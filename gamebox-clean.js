@@ -51,11 +51,6 @@
   compactCardSetup();
   compactCoinSetup();
 
-  const playerStyle=document.createElement('link');
-  playerStyle.rel='stylesheet';
-  playerStyle.href='players.css?v=1';
-  document.head.appendChild(playerStyle);
-
   const loader=document.createElement('script');
   loader.src='players-loader.js?v=1';
   loader.async=false;
