@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="heads.css" />
 <link rel="stylesheet" href="heads-landscape.css?v=1" />
-<link rel="stylesheet" href="heads-clean.css?v=1" />
+<link rel="stylesheet" href="heads-clean.css?v=2" />
 </head>
 <body>
 <main class="headsPage">
@@ -22,17 +22,11 @@
   <section id="headsSetup" class="headsSetupGrid headsSimpleSetup">
     <div class="panel headsSetupMain">
       <div class="headsSetupTop">
-        <div><h2>Choose your game</h2><p class="sub">Pick a deck and a time.</p></div>
+        <div><h2>Choose a category</h2></div>
       </div>
 
       <div class="field">
-        <label>Categories</label>
         <div class="headsCategoryGrid" id="headsCategories"></div>
-      </div>
-
-      <div class="field">
-        <label>Round length</label>
-        <div class="headsTimer" id="headsTimer"></div>
       </div>
 
       <button class="btn good headsPrimaryPlay" id="headsStart">Play</button>
@@ -41,6 +35,12 @@
       <details class="headsSetupMore">
         <summary>⚙ Settings & decks</summary>
         <div class="headsSettingsBody">
+          <div class="headsSettingsSection">
+            <h3>Round length</h3>
+            <p class="sub">30 seconds by default.</p>
+            <div class="headsTimer" id="headsTimer"></div>
+          </div>
+
           <div class="headsSettingsSection">
             <div class="headsSettingsGrid">
               <div class="field"><label for="headsRoundName">Round name</label><input class="textInput" id="headsRoundName" maxlength="40" placeholder="Movie Round"></div>
@@ -95,7 +95,7 @@
         <div id="headsCountdownWrap" class="hidden"><div class="headsCountdown" id="headsCountdown">3</div></div>
 
         <div id="headsLive" class="hidden" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
-          <div class="headsTopline"><div class="headsClock" id="headsClock">60.0</div><div class="headsScore"><span id="headsLivePlayer">Player 1</span> · <strong id="headsLiveScore">0 correct</strong></div></div>
+          <div class="headsTopline"><div class="headsClock" id="headsClock">30.0</div><div class="headsScore"><span id="headsLivePlayer">Player 1</span> · <strong id="headsLiveScore">0 correct</strong></div></div>
           <div class="headsWordCard"><div class="headsCategoryLabel" id="headsCardCategory">Category</div><div class="headsWord" id="headsWord">Ready</div></div>
           <div class="headsHintPill"><strong>Tilt controls active</strong><span id="headsTiltReadout">Ready</span></div>
           <div class="headsControls"><button class="btn pass" id="headsPass">Pass</button><button class="btn correct" id="headsCorrect">Correct</button></div>
@@ -117,6 +117,7 @@
   </section>
 </main>
 <script src="heads-v3.js?v=2"></script>
+<script src="heads-default-30.js?v=1"></script>
 <script src="heads-round-end-fix.js?v=2"></script>
 </body>
 </html>
