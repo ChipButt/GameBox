@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d12" />
+<title>Heads Up · GameBox</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="heads.css" />
+</head>
+<body>
+<main class="headsPage">
+  <header class="headsHeader">
+    <a class="headsHome" href="index.html">← Home</a>
+    <div class="headsTitle"><h1>Heads Up</h1><p>Tilt to score · custom categories and rounds</p></div>
+  </header>
+
+  <div class="headsModeSwitch"><button id="headsSetupTab" class="active">Setup</button><button id="headsPlayTab">Game Play</button></div>
+
+  <section id="headsSetup" class="headsSetupGrid">
+    <div class="panel panelPad">
+      <h3>Round Setup</h3><p class="sub">Pick one or more categories, then hold the phone to your forehead when the round starts.</p>
+      <div class="field"><label for="headsRoundName">Round name</label><input class="textInput" id="headsRoundName" maxlength="40" placeholder="Movie Round"></div>
+      <div class="field"><label for="headsPlayerName">Player name</label><input class="textInput" id="headsPlayerName" maxlength="24" placeholder="Player 1"></div>
+      <div class="field"><label>Round length</label><div class="headsTimer" id="headsTimer"></div></div>
+      <div class="field"><label>Categories</label><div class="headsCategoryGrid" id="headsCategories"></div></div>
+      <div class="field"><label for="headsExtraCards">Extra cards for this round</label><textarea class="headsTextarea" id="headsExtraCards" placeholder="One card per line&#10;Example:&#10;Jurassic Park&#10;The Eiffel Tower"></textarea></div>
+      <label class="headsToggle"><input type="checkbox" id="headsReverseTilt"><span><strong>Reverse tilt directions</strong><span>Use this only if your phone reports the two tilt directions backwards.</span></span></label>
+      <div class="actions"><button class="btn good" id="headsStart">Start Round</button><button class="btn secondary" id="headsSaveRound">Save Round</button></div>
+      <div class="status" id="headsStatus"></div>
+      <div class="savedWrap"><h3>Saved Rounds</h3><p class="sub">Save category combinations, timing and extra cards for instant reuse.</p><div class="headsSavedList" id="headsSavedRounds"></div></div>
+    </div>
+
+    <div class="panel panelPad">
+      <h3>Custom Categories</h3><p class="sub">Create your own deck of cards. Saved categories appear alongside the built-in categories above.</p>
+      <div class="headsCustomForm">
+        <input class="textInput" id="headsCustomName" maxlength="30" placeholder="Category name">
+        <textarea class="headsTextarea" id="headsCustomCards" placeholder="One card per line"></textarea>
+        <button class="btn secondary" id="headsSaveCategory">Save Custom Category</button>
+        <div class="status" id="headsCustomStatus"></div>
+      </div>
+      <div class="savedWrap"><div class="headsCustomList" id="headsCustomList"></div></div>
+    </div>
+  </section>
+
+  <section id="headsPlay" class="hidden">
+    <div class="panel headsGamePanel">
+      <div class="headsArena" id="headsArena">
+        <div id="headsReady" class="headsRoundEnd">
+          <h3 id="headsReadyTitle">Ready?</h3>
+          <p class="sub" id="headsReadyMeta">Hold the phone against your forehead with the screen facing the other players.</p>
+          <div class="headsOrientationTip">
+            <div><strong>Tilt down = Correct</strong><span>The next card appears automatically.</span></div>
+            <div><strong>Tilt up = Pass</strong><span>Return the phone to your forehead before the next tilt.</span></div>
+          </div>
+          <div class="headsReadyActions" style="margin:16px auto 0">
+            <button class="btn good" id="headsBegin">Begin & Enable Tilt</button>
+            <button class="btn secondary" id="headsBackSetup">Back to Setup</button>
+          </div>
+          <div class="headsTiltState" id="headsTiltState">Tilt controls will be enabled when the round begins.</div>
+        </div>
+
+        <div id="headsCountdownWrap" class="hidden"><div class="headsCountdown" id="headsCountdown">3</div></div>
+
+        <div id="headsLive" class="hidden" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
+          <div class="headsTopline"><div class="headsClock" id="headsClock">60.0</div><div class="headsScore"><span id="headsLivePlayer">Player 1</span> · <strong id="headsLiveScore">0 correct</strong></div></div>
+          <div class="headsWordCard"><div class="headsCategoryLabel" id="headsCardCategory">Category</div><div class="headsWord" id="headsWord">Ready</div></div>
+          <div class="headsHintPill"><strong>Tilt controls active</strong><span id="headsTiltReadout">Hold level</span></div>
+          <div class="headsControls"><button class="btn pass" id="headsPass">Pass</button><button class="btn correct" id="headsCorrect">Correct</button></div>
+          <div class="headsInstruction">Tilting is the main control. The buttons are only a fallback if motion controls are unavailable.</div>
+        </div>
+
+        <div id="headsResults" class="headsRoundEnd hidden">
+          <h3>Round Over</h3><div class="headsBigScore" id="headsFinalScore">0</div><div class="sub" id="headsFinalLabel">correct answers</div>
+          <div class="headsResultStats"><div class="resultBox"><strong id="headsCorrectCount">0</strong><span>Correct</span></div><div class="resultBox"><strong id="headsPassCount">0</strong><span>Passed</span></div></div>
+          <div class="headsRoundHistory" id="headsHistory"></div>
+          <div class="actions" style="width:min(100%,520px);margin:16px auto 0"><button class="btn good" id="headsAgain">Play Again</button><button class="btn secondary" id="headsResultsSetup">New Round Setup</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="heads.js"></script>
+</body>
+</html>
