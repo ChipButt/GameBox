@@ -1,107 +1,79 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0b0d12" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090c12">
 <title>GameBox</title>
-<link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="gamebox-clean.css?v=1" />
+<link rel="stylesheet" href="gamebox-v3.css?v=1">
 </head>
 <body>
-<div class="app">
-  <section id="homeScreen" class="screen">
-    <header class="topbar">
-      <div class="brand"><div class="brandMark">GB</div><div><h1>GameBox</h1><p>Pick a game and pass the phone around.</p></div></div>
-    </header>
-
-    <div class="sectionTitle"><h2>Card Games</h2><p>Games that use a standard deck.</p></div>
-    <div class="tiles">
-      <button class="gameTile" id="openCards"><div class="tileIcon">🂠</div><div><strong>House Rules</strong><span>Draw one card per turn from a shuffled 54-card deck, including both jokers.</span></div></button>
-    </div>
-
-    <div class="sectionTitle"><h2>Quick Games</h2><p>Simple games and randomisers.</p></div>
-    <div class="tiles">
-      <button class="gameTile" id="openCoins"><div class="tileIcon">🪙</div><div><strong>Coin Flip</strong><span>Choose the players and how many coins each person flips on their turn.</span></div></button>
-    </div>
-
-    <div class="sectionTitle"><h2>Party Games</h2><p>Fast group games designed around the phone.</p></div>
-    <div class="tiles">
-      <a class="gameTile" href="heads.html" style="text-decoration:none"><div class="tileIcon">🤔</div><div><strong>Heads Up</strong><span>Hold the phone to your forehead, guess the card and tilt to score or pass.</span></div></a>
+<main class="app">
+  <section data-view="home">
+    <header class="topbar"><div class="brand"><div class="brandMark">GB</div><h1>GameBox</h1></div></header>
+    <section class="panel homeRoster">
+      <h2>Players</h2>
+      <div class="addPlayerRow"><input id="newPlayerName" class="textInput" maxlength="24" placeholder="Add player name"><button id="addPlayer" class="btn">Add</button></div>
+      <div id="homePlayers" class="homePlayers"></div>
+    </section>
+    <div class="gameSections">
+      <section><div class="sectionLabel">Card Games</div><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>House Rules</strong></button></div></section>
+      <section><div class="sectionLabel">Quick Games</div><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
+      <section><div class="sectionLabel">Party Games</div><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
     </div>
   </section>
 
-  <section id="cardScreen" class="screen hidden">
-    <header class="gameHeader"><button class="iconBtn" data-home>← Home</button><div class="gameHeading"><h2>House Rules</h2><p>Cards · 54 card deck · Jokers included</p></div></header>
-    <div class="modeSwitch"><button id="cardSetupTab" class="active">Setup</button><button id="cardPlayTab">Game Play</button></div>
-
-    <div id="cardSetup" class="setupGrid">
-      <div class="panel panelPad">
-        <h3>Game Setup</h3><p class="sub">Choose 1–4 players, name the game, then save or start it.</p>
-        <div class="field"><label for="cardGameName">Game name</label><input class="textInput" id="cardGameName" type="text" maxlength="40" placeholder="Friday Night Rules"></div>
-        <div class="field"><label>Players</label><div class="seg4" id="cardPlayerCount"></div></div>
-        <div class="field"><label>Player names</label><div class="stack" id="cardPlayerNames"></div></div>
-        <div class="actions"><button class="btn good" id="cardStart">Start Game</button><button class="btn secondary" id="cardSave">Save Setup</button></div>
-        <div class="status" id="cardStatus"></div>
-        <div class="savedWrap"><h3>Saved Card Games</h3><p class="sub">Rules and player setup are stored on this device.</p><div class="savedList" id="cardSaved"></div></div>
-      </div>
-      <div class="panel panelPad">
-        <div class="ruleToolbar"><div><h3>Card Rules</h3><p class="sub" style="margin:3px 0 0">Each rule applies to all four suits of that value.</p></div><div class="tinyRow"><button class="tiny" id="cardExamples">Example rules</button><button class="tiny" id="cardClear">Clear</button></div></div>
-        <div class="rules" id="cardRules"></div>
-      </div>
-    </div>
-
-    <div id="cardPlay" class="playStack hidden">
-      <div class="panel playHeader"><div class="turn"><div class="turnBubble" id="cardTurnBubble">1</div><div class="turnText"><strong id="cardTurnText">Player 1's turn</strong><span id="cardTitle">Unsaved Game</span></div></div><div class="stats"><div class="stat"><strong id="cardsLeft">54</strong><span>left</span></div><div class="stat"><strong id="cardsDrawn">0</strong><span>drawn</span></div></div></div>
-      <div class="panel playPanel cardPlay">
-        <div class="mainPlay">
-          <div class="deckZone"><div class="deckStack" id="deckStack" role="button" tabindex="0" aria-label="Draw next card"><div class="deckCard"></div><div class="deckCard"></div><div class="deckCard top" id="deckTop">DRAW</div></div><div id="drawnSlot" class="emptyCard">Your card appears here.</div></div>
-          <div class="drawHint" id="cardHint">Tap the deck or Draw Card.</div>
-          <div class="ruleDisplay empty" id="cardRuleDisplay"><span class="label">Card rule</span><div class="rule" id="cardRuleText">Draw a card to begin.</div></div>
-        </div>
-        <aside class="side">
-          <div class="sideCard"><h4>Turn order</h4><div class="players" id="cardPlayers"></div></div>
-          <div class="sideCard"><h4>Recent cards</h4><div class="history" id="cardHistory"></div></div>
-          <div class="playActions"><button class="btn" id="cardDraw">Draw Card</button><button class="btn secondary" id="cardRestart">Shuffle & Restart</button><button class="btn secondary" id="cardBackSetup">Back to Setup</button></div>
-        </aside>
-      </div>
-      <div class="mobileAction"><button class="btn" id="cardDrawMobile">Draw Card</button></div>
+  <section class="hidden" data-view="cards-setup">
+    <header class="gameHeader"><button class="backButton" data-go="home">← Home</button><h1>House Rules</h1></header>
+    <div class="setupStack">
+      <section class="panel"><h2>Who’s playing?</h2><div id="cardPlayerPicker" class="playerChoices"></div></section>
+      <button id="cardStart" class="btn good primaryStart">Start Game</button><div id="cardStatus" class="status"></div>
+      <details class="settings"><summary>⚙ Game settings</summary><div class="settingsBody">
+        <section class="settingsSection"><h3>Card penalties & rules</h3><div class="ruleActions"><button id="cardExamples" type="button">Example rules</button><button id="cardClearRules" type="button">Clear</button></div><div id="cardRules" class="rules"></div></section>
+        <section class="settingsSection"><h3>Save setup</h3><input id="cardGameName" class="textInput" maxlength="40" placeholder="Setup name"><button id="cardSave" class="btn secondary">Save setup</button><div id="cardSaved" class="savedList"></div></section>
+      </div></details>
     </div>
   </section>
 
-  <section id="coinScreen" class="screen hidden">
-    <header class="gameHeader"><button class="iconBtn" data-home>← Home</button><div class="gameHeading"><h2>Coin Flip</h2><p>1–4 players · Custom coins per player</p></div></header>
-    <div class="modeSwitch"><button id="coinSetupTab" class="active">Setup</button><button id="coinPlayTab">Game Play</button></div>
-
-    <div id="coinSetup" class="setupGrid">
-      <div class="panel panelPad">
-        <h3>Coin Setup</h3><p class="sub">Set the players and how many coins each person flips when it is their turn.</p>
-        <div class="field"><label for="coinGameName">Game name</label><input class="textInput" id="coinGameName" type="text" maxlength="40" placeholder="Coin Night"></div>
-        <div class="field"><label>Players</label><div class="seg4" id="coinPlayerCount"></div></div>
-        <div class="coinTotal"><strong id="coinTotalCount">2</strong><span>Total coins flipped per round</span></div>
-        <div class="actions"><button class="btn good" id="coinStart">Start Game</button><button class="btn secondary" id="coinSave">Save Setup</button></div><div class="status" id="coinStatus"></div>
-        <div class="savedWrap"><h3>Saved Coin Games</h3><p class="sub">Player names and flip amounts are stored on this device.</p><div class="savedList" id="coinSaved"></div></div>
-      </div>
-      <div class="panel panelPad">
-        <h3>Players & Coins</h3><p class="sub">Each player can flip between 1 and 20 coins on their turn.</p><div class="coinSetupPlayers" id="coinPlayersSetup"></div>
-      </div>
-    </div>
-
-    <div id="coinPlay" class="playStack hidden">
-      <div class="panel playHeader"><div class="turn"><div class="turnBubble" id="coinTurnBubble">1</div><div class="turnText"><strong id="coinTurnText">Player 1's turn</strong><span id="coinTitle">Unsaved Game</span></div></div><div class="stats"><div class="stat"><strong id="coinFlipCount">0</strong><span>flips</span></div><div class="stat"><strong id="coinRoundCount">1</strong><span>round</span></div></div></div>
-      <div class="panel playPanel cardPlay">
-        <div class="coinArena"><div class="coinGrid" id="coinGrid"><div class="emptyCard" style="width:150px;height:150px">Flip coins to begin.</div></div><div class="coinSummary"><div class="resultBox"><strong id="headsResult">0</strong><span>Heads</span></div><div class="resultBox"><strong id="tailsResult">0</strong><span>Tails</span></div></div><div class="drawHint" id="coinHint">Tap Flip Coins for Player 1.</div></div>
-        <aside class="side"><div class="sideCard"><h4>Players</h4><div class="players" id="coinScores"></div></div><div class="sideCard"><h4>Recent flips</h4><div class="history" id="coinHistory"></div></div><div class="playActions"><button class="btn" id="coinFlip">Flip Coins</button><button class="btn secondary" id="coinRestart">Restart Game</button><button class="btn secondary" id="coinBackSetup">Back to Setup</button></div></aside>
-      </div>
-      <div class="mobileAction"><button class="btn" id="coinFlipMobile">Flip Coins</button></div>
+  <section class="hidden" data-view="cards-play">
+    <header class="gameHeader"><button class="backButton" data-go="cards-setup">← Setup</button><h1>House Rules</h1></header>
+    <div class="playShell">
+      <div id="cardJustTurned" class="eventBanner hidden"><span class="eyebrow">JUST TURNED</span><strong id="cardJustTurnedName"></strong></div>
+      <div class="cardStage"><div id="cardFace" class="playingCard emptyPlayingCard"><span>TURN<br>A CARD</span></div></div>
+      <div class="penaltyBox"><span class="eyebrow">PENALTY / RULE</span><strong id="cardPenalty">Turn the first card to begin.</strong></div>
+      <div class="nextBanner"><span class="eyebrow">NEXT</span><strong id="cardNextName">—</strong></div>
+      <button id="cardDrawButton" class="btn good bigAction">Turn Card</button><div id="cardDeckCount" class="deckCount"></div>
+      <details class="settings"><summary>⚙ Game controls</summary><div class="settingsBody"><div class="controlGrid"><button id="cardRestart" class="btn secondary">Shuffle & Restart</button><button class="btn secondary" data-go="cards-setup">Change players/settings</button></div><section class="settingsSection"><h3>Recent cards</h3><div id="cardRecent"></div></section></div></details>
     </div>
   </section>
-</div>
 
-<dialog id="cardRestartDialog"><div class="dialogInner"><h3>Shuffle and restart?</h3><p>All 54 cards will return to the deck, history will clear and Player 1 will go first.</p><div class="actions"><button class="btn" id="cardRestartYes">Shuffle & Restart</button><button class="btn secondary" data-close-dialog>Cancel</button></div></div></dialog>
-<dialog id="coinRestartDialog"><div class="dialogInner"><h3>Restart coin game?</h3><p>This clears all flip totals and history, then returns to Player 1.</p><div class="actions"><button class="btn" id="coinRestartYes">Restart</button><button class="btn secondary" data-close-dialog>Cancel</button></div></div></dialog>
+  <section class="hidden" data-view="coins-setup">
+    <header class="gameHeader"><button class="backButton" data-go="home">← Home</button><h1>Coin Flip</h1></header>
+    <div class="setupStack">
+      <section class="panel"><h2>Who’s playing?</h2><div id="coinPlayerPicker" class="playerChoices"></div></section>
+      <button id="coinStart" class="btn good primaryStart">Start Game</button><div id="coinStatus" class="status"></div>
+      <details class="settings"><summary>⚙ Game settings</summary><div class="settingsBody">
+        <section class="settingsSection"><h3>Win condition</h3><div class="goalGrid"><label><span>Goal</span><select id="coinGoalMode"><option value="free">Free play</option><option value="total-heads">First to Heads</option><option value="total-tails">First to Tails</option><option value="streak-heads">Consecutive Heads</option><option value="streak-tails">Consecutive Tails</option><option value="streak-either">Consecutive same side</option></select></label><label id="coinGoalTargetWrap"><span>Target</span><input id="coinGoalTarget" class="numberInput" type="number" inputmode="numeric" min="2" max="20" value="3"></label></div></section>
+        <section class="settingsSection"><h3>Coins per turn</h3><div id="coinPlayerSettings" class="coinPlayerSettings"></div></section>
+        <section class="settingsSection"><h3>Save setup</h3><input id="coinGameName" class="textInput" maxlength="40" placeholder="Setup name"><button id="coinSave" class="btn secondary">Save setup</button><div id="coinSaved" class="savedList"></div></section>
+      </div></details>
+    </div>
+  </section>
 
-<script src="app.js"></script>
-<script src="gamebox-clean.js?v=1"></script>
+  <section class="hidden" data-view="coins-play">
+    <header class="gameHeader"><button class="backButton" data-go="coins-setup">← Setup</button><h1>Coin Flip</h1></header>
+    <div class="playShell">
+      <div class="goalBanner"><span class="eyebrow">GOAL</span><strong id="coinGoalBanner">Free play</strong></div>
+      <div id="coinJustFlipped" class="eventBanner hidden"><span class="eyebrow">JUST FLIPPED</span><strong id="coinJustFlippedName"></strong></div>
+      <div class="coinStage"><div id="coinResults" class="coinResults"><div class="coinPlaceholder">Flip to begin</div></div></div>
+      <div id="coinWinner" class="winnerBox hidden"></div>
+      <div id="coinProgress" class="progressBoard"></div>
+      <div class="nextBanner"><span class="eyebrow">NEXT</span><strong id="coinNextName">—</strong></div>
+      <button id="coinFlipButton" class="btn good bigAction">Flip</button>
+      <details class="settings"><summary>⚙ Game controls</summary><div class="settingsBody"><div class="controlGrid"><button id="coinRestart" class="btn secondary">Restart Game</button><button class="btn secondary" data-go="coins-setup">Change players/settings</button></div></div></details>
+    </div>
+  </section>
+</main>
+<script src="gamebox-v3.js?v=1"></script>
 </body>
 </html>
