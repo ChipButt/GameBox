@@ -50,4 +50,8 @@
 
   compactCardSetup();
   compactCoinSetup();
+
+  const loader=document.createElement('script');
+  loader.src='players-loader.js?v=1';
+  document.body.appendChild(loader);
 })();
