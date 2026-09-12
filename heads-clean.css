@@ -1,0 +1,97 @@
+/* Simplified Heads Up UI */
+.headsTitle p,.headsModeSwitch{display:none!important}
+.headsPage{width:min(100%,760px)}
+.headsSetupGrid{display:block}
+.headsSetupMain{padding:16px}
+.headsSetupTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.headsSetupTop h2{margin:0;font-size:23px}
+.headsSetupTop .sub{margin:2px 0 0}
+.headsSetupMain>.field{margin-top:16px}
+.headsSetupMain>.field>label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900;margin-bottom:8px;display:block}
+.headsCategoryGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.headsCategoryCard{min-height:66px;padding:12px 13px;justify-content:center;border-radius:16px;text-align:left}
+.headsCategoryCard strong{font-size:15px}
+.headsCategoryCard>span{display:none}
+.headsTimer{gap:6px}
+.headsTimer button{min-height:44px;border-radius:13px}
+.headsPrimaryPlay{width:100%;min-height:58px;margin-top:16px;font-size:18px;border-radius:16px}
+.headsSetupMore{margin-top:12px;border:1px solid var(--line);background:#0f131b;border-radius:15px;overflow:hidden}
+.headsSetupMore>summary{list-style:none;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;font-weight:900;color:var(--muted);user-select:none}
+.headsSetupMore>summary::-webkit-details-marker{display:none}
+.headsSetupMore[open]>summary{color:var(--text);border-bottom:1px solid var(--line)}
+.headsSettingsBody{padding:14px;display:grid;gap:14px}
+.headsSettingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.headsSettingsSection{padding-top:12px;border-top:1px solid var(--line)}
+.headsSettingsSection:first-child{padding-top:0;border-top:0}
+.headsSettingsSection h3{font-size:14px;margin:0 0 8px}
+.headsSettingsSection .sub{font-size:11px;margin:0 0 9px}
+.headsSettingsBody .actions{margin:0}
+.headsToggle{display:none!important}
+.headsStatus:empty,.headsCustomStatus:empty{display:none}
+.headsHeader{margin-bottom:10px}
+.headsTitle h1{font-size:22px}
+
+/* Ready screen: only the useful information */
+#headsReady{max-width:540px}
+#headsReady h3{font-size:34px;margin-bottom:8px}
+#headsReadyMeta{font-size:14px;margin-bottom:16px}
+.headsOrientationTip{gap:10px;width:min(100%,460px)}
+.headsOrientationTip div{border:0;border-radius:18px;padding:15px 12px}
+.headsOrientationTip div:first-child{background:rgba(31,156,105,.18);box-shadow:inset 0 0 0 1px rgba(31,156,105,.35)}
+.headsOrientationTip div:last-child{background:rgba(190,60,75,.18);box-shadow:inset 0 0 0 1px rgba(190,60,75,.35)}
+.headsOrientationTip strong{font-size:15px}
+.headsOrientationTip span{display:none}
+.headsReadyActions{margin-top:14px!important}
+#headsBegin{font-size:17px}
+.headsTiltState{display:none!important}
+
+/* Live round: timer, score, word, fallback buttons. Nothing else. */
+.headsCategoryLabel,.headsHintPill,.headsInstruction{display:none!important}
+.headsWordCard{border-radius:26px}
+.headsClock{font-variant-numeric:tabular-nums}
+.headsScore{color:var(--text)}
+
+/* Results: colourful and playful */
+#headsResults{width:min(100%,680px);padding:20px;border-radius:26px;background:radial-gradient(circle at 20% 0%,rgba(140,124,255,.28),transparent 42%),linear-gradient(145deg,#141927,#0d1119);box-shadow:0 22px 60px rgba(0,0,0,.35)}
+#headsResults h3{font-size:18px;color:#c9c5ff;text-transform:uppercase;letter-spacing:.09em;margin:0}
+#headsResults .headsBigScore{font-size:86px;margin:8px 0 0;line-height:.95;color:#fff;text-shadow:0 4px 28px rgba(140,124,255,.28)}
+#headsResults #headsFinalLabel{font-size:14px;color:var(--muted)}
+.headsResultStats{gap:10px;margin:18px auto 14px;width:min(100%,420px)}
+.headsResultStats .resultBox{border:0;border-radius:18px;padding:14px 10px;color:#fff}
+.headsResultStats .resultBox:first-child{background:linear-gradient(145deg,#29b879,#178b5a)}
+.headsResultStats .resultBox:last-child{background:linear-gradient(145deg,#d85a69,#a93244)}
+.headsResultStats .resultBox strong{font-size:28px}
+.headsResultStats .resultBox span{color:rgba(255,255,255,.82)}
+.headsRoundHistory{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%;max-height:none;overflow:visible;margin:14px auto 0}
+.headsHistoryItem{display:inline-flex;align-items:center;gap:7px;max-width:100%;border:0!important;border-radius:999px;padding:9px 13px;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.15)}
+.headsHistoryItem.correct{background:linear-gradient(145deg,#29b879,#178b5a)}
+.headsHistoryItem.pass{background:linear-gradient(145deg,#d85a69,#a93244)}
+.headsHistoryItem>div{display:flex;align-items:center;min-width:0}
+.headsHistoryItem strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.headsHistoryItem span{display:none!important}
+.headsHistoryItem b{font-size:11px;white-space:nowrap;color:rgba(255,255,255,.88)}
+#headsResults .actions{margin-top:20px!important}
+#headsResults .actions .btn{min-height:52px;border-radius:15px}
+
+/* Landscape live game: giant card, tiny fallback controls, no diagnostic UI. */
+@media(orientation:landscape){
+  body.headsLandscapePlay #headsLive{display:grid!important;grid-template-columns:110px minmax(0,1fr) 110px;grid-template-rows:auto 1fr;gap:8px 12px;width:100%!important;height:100%}
+  .headsLandscapePlay .headsTopline{grid-column:1/-1;grid-row:1;width:100%;padding:0 8px}
+  .headsLandscapePlay .headsClock{font-size:clamp(25px,6vh,40px)}
+  .headsLandscapePlay .headsScore{font-size:clamp(13px,2.8vh,18px)}
+  .headsLandscapePlay .headsWordCard{grid-column:2;grid-row:2;width:100%;height:min(72vh,390px);min-height:180px;padding:22px 30px}
+  .headsLandscapePlay .headsWord{font-size:clamp(46px,9vw,104px)}
+  .headsLandscapePlay .headsControls{grid-column:1 / -1;grid-row:2;width:100%;height:100%;display:flex!important;align-items:flex-end;justify-content:space-between;pointer-events:none;padding:0 2px 6px}
+  .headsLandscapePlay .headsControls .btn{pointer-events:auto;width:96px;min-height:42px;font-size:12px;opacity:.55;border-radius:14px;padding:8px}
+  .headsLandscapePlay .headsControls .btn:active{opacity:1}
+  .headsLandscapePlay #headsResults{max-height:94vh;overflow:auto}
+  .headsLandscapePlay .headsRoundHistory{max-height:none;overflow:visible}
+}
+
+@media(max-width:560px){
+  .headsCategoryGrid{grid-template-columns:1fr 1fr}
+  .headsSettingsGrid{grid-template-columns:1fr}
+  #headsResults{padding:16px}
+  .headsHistoryItem strong{max-width:150px}
+}
+@media(max-width:370px){.headsCategoryGrid{grid-template-columns:1fr}}
