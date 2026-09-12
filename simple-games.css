@@ -1,7 +1,7 @@
 /* Card + Coin simplification */
 .sgSetupMain{padding:16px!important}
-.sgSetupMain>:scope>.sub{display:none!important}
-.sgSetupMain>:scope>h3{font-size:23px;margin:0 0 12px!important}
+.sgSetupMain>.sub{display:none!important}
+.sgSetupMain>h3{font-size:23px;margin:0 0 12px!important}
 #cardSetup .coinTotal,#coinSetup .coinTotal{display:none!important}
 #cardSetup .sgSettings,#coinSetup .sgSettings{margin-top:12px}
 .sgSettings{border:1px solid var(--line);background:#0f131b;border-radius:16px;overflow:hidden}
