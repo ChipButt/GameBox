@@ -50,14 +50,14 @@
           <h3 id="headsReadyTitle">Ready?</h3>
           <p class="sub" id="headsReadyMeta">Hold the phone against your forehead with the screen facing the other players.</p>
           <div class="headsOrientationTip">
-            <div><strong>Tilt down = Correct</strong><span>The next card appears automatically.</span></div>
-            <div><strong>Tilt up = Pass</strong><span>Return the phone to your forehead before the next tilt.</span></div>
+            <div><strong>Tilt down 60° = Correct</strong><span>You will hear a ding, then return the phone to your forehead.</span></div>
+            <div><strong>Tilt up 60° = Pass</strong><span>You will hear a buzzer, then return to neutral before the next tilt.</span></div>
           </div>
           <div class="headsReadyActions" style="margin:16px auto 0">
             <button class="btn good" id="headsBegin">Begin & Enable Tilt</button>
             <button class="btn secondary" id="headsBackSetup">Back to Setup</button>
           </div>
-          <div class="headsTiltState" id="headsTiltState">Tilt controls will be enabled when the round begins.</div>
+          <div class="headsTiltState" id="headsTiltState">Tilt controls will calibrate from your forehead position during the countdown.</div>
         </div>
 
         <div id="headsCountdownWrap" class="hidden"><div class="headsCountdown" id="headsCountdown">3</div></div>
@@ -65,9 +65,9 @@
         <div id="headsLive" class="hidden" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
           <div class="headsTopline"><div class="headsClock" id="headsClock">60.0</div><div class="headsScore"><span id="headsLivePlayer">Player 1</span> · <strong id="headsLiveScore">0 correct</strong></div></div>
           <div class="headsWordCard"><div class="headsCategoryLabel" id="headsCardCategory">Category</div><div class="headsWord" id="headsWord">Ready</div></div>
-          <div class="headsHintPill"><strong>Tilt controls active</strong><span id="headsTiltReadout">Hold level</span></div>
+          <div class="headsHintPill"><strong>Tilt controls active</strong><span id="headsTiltReadout">Hold at forehead</span></div>
           <div class="headsControls"><button class="btn pass" id="headsPass">Pass</button><button class="btn correct" id="headsCorrect">Correct</button></div>
-          <div class="headsInstruction">Tilting is the main control. The buttons are only a fallback if motion controls are unavailable.</div>
+          <div class="headsInstruction">A deliberate 60° tilt is required. Tilting is the main control; the buttons are only a fallback.</div>
         </div>
 
         <div id="headsResults" class="headsRoundEnd hidden">
@@ -80,6 +80,6 @@
     </div>
   </section>
 </main>
-<script src="heads.js"></script>
+<script src="heads-v2.js"></script>
 </body>
 </html>
