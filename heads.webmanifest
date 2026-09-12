@@ -1,0 +1,9 @@
+{
+  "name": "GameBox · Heads Up",
+  "short_name": "Heads Up",
+  "start_url": "./heads.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#07090d",
+  "theme_color": "#07090d"
+}
