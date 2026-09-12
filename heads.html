@@ -7,6 +7,7 @@
 <title>Heads Up · GameBox</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="heads.css" />
+<link rel="stylesheet" href="heads-landscape.css?v=1" />
 </head>
 <body>
 <main class="headsPage">
@@ -25,7 +26,7 @@
       <div class="field"><label>Round length</label><div class="headsTimer" id="headsTimer"></div></div>
       <div class="field"><label>Categories</label><div class="headsCategoryGrid" id="headsCategories"></div></div>
       <div class="field"><label for="headsExtraCards">Extra cards for this round</label><textarea class="headsTextarea" id="headsExtraCards" placeholder="One card per line&#10;Example:&#10;Jurassic Park&#10;The Eiffel Tower"></textarea></div>
-      <label class="headsToggle"><input type="checkbox" id="headsReverseTilt"><span><strong>Reverse tilt directions</strong><span>Use this only if your phone reports the two tilt directions backwards.</span></span></label>
+      <label class="headsToggle"><input type="checkbox" id="headsReverseTilt"><span><strong>Reverse tilt directions</strong><span>Legacy setting — no longer used.</span></span></label>
       <div class="actions"><button class="btn good" id="headsStart">Start Round</button><button class="btn secondary" id="headsSaveRound">Save Round</button></div>
       <div class="status" id="headsStatus"></div>
       <div class="savedWrap"><h3>Saved Rounds</h3><p class="sub">Save category combinations, timing and extra cards for instant reuse.</p><div class="headsSavedList" id="headsSavedRounds"></div></div>
@@ -57,7 +58,7 @@
             <button class="btn good" id="headsBegin">Begin & Enable Tilt</button>
             <button class="btn secondary" id="headsBackSetup">Back to Setup</button>
           </div>
-          <div class="headsTiltState" id="headsTiltState">Tilt controls will calibrate from your forehead position during the countdown.</div>
+          <div class="headsTiltState" id="headsTiltState">Gameplay switches to landscape when the round begins.</div>
         </div>
 
         <div id="headsCountdownWrap" class="hidden"><div class="headsCountdown" id="headsCountdown">3</div></div>
@@ -67,7 +68,7 @@
           <div class="headsWordCard"><div class="headsCategoryLabel" id="headsCardCategory">Category</div><div class="headsWord" id="headsWord">Ready</div></div>
           <div class="headsHintPill"><strong>Tilt controls active</strong><span id="headsTiltReadout">Hold at forehead</span></div>
           <div class="headsControls"><button class="btn pass" id="headsPass">Pass</button><button class="btn correct" id="headsCorrect">Correct</button></div>
-          <div class="headsInstruction">A deliberate 60° tilt is required. <strong>Down = Correct · Up = Pass.</strong> Tilting is the main control; the buttons are only a fallback.</div>
+          <div class="headsInstruction">A deliberate 60° tilt is required. <strong>Down = Correct · Up = Pass.</strong> Return to the forehead position before the next answer.</div>
         </div>
 
         <div id="headsResults" class="headsRoundEnd hidden">
@@ -80,7 +81,6 @@
     </div>
   </section>
 </main>
-<script src="heads-v2.js"></script>
-<script src="tilt-direction-fix.js?v=1"></script>
+<script src="heads-v3.js?v=1"></script>
 </body>
 </html>
