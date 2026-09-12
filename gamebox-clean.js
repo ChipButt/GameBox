@@ -51,7 +51,23 @@
   compactCardSetup();
   compactCoinSetup();
 
+  const playerStyle=document.createElement('link');
+  playerStyle.rel='stylesheet';
+  playerStyle.href='players.css?v=1';
+  document.head.appendChild(playerStyle);
+
   const loader=document.createElement('script');
   loader.src='players-loader.js?v=1';
+  loader.async=false;
   document.body.appendChild(loader);
+
+  const simpleStyle=document.createElement('link');
+  simpleStyle.rel='stylesheet';
+  simpleStyle.href='simple-games.css?v=1';
+  document.head.appendChild(simpleStyle);
+
+  const simpleScript=document.createElement('script');
+  simpleScript.src='simple-games.js?v=1';
+  simpleScript.async=false;
+  document.body.appendChild(simpleScript);
 })();
