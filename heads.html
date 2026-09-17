@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#07090d" />
+<meta name="theme-color" content="#eefaf5" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Heads Up" />
-<title>Heads Up · GameBox</title>
+<title>Heads Up · Chip In Games</title>
 <link rel="manifest" href="heads.webmanifest" />
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="heads.css" />
 <link rel="stylesheet" href="heads-landscape.css?v=1" />
 <link rel="stylesheet" href="heads-clean.css?v=2" />
 <link rel="stylesheet" href="heads-summary-lines.css?v=1" />
+<link rel="stylesheet" href="chipin-heads.css?v=1" />
 </head>
 <body>
 <main class="headsPage">
   <header class="headsHeader">
-    <a class="headsHome" href="index.html">← Home</a>
-    <div class="headsTitle"><h1>Heads Up</h1><p>Guess fast. Tilt to score.</p></div>
+    <a class="headsHome" href="index.html">← GameBox</a>
+    <div class="headsTitle"><h1>Heads Up</h1><p>A Chip In Game · Guess fast. Tilt to score.</p></div>
   </header>
 
   <div class="headsModeSwitch" aria-hidden="true"><button id="headsSetupTab" class="active">Setup</button><button id="headsPlayTab">Game Play</button></div>
@@ -122,7 +123,9 @@
     </div>
   </section>
 </main>
+<script src="lan-core.js?v=1"></script>
 <script src="heads-v3.js?v=2"></script>
+<script src="heads-lan-v2.js?v=1"></script>
 <script src="heads-fullscreen.js?v=1"></script>
 <script src="heads-default-30.js?v=1"></script>
 <script src="heads-round-end-fix.js?v=2"></script>
