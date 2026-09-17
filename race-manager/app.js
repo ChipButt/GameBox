@@ -9,22 +9,25 @@
   const NEXT_RACE_DELAY=3000;
 
   const TRACKS=[
-    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,profile:'Technical · Heavy traffic',risk:1.0,botPace:.505,weights:{passing:1.35,attack:1.20,defence:.85,throttle:.95,cornering:1.25,composure:.80}},
-    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,profile:'Corner-heavy · Low traffic',risk:1.15,botPace:.508,weights:{passing:.65,attack:.85,defence:.75,throttle:.80,cornering:1.75,composure:1.20}},
-    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,profile:'Long straights · Drafting',risk:.85,botPace:.510,weights:{passing:1.00,attack:1.25,defence:1.15,throttle:1.70,cornering:.45,composure:.75}},
-    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · High-risk',risk:1.55,botPace:.506,weights:{passing:.55,attack:.80,defence:.65,throttle:.70,cornering:1.45,composure:1.75}}
+    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,profile:'Stop-start · Technical',risk:1.0,weights:{engine:1.25,tyres:1.25,brakes:1.40,fuel:.85}},
+    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,profile:'Corner-heavy · Big braking zones',risk:1.15,weights:{engine:.85,tyres:1.75,brakes:1.55,fuel:.65}},
+    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,profile:'Long straights · High speed',risk:.85,weights:{engine:1.35,tyres:.55,brakes:.65,fuel:1.80}},
+    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · Constant direction changes',risk:1.50,weights:{engine:.90,tyres:1.55,brakes:1.45,fuel:.70}}
   ];
 
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
 
-  const STAT_META={
-    passing:{label:'Passing',desc:'Improves overtaking',base:32,step:4,pace:.0090},
-    attack:{label:'Attack',desc:'More pace in traffic',base:36,step:4,pace:.0105},
-    defence:{label:'Defence',desc:'Makes you harder to pass',base:40,step:4,pace:.0060},
-    throttle:{label:'Throttle',desc:'Improves straight-line acceleration',base:45,step:4,pace:.0125},
-    cornering:{label:'Cornering',desc:'Carries speed through bends',base:52,step:4,pace:.0125},
-    composure:{label:'Composure',desc:'Cuts mistakes and pace swings',base:48,step:4,pace:.0080}
+  const UPGRADE_META={
+    engine:{label:'Engine',desc:'Acceleration',kind:'car',base:38,step:8},
+    tyres:{label:'Tyres',desc:'Cornering grip',kind:'car',base:42,step:8},
+    brakes:{label:'Brakes',desc:'Braking performance',kind:'car',base:40,step:8},
+    fuel:{label:'Fuel',desc:'Top speed',kind:'car',base:46,step:8},
+    sponsors:{label:'Sponsors',desc:'Income multiplier',kind:'income',base:80,factor:1.25},
+    fans:{label:'Fan Base',desc:'Advertising multiplier',kind:'income',base:65,factor:1.15}
   };
+  const CAR_KEYS=['engine','tyres','brakes','fuel'];
+  const INCOME_KEYS=['sponsors','fans'];
+  const UPGRADE_KEYS=[...CAR_KEYS,...INCOME_KEYS];
 
   const $=id=>document.getElementById(id);
   const $$=sel=>Array.from(document.querySelectorAll(sel));
@@ -53,14 +56,14 @@
 
   function profiles(){const p=read(PROFILE_KEY,{});return p&&typeof p==='object'?p:{}}
 
-  function normaliseLevels(raw={}){
+  function normaliseLevels(raw={},legacySponsor=0){
     return {
-      passing:Math.max(1,finite(raw.passing,finite(raw.pace,1))),
-      attack:Math.max(1,finite(raw.attack,finite(raw.handling,1))),
-      defence:Math.max(1,finite(raw.defence,finite(raw.focus,1))),
-      throttle:Math.max(1,finite(raw.throttle,finite(raw.reliability,1))),
-      cornering:Math.max(1,finite(raw.cornering,1)),
-      composure:Math.max(1,finite(raw.composure,1))
+      engine:Math.max(1,finite(raw.engine,finite(raw.throttle,finite(raw.attack,1)))),
+      tyres:Math.max(1,finite(raw.tyres,finite(raw.cornering,finite(raw.handling,1)))),
+      brakes:Math.max(1,finite(raw.brakes,finite(raw.defence,finite(raw.focus,1)))),
+      fuel:Math.max(1,finite(raw.fuel,finite(raw.passing,finite(raw.reliability,1)))),
+      sponsors:Math.max(1,finite(raw.sponsors,1+finite(legacySponsor,0))),
+      fans:Math.max(1,finite(raw.fans,1))
     };
   }
 
@@ -72,8 +75,7 @@
       name:player.name,
       cash:Number.isFinite(savedCash)?savedCash:240,
       gems:Math.max(0,finite(saved.gems,0)),
-      sponsorLevel:Math.max(0,finite(saved.sponsorLevel,0)),
-      levels:normaliseLevels(saved.levels),
+      levels:normaliseLevels(saved.levels,saved.sponsorLevel),
       races:Math.max(0,finite(saved.races,0)),
       best:Math.max(0,finite(saved.best,0))
     };
@@ -87,7 +89,6 @@
       name:e.name,
       cash:Math.round(e.cash),
       gems:Math.max(0,Math.round(e.gems||0)),
-      sponsorLevel:Math.max(0,Math.round(e.sponsorLevel||0)),
       levels:{...e.levels},
       races:Math.max(finite(old.races,0),finite(e.races,0)),
       best:e.best||old.best||0
@@ -147,7 +148,6 @@
       levels:{...p.levels},
       cash:p.cash,
       gems:p.gems,
-      sponsorLevel:p.sponsorLevel,
       races:p.races,
       best:p.best||0,
       progress:0,
@@ -156,7 +156,7 @@
     };
   }
 
-  const STAT_KEYS=Object.keys(STAT_META);
+  const STAT_KEYS=UPGRADE_KEYS;
 
   function botSkill(raceNo,i){
     return clamp(.12+Math.max(0,(raceNo||1)-1)*.045+(i%4)*.025,.12,.94);
@@ -171,7 +171,7 @@
     const skill=botSkill(raceNo,i);
     return {
       id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,
-      cash:180,gems:0,sponsorLevel:0,
+      cash:180,gems:0,
       aiSkill:skill,
       aiFocus:STAT_KEYS[i%STAT_KEYS.length],
       nextDecision:18+Math.round(Math.random()*botDecisionDelay(skill)),
@@ -179,12 +179,20 @@
     };
   }
 
-  function sumLevels(e){return STAT_KEYS.reduce((sum,key)=>sum+finite(e.levels?.[key],1),0)}
-  function incomeRate(e){return 5+Math.max(0,finite(e.sponsorLevel,0))*2}
-  function sponsorCost(e){const lvl=Math.max(0,finite(e.sponsorLevel,0));return Math.round(80*Math.pow(1.55,lvl))}
-  function power(e){return Math.round(48+sumLevels(e)*2)}
-  function statPercent(e,stat){return 2+Math.max(1,finite(e.levels?.[stat],1))*STAT_META[stat].step}
-  function upgradeCost(e,stat){const lvl=Math.max(1,finite(e.levels?.[stat],1));return Math.round(STAT_META[stat].base*Math.pow(1.42,lvl-1))}
+  function carLevelTotal(e){return CAR_KEYS.reduce((sum,key)=>sum+finite(e.levels?.[key],1),0)}
+  function incomeFactor(level,key){return Math.pow(UPGRADE_META[key].factor,Math.max(0,finite(level,1)-1))}
+  function incomeRate(e){
+    const sponsors=incomeFactor(e.levels?.sponsors,'sponsors');
+    const fans=incomeFactor(e.levels?.fans,'fans');
+    return 5*sponsors*fans;
+  }
+  function power(e){return Math.round(48+carLevelTotal(e)*3)}
+  function statPercent(e,stat){return Math.max(0,(Math.max(1,finite(e.levels?.[stat],1))-1)*UPGRADE_META[stat].step)}
+  function upgradeCost(e,stat){
+    const lvl=Math.max(1,finite(e.levels?.[stat],1));
+    const growth=UPGRADE_META[stat].kind==='income'?1.50:1.40;
+    return Math.round(UPGRADE_META[stat].base*Math.pow(growth,lvl-1));
+  }
   function localEntrant(){return game?.entrants?.find(e=>e.human&&e.playerId===localPlayer?.id)||null}
 
   function seedGrid(entrants){
@@ -227,38 +235,59 @@
     const track=TRACKS[game.trackIndex]||TRACKS[0];
     const launch=clamp(game.tick/18,.28,1);
     const levels=normaliseLevels(e.levels);
+    const engine=Math.max(0,levels.engine-1);
+    const tyres=Math.max(0,levels.tyres-1);
+    const brakes=Math.max(0,levels.brakes-1);
+    const fuel=Math.max(0,levels.fuel-1);
+
+    const lapPhase=((e.progress/100)*(track.laps||8))%1;
+    const brakingZone=(lapPhase>.16&&lapPhase<.25)||(lapPhase>.56&&lapPhase<.65);
+    const cornerZone=(lapPhase>=.25&&lapPhase<.40)||(lapPhase>=.65&&lapPhase<.82);
+    const accelerationZone=(lapPhase>=.40&&lapPhase<.52)||(lapPhase>=.82&&lapPhase<.94);
+    const straightZone=!brakingZone&&!cornerZone&&!accelerationZone;
+
     let speed=.468-(e.human?0:.003);
+    speed+=fuel*.0060*(track.weights.fuel||1);
+    speed+=engine*.0035*(track.weights.engine||1);
 
-    for(const [stat,meta] of Object.entries(STAT_META)){
-      const gained=Math.max(0,levels[stat]-1);
-      speed+=gained*meta.pace*(track.weights[stat]||1);
+    if(straightZone)speed+=fuel*.0080*(track.weights.fuel||1);
+    if(accelerationZone)speed+=engine*.0110*(track.weights.engine||1);
+    if(brakingZone){
+      speed-=.020*(track.weights.brakes||1);
+      speed+=brakes*.0100*(track.weights.brakes||1);
+    }
+    if(cornerZone){
+      speed-=.025*(track.weights.tyres||1);
+      speed+=tyres*.0110*(track.weights.tyres||1);
+      speed+=brakes*.0025*(track.weights.brakes||1);
     }
 
-    if(ahead){
-      const gap=ahead.progress-e.progress;
-      if(gap>0&&gap<1.45){
-        speed+=Math.max(0,levels.passing-1)*.0045*(track.weights.passing||1);
-        speed+=Math.max(0,levels.attack-1)*.0035*(track.weights.attack||1);
-        speed-=Math.max(0,finite(ahead.levels?.defence,1)-1)*.0025*(track.weights.defence||1);
-      }
-    }
-
-    const calm=1+Math.max(0,levels.composure-1)*.16*(track.weights.composure||1);
-    const noise=(Math.random()-.5)*((e.human ? .030 : .024)/calm);
-    const incidentChance=(.0048*(track.risk||1))/calm;
-    const incident=Math.random()<incidentChance?-(.07+Math.random()*.10):0;
+    const stability=1+tyres*.05+brakes*.04;
+    const noise=(Math.random()-.5)*((e.human ? .026 : .022)/stability);
+    const incidentChance=(.0038*(track.risk||1))/stability;
+    const incident=Math.random()<incidentChance?-(.05+Math.random()*.08):0;
     return Math.max(.16,(speed+noise+incident)*launch);
   }
 
-  function botUpgradeScore(e,stat,rank,track){
-    const meta=STAT_META[stat];
+  function botUpgradeScore(e,stat,rank,track,remainingSec){
+    const meta=UPGRADE_META[stat];
     const cost=upgradeCost(e,stat);
-    const affinity=track.weights[stat]||1;
-    let value=(meta.pace*affinity*10000)/Math.pow(cost,.68);
+    let value=0;
 
-    if(rank>5&&(stat==='passing'||stat==='attack'))value*=1.18;
-    if(rank<=3&&stat==='defence')value*=1.12;
-    if((track.risk||1)>1.2&&stat==='composure')value*=1.18;
+    if(meta.kind==='income'){
+      const current=incomeRate(e);
+      const preview={...e,levels:{...e.levels,[stat]:finite(e.levels?.[stat],1)+1}};
+      const gain=incomeRate(preview)-current;
+      const paybackValue=(gain*remainingSec)/Math.max(1,cost);
+      value=paybackValue*60;
+      if(remainingSec<18)value*=.15;
+    }else{
+      const affinity=track.weights[stat]||1;
+      const baseEffect={engine:.0145,tyres:.0135,brakes:.0125,fuel:.0140}[stat]||.01;
+      value=(baseEffect*affinity*10000)/Math.pow(cost,.68);
+      if(rank>6&&stat==='engine')value*=1.08;
+      if((track.risk||1)>1.2&&(stat==='tyres'||stat==='brakes'))value*=1.10;
+    }
 
     const focusBias=stat===e.aiFocus?1+(1-e.aiSkill)*1.8:1;
     return value*focusBias;
@@ -275,21 +304,12 @@
     const options=STAT_KEYS.map(stat=>({
       stat,
       cost:upgradeCost(e,stat),
-      score:botUpgradeScore(e,stat,rank,track)
+      score:botUpgradeScore(e,stat,rank,track,remainingSec)
     })).sort((a,b)=>b.score-a.score);
 
     const best=options[0];
-    const sponsor=sponsorCost(e);
-    const sponsorPayback=sponsor/2;
-    const earlyEnough=remainingSec>sponsorPayback*(1.06+(1-skill)*.7);
-    const sponsorUseful=earlyEnough&&e.cash>=sponsor&&(
-      skill>.55 ? sponsorPayback<remainingSec*.58 : Math.random()<.10+skill*.22
-    );
 
-    if(sponsorUseful){
-      e.cash-=sponsor;
-      e.sponsorLevel=Math.max(0,finite(e.sponsorLevel,0))+1;
-    }else if(best&&e.cash>=best.cost){
+    if(best&&e.cash>=best.cost){
       const optimality=.25+skill*.72;
       if(Math.random()<optimality){
         e.cash-=best.cost;
@@ -370,18 +390,7 @@
     const e=game.entrants.find(x=>x.human&&x.playerId===playerId);
     if(!e)return;
 
-    if(msg.action==='sponsor'){
-      const cost=sponsorCost(e);
-      if(e.cash<cost)return;
-      e.cash-=cost;
-      e.sponsorLevel=Math.max(0,finite(e.sponsorLevel,0))+1;
-      saveProfileFromEntrant(e);
-      broadcastGame();
-      renderGame();
-      return;
-    }
-
-    if(msg.action!=='upgrade'||!STAT_META[msg.stat])return;
+    if(msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
     const cost=upgradeCost(e,msg.stat);
     if(e.cash<cost)return;
     e.cash-=cost;
@@ -402,7 +411,7 @@
     return {
       phase:game.phase,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,sponsorLevel:e.sponsorLevel,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
+        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
       }))
     };
   }
@@ -425,11 +434,6 @@
     $('trackMeta').textContent=`Race ${game.raceNo} · ${track.discipline} · ${track.weather}`;
     if($('trackFocus'))$('trackFocus').textContent=track.profile;
     if($('sponsorName'))$('sponsorName').textContent='Chip In Racing';
-    if($('buySponsor')){
-      const cost=sponsorCost(me);
-      $('buySponsor').disabled=game.phase!=='race'||me.cash<cost;
-      $('buySponsor').innerHTML=`<span>+£2/s</span><small>${money(cost)}</small>`;
-    }
     $('power').textContent=power(me);
 
     const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));
@@ -448,28 +452,24 @@
 
     $('raceLanes').innerHTML=sorted.map((e,i)=>`<div class="raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}"><span class="pos">${e.position||i+1}</span><span class="name">${esc(e.name)}</span><div class="lane"><i class="carDot" style="left:calc(${clamp(e.progress*.96,0,96)}% - 10px)"></i></div></div>`).join('');
 
-    $('upgradeGrid').innerHTML=Object.entries(STAT_META).map(([key,m])=>{
+    $('upgradeGrid').innerHTML=UPGRADE_KEYS.map(key=>{
+      const m=UPGRADE_META[key];
       const lvl=Math.max(1,finite(me.levels[key],1));
       const cost=upgradeCost(me,key);
+      const disabled=game.phase!=='race'||me.cash<cost;
+
+      if(m.kind==='income'){
+        const currentFactor=incomeFactor(lvl,key);
+        const nextFactor=incomeFactor(lvl+1,key);
+        return `<button class="upgradeButton incomeUpgrade ${key}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)} · ×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)} · ${money(cost)}</small></button>`;
+      }
+
       const current=statPercent(me,key);
       const next=current+m.step;
-      const disabled=game.phase!=='race'||me.cash<cost;
       const affinity=track.weights[key]||1;
       const hot=affinity>=1.30?' trackHot':'';
-      return `<button class="upgradeButton${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${current}% → ${next}% · ${money(cost)} · Track ×${affinity.toFixed(1)}</small></button>`;
+      return `<button class="upgradeButton carUpgrade${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)} +${current}% → +${next}% · ${money(cost)} · Track ×${affinity.toFixed(1)}</small></button>`;
     }).join('');
-
-    for(const [key,m] of Object.entries(STAT_META)){
-      const dock=document.querySelector(`.raceActionDock [data-dock-stat="${key}"]`);
-      if(!dock)continue;
-      const lvl=Math.max(1,finite(me.levels[key],1));
-      const cost=upgradeCost(me,key);
-      dock.disabled=game.phase!=='race'||me.cash<cost;
-      const label=dock.querySelector('strong');
-      const meta=dock.querySelector('small');
-      if(label)label.textContent=m.label;
-      if(meta)meta.textContent=`Lv ${lvl} · ${money(cost)}`;
-    }
 
     if(game.phase==='race'){
       if($('raceStatus'))$('raceStatus').innerHTML='<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>';
@@ -495,7 +495,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v7',
+      game:'gridline-v8',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
@@ -597,7 +597,6 @@
     $('makeAnswer').onclick=makeAnswer;
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
-    if($('buySponsor'))$('buySponsor').onclick=()=>requestAction({action:'sponsor'});
 
     document.addEventListener('click',e=>{
       const up=e.target.closest('[data-upgrade]');
