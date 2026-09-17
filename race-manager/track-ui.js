@@ -8,8 +8,11 @@
 
   const VIEW_W = 600;
   const VIEW_H = 340;
+  const STEP_MS = 300;
   const CIRCUIT_D = 'M 104 278 C 55 267 42 224 67 190 C 91 158 139 152 164 181 C 185 205 168 236 197 249 C 224 261 253 244 253 216 C 252 185 227 173 241 139 C 255 105 291 90 322 105 C 355 121 351 163 382 174 C 418 187 438 154 449 126 C 464 88 514 82 540 111 C 570 145 555 195 522 213 C 492 230 476 256 503 278 C 526 297 554 291 565 275 C 575 301 548 320 508 320 L 174 320 C 134 320 113 304 104 278 Z';
 
+  const motion = new Map();
+  const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
   const hash = value => {
     let h = 0;
     const s = String(value || '');
@@ -26,9 +29,9 @@
   const progressFromDot = dot => {
     const raw = dot?.style?.left || '';
     const match = raw.match(/calc\(([\d.]+)%/);
-    if (match) return Math.max(0, Math.min(100, Number(match[1]) / 0.96));
+    if (match) return clamp(Number(match[1]) / 0.96, 0, 100);
     const pct = raw.match(/([\d.]+)%/);
-    return pct ? Math.max(0, Math.min(100, Number(pct[1]))) : 0;
+    return pct ? clamp(Number(pct[1]), 0, 100) : 0;
   };
 
   function ensureCircuit() {
@@ -70,51 +73,109 @@
     document.body.classList.toggle('gridline-racing-live', !raceScreen.classList.contains('hidden'));
   }
 
-  function layoutTrack() {
-    updateMode();
-    if (raceScreen.classList.contains('hidden')) return;
-    const svg = ensureCircuit();
-    const path = svg.querySelector('#gridlineCircuitPath');
-    if (!path || typeof path.getTotalLength !== 'function') return;
+  function interpolatedDistance(state, now) {
+    if (!state) return 0;
+    if (state.to === state.from || state.duration <= 0) return state.to;
+    const p = clamp((now - state.startedAt) / state.duration, 0, 1);
+    return state.from + (state.to - state.from) * p;
+  }
 
-    const laps = totalLaps();
-    const length = path.getTotalLength();
-    const rows = Array.from(lanes.querySelectorAll('.raceLane'));
+  function syncMotion(rows, laps, now) {
+    const seen = new Set();
     rows.forEach((row, index) => {
       const dot = row.querySelector('.carDot');
       const totalProgress = progressFromDot(dot);
-      let lapProgress = ((totalProgress / 100) * laps) % 1;
-      if (totalProgress >= 99.95) lapProgress = 0.995;
-      const point = path.getPointAtLength(length * lapProgress);
       const name = row.querySelector('.name')?.textContent?.trim() || `Racer ${index + 1}`;
-      const rank = row.querySelector('.pos')?.textContent?.trim() || String(index + 1);
-      const isYou = row.classList.contains('you');
-      const colour = isYou ? '#f7bd18' : palette[hash(name) % palette.length];
+      const key = name;
+      const target = (totalProgress / 100) * laps;
+      seen.add(key);
 
-      row.style.setProperty('--track-x', `${(point.x / VIEW_W) * 100}%`);
-      row.style.setProperty('--track-y', `${(point.y / VIEW_H) * 100}%`);
-      row.style.setProperty('--racer-colour', colour);
-      row.setAttribute('aria-label', `${name}, position ${rank}`);
-      row.title = `${rank}. ${name}`;
+      let state = motion.get(key);
+      if (!state) {
+        state = {from:target,to:target,startedAt:now,duration:0,lastSeen:now};
+        motion.set(key,state);
+      } else {
+        const current = interpolatedDistance(state, now);
+        const newRace = target + 0.35 < state.to;
+        if (newRace) {
+          state.from = target;
+          state.to = target;
+          state.startedAt = now;
+          state.duration = 0;
+        } else if (Math.abs(target - state.to) > 0.0001) {
+          state.from = current;
+          state.to = Math.max(current,target);
+          state.startedAt = now;
+          state.duration = STEP_MS;
+        }
+        state.lastSeen = now;
+      }
+
+      state.row = row;
+      state.name = name;
+      state.rank = row.querySelector('.pos')?.textContent?.trim() || String(index + 1);
+      state.isYou = row.classList.contains('you');
+      state.laps = laps;
     });
+
+    for (const [key,state] of motion) {
+      if (!seen.has(key) && now - state.lastSeen > 1500) motion.delete(key);
+    }
   }
 
-  let queued = false;
-  const queueLayout = () => {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => {
-      queued = false;
-      layoutTrack();
-    });
-  };
+  function drawRacer(state, path, length, now) {
+    const row = state.row;
+    if (!row?.isConnected) return;
 
-  const laneObserver = new MutationObserver(queueLayout);
-  laneObserver.observe(lanes, {childList:true, subtree:true, attributes:true, attributeFilter:['style','class']});
-  const screenObserver = new MutationObserver(queueLayout);
+    const travelled = interpolatedDistance(state, now);
+    let lapProgress = travelled % 1;
+    if (state.to >= state.laps && travelled >= state.laps - 0.002) lapProgress = 0.998;
+
+    const pathDistance = clamp(length * lapProgress, 0, Math.max(0,length - 0.1));
+    const point = path.getPointAtLength(pathDistance);
+    const tangentDistance = Math.min(length - 0.1, pathDistance + 3);
+    const tangentPoint = path.getPointAtLength(tangentDistance);
+    let dx = tangentPoint.x - point.x;
+    let dy = tangentPoint.y - point.y;
+    const mag = Math.hypot(dx,dy) || 1;
+    dx /= mag;
+    dy /= mag;
+
+    const laneBand = (hash(state.name) % 3) - 1;
+    const lateral = laneBand * 3.2;
+    const x = point.x + (-dy * lateral);
+    const y = point.y + (dx * lateral);
+    const colour = state.isYou ? '#f7bd18' : palette[hash(state.name) % palette.length];
+
+    row.style.transition = 'none';
+    row.style.setProperty('--track-x', `${(x / VIEW_W) * 100}%`);
+    row.style.setProperty('--track-y', `${(y / VIEW_H) * 100}%`);
+    row.style.setProperty('--racer-colour', colour);
+    row.setAttribute('aria-label', `${state.name}, position ${state.rank}`);
+    row.title = `${state.rank}. ${state.name}`;
+  }
+
+  function animate(now) {
+    updateMode();
+    if (!raceScreen.classList.contains('hidden')) {
+      const svg = ensureCircuit();
+      const path = svg.querySelector('#gridlineCircuitPath');
+      if (path && typeof path.getTotalLength === 'function') {
+        const rows = Array.from(lanes.querySelectorAll('.raceLane'));
+        const laps = totalLaps();
+        syncMotion(rows, laps, now);
+        const length = path.getTotalLength();
+        for (const state of motion.values()) drawRacer(state,path,length,now);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  const screenObserver = new MutationObserver(() => {
+    updateMode();
+    if (raceScreen.classList.contains('hidden')) motion.clear();
+  });
   screenObserver.observe(raceScreen, {attributes:true, attributeFilter:['class']});
 
-  window.addEventListener('resize', queueLayout, {passive:true});
-  setInterval(queueLayout, 400);
-  queueLayout();
+  requestAnimationFrame(animate);
 })();
