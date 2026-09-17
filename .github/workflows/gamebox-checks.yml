@@ -20,6 +20,7 @@ jobs:
           node --check gamebox-v4.js
           node --check heads-v3.js
           node --check heads-lan-v2.js
+          node --check heads-lan-v3.js
           node --check race-manager/app.js
       - name: Check required files
         run: |
@@ -27,5 +28,6 @@ jobs:
           test -f heads.html
           test -f chipin-gamebox.css
           test -f chipin-heads.css
+          test -f heads-lan-v3.js
           test -f race-manager/index.html
           test -f race-manager/styles.css
