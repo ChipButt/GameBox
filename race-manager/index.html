@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="track-ui.css?v=6">
+  <link rel="stylesheet" href="track-ui.css?v=7">
 </head>
 <body>
 <div class="appShell">
@@ -87,7 +87,7 @@
     <section id="raceScreen" class="hidden">
       <section class="resourceBar raceHud">
         <div class="hudCash"><span>Cash</span><strong id="cash">£0</strong></div>
-        <div class="hudIncome"><span>Income / s</span><strong id="sponsorRate">£0/s</strong><button id="buySponsor" class="sponsorBuy" type="button"><span>+£2/s</span><small>£80</small></button></div>
+        <div class="hudIncome"><span>Income / s</span><strong id="sponsorRate">£0/s</strong></div>
         <div class="hudRace"><span>Race</span><strong id="raceNumber">1</strong></div>
       </section>
 
@@ -108,28 +108,21 @@
 
       <section class="upgradeShelf">
         <div class="upgradeShelfHeader">
-          <div><span class="eyebrow">LIVE STRATEGY</span><strong>Invest where this track rewards it</strong></div>
+          <div><span class="eyebrow">LIVE UPGRADES</span><strong>4 car upgrades · 2 income upgrades</strong></div>
           <div class="ratingBubble"><span>TEAM</span><strong id="power">60</strong></div>
           <span class="tag">AUTO RACE</span>
         </div>
-        <div id="upgradeGrid" class="upgradeGrid sixUpgradeGrid"></div>
+        <div id="upgradeGrid" class="upgradeGrid fourTwoUpgradeGrid"></div>
       </section>
 
       <section id="resultCard" class="resultCard hidden" aria-live="polite"></section>
 
-      <nav class="raceActionDock" aria-label="Live race upgrades">
-        <button class="dockButton upgradeDock" data-upgrade="passing" data-dock-stat="passing" type="button"><span class="dockIcon">↗</span><strong>Passing</strong><small>—</small></button>
-        <button class="dockButton upgradeDock" data-upgrade="attack" data-dock-stat="attack" type="button"><span class="dockIcon">⚡</span><strong>Attack</strong><small>—</small></button>
-        <button class="dockButton upgradeDock" data-upgrade="defence" data-dock-stat="defence" type="button"><span class="dockIcon">⬟</span><strong>Defence</strong><small>—</small></button>
-        <button class="dockButton upgradeDock" data-upgrade="throttle" data-dock-stat="throttle" type="button"><span class="dockIcon">↑</span><strong>Throttle</strong><small>—</small></button>
-        <button class="dockButton upgradeDock" data-upgrade="cornering" data-dock-stat="cornering" type="button"><span class="dockIcon">◎</span><strong>Cornering</strong><small>—</small></button>
-        <button class="dockButton upgradeDock" data-upgrade="composure" data-dock-stat="composure" type="button"><span class="dockIcon">◉</span><strong>Composure</strong><small>—</small></button>
-      </nav>
+
     </section>
   </main>
 </div>
 <script src="../lan-core.js?v=1"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script src="track-ui.js?v=3"></script>
 </body>
 </html>
