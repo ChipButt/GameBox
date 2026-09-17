@@ -266,6 +266,16 @@
     const noise=(Math.random()-.5)*((e.human ? .026 : .022)/stability);
     const incidentChance=(.0038*(track.risk||1))/stability;
     const incident=Math.random()<incidentChance?-(.05+Math.random()*.08):0;
+
+    if(ahead&&ahead.finishTick===null){
+      const gap=ahead.progress-e.progress;
+      if(gap>0&&gap<.24){
+        const control=Math.max(0,(levels.tyres-1)+(levels.brakes-1));
+        const contactPenalty=Math.max(.003,.016-control*.0014);
+        speed-=contactPenalty*(1-gap/.24);
+      }
+    }
+
     return Math.max(.16,(speed+noise+incident)*launch);
   }
 
@@ -450,7 +460,7 @@
       $('raceTimer').textContent=`0:${String(seconds).padStart(2,'0')}`;
     }
 
-    $('raceLanes').innerHTML=sorted.map((e,i)=>`<div class="raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}"><span class="pos">${e.position||i+1}</span><span class="name">${esc(e.name)}</span><div class="lane"><i class="carDot" style="left:calc(${clamp(e.progress*.96,0,96)}% - 10px)"></i></div></div>`).join('');
+    $('raceLanes').innerHTML=sorted.map((e,i)=>`<div class="raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}"><span class="pos" aria-hidden="true"></span><span class="name">${esc(e.name)}</span><div class="lane"><i class="carDot" style="left:calc(${clamp(e.progress*.96,0,96)}% - 10px)"></i></div></div>`).join('');
 
     $('upgradeGrid').innerHTML=UPGRADE_KEYS.map(key=>{
       const m=UPGRADE_META[key];
