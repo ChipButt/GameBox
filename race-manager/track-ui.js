@@ -105,9 +105,8 @@
 
       let state=motion.get(key);
       if(!state){
-        const joiningMidRace=target>.4;
         state={
-          displayed:joiningMidRace?target:0,
+          displayed:target,
           target,
           lastTarget:target,
           launchAt:now,
@@ -122,7 +121,7 @@
       }else{
         const newRace=target+.35<state.lastTarget;
         if(newRace){
-          state.displayed=0;
+          state.displayed=target;
           state.launchAt=now;
           state.lastFrame=now;
           state.visualShift=0;
@@ -214,7 +213,7 @@
       group.forEach((item,index)=>{
         const row=Math.floor(index/laneSlots.length);
         item.state.targetLateral=laneSlots[index%laneSlots.length];
-        item.state.targetVisualShift=row*.010;
+        item.state.targetVisualShift=-row*.010;
         item.state.contact=true;
       });
     }
