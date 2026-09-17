@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="track-ui.css?v=1">
+  <link rel="stylesheet" href="track-ui.css?v=2">
 </head>
 <body>
 <div class="appShell">
@@ -85,37 +85,34 @@
     </section>
 
     <section id="raceScreen" class="hidden">
-      <section class="resourceBar">
-        <div><span>Player</span><strong id="activePlayerName">—</strong></div>
-        <div><span>Cash</span><strong id="cash">£0</strong></div>
-        <div><span>Sponsor</span><strong id="sponsorRate">£0/s</strong></div>
-        <div><span>Race</span><strong id="raceNumber">1</strong></div>
+      <section class="resourceBar raceHud">
+        <div class="hudCash"><span>Cash</span><strong id="cash">£0</strong></div>
+        <div class="hudIncome"><span>Income / s</span><strong id="sponsorRate">£0/s</strong></div>
+        <div class="hudRace"><span>Race</span><strong id="raceNumber">1</strong></div>
       </section>
 
-      <section class="raceCard">
-        <div class="raceHeader">
-          <div><span class="eyebrow">LIVE RACE</span><h1 id="trackName">Harbour Sprint</h1><p id="trackMeta">Open Wheel · Dry</p></div>
-          <div class="positionBadge"><span>POS</span><strong id="position">12</strong><small>/ 12</small></div>
+      <section class="raceCard circuitPanel">
+        <div class="raceHeader raceHeaderCompact">
+          <div class="teamStamp"><span>YOUR TEAM</span><strong id="activePlayerName">—</strong></div>
+          <div class="positionBadge"><strong id="position">12</strong><small>/ 12</small><span id="lapText">Lap 1 / 8</span></div>
+          <div class="trackStamp"><strong id="trackName">Harbour Sprint</strong><span id="trackMeta">Open Wheel · Dry</span></div>
         </div>
-        <div class="lapStrip"><strong id="lapText">Lap 1 / 8</strong><div class="lapBar"><i id="lapBar"></i></div></div>
+        <div class="lapBar compactLap"><i id="lapBar"></i></div>
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
-        <div class="sponsorStrip"><div><span class="eyebrow">SPONSOR</span><strong id="sponsorName">Chip In Performance</strong></div><div class="sponsorIncome"><span>LIVE INCOME</span><strong id="liveSponsor">+£0</strong></div></div>
-        <div id="raceStatus" class="raceStatus"><strong>Race loading</strong><span>Upgrades and calls happen live.</span></div>
-      </section>
-
-      <section class="panel">
-        <div class="sectionHeading"><div><span class="eyebrow">UPGRADE DURING THE RACE</span><h2>Your racer</h2></div><div class="ratingBubble"><span>POWER</span><strong id="power">60</strong></div></div>
-        <p class="panelIntro">Sponsor cash arrives while you race. Buy upgrades immediately and they affect your speed in the current race.</p>
-        <div id="upgradeGrid" class="upgradeGrid"></div>
-      </section>
-
-      <section class="panel">
-        <div class="sectionHeading"><div><span class="eyebrow">RACE CALLS</span><h2>Make the call</h2></div><span id="tacticState" class="tag">Ready</span></div>
-        <div class="tacticGrid">
-          <button class="tacticButton" data-tactic="push" type="button"><strong>Push</strong><small>More pace · more risk</small></button>
-          <button class="tacticButton" data-tactic="defend" type="button"><strong>Defend</strong><small>Hold position</small></button>
-          <button class="tacticButton" data-tactic="clean" type="button"><strong>Clean air</strong><small>Steady pace boost</small></button>
+        <div class="hiddenRaceMeta" aria-hidden="true">
+          <strong id="sponsorName">Chip In Performance</strong>
+          <strong id="liveSponsor">+£0</strong>
+          <div id="raceStatus"><strong>Race loading</strong><span>Upgrades and calls happen live.</span></div>
         </div>
+      </section>
+
+      <section class="upgradeShelf">
+        <div class="upgradeShelfHeader">
+          <div><span class="eyebrow">LIVE UPGRADES</span><strong>Improve while you race</strong></div>
+          <div class="ratingBubble"><span>POWER</span><strong id="power">60</strong></div>
+          <span id="tacticState" class="tag">Ready</span>
+        </div>
+        <div id="upgradeGrid" class="upgradeGrid"></div>
       </section>
 
       <section id="decisionCard" class="decisionCard hidden">
@@ -127,11 +124,21 @@
       </section>
 
       <section id="resultCard" class="resultCard hidden" aria-live="polite"></section>
+
+      <nav class="raceActionDock" aria-label="Live race actions">
+        <button class="dockButton upgradeDock" data-upgrade="pace" data-dock-stat="pace" type="button"><span class="dockIcon">⚡</span><strong>Pace</strong><small data-dock-cost="pace">—</small></button>
+        <button class="dockButton upgradeDock" data-upgrade="handling" data-dock-stat="handling" type="button"><span class="dockIcon">◎</span><strong>Handling</strong><small data-dock-cost="handling">—</small></button>
+        <button class="dockButton upgradeDock" data-upgrade="focus" data-dock-stat="focus" type="button"><span class="dockIcon">◉</span><strong>Focus</strong><small data-dock-cost="focus">—</small></button>
+        <button class="dockButton upgradeDock" data-upgrade="reliability" data-dock-stat="reliability" type="button"><span class="dockIcon">◆</span><strong>Reliability</strong><small data-dock-cost="reliability">—</small></button>
+        <button class="dockButton tacticDock" data-tactic="push" type="button"><span class="dockIcon">↑</span><strong>Push</strong><small>Attack</small></button>
+        <button class="dockButton tacticDock" data-tactic="defend" type="button"><span class="dockIcon">⬟</span><strong>Defend</strong><small>Hold</small></button>
+      </nav>
     </section>
   </main>
 </div>
 <script src="../lan-core.js?v=1"></script>
 <script src="app.js?v=4"></script>
-<script src="track-ui.js?v=1"></script>
+<script src="track-ui.js?v=2"></script>
+<script src="race-layout.js?v=1"></script>
 </body>
 </html>
