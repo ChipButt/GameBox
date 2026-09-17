@@ -6,19 +6,19 @@
 <meta name="theme-color" content="#eefaf5">
 <title>GameBox · Chip In Games</title>
 <link rel="stylesheet" href="gamebox-v3.css?v=1">
-<link rel="stylesheet" href="chipin-gamebox.css?v=1">
+<link rel="stylesheet" href="chipin-gamebox.css?v=2">
 </head>
 <body>
 <main class="app">
   <section data-view="home">
-    <header class="topbar"><div class="brand"><div class="brandMark">CI</div><h1>GameBox</h1></div></header>
+    <header class="topbar"><div class="brand"><img class="brandLogo" src="chipin-logo.svg?v=1" alt="Chip In"><h1>GameBox</h1></div></header>
     <section class="panel homeRoster">
       <h2>Players</h2>
       <div class="addPlayerRow"><input id="newPlayerName" class="textInput" maxlength="24" placeholder="Add player name"><button id="addPlayer" class="btn">Add</button></div>
       <div id="homePlayers" class="homePlayers"></div>
     </section>
     <div class="gameSections">
-      <section><div class="sectionLabel">Card Games</div><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>House Rules</strong></button></div></section>
+      <section><div class="sectionLabel">Card Games</div><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>Card Deck</strong></button></div></section>
       <section><div class="sectionLabel">Quick Games</div><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
       <section><div class="sectionLabel">Party Games</div><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
       <section><div class="sectionLabel">Racing Games</div><div class="gameGrid"><a class="gameTile" href="race-manager/index.html"><span class="gameTileIcon">🏎️</span><strong>Gridline Racing</strong></a></div></section>
@@ -26,7 +26,7 @@
   </section>
 
   <section class="hidden" data-view="cards-setup">
-    <header class="gameHeader"><button class="backButton" data-go="home">← Home</button><h1>House Rules</h1></header>
+    <header class="gameHeader"><button class="backButton" data-go="home">← Home</button><h1>Card Deck</h1></header>
     <div class="setupStack">
       <section class="panel"><h2>Who’s playing?</h2><div id="cardPlayerPicker" class="playerChoices"></div></section>
       <button id="cardStart" class="btn good primaryStart">Start Game</button><div id="cardStatus" class="status"></div>
@@ -38,7 +38,7 @@
   </section>
 
   <section class="hidden" data-view="cards-play">
-    <header class="gameHeader"><button class="backButton" data-go="cards-setup">← Setup</button><h1>House Rules</h1></header>
+    <header class="gameHeader"><button class="backButton" data-go="cards-setup">← Setup</button><h1>Card Deck</h1></header>
     <div class="playShell">
       <div id="cardJustTurned" class="eventBanner hidden"><span class="eyebrow">JUST TURNED</span><strong id="cardJustTurnedName"></strong></div>
       <div class="cardStage"><div id="cardFace" class="playingCard emptyPlayingCard"><span>TURN<br>A CARD</span></div></div>
@@ -78,5 +78,10 @@
 </main>
 <script src="lan-core.js?v=1"></script>
 <script src="gamebox-v4.js?v=1"></script>
+<script>
+  document.querySelectorAll('.lanPanel h3').forEach(function(el){
+    if(el.textContent.indexOf('House Rules')!==-1)el.textContent=el.textContent.replace('House Rules','Card Deck');
+  });
+</script>
 </body>
 </html>
