@@ -29,6 +29,16 @@
   const INCOME_KEYS=['sponsors','fans'];
   const UPGRADE_KEYS=[...CAR_KEYS,...INCOME_KEYS];
 
+  const UPGRADE_ICONS={
+    engine:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 10h15l3 4v10H7z"/><path d="M11 7h8v3M4 14h3v7H4M25 16h3v6h-3M10 15h5v5h-5M18 14h4v7h-4"/></svg>`,
+    tyres:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="5"/><path d="M10 7l3 5M18 5l2 6M23 8l-4 5M25 17l-6 1M21 25l-4-6M13 27l1-7M7 22l6-3M6 14l6 1"/></svg>`,
+    brakes:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="15" cy="16" r="10"/><circle cx="15" cy="16" r="3"/><path d="M21 9h5v14h-5l-3-3V12z"/><path d="M11 8l2 4M9 16h5M12 24l2-4"/></svg>`,
+    fuel:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h12v22H8z"/><path d="M11 9h6v6h-6zM20 10h3l4 4v10c0 2-1 3-3 3s-3-1-3-3v-5"/><path d="M23 10l3-3"/></svg>`,
+    sponsors:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15l7-7 6 3 4-2 7 7-9 9-4-4-3 3z"/><path d="M11 14l5 5M15 12l5 5M8 17l4 4"/></svg>`,
+    fans:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="9" r="4"/><circle cx="7" cy="13" r="3"/><circle cx="25" cy="13" r="3"/><path d="M9 27v-5c0-4 3-7 7-7s7 3 7 7v5M2 26v-4c0-3 2-5 5-5M30 26v-4c0-3-2-5-5-5"/></svg>`
+  };
+  const upgradeIcon=key=>`<span class="upgradeIcon">${UPGRADE_ICONS[key]||''}</span>`;
+
   const $=id=>document.getElementById(id);
   const $$=sel=>Array.from(document.querySelectorAll(sel));
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -441,10 +451,10 @@
     $('raceNumber').textContent=game.raceNo;
     if($('gems'))$('gems').textContent=Math.round(me.gems||0);
     $('trackName').textContent=track.name;
-    $('trackMeta').textContent=`Race ${game.raceNo} · ${track.discipline} · ${track.weather}`;
+    $('trackMeta').textContent=`${track.discipline} · ${track.weather}`;
     if($('trackFocus'))$('trackFocus').textContent=track.profile;
     if($('sponsorName'))$('sponsorName').textContent='Chip In Racing';
-    $('power').textContent=power(me);
+    if($('power'))$('power').textContent=power(me);
 
     const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));
     const currentPos=me.position||sorted.findIndex(e=>e.id===me.id)+1;
@@ -471,14 +481,22 @@
       if(m.kind==='income'){
         const currentFactor=incomeFactor(lvl,key);
         const nextFactor=incomeFactor(lvl+1,key);
-        return `<button class="upgradeButton incomeUpgrade ${key}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)} · ×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)} · ${money(cost)}</small></button>`;
+        return `<button class="upgradeButton incomeUpgrade ${key}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
+          ${upgradeIcon(key)}
+          <span class="upgradeCopy"><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)}<br>×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}</small></span>
+          <span class="upgradeCost">${money(cost)}</span>
+        </button>`;
       }
 
       const current=statPercent(me,key);
       const next=current+m.step;
       const affinity=track.weights[key]||1;
       const hot=affinity>=1.30?' trackHot':'';
-      return `<button class="upgradeButton carUpgrade${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)} +${current}% → +${next}% · ${money(cost)} · Track ×${affinity.toFixed(1)}</small></button>`;
+      return `<button class="upgradeButton carUpgrade${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
+        ${upgradeIcon(key)}
+        <span class="upgradeCopy"><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)}<br>+${current}% → +${next}% · Track ×${affinity.toFixed(1)}</small></span>
+        <span class="upgradeCost">${money(cost)}</span>
+      </button>`;
     }).join('');
 
     if(game.phase==='race'){
@@ -502,10 +520,39 @@
 
   function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 
+  function animateCoinTransfer(button){
+    const source=$('cash');
+    if(!source||!button)return;
+    const from=source.getBoundingClientRect();
+    const to=button.getBoundingClientRect();
+    const sx=from.left+from.width/2;
+    const sy=from.top+from.height/2;
+    const tx=to.left+to.width/2;
+    const ty=to.top+to.height/2;
+
+    button.classList.add('receivingCoins');
+    for(let i=0;i<6;i++){
+      const coin=document.createElement('span');
+      coin.className='upgradeCoinFx';
+      coin.textContent='£';
+      coin.style.left=`${sx-8}px`;
+      coin.style.top=`${sy-8}px`;
+      document.body.appendChild(coin);
+      const bend=(i-2.5)*9;
+      const animation=coin.animate([
+        {transform:'translate(0,0) scale(.65)',opacity:0},
+        {transform:`translate(${(tx-sx)*.38+bend}px,${(ty-sy)*.32-18-Math.abs(bend)*.25}px) scale(1)`,opacity:1,offset:.35},
+        {transform:`translate(${tx-sx+bend*.08}px,${ty-sy}px) scale(.55)`,opacity:.15}
+      ],{duration:430+i*24,delay:i*35,easing:'cubic-bezier(.22,.74,.32,1)',fill:'forwards'});
+      animation.onfinish=()=>coin.remove();
+    }
+    setTimeout(()=>button.classList.remove('receivingCoins'),620);
+  }
+
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v8',
+      game:'gridline-v9',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
@@ -610,7 +657,10 @@
 
     document.addEventListener('click',e=>{
       const up=e.target.closest('[data-upgrade]');
-      if(up){requestAction({action:'upgrade',stat:up.dataset.upgrade})}
+      if(up&&!up.disabled){
+        animateCoinTransfer(up);
+        requestAction({action:'upgrade',stat:up.dataset.upgrade});
+      }
     });
 
     window.addEventListener('beforeunload',()=>{try{session?.close()}catch{};clearInterval(hostTimer);clearTimeout(nextRaceTimer)});
