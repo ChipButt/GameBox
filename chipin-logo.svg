@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" role="img" aria-labelledby="title desc">
+  <title id="title">Chip In</title>
+  <desc id="desc">Chip In wordmark in navy with a gold person forming the I.</desc>
+  <g fill="#0b2f6b">
+    <text x="0" y="64" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="64" font-weight="900" letter-spacing="-4">CHIP</text>
+    <text x="205" y="64" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="64" font-weight="900">N</text>
+  </g>
+  <g fill="#e5ad16" transform="translate(179 7)">
+    <circle cx="0" cy="9" r="7"/>
+    <path d="M-11 24c0-5 4-9 9-9h4c5 0 9 4 9 9v14l-6 2v27h-7L0 45l-2 22h-7V40l-6-2V24h4z"/>
+  </g>
+</svg>
