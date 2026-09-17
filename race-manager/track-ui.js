@@ -8,7 +8,6 @@
 
   const VIEW_W = 600;
   const VIEW_H = 340;
-  const STEP_MS = 300;
   const CIRCUIT_D = 'M 104 278 C 55 267 42 224 67 190 C 91 158 139 152 164 181 C 185 205 168 236 197 249 C 224 261 253 244 253 216 C 252 185 227 173 241 139 C 255 105 291 90 322 105 C 355 121 351 163 382 174 C 418 187 438 154 449 126 C 464 88 514 82 540 111 C 570 145 555 195 522 213 C 492 230 476 256 503 278 C 526 297 554 291 565 275 C 575 301 548 320 508 320 L 174 320 C 134 320 113 304 104 278 Z';
 
   const motion = new Map();
@@ -73,11 +72,10 @@
     document.body.classList.toggle('gridline-racing-live', !raceScreen.classList.contains('hidden'));
   }
 
-  function interpolatedDistance(state, now) {
-    if (!state) return 0;
-    if (state.to === state.from || state.duration <= 0) return state.to;
-    const p = clamp((now - state.startedAt) / state.duration, 0, 1);
-    return state.from + (state.to - state.from) * p;
+  function launchSpeed(elapsedMs) {
+    if (elapsedMs < 1200) return 0.055 + (elapsedMs / 1200) * 0.095;
+    if (elapsedMs < 3000) return 0.15 + ((elapsedMs - 1200) / 1800) * 0.12;
+    return 0.38;
   }
 
   function syncMotion(rows, laps, now) {
@@ -92,22 +90,25 @@
 
       let state = motion.get(key);
       if (!state) {
-        state = {from:target,to:target,startedAt:now,duration:0,lastSeen:now};
+        const joiningMidRace = target > 0.4;
+        state = {
+          displayed: joiningMidRace ? target : 0,
+          target,
+          lastTarget: target,
+          launchAt: now,
+          lastFrame: now,
+          lastSeen: now
+        };
         motion.set(key,state);
       } else {
-        const current = interpolatedDistance(state, now);
-        const newRace = target + 0.35 < state.to;
+        const newRace = target + 0.35 < state.lastTarget;
         if (newRace) {
-          state.from = target;
-          state.to = target;
-          state.startedAt = now;
-          state.duration = 0;
-        } else if (Math.abs(target - state.to) > 0.0001) {
-          state.from = current;
-          state.to = Math.max(current,target);
-          state.startedAt = now;
-          state.duration = STEP_MS;
+          state.displayed = 0;
+          state.launchAt = now;
+          state.lastFrame = now;
         }
+        state.target = target;
+        state.lastTarget = target;
         state.lastSeen = now;
       }
 
@@ -123,13 +124,38 @@
     }
   }
 
-  function drawRacer(state, path, length, now) {
+  function advanceMotion(state, now) {
+    const dt = clamp((now - state.lastFrame) / 1000, 0, 0.05);
+    state.lastFrame = now;
+    if (state.displayed >= state.target) return;
+
+    const age = Math.max(0, now - state.launchAt);
+    const maxSpeed = launchSpeed(age);
+    const gap = state.target - state.displayed;
+    const catchup = gap > 0.45 ? Math.min(0.18, (gap - 0.45) * 0.16) : 0;
+    const step = (maxSpeed + catchup) * dt;
+    state.displayed = Math.min(state.target, state.displayed + step);
+  }
+
+  function svgPointToLanePixels(svg, x, y) {
+    const matrix = svg.getScreenCTM?.();
+    if (!matrix || typeof svg.createSVGPoint !== 'function') return null;
+    const p = svg.createSVGPoint();
+    p.x = x;
+    p.y = y;
+    const screen = p.matrixTransform(matrix);
+    const rect = lanes.getBoundingClientRect();
+    return {x:screen.x - rect.left,y:screen.y - rect.top};
+  }
+
+  function drawRacer(state, svg, path, length, now) {
     const row = state.row;
     if (!row?.isConnected) return;
 
-    const travelled = interpolatedDistance(state, now);
+    advanceMotion(state, now);
+    const travelled = state.displayed;
     let lapProgress = travelled % 1;
-    if (state.to >= state.laps && travelled >= state.laps - 0.002) lapProgress = 0.998;
+    if (state.target >= state.laps && travelled >= state.laps - 0.002) lapProgress = 0.998;
 
     const pathDistance = clamp(length * lapProgress, 0, Math.max(0,length - 0.1));
     const point = path.getPointAtLength(pathDistance);
@@ -142,14 +168,16 @@
     dy /= mag;
 
     const laneBand = (hash(state.name) % 3) - 1;
-    const lateral = laneBand * 3.2;
-    const x = point.x + (-dy * lateral);
-    const y = point.y + (dx * lateral);
-    const colour = state.isYou ? '#f7bd18' : palette[hash(state.name) % palette.length];
+    const lateral = laneBand * 2.6;
+    const svgX = point.x + (-dy * lateral);
+    const svgY = point.y + (dx * lateral);
+    const rendered = svgPointToLanePixels(svg, svgX, svgY);
+    if (!rendered) return;
 
+    const colour = state.isYou ? '#f7bd18' : palette[hash(state.name) % palette.length];
     row.style.transition = 'none';
-    row.style.setProperty('--track-x', `${(x / VIEW_W) * 100}%`);
-    row.style.setProperty('--track-y', `${(y / VIEW_H) * 100}%`);
+    row.style.setProperty('--track-x', `${rendered.x}px`);
+    row.style.setProperty('--track-y', `${rendered.y}px`);
     row.style.setProperty('--racer-colour', colour);
     row.setAttribute('aria-label', `${state.name}, position ${state.rank}`);
     row.title = `${state.rank}. ${state.name}`;
@@ -165,7 +193,7 @@
         const laps = totalLaps();
         syncMotion(rows, laps, now);
         const length = path.getTotalLength();
-        for (const state of motion.values()) drawRacer(state,path,length,now);
+        for (const state of motion.values()) drawRacer(state,svg,path,length,now);
       }
     }
     requestAnimationFrame(animate);
@@ -176,6 +204,10 @@
     if (raceScreen.classList.contains('hidden')) motion.clear();
   });
   screenObserver.observe(raceScreen, {attributes:true, attributeFilter:['class']});
+
+  window.addEventListener('resize',()=>{
+    for (const state of motion.values()) state.lastFrame = performance.now();
+  },{passive:true});
 
   requestAnimationFrame(animate);
 })();
