@@ -1,465 +1,257 @@
 (() => {
   'use strict';
 
-  const SAVE_KEY='gamebox-gridline-v3';
-  const OLD_KEYS=['gamebox-gridline-v2','gamebox-gridline-v1'];
-  const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
+  const ROSTER_KEY='gamebox.players.v1';
+  const PROFILE_KEY='gamebox.gridline.profiles.v4';
+  const TICK_MS=300;
+  const MAX_GRID=12;
   const TRACKS=[
-    {name:'Harbour Sprint',discipline:'Open Wheel',laps:8,weather:'Dry',difficulty:58},
-    {name:'Alpine Ring',discipline:'Open Wheel',laps:9,weather:'Cool',difficulty:61},
-    {name:'Desert Oval',discipline:'Stock Car',laps:10,weather:'Hot',difficulty:64},
-    {name:'Forest Run',discipline:'Rally',laps:8,weather:'Damp',difficulty:67}
+    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,difficulty:58},
+    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,difficulty:61},
+    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,difficulty:64},
+    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,difficulty:67}
   ];
-  const PRIZES=[550,420,340,280,240,200,170,145,120,100,80,60];
-  const UPGRADES={
-    pace:{label:'Pace',desc:'Higher outright speed',base:150,growth:1.42},
-    handling:{label:'Handling',desc:'Faster through traffic',base:125,growth:1.40},
-    focus:{label:'Focus',desc:'More consistent laps',base:110,growth:1.38},
-    reliability:{label:'Reliability',desc:'Fewer costly mistakes',base:120,growth:1.39}
+  const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
+  const STAT_META={
+    pace:{label:'Pace',desc:'Higher raw speed'},
+    handling:{label:'Handling',desc:'Cleaner overtakes'},
+    focus:{label:'Focus',desc:'Fewer mistakes'},
+    reliability:{label:'Reliability',desc:'Less race-time loss'}
   };
   const DECISIONS=[
-    {title:'Traffic ahead',text:'Two cars are fighting in front. Make the call now.',choices:[
-      {label:'Dive inside',boost:1.05,duration:18,risk:.035,msg:'Aggressive move: big short-term pace boost.'},
-      {label:'Wait for a gap',boost:.35,duration:28,risk:0,msg:'Patient move: smaller but safer gain.'}
-    ]},
-    {title:'Tyres are heating up',text:'The racer is sliding more through the fast section.',choices:[
-      {label:'Keep pushing',boost:.85,duration:20,risk:.028,msg:'You keep the pressure on.'},
-      {label:'Settle the car',boost:.45,duration:32,risk:0,msg:'The car settles and finds rhythm.'}
-    ]},
-    {title:'Sponsor challenge',text:'Your sponsor wants a visible attack before the next lap.',choices:[
-      {label:'Go for it',boost:.9,duration:22,risk:.02,cash:75,msg:'Sponsor pays £75 for the attack.'},
-      {label:'Protect the finish',boost:.3,duration:30,risk:0,msg:'No bonus, but the pace remains stable.'}
-    ]},
-    {title:'Clear track opening',text:'You have a chance to use clean air before the pack closes again.',choices:[
-      {label:'Use it now',boost:.75,duration:26,risk:.012,msg:'Clean air gives an immediate run.'},
-      {label:'Save the tyres',boost:.25,duration:38,risk:0,msg:'You trade speed now for consistency.'}
-    ]}
+    {id:'traffic',title:'Traffic ahead',text:'You are closing quickly on a slower car.',choices:[['attack','Attack now',1.8,.08],['wait','Wait for a clean gap',.7,-.03]]},
+    {id:'tyres',title:'Tyres are fading',text:'The car is starting to slide in the longer corners.',choices:[['push','Keep pushing',1.5,.10],['manage','Manage the tyres',.45,-.05]]},
+    {id:'gap',title:'Small gap ahead',text:'You can burn extra energy to close the gap before the next sector.',choices:[['close','Close it now',1.7,.07],['steady','Stay steady',.5,-.02]]}
   ];
 
-  const DEFAULT_STATE={
-    cash:900,fans:0,division:'Rookie',racesRun:0,bestFinish:null,sponsorLevel:1,
-    upgrades:{pace:1,handling:1,focus:1,reliability:1},
-    sponsorName:'Chip In Performance'
-  };
-
-  let state=loadState();
-  let runtime=null;
-  let raceTimer=null;
-  let sponsorTimer=null;
-  let nextRaceTimer=null;
-  let tacticCooldownUntil=0;
-  let hostPending=null,hostPeers=[],joinPeer=null,joinChannel=null;
-  let networkMode=null,networkLocalId=null;
-
-  const $=(s,r=document)=>r.querySelector(s);
-  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const clone=o=>JSON.parse(JSON.stringify(o));
-  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+  const $=id=>document.getElementById(id);
+  const $$=sel=>Array.from(document.querySelectorAll(sel));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
   const money=n=>'£'+Math.max(0,Math.round(Number(n)||0)).toLocaleString('en-GB');
-  const uid=()=>Math.random().toString(36).slice(2,10);
+  const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key));return v??fallback}catch{return fallback}};
+  const write=(key,v)=>{try{localStorage.setItem(key,JSON.stringify(v))}catch{}};
 
-  function escapeHtml(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-  function loadState(){
-    let raw=null;
-    try{
-      raw=localStorage.getItem(SAVE_KEY);
-      if(!raw){for(const key of OLD_KEYS){raw=localStorage.getItem(key);if(raw)break;}}
-      if(!raw)return clone(DEFAULT_STATE);
-      const saved=JSON.parse(raw);
-      const merged=clone(DEFAULT_STATE);
-      if(typeof saved.cash==='number')merged.cash=saved.cash;
-      else if(saved.team&&typeof saved.team.credits==='number')merged.cash=saved.team.credits;
-      merged.fans=Number(saved.fans ?? saved.team?.fans ?? 0)||0;
-      merged.division=String(saved.division ?? saved.team?.division ?? 'Rookie');
-      merged.racesRun=Number(saved.racesRun ?? saved.history?.length ?? 0)||0;
-      merged.bestFinish=saved.bestFinish||null;
-      merged.sponsorLevel=Math.max(1,Number(saved.sponsorLevel)||1);
-      merged.sponsorName=String(saved.sponsorName||merged.sponsorName);
-      if(saved.upgrades)merged.upgrades=Object.assign(merged.upgrades,saved.upgrades);
-      else if(saved.drivers?.[0]&&saved.cars?.[0]){
-        const d=saved.drivers[0],c=saved.cars[0];
-        merged.upgrades.pace=Math.max(1,Math.round(((d.pace||65)-60)/3));
-        merged.upgrades.handling=Math.max(1,Math.round(((c.grip||65)-60)/3));
-        merged.upgrades.focus=Math.max(1,Math.round(((d.focus||65)-60)/3));
-        merged.upgrades.reliability=Math.max(1,Math.round(((c.reliability||65)-60)/3));
-      }
-      return merged;
-    }catch(err){console.warn('Save load failed',err);return clone(DEFAULT_STATE);}
+  let selectedSingleId='';
+  let localPlayer=null;
+  let playMode='single';
+  let role=null;
+  let session=null;
+  let game=null;
+  let hostTimer=null;
+  let nextRaceTimer=null;
+  let pendingHello=false;
+
+  function roster(){
+    const items=read(ROSTER_KEY,[]);
+    return Array.isArray(items)?items.filter(p=>p&&p.id&&String(p.name||'').trim()).map(p=>({id:String(p.id),name:String(p.name).trim()})):[];
   }
-  function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch(err){console.warn('Save failed',err);}}
-  function sponsorRate(){return 8+state.sponsorLevel*5+Math.floor(state.fans/250);}
-  function power(){
-    const u=state.upgrades;
-    return Math.round(54+u.pace*2.6+u.handling*2.0+u.focus*1.65+u.reliability*1.45);
+  function profiles(){const p=read(PROFILE_KEY,{});return p&&typeof p==='object'?p:{}}
+  function getProfile(player){
+    const all=profiles(),saved=all[player.id]||{};
+    return {playerId:player.id,name:player.name,cash:Number(saved.cash)||200,levels:{pace:Number(saved.levels?.pace)||1,handling:Number(saved.levels?.handling)||1,focus:Number(saved.levels?.focus)||1,reliability:Number(saved.levels?.reliability)||1},races:Number(saved.races)||0,best:Number(saved.best)||0};
   }
-  function upgradeCost(key){
-    const cfg=UPGRADES[key],lvl=Math.max(1,state.upgrades[key]||1);
-    return Math.round(cfg.base*Math.pow(cfg.growth,lvl-1)/10)*10;
-  }
-  function updateDivision(){
-    state.division=state.fans>=2000?'Elite':state.fans>=1000?'Pro':state.fans>=400?'Club':'Rookie';
+  function saveProfileFromEntrant(e){
+    if(!e||!e.playerId||!e.human)return;
+    const all=profiles();
+    const old=all[e.playerId]||{};
+    all[e.playerId]={name:e.name,cash:Math.round(e.cash),levels:{...e.levels},races:Math.max(Number(old.races)||0,Number(e.races)||0),best:e.best||old.best||0};
+    write(PROFILE_KEY,all);
   }
 
-  function renderHud(){
-    $('#cash').textContent=money(state.cash);
-    $('#sponsorRate').textContent=money(sponsorRate())+'/s';
-    $('#raceNumber').textContent=String(state.racesRun+1);
-    $('#power').textContent=String(power());
-    $('#fans').textContent=Math.round(state.fans).toLocaleString('en-GB');
-    $('#division').textContent=state.division;
-    $('#bestFinish').textContent=state.bestFinish?ordinal(state.bestFinish):'—';
-    $('#racesRun').textContent=String(state.racesRun);
-    $('#sponsorName').textContent=state.sponsorName;
-    renderUpgrades();
+  function showSetup(id){
+    $$('.setupView').forEach(v=>v.classList.toggle('hidden',v.id!==id));
+    $('raceScreen').classList.add('hidden');
+    $('exitRace').classList.add('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(id==='singleSetup')renderSinglePlayers();
+    if(id==='hostSetup'||id==='joinSetup')syncPlayerSelects();
   }
-  function renderUpgrades(){
-    const running=!!runtime&&runtime.running;
-    $('#upgradeGrid').innerHTML=Object.entries(UPGRADES).map(([key,cfg])=>{
-      const level=state.upgrades[key],cost=upgradeCost(key),afford=state.cash>=cost;
-      return `<button class="upgradeButton" data-upgrade="${key}" type="button" ${(!running||!afford)?'disabled':''}>
-        <strong>${cfg.label} · Lv ${level}</strong><span>${cfg.desc}</span><b>${money(cost)}</b>
-      </button>`;
-    }).join('');
+  function showRace(){
+    $$('.setupView').forEach(v=>v.classList.add('hidden'));
+    $('raceScreen').classList.remove('hidden');
+    $('exitRace').classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
   }
-  function ordinal(n){const v=n%100;return n+(v>=11&&v<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));}
-  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 
-  function makeEntrants(track,friendEntrants=[]){
-    const entrants=[{id:'you',name:'You',distance:0,power:power(),kind:'you',finish:null}];
-    friendEntrants.forEach(f=>entrants.push({id:f.id,name:f.name,distance:0,power:f.power||60,kind:'friend',finish:null}));
-    const need=Math.max(0,12-entrants.length);
-    shuffle(BOT_NAMES.slice()).slice(0,need).forEach((name,i)=>{
-      entrants.push({id:'bot-'+i,name,distance:0,power:track.difficulty-5+Math.random()*13,kind:'bot',finish:null});
+  function renderSinglePlayers(){
+    const people=roster(),wrap=$('singlePlayerList');wrap.innerHTML='';
+    $('singleRosterEmpty').classList.toggle('hidden',people.length>0);
+    if(!people.some(p=>p.id===selectedSingleId))selectedSingleId='';
+    people.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='playerChoice'+(p.id===selectedSingleId?' selected':'');b.textContent=p.name;b.onclick=()=>{selectedSingleId=p.id;renderSinglePlayers()};wrap.appendChild(b)});
+    $('startSingle').disabled=!selectedSingleId;
+  }
+  function syncPlayerSelects(){
+    const people=roster();
+    for(const id of ['hostPlayerSelect','joinPlayerSelect']){
+      const select=$(id),old=select.value;select.innerHTML=people.length?people.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No GameBox players saved</option>';
+      if(people.some(p=>p.id===old))select.value=old;
+    }
+  }
+
+  function entrantFromPlayer(player,owner='local'){
+    const p=getProfile(player);
+    return {id:'human-'+player.id,playerId:player.id,name:player.name,human:true,owner,levels:{...p.levels},cash:p.cash,races:p.races,best:p.best||0,progress:0,finishTick:null,position:null,tactic:'steady',tacticUntil:0,decision:null,decisionBoost:0,decisionUntil:0};
+  }
+  function botEntrant(name,i,difficulty){
+    const power=Math.round(difficulty-5+Math.random()*12);
+    const level=Math.max(1,Math.round((power-48)/3.2));
+    return {id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels:{pace:level,handling:level,focus:level,reliability:level},cash:0,progress:0,finishTick:null,position:null,tactic:'steady',tacticUntil:0,decision:null,decisionBoost:0,decisionUntil:0};
+  }
+  function sponsorRate(e){if(!e.human)return 0;return 7+Math.floor((e.levels.pace+e.levels.handling+e.levels.focus+e.levels.reliability-4)*1.35)}
+  function power(e){return Math.round(48+(e.levels.pace+e.levels.handling+e.levels.focus+e.levels.reliability)*3)}
+  function upgradeCost(e,stat){const lvl=e.levels[stat]||1;return 70+lvl*55}
+  function localEntrant(){return game?.entrants?.find(e=>e.human&&e.playerId===localPlayer?.id)||null}
+
+  function buildGame(humans){
+    const trackIndex=((humans[0]?.races||0))%TRACKS.length,track=TRACKS[trackIndex];
+    const entrants=humans.map(h=>entrantFromPlayer(h.player,h.owner));
+    const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
+    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track.difficulty));
+    return {phase:'race',raceNo:(humans[0]?.races||0)+1,trackIndex,tick:0,maxTicks:110,entrants,results:[]};
+  }
+  function resetRound(){
+    if(!game)return;
+    game.trackIndex=(game.trackIndex+1)%TRACKS.length;game.raceNo++;game.tick=0;game.phase='race';game.results=[];
+    const track=TRACKS[game.trackIndex];
+    game.entrants.forEach((e,i)=>{e.progress=0;e.finishTick=null;e.position=null;e.tactic='steady';e.tacticUntil=0;e.decision=null;e.decisionBoost=0;e.decisionUntil=0;if(!e.human){const b=botEntrant(e.name,i,track.difficulty);e.levels=b.levels}});
+    broadcastGame();renderGame();
+  }
+
+  function speedFor(e){
+    const p=power(e),pace=(e.levels.pace-1)*.035,handling=(e.levels.handling-1)*.015,focus=(e.levels.focus-1)*.012,reliability=(e.levels.reliability-1)*.010;
+    let tactical=0,risk=0;
+    if(e.tacticUntil>game.tick){if(e.tactic==='push'){tactical=.22;risk=.035}else if(e.tactic==='defend'){tactical=.08;risk=.010}else if(e.tactic==='clean'){tactical=.13;risk=.015}}
+    if(e.decisionUntil>game.tick)tactical+=e.decisionBoost||0;
+    const reliabilityProtection=Math.min(.025,(e.levels.reliability-1)*.003),incident=Math.random()<Math.max(.003,risk-reliabilityProtection)?-(.18+Math.random()*.22):0;
+    return Math.max(.38,.72+(p-60)*.009+pace+handling+focus+reliability+tactical+incident+(Math.random()-.5)*.08);
+  }
+  function maybeCreateDecisions(){
+    if(!game||game.phase!=='race'||![24,52,76].includes(game.tick))return;
+    game.entrants.filter(e=>e.human&&!e.finishTick).forEach((e,idx)=>{const template=DECISIONS[(game.tick/24+idx)%DECISIONS.length|0];e.decision={...template,expires:game.tick+14}});
+  }
+  function hostTick(){
+    if(!game||game.phase!=='race')return;
+    game.tick++;
+    maybeCreateDecisions();
+    for(const e of game.entrants){
+      if(e.human)e.cash+=sponsorRate(e)*(TICK_MS/1000);
+      if(e.decision&&game.tick>e.decision.expires)e.decision=null;
+      if(e.finishTick!==null)continue;
+      e.progress=Math.min(100,e.progress+speedFor(e));
+      if(e.progress>=100)e.finishTick=game.tick+Math.random()*.2;
+    }
+    if(game.entrants.every(e=>e.finishTick!==null)||game.tick>=game.maxTicks)finishRound();
+    broadcastGame();renderGame();
+  }
+  function finishRound(){
+    if(!game||game.phase!=='race')return;
+    game.phase='result';
+    const sorted=[...game.entrants].sort((a,b)=>{
+      if(a.finishTick!==null&&b.finishTick!==null)return a.finishTick-b.finishTick;
+      if(a.finishTick!==null)return -1;if(b.finishTick!==null)return 1;return b.progress-a.progress;
     });
-    return entrants;
+    sorted.forEach((e,i)=>{e.position=i+1});game.results=sorted.map(e=>e.id);
+    const payouts=[650,500,400,330,275,230,195,165,140,120,105,90];
+    for(const e of sorted.filter(x=>x.human)){
+      const pay=payouts[e.position-1]||80,sponsorBonus=e.position<=3?Math.round(sponsorRate(e)*8):Math.round(sponsorRate(e)*3);
+      e.cash+=pay+sponsorBonus;e.races=(e.races||0)+1;e.best=!e.best?e.position:Math.min(e.best,e.position);saveProfileFromEntrant(e);
+    }
+    broadcastGame();renderGame();
+    clearTimeout(nextRaceTimer);nextRaceTimer=setTimeout(()=>{if(role==='host'||playMode==='single')resetRound()},5000);
   }
 
-  function startRace(opts={}){
-    clearTimeout(nextRaceTimer);
-    const trackIndex=opts.trackIndex ?? (state.racesRun%TRACKS.length);
-    const track=TRACKS[trackIndex];
-    runtime={
-      running:true,trackIndex,track,total:track.laps*100,tick:0,entrants:opts.entrants||makeEntrants(track),
-      boost:0,boostUntil:0,risk:0,tactic:null,tacticUntil:0,nextDecisionAt:35+Math.floor(Math.random()*18),
-      decision:null,decisionExpires:0,networkHost:opts.networkHost||false,remote:opts.remote||false
-    };
-    $('#startSeason').classList.add('hidden');
-    $('#resultCard').classList.add('hidden');
-    $('#raceStatus').innerHTML='<strong>Race live</strong><span>Earn, upgrade and make calls while the cars are moving.</span>';
-    renderTrackHeader();
-    renderRaceLanes();
-    renderHud();
-    startSponsorClock();
-    if(!runtime.remote){
-      clearInterval(raceTimer);
-      raceTimer=setInterval(raceTick,300);
+  function applyAction(playerId,msg){
+    if(!game||game.phase!=='race')return;
+    const e=game.entrants.find(x=>x.human&&x.playerId===playerId);if(!e)return;
+    if(msg.action==='upgrade'&&STAT_META[msg.stat]){
+      const cost=upgradeCost(e,msg.stat);if(e.cash<cost)return;e.cash-=cost;e.levels[msg.stat]++;saveProfileFromEntrant(e);
+    }
+    if(msg.action==='tactic'&&['push','defend','clean'].includes(msg.tactic)){
+      e.tactic=msg.tactic;e.tacticUntil=game.tick+16;
+    }
+    if(msg.action==='decision'&&e.decision){
+      const choice=e.decision.choices.find(c=>c[0]===msg.choice);if(choice){e.decisionBoost=choice[2]*.10;e.decisionUntil=game.tick+18;e.decision=null}
+    }
+    broadcastGame();renderGame();
+  }
+  function requestAction(msg){
+    if(!localPlayer||!game||game.phase!=='race')return;
+    if(playMode==='single'||role==='host')applyAction(localPlayer.id,msg);
+    else session?.sendToHost({type:'race-action',playerId:localPlayer.id,...msg});
+  }
+
+  function publicGame(){
+    if(!game)return null;
+    return {phase:game.phase,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,entrants:game.entrants.map(e=>({id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,tactic:e.tactic,tacticUntil:e.tacticUntil,decision:e.decision,decisionBoost:e.decisionBoost,decisionUntil:e.decisionUntil}))};
+  }
+  function broadcastGame(){if(role==='host'&&session)session.broadcast({type:'race-state',game:publicGame()})}
+  function applyRemoteGame(remote){game=remote;const me=localEntrant();if(me)saveProfileFromEntrant(me);showRace();renderGame()}
+
+  function renderGame(){
+    if(!game||!localPlayer)return;
+    const track=TRACKS[game.trackIndex]||TRACKS[0],me=localEntrant();if(!me)return;
+    $('activePlayerName').textContent=localPlayer.name;$('cash').textContent=money(me.cash);$('sponsorRate').textContent=money(sponsorRate(me))+'/s';$('raceNumber').textContent=game.raceNo;$('trackName').textContent=track.name;$('trackMeta').textContent=`${track.discipline} · ${track.weather}`;$('sponsorName').textContent='Chip In Performance';$('power').textContent=power(me);
+    const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));const currentPos=me.position||sorted.findIndex(e=>e.id===me.id)+1;$('position').textContent=currentPos;$('liveSponsor').textContent='+'+money(sponsorRate(me));
+    const lap=Math.min(track.laps,Math.max(1,Math.ceil((game.tick/Math.max(1,game.maxTicks))*track.laps)));$('lapText').textContent=`Lap ${lap} / ${track.laps}`;$('lapBar').style.width=`${clamp(game.tick/game.maxTicks*100,0,100)}%`;
+    $('raceLanes').innerHTML=sorted.map((e,i)=>`<div class="raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}"><span class="pos">${e.position||i+1}</span><span class="name">${esc(e.name)}</span><div class="lane"><i class="carDot" style="left:calc(${clamp(e.progress*.96,0,96)}% - 10px)"></i></div></div>`).join('');
+    $('upgradeGrid').innerHTML=Object.entries(STAT_META).map(([key,m])=>{const cost=upgradeCost(me,key),disabled=game.phase!=='race'||me.cash<cost;return `<button class="upgradeButton" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${me.levels[key]}</strong><small>${esc(m.desc)} · ${money(cost)}</small></button>`}).join('');
+    const activeTactic=game.tick<(me.tacticUntil||0)?me.tactic:'steady';$('tacticState').textContent=activeTactic==='steady'?'Ready':activeTactic[0].toUpperCase()+activeTactic.slice(1);$$('[data-tactic]').forEach(b=>b.disabled=game.phase!=='race');
+    renderDecision(me);
+    if(game.phase==='race'){$('raceStatus').innerHTML='<strong>Race live</strong><span>Earn sponsor cash, upgrade and make calls while the field is moving.</span>';$('resultCard').classList.add('hidden')}
+    else renderResult(me);
+  }
+  function renderDecision(me){
+    const card=$('decisionCard');if(!me.decision||game.phase!=='race'){card.classList.add('hidden');return}card.classList.remove('hidden');$('decisionTitle').textContent=me.decision.title;$('decisionText').textContent=me.decision.text;$('decisionChoices').innerHTML=me.decision.choices.map(c=>`<button type="button" data-decision="${esc(c[0])}">${esc(c[1])}</button>`).join('');const left=clamp((me.decision.expires-game.tick)/14*100,0,100);$('decisionTimerBar').style.width=left+'%';
+  }
+  function renderResult(me){
+    const card=$('resultCard');card.classList.remove('hidden');const payouts=[650,500,400,330,275,230,195,165,140,120,105,90],pay=payouts[(me.position||12)-1]||80,bonus=me.position<=3?Math.round(sponsorRate(me)*8):Math.round(sponsorRate(me)*3);card.innerHTML=`<span class="eyebrow">RACE COMPLETE</span><h2>${ordinal(me.position||12)} place</h2><div class="resultGrid"><div><span>Finish money</span><strong>${money(pay)}</strong></div><div><span>Sponsor bonus</span><strong>${money(bonus)}</strong></div><div><span>Next race</span><strong>5 sec</strong></div></div>`;$('raceStatus').innerHTML='<strong>Race complete</strong><span>The host is loading the next race.</span>';
+  }
+  function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+
+  function installSession(){
+    if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
+    session=new window.GameBoxLAN.Session({game:'gridline-v4',onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},onPeersChanged:()=>{if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}if(role==='host'){renderHostLobby();broadcastLobby()}},onMessage:handleNetworkMessage});
+  }
+  function ensureSession(){if(!session)installSession();return session}
+  function sendClientHello(){if(!localPlayer)return;session?.sendToHost({type:'hello',player:localPlayer,profile:getProfile(localPlayer)})}
+  function handleNetworkMessage(msg,source){
+    if(role==='host'){
+      if(msg.type==='hello'&&source.peer){source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};source.peer.meta.profile=msg.profile||null;renderHostLobby();broadcastLobby();return}
+      if(msg.type==='race-action'){applyAction(String(msg.playerId||''),msg);return}
+    }else if(role==='client'){
+      if(msg.type==='lobby'){renderJoinLobby(msg.players||[]);return}
+      if(msg.type==='race-state'&&msg.game){applyRemoteGame(msg.game);return}
     }
   }
-
-  function renderTrackHeader(){
-    if(!runtime)return;
-    $('#trackName').textContent=runtime.track.name;
-    $('#trackMeta').textContent=`${runtime.track.discipline} · ${runtime.track.weather}`;
-    $('#lapText').textContent=`Lap 1 / ${runtime.track.laps}`;
-    $('#lapBar').style.width='0%';
+  function hostPlayers(){
+    const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);const players=[];if(hp)players.push({id:hp.id,name:hp.name,host:true});if(session)session.peers().forEach(peer=>{if(peer.meta?.player)players.push({...peer.meta.player,host:false})});return players;
   }
-  function renderRaceLanes(){
-    if(!runtime)return;
-    const sorted=runtime.entrants.slice().sort((a,b)=>b.distance-a.distance);
-    const positionById=Object.fromEntries(sorted.map((e,i)=>[e.id,i+1]));
-    const localId=networkLocalId||'you';
-    const local=runtime.entrants.find(e=>e.id===localId)||runtime.entrants.find(e=>e.id==='you');
-    const localPos=local?positionById[local.id]:12;
-    $('#position').textContent=String(localPos);
-    $('#raceLanes').innerHTML=runtime.entrants.map(e=>{
-      const pct=(e.distance%100);
-      const cls=e.id===localId||(!networkLocalId&&e.id==='you')?'you':e.kind==='friend'?'friend':'';
-      return `<div class="raceLane ${cls}" data-id="${escapeHtml(e.id)}">
-        <span class="pos">${positionById[e.id]}</span><span class="name">${escapeHtml(e.name)}</span>
-        <div class="lane"><i class="carDot" style="left:calc(${Math.min(96,pct*.96)}% - 12px)"></i></div>
-      </div>`;
-    }).join('');
-    const ref=local||runtime.entrants[0];
-    const lap=Math.min(runtime.track.laps,Math.floor(ref.distance/100)+1);
-    const lapPct=Math.min(100,ref.distance>=runtime.total?100:(ref.distance%100));
-    $('#lapText').textContent=`Lap ${lap} / ${runtime.track.laps}`;
-    $('#lapBar').style.width=lapPct+'%';
-  }
-
-  function raceTick(){
-    if(!runtime||!runtime.running||runtime.remote)return;
-    runtime.tick++;
-    const nowTick=runtime.tick;
-    if(runtime.boostUntil<=nowTick){runtime.boost=0;runtime.risk=0;}
-    if(runtime.tacticUntil<=nowTick)runtime.tactic=null;
-
-    const active=runtime.entrants.filter(e=>e.finish===null);
-    active.forEach(e=>{
-      let speed;
-      if(e.id==='you'){
-        e.power=power();
-        const u=state.upgrades;
-        const consistency=(u.focus-1)*.035;
-        speed=4.55+(e.power-60)*.042+runtime.boost+(Math.random()-.5)*(1.05-Math.min(.7,consistency));
-        if(runtime.tactic==='push')speed+=.85;
-        if(runtime.tactic==='defend')speed+=.36;
-        if(runtime.tactic==='clean')speed+=.48;
-        const mistakeBase=.012-Math.min(.009,(u.reliability-1)*.0012);
-        if(Math.random()<mistakeBase+runtime.risk+(runtime.tactic==='push'?.014:0))speed-=2.5+Math.random()*2.3;
-      }else if(e.kind==='friend'){
-        speed=4.5+(e.power-60)*.042+(Math.random()-.5)*.85;
-      }else{
-        speed=4.48+(e.power-60)*.042+(Math.random()-.5)*.95;
-      }
-      e.distance=Math.min(runtime.total,e.distance+Math.max(1.35,speed));
-      if(e.distance>=runtime.total&&e.finish===null)e.finish=runtime.tick+Math.random()*.2;
-    });
-
-    if(!runtime.decision&&runtime.tick>=runtime.nextDecisionAt&&runtime.entrants.find(e=>e.id==='you')?.finish===null){
-      openDecision();
-    }
-    if(runtime.decision){
-      const remaining=runtime.decisionExpires-runtime.tick;
-      $('#decisionTimerBar').style.width=clamp((remaining/20)*100,0,100)+'%';
-      if(remaining<=0)resolveDecision(1,true);
-    }
-
-    renderRaceLanes();
-    if(runtime.networkHost&&runtime.tick%2===0)broadcastSnapshot();
-
-    if(runtime.entrants.every(e=>e.finish!==null))finishRace();
-  }
-
-  function startSponsorClock(){
-    if(sponsorTimer)return;
-    sponsorTimer=setInterval(()=>{
-      if(!runtime||!runtime.running)return;
-      const income=sponsorRate();
-      state.cash+=income;
-      $('#liveSponsor').textContent='+'+money(income);
-      renderHud();
-      persist();
-      if(networkMode==='guest'&&joinChannel?.readyState==='open'){
-        joinChannel.send(JSON.stringify({type:'local-money',cash:state.cash}));
-      }
-    },1000);
-  }
-
-  function buyUpgrade(key){
-    if(!runtime||!runtime.running)return toast('Upgrades are bought during a live race.');
-    const cfg=UPGRADES[key];if(!cfg)return;
-    const cost=upgradeCost(key);
-    if(state.cash<cost)return toast('Not enough sponsor cash yet.');
-    state.cash-=cost;
-    state.upgrades[key]++;
-    persist();
-    renderHud();
-    toast(`${cfg.label} upgraded — it affects this race immediately.`);
-    if(networkMode==='guest'&&joinChannel?.readyState==='open'){
-      joinChannel.send(JSON.stringify({type:'power',power:power()}));
-    }
-  }
-
-  function useTactic(name){
-    if(!runtime||!runtime.running)return toast('Start racing first.');
-    const now=Date.now();
-    if(now<tacticCooldownUntil)return;
-    runtime.tactic=name;runtime.tacticUntil=runtime.tick+18;
-    tacticCooldownUntil=now+5200;
-    $('#tacticState').textContent=name==='push'?'Pushing':name==='defend'?'Defending':'Clean air';
-    $$('.tacticButton').forEach(b=>b.disabled=true);
-    setTimeout(()=>{
-      $('#tacticState').textContent='Ready';
-      $$('.tacticButton').forEach(b=>b.disabled=!(runtime&&runtime.running));
-    },5200);
-  }
-
-  function openDecision(){
-    const d=DECISIONS[Math.floor(Math.random()*DECISIONS.length)];
-    runtime.decision=d;
-    runtime.decisionExpires=runtime.tick+20;
-    $('#decisionTitle').textContent=d.title;
-    $('#decisionText').textContent=d.text;
-    $('#decisionChoices').innerHTML=d.choices.map((c,i)=>`<button type="button" data-decision-choice="${i}">${escapeHtml(c.label)}</button>`).join('');
-    $('#decisionTimerBar').style.width='100%';
-    $('#decisionCard').classList.remove('hidden');
-  }
-  function resolveDecision(index,auto=false){
-    if(!runtime?.decision)return;
-    const c=runtime.decision.choices[index]||runtime.decision.choices[0];
-    runtime.boost=c.boost||0;runtime.boostUntil=runtime.tick+(c.duration||18);runtime.risk=c.risk||0;
-    if(c.cash){state.cash+=c.cash;persist();}
-    runtime.nextDecisionAt=runtime.tick+42+Math.floor(Math.random()*28);
-    runtime.decision=null;
-    $('#decisionCard').classList.add('hidden');
-    toast((auto?'Pit wall auto-call: ':'')+c.msg);
-  }
-
-  function finishRace(){
-    if(!runtime||!runtime.running)return;
-    runtime.running=false;
-    clearInterval(raceTimer);raceTimer=null;
-    const results=runtime.entrants.slice().sort((a,b)=>(a.finish??9999)-(b.finish??9999));
-    const localId=networkLocalId||'you';
-    const localIndex=Math.max(0,results.findIndex(e=>e.id===localId));
-    const pos=localIndex+1;
-    const prize=PRIZES[localIndex]||60;
-    const sponsorBonus=Math.max(0,(7-pos)*25)+state.sponsorLevel*20;
-    state.cash+=prize+sponsorBonus;
-    state.fans+=Math.max(3,13-pos)*6;
-    state.racesRun++;
-    state.bestFinish=state.bestFinish?Math.min(state.bestFinish,pos):pos;
-    if(state.racesRun%3===0)state.sponsorLevel++;
-    updateDivision();
-    persist();
-    renderHud();
-    $('#decisionCard').classList.add('hidden');
-    $('#raceStatus').innerHTML=`<strong>${ordinal(pos)} place</strong><span>Next race starts automatically.</span>`;
-    $('#resultCard').innerHTML=`<span class="eyebrow">CHEQUERED FLAG</span><h2>${ordinal(pos)} place</h2>
-      <div class="resultMoney"><div><span>Finish money</span><strong>+${money(prize)}</strong></div><div><span>Sponsor bonus</span><strong>+${money(sponsorBonus)}</strong></div></div>`;
-    $('#resultCard').classList.remove('hidden');
-
-    if(runtime.networkHost){
-      const packet=JSON.stringify({type:'finish',results:results.map((r,i)=>({id:r.id,name:r.name,position:i+1}))});
-      hostPeers.forEach(p=>{if(p.channel?.readyState==='open')p.channel.send(packet);});
-      return;
-    }
-    if(networkMode==='guest')return;
-    nextRaceTimer=setTimeout(()=>startRace(),2400);
-  }
-
-  function toast(text){
-    let el=$('#gridToast');
-    if(!el){el=document.createElement('div');el.id='gridToast';el.style.cssText='position:fixed;z-index:100;left:50%;bottom:18px;transform:translateX(-50%);max-width:calc(100% - 24px);background:#082f68;color:#fff;padding:10px 14px;border-radius:999px;font:700 13px Inter,system-ui;text-align:center;box-shadow:0 10px 30px rgba(8,47,104,.22)';document.body.appendChild(el);}
-    el.textContent=text;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,2200);
-  }
-
-  function showFriends(show){
-    $('#raceScreen').classList.toggle('hidden',show);
-    $('#friendsScreen').classList.toggle('hidden',!show);
-    if(show){clearTimeout(nextRaceTimer);}
-  }
-
-  function makePeer(){
-    if(typeof RTCPeerConnection!=='function')throw new Error('This browser does not support direct Wi-Fi play.');
-    return new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-  }
-  function waitIce(pc){
-    if(pc.iceGatheringState==='complete')return Promise.resolve();
-    return new Promise(resolve=>{
-      let done=false;
-      const finish=()=>{if(done)return;done=true;pc.removeEventListener('icegatheringstatechange',check);resolve();};
-      const check=()=>{if(pc.iceGatheringState==='complete')finish();};
-      pc.addEventListener('icegatheringstatechange',check);setTimeout(finish,5000);
-    });
-  }
-  function encodeSignal(desc){return btoa(unescape(encodeURIComponent(JSON.stringify(desc))));}
-  function decodeSignal(code){return JSON.parse(decodeURIComponent(escape(atob(String(code||'').trim()))));}
+  function renderHostLobby(){const players=hostPlayers();$('hostLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Choose the host player, then connect friends.</div>';$('startHostRace').disabled=players.length<2}
+  function renderJoinLobby(players){$('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Waiting for the host lobby.</div>'}
+  function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:hostPlayers()})}
 
   async function createInvite(){
-    try{
-      $('#hostState').textContent='Creating';
-      const pc=makePeer(),channel=pc.createDataChannel('gridline-v3'),peer={id:uid(),pc,channel,player:null};
-      wireHostPeer(peer);
-      await pc.setLocalDescription(await pc.createOffer());await waitIce(pc);
-      hostPending=peer;$('#hostOffer').value=encodeSignal(pc.localDescription);$('#hostState').textContent='Invite ready';
-    }catch(err){console.error(err);toast(err.message||'Could not create invite');$('#hostState').textContent='Error';}
-  }
-  function wireHostPeer(peer){
-    peer.channel.onopen=()=>{$('#hostState').textContent='Connected';renderHostPlayers();};
-    peer.channel.onmessage=evt=>{
-      try{
-        const msg=JSON.parse(evt.data);
-        if(msg.type==='hello'){peer.player={id:peer.id,name:String(msg.name||'Friend').slice(0,24),power:Number(msg.power)||60};renderHostPlayers();}
-        if(msg.type==='power'&&peer.player){peer.player.power=Number(msg.power)||peer.player.power;const e=runtime?.entrants.find(x=>x.id===peer.id);if(e)e.power=peer.player.power;}
-      }catch(err){console.warn(err);}
-    };
-    peer.channel.onclose=renderHostPlayers;
+    role='host';ensureSession();$('hostState').textContent='Creating';try{$('hostOffer').value=await session.createHostOffer();$('hostState').textContent='Invite ready'}catch(err){console.error(err);$('hostState').textContent='Error'}
   }
   async function acceptAnswer(){
-    if(!hostPending)return toast('Create an invite first.');
-    try{
-      await hostPending.pc.setRemoteDescription(decodeSignal($('#hostAnswer').value));
-      hostPeers.push(hostPending);hostPending=null;$('#hostOffer').value='';$('#hostAnswer').value='';$('#hostState').textContent='Connecting';renderHostPlayers();
-    }catch(err){console.error(err);toast('That answer code is not valid.');}
-  }
-  function renderHostPlayers(){
-    const open=hostPeers.filter(p=>p.channel?.readyState==='open'&&p.player);
-    $('#hostPlayers').innerHTML=[{name:'You',power:power()},...open.map(p=>p.player)].map((p,i)=>`<div class="playerChip"><strong>${escapeHtml(p.name)}${i===0?' · Host':''}</strong><span>Power ${Math.round(p.power)}</span></div>`).join('');
-    $('#startFriendRace').disabled=open.length===0;
+    role='host';ensureSession();try{await session.acceptHostAnswer($('hostAnswer').value);$('hostAnswer').value='';$('hostOffer').value='';$('hostState').textContent='Connecting'}catch(err){console.error(err);$('hostState').textContent='Invalid answer'}
   }
   async function makeAnswer(){
-    try{
-      $('#joinState').textContent='Connecting';
-      joinPeer=makePeer();
-      joinPeer.ondatachannel=evt=>{
-        joinChannel=evt.channel;
-        joinChannel.onopen=()=>{$('#joinState').textContent='Connected';joinChannel.send(JSON.stringify({type:'hello',name:'Friend',power:power()}));};
-        joinChannel.onmessage=evt=>handleGuestMessage(JSON.parse(evt.data));
-        joinChannel.onclose=()=>$('#joinState').textContent='Disconnected';
-      };
-      await joinPeer.setRemoteDescription(decodeSignal($('#joinOffer').value));
-      await joinPeer.setLocalDescription(await joinPeer.createAnswer());await waitIce(joinPeer);
-      $('#joinAnswer').value=encodeSignal(joinPeer.localDescription);$('#joinState').textContent='Answer ready';
-    }catch(err){console.error(err);toast('That invite code is not valid.');$('#joinState').textContent='Error';}
+    role='client';ensureSession();const p=roster().find(x=>x.id===$('joinPlayerSelect').value);if(!p)return;localPlayer=p;pendingHello=true;try{$('joinAnswer').value=await session.createClientAnswer($('joinOffer').value);$('joinState').textContent='Answer ready'}catch(err){console.error(err);$('joinState').textContent='Invalid invite'}
+  }
+  function startHostRace(){
+    const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);if(!hp)return;localPlayer=hp;playMode='multi';role='host';const humans=[{player:hp,owner:'host'}];session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id})});if(humans.length<2)return;game=buildGame(humans);showRace();renderGame();broadcastGame();clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
+  }
+  function startSingleRace(){const p=roster().find(x=>x.id===selectedSingleId);if(!p)return;localPlayer=p;playMode='single';role='host';game=buildGame([{player:p,owner:'local'}]);showRace();renderGame();clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS)}
+  function leaveRace(){clearInterval(hostTimer);clearTimeout(nextRaceTimer);hostTimer=null;nextRaceTimer=null;game=null;session?.close();session=null;role=null;playMode='single';showSetup('setupHome')}
+
+  function bind(){
+    $('chooseSingle').onclick=()=>showSetup('singleSetup');$('chooseMulti').onclick=()=>showSetup('multiSetup');$('chooseWifi').onclick=()=>showSetup('wifiRole');$('chooseBluetooth').onclick=()=>{$('bluetoothNote').classList.remove('hidden')};$('chooseHost').onclick=()=>{role='host';showSetup('hostSetup');renderHostLobby()};$('chooseJoin').onclick=()=>{role='client';showSetup('joinSetup');renderJoinLobby([])};$$('[data-back]').forEach(b=>b.onclick=()=>showSetup(b.dataset.back));$('startSingle').onclick=startSingleRace;$('hostPlayerSelect').onchange=renderHostLobby;$('createInvite').onclick=createInvite;$('acceptAnswer').onclick=acceptAnswer;$('makeAnswer').onclick=makeAnswer;$('startHostRace').onclick=startHostRace;$('exitRace').onclick=leaveRace;
+    document.addEventListener('click',e=>{const up=e.target.closest('[data-upgrade]');if(up){requestAction({action:'upgrade',stat:up.dataset.upgrade});return}const tac=e.target.closest('[data-tactic]');if(tac){requestAction({action:'tactic',tactic:tac.dataset.tactic});return}const dec=e.target.closest('[data-decision]');if(dec){requestAction({action:'decision',choice:dec.dataset.decision})}});
+    window.addEventListener('beforeunload',()=>{try{session?.close()}catch{};clearInterval(hostTimer);clearTimeout(nextRaceTimer)});
   }
 
-  function startFriendRace(){
-    const peers=hostPeers.filter(p=>p.channel?.readyState==='open'&&p.player);
-    if(!peers.length)return;
-    networkMode='host';networkLocalId='you';showFriends(false);
-    const trackIndex=state.racesRun%TRACKS.length,track=TRACKS[trackIndex];
-    const friends=peers.map(p=>({id:p.id,name:p.player.name,power:p.player.power}));
-    const entrants=makeEntrants(track,friends);
-    startRace({trackIndex,entrants,networkHost:true});
-    peers.forEach(p=>p.channel.send(JSON.stringify({type:'race-start',payload:{trackIndex,entrants:entrants.map(e=>({id:e.id,name:e.name,power:e.power,kind:e.kind})),localId:p.id}})));
-  }
-  function broadcastSnapshot(){
-    if(!runtime)return;
-    const data={type:'snapshot',tick:runtime.tick,entrants:runtime.entrants.map(e=>({id:e.id,distance:e.distance,power:e.power,finish:e.finish}))};
-    const packet=JSON.stringify(data);
-    hostPeers.forEach(p=>{if(p.channel?.readyState==='open')p.channel.send(packet);});
-  }
-  function handleGuestMessage(msg){
-    if(msg.type==='race-start'){
-      networkMode='guest';networkLocalId=msg.payload.localId;showFriends(false);
-      const track=TRACKS[msg.payload.trackIndex]||TRACKS[0];
-      const entrants=msg.payload.entrants.map(e=>Object.assign({distance:0,finish:null},e));
-      startRace({trackIndex:msg.payload.trackIndex,entrants,remote:true});
-    }
-    if(msg.type==='snapshot'&&runtime?.remote){
-      runtime.tick=msg.tick;
-      msg.entrants.forEach(update=>{const e=runtime.entrants.find(x=>x.id===update.id);if(e)Object.assign(e,update);});
-      renderRaceLanes();
-    }
-    if(msg.type==='finish'&&runtime?.remote){
-      runtime.running=false;
-      const mine=msg.results.find(r=>r.id===networkLocalId);
-      const pos=mine?.position||12,prize=PRIZES[pos-1]||60,sponsorBonus=Math.max(0,(7-pos)*25)+state.sponsorLevel*20;
-      state.cash+=prize+sponsorBonus;state.fans+=Math.max(3,13-pos)*6;state.racesRun++;state.bestFinish=state.bestFinish?Math.min(state.bestFinish,pos):pos;if(state.racesRun%3===0)state.sponsorLevel++;updateDivision();persist();renderHud();
-      $('#raceStatus').innerHTML=`<strong>${ordinal(pos)} place</strong><span>Friend race complete.</span>`;
-      $('#resultCard').innerHTML=`<span class="eyebrow">CHEQUERED FLAG</span><h2>${ordinal(pos)} place</h2><div class="resultMoney"><div><span>Finish money</span><strong>+${money(prize)}</strong></div><div><span>Sponsor bonus</span><strong>+${money(sponsorBonus)}</strong></div></div>`;
-      $('#resultCard').classList.remove('hidden');
-    }
-  }
-
-  document.addEventListener('click',e=>{
-    const upgrade=e.target.closest('[data-upgrade]');if(upgrade){buyUpgrade(upgrade.dataset.upgrade);return;}
-    const tactic=e.target.closest('[data-tactic]');if(tactic){useTactic(tactic.dataset.tactic);return;}
-    const choice=e.target.closest('[data-decision-choice]');if(choice){resolveDecision(Number(choice.dataset.decisionChoice)||0);return;}
-  });
-  $('#startSeason').addEventListener('click',()=>{networkMode=null;networkLocalId=null;startRace();});
-  $('#friendsButton').addEventListener('click',()=>showFriends(true));
-  $('#backToRace').addEventListener('click',()=>showFriends(false));
-  $('#hostMode').addEventListener('click',()=>{$('#hostPanel').classList.remove('hidden');$('#joinPanel').classList.add('hidden');renderHostPlayers();});
-  $('#joinMode').addEventListener('click',()=>{$('#joinPanel').classList.remove('hidden');$('#hostPanel').classList.add('hidden');});
-  $('#createInvite').addEventListener('click',createInvite);
-  $('#acceptAnswer').addEventListener('click',acceptAnswer);
-  $('#makeAnswer').addEventListener('click',makeAnswer);
-  $('#startFriendRace').addEventListener('click',startFriendRace);
-
-  window.addEventListener('error',e=>{console.error(e.error||e.message);toast('Gridline hit an error. Refresh if controls stop responding.');});
-
-  renderHud();
-  $('#raceLanes').innerHTML=BOT_NAMES.slice(0,11).concat(['You']).map((n,i)=>`<div class="raceLane ${n==='You'?'you':''}"><span class="pos">${i+1}</span><span class="name">${escapeHtml(n)}</span><div class="lane"><i class="carDot"></i></div></div>`).join('');
+  syncPlayerSelects();renderSinglePlayers();bind();showSetup('setupHome');
 })();
