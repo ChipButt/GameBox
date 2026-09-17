@@ -5,55 +5,106 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <div class="appShell">
   <header class="topbar">
     <a class="backLink" href="../index.html">← GameBox</a>
-    <div class="brandBlock"><span class="brandMark">CI</span><div><strong>Gridline Racing</strong><small>A Chip In Game</small></div></div>
-    <button id="friendsButton" class="iconButton wide" type="button">Friends</button>
+    <img class="chipLogo" src="../chip_in_logo.png?v=1" alt="Chip In">
+    <button id="exitRace" class="iconButton hidden" type="button">Setup</button>
   </header>
 
-  <section class="resourceBar">
-    <div><span>Cash</span><strong id="cash">£0</strong></div>
-    <div><span>Sponsor</span><strong id="sponsorRate">£0/s</strong></div>
-    <div><span>Race</span><strong id="raceNumber">1</strong></div>
-  </section>
-
   <main class="mainView">
-    <section id="raceScreen">
+    <section id="setupHome" class="setupView">
+      <div class="heroPanel">
+        <span class="eyebrow">GRIDLINE RACING</span>
+        <h1>How do you want to play?</h1>
+        <p>Race bots on your own, or connect with friends and race live together.</p>
+        <div class="modeChoiceGrid">
+          <button id="chooseSingle" class="modeChoice" type="button"><span>🏁</span><strong>Single Player</strong><small>You vs the computer field</small></button>
+          <button id="chooseMulti" class="modeChoice" type="button"><span>👥</span><strong>Multiplayer</strong><small>Race friends live</small></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="singleSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">SINGLE PLAYER</span><h1>Choose your player</h1></div></header>
+      <section class="panel">
+        <p class="panelIntro">Choose one name from the player list you created on the GameBox home screen.</p>
+        <div id="singlePlayerList" class="playerChoices"></div>
+        <div id="singleRosterEmpty" class="emptyState hidden">No players are saved yet. Go back to GameBox and add a player first.</div>
+        <button id="startSingle" class="primaryButton full" type="button" disabled>Start race</button>
+      </section>
+    </section>
+
+    <section id="multiSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">MULTIPLAYER</span><h1>Choose connection</h1></div></header>
+      <div class="modeChoiceGrid">
+        <button id="chooseWifi" class="modeChoice" type="button"><span>📶</span><strong>Wi‑Fi</strong><small>Same local network</small></button>
+        <button id="chooseBluetooth" class="modeChoice disabledChoice" type="button"><span>ᛒ</span><strong>Bluetooth</strong><small>Requires the future native app</small></button>
+      </div>
+      <div id="bluetoothNote" class="infoPanel hidden">Bluetooth browser-to-browser play is not available reliably on iPhone/Android through GitHub Pages. Wi‑Fi is fully supported here.</div>
+    </section>
+
+    <section id="wifiRole" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="multiSetup" type="button">← Back</button><div><span class="eyebrow">WI‑FI MULTIPLAYER</span><h1>Host or join?</h1></div></header>
+      <div class="modeChoiceGrid">
+        <button id="chooseHost" class="modeChoice" type="button"><span>🏠</span><strong>Host Game</strong><small>Create the race lobby</small></button>
+        <button id="chooseJoin" class="modeChoice" type="button"><span>🔎</span><strong>Join Game</strong><small>Connect to a host</small></button>
+      </div>
+    </section>
+
+    <section id="hostSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">HOST GAME</span><h1>Race lobby</h1></div></header>
+      <section class="panel">
+        <label class="fieldLabel">This phone is playing as<select id="hostPlayerSelect"></select></label>
+        <button id="createInvite" class="secondaryButton full" type="button">Create player invite</button>
+        <label class="fieldLabel">Invite code<textarea id="hostOffer" rows="4" readonly placeholder="Create an invite and send this code to your friend"></textarea></label>
+        <label class="fieldLabel">Friend answer<textarea id="hostAnswer" rows="4" placeholder="Paste their answer code here"></textarea></label>
+        <button id="acceptAnswer" class="secondaryButton full" type="button">Connect player</button>
+        <div class="lobbyHeader"><strong>Leaderboard / Lobby</strong><span id="hostState" class="tag">Ready</span></div>
+        <div id="hostLobby" class="leaderboard"></div>
+        <button id="startHostRace" class="primaryButton full" type="button" disabled>Start race</button>
+        <p class="smallNote">For additional phones, create another invite after each player connects.</p>
+      </section>
+    </section>
+
+    <section id="joinSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">JOIN GAME</span><h1>Find your host</h1></div></header>
+      <section class="panel">
+        <label class="fieldLabel">You are playing as<select id="joinPlayerSelect"></select></label>
+        <label class="fieldLabel">Host invite<textarea id="joinOffer" rows="4" placeholder="Paste the host's invite code"></textarea></label>
+        <button id="makeAnswer" class="secondaryButton full" type="button">Create answer</button>
+        <label class="fieldLabel">Your answer code<textarea id="joinAnswer" rows="4" readonly placeholder="Send this answer back to the host"></textarea></label>
+        <div class="lobbyHeader"><strong>Leaderboard / Lobby</strong><span id="joinState" class="tag">Waiting</span></div>
+        <div id="joinLobby" class="leaderboard"></div>
+        <p class="smallNote">Keep this screen open. The host starts the race for everyone once all players are connected.</p>
+      </section>
+    </section>
+
+    <section id="raceScreen" class="hidden">
+      <section class="resourceBar">
+        <div><span>Player</span><strong id="activePlayerName">—</strong></div>
+        <div><span>Cash</span><strong id="cash">£0</strong></div>
+        <div><span>Sponsor</span><strong id="sponsorRate">£0/s</strong></div>
+        <div><span>Race</span><strong id="raceNumber">1</strong></div>
+      </section>
+
       <section class="raceCard">
         <div class="raceHeader">
           <div><span class="eyebrow">LIVE RACE</span><h1 id="trackName">Harbour Sprint</h1><p id="trackMeta">Open Wheel · Dry</p></div>
           <div class="positionBadge"><span>POS</span><strong id="position">12</strong><small>/ 12</small></div>
         </div>
-
-        <div class="lapStrip">
-          <strong id="lapText">Lap 1 / 8</strong>
-          <div class="lapBar"><i id="lapBar"></i></div>
-        </div>
-
+        <div class="lapStrip"><strong id="lapText">Lap 1 / 8</strong><div class="lapBar"><i id="lapBar"></i></div></div>
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
-
-        <div class="sponsorStrip">
-          <div><span class="eyebrow">SPONSOR</span><strong id="sponsorName">Chip In Performance</strong></div>
-          <div class="sponsorIncome"><span>LIVE INCOME</span><strong id="liveSponsor">+£0</strong></div>
-        </div>
-
-        <div id="raceStatus" class="raceStatus">
-          <strong>Ready to race</strong>
-          <span>Once started, races continue automatically.</span>
-        </div>
-        <button id="startSeason" class="primaryButton full bigStart" type="button">Start racing</button>
+        <div class="sponsorStrip"><div><span class="eyebrow">SPONSOR</span><strong id="sponsorName">Chip In Performance</strong></div><div class="sponsorIncome"><span>LIVE INCOME</span><strong id="liveSponsor">+£0</strong></div></div>
+        <div id="raceStatus" class="raceStatus"><strong>Race loading</strong><span>Upgrades and calls happen live.</span></div>
       </section>
 
       <section class="panel">
-        <div class="sectionHeading">
-          <div><span class="eyebrow">UPGRADE WHILE RACING</span><h2>Your racer</h2></div>
-          <div class="ratingBubble"><span>POWER</span><strong id="power">60</strong></div>
-        </div>
-        <p class="panelIntro">Sponsor cash arrives during the race. Spend it immediately — every upgrade changes your pace in the current race.</p>
+        <div class="sectionHeading"><div><span class="eyebrow">UPGRADE DURING THE RACE</span><h2>Your racer</h2></div><div class="ratingBubble"><span>POWER</span><strong id="power">60</strong></div></div>
+        <p class="panelIntro">Sponsor cash arrives while you race. Buy upgrades immediately and they affect your speed in the current race.</p>
         <div id="upgradeGrid" class="upgradeGrid"></div>
       </section>
 
@@ -75,45 +126,10 @@
       </section>
 
       <section id="resultCard" class="resultCard hidden" aria-live="polite"></section>
-
-      <section class="panel compact">
-        <div class="sectionHeading"><div><span class="eyebrow">SEASON</span><h2>Running record</h2></div><span id="division" class="tag">Rookie</span></div>
-        <div class="recordGrid">
-          <div><span>Fans</span><strong id="fans">0</strong></div>
-          <div><span>Best finish</span><strong id="bestFinish">—</strong></div>
-          <div><span>Races</span><strong id="racesRun">0</strong></div>
-        </div>
-      </section>
-    </section>
-
-    <section id="friendsScreen" class="hidden">
-      <header class="viewHeader"><button id="backToRace" class="textButton" type="button">← Race</button><div><span class="eyebrow">LOCAL PLAY</span><h1>Race Friends</h1></div></header>
-      <section class="panel">
-        <h2>Same Wi-Fi race</h2>
-        <p class="panelIntro">Connect phones directly. Each player earns and spends their own cash during the race; upgrades are sent to the host and change that racer immediately.</p>
-        <div class="modeButtons"><button id="hostMode" class="primaryButton" type="button">Host</button><button id="joinMode" class="secondaryButton" type="button">Join</button></div>
-      </section>
-
-      <section id="hostPanel" class="panel hidden">
-        <div class="sectionHeading"><div><span class="eyebrow">HOST</span><h2>Lobby</h2></div><span id="hostState" class="tag">Ready</span></div>
-        <button id="createInvite" class="secondaryButton full" type="button">Create invite</button>
-        <label class="fieldLabel">Invite code<textarea id="hostOffer" rows="4" readonly></textarea></label>
-        <label class="fieldLabel">Friend answer<textarea id="hostAnswer" rows="4"></textarea></label>
-        <button id="acceptAnswer" class="secondaryButton full" type="button">Connect friend</button>
-        <div id="hostPlayers" class="playerList"></div>
-        <button id="startFriendRace" class="primaryButton full" type="button" disabled>Start friend race</button>
-      </section>
-
-      <section id="joinPanel" class="panel hidden">
-        <div class="sectionHeading"><div><span class="eyebrow">JOIN</span><h2>Join race</h2></div><span id="joinState" class="tag">Waiting</span></div>
-        <label class="fieldLabel">Host invite<textarea id="joinOffer" rows="4"></textarea></label>
-        <button id="makeAnswer" class="secondaryButton full" type="button">Create answer</button>
-        <label class="fieldLabel">Answer code<textarea id="joinAnswer" rows="4" readonly></textarea></label>
-        <div id="joinPlayers" class="playerList"></div>
-      </section>
     </section>
   </main>
 </div>
-<script src="app.js?v=3"></script>
+<script src="../lan-core.js?v=1"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
