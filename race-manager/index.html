@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="track-ui.css?v=7">
+  <link rel="stylesheet" href="track-ui.css?v=8">
 </head>
 <body>
 <div class="appShell">
@@ -85,20 +85,18 @@
     </section>
 
     <section id="raceScreen" class="hidden">
-      <section class="resourceBar raceHud">
-        <div class="hudCash"><span>Cash</span><strong id="cash">£0</strong></div>
-        <div class="hudIncome"><span>Income / s</span><strong id="sponsorRate">£0/s</strong></div>
-        <div class="hudRace"><span>Race</span><strong id="raceNumber">1</strong></div>
-      </section>
-
       <section class="raceCard circuitPanel">
         <div class="raceHeader raceHeaderCompact">
           <div class="teamStamp"><span>YOUR TEAM</span><strong id="activePlayerName">—</strong></div>
-          <div class="positionBadge"><strong id="position">12</strong><small>/ 12</small><span id="raceTimer">1:00</span></div>
-          <div class="trackStamp"><strong id="trackName">Harbour Sprint</strong><span id="trackMeta">Race 1 · Open Wheel · Dry</span><span id="trackFocus" class="trackFocus">Technical · Heavy traffic</span></div>
+          <div class="positionBadge"><strong id="position">12</strong><small>/ 12</small></div>
+          <div class="trackStamp"><span class="raceCounter">RACE <b id="raceNumber">1</b></span><strong id="trackName">Harbour Sprint</strong><span id="trackMeta">Open Wheel · Dry</span><span id="trackFocus" class="trackFocus">Technical · Heavy traffic</span></div>
         </div>
         <div class="lapInfo"><span id="lapText">Lap 1 / 8</span><div class="lapBar compactLap"><i id="lapBar"></i></div></div>
-        <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
+        <div class="trackStage">
+          <div class="trackEconomy trackCashPot"><span>CASH</span><strong id="cash">£0</strong></div>
+          <div class="trackEconomy trackIncomePot"><span>INCOME / S</span><strong id="sponsorRate">£0/s</strong></div>
+          <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
+        </div>
         <div class="hiddenRaceMeta" aria-hidden="true">
           <strong id="sponsorName">Chip In Racing</strong>
           <strong id="liveSponsor">+£0</strong>
@@ -109,8 +107,6 @@
       <section class="upgradeShelf">
         <div class="upgradeShelfHeader">
           <div><span class="eyebrow">LIVE UPGRADES</span><strong>4 car upgrades · 2 income upgrades</strong></div>
-          <div class="ratingBubble"><span>TEAM</span><strong id="power">60</strong></div>
-          <span class="tag">AUTO RACE</span>
         </div>
         <div id="upgradeGrid" class="upgradeGrid fourTwoUpgradeGrid"></div>
       </section>
@@ -122,7 +118,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=1"></script>
-<script src="app.js?v=8"></script>
-<script src="track-ui.js?v=3"></script>
+<script src="app.js?v=9"></script>
+<script src="track-ui.js?v=4"></script>
 </body>
 </html>
