@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10151f">
+  <title>Gridline Racing · GameBox</title>
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+  <div class="appShell">
+    <header class="topbar">
+      <a class="backLink" href="../index.html">← GameBox</a>
+      <div class="brandBlock"><span class="brandMark">G</span><div><strong>Gridline Racing</strong><small>Team Manager</small></div></div>
+      <button id="resetSave" class="iconButton" aria-label="Reset save">↻</button>
+    </header>
+
+    <section class="resourceBar" aria-label="Team resources">
+      <div><span>Credits</span><strong id="credits">0</strong></div>
+      <div><span>Fans</span><strong id="fans">0</strong></div>
+      <div><span>Division</span><strong id="division">Rookie</strong></div>
+    </section>
+
+    <main id="mainView" class="mainView">
+      <section id="view-home" class="view active">
+        <div class="heroCard">
+          <div>
+            <span class="eyebrow">YOUR TEAM</span>
+            <h1 id="teamName">Gridline Racing</h1>
+            <p>Build the fastest team, improve your drivers and cars, then take them into solo or local multiplayer races.</p>
+          </div>
+          <button class="primaryButton" data-open="race">Race now</button>
+        </div>
+
+        <div class="dashboardGrid">
+          <button class="dashCard" data-open="drivers"><span class="dashIcon">◉</span><strong>Drivers</strong><small id="driverSummary">2 signed</small></button>
+          <button class="dashCard" data-open="garage"><span class="dashIcon">◆</span><strong>Garage</strong><small id="garageSummary">1 car</small></button>
+          <button class="dashCard" data-open="championship"><span class="dashIcon">🏁</span><strong>Championship</strong><small id="champSummary">0 pts</small></button>
+          <button class="dashCard highlight" data-open="multiplayer"><span class="dashIcon">⌁</span><strong>Local Multiplayer</strong><small>Wi-Fi / peer-to-peer</small></button>
+        </div>
+
+        <section class="panel">
+          <div class="sectionHeading"><div><span class="eyebrow">NEXT EVENT</span><h2 id="nextRaceName">Harbour Sprint</h2></div><span id="nextRaceTag" class="tag">Open Wheel</span></div>
+          <div class="trackPreview"><div class="trackLine"></div><div class="trackInfo"><strong id="nextRaceLaps">8 laps</strong><span id="nextRaceWeather">Dry · Balanced</span></div></div>
+          <button class="secondaryButton full" data-open="race">Prepare team</button>
+        </section>
+      </section>
+
+      <section id="view-drivers" class="view">
+        <header class="viewHeader"><button class="textButton" data-open="home">← Back</button><div><span class="eyebrow">TEAM</span><h1>Drivers</h1></div></header>
+        <div id="driverList" class="cardList"></div>
+      </section>
+
+      <section id="view-garage" class="view">
+        <header class="viewHeader"><button class="textButton" data-open="home">← Back</button><div><span class="eyebrow">TEAM</span><h1>Garage</h1></div></header>
+        <div id="carList" class="cardList"></div>
+        <section class="panel"><div class="sectionHeading"><div><span class="eyebrow">FACILITY</span><h2>Workshop</h2></div></div><div id="workshopUpgrades" class="upgradeList"></div></section>
+      </section>
+
+      <section id="view-race" class="view">
+        <header class="viewHeader"><button class="textButton" data-open="home">← Back</button><div><span class="eyebrow">SINGLE PLAYER</span><h1>Race Weekend</h1></div></header>
+        <section class="panel">
+          <label class="fieldLabel">Event<select id="raceTrack"></select></label>
+          <div class="selectionGrid">
+            <label class="fieldLabel">Driver<select id="raceDriver"></select></label>
+            <label class="fieldLabel">Car<select id="raceCar"></select></label>
+          </div>
+          <div id="raceSetupSummary" class="setupSummary"></div>
+          <button id="startSoloRace" class="primaryButton full">Start race</button>
+        </section>
+        <section id="raceArena" class="raceArena hidden">
+          <div class="raceTop"><div><span class="eyebrow">LIVE</span><h2 id="liveRaceTitle">Race</h2></div><strong id="raceLap">Lap 1/8</strong></div>
+          <div id="raceLanes" class="raceLanes"></div>
+          <div id="raceResult" class="resultPanel hidden"></div>
+        </section>
+      </section>
+
+      <section id="view-championship" class="view">
+        <header class="viewHeader"><button class="textButton" data-open="home">← Back</button><div><span class="eyebrow">SEASON</span><h1>Championship</h1></div></header>
+        <section class="panel"><div class="sectionHeading"><div><span class="eyebrow">CURRENT SEASON</span><h2 id="seasonTitle">Rookie Cup</h2></div><span id="seasonRound" class="tag">Round 1/6</span></div><div id="standings" class="standings"></div></section>
+      </section>
+
+      <section id="view-multiplayer" class="view">
+        <header class="viewHeader"><button class="textButton" data-open="home">← Back</button><div><span class="eyebrow">LOCAL PLAY</span><h1>Race Friends</h1></div></header>
+        <section class="panel multiplayerIntro">
+          <h2>Same Wi-Fi multiplayer</h2>
+          <p>One phone hosts the race. Friends connect directly using WebRTC. Empty grid slots are filled by bots.</p>
+          <div class="modeButtons"><button id="hostMode" class="primaryButton">Host race</button><button id="joinMode" class="secondaryButton">Join race</button></div>
+        </section>
+
+        <section id="hostPanel" class="panel hidden">
+          <div class="sectionHeading"><div><span class="eyebrow">HOST</span><h2>Local lobby</h2></div><span id="hostConnectionState" class="tag">Ready</span></div>
+          <p class="muted">Create an invite for each friend. They paste it into Join Race and send the answer code back to you.</p>
+          <button id="createInvite" class="secondaryButton full">Create friend invite</button>
+          <label class="fieldLabel">Invite code<textarea id="hostOffer" rows="5" readonly placeholder="Invite appears here"></textarea></label>
+          <label class="fieldLabel">Friend answer<textarea id="hostAnswer" rows="5" placeholder="Paste their answer here"></textarea></label>
+          <button id="acceptAnswer" class="secondaryButton full">Connect friend</button>
+          <div id="hostPlayers" class="playerList"></div>
+          <label class="fieldLabel">Event<select id="multiTrack"></select></label>
+          <button id="startMultiRace" class="primaryButton full" disabled>Start multiplayer race</button>
+        </section>
+
+        <section id="joinPanel" class="panel hidden">
+          <div class="sectionHeading"><div><span class="eyebrow">JOIN</span><h2>Join local race</h2></div><span id="joinConnectionState" class="tag">Waiting</span></div>
+          <label class="fieldLabel">Host invite<textarea id="joinOffer" rows="5" placeholder="Paste the host invite"></textarea></label>
+          <button id="makeAnswer" class="secondaryButton full">Create answer</button>
+          <label class="fieldLabel">Answer code<textarea id="joinAnswer" rows="5" readonly placeholder="Send this back to the host"></textarea></label>
+          <div id="joinLobby" class="playerList"></div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottomNav" aria-label="Game navigation">
+      <button data-open="home" class="active">Home</button>
+      <button data-open="drivers">Drivers</button>
+      <button data-open="race">Race</button>
+      <button data-open="garage">Garage</button>
+    </nav>
+  </div>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
