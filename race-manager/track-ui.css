@@ -1,4 +1,4 @@
-/* Gridline live race: compact one-screen layout inspired by a mobile race-manager HUD. */
+/* Gridline live race: compact one-screen idle-racing layout. */
 body.gridline-racing-live{height:100dvh;overflow:hidden;background:#edf2f7}
 body.gridline-racing-live .appShell{height:100dvh;min-height:0;overflow:hidden;display:grid;grid-template-rows:40px minmax(0,1fr)}
 body.gridline-racing-live .topbar{position:relative;height:40px;min-height:0;padding:3px 8px;background:#f8fbfd}
@@ -19,18 +19,20 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .hudIncome strong{font-size:1.05rem;color:#10a83b}
 
 /* Main circuit panel */
-#raceScreen .circuitPanel{height:100%;min-height:0;padding:5px 7px 7px;border-radius:17px;background:#0d1a31;border:0;box-shadow:none;display:grid;grid-template-rows:47px 5px minmax(0,1fr);gap:4px;overflow:hidden;position:relative}
+#raceScreen .circuitPanel{height:100%;min-height:0;padding:5px 7px 7px;border-radius:17px;background:#0d1a31;border:0;box-shadow:none;display:grid;grid-template-rows:47px 17px minmax(0,1fr);gap:4px;overflow:hidden;position:relative}
 #raceScreen .raceHeaderCompact{display:grid;grid-template-columns:1fr 92px 1fr;align-items:center;gap:5px;min-height:0}
 #raceScreen .teamStamp,#raceScreen .trackStamp{min-width:0;color:#fff}
 #raceScreen .teamStamp span{display:block;color:#4f90ff;font:800 .54rem/1 Fredoka,Inter,sans-serif;letter-spacing:.05em}
 #raceScreen .teamStamp strong{display:block;margin-top:3px;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #raceScreen .trackStamp{text-align:right}
 #raceScreen .trackStamp strong{display:block;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#raceScreen .trackStamp span{display:block;margin-top:2px;color:#9fb0c7;font-size:.51rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#raceScreen .trackStamp span{display:block;margin-top:2px;color:#9fb0c7;font-size:.49rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #raceScreen .positionBadge{min-width:0;height:43px;border-radius:13px;background:#182a45;border:1px solid #4a5c73;color:#fff;padding:3px 5px;display:grid;grid-template-columns:1fr auto;grid-template-rows:24px 12px;align-items:center;justify-items:center;gap:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
 #raceScreen .positionBadge strong{font-size:1.2rem;line-height:1;color:#4d8cff;justify-self:end}
 #raceScreen .positionBadge small{font-size:.72rem;color:#4d8cff;justify-self:start}
-#raceScreen .positionBadge span{grid-column:1/3;font:800 .52rem/1 Inter,sans-serif;color:#fff;opacity:.95}
+#raceScreen .positionBadge span{grid-column:1/3;font:800 .56rem/1 Inter,sans-serif;color:#fff;opacity:.95}
+#raceScreen .lapInfo{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;color:#c8d5e5;font:800 .5rem/1 Inter,sans-serif;min-width:0}
+#raceScreen .lapInfo>span{white-space:nowrap}
 #raceScreen .compactLap{height:5px;margin:0;background:#253955}
 #raceScreen .compactLap i{background:#4f90ff}
 
@@ -43,41 +45,34 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .carDot{display:none!important}
 #raceScreen .hiddenRaceMeta{display:none!important}
 
-/* Upgrade cards are live controls as well as status cards. */
+/* Six live upgrade cards */
 #raceScreen .upgradeShelf{min-height:0;border-top:1px solid #cad6e3;padding:5px 0 0;overflow:hidden;background:transparent}
 #raceScreen .upgradeShelfHeader{height:28px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px;padding:0 2px}
 #raceScreen .upgradeShelfHeader .eyebrow{font-size:.48rem;letter-spacing:.06em;margin:0;color:var(--gold)}
-#raceScreen .upgradeShelfHeader>div:first-child>strong{display:block;color:var(--navy);font-size:.68rem;line-height:1}
+#raceScreen .upgradeShelfHeader>div:first-child>strong{display:block;color:var(--navy);font-size:.65rem;line-height:1}
 #raceScreen .ratingBubble{width:auto;height:auto;border:0;border-radius:9px;background:#fff4c6;padding:3px 6px;display:flex;gap:4px;align-items:center}
 #raceScreen .ratingBubble span{font-size:.42rem}
 #raceScreen .ratingBubble strong{font-size:.7rem}
 #raceScreen .tag{padding:3px 7px;font-size:.49rem}
-#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5px;pointer-events:auto}
-#raceScreen .upgradeButton{min-width:0;height:100%;padding:7px 8px;border-radius:12px;text-align:left;background:#fff;border:1px solid #d6e0ea;box-shadow:none;color:var(--navy);display:grid;grid-template-rows:auto 1fr;align-content:start;opacity:1!important;cursor:pointer;touch-action:manipulation}
-#raceScreen .upgradeButton strong{font-size:.69rem;line-height:1.08;white-space:normal;overflow:visible;text-overflow:clip}
-#raceScreen .upgradeButton small{font-size:.56rem;line-height:1.1;margin-top:4px;color:#8190a3;white-space:normal;overflow:visible;text-overflow:clip}
+#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px;pointer-events:auto}
+#raceScreen .upgradeButton{min-width:0;height:100%;padding:6px 6px;border-radius:12px;text-align:left;background:#fff;border:1px solid #d6e0ea;box-shadow:none;color:var(--navy);display:grid;grid-template-rows:auto 1fr;align-content:start;opacity:1!important;cursor:pointer;touch-action:manipulation}
+#raceScreen .upgradeButton strong{font-size:.62rem;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#raceScreen .upgradeButton small{font-size:.49rem;line-height:1.08;margin-top:3px;color:#8190a3;white-space:normal;overflow:hidden}
 #raceScreen .upgradeButton:not(:disabled):active{transform:scale(.98);background:#fff8df;border-color:#e2bb3e}
 #raceScreen .upgradeButton:disabled{background:#f5f7fa;color:#8fa0b4;opacity:.48!important;cursor:not-allowed}
 
-/* Exactly six bottom action buttons, no tab bar. */
+/* Exactly six bottom upgrade buttons; no tab bar. */
 #raceScreen .raceActionDock{min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:4px 0 0;border-top:1px solid #cbd7e4;background:#edf2f7}
 #raceScreen .dockButton{min-width:0;height:56px;border:1px solid #cbd7e4;border-radius:12px;background:#fff;color:var(--navy);padding:4px 2px;display:grid;grid-template-rows:18px 14px 12px;align-items:center;justify-items:center;font-family:Fredoka,Inter,sans-serif;box-shadow:none;cursor:pointer;touch-action:manipulation}
 #raceScreen .dockButton .dockIcon{font-size:1rem;line-height:1;color:#4f90ff}
-#raceScreen .dockButton strong{font-size:.56rem;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
-#raceScreen .dockButton small{font:700 .46rem/1 Inter,sans-serif;color:#8292a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
-#raceScreen .dockButton.tacticDock{background:#10223b;color:#fff;border-color:#10223b}
-#raceScreen .dockButton.tacticDock .dockIcon{color:var(--gold)}
-#raceScreen .dockButton.tacticDock small{color:#b9c5d4}
-#raceScreen .dockButton:not(:disabled):active{transform:scale(.96)}
+#raceScreen .dockButton strong{font-size:.53rem;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
+#raceScreen .dockButton small{font:700 .42rem/1 Inter,sans-serif;color:#8292a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
+#raceScreen .dockButton:not(:disabled):active{transform:scale(.96);background:#fff8df;border-color:#e2bb3e}
 #raceScreen .dockButton:disabled{opacity:.4;filter:grayscale(.25);cursor:not-allowed}
 
-/* Race decision/result overlays do not consume layout height. */
-#raceScreen .decisionCard,#raceScreen .resultCard{position:absolute;left:7%;right:7%;top:25%;z-index:40;margin:0;padding:10px;border-radius:16px;background:#fff;box-shadow:0 15px 40px rgba(8,47,104,.28)}
-#raceScreen .decisionCard h2,#raceScreen .resultCard h2{font-size:1rem;margin:2px 0 4px;color:var(--navy)}
-#raceScreen .decisionCard p{font-size:.67rem;margin:0 0 7px;line-height:1.25;color:var(--muted)}
-#raceScreen .decisionChoices{grid-template-columns:1fr 1fr;gap:6px}
-#raceScreen .decisionChoices button{min-height:34px;padding:5px 7px;font-size:.65rem}
-#raceScreen .decisionTimer{height:4px;margin-top:6px}
+/* Result overlay leaves the track visible underneath. */
+#raceScreen .resultCard{position:absolute;left:7%;right:7%;top:25%;z-index:40;margin:0;padding:10px;border-radius:16px;background:#fff;box-shadow:0 15px 40px rgba(8,47,104,.28)}
+#raceScreen .resultCard h2{font-size:1rem;margin:2px 0 4px;color:var(--navy)}
 #raceScreen .resultGrid{gap:5px}
 #raceScreen .resultGrid div{padding:6px;border-radius:9px}
 #raceScreen .resultGrid span{font-size:.48rem}
@@ -89,10 +84,13 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   #raceScreen .teamStamp strong{font-size:.8rem}
   #raceScreen .trackStamp strong{font-size:.66rem}
   #raceScreen .positionBadge{height:40px}
-  #raceScreen .upgradeGrid{height:113px}
+  #raceScreen .upgradeGrid{height:113px;gap:4px}
+  #raceScreen .upgradeButton{padding:5px 4px}
+  #raceScreen .upgradeButton strong{font-size:.55rem}
+  #raceScreen .upgradeButton small{font-size:.44rem}
   #raceScreen .dockButton{height:53px;border-radius:10px}
-  #raceScreen .dockButton strong{font-size:.5rem}
-  #raceScreen .dockButton small{font-size:.42rem}
+  #raceScreen .dockButton strong{font-size:.47rem}
+  #raceScreen .dockButton small{font-size:.38rem}
 }
 
 @media(max-height:700px){
@@ -100,12 +98,12 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   body.gridline-racing-live .topbar{height:36px}
   body.gridline-racing-live .chipLogo{height:26px;width:74px}
   #raceScreen:not(.hidden){grid-template-rows:34px minmax(0,1fr) 132px 55px;gap:3px}
-  #raceScreen .circuitPanel{grid-template-rows:41px 4px minmax(0,1fr);padding:4px 5px 5px}
+  #raceScreen .circuitPanel{grid-template-rows:41px 15px minmax(0,1fr);padding:4px 5px 5px}
   #raceScreen .upgradeShelfHeader{height:24px}
   #raceScreen .upgradeGrid{height:104px;gap:4px}
-  #raceScreen .upgradeButton{padding:5px 6px}
-  #raceScreen .upgradeButton strong{font-size:.61rem}
-  #raceScreen .upgradeButton small{font-size:.5rem}
+  #raceScreen .upgradeButton{padding:4px}
+  #raceScreen .upgradeButton strong{font-size:.53rem}
+  #raceScreen .upgradeButton small{font-size:.42rem}
   #raceScreen .dockButton{height:49px;grid-template-rows:16px 13px 10px}
   #raceScreen .dockButton .dockIcon{font-size:.88rem}
 }
