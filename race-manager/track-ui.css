@@ -7,21 +7,16 @@ body.gridline-racing-live .backLink{font-size:.68rem}
 body.gridline-racing-live .iconButton{min-height:29px;padding:4px 9px;font-size:.67rem}
 body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;padding:5px 7px calc(5px + env(safe-area-inset-bottom))}
 
-#raceScreen:not(.hidden){height:100%;min-height:0;display:grid;grid-template-rows:40px minmax(0,1fr) 154px 64px;gap:5px;position:relative}
+#raceScreen:not(.hidden){height:100%;min-height:0;display:grid;grid-template-rows:40px minmax(0,1fr) 154px;gap:5px;position:relative}
 
 /* Top money / income / race strip */
 #raceScreen .raceHud{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:6px;margin:0;min-height:0}
 #raceScreen .raceHud>div{min-width:0;border:1px solid #ced9e6;background:#fff;border-radius:18px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;gap:5px;box-shadow:0 3px 8px rgba(8,47,104,.05)}
 #raceScreen .raceHud span{font-size:.54rem;text-transform:uppercase;letter-spacing:.05em;color:#7c8da0;font-weight:800}
 #raceScreen .raceHud strong{font-size:.85rem;color:var(--navy);white-space:nowrap}
-#raceScreen .hudIncome{position:relative;flex-direction:column;justify-content:center!important;gap:0!important;text-align:left;padding-right:61px!important}
-#raceScreen .hudIncome>span{font-size:.52rem;align-self:flex-start}
-#raceScreen .hudIncome>strong{font-size:.96rem;color:#10a83b;align-self:flex-start}
-#raceScreen .sponsorBuy{position:absolute;right:4px;top:4px;bottom:4px;width:54px;border:1px solid #e0b325;border-radius:13px;background:#fff6cf;color:var(--navy);padding:2px;display:grid;place-content:center;gap:1px;font-family:Inter,sans-serif;touch-action:manipulation}
-#raceScreen .sponsorBuy span{font-size:.48rem;font-weight:900;color:#0b8f35;line-height:1}
-#raceScreen .sponsorBuy small{font-size:.45rem;font-weight:800;color:var(--navy);line-height:1}
-#raceScreen .sponsorBuy:not(:disabled):active{transform:scale(.96)}
-#raceScreen .sponsorBuy:disabled{opacity:.42;filter:grayscale(.2)}
+#raceScreen .hudIncome{flex-direction:column;justify-content:center!important;gap:0!important;text-align:center}
+#raceScreen .hudIncome>span{font-size:.52rem}
+#raceScreen .hudIncome>strong{font-size:.96rem;color:#10a83b}
 
 /* Main circuit panel */
 #raceScreen .circuitPanel{height:100%;min-height:0;padding:5px 7px 7px;border-radius:17px;background:#0d1a31;border:0;box-shadow:none;display:grid;grid-template-rows:47px 17px minmax(0,1fr);gap:4px;overflow:hidden;position:relative}
@@ -60,7 +55,10 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .ratingBubble span{font-size:.42rem}
 #raceScreen .ratingBubble strong{font-size:.7rem}
 #raceScreen .tag{padding:3px 7px;font-size:.49rem}
-#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px;pointer-events:auto}
+#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px;pointer-events:auto}
+#raceScreen .upgradeButton.incomeUpgrade{grid-column:span 2;background:#f4fbf7;border-color:#b9dfc8}
+#raceScreen .upgradeButton.incomeUpgrade strong{color:#087334}
+#raceScreen .upgradeButton.incomeUpgrade small{color:#4f7f62}
 #raceScreen .upgradeButton{min-width:0;height:100%;padding:6px 6px;border-radius:12px;text-align:left;background:#fff;border:1px solid #d6e0ea;box-shadow:none;color:var(--navy);display:grid;grid-template-rows:auto 1fr;align-content:start;opacity:1!important;cursor:pointer;touch-action:manipulation}
 #raceScreen .upgradeButton strong{font-size:.62rem;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #raceScreen .upgradeButton small{font-size:.49rem;line-height:1.08;margin-top:3px;color:#8190a3;white-space:normal;overflow:hidden}
@@ -68,15 +66,6 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .upgradeButton.trackHot strong::after{content:' ★';color:#c28d00}
 #raceScreen .upgradeButton:not(:disabled):active{transform:scale(.98);background:#fff8df;border-color:#e2bb3e}
 #raceScreen .upgradeButton:disabled{background:#f5f7fa;color:#8fa0b4;opacity:.48!important;cursor:not-allowed}
-
-/* Exactly six bottom upgrade buttons; no tab bar. */
-#raceScreen .raceActionDock{min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:4px 0 0;border-top:1px solid #cbd7e4;background:#edf2f7}
-#raceScreen .dockButton{min-width:0;height:56px;border:1px solid #cbd7e4;border-radius:12px;background:#fff;color:var(--navy);padding:4px 2px;display:grid;grid-template-rows:18px 14px 12px;align-items:center;justify-items:center;font-family:Fredoka,Inter,sans-serif;box-shadow:none;cursor:pointer;touch-action:manipulation}
-#raceScreen .dockButton .dockIcon{font-size:1rem;line-height:1;color:#4f90ff}
-#raceScreen .dockButton strong{font-size:.53rem;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
-#raceScreen .dockButton small{font:700 .42rem/1 Inter,sans-serif;color:#8292a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
-#raceScreen .dockButton:not(:disabled):active{transform:scale(.96);background:#fff8df;border-color:#e2bb3e}
-#raceScreen .dockButton:disabled{opacity:.4;filter:grayscale(.25);cursor:not-allowed}
 
 /* Result overlay leaves the track visible underneath. */
 #raceScreen .resultCard{position:absolute;left:7%;right:7%;top:25%;z-index:40;margin:0;padding:10px;border-radius:16px;background:#fff;box-shadow:0 15px 40px rgba(8,47,104,.28)}
@@ -87,7 +76,7 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .resultGrid strong{font-size:.68rem}
 
 @media(max-width:420px){
-  #raceScreen:not(.hidden){grid-template-rows:38px minmax(0,1fr) 146px 60px;gap:4px}
+  #raceScreen:not(.hidden){grid-template-rows:38px minmax(0,1fr) 146px;gap:4px}
   #raceScreen .raceHeaderCompact{grid-template-columns:1fr 82px 1fr}
   #raceScreen .teamStamp strong{font-size:.8rem}
   #raceScreen .trackStamp strong{font-size:.66rem}
@@ -96,22 +85,17 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   #raceScreen .upgradeButton{padding:5px 4px}
   #raceScreen .upgradeButton strong{font-size:.55rem}
   #raceScreen .upgradeButton small{font-size:.44rem}
-  #raceScreen .dockButton{height:53px;border-radius:10px}
-  #raceScreen .dockButton strong{font-size:.47rem}
-  #raceScreen .dockButton small{font-size:.38rem}
 }
 
 @media(max-height:700px){
   body.gridline-racing-live .appShell{grid-template-rows:36px minmax(0,1fr)}
   body.gridline-racing-live .topbar{height:36px}
   body.gridline-racing-live .chipLogo{height:26px;width:74px}
-  #raceScreen:not(.hidden){grid-template-rows:34px minmax(0,1fr) 132px 55px;gap:3px}
+  #raceScreen:not(.hidden){grid-template-rows:34px minmax(0,1fr) 132px;gap:3px}
   #raceScreen .circuitPanel{grid-template-rows:41px 15px minmax(0,1fr);padding:4px 5px 5px}
   #raceScreen .upgradeShelfHeader{height:24px}
   #raceScreen .upgradeGrid{height:104px;gap:4px}
   #raceScreen .upgradeButton{padding:4px}
   #raceScreen .upgradeButton strong{font-size:.53rem}
   #raceScreen .upgradeButton small{font-size:.42rem}
-  #raceScreen .dockButton{height:49px;grid-template-rows:16px 13px 10px}
-  #raceScreen .dockButton .dockIcon{font-size:.88rem}
 }
