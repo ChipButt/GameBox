@@ -114,7 +114,7 @@
 
       state.row = row;
       state.name = name;
-      state.rank = row.querySelector('.pos')?.textContent?.trim() || String(index + 1);
+      state.rank = String(index + 1);
       state.isYou = row.classList.contains('you');
       state.laps = laps;
     });
@@ -137,6 +137,37 @@
     state.displayed = Math.min(state.target, state.displayed + step);
   }
 
+  function prepareCollisionOffsets(states) {
+    for (const state of states) {
+      const base=((hash(state.name)%3)-1)*1.35;
+      state.targetLateral=base;
+      state.contact=false;
+    }
+
+    for(let i=0;i<states.length;i++){
+      for(let j=i+1;j<states.length;j++){
+        const a=states[i],b=states[j];
+        let phaseGap=Math.abs((a.displayed%1)-(b.displayed%1));
+        phaseGap=Math.min(phaseGap,1-phaseGap);
+        if(phaseGap>=.012)continue;
+
+        const closeness=1-(phaseGap/.012);
+        const direction=hash(a.name)<hash(b.name)?-1:1;
+        const separation=4.6*closeness;
+        a.targetLateral+=direction*separation;
+        b.targetLateral-=direction*separation;
+        a.contact=true;
+        b.contact=true;
+      }
+    }
+
+    for(const state of states){
+      state.targetLateral=clamp(state.targetLateral,-7.2,7.2);
+      if(!Number.isFinite(state.lateral))state.lateral=state.targetLateral;
+      state.lateral+=(state.targetLateral-state.lateral)*.18;
+    }
+  }
+
   function svgPointToLanePixels(svg, x, y) {
     const matrix = svg.getScreenCTM?.();
     if (!matrix || typeof svg.createSVGPoint !== 'function') return null;
@@ -148,11 +179,10 @@
     return {x:screen.x - rect.left,y:screen.y - rect.top};
   }
 
-  function drawRacer(state, svg, path, length, now) {
+  function drawRacer(state, svg, path, length) {
     const row = state.row;
     if (!row?.isConnected) return;
 
-    advanceMotion(state, now);
     const travelled = state.displayed;
     let lapProgress = travelled % 1;
     if (state.target >= state.laps && travelled >= state.laps - 0.002) lapProgress = 0.998;
@@ -167,8 +197,7 @@
     dx /= mag;
     dy /= mag;
 
-    const laneBand = (hash(state.name) % 3) - 1;
-    const lateral = laneBand * 2.6;
+    const lateral = Number.isFinite(state.lateral) ? state.lateral : 0;
     const svgX = point.x + (-dy * lateral);
     const svgY = point.y + (dx * lateral);
     const rendered = svgPointToLanePixels(svg, svgX, svgY);
@@ -179,6 +208,7 @@
     row.style.setProperty('--track-x', `${rendered.x}px`);
     row.style.setProperty('--track-y', `${rendered.y}px`);
     row.style.setProperty('--racer-colour', colour);
+    row.classList.toggle('contacting',!!state.contact);
     row.setAttribute('aria-label', `${state.name}, position ${state.rank}`);
     row.title = `${state.rank}. ${state.name}`;
   }
@@ -192,8 +222,11 @@
         const rows = Array.from(lanes.querySelectorAll('.raceLane'));
         const laps = totalLaps();
         syncMotion(rows, laps, now);
+        const states=Array.from(motion.values()).filter(state=>state.row?.isConnected);
+        for(const state of states)advanceMotion(state,now);
+        prepareCollisionOffsets(states);
         const length = path.getTotalLength();
-        for (const state of motion.values()) drawRacer(state,svg,path,length,now);
+        for (const state of states) drawRacer(state,svg,path,length);
       }
     }
     requestAnimationFrame(animate);
