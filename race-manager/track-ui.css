@@ -36,14 +36,14 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 
 #raceScreen .raceLanes{display:block;position:relative;min-height:0;height:100%;width:100%;overflow:hidden;border-radius:11px;background:#67b34f;isolation:isolate}
 #raceScreen .trackSvg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
-#raceScreen .raceLane{position:absolute!important;left:var(--track-x,50%)!important;top:var(--track-y,50%)!important;width:21px;height:21px;display:block!important;transform:translate(-50%,-50%);z-index:7;font-size:0;transition:left .20s linear,top .20s linear}
+#raceScreen .raceLane{position:absolute!important;left:var(--track-x,50%)!important;top:var(--track-y,50%)!important;width:21px;height:21px;display:block!important;transform:translate(-50%,-50%);z-index:7;font-size:0;transition:none}
 #raceScreen .raceLane .name,#raceScreen .raceLane .lane{display:none!important}
 #raceScreen .raceLane .pos{display:grid;width:16px;height:16px;place-items:center;border-radius:50%;background:var(--racer-colour,#2f80ed);color:#fff!important;font:800 7px/1 Inter,system-ui,sans-serif;border:2px solid rgba(255,255,255,.95);box-shadow:0 1px 5px rgba(3,18,36,.42)}
 #raceScreen .raceLane.you .pos{width:20px;height:20px;color:var(--navy)!important;border:3px solid #fff;font-size:8px;box-shadow:0 0 0 2px #4f90ff,0 2px 8px rgba(8,47,104,.42)}
 #raceScreen .carDot{display:none!important}
 #raceScreen .hiddenRaceMeta{display:none!important}
 
-/* Upgrade cards: information only. Actions live in the six-button dock. */
+/* Upgrade cards are live controls as well as status cards. */
 #raceScreen .upgradeShelf{min-height:0;border-top:1px solid #cad6e3;padding:5px 0 0;overflow:hidden;background:transparent}
 #raceScreen .upgradeShelfHeader{height:28px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px;padding:0 2px}
 #raceScreen .upgradeShelfHeader .eyebrow{font-size:.48rem;letter-spacing:.06em;margin:0;color:var(--gold)}
@@ -52,22 +52,24 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .ratingBubble span{font-size:.42rem}
 #raceScreen .ratingBubble strong{font-size:.7rem}
 #raceScreen .tag{padding:3px 7px;font-size:.49rem}
-#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5px;pointer-events:none}
-#raceScreen .upgradeButton{min-width:0;height:100%;padding:7px 8px;border-radius:12px;text-align:left;background:#fff;border:1px solid #d6e0ea;box-shadow:none;color:var(--navy);display:grid;grid-template-rows:auto 1fr;align-content:start;opacity:1!important}
+#raceScreen .upgradeGrid{height:121px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5px;pointer-events:auto}
+#raceScreen .upgradeButton{min-width:0;height:100%;padding:7px 8px;border-radius:12px;text-align:left;background:#fff;border:1px solid #d6e0ea;box-shadow:none;color:var(--navy);display:grid;grid-template-rows:auto 1fr;align-content:start;opacity:1!important;cursor:pointer;touch-action:manipulation}
 #raceScreen .upgradeButton strong{font-size:.69rem;line-height:1.08;white-space:normal;overflow:visible;text-overflow:clip}
 #raceScreen .upgradeButton small{font-size:.56rem;line-height:1.1;margin-top:4px;color:#8190a3;white-space:normal;overflow:visible;text-overflow:clip}
-#raceScreen .upgradeButton:disabled{background:#f5f7fa;color:#8fa0b4}
+#raceScreen .upgradeButton:not(:disabled):active{transform:scale(.98);background:#fff8df;border-color:#e2bb3e}
+#raceScreen .upgradeButton:disabled{background:#f5f7fa;color:#8fa0b4;opacity:.48!important;cursor:not-allowed}
 
 /* Exactly six bottom action buttons, no tab bar. */
 #raceScreen .raceActionDock{min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:4px 0 0;border-top:1px solid #cbd7e4;background:#edf2f7}
-#raceScreen .dockButton{min-width:0;height:56px;border:1px solid #cbd7e4;border-radius:12px;background:#fff;color:var(--navy);padding:4px 2px;display:grid;grid-template-rows:18px 14px 12px;align-items:center;justify-items:center;font-family:Fredoka,Inter,sans-serif;box-shadow:none}
+#raceScreen .dockButton{min-width:0;height:56px;border:1px solid #cbd7e4;border-radius:12px;background:#fff;color:var(--navy);padding:4px 2px;display:grid;grid-template-rows:18px 14px 12px;align-items:center;justify-items:center;font-family:Fredoka,Inter,sans-serif;box-shadow:none;cursor:pointer;touch-action:manipulation}
 #raceScreen .dockButton .dockIcon{font-size:1rem;line-height:1;color:#4f90ff}
 #raceScreen .dockButton strong{font-size:.56rem;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
 #raceScreen .dockButton small{font:700 .46rem/1 Inter,sans-serif;color:#8292a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
 #raceScreen .dockButton.tacticDock{background:#10223b;color:#fff;border-color:#10223b}
 #raceScreen .dockButton.tacticDock .dockIcon{color:var(--gold)}
 #raceScreen .dockButton.tacticDock small{color:#b9c5d4}
-#raceScreen .dockButton:disabled{opacity:.4;filter:grayscale(.25)}
+#raceScreen .dockButton:not(:disabled):active{transform:scale(.96)}
+#raceScreen .dockButton:disabled{opacity:.4;filter:grayscale(.25);cursor:not-allowed}
 
 /* Race decision/result overlays do not consume layout height. */
 #raceScreen .decisionCard,#raceScreen .resultCard{position:absolute;left:7%;right:7%;top:25%;z-index:40;margin:0;padding:10px;border-radius:16px;background:#fff;box-shadow:0 15px 40px rgba(8,47,104,.28)}
