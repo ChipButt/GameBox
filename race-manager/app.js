@@ -207,7 +207,11 @@
 
   function seedGrid(entrants){
     entrants.sort(()=>Math.random()-.5);
-    entrants.forEach((e,i)=>{e.progress=(entrants.length-i-1)*0.035;e.finishTick=null;e.position=null});
+    entrants.forEach((e,i)=>{
+      e.progress=(entrants.length-i-1)*0.16;
+      e.finishTick=null;
+      e.position=null;
+    });
   }
 
   function buildGame(humans){
@@ -552,7 +556,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v9',
+      game:'gridline-v10',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
