@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090c12">
-<title>GameBox</title>
+<meta name="theme-color" content="#eefaf5">
+<title>GameBox · Chip In Games</title>
 <link rel="stylesheet" href="gamebox-v3.css?v=1">
+<link rel="stylesheet" href="chipin-gamebox.css?v=1">
 </head>
 <body>
 <main class="app">
   <section data-view="home">
-    <header class="topbar"><div class="brand"><div class="brandMark">GB</div><h1>GameBox</h1></div></header>
+    <header class="topbar"><div class="brand"><div class="brandMark">CI</div><h1>GameBox</h1></div></header>
     <section class="panel homeRoster">
       <h2>Players</h2>
       <div class="addPlayerRow"><input id="newPlayerName" class="textInput" maxlength="24" placeholder="Add player name"><button id="addPlayer" class="btn">Add</button></div>
@@ -20,6 +21,7 @@
       <section><div class="sectionLabel">Card Games</div><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>House Rules</strong></button></div></section>
       <section><div class="sectionLabel">Quick Games</div><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
       <section><div class="sectionLabel">Party Games</div><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
+      <section><div class="sectionLabel">Racing Games</div><div class="gameGrid"><a class="gameTile" href="race-manager/index.html"><span class="gameTileIcon">🏎️</span><strong>Gridline Racing</strong></a></div></section>
     </div>
   </section>
 
@@ -74,6 +76,7 @@
     </div>
   </section>
 </main>
-<script src="gamebox-v3.js?v=1"></script>
+<script src="lan-core.js?v=1"></script>
+<script src="gamebox-v4.js?v=1"></script>
 </body>
 </html>
