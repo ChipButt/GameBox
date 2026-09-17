@@ -156,14 +156,31 @@
     };
   }
 
-  function botEntrant(name,i,track){
-    const levels={};Object.keys(STAT_META).forEach(key=>levels[key]=1);
-    const spread=((i%7)-3)*.0017;
-    return {id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,cash:0,gems:0,sponsorLevel:0,botPace:track.botPace+spread,progress:0,finishTick:null,position:null};
+  const STAT_KEYS=Object.keys(STAT_META);
+
+  function botSkill(raceNo,i){
+    return clamp(.12+Math.max(0,(raceNo||1)-1)*.045+(i%4)*.025,.12,.94);
   }
 
-  function sumLevels(e){return Object.keys(STAT_META).reduce((sum,key)=>sum+finite(e.levels?.[key],1),0)}
-  function incomeRate(e){if(!e.human)return 0;return 5+Math.max(0,finite(e.sponsorLevel,0))*2}
+  function botDecisionDelay(skill){
+    return Math.max(7,Math.round(34-skill*25+Math.random()*7));
+  }
+
+  function botEntrant(name,i,track,raceNo=1){
+    const levels={};STAT_KEYS.forEach(key=>levels[key]=1);
+    const skill=botSkill(raceNo,i);
+    return {
+      id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,
+      cash:180,gems:0,sponsorLevel:0,
+      aiSkill:skill,
+      aiFocus:STAT_KEYS[i%STAT_KEYS.length],
+      nextDecision:18+Math.round(Math.random()*botDecisionDelay(skill)),
+      progress:0,finishTick:null,position:null
+    };
+  }
+
+  function sumLevels(e){return STAT_KEYS.reduce((sum,key)=>sum+finite(e.levels?.[key],1),0)}
+  function incomeRate(e){return 5+Math.max(0,finite(e.sponsorLevel,0))*2}
   function sponsorCost(e){const lvl=Math.max(0,finite(e.sponsorLevel,0));return Math.round(80*Math.pow(1.55,lvl))}
   function power(e){return Math.round(48+sumLevels(e)*2)}
   function statPercent(e,stat){return 2+Math.max(1,finite(e.levels?.[stat],1))*STAT_META[stat].step}
@@ -180,7 +197,7 @@
     const track=TRACKS[trackIndex];
     const entrants=humans.map(h=>entrantFromPlayer(h.player,h.owner,h.profile||null));
     const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
-    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track));
+    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,(entrants.find(e=>e.human)?.races||0)+1));
     seedGrid(entrants);
     return {phase:'race',raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[]};
   }
@@ -195,7 +212,11 @@
     const track=TRACKS[game.trackIndex];
     game.entrants.forEach((e,i)=>{
       e.progress=0;e.finishTick=null;e.position=null;
-      if(!e.human){const b=botEntrant(e.name,i,track);e.levels=b.levels;e.botPace=b.botPace}
+      if(!e.human){
+        e.aiSkill=botSkill(game.raceNo,i);
+        e.aiFocus=e.aiFocus||STAT_KEYS[i%STAT_KEYS.length];
+        e.nextDecision=12+Math.round(Math.random()*botDecisionDelay(e.aiSkill));
+      }
     });
     seedGrid(game.entrants);
     broadcastGame();
@@ -205,14 +226,9 @@
   function speedFor(e,ahead){
     const track=TRACKS[game.trackIndex]||TRACKS[0];
     const launch=clamp(game.tick/18,.28,1);
-
-    if(!e.human){
-      const noise=(Math.random()-.5)*.010;
-      return Math.max(.16,(finite(e.botPace,track.botPace)+noise)*launch);
-    }
-
     const levels=normaliseLevels(e.levels);
-    let speed=.468;
+    let speed=.468-(e.human?0:.003);
+
     for(const [stat,meta] of Object.entries(STAT_META)){
       const gained=Math.max(0,levels[stat]-1);
       speed+=gained*meta.pace*(track.weights[stat]||1);
@@ -228,18 +244,84 @@
     }
 
     const calm=1+Math.max(0,levels.composure-1)*.16*(track.weights.composure||1);
-    const noise=(Math.random()-.5)*(.030/calm);
+    const noise=(Math.random()-.5)*((e.human?.030:.024)/calm);
     const incidentChance=(.0048*(track.risk||1))/calm;
     const incident=Math.random()<incidentChance?-(.07+Math.random()*.10):0;
     return Math.max(.16,(speed+noise+incident)*launch);
+  }
+
+  function botUpgradeScore(e,stat,rank,track){
+    const meta=STAT_META[stat];
+    const cost=upgradeCost(e,stat);
+    const affinity=track.weights[stat]||1;
+    let value=(meta.pace*affinity*10000)/Math.pow(cost,.68);
+
+    if(rank>5&&(stat==='passing'||stat==='attack'))value*=1.18;
+    if(rank<=3&&stat==='defence')value*=1.12;
+    if((track.risk||1)>1.2&&stat==='composure')value*=1.18;
+
+    const focusBias=stat===e.aiFocus?1+(1-e.aiSkill)*1.8:1;
+    return value*focusBias;
+  }
+
+  function maybeBotDecision(e,order){
+    if(e.human||e.finishTick!==null||game.tick<finite(e.nextDecision,0))return;
+
+    const track=TRACKS[game.trackIndex]||TRACKS[0];
+    const skill=clamp(finite(e.aiSkill,.15),.1,.95);
+    const rank=Math.max(1,order.findIndex(x=>x.id===e.id)+1);
+    const remainingSec=Math.max(0,(game.maxTicks-game.tick)*TICK_MS/1000);
+
+    const options=STAT_KEYS.map(stat=>({
+      stat,
+      cost:upgradeCost(e,stat),
+      score:botUpgradeScore(e,stat,rank,track)
+    })).sort((a,b)=>b.score-a.score);
+
+    const best=options[0];
+    const sponsor=sponsorCost(e);
+    const sponsorPayback=sponsor/2;
+    const earlyEnough=remainingSec>sponsorPayback*(1.06+(1-skill)*.7);
+    const sponsorUseful=earlyEnough&&e.cash>=sponsor&&(
+      skill>.55 ? sponsorPayback<remainingSec*.58 : Math.random()<.10+skill*.22
+    );
+
+    if(sponsorUseful){
+      e.cash-=sponsor;
+      e.sponsorLevel=Math.max(0,finite(e.sponsorLevel,0))+1;
+    }else if(best&&e.cash>=best.cost){
+      const optimality=.25+skill*.72;
+      if(Math.random()<optimality){
+        e.cash-=best.cost;
+        e.levels[best.stat]=Math.max(1,finite(e.levels[best.stat],1))+1;
+      }else{
+        const affordable=options.filter(o=>e.cash>=o.cost);
+        const choice=affordable.find(o=>o.stat===e.aiFocus)||affordable[Math.floor(Math.random()*Math.max(1,affordable.length))];
+        if(choice){
+          e.cash-=choice.cost;
+          e.levels[choice.stat]=Math.max(1,finite(e.levels[choice.stat],1))+1;
+        }
+      }
+    }else if(best){
+      const affordable=options.filter(o=>e.cash>=o.cost);
+      const saveForBest=skill>.38||best.cost-e.cash<incomeRate(e)*5;
+      if(!saveForBest&&affordable.length){
+        const choice=affordable.find(o=>o.stat===e.aiFocus)||affordable[0];
+        e.cash-=choice.cost;
+        e.levels[choice.stat]=Math.max(1,finite(e.levels[choice.stat],1))+1;
+      }
+    }
+
+    e.nextDecision=game.tick+botDecisionDelay(skill);
   }
 
   function hostTick(){
     if(!game||game.phase!=='race')return;
     game.tick++;
     const order=[...game.entrants].sort((a,b)=>b.progress-a.progress);
+    for(const e of game.entrants)e.cash+=incomeRate(e)*(TICK_MS/1000);
+    for(const e of game.entrants)maybeBotDecision(e,order);
     for(const e of game.entrants){
-      if(e.human)e.cash+=incomeRate(e)*(TICK_MS/1000);
       if(e.finishTick!==null)continue;
       const rank=order.findIndex(x=>x.id===e.id);
       const ahead=rank>0?order[rank-1]:null;
@@ -265,14 +347,16 @@
 
     const cashPayouts=[220,180,150,125,105,90,78,68,60,52,46,40];
     const gemPayouts=[5,4,3,2,2,1,1,1,1,1,1,1];
-    for(const e of sorted.filter(x=>x.human)){
+    for(const e of sorted){
       const cash=cashPayouts[e.position-1]||35;
-      const gems=gemPayouts[e.position-1]||1;
       e.cash+=cash;
-      e.gems=(e.gems||0)+gems;
-      e.races=(e.races||0)+1;
-      e.best=!e.best?e.position:Math.min(e.best,e.position);
-      saveProfileFromEntrant(e);
+      if(e.human){
+        const gems=gemPayouts[e.position-1]||1;
+        e.gems=(e.gems||0)+gems;
+        e.races=(e.races||0)+1;
+        e.best=!e.best?e.position:Math.min(e.best,e.position);
+        saveProfileFromEntrant(e);
+      }
     }
 
     broadcastGame();
@@ -318,7 +402,7 @@
     return {
       phase:game.phase,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,sponsorLevel:e.sponsorLevel,botPace:e.botPace,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
+        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,sponsorLevel:e.sponsorLevel,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
       }))
     };
   }
@@ -411,7 +495,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v6',
+      game:'gridline-v7',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
