@@ -9,21 +9,21 @@
   const NEXT_RACE_DELAY=3000;
 
   const TRACKS=[
-    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,difficulty:58},
-    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,difficulty:61},
-    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,difficulty:64},
-    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,difficulty:67}
+    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,profile:'Technical · Heavy traffic',risk:1.0,botPace:.505,weights:{passing:1.35,attack:1.20,defence:.85,throttle:.95,cornering:1.25,composure:.80}},
+    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,profile:'Corner-heavy · Low traffic',risk:1.15,botPace:.508,weights:{passing:.65,attack:.85,defence:.75,throttle:.80,cornering:1.75,composure:1.20}},
+    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,profile:'Long straights · Drafting',risk:.85,botPace:.510,weights:{passing:1.00,attack:1.25,defence:1.15,throttle:1.70,cornering:.45,composure:.75}},
+    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · High-risk',risk:1.55,botPace:.506,weights:{passing:.55,attack:.80,defence:.65,throttle:.70,cornering:1.45,composure:1.75}}
   ];
 
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
 
   const STAT_META={
-    passing:{label:'Passing',desc:'Improves overtaking',base:55,step:2},
-    attack:{label:'Attack',desc:'More race pace in traffic',base:65,step:2},
-    defence:{label:'Defence',desc:'Makes position harder to lose',base:75,step:2},
-    throttle:{label:'Throttle',desc:'Improves acceleration',base:90,step:2},
-    cornering:{label:'Cornering',desc:'Carries more speed through bends',base:105,step:2},
-    composure:{label:'Composure',desc:'Reduces costly mistakes',base:120,step:2}
+    passing:{label:'Passing',desc:'Improves overtaking',base:32,step:4,pace:.0090},
+    attack:{label:'Attack',desc:'More pace in traffic',base:36,step:4,pace:.0105},
+    defence:{label:'Defence',desc:'Makes you harder to pass',base:40,step:4,pace:.0060},
+    throttle:{label:'Throttle',desc:'Improves straight-line acceleration',base:45,step:4,pace:.0125},
+    cornering:{label:'Cornering',desc:'Carries speed through bends',base:52,step:4,pace:.0125},
+    composure:{label:'Composure',desc:'Cuts mistakes and pace swings',base:48,step:4,pace:.0080}
   };
 
   const $=id=>document.getElementById(id);
@@ -70,8 +70,9 @@
     return {
       playerId:player.id,
       name:player.name,
-      cash:Number.isFinite(savedCash)?savedCash:200,
+      cash:Number.isFinite(savedCash)?savedCash:240,
       gems:Math.max(0,finite(saved.gems,0)),
+      sponsorLevel:Math.max(0,finite(saved.sponsorLevel,0)),
       levels:normaliseLevels(saved.levels),
       races:Math.max(0,finite(saved.races,0)),
       best:Math.max(0,finite(saved.best,0))
@@ -86,6 +87,7 @@
       name:e.name,
       cash:Math.round(e.cash),
       gems:Math.max(0,Math.round(e.gems||0)),
+      sponsorLevel:Math.max(0,Math.round(e.sponsorLevel||0)),
       levels:{...e.levels},
       races:Math.max(finite(old.races,0),finite(e.races,0)),
       best:e.best||old.best||0
@@ -145,6 +147,7 @@
       levels:{...p.levels},
       cash:p.cash,
       gems:p.gems,
+      sponsorLevel:p.sponsorLevel,
       races:p.races,
       best:p.best||0,
       progress:0,
@@ -153,18 +156,18 @@
     };
   }
 
-  function botEntrant(name,i,difficulty){
-    const baseline=Math.max(1,Math.round((difficulty-52)/4));
-    const levels={};
-    Object.keys(STAT_META).forEach((key,offset)=>{levels[key]=Math.max(1,baseline+((i+offset)%3===0?1:0))});
-    return {id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,cash:0,gems:0,progress:0,finishTick:null,position:null};
+  function botEntrant(name,i,track){
+    const levels={};Object.keys(STAT_META).forEach(key=>levels[key]=1);
+    const spread=((i%7)-3)*.0017;
+    return {id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,cash:0,gems:0,sponsorLevel:0,botPace:track.botPace+spread,progress:0,finishTick:null,position:null};
   }
 
   function sumLevels(e){return Object.keys(STAT_META).reduce((sum,key)=>sum+finite(e.levels?.[key],1),0)}
-  function incomeRate(e){if(!e.human)return 0;return 3+Math.floor(Math.max(0,sumLevels(e)-6)*0.72)}
+  function incomeRate(e){if(!e.human)return 0;return 5+Math.max(0,finite(e.sponsorLevel,0))*2}
+  function sponsorCost(e){const lvl=Math.max(0,finite(e.sponsorLevel,0));return Math.round(80*Math.pow(1.55,lvl))}
   function power(e){return Math.round(48+sumLevels(e)*2)}
   function statPercent(e,stat){return 2+Math.max(1,finite(e.levels?.[stat],1))*STAT_META[stat].step}
-  function upgradeCost(e,stat){const lvl=Math.max(1,finite(e.levels?.[stat],1));return Math.round(STAT_META[stat].base*Math.pow(1.68,lvl-1))}
+  function upgradeCost(e,stat){const lvl=Math.max(1,finite(e.levels?.[stat],1));return Math.round(STAT_META[stat].base*Math.pow(1.42,lvl-1))}
   function localEntrant(){return game?.entrants?.find(e=>e.human&&e.playerId===localPlayer?.id)||null}
 
   function seedGrid(entrants){
@@ -177,7 +180,7 @@
     const track=TRACKS[trackIndex];
     const entrants=humans.map(h=>entrantFromPlayer(h.player,h.owner,h.profile||null));
     const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
-    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track.difficulty));
+    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track));
     seedGrid(entrants);
     return {phase:'race',raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[]};
   }
@@ -192,7 +195,7 @@
     const track=TRACKS[game.trackIndex];
     game.entrants.forEach((e,i)=>{
       e.progress=0;e.finishTick=null;e.position=null;
-      if(!e.human){const b=botEntrant(e.name,i,track.difficulty);e.levels=b.levels}
+      if(!e.human){const b=botEntrant(e.name,i,track);e.levels=b.levels;e.botPace=b.botPace}
     });
     seedGrid(game.entrants);
     broadcastGame();
@@ -200,28 +203,34 @@
   }
 
   function speedFor(e,ahead){
+    const track=TRACKS[game.trackIndex]||TRACKS[0];
+    const launch=clamp(game.tick/18,.28,1);
+
+    if(!e.human){
+      const noise=(Math.random()-.5)*.010;
+      return Math.max(.16,(finite(e.botPace,track.botPace)+noise)*launch);
+    }
+
     const levels=normaliseLevels(e.levels);
-    let speed=.515;
-    speed+=(levels.throttle-1)*.0050;
-    speed+=(levels.cornering-1)*.0042;
-    speed+=(levels.attack-1)*.0032;
-    speed+=(levels.passing-1)*.0028;
-    speed+=(levels.defence-1)*.0018;
-    speed+=(levels.composure-1)*.0022;
+    let speed=.468;
+    for(const [stat,meta] of Object.entries(STAT_META)){
+      const gained=Math.max(0,levels[stat]-1);
+      speed+=gained*meta.pace*(track.weights[stat]||1);
+    }
 
     if(ahead){
       const gap=ahead.progress-e.progress;
-      if(gap>0&&gap<1.35){
-        speed+=(levels.passing-1)*.0035+(levels.attack-1)*.0027;
-        speed-=Math.max(0,finite(ahead.levels?.defence,1)-1)*.0018;
+      if(gap>0&&gap<1.45){
+        speed+=Math.max(0,levels.passing-1)*.0045*(track.weights.passing||1);
+        speed+=Math.max(0,levels.attack-1)*.0035*(track.weights.attack||1);
+        speed-=Math.max(0,finite(ahead.levels?.defence,1)-1)*.0025*(track.weights.defence||1);
       }
     }
 
-    const launch=clamp(game.tick/18,.28,1);
-    const calm=1+Math.max(0,levels.composure-1)*.10;
-    const noise=(Math.random()-.5)*(.040/calm);
-    const incidentChance=.0045/calm;
-    const incident=Math.random()<incidentChance?-(.09+Math.random()*.12):0;
+    const calm=1+Math.max(0,levels.composure-1)*.16*(track.weights.composure||1);
+    const noise=(Math.random()-.5)*(.030/calm);
+    const incidentChance=(.0048*(track.risk||1))/calm;
+    const incident=Math.random()<incidentChance?-(.07+Math.random()*.10):0;
     return Math.max(.16,(speed+noise+incident)*launch);
   }
 
@@ -273,9 +282,22 @@
   }
 
   function applyAction(playerId,msg){
-    if(!game||game.phase!=='race'||msg.action!=='upgrade'||!STAT_META[msg.stat])return;
+    if(!game||game.phase!=='race')return;
     const e=game.entrants.find(x=>x.human&&x.playerId===playerId);
     if(!e)return;
+
+    if(msg.action==='sponsor'){
+      const cost=sponsorCost(e);
+      if(e.cash<cost)return;
+      e.cash-=cost;
+      e.sponsorLevel=Math.max(0,finite(e.sponsorLevel,0))+1;
+      saveProfileFromEntrant(e);
+      broadcastGame();
+      renderGame();
+      return;
+    }
+
+    if(msg.action!=='upgrade'||!STAT_META[msg.stat])return;
     const cost=upgradeCost(e,msg.stat);
     if(e.cash<cost)return;
     e.cash-=cost;
@@ -296,7 +318,7 @@
     return {
       phase:game.phase,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
+        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,sponsorLevel:e.sponsorLevel,botPace:e.botPace,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
       }))
     };
   }
@@ -317,7 +339,13 @@
     if($('gems'))$('gems').textContent=Math.round(me.gems||0);
     $('trackName').textContent=track.name;
     $('trackMeta').textContent=`Race ${game.raceNo} · ${track.discipline} · ${track.weather}`;
+    if($('trackFocus'))$('trackFocus').textContent=track.profile;
     if($('sponsorName'))$('sponsorName').textContent='Chip In Racing';
+    if($('buySponsor')){
+      const cost=sponsorCost(me);
+      $('buySponsor').disabled=game.phase!=='race'||me.cash<cost;
+      $('buySponsor').innerHTML=`<span>+£2/s</span><small>${money(cost)}</small>`;
+    }
     $('power').textContent=power(me);
 
     const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));
@@ -342,7 +370,9 @@
       const current=statPercent(me,key);
       const next=current+m.step;
       const disabled=game.phase!=='race'||me.cash<cost;
-      return `<button class="upgradeButton" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${current}% → ${next}% · ${money(cost)}</small></button>`;
+      const affinity=track.weights[key]||1;
+      const hot=affinity>=1.30?' trackHot':'';
+      return `<button class="upgradeButton${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${current}% → ${next}% · ${money(cost)} · Track ×${affinity.toFixed(1)}</small></button>`;
     }).join('');
 
     for(const [key,m] of Object.entries(STAT_META)){
@@ -381,7 +411,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v5',
+      game:'gridline-v6',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
@@ -483,6 +513,7 @@
     $('makeAnswer').onclick=makeAnswer;
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
+    if($('buySponsor'))$('buySponsor').onclick=()=>requestAction({action:'sponsor'});
 
     document.addEventListener('click',e=>{
       const up=e.target.closest('[data-upgrade]');
