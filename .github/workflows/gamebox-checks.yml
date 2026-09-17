@@ -1,0 +1,31 @@
+name: GameBox checks
+
+on:
+  push:
+    branches: [main, race-manager-integration]
+  pull_request:
+    branches: [main]
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check lan-core.js
+          node --check gamebox-v4.js
+          node --check heads-v3.js
+          node --check heads-lan-v2.js
+          node --check race-manager/app.js
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f heads.html
+          test -f chipin-gamebox.css
+          test -f chipin-heads.css
+          test -f race-manager/index.html
+          test -f race-manager/styles.css
