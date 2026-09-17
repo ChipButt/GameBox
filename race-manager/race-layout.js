@@ -5,15 +5,29 @@
   const raceScreen = document.getElementById('raceScreen');
   if (!upgradeGrid || !raceScreen) return;
 
+  const stats = ['pace','handling','focus','reliability'];
+
+  function sourceFor(stat) {
+    return upgradeGrid.querySelector(`[data-upgrade="${stat}"]`);
+  }
+
+  function dockFor(stat) {
+    return raceScreen.querySelector(`.raceActionDock [data-dock-stat="${stat}"]`);
+  }
+
   function syncUpgradeDock() {
-    for (const stat of ['pace','handling','focus','reliability']) {
-      const source = upgradeGrid.querySelector(`[data-upgrade="${stat}"]`);
-      const dock = raceScreen.querySelector(`.raceActionDock [data-dock-stat="${stat}"]`);
+    for (const stat of stats) {
+      const source = sourceFor(stat);
+      const dock = dockFor(stat);
       if (!dock) continue;
+
       if (!source) {
         dock.disabled = true;
+        const meta = dock.querySelector(`[data-dock-cost="${stat}"]`);
+        if (meta) meta.textContent = '—';
         continue;
       }
+
       dock.disabled = source.disabled;
       const strong = source.querySelector('strong')?.textContent || '';
       const small = source.querySelector('small')?.textContent || '';
@@ -22,6 +36,21 @@
       const meta = dock.querySelector(`[data-dock-cost="${stat}"]`);
       if (meta) meta.textContent = [level ? `Lv ${level}` : '', cost || ''].filter(Boolean).join(' · ') || '—';
     }
+  }
+
+  for (const stat of stats) {
+    const dock = dockFor(stat);
+    if (!dock) continue;
+    dock.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const source = sourceFor(stat);
+      if (!source || source.disabled) return;
+      source.click();
+      dock.classList.add('justActivated');
+      setTimeout(() => dock.classList.remove('justActivated'), 140);
+      setTimeout(syncUpgradeDock, 0);
+    });
   }
 
   const observer = new MutationObserver(syncUpgradeDock);
