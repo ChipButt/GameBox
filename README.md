@@ -4,7 +4,7 @@ A mobile-first browser games hub from **Chip In Games**.
 
 ## Included games
 
-### House Rules
+### Card Deck
 - 1–4 players
 - 54-card deck including red and black jokers
 - Assign rules to each card rank and both jokers
@@ -30,8 +30,9 @@ A mobile-first browser games hub from **Chip In Games**.
 
 ### Gridline Racing
 - Mobile-first racing team management game
-- Drivers, cars, upgrades, workshop development and persistent local progress
-- Bot-filled races and championship points
+- Live-race upgrades and tactical decisions
+- Sponsor income and finishing-position prize money
+- Bot-filled races and persistent progression
 - Same-Wi-Fi multiplayer races using direct browser-to-browser WebRTC connections
 - Empty multiplayer grid positions are filled by bots
 
