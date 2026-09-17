@@ -22,6 +22,8 @@ jobs:
           node --check heads-lan-v2.js
           node --check heads-lan-v3.js
           node --check race-manager/app.js
+          node --check race-manager/track-ui.js
+          node --check race-manager/race-layout.js
       - name: Check required files
         run: |
           test -f index.html
@@ -31,3 +33,6 @@ jobs:
           test -f heads-lan-v3.js
           test -f race-manager/index.html
           test -f race-manager/styles.css
+          test -f race-manager/track-ui.css
+          test -f race-manager/track-ui.js
+          test -f race-manager/race-layout.js
