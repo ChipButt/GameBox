@@ -244,7 +244,7 @@
     }
 
     const calm=1+Math.max(0,levels.composure-1)*.16*(track.weights.composure||1);
-    const noise=(Math.random()-.5)*((e.human?.030:.024)/calm);
+    const noise=(Math.random()-.5)*((e.human ? .030 : .024)/calm);
     const incidentChance=(.0048*(track.risk||1))/calm;
     const incident=Math.random()<incidentChance?-(.07+Math.random()*.10):0;
     return Math.max(.16,(speed+noise+incident)*launch);
