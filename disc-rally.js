@@ -12,7 +12,7 @@ const TRACKS=[
 ];
 const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
 const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,BOUNCE=.72,STEPS_MAX=900;
-const VIEW={w:1000,h:600,horizon:112,focal:500,cameraHeight:180,setback:240};
+const VIEW={w:1000,h:600,horizon:95,focal:600,cameraHeight:145,setback:200};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const read=(k,f=[])=>{try{const v=JSON.parse(localStorage.getItem(k));return v??f}catch{return f}};
@@ -291,13 +291,60 @@ function processCheckpoints(){
   });
 }
 
+function roundedRectSdf(x,y,r){
+  const cx=r.x+r.w/2,cy=r.y+r.h/2;
+  const bx=r.w/2-r.r,by=r.h/2-r.r;
+  const qx=Math.abs(x-cx)-bx,qy=Math.abs(y-cy)-by;
+  const ox=Math.max(qx,0),oy=Math.max(qy,0);
+  return Math.hypot(ox,oy)+Math.min(Math.max(qx,qy),0)-r.r;
+}
+function roadClearContains(x,y){
+  const outer=roundedRectSdf(x,y,TRACK_OUTER);
+  const inner=roundedRectSdf(x,y,track().inner);
+  return outer<=-DISC_R&&inner>=DISC_R;
+}
+function sdfNormal(x,y,rect){
+  const e=1.25;
+  const gx=roundedRectSdf(x+e,y,rect)-roundedRectSdf(x-e,y,rect);
+  const gy=roundedRectSdf(x,y+e,rect)-roundedRectSdf(x,y-e,rect);
+  const m=Math.hypot(gx,gy)||1;
+  return{x:gx/m,y:gy/m};
+}
 function applyWalls(p){
-  const sx=p.vx*.5,sy=p.vy*.5,nx=p.x+sx,ny=p.y+sy;
-  if(roadContains(nx,ny)){p.x=nx;p.y=ny;return}
-  const canX=roadContains(p.x+sx,p.y),canY=roadContains(p.x,p.y+sy);
-  if(canX){p.x+=sx;p.vy*=-BOUNCE}
-  else if(canY){p.y+=sy;p.vx*=-BOUNCE}
-  else{p.vx*=-BOUNCE;p.vy*=-BOUNCE}
+  const sx=p.vx*.5,sy=p.vy*.5,target={x:p.x+sx,y:p.y+sy};
+  if(roadClearContains(target.x,target.y)){p.x=target.x;p.y=target.y;return}
+
+  // Find the last valid point along this movement step so the disc contacts the
+  // barrier rather than teleporting back from a corner.
+  let lo=0,hi=1;
+  for(let i=0;i<9;i++){
+    const mid=(lo+hi)/2,x=p.x+sx*mid,y=p.y+sy*mid;
+    if(roadClearContains(x,y))lo=mid;else hi=mid;
+  }
+  p.x+=sx*lo;p.y+=sy*lo;
+
+  const probeX=p.x+sx*Math.max(.02,hi-lo),probeY=p.y+sy*Math.max(.02,hi-lo);
+  const outerViolation=roundedRectSdf(probeX,probeY,TRACK_OUTER)+DISC_R;
+  const innerViolation=DISC_R-roundedRectSdf(probeX,probeY,track().inner);
+  let n;
+  if(innerViolation>outerViolation){
+    const g=sdfNormal(p.x,p.y,track().inner);
+    n={x:-g.x,y:-g.y}; // into the infield = out of the legal road
+  }else{
+    n=sdfNormal(p.x,p.y,TRACK_OUTER); // away from the circuit = out of the legal road
+  }
+
+  // Reflect only the velocity component travelling into the wall. Tangential
+  // speed is preserved, so shallow impacts glance along the barrier naturally.
+  const dot=p.vx*n.x+p.vy*n.y;
+  if(dot>0){
+    p.vx-=(1+BOUNCE)*dot*n.x;
+    p.vy-=(1+BOUNCE)*dot*n.y;
+  }
+
+  // Tiny inward nudge prevents the following physics sub-step from detecting
+  // the same contact again and producing a double-bounce.
+  p.x-=n.x*1.5;p.y-=n.y*1.5;
   p.x=clamp(p.x,DISC_R,1000-DISC_R);p.y=clamp(p.y,DISC_R,600-DISC_R);
 }
 function applyBumpers(p){
