@@ -45,6 +45,7 @@
 
   const motion=new Map();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const finiteTime=(value,fallback)=>Number.isFinite(Number(value))?Number(value):fallback;
   const currentTrackName=()=>document.getElementById('trackName')?.textContent?.trim()||'Forest Lake';
 
   function updateRaceScale(){
@@ -146,26 +147,43 @@
           rendered:target,target,previousTarget:target,targetAt:now,velocity:0,lastFrame:now,lastSeen:now,
           lateral:phase==='countdown'?gridLateral(index):0,
           targetLateral:phase==='countdown'?gridLateral(index):0,
-          visualShift:0,targetVisualShift:0,lastPhase:phase
+          visualShift:0,targetVisualShift:0,
+          startGridOffset:phase==='countdown'?gridTarget(index):0,
+          startGridOffsetAt:now,
+          gridOffset:phase==='countdown'?gridTarget(index):0,
+          lastPhase:phase
         };
         motion.set(key,state);
       }else{
         const phaseChanged=state.lastPhase!==phase;
         if(phaseChanged&&phase==='countdown'){
-          state.rendered=target;
-          state.target=target;
-          state.previousTarget=target;
+          const start=gridTarget(index);
+          state.rendered=start;
+          state.target=start;
+          state.previousTarget=start;
           state.velocity=0;
           state.visualShift=0;
           state.targetVisualShift=0;
           state.lateral=gridLateral(index);
           state.targetLateral=gridLateral(index);
+          state.startGridOffset=start;
+          state.startGridOffsetAt=now;
+          state.gridOffset=start;
           state.targetAt=now;
         }else if(phaseChanged&&phase==='race'){
-          state.previousTarget=state.target;
+          const start=gridTarget(index);
+          state.rendered=rawTarget;
+          state.previousTarget=rawTarget;
           state.target=rawTarget;
           state.targetAt=now;
           state.velocity=Math.max(state.velocity,.018);
+          state.startGridOffset=start;
+          state.startGridOffsetAt=now;
+          state.gridOffset=start;
+          state.lateral=gridLateral(index);
+          state.targetLateral=gridLateral(index);
+          state.visualShift=0;
+          state.targetVisualShift=0;
         }else if(Math.abs(target-state.target)>.000001){
           const elapsed=Math.max(.05,(now-state.targetAt)/1000);
           const measured=(target-state.target)/elapsed;
@@ -206,8 +224,14 @@
     if(phase==='countdown'){
       state.rendered=state.target;
       state.velocity=0;
+      state.gridOffset=gridTarget(state.gridIndex||0);
       return;
     }
+
+    const gridAge=Math.max(0,(now-finiteTime(state.startGridOffsetAt,now))/1000);
+    const gridT=clamp(gridAge/5.5,0,1);
+    const gridEase=gridT*gridT*(3-2*gridT);
+    state.gridOffset=(state.startGridOffset||0)*(1-gridEase);
 
     const age=Math.max(0,(now-state.targetAt)/1000);
     const prediction=Math.min(.34,age)*state.velocity;
@@ -227,13 +251,13 @@
         state.targetVisualShift=0;
         state.contact=false;
         state.lateral+=(state.targetLateral-state.lateral)*.18;
-        state.visualShift+=(0-state.visualShift)*.15;
+        state.visualShift+=(0-state.visualShift)*.12;
       }
       return;
     }
 
     const phased=states
-      .map(state=>({state,phase:((state.rendered%1)+1)%1}))
+      .map(state=>({state,phase:((state.rendered+(state.gridOffset||0))%1+1)%1}))
       .sort((a,b)=>a.phase-b.phase);
 
     for(const {state} of phased){
@@ -244,7 +268,7 @@
 
     const groups=[];
     let current=[];
-    const PACK_PHASE_GAP=.024;
+    const PACK_PHASE_GAP=.018;
     for(const item of phased){
       if(!current.length){current=[item];continue}
       const prev=current[current.length-1];
@@ -262,40 +286,38 @@
       }
     }
 
-    // Cars must never render directly on top of each other. Keep them within
-    // the road width by using two lateral lanes, then stagger additional cars
-    // slightly forward/back along the centre-line.
+    // Stable slots are keyed to the original grid index. A car keeps the same
+    // side/spacing assignment while traffic is dense, so cars no longer jump
+    // between visual slots as gaps open around them.
     const packSlots=[
       {lat:-5.5,shift:0},
       {lat: 5.5,shift:0},
-      {lat:-5.5,shift:-.009},
-      {lat: 5.5,shift:-.009},
-      {lat:-5.5,shift: .009},
-      {lat: 5.5,shift: .009},
-      {lat:-4.0,shift:-.018},
-      {lat: 4.0,shift:-.018},
-      {lat:-4.0,shift: .018},
-      {lat: 4.0,shift: .018},
-      {lat: 0.0,shift:-.027},
-      {lat: 0.0,shift: .027}
+      {lat:-5.5,shift:-.007},
+      {lat: 5.5,shift:-.007},
+      {lat:-5.5,shift: .007},
+      {lat: 5.5,shift: .007},
+      {lat:-4.0,shift:-.014},
+      {lat: 4.0,shift:-.014},
+      {lat:-4.0,shift: .014},
+      {lat: 4.0,shift: .014},
+      {lat:-2.0,shift:-.021},
+      {lat: 2.0,shift: .021}
     ];
 
     for(const group of groups){
       if(group.length<2)continue;
-      group.sort((a,b)=>b.state.rendered-a.state.rendered);
-      group.forEach((entry,index)=>{
-        const slot=packSlots[index%packSlots.length];
-        const extraBand=Math.floor(index/packSlots.length);
+      for(const entry of group){
+        const slot=packSlots[(entry.state.gridIndex||0)%packSlots.length];
         entry.state.targetLateral=slot.lat;
-        entry.state.targetVisualShift=slot.shift-(extraBand*.036);
+        entry.state.targetVisualShift=slot.shift;
         entry.state.contact=true;
-      });
+      }
     }
 
     for(const state of states){
       state.targetLateral=clamp(state.targetLateral,-5.5,5.5);
-      state.lateral+=(state.targetLateral-state.lateral)*.20;
-      state.visualShift+=(state.targetVisualShift-state.visualShift)*.18;
+      state.lateral+=(state.targetLateral-state.lateral)*.13;
+      state.visualShift+=(state.targetVisualShift-state.visualShift)*.07;
     }
   }
 
@@ -313,7 +335,7 @@
     const row=state.row;
     if(!row?.isConnected)return;
 
-    const travelled=state.rendered+state.visualShift;
+    const travelled=state.rendered+(state.gridOffset||0)+state.visualShift;
     let lapProgress=((travelled%1)+1)%1;
     if(state.target>=state.laps&&travelled>=state.laps-.002)lapProgress=.998;
 
