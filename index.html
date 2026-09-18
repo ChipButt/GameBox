@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#eefaf5">
 <title>GameBox · Chip In Games</title>
 <link rel="stylesheet" href="gamebox-v3.css?v=1">
-<link rel="stylesheet" href="chipin-gamebox.css?v=3">
+<link rel="stylesheet" href="chipin-gamebox.css?v=4">
 </head>
 <body>
 <main class="app">
@@ -17,11 +17,12 @@
       <div class="addPlayerRow"><input id="newPlayerName" class="textInput" maxlength="24" placeholder="Add player name"><button id="addPlayer" class="btn">Add</button></div>
       <div id="homePlayers" class="homePlayers"></div>
     </section>
-    <div class="gameSections">
-      <section><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>Card Deck</strong></button></div></section>
-      <section><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
-      <section><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
-      <section><div class="gameGrid"><a class="gameTile" href="disc-rally.html"><span class="gameTileIcon">🥏</span><strong>Disc Rally</strong></a></div></section>\n      <section><div class="gameGrid"><a class="gameTile gridlineHomeTile" href="race-manager/index.html" aria-label="Gridline Racing"><img class="gridlineHomeLogo" src="race-manager/assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing"></a></div></section>
+    <div class="gameSections toyBox" aria-label="GameBox games">
+      <section class="toyGame toyGameCards"><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>Card Deck</strong><small>CHIP IN GAMES</small></button></div></section>
+      <section class="toyGame toyGameCoins"><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong><small>CHIP IN GAMES</small></button></div></section>
+      <section class="toyGame toyGameHeads"><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong><small>CHIP IN GAMES</small></a></div></section>
+      <section class="toyGame toyGameDisc"><div class="gameGrid"><a class="gameTile" href="disc-rally.html"><span class="gameTileIcon">🥏</span><strong>Disc Rally</strong><small>CHIP IN GAMES</small></a></div></section>
+      <section class="toyGame toyGameGridline"><div class="gameGrid"><a class="gameTile gridlineHomeTile" href="race-manager/index.html" aria-label="Gridline Racing"><img class="gridlineHomeLogo" src="race-manager/assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing"><small>CHIP IN GAMES</small></a></div></section>
     </div>
   </section>
 
