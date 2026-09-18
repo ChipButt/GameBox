@@ -126,11 +126,11 @@ body.gridline-racing-live .mainView{
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .cashValue{
-  left:71px;top:165px;width:45px;height:14px;z-index:34;
+  left:71px;top:164px;width:45px;height:14px;z-index:34;
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .positionValue{
-  left:187px;top:165px;width:49px;height:14px;z-index:35;
+  left:187px;top:164px;width:49px;height:14px;z-index:35;
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .ordinalSuffix{
@@ -142,7 +142,7 @@ body.gridline-racing-live .mainView{
   margin-left:1px;
 }
 #raceScreen .incomeValue{
-  left:310.556px;top:165px;width:46px;height:14px;z-index:36;
+  left:310.556px;top:164px;width:46px;height:14px;z-index:36;
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .lapTitleText{
