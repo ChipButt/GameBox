@@ -840,14 +840,17 @@
     const wrap=$('availableHosts');
     if(!wrap||role!=='client')return;
     if(session?.peers?.().length){
+      $('joinState').textContent='Connected';
       wrap.innerHTML='<div class="discoveryConnected">Connected to host ✓</div>';
       return;
     }
     const open=hosts.filter(host=>!host.started&&finite(host.playerCount,1)<finite(host.maxPlayers,4));
     if(!open.length){
+      $('joinState').textContent='Scanning';
       wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>';
       return;
     }
+    $('joinState').textContent=`${open.length} found`;
     wrap.innerHTML=open.map(host=>`
       <button class="hostDiscoveryCard" type="button" data-auto-host="${esc(host.peerId)}">
         <span class="hostDiscoveryIcon">🏁</span>
@@ -962,7 +965,13 @@
       renderJoinLobby([]);
       startAutoScan();
     };
-    $$('[data-back]').forEach(b=>b.onclick=()=>showSetup(b.dataset.back));
+    $('[data-back]').forEach(b=>b.onclick=()=>{
+      if(b.closest('#hostSetup,#joinSetup')){
+        resetNetworkSession();
+        role=null;
+      }
+      showSetup(b.dataset.back);
+    });
     $('startSingle').onclick=startSingleRace;
     $('hostPlayerSelect').onchange=()=>{
       renderHostLobby();
