@@ -7,34 +7,34 @@ const LOCAL_PICK_KEY='gamebox.discrally.players.v1';
 const COLORS=['#f7bd18','#0a65c7','#d94f5c','#24a47f'];
 const TRACKS=[
   {
-    id:'harbour',name:'Harbour Loop',desc:'Long flowing waterfront circuit',width:138,curve:true,
-    points:[[500,520],[760,530],[900,430],[850,280],[930,150],[760,70],[540,95],[390,55],[190,100],[80,230],[120,400],[300,500]],
-    bumpers:[],boosts:[{s:.16,offset:0,length:90,width:52}],slow:[]
+    id:'harbour',name:'Harbour Loop',desc:'Long flowing waterfront circuit',width:140,smooth:3,
+    points:[[500,850],[900,880],[1280,790],[1450,600],[1380,360],[1180,160],[880,130],[650,230],[430,100],[180,180],[80,430],[170,690],[320,820]],
+    bumpers:[],boosts:[{s:.16,offset:0,length:105,width:54}],slow:[]
   },
   {
-    id:'bumper',name:'Bumper Beware',desc:'Technical bends with sparse rebound posts',width:126,curve:true,
-    points:[[500,525],[800,520],[915,410],[820,330],[910,210],[800,80],[560,70],[480,170],[360,80],[170,90],[80,200],[170,300],[80,410],[190,510]],
-    bumpers:[{s:.29,offset:20,r:13},{s:.67,offset:-18,r:13}],boosts:[{s:.11,offset:0,length:80,width:48}],slow:[]
+    id:'bumper',name:'Bumper Beware',desc:'Smooth technical bends with sparse rebound posts',width:126,smooth:3,
+    points:[[500,850],[900,880],[1280,780],[1450,600],[1260,480],[1430,300],[1240,120],[950,150],[760,330],[560,170],[300,110],[100,300],[260,470],[90,650],[300,830]],
+    bumpers:[{s:.29,offset:20,r:13},{s:.67,offset:-18,r:13}],boosts:[{s:.11,offset:0,length:90,width:48}],slow:[]
   },
   {
-    id:'goldrush',name:'Gold Rush',desc:'Wide sweepers, S-bends and boost lanes',width:132,curve:true,
-    points:[[500,525],[770,520],[900,430],[820,330],[900,190],[760,80],[560,105],[430,190],[300,95],[130,120],[80,260],[180,340],[100,450],[280,520]],
-    bumpers:[{s:.38,offset:18,r:12}],boosts:[{s:.14,offset:0,length:95,width:50},{s:.57,offset:0,length:90,width:50}],slow:[{s:.78,offset:0,length:105,width:76}]
+    id:'goldrush',name:'Gold Rush',desc:'Wide sweepers, S-bends and boost lanes',width:132,smooth:3,
+    points:[[500,870],[850,900],[1210,820],[1450,650],[1260,500],[1450,320],[1240,120],[950,170],[760,370],[540,190],[270,100],[90,300],[260,480],[100,680],[310,850]],
+    bumpers:[{s:.38,offset:18,r:12}],boosts:[{s:.14,offset:0,length:110,width:50},{s:.57,offset:0,length:100,width:50}],slow:[{s:.78,offset:0,length:120,width:78}]
   },
   {
-    id:'switchback',name:'Switchback',desc:'A long chain of alternating hairpins',width:104,curve:false,
-    points:[[500,525],[820,515],[920,420],[760,360],[900,280],[770,200],[910,115],[760,60],[540,80],[400,160],[250,85],[90,120],[180,220],[80,300],[220,370],[90,450],[250,525]],
-    bumpers:[{s:.47,offset:-14,r:10}],boosts:[{s:.09,offset:0,length:72,width:42}],slow:[]
+    id:'switchback',name:'Switchback',desc:'Long rounded switchbacks with generous separation',width:108,smooth:3,
+    points:[[500,1040],[920,1050],[1360,950],[1510,780],[1120,680],[1480,560],[1110,440],[1480,320],[1200,150],[850,100],[560,190],[330,340],[100,230],[80,470],[370,560],[90,690],[380,790],[180,950]],
+    bumpers:[{s:.47,offset:-14,r:10}],boosts:[{s:.09,offset:0,length:90,width:42}],slow:[]
   },
   {
-    id:'roundabout',name:'Roundabout',desc:'Deep inward curves around a tight centre',width:122,curve:true,
-    points:[[500,525],[750,520],[900,420],[820,300],[900,160],[760,70],[600,120],[500,230],[400,120],[240,70],[100,160],[180,300],[100,420],[250,520]],
-    bumpers:[{s:.24,offset:16,r:11},{s:.73,offset:-16,r:11}],boosts:[],slow:[{s:.5,offset:0,length:85,width:70}]
+    id:'roundabout',name:'Roundabout',desc:'Broad looping bends around a deep central section',width:124,smooth:3,
+    points:[[550,930],[950,950],[1320,850],[1500,650],[1320,470],[1460,280],[1240,100],[950,120],[820,340],[650,500],[470,350],[390,120],[160,180],[70,420],[260,570],[90,760],[320,920]],
+    bumpers:[{s:.24,offset:16,r:11},{s:.73,offset:-16,r:11}],boosts:[],slow:[{s:.5,offset:0,length:95,width:72}]
   },
   {
-    id:'lightning',name:'Force Lightning',desc:'Fast angular straights and sharp direction changes',width:112,curve:false,
-    points:[[500,530],[780,510],[900,400],[740,340],[910,250],[760,180],[900,90],[660,70],[520,170],[400,80],[180,90],[100,210],[260,280],[90,360],[180,490],[360,520]],
-    bumpers:[{s:.64,offset:14,r:10}],boosts:[{s:.12,offset:0,length:105,width:44},{s:.46,offset:0,length:100,width:44},{s:.82,offset:0,length:90,width:44}],slow:[]
+    id:'lightning',name:'Force Lightning',desc:'Fast sweeping direction changes without crossovers',width:112,smooth:3,
+    points:[[500,940],[920,940],[1330,820],[1480,640],[1180,550],[1450,410],[1160,310],[1420,160],[1110,90],[800,190],[570,90],[290,120],[90,300],[360,420],[100,550],[330,680],[140,820],[340,930]],
+    bumpers:[{s:.64,offset:14,r:10}],boosts:[{s:.12,offset:0,length:115,width:44},{s:.46,offset:0,length:110,width:44},{s:.82,offset:0,length:100,width:44}],slow:[]
   }
 ];
 const TRACK_GEOMETRY=new Map();
