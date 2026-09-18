@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=7">
-  <link rel="stylesheet" href="track-ui.css?v=18">
+  <link rel="stylesheet" href="track-ui.css?v=19">
 </head>
 <body>
 <div class="appShell">
@@ -160,14 +160,38 @@
       <div class="racePlacedAsset lapBannerAsset"><img src="assets/ui/hud/race_name_banner.png" alt=""></div>
       <strong id="lapText" class="raceText lapTitleText">Lap 1 / 8</strong>
       <div id="lapMarkers" class="lapMarkers" aria-hidden="true">
-        <img id="lapMarker1" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker2" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker3" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker4" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker5" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker6" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker7" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
-        <img id="lapMarker8" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <span id="lapMarker1" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker2" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker3" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker4" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker5" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker6" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker7" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
+        <span id="lapMarker8" class="lapMarker" style="--lap-fill:0%">
+          <img class="lapMarkerEmpty" src="assets/ui/hud/lap_marker_empty.png" alt="">
+          <span class="lapMarkerFill"><img src="assets/ui/hud/lap_marker_full.png" alt=""></span>
+        </span>
       </div>
       <img id="finalLapBadge" class="raceStatusFlag finalLapBadge hidden" src="assets/ui/race_status/final_lap.png" alt="Final lap">
       <img id="greenFlagBadge" class="raceStatusFlag greenFlagBadge hidden" src="assets/ui/race_status/green_flag.png" alt="Race started">
@@ -191,7 +215,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=6"></script>
-<script src="app.js?v=24"></script>
+<script src="app.js?v=25"></script>
 <script src="track-ui.js?v=14"></script>
 </body>
 </html>
