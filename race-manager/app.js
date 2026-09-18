@@ -826,7 +826,7 @@
       `
       :`
         <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/ready_next_race.png" alt="">
-        <div class="resultPosition">${ordinal(me.position||12)} place · Prize +${money(prize)}</div>
+        <div class="resultPosition">${ordinalHTML(me.position||12)} place · Prize +${money(prize)}</div>
         <div class="resultReady">${readyCount} / ${humans.length} ready</div>
         <button class="resultAction" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'NEXT RACE'}</button>
       `;
