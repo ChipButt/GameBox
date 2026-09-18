@@ -12,8 +12,16 @@
 
   const VIEW_W=600;
   const VIEW_H=360;
-  // 0% race progress is exactly the chequered start/finish line.
-  const CIRCUIT_D='M 421 278 L 108 278 C 62 278 43 242 58 203 C 72 166 109 148 149 160 C 192 173 190 219 231 226 C 271 233 297 208 310 168 C 324 127 361 102 407 109 C 458 117 511 149 528 188 C 546 229 522 270 476 278 L 421 278 Z';
+  // Every circuit begins at the same chequered start/finish line.
+  const TRACK_PATHS={
+    'Harbour Sprint':'M 421 278 L 108 278 C 62 278 43 242 58 203 C 72 166 109 148 149 160 C 192 173 190 219 231 226 C 271 233 297 208 310 168 C 324 127 361 102 407 109 C 458 117 511 149 528 188 C 546 229 522 270 476 278 L 421 278 Z',
+    'Alpine Ring':'M 421 278 L 337 278 C 287 278 274 245 292 219 C 311 192 271 176 237 187 C 196 201 177 170 195 140 C 216 105 273 109 303 130 C 337 154 347 113 386 103 C 433 91 493 116 520 154 C 548 194 535 247 487 270 C 466 280 444 280 421 278 Z',
+    'Desert Oval':'M 421 278 L 176 278 C 91 278 54 239 54 184 C 54 119 104 82 196 82 L 404 82 C 497 82 548 121 548 185 C 548 244 504 278 421 278 Z',
+    'Forest Stage':'M 421 278 L 344 278 C 306 278 292 252 310 230 C 332 203 288 189 253 204 C 209 223 177 203 181 169 C 185 133 222 116 255 126 C 285 135 293 93 336 88 C 378 83 395 120 425 126 C 459 133 500 114 523 151 C 547 190 524 228 486 238 C 448 248 462 278 421 278 Z',
+    'Coastal Run':'M 421 278 L 132 278 C 73 278 48 246 64 211 C 78 180 121 180 145 195 C 178 216 208 190 224 160 C 244 122 278 96 326 91 C 384 85 449 102 493 134 C 540 168 553 218 524 251 C 504 274 470 281 421 278 Z',
+    'Metro Circuit':'M 421 278 L 305 278 L 305 238 L 128 238 C 101 238 86 219 86 197 L 86 162 L 206 162 L 206 102 L 444 102 L 444 148 L 520 148 L 520 231 L 468 231 L 468 278 L 421 278 Z'
+  };
+  const currentTrackName=()=>document.getElementById('trackName')?.textContent?.trim()||'Harbour Sprint';
 
   const motion=new Map();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -39,8 +47,14 @@
   }
 
   function ensureCircuit(){
+    const trackName=currentTrackName();
     let svg=lanes.querySelector('.trackSvg');
-    if(svg)return svg;
+    if(svg&&svg.dataset.trackName===trackName)return svg;
+    if(svg){
+      svg.remove();
+      motion.clear();
+    }
+    const circuitD=TRACK_PATHS[trackName]||TRACK_PATHS['Harbour Sprint'];
 
     const ns='http://www.w3.org/2000/svg';
     svg=document.createElementNS(ns,'svg');
@@ -48,6 +62,7 @@
     svg.setAttribute('viewBox',`0 0 ${VIEW_W} ${VIEW_H}`);
     svg.setAttribute('preserveAspectRatio','none');
     svg.setAttribute('aria-hidden','true');
+    svg.dataset.trackName=trackName;
 
     let checks='';
     const size=7;
@@ -64,11 +79,11 @@
         </filter>
       </defs>
       <rect width="${VIEW_W}" height="${VIEW_H}" rx="14" fill="#69b450"/>
-      <path d="${CIRCUIT_D}" fill="none" stroke="#dfc79c" stroke-width="78" stroke-linecap="round" stroke-linejoin="round" filter="url(#trackShadow)"/>
-      <path d="${CIRCUIT_D}" fill="none" stroke="#f1f1f1" stroke-width="68" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 10"/>
-      <path d="${CIRCUIT_D}" fill="none" stroke="#d94b45" stroke-width="65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 10"/>
-      <path d="${CIRCUIT_D}" fill="none" stroke="#666c72" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
-      <path id="gridlineCircuitPath" d="${CIRCUIT_D}" fill="none" stroke="#d9dde1" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="10 10" opacity=".92"/>
+      <path d="${circuitD}" fill="none" stroke="#dfc79c" stroke-width="78" stroke-linecap="round" stroke-linejoin="round" filter="url(#trackShadow)"/>
+      <path d="${circuitD}" fill="none" stroke="#f1f1f1" stroke-width="68" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 10"/>
+      <path d="${circuitD}" fill="none" stroke="#d94b45" stroke-width="65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 10"/>
+      <path d="${circuitD}" fill="none" stroke="#666c72" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="gridlineCircuitPath" d="${circuitD}" fill="none" stroke="#d9dde1" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="10 10" opacity=".92"/>
       <g id="startFinish">
         <rect x="410" y="242" width="22" height="72" rx="2" fill="#fff" opacity=".97"/>
         ${checks}
