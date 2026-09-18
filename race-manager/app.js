@@ -788,10 +788,11 @@
   }
 
   function installSession(){
-    if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
-    session=new window.GameBoxLAN.Session({
-      game:'gridline-v14',
+    if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
+    session=new window.GameBoxLAN.DiscoverySession({
+      game:'gridline-v15',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
+      onHostsChanged:hosts=>renderAvailableHosts(hosts),
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
         if(role==='host'){renderHostLobby();broadcastLobby()}
@@ -832,26 +833,90 @@
   }
 
   function renderJoinLobby(players){
-    $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Waiting for the host lobby.</div>';
+    $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Choose an available host above.</div>';
+  }
+
+  function renderAvailableHosts(hosts=[]){
+    const wrap=$('availableHosts');
+    if(!wrap||role!=='client')return;
+    if(session?.peers?.().length){
+      wrap.innerHTML='<div class="discoveryConnected">Connected to host ✓</div>';
+      return;
+    }
+    const open=hosts.filter(host=>!host.started&&finite(host.playerCount,1)<finite(host.maxPlayers,4));
+    if(!open.length){
+      wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>';
+      return;
+    }
+    wrap.innerHTML=open.map(host=>`
+      <button class="hostDiscoveryCard" type="button" data-auto-host="${esc(host.peerId)}">
+        <span class="hostDiscoveryIcon">🏁</span>
+        <span class="hostDiscoveryCopy">
+          <strong>${esc(host.hostName||((host.playerName||'Host')+"'s Race"))}</strong>
+          <small>${finite(host.playerCount,1)} / ${finite(host.maxPlayers,4)} players</small>
+        </span>
+        <span class="hostDiscoveryJoin">JOIN</span>
+      </button>
+    `).join('');
   }
 
   function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:hostPlayers()})}
 
-  async function createInvite(){
-    role='host';ensureSession();$('hostState').textContent='Creating';
-    try{$('hostOffer').value=await session.createHostOffer();$('hostState').textContent='Invite ready'}catch(err){console.error(err);$('hostState').textContent='Error'}
+  function resetNetworkSession(){
+    try{session?.close()}catch{}
+    session=null;
+    pendingHello=false;
   }
 
-  async function acceptAnswer(){
-    role='host';ensureSession();
-    try{await session.acceptHostAnswer($('hostAnswer').value);$('hostAnswer').value='';$('hostOffer').value='';$('hostState').textContent='Connecting'}catch(err){console.error(err);$('hostState').textContent='Invalid answer'}
+  async function startAutoHost(){
+    const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
+    if(!p){$('hostState').textContent='Choose player';return}
+    role='host';
+    const current=ensureSession();
+    $('hostState').textContent='Starting';
+    try{
+      await current.startHost({
+        hostName:`${p.name}'s Gridline Race`,
+        player:p,
+        profile:getProfile(p)
+      });
+      renderHostLobby();
+    }catch(err){
+      console.error(err);
+      $('hostState').textContent='Discovery error';
+    }
   }
 
-  async function makeAnswer(){
-    role='client';ensureSession();
-    const p=roster().find(x=>x.id===$('joinPlayerSelect').value);if(!p)return;
-    localPlayer=p;pendingHello=true;
-    try{$('joinAnswer').value=await session.createClientAnswer($('joinOffer').value);$('joinState').textContent='Answer ready'}catch(err){console.error(err);$('joinState').textContent='Invalid invite'}
+  async function startAutoScan(){
+    role='client';
+    const current=ensureSession();
+    $('joinState').textContent='Scanning';
+    renderAvailableHosts([]);
+    try{
+      await current.startScanner();
+    }catch(err){
+      console.error(err);
+      $('joinState').textContent='Discovery error';
+      const wrap=$('availableHosts');
+      if(wrap)wrap.innerHTML='<div class="emptyState">Could not start automatic host discovery. Check the network connection and try again.</div>';
+    }
+  }
+
+  async function joinDiscoveredHost(peerId){
+    const p=roster().find(x=>x.id===$('joinPlayerSelect').value);
+    if(!p)return;
+    localPlayer=p;
+    pendingHello=true;
+    $('joinState').textContent='Joining';
+    try{
+      await ensureSession().joinHost(peerId,{player:p,profile:getProfile(p)});
+      $('joinState').textContent='Connected';
+      renderAvailableHosts([]);
+    }catch(err){
+      console.error(err);
+      pendingHello=false;
+      $('joinState').textContent=err?.message||'Join failed';
+    }
   }
 
   function startHostRace(){
@@ -860,6 +925,7 @@
     const humans=[{player:hp,owner:'host',profile:getProfile(hp)}];
     session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null})});
     if(humans.length<2)return;
+    session?.updateHost?.({started:true});
     game=buildGame(humans);showRace();renderGame();broadcastGame();
     clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
   }
@@ -882,18 +948,36 @@
     $('chooseMulti').onclick=()=>showSetup('multiSetup');
     $('chooseWifi').onclick=()=>showSetup('wifiRole');
     $('chooseBluetooth').onclick=()=>{$('bluetoothNote').classList.remove('hidden')};
-    $('chooseHost').onclick=()=>{role='host';showSetup('hostSetup');renderHostLobby()};
-    $('chooseJoin').onclick=()=>{role='client';showSetup('joinSetup');renderJoinLobby([])};
+    $('chooseHost').onclick=()=>{
+      resetNetworkSession();
+      role='host';
+      showSetup('hostSetup');
+      renderHostLobby();
+      startAutoHost();
+    };
+    $('chooseJoin').onclick=()=>{
+      resetNetworkSession();
+      role='client';
+      showSetup('joinSetup');
+      renderJoinLobby([]);
+      startAutoScan();
+    };
     $$('[data-back]').forEach(b=>b.onclick=()=>showSetup(b.dataset.back));
     $('startSingle').onclick=startSingleRace;
-    $('hostPlayerSelect').onchange=renderHostLobby;
-    $('createInvite').onclick=createInvite;
-    $('acceptAnswer').onclick=acceptAnswer;
-    $('makeAnswer').onclick=makeAnswer;
+    $('hostPlayerSelect').onchange=()=>{
+      renderHostLobby();
+      const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
+      if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p)});
+    };
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
 
     document.addEventListener('click',e=>{
+      const autoHost=e.target.closest('[data-auto-host]');
+      if(autoHost){
+        joinDiscoveredHost(autoHost.dataset.autoHost);
+        return;
+      }
       const ready=e.target.closest('[data-ready-race]');
       if(ready&&!ready.disabled){
         requestAction({action:'ready'});
