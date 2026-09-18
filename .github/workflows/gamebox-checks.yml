@@ -42,3 +42,4 @@ jobs:
           test -f race-manager/assets/tracks/tropical_island_circuit.png
           test -f race-manager/assets/ui/hud/lap_marker_full.png
           test -f race-manager/assets/ui/hud/lap_marker_empty.png
+          test -f race-manager/assets/ui/popups/leaderboard.png
