@@ -61,7 +61,7 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .setupPanel{position:relative;z-index:2;background:var(--panel);border:5px solid #063b5d;border-radius:16px;margin:18px 8px 22px;padding:70px 0 0;box-shadow:0 6px 0 rgba(3,43,71,.55)}
 .panelRibbon{position:absolute;left:-3px;right:-3px;top:-4px;border-radius:28px 14px 14px 28px}
 .trackSummaryButton{width:100%;border:0;background:transparent;color:#fff;padding:20px;display:flex;align-items:center;justify-content:center;gap:18px}
-.summaryTrackIcon{font-size:86px;font-family:Fredoka;color:#fff;line-height:1}
+.summaryTrackIcon{width:96px;height:86px;font-size:86px;font-family:Fredoka;color:#fff;line-height:1;display:grid;place-items:center}.summaryTrackIcon svg{width:92px;height:76px}.summaryTrackIcon path{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
 .trackSummaryButton span:last-child{display:grid}
 .trackSummaryButton strong{font-size:29px}
 .trackSummaryButton small{color:#55b8ff;font-weight:800;font-size:16px;margin-top:3px}
