@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=5">
+<link rel="stylesheet" href="disc-rally.css?v=6">
 </head>
 <body>
 <div class="discApp">
@@ -212,10 +212,10 @@
           <small id="turnHint">Aim and flick</small>
         </section>
 
-        <div class="raceTouchHud" aria-hidden="true">
-          <div id="aimPad" class="aimPad"><span id="aimDot"></span></div>
-          <div id="powerDial" class="powerDial"><span></span><i id="powerFill"></i></div>
-        </div>
+        <button id="turboButton" class="turboButton" type="button" aria-label="Hold to use turbo">
+          <span class="turboGauge"><i id="turboFill"></i><b>⚡</b></span>
+          <small id="turboState">CHARGING</small>
+        </button>
 
         <div id="finishOverlay" class="finishOverlay hidden"></div>
       </div>
@@ -223,7 +223,6 @@
       <section id="scoreboard" class="scoreboard"></section>
 
       <div class="raceBottomBar">
-        <button id="turboButton" class="turboButton" type="button"><span>⚡</span><strong>TURBO</strong><small id="turboState">Ready</small></button>
         <button id="finishTurnButton" class="finishTurnButton" type="button" disabled>FINISH TURN</button>
       </div>
     </section>
@@ -231,6 +230,6 @@
 </div>
 
 <script src="lan-core.js?v=7"></script>
-<script src="disc-rally.js?v=5"></script>
+<script src="disc-rally.js?v=6"></script>
 </body>
 </html>
