@@ -145,7 +145,7 @@
   }
 
   function showSetup(id){
-    $('.setupView').forEach(v=>v.classList.toggle('hidden',v.id!==id));
+    Array.from(document.querySelectorAll('.setupView')).forEach(v=>v.classList.toggle('hidden',v.id!==id));
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
@@ -251,7 +251,7 @@
 
   function renderRaceSetup(){
     const config=setupConfig();
-    $('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
+    Array.from(document.querySelectorAll('[data-race-mode]')).forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
 
     for(const prefix of ['single','host']){
       const length=$(prefix+'TournamentLength');
