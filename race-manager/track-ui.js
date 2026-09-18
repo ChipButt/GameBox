@@ -2,6 +2,11 @@
   'use strict';
 
   const ASSET_ROOT='assets';
+  const DESIGN_W=390;
+  const DESIGN_H=844;
+  const TRACK_W=390;
+  const TRACK_H=340;
+
   const YOU_SPRITE=`${ASSET_ROOT}/cars/player_gold.png`;
   const BOT_SPRITES=[
     'blue.png','red.png','green.png','cyan.png','orange.png',
@@ -9,22 +14,49 @@
   ].map(name=>`${ASSET_ROOT}/cars/${name}`);
 
   const TRACK_ASSETS={
-    'Forest Lake':`${ASSET_ROOT}/tracks/forest_lake.png`,
-    'Mediterranean Marina':`${ASSET_ROOT}/tracks/mediterranean_marina.png`,
-    'Desert Canyon':`${ASSET_ROOT}/tracks/desert_canyon.png`,
-    'Snowy Alpine':`${ASSET_ROOT}/tracks/snowy_alpine.png`
+    'Autumn River Valley':`${ASSET_ROOT}/tracks/autumn_river_valley_circuit.png`,
+    'Forest Lake':`${ASSET_ROOT}/tracks/forest_lake_circuit.png`,
+    'Desert Canyon':`${ASSET_ROOT}/tracks/desert_canyon_circuit.png`,
+    'Tropical Island':`${ASSET_ROOT}/tracks/tropical_island_circuit.png`
   };
 
-  const VIEW_W=600;
-  const VIEW_H=338;
-
-  // Invisible centre-lines used only to position the approved car sprites over
-  // the approved track artwork.  The SVG itself is never drawn.
-  const TRACK_PATHS={
-    'Forest Lake':'M 318 254 C 410 255 516 257 548 220 C 575 188 565 120 525 91 C 485 62 424 64 382 95 C 345 123 328 150 296 137 C 262 123 250 83 207 72 C 152 58 95 76 73 116 C 53 153 68 193 103 211 C 139 230 180 215 208 233 C 235 250 269 254 318 254 Z',
-    'Mediterranean Marina':'M 300 253 C 405 255 510 257 544 220 C 568 193 560 132 531 99 C 502 66 447 63 394 78 C 335 95 291 111 246 101 C 205 92 178 67 132 73 C 86 80 61 112 68 151 C 76 193 112 215 150 218 C 180 221 192 246 230 252 C 250 255 274 254 300 253 Z',
-    'Desert Canyon':'M 320 255 C 426 255 517 258 544 219 C 562 193 550 162 517 151 C 485 140 470 118 493 94 C 521 65 493 48 448 56 C 399 65 361 99 326 112 C 292 125 267 107 243 86 C 214 61 169 58 124 76 C 81 93 61 125 72 159 C 83 192 118 198 145 211 C 173 224 158 245 198 252 C 235 258 279 255 320 255 Z',
-    'Snowy Alpine':'M 311 254 C 407 255 510 256 543 216 C 569 184 557 126 521 96 C 485 67 437 70 397 93 C 357 117 330 148 296 136 C 262 124 247 87 208 75 C 160 60 105 73 78 108 C 51 144 63 187 98 209 C 130 229 168 220 198 232 C 228 245 259 252 311 254 Z'
+  // Centre-line points were mapped directly against the approved 390 x 340
+  // track images.  Cars are kept on these centre-lines, with only a small
+  // lateral offset when cars overlap, so sprites remain visually on asphalt.
+  const TRACK_POINTS={
+    'Autumn River Valley':[
+      [211,291],[275,291],[306,276],[316,250],[312,215],[330,195],[352,181],
+      [358,151],[350,128],[332,114],[320,82],[299,55],[270,44],[220,45],
+      [165,47],[115,44],[75,42],[44,51],[31,67],[37,88],[58,110],[76,126],
+      [77,154],[64,177],[48,199],[45,223],[54,244],[81,264],[119,282],
+      [162,290]
+    ],
+    'Forest Lake':[
+      [196,291],[255,292],[303,295],[331,287],[347,268],[349,235],[347,197],
+      [347,160],[354,126],[359,96],[349,80],[329,75],[298,76],[274,65],
+      [255,47],[239,34],[217,32],[200,38],[187,56],[177,73],[159,83],
+      [133,83],[103,76],[78,61],[58,56],[43,68],[45,84],[61,96],[84,106],
+      [105,119],[108,137],[98,151],[79,163],[69,179],[69,196],[82,211],
+      [95,227],[98,246],[106,263],[126,278],[155,287]
+    ],
+    'Desert Canyon':[
+      [193,293],[255,293],[314,294],[340,285],[350,266],[351,244],[342,229],
+      [325,220],[317,204],[324,188],[343,178],[355,158],[358,136],[352,113],
+      [344,92],[329,80],[312,75],[293,78],[279,72],[270,60],[260,41],
+      [243,29],[222,24],[205,29],[197,42],[194,59],[185,76],[171,88],
+      [148,95],[119,100],[93,107],[67,115],[51,126],[45,140],[51,154],
+      [66,164],[84,171],[101,182],[106,196],[104,212],[93,222],[78,228],
+      [58,232],[39,240],[26,251],[22,266],[27,280],[43,291],[80,294],
+      [130,294]
+    ],
+    'Tropical Island':[
+      [124,263],[180,265],[235,268],[286,269],[317,263],[338,248],[348,226],
+      [348,202],[355,181],[364,160],[363,139],[359,117],[348,98],[337,84],
+      [323,74],[312,61],[299,57],[288,60],[281,73],[278,87],[267,96],
+      [252,101],[228,102],[205,98],[181,90],[157,81],[132,72],[108,63],
+      [87,60],[70,65],[60,77],[57,94],[58,113],[64,132],[65,150],[58,166],
+      [48,182],[39,201],[34,220],[38,238],[50,250],[71,257],[96,261]
+    ]
   };
 
   const lanes=document.getElementById('raceLanes');
@@ -34,6 +66,14 @@
   const motion=new Map();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
   const currentTrackName=()=>document.getElementById('trackName')?.textContent?.trim()||'Forest Lake';
+
+  function updateRaceScale(){
+    const scale=Math.min(
+      window.innerWidth/DESIGN_W,
+      window.innerHeight/DESIGN_H
+    );
+    raceScreen.style.setProperty('--race-scale',String(scale));
+  }
 
   const totalLaps=()=>{
     const text=document.getElementById('lapText')?.textContent||'';
@@ -46,19 +86,38 @@
     return Number.isFinite(value)?clamp(value,0,100):0;
   };
 
+  function catmullRomClosed(points){
+    const n=points.length;
+    if(n<3)return '';
+    const parts=[`M ${points[0][0]} ${points[0][1]}`];
+    for(let i=0;i<n;i++){
+      const p0=points[(i-1+n)%n];
+      const p1=points[i];
+      const p2=points[(i+1)%n];
+      const p3=points[(i+2)%n];
+      const c1x=p1[0]+(p2[0]-p0[0])/6;
+      const c1y=p1[1]+(p2[1]-p0[1])/6;
+      const c2x=p2[0]-(p3[0]-p1[0])/6;
+      const c2y=p2[1]-(p3[1]-p1[1])/6;
+      parts.push(`C ${c1x.toFixed(2)} ${c1y.toFixed(2)} ${c2x.toFixed(2)} ${c2y.toFixed(2)} ${p2[0]} ${p2[1]}`);
+    }
+    parts.push('Z');
+    return parts.join(' ');
+  }
+
   function gridTarget(index){
     const row=Math.floor(index/2);
-    return -(0.008*(row+1));
+    return -(0.0075*(row+1));
   }
 
   function gridLateral(index){
-    return index%2===0?-11:11;
+    return index%2===0?-4.5:4.5;
   }
 
   function ensureCircuit(){
     const trackName=currentTrackName();
     const imageSrc=TRACK_ASSETS[trackName]||TRACK_ASSETS['Forest Lake'];
-    const pathData=TRACK_PATHS[trackName]||TRACK_PATHS['Forest Lake'];
+    const points=TRACK_POINTS[trackName]||TRACK_POINTS['Forest Lake'];
 
     let image=lanes.querySelector('.trackMap');
     if(!image){
@@ -79,7 +138,7 @@
       const ns='http://www.w3.org/2000/svg';
       svg=document.createElementNS(ns,'svg');
       svg.classList.add('trackMotionSvg');
-      svg.setAttribute('viewBox',`0 0 ${VIEW_W} ${VIEW_H}`);
+      svg.setAttribute('viewBox',`0 0 ${TRACK_W} ${TRACK_H}`);
       svg.setAttribute('preserveAspectRatio','none');
       svg.setAttribute('aria-hidden','true');
       const path=document.createElementNS(ns,'path');
@@ -89,9 +148,10 @@
       svg.appendChild(path);
       lanes.appendChild(svg);
     }
+
     const path=svg.querySelector('#gridlineCircuitPath');
     if(svg.dataset.trackName!==trackName){
-      path.setAttribute('d',pathData);
+      path.setAttribute('d',catmullRomClosed(points));
       svg.dataset.trackName=trackName;
     }
     return {svg,path};
@@ -99,6 +159,7 @@
 
   function updateMode(){
     document.body.classList.toggle('gridline-racing-live',!raceScreen.classList.contains('hidden'));
+    if(!raceScreen.classList.contains('hidden'))updateRaceScale();
   }
 
   function syncMotion(rows,laps,now){
@@ -232,21 +293,24 @@
       }
     }
 
-    const laneSlots=[-15,-8,0,8,15];
+    // The approved roads are about 22–30 design pixels wide.  These small
+    // offsets keep every 8 px-wide car inside the asphalt while still making
+    // overlapping racers visible.
+    const laneSlots=[-6,-3,0,3,6];
     for(const group of groups){
       if(group.length<2)continue;
       group.sort((a,b)=>b.state.rendered-a.state.rendered);
-      group.forEach((item,index)=>{
+      group.forEach((entry,index)=>{
         const laneIndex=index%laneSlots.length;
         const extraRow=Math.floor(index/laneSlots.length);
-        item.state.targetLateral=laneSlots[laneIndex];
-        item.state.targetVisualShift=extraRow?-(extraRow*.009):0;
-        item.state.contact=true;
+        entry.state.targetLateral=laneSlots[laneIndex];
+        entry.state.targetVisualShift=extraRow?-(extraRow*.006):0;
+        entry.state.contact=true;
       });
     }
 
     for(const state of states){
-      state.targetLateral=clamp(state.targetLateral,-16,16);
+      state.targetLateral=clamp(state.targetLateral,-6,6);
       state.lateral+=(state.targetLateral-state.lateral)*.11;
       state.visualShift+=(state.targetVisualShift-state.visualShift)*.08;
     }
@@ -257,9 +321,9 @@
     if(!matrix||typeof svg.createSVGPoint!=='function')return null;
     const p=svg.createSVGPoint();
     p.x=x;p.y=y;
-    const screen=p.matrixTransform(matrix);
+    const screenPoint=p.matrixTransform(matrix);
     const rect=lanes.getBoundingClientRect();
-    return{x:screen.x-rect.left,y:screen.y-rect.top};
+    return{x:screenPoint.x-rect.left,y:screenPoint.y-rect.top};
   }
 
   function drawRacer(state,svg,path,length){
@@ -272,7 +336,7 @@
 
     const pathDistance=clamp(length*lapProgress,0,Math.max(0,length-.1));
     const point=path.getPointAtLength(pathDistance);
-    const tangentPoint=path.getPointAtLength(Math.min(length-.1,pathDistance+3));
+    const tangentPoint=path.getPointAtLength(Math.min(length-.1,pathDistance+2));
 
     let dx=tangentPoint.x-point.x;
     let dy=tangentPoint.y-point.y;
@@ -327,9 +391,11 @@
   screenObserver.observe(raceScreen,{attributes:true,attributeFilter:['class']});
 
   window.addEventListener('resize',()=>{
+    updateRaceScale();
     const now=performance.now();
     for(const state of motion.values())state.lastFrame=now;
   },{passive:true});
 
+  updateRaceScale();
   requestAnimationFrame(animate);
 })();
