@@ -13,11 +13,63 @@
   const shuffle=input=>{const out=[...input];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out};
   const coinResult=()=>{try{const a=new Uint32Array(1);globalThis.crypto.getRandomValues(a);return(a[0]&1)?'H':'T'}catch{return Math.random()>=.5?'H':'T'}};
 
-  function roster(){const items=read(ROSTER_KEY,[]);return Array.isArray(items)?items.filter(p=>p?.id&&String(p.name||'').trim()).map(p=>({id:String(p.id),name:String(p.name).trim()})):[]}
+  const DEFAULT_PLAYERS=[
+    {id:'default-chip',name:'Chip',fixed:true},
+    {id:'default-jess',name:'Jess',fixed:true}
+  ];
+  function roster(){
+    const saved=read(ROSTER_KEY,[]);
+    const items=Array.isArray(saved)?saved:[];
+    const cleaned=items
+      .filter(p=>p?.id&&String(p.name||'').trim())
+      .map(p=>({id:String(p.id),name:String(p.name).trim()}))
+      .filter(p=>!DEFAULT_PLAYERS.some(d=>d.id===p.id||d.name.toLowerCase()===p.name.toLowerCase()));
+    const people=[...DEFAULT_PLAYERS.map(p=>({...p})),...cleaned];
+    const stored=people.map(({id,name})=>({id,name}));
+    if(JSON.stringify(items)!==JSON.stringify(stored))write(ROSTER_KEY,stored);
+    return people;
+  }
   function selection(key,max=4){const valid=new Set(roster().map(p=>p.id)),ids=read(key,[]);return Array.isArray(ids)?ids.map(String).filter(id=>valid.has(id)).slice(0,max):[]}
   function selectedPeople(key,max=4){const map=new Map(roster().map(p=>[p.id,p]));return selection(key,max).map(id=>map.get(id)).filter(Boolean)}
-  function renderHomeRoster(){const list=$('homePlayers');if(!list)return;const people=roster();list.innerHTML='';if(!people.length){list.innerHTML='<div class="emptyNote">Add players here once. Every game will use this list.</div>';return}people.forEach(person=>{const row=document.createElement('div');row.className='homePlayerPill';row.innerHTML=`<span>${esc(person.name)}</span><button type="button" aria-label="Remove ${esc(person.name)}">×</button>`;row.querySelector('button').onclick=()=>{write(ROSTER_KEY,roster().filter(p=>p.id!==person.id));write(CARD_SELECTION_KEY,selection(CARD_SELECTION_KEY).filter(id=>id!==person.id));write(COIN_SELECTION_KEY,selection(COIN_SELECTION_KEY).filter(id=>id!==person.id));renderHomeRoster();renderAllPlayerPickers();syncAllLanPlayerSelects()};list.appendChild(row)})}
-  function addHomePlayer(){const input=$('newPlayerName'),name=input.value.trim();if(!name)return;const people=roster();if(people.some(p=>p.name.toLowerCase()===name.toLowerCase())){input.select();return}people.push({id:uid(),name});write(ROSTER_KEY,people);input.value='';renderHomeRoster();renderAllPlayerPickers();syncAllLanPlayerSelects();input.focus()}
+  function renderHomeRoster(){
+    const list=$('homePlayers');
+    if(!list)return;
+    const people=roster();
+    list.innerHTML='';
+    people.forEach(person=>{
+      const row=document.createElement('div');
+      row.className='homePlayerPill'+(person.fixed?' fixedPlayer':'');
+      row.innerHTML=person.fixed
+        ?`<span>${esc(person.name)}</span>`
+        :`<span>${esc(person.name)}</span><button type="button" aria-label="Remove ${esc(person.name)}">×</button>`;
+      const remove=row.querySelector('button');
+      if(remove)remove.onclick=()=>{
+        write(ROSTER_KEY,roster().filter(p=>p.id!==person.id).map(({id,name})=>({id,name})));
+        write(CARD_SELECTION_KEY,selection(CARD_SELECTION_KEY).filter(id=>id!==person.id));
+        write(COIN_SELECTION_KEY,selection(COIN_SELECTION_KEY).filter(id=>id!==person.id));
+        renderHomeRoster();
+        renderAllPlayerPickers();
+        syncAllLanPlayerSelects();
+      };
+      list.appendChild(row);
+    });
+  }
+  function addHomePlayer({blur=false}={}){
+    const input=$('newPlayerName'),name=input.value.trim();
+    if(!name){if(blur)input.blur();return}
+    const people=roster();
+    if(people.some(p=>p.name.toLowerCase()===name.toLowerCase())){
+      if(blur)input.blur();else input.select();
+      return;
+    }
+    people.push({id:uid(),name});
+    write(ROSTER_KEY,people.map(({id,name})=>({id,name})));
+    input.value='';
+    renderHomeRoster();
+    renderAllPlayerPickers();
+    syncAllLanPlayerSelects();
+    if(blur)input.blur();
+  }
 
   const pickerDefs=[];
   function setupPicker(containerId,storageKey,max,onChange){const container=$(containerId),def={container,storageKey,max,onChange};pickerDefs.push(def);renderPicker(def)}
@@ -97,6 +149,6 @@
   function startWifiCoin(){const people=getSelected('coin'),net=coinNet;if(!people.every(p=>claimedPlayerIds('coin').has(p.id)))return setLanStatus('coin','Every selected player needs an assigned phone before starting.');initialiseCoin(people);net.active=true;net.role='host';net.session.broadcast({type:'coin-start',state:coinSnapshot()});renderCoinPlay();showView('coins-play')}
   function wireLanControls(prefix){$(`${prefix}LanHostMode`).onclick=()=>showLanMode(prefix,'host');$(`${prefix}LanJoinMode`).onclick=()=>showLanMode(prefix,'join');$(`${prefix}LanHostPlayer`).onchange=e=>{const net=getNet(prefix);net.localPlayerId=e.target.value;renderLanDevices(prefix)};$(`${prefix}LanCreateInvite`).onclick=()=>createInvite(prefix);$(`${prefix}LanAcceptAnswer`).onclick=()=>acceptAnswer(prefix);$(`${prefix}LanMakeAnswer`).onclick=()=>makeAnswer(prefix);$(`${prefix}LanJoinName`).onchange=()=>{const net=getNet(prefix);if(net.role==='client'&&net.session.clientChannel?.readyState==='open')net.session.sendToHost({type:'hello',name:$(`${prefix}LanJoinName`).value.trim()})};$(`${prefix}LanStart`).onclick=prefix==='card'?startWifiCard:startWifiCoin}
 
-  function init(){installLanPanel('card','House Rules','cards-setup');installLanPanel('coin','Coin Flip','coins-setup');installNetworkBadge('cards-play','card');installNetworkBadge('coins-play','coin');installNetSession('card');installNetSession('coin');renderHomeRoster();renderCardRules();renderCardSaves();renderCoinSaves();setupPicker('cardPlayerPicker',CARD_SELECTION_KEY,4,()=>syncLanHostPlayer('card'));setupPicker('coinPlayerPicker',COIN_SELECTION_KEY,4,()=>{renderCoinPlayerSettings();syncLanHostPlayer('coin')});wireLanControls('card');wireLanControls('coin');$('addPlayer').onclick=addHomePlayer;$('newPlayerName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addHomePlayer()}};document.querySelectorAll('[data-go]').forEach(btn=>btn.onclick=()=>showView(btn.dataset.go));$('cardExamples').onclick=()=>{card.rules={...card.rules,...exampleRules};renderCardRules()};$('cardClearRules').onclick=()=>{card.rules=Object.fromEntries(ruleKeys.map(k=>[k,'']));renderCardRules()};$('cardStart').onclick=startCardGame;$('cardDrawButton').onclick=requestCardDraw;$('cardRestart').onclick=restartCardGame;$('cardSave').onclick=saveCardSetup;$('coinGoalMode').onchange=()=>{$('coinGoalTargetWrap').classList.toggle('hidden',$('coinGoalMode').value==='free')};$('coinGoalTargetWrap').classList.toggle('hidden',$('coinGoalMode').value==='free');$('coinStart').onclick=startCoinGame;$('coinFlipButton').onclick=requestCoinFlip;$('coinRestart').onclick=restartCoinGame;$('coinSave').onclick=saveCoinSetup;syncAllLanPlayerSelects()}
+  function init(){installLanPanel('card','House Rules','cards-setup');installLanPanel('coin','Coin Flip','coins-setup');installNetworkBadge('cards-play','card');installNetworkBadge('coins-play','coin');installNetSession('card');installNetSession('coin');renderHomeRoster();renderCardRules();renderCardSaves();renderCoinSaves();setupPicker('cardPlayerPicker',CARD_SELECTION_KEY,4,()=>syncLanHostPlayer('card'));setupPicker('coinPlayerPicker',COIN_SELECTION_KEY,4,()=>{renderCoinPlayerSettings();syncLanHostPlayer('coin')});wireLanControls('card');wireLanControls('coin');$('addPlayer').onclick=()=>addHomePlayer();$('newPlayerName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addHomePlayer({blur:true})}};document.querySelectorAll('[data-go]').forEach(btn=>btn.onclick=()=>showView(btn.dataset.go));$('cardExamples').onclick=()=>{card.rules={...card.rules,...exampleRules};renderCardRules()};$('cardClearRules').onclick=()=>{card.rules=Object.fromEntries(ruleKeys.map(k=>[k,'']));renderCardRules()};$('cardStart').onclick=startCardGame;$('cardDrawButton').onclick=requestCardDraw;$('cardRestart').onclick=restartCardGame;$('cardSave').onclick=saveCardSetup;$('coinGoalMode').onchange=()=>{$('coinGoalTargetWrap').classList.toggle('hidden',$('coinGoalMode').value==='free')};$('coinGoalTargetWrap').classList.toggle('hidden',$('coinGoalMode').value==='free');$('coinStart').onclick=startCoinGame;$('coinFlipButton').onclick=requestCoinFlip;$('coinRestart').onclick=restartCoinGame;$('coinSave').onclick=saveCoinSetup;syncAllLanPlayerSelects()}
   init();
 })();
