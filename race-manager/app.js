@@ -55,7 +55,6 @@
   let session=null;
   let game=null;
   let hostTimer=null;
-  let nextRaceTimer=null;
   let pendingHello=false;
 
   function roster(){
@@ -206,8 +205,8 @@
 
   function seedGrid(entrants){
     entrants.sort(()=>Math.random()-.5);
-    entrants.forEach((e,i)=>{
-      e.progress=(entrants.length-i-1)*0.012;
+    entrants.forEach(e=>{
+      e.progress=0;
       e.finishTick=null;
       e.position=null;
     });
@@ -226,7 +225,7 @@
     const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
     for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,(entrants.find(e=>e.human)?.races||0)+1));
     seedGrid(entrants);
-    return {phase:'countdown',countdownTicks:14,raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[],ready:{}};
+    return {phase:'countdown',countdownTicks:12,raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[],ready:{}};
   }
 
   function resetRound(){
@@ -235,7 +234,7 @@
     game.raceNo++;
     game.tick=0;
     game.phase='countdown';
-    game.countdownTicks=14;
+    game.countdownTicks=12;
     game.results=[];
     game.ready={};
     const track=TRACKS[game.trackIndex];
@@ -370,7 +369,7 @@
     if(!game)return;
 
     if(game.phase==='countdown'){
-      game.countdownTicks=Math.max(0,finite(game.countdownTicks,13)-1);
+      game.countdownTicks=Math.max(0,finite(game.countdownTicks,12)-1);
       if(game.countdownTicks<=0){
         game.phase='race';
         game.tick=0;
@@ -485,6 +484,7 @@
     const me=localEntrant();
     if(!me)return;
 
+    $('raceScreen').dataset.phase=game.phase;
     $('activePlayerName').textContent=localPlayer.name;
     $('cash').textContent=money(me.cash);
     $('sponsorRate').textContent=money(incomeRate(me))+'/s';
@@ -587,8 +587,8 @@
       return;
     }
 
-    const ticks=Math.max(0,finite(game.countdownTicks,14));
-    const label=ticks>=11?'3':ticks>=8?'2':ticks>=5?'1':'GO!';
+    const ticks=Math.max(0,finite(game.countdownTicks,12));
+    const label=ticks>=10?'3':ticks>=7?'2':ticks>=4?'1':'GO!';
     const lit=label==='3'?1:label==='2'?2:3;
     overlay.classList.remove('hidden');
     overlay.classList.toggle('go',label==='GO!');
@@ -657,7 +657,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v12',
+      game:'gridline-v13',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
