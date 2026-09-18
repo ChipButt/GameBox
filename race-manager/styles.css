@@ -43,3 +43,331 @@
 .joinRaceConfig{margin:12px 0;padding:10px 12px;border-radius:15px;background:#eef5ff;border:1px solid #bed0e7;color:var(--navy)}
 .joinRaceConfig strong,.joinRaceConfig small{display:block}.joinRaceConfig strong{font-size:.8rem}.joinRaceConfig small{margin-top:3px;color:var(--muted);font-size:.64rem}
 @media(max-width:560px){.mainView{padding:10px}.chipLogo{width:96px;height:36px}.modeChoiceGrid{grid-template-columns:1fr}.modeChoice{min-height:104px}.resourceBar{grid-template-columns:repeat(2,1fr)}.upgradeGrid{grid-template-columns:1fr}.tacticGrid{grid-template-columns:1fr}.raceLane{grid-template-columns:22px 74px 1fr}.panel,.raceCard,.heroPanel{border-radius:20px;padding:13px}.resultGrid{grid-template-columns:1fr 1fr}}
+
+
+/* Gridline designed menu screens — exact 390 x 844 layout JSON. */
+body.gridline-menu-live{
+  width:100%;
+  height:100dvh;
+  overflow:hidden;
+  background:#020b1b;
+}
+body.gridline-menu-live .appShell{
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  margin:0;
+  overflow:hidden;
+}
+body.gridline-menu-live .topbar{display:none!important}
+body.gridline-menu-live .mainView{
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  background:#020b1b;
+}
+
+.menuDesignView:not(.hidden){
+  position:relative;
+  display:block;
+  flex:0 0 auto;
+  width:390px;
+  height:844px;
+  min-width:390px;
+  min-height:844px;
+  overflow:hidden;
+  transform:scale(var(--menu-scale,1));
+  transform-origin:top center;
+  font-family:Arial,sans-serif;
+}
+.menuDesignCanvas{
+  position:relative;
+  width:390px;
+  height:844px;
+  overflow:hidden;
+  background:#03142e;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+.menuBackgroundAsset{
+  position:absolute;
+  left:0;
+  top:0;
+  width:390px;
+  height:844px;
+  object-fit:fill;
+  pointer-events:none;
+  user-select:none;
+}
+.menuPlacedAsset{position:absolute;z-index:50}
+.menuPlacedAsset>img,
+.menuImageChoice>img,
+.menuAssetButton>img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+}
+.menuBackAsset{
+  left:24px;
+  top:24px;
+  width:84px;
+  height:32px;
+  border:0;
+  padding:0;
+  margin:0;
+  background:transparent;
+  text-decoration:none;
+  touch-action:manipulation;
+}
+.menuSettingsAsset{
+  left:320px;
+  top:24px;
+  width:40px;
+  height:32px;
+  object-fit:contain;
+  pointer-events:none;
+}
+.menuLogoAsset{
+  left:88px;
+  top:56px;
+  width:214px;
+  height:51.343px;
+  object-fit:contain;
+  pointer-events:none;
+  z-index:40;
+}
+.menuAssetButton{cursor:pointer}
+.menuAssetButton:active{transform:scale(.96)}
+.menuScreenTitle{
+  position:absolute;
+  left:50px;
+  top:128px;
+  width:290px;
+  height:42px;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  color:#fff;
+  font:900 40px/1 Arial,sans-serif;
+  text-align:center;
+  text-shadow:0 2px 4px rgba(0,0,0,.58);
+  pointer-events:none;
+}
+.carSelectionTitle,
+.trackChoiceTitle{font-size:35px}
+
+.menuImageChoice{
+  position:absolute;
+  z-index:10;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.menuImageChoice:active{transform:scale(.985)}
+.menuImageChoice.selected>img{
+  filter:brightness(1.08) drop-shadow(0 0 7px rgba(247,189,24,.8));
+}
+.crewSingleChoice{left:30px;top:203.969px;width:330px;height:269.06px}
+.crewMultiChoice{left:30px;top:499.072px;width:330px;height:250.516px}
+.raceQuickChoice{left:30px;top:235px;width:330px;height:235.222px}
+.raceTournamentChoice{left:30px;top:505px;width:330px;height:229.542px}
+
+.menuChoiceLayer{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  margin:0;
+  padding:0;
+}
+.menuSelectionCardAsset{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+}
+
+/* Car Selection — positions and text geometry are taken from the supplied layout. */
+.carSelectionView .carChoices{display:block;margin:0}
+.carSelectionView .carChoice{
+  position:absolute;
+  left:var(--slot-x);
+  top:var(--slot-y);
+  width:105px;
+  height:148px;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  overflow:visible;
+  background:transparent;
+  box-shadow:none;
+  color:#fff;
+  text-align:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.carSelectionView .carChoice:disabled{opacity:.32}
+.carSelectionView .carChoice.selected{
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  filter:brightness(1.08) drop-shadow(0 0 5px rgba(247,189,24,.86));
+}
+.carSelectionView .carChoiceSprite{
+  position:absolute;
+  left:20.76px;
+  top:14.637px;
+  width:63.481px;
+  height:78.183px;
+  object-fit:contain;
+  filter:none;
+  pointer-events:none;
+}
+.carSelectionView .carDriverName{
+  position:absolute;
+  left:9.302px;
+  top:106.129px;
+  width:86.398px;
+  height:12.598px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#fff;
+  font:900 10px/1 Arial,sans-serif;
+  text-align:center;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  pointer-events:none;
+}
+.carSelectionView .carChooseText{
+  position:absolute;
+  left:10.057px;
+  top:123.141px;
+  width:84.776px;
+  height:20.008px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#000;
+  font:900 16px/1 Arial,sans-serif;
+  text-align:center;
+  pointer-events:none;
+}
+
+/* Track Choice — positions and text geometry are taken from the supplied layout. */
+.trackChoiceView .trackChoices{display:block;margin:0}
+.trackChoiceView .trackChoice{
+  position:absolute;
+  left:var(--slot-x);
+  top:var(--slot-y);
+  width:172px;
+  height:242px;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  overflow:visible;
+  background:transparent;
+  box-shadow:none;
+  color:#fff;
+  text-align:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.trackChoiceView .trackChoice.selected{
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  filter:brightness(1.08) drop-shadow(0 0 5px rgba(247,189,24,.82));
+}
+.trackChoiceView .trackChoice.selected .trackChoiceName::after{content:none}
+.trackChoiceView .trackChoiceImage{
+  position:absolute;
+  left:14.512px;
+  top:14.584px;
+  width:142.088px;
+  height:145.172px;
+  object-fit:cover;
+  border-radius:0;
+  pointer-events:none;
+}
+.trackChoiceView .trackChoiceName{
+  position:absolute;
+  left:15.176px;
+  top:169.855px;
+  width:142.858px;
+  height:25.012px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  color:#fff;
+  font:900 11px/1 Arial,sans-serif;
+  text-align:center;
+  white-space:normal;
+  text-overflow:clip;
+  pointer-events:none;
+}
+.trackChoiceView .trackChooseText{
+  position:absolute;
+  left:10.193px;
+  top:199.634px;
+  width:151.089px;
+  height:32.529px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#000;
+  font:900 30px/1 Arial,sans-serif;
+  text-align:center;
+  pointer-events:none;
+}
+.menuHiddenControl{display:none!important}
+.menuStartRaceButton{
+  position:absolute;
+  left:30px;
+  top:778px;
+  width:330px;
+  height:50px;
+  z-index:80;
+  margin:0;
+  padding:0;
+  border:2px solid #fff0a3;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffe548,#ffad00);
+  color:#082f68;
+  box-shadow:0 0 0 2px #ffc400 inset,0 0 12px rgba(255,193,7,.45);
+  font:900 21px/1 Arial,sans-serif;
+  text-align:center;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.menuStartRaceButton:disabled{opacity:.42}
+.menuStartRaceButton:active{transform:scale(.985)}
