@@ -468,3 +468,98 @@ body.gridline-menu-live .mainView{
   border-radius:0!important;
   object-fit:cover!important;
 }
+
+
+/* Multiplayer lobby car selection */
+.lobbyCarChoices{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin:8px 0 14px;
+}
+.lobbyCarChoices .carChoice{
+  position:relative;
+  width:100%;
+  aspect-ratio:105/148;
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:12px;
+  overflow:hidden;
+  background:#082f68;
+  color:#fff;
+  box-shadow:0 5px 12px rgba(8,47,104,.16);
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.lobbyCarChoices .carChoice.selected{
+  box-shadow:0 0 0 3px #f7bd18,0 6px 15px rgba(8,47,104,.2);
+}
+.lobbyCarChoices .carChoice:disabled{
+  opacity:.28;
+  filter:grayscale(1);
+  cursor:not-allowed;
+}
+.lobbyCarChoices .menuSelectionCardAsset{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  pointer-events:none;
+}
+.lobbyCarChoices .carChoiceSprite{
+  position:absolute;
+  left:19%;
+  top:9%;
+  width:62%;
+  height:53%;
+  object-fit:contain;
+  pointer-events:none;
+}
+.lobbyCarChoices .carDriverName{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:69%;
+  display:block;
+  overflow:hidden;
+  color:#fff;
+  font:900 10px/1 Arial,sans-serif;
+  white-space:nowrap;
+  text-align:center;
+  text-overflow:ellipsis;
+  pointer-events:none;
+}
+.lobbyCarChoices .carChooseText{
+  position:absolute;
+  left:7%;
+  right:7%;
+  bottom:4%;
+  min-height:19%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#071b34;
+  font:900 12px/1 Arial,sans-serif;
+  pointer-events:none;
+}
+.lobbyReadyNote{
+  margin:8px 0 12px;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--soft);
+  color:var(--muted);
+  font-size:.72rem;
+  line-height:1.35;
+}
+.leaderRow.readyPlayer{box-shadow:inset 4px 0 0 #2da66a}
+.leaderRow.waitingPlayer{box-shadow:inset 4px 0 0 #f7bd18}
+@media(max-width:560px){
+  .lobbyCarChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .lobbyCarChoices .carDriverName{font-size:9px}
+  .lobbyCarChoices .carChooseText{font-size:11px}
+}
