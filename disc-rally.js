@@ -6,13 +6,16 @@ const ROSTER_KEY='gamebox.players.v1';
 const LOCAL_PICK_KEY='gamebox.discrally.players.v1';
 const COLORS=['#f7bd18','#0a65c7','#d94f5c','#24a47f'];
 const TRACKS=[
-  {id:'harbour',name:'Harbour Loop',desc:'Fast, open corners',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[],boosts:[{x:665,y:488,w:120,h:34,a:0}],slow:[]},
-  {id:'bumper',name:'Bumper Run',desc:'Two central rebound posts',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[{x:820,y:180,r:26},{x:180,y:420,r:26}],boosts:[{x:440,y:72,w:120,h:34,a:0}],slow:[]},
-  {id:'goldrush',name:'Gold Rush',desc:'Boost pads and a slow patch',inner:{x:270,y:170,w:460,h:260,r:105},bumpers:[{x:835,y:390,r:22}],boosts:[{x:640,y:486,w:130,h:34,a:0},{x:205,y:72,w:110,h:34,a:0}],slow:[{x:75,y:225,w:120,h:150}]}
+  {id:'harbour',name:'Harbour Loop',desc:'Fast flowing corners',icon:'M12 52 C12 18 84 18 84 48 C84 75 52 82 32 68 C17 58 18 42 34 37',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[],boosts:[{x:665,y:488,w:120,h:34,a:0}],slow:[]},
+  {id:'bumper',name:'Bumper Beware',desc:'Rebound posts guard the line',icon:'M14 64 L14 24 L52 24 L52 44 L82 44 L82 72 L45 72 L45 55 L27 55',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[{x:820,y:180,r:26},{x:180,y:420,r:26}],boosts:[{x:440,y:72,w:120,h:34,a:0}],slow:[]},
+  {id:'goldrush',name:'Gold Rush',desc:'Boost pads and a slow patch',icon:'M12 60 C20 20 48 18 60 38 C72 58 80 28 88 20 M22 70 L78 70',inner:{x:270,y:170,w:460,h:260,r:105},bumpers:[{x:835,y:390,r:22}],boosts:[{x:640,y:486,w:130,h:34,a:0},{x:205,y:72,w:110,h:34,a:0}],slow:[{x:75,y:225,w:120,h:150}]},
+  {id:'switchback',name:'Switchback',desc:'Slalom through alternating posts',icon:'M15 25 L70 25 L70 45 L30 45 L30 68 L85 68',inner:{x:235,y:145,w:530,h:310,r:95},bumpers:[{x:790,y:205,r:23},{x:680,y:92,r:22},{x:315,y:92,r:22},{x:205,y:395,r:23}],boosts:[{x:635,y:490,w:105,h:32,a:0}],slow:[]},
+  {id:'roundabout',name:'Roundabout',desc:'Busy centre-line obstacles',icon:'M18 50 C18 20 82 20 82 50 C82 80 18 80 18 50 M40 50 C40 38 60 38 60 50 C60 62 40 62 40 50',inner:{x:285,y:175,w:430,h:250,r:125},bumpers:[{x:810,y:300,r:25},{x:500,y:85,r:24},{x:190,y:300,r:25},{x:500,y:515,r:24}],boosts:[],slow:[{x:445,y:55,w:110,h:70}]},
+  {id:'lightning',name:'Force Lightning',desc:'Long boosts reward commitment',icon:'M14 62 L35 23 L35 47 L60 47 L45 76 L86 28',inner:{x:245,y:155,w:510,h:290,r:135},bumpers:[{x:850,y:300,r:20}],boosts:[{x:620,y:485,w:150,h:34,a:0},{x:430,y:62,w:140,h:34,a:0},{x:92,y:245,w:34,h:115,a:0}],slow:[]}
 ];
 const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
 const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,BOUNCE=.72,STEPS_MAX=900;
-const VIEW={w:1000,h:600,horizon:95,focal:600,cameraHeight:145,setback:200};
+const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const read=(k,f=[])=>{try{const v=JSON.parse(localStorage.getItem(k));return v??f}catch{return f}};
@@ -29,7 +32,7 @@ const roster=()=>{
 };
 
 let currentView='modeView';
-let mode='local',role=null,session=null,localPlayerId='',selectedTrack='harbour',selectedLaps=2,connectedLobby=[],drag=null,animating=false,turboArmed=false,lastHosts=[];
+let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,animating=false,turboArmed=false,lastHosts=[];
 let game=null,pendingSnapshot=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
@@ -44,13 +47,20 @@ function selectedLocal(){
   return read(LOCAL_PICK_KEY,[]).filter(id=>valid.has(id)).slice(0,4);
 }
 function renderPlayerPicks(){
-  const wrap=$('localPlayers');wrap.innerHTML='';
-  const picked=selectedLocal();
-  roster().forEach(p=>{
-    const b=document.createElement('button');b.type='button';b.className='playerChoice'+(picked.includes(p.id)?' selected':'');b.textContent=p.name;
-    b.onclick=()=>{let s=selectedLocal();if(s.includes(p.id))s=s.filter(x=>x!==p.id);else if(s.length<4)s.push(p.id);write(LOCAL_PICK_KEY,s);renderPlayerPicks()};
-    wrap.appendChild(b);
-  });
+  const wrap=$('localPlayers');if(!wrap)return;wrap.innerHTML='';
+  const picked=selectedLocal(),map=new Map(roster().map(p=>[p.id,p]));
+  for(let i=0;i<4;i++){
+    const person=map.get(picked[i]),slot=document.createElement('div');
+    slot.className='playerSlot '+(person?'filled':'empty');
+    slot.innerHTML=person
+      ? `<span class="playerDisc" style="background:${COLORS[i%COLORS.length]}"></span><strong>${esc(person.name)}</strong>`
+      : '<span class="playerDisc"></span><strong>EMPTY</strong>';
+    wrap.appendChild(slot);
+  }
+  const picker=$('passRosterOptions');
+  if(picker){
+    picker.innerHTML=roster().map(p=>`<button type="button" data-pass-player="${esc(p.id)}" class="${picked.includes(p.id)?'selected':''}">${esc(p.name)}</button>`).join('');
+  }
 }
 function syncPlayerSelects(){
   ['hostPlayer','joinPlayer'].forEach(id=>{
@@ -59,20 +69,43 @@ function syncPlayerSelects(){
   });
 }
 function renderTracks(containerId){
-  const wrap=$(containerId);wrap.innerHTML='';
+  const wrap=$(containerId);if(!wrap)return;wrap.innerHTML='';
+  if(containerId==='trackGrid'){
+    const random=document.createElement('button');
+    random.type='button';random.className='trackCard random'+(selectedTrack==='random'?' selected':'');
+    random.innerHTML='<span class="trackCardArt">?</span><strong>Random Track</strong>';
+    random.onclick=()=>selectTrack('random',true);wrap.appendChild(random);
+    TRACKS.forEach(t=>{
+      const b=document.createElement('button');b.type='button';b.className='trackCard'+(t.id===selectedTrack?' selected':'');
+      b.innerHTML=`<span class="trackCardArt"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${t.icon}"></path></svg></span><strong>${esc(t.name)}</strong>`;
+      b.onclick=()=>selectTrack(t.id,true);wrap.appendChild(b);
+    });
+    return;
+  }
   TRACKS.forEach(t=>{
     const b=document.createElement('button');b.type='button';b.className='trackChoice'+(t.id===selectedTrack?' selected':'');
     b.innerHTML=`<strong>${esc(t.name)}</strong><small>${esc(t.desc)}</small>`;
-    b.onclick=()=>{selectedTrack=t.id;['localTracks','hostTracks'].forEach(renderTracks);if(role==='host')updateHostAdvert()};
-    wrap.appendChild(b);
+    b.onclick=()=>selectTrack(t.id,false);wrap.appendChild(b);
   });
 }
-function track(){return TRACKS.find(t=>t.id===selectedTrack)||TRACKS[0]}
+function selectTrack(id,returnToSetup=false){
+  selectedTrack=id;
+  renderTracks('trackGrid');renderTracks('hostTracks');renderTrackSummary();
+  if(role==='host')updateHostAdvert();
+  if(returnToSetup)showView('localSetup');
+}
+function renderTrackSummary(){
+  const t=TRACKS.find(x=>x.id===selectedTrack);
+  if($('selectedTrackName'))$('selectedTrackName').textContent=t?t.name:'Random Track';
+  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${t.icon}"></path></svg>`:'?';
+}
+function track(){return TRACKS.find(t=>t.id===(game?.trackId||selectedTrack))||TRACKS[0]}
 
 function buildRace(players,laps=2){
   const starts=[{x:390,y:500},{x:340,y:500},{x:290,y:500},{x:240,y:500}];
+  const raceTrack=selectedTrack==='random'?TRACKS[Math.floor(Math.random()*TRACKS.length)].id:selectedTrack;
   return {
-    id:uid(),trackId:selectedTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,shotInProgress:false,
+    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',
     players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turbo:1,finished:false}))
   };
 }
@@ -86,7 +119,12 @@ function applySnapshot(s){
 function activePlayer(){return game?.players?.[game.current]||null}
 function localCanShoot(){
   const p=activePlayer();
-  if(!p||animating||game?.winner)return false;
+  if(!p||animating||game?.winner||game?.phase!=='aim')return false;
+  return mode==='local'||localPlayerId===p.id;
+}
+function localCanFinish(){
+  const p=activePlayer();
+  if(!p||animating||game?.winner||game?.phase!=='settled')return false;
   return mode==='local'||localPlayerId===p.id;
 }
 function nextTurn(){
