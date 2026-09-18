@@ -149,10 +149,15 @@
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
-    if(id==='setupHome')renderRaceSetup();
+    if(id==='raceFormatSetup')renderRaceSetup();
     if(id==='carSetup')renderCarChoices('flow');
-    if(id==='trackSetup')renderRaceSetup();
-    if(id==='singleSetup'){renderSinglePlayers();renderRaceSetup()}
+    if(id==='trackSetup'){
+      renderRaceSetup();
+      renderSinglePlayers();
+      const playerBlock=$('singlePlayerBlock');
+      if(playerBlock)playerBlock.classList.toggle('hidden',playMode!=='single');
+      updateTrackStartButton();
+    }
     if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
     if(id==='joinSetup')syncPlayerSelects();
   }
@@ -168,7 +173,7 @@
     const people=roster(),wrap=$('singlePlayerList');
     wrap.innerHTML='';
     $('singleRosterEmpty').classList.toggle('hidden',people.length>0);
-    if(!people.some(p=>p.id===selectedSingleId))selectedSingleId='';
+    if(!people.some(p=>p.id===selectedSingleId))selectedSingleId=people[0]?.id||'';
     people.forEach(p=>{
       const b=document.createElement('button');
       b.type='button';
@@ -177,7 +182,7 @@
       b.onclick=()=>{selectedSingleId=p.id;renderSinglePlayers();renderCarChoices('single')};
       wrap.appendChild(b);
     });
-    $('startSingle').disabled=!selectedSingleId;
+    updateTrackStartButton();
   }
 
   function carLabel(color){return CAR_BY_COLOR[normaliseCarColor(color)]?.label||'Gold'}
@@ -220,9 +225,7 @@
   function selectCarColor(color){
     const next=normaliseCarColor(color);
     selectedCarColor=next;
-    renderCarChoices('single');
-    renderCarChoices('host');
-    renderCarChoices('join',latestLobbyPlayers);
+    renderCarChoices('flow');
 
     if(role==='host'&&session){
       renderHostLobby();
@@ -253,14 +256,12 @@
     const config=setupConfig();
     Array.from(document.querySelectorAll('[data-race-mode]')).forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
 
-    for(const prefix of ['single','host']){
-      const length=$(prefix+'TournamentLength');
-      if(length)length.classList.toggle('hidden',config.mode!=='tournament');
-      const input=$(prefix+'RaceCount');
-      const value=$(prefix+'RaceCountValue');
-      if(input)input.value=String(config.totalRaces===1?raceSetup.races:config.totalRaces);
-      if(value)value.textContent=`${config.totalRaces===1?raceSetup.races:config.totalRaces} races`;
-    }
+    const flowLength=$('flowTournamentLength');
+    if(flowLength)flowLength.classList.toggle('hidden',config.mode!=='tournament');
+    const flowCount=$('flowRaceCount');
+    const flowValue=$('flowRaceCountValue');
+    if(flowCount)flowCount.value=String(raceSetup.races);
+    if(flowValue)flowValue.textContent=`${raceSetup.races} races`;
 
     const flowTracks=$('flowTrackChoices');
     if(flowTracks)flowTracks.innerHTML=TRACKS.map((track,index)=>`
@@ -1119,6 +1120,20 @@
     setTimeout(()=>button.classList.remove('receivingCoins'),620);
   }
 
+  function updateTrackStartButton(){
+    const button=$('startConfiguredRace');
+    if(!button)return;
+    button.disabled=playMode==='single'&&!selectedSingleId;
+  }
+
+  function startConfiguredRace(){
+    if(playMode==='single'){
+      startSingleRace();
+      return;
+    }
+    showSetup('multiSetup');
+  }
+
   function installSession(){
     if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
     session=new window.GameBoxLAN.DiscoverySession({
@@ -1309,8 +1324,16 @@
   }
 
   function bind(){
-    $('chooseSingle').onclick=()=>showSetup('singleSetup');
-    $('chooseMulti').onclick=()=>showSetup('multiSetup');
+    $('chooseSingle').onclick=()=>{
+      playMode='single';
+      role=null;
+      showSetup('raceFormatSetup');
+    };
+    $('chooseMulti').onclick=()=>{
+      playMode='multi';
+      role=null;
+      showSetup('raceFormatSetup');
+    };
     $('chooseWifi').onclick=()=>showSetup('wifiRole');
     $('chooseBluetooth').onclick=()=>{$('bluetoothNote').classList.remove('hidden')};
     $('chooseHost').onclick=()=>{
@@ -1334,21 +1357,17 @@
       }
       showSetup(b.dataset.back);
     });
-    $('startSingle').onclick=startSingleRace;
+    $('startConfiguredRace').onclick=startConfiguredRace;
     $('hostPlayerSelect').onchange=()=>{
       renderHostLobby();
       const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
       if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p),carColor:selectedCarColor});
     };
-    $('joinPlayerSelect').onchange=()=>{
+    const flowRaceCount=$('flowRaceCount');
+    if(flowRaceCount)flowRaceCount.oninput=()=>{
+      raceSetup.races=clamp(Math.round(finite(flowRaceCount.value,5)),3,15);
+      renderRaceSetup();
     };
-    for(const id of ['singleRaceCount','hostRaceCount']){
-      const input=$(id);
-      if(input)input.oninput=()=>{
-        raceSetup.races=clamp(Math.round(finite(input.value,5)),3,15);
-        renderRaceSetup();
-      };
-    }
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
     const gameboxBack=document.getElementById('gameboxBack');
@@ -1371,14 +1390,13 @@
       if(raceMode){
         raceSetup.mode=raceMode.dataset.raceMode==='tournament'?'tournament':'quick';
         renderRaceSetup();
-        if(raceMode.closest('#setupHome'))showSetup('carSetup');
+        if(raceMode.closest('#raceFormatSetup'))showSetup('carSetup');
         return;
       }
       const trackChoice=e.target.closest('[data-track-index]');
       if(trackChoice){
         raceSetup.trackIndex=clamp(Math.round(finite(trackChoice.dataset.trackIndex,0)),0,TRACKS.length-1);
         renderRaceSetup();
-        if(trackChoice.closest('#trackSetup'))showSetup('playSetup');
         return;
       }
       const exitSeries=e.target.closest('[data-exit-series]');
