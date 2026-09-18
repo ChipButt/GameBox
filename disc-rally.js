@@ -554,10 +554,10 @@ function localCanTurbo(){
   const owned=mode==='local'||localPlayerId===p.id;
   return owned&&(p.turboHeld||(p.turboReady&&p.turboCharge>=.999));
 }
-function applyTurboHeld(playerId,held){
+function applyTurboHeld(playerId,held,force=false){
   const p=game?.players?.find(x=>x.id===playerId);if(!p)return false;
   if(held){
-    if(game?.phase!=='moving'||p.id!==activePlayer()?.id||!p.turboReady||p.turboCharge<.999)return false;
+    if(!force&&(game?.phase!=='moving'||p.id!==activePlayer()?.id||!p.turboReady||p.turboCharge<.999))return false;
     p.turboReady=false;p.turboHeld=true;
   }else{
     p.turboHeld=false;
@@ -708,7 +708,7 @@ function networkMessage(msg,source){
     if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];selectedTrack=msg.trackId||selectedTrack;selectedLaps=Number(msg.laps)||2;renderLobby('joinLobby',connectedLobby);return}
     if(msg.type==='start'&&msg.state){mode='multi';applySnapshot(msg.state);return}
     if(msg.type==='flick-start'){playRemoteFlick(msg);return}
-    if(msg.type==='turbo-hold'){applyTurboHeld(String(msg.playerId||''),!!msg.held);return}
+    if(msg.type==='turbo-hold'){applyTurboHeld(String(msg.playerId||''),!!msg.held,true);return}
     if(msg.type==='state'){if(animating)pendingSnapshot=msg.state;else applySnapshot(msg.state);return}
   }
 }
