@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=7">
-  <link rel="stylesheet" href="track-ui.css?v=22">
+  <link rel="stylesheet" href="track-ui.css?v=23">
 
   <!-- Preload both upgrade states so the first affordability change never flashes while artwork loads. -->
   <link rel="preload" as="image" href="assets/ui/upgrades/enabled/engine.png">
@@ -49,6 +49,8 @@
         <p class="panelIntro">Choose one name from the player list you created on the GameBox home screen.</p>
         <div id="singlePlayerList" class="playerChoices"></div>
         <div id="singleRosterEmpty" class="emptyState hidden">No players are saved yet. Go back to GameBox and add a player first.</div>
+        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Your name replaces that colour's regular racer.</small></div>
+        <div id="singleCarChoices" class="carChoices"></div>
         <section class="raceSetupBlock">
           <div class="setupSectionTitle"><strong>Race format</strong><small>Choose one race or a multi-race tournament.</small></div>
           <div class="raceModeChoices">
@@ -87,6 +89,8 @@
       <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">HOST GAME</span><h1>Race lobby</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">This phone is playing as<select id="hostPlayerSelect"></select></label>
+        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Choose the host player's car.</small></div>
+        <div id="hostCarChoices" class="carChoices"></div>
         <section class="raceSetupBlock hostRaceSetup">
           <div class="setupSectionTitle"><strong>Race format</strong><small>The host sets the race for everyone.</small></div>
           <div class="raceModeChoices">
@@ -115,6 +119,8 @@
       <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">JOIN GAME</span><h1>Find a race</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">You are playing as<select id="joinPlayerSelect"></select></label>
+        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Choose your car before joining.</small></div>
+        <div id="joinCarChoices" class="carChoices"></div>
         <div class="lobbyHeader"><strong>Available games</strong><span id="joinState" class="tag">Scanning</span></div>
         <div id="availableHosts" class="hostDiscoveryList">
           <div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>
@@ -214,6 +220,13 @@
         <div id="upgradeGrid" class="upgradeGrid"></div>
       </section>
 
+      <section id="raceLeaderboard" class="raceLeaderboard hidden" aria-live="polite">
+        <div class="raceLeaderboardFrame">
+          <img class="raceLeaderboardAsset" src="assets/ui/popups/leaderboard.png" alt="">
+          <div id="raceLeaderboardRows" class="raceLeaderboardRows"></div>
+        </div>
+      </section>
+
       <section id="resultCard" class="resultCard hidden" aria-live="polite"></section>
 
       <div class="hiddenRaceMeta" aria-hidden="true">
@@ -229,7 +242,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=6"></script>
-<script src="app.js?v=28"></script>
-<script src="track-ui.js?v=15"></script>
+<script src="app.js?v=29"></script>
+<script src="track-ui.js?v=16"></script>
 </body>
 </html>
