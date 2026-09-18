@@ -286,8 +286,9 @@
       }
     }
 
+    const lobbyLocked=prefix==='join'&&multiplayerStage==='track';
     wrap.innerHTML=CAR_ROSTER.map((car,index)=>{
-      const unavailable=taken.has(car.color)&&car.color!==selectedCarColor;
+      const unavailable=lobbyLocked||(taken.has(car.color)&&car.color!==selectedCarColor);
       const slot=CAR_MENU_SLOTS[index]||CAR_MENU_SLOTS[0];
       const replacementName=prefix==='flow'
         ?car.racer
@@ -321,6 +322,7 @@
     }
 
     if(role==='client'&&playMode==='multi'){
+      if(multiplayerStage==='track')return false;
       const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
       const taken=(latestLobbyPlayers||[]).some(player=>String(player.id)!==String(ownId)&&validCarColor(player.carColor)===next);
       if(taken&&next!==selectedCarColor)return false;
@@ -1426,6 +1428,7 @@
 
   function renderJoinLobby(players,config=null){
     latestLobbyPlayers=Array.isArray(players)?players:[];
+    multiplayerStage=config?.stage==='track'?'track':'lobby';
     const panel=$('joinCarPanel');
     if(panel)panel.classList.toggle('hidden',!session?.peers?.().length);
     const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
