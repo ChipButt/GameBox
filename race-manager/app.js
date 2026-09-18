@@ -237,7 +237,7 @@
 
   function showRace(){
     closeTrackStartPopup();
-    $('.setupView').forEach(v=>v.classList.add('hidden'));
+    $$('.setupView').forEach(v=>v.classList.add('hidden'));
     document.body.classList.remove('gridline-menu-live');
     $('raceScreen').classList.remove('hidden');
     $('exitRace').classList.remove('hidden');
