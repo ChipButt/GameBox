@@ -315,38 +315,46 @@ function drawAim(){
 }
 function draw(){drawTrack();drawDiscs();drawAim()}
 function pointerPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
-function controlFeedback(sx=0,sy=0,power=0){
-  const dot=$('aimDot'),dial=$('powerDial')?.querySelector('span'),ring=$('powerFill');
-  if(dot){
-    const m=Math.hypot(sx,sy)||1,cap=Math.min(24,m*.18);
-    dot.style.transform=`translate(${sx/m*cap}px,${sy/m*cap}px)`;
-  }
-  if(dial)dial.style.transform=`translate(-50%,-100%) rotate(${-115+230*power}deg)`;
-  if(ring)ring.style.opacity=String(.25+.75*power);
-}
+function resetLook(){lookDrag=null;lookYaw=0;lookPitch=0}
 function onPointerDown(e){
   if(!localCanShoot())return;
-  const q=pointerPoint(e),p=activePlayer(),sp=projectPoint(p.x,p.y);if(!sp||Math.hypot(q.x-sp.x,q.y-sp.y)>Math.max(95,DISC_R*sp.scale*1.35))return;
-  canvas.setPointerCapture?.(e.pointerId);drag=q;turboArmed=turboArmed&&p.turbo>0;draw();e.preventDefault();
+  const q=pointerPoint(e),p=activePlayer(),sp=projectPoint(p.x,p.y);
+  if(!sp)return;
+  canvas.setPointerCapture?.(e.pointerId);
+  const discHit=Math.hypot(q.x-sp.x,q.y-sp.y)<=Math.max(95,DISC_R*sp.scale*1.35);
+  if(discHit){
+    drag=q;
+  }else{
+    lookDrag={x:q.x,y:q.y,startYaw:lookYaw,startPitch:lookPitch,pointerId:e.pointerId};
+  }
+  draw();e.preventDefault();
 }
 function onPointerMove(e){
-  if(!drag)return;drag=pointerPoint(e);const p=activePlayer(),sp=projectPoint(p.x,p.y);if(!sp)return;
-  const sx=drag.x-sp.x,sy=drag.y-sp.y,power=clamp(Math.hypot(sx,sy)/MAX_DRAG_SCREEN,0,1);controlFeedback(sx,sy,power);draw();e.preventDefault();
+  if(lookDrag){
+    const q=pointerPoint(e);
+    lookYaw=clamp(lookDrag.startYaw-(q.x-lookDrag.x)*.0065,-Math.PI,Math.PI);
+    lookPitch=clamp(lookDrag.startPitch+(q.y-lookDrag.y)*.22,-120,150);
+    draw();e.preventDefault();return;
+  }
+  if(!drag)return;
+  drag=pointerPoint(e);draw();e.preventDefault();
 }
 function onPointerUp(e){
+  if(lookDrag){
+    lookDrag=null;draw();e.preventDefault();return;
+  }
   if(!drag||!localCanShoot())return;
   const q=pointerPoint(e),p=activePlayer(),sp=projectPoint(p.x,p.y),cam=cameraForView();
   if(!sp){drag=null;return}
-  const sx=q.x-sp.x,sy=q.y-sp.y,d=Math.hypot(sx,sy);drag=null;controlFeedback(0,0,0);draw();
-  if(d<20)return;
-  const power=clamp(d/MAX_DRAG_SCREEN,.12,1),speed=(5+power*MAX_SPEED)*(turboArmed?1.35:1);
-  // Up-screen is forward along the track. Horizontal drag steers left/right.
+  const sx=q.x-sp.x,sy=q.y-sp.y,d=Math.hypot(sx,sy);drag=null;
+  if(d<20){draw();return}
+  const power=clamp(d/MAX_DRAG_SCREEN,.12,1),speed=5+power*MAX_SPEED;
   const forward=-sy,lateral=sx*.9,dm=Math.hypot(forward,lateral)||1;
   const ux=(cam.hx*forward+cam.rx*lateral)/dm,uy=(cam.hy*forward+cam.ry*lateral)/dm;
-  const vx=ux*speed,vy=uy*speed,useTurbo=turboArmed;
-  turboArmed=false;renderRace();
-  if(mode==='multi'&&role==='client')session?.sendToHost({type:'flick',playerId:p.id,vx,vy,useTurbo});
-  else startAuthoritativeFlick(p.id,vx,vy,useTurbo);
+  const vx=ux*speed,vy=uy*speed;
+  resetLook();draw();renderRace();
+  if(mode==='multi'&&role==='client')session?.sendToHost({type:'flick',playerId:p.id,vx,vy});
+  else startAuthoritativeFlick(p.id,vx,vy);
   e.preventDefault();
 }
 
