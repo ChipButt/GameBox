@@ -560,10 +560,11 @@ function renderLobby(target,players){
   const wrap=$(target);if(!wrap)return;
   wrap.innerHTML=players.length?players.map((p,i)=>`<div class="lobbyPlayer"><strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="empty">Waiting for players…</div>';
 }
+function selectedTrackLabel(){return selectedTrack==='random'?'Random Track':(TRACKS.find(t=>t.id===selectedTrack)?.name||'Track')}
 function updateHostAdvert(){
   if(role!=='host'||!session?.updateHost)return;
-  const p=roster().find(x=>x.id===$('hostPlayer').value),t=track();
-  session.updateHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,started:false,raceMode:'disc-rally',trackName:t.name,totalRaces:Number($('hostLaps').value)||2});
+  const p=roster().find(x=>x.id===$('hostPlayer').value);
+  session.updateHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,started:false,raceMode:'disc-rally',trackName:selectedTrackLabel(),totalRaces:Number($('hostLaps').value)||2});
 }
 function installSession(kind){
   resetSession();
@@ -585,7 +586,7 @@ async function startHostDiscovery(){
     installSession('host');localPlayerId=$('hostPlayer').value;
     const p=roster().find(x=>x.id===localPlayerId);selectedLaps=Number($('hostLaps').value)||2;
     $('hostStatus').textContent='Starting…';
-    await session.startHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,raceMode:'disc-rally',trackName:track().name,totalRaces:selectedLaps});
+    await session.startHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,raceMode:'disc-rally',trackName:selectedTrackLabel(),totalRaces:selectedLaps});
     renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;
   }catch(err){console.error(err);$('hostStatus').textContent='Discovery error — tap Restart discovery';}
 }
@@ -633,23 +634,76 @@ function startLocalRace(){
   selectedLaps=Number($('localLaps').value)||2;mode='local';role=null;localPlayerId='';game=buildRace(players,selectedLaps);renderRace();showView('raceView');
 }
 function leaveRace(){
-  resetSession();game=null;drag=null;animating=false;turboArmed=false;mode='local';role=null;showView('modeView');
+  resetSession();game=null;drag=null;animating=false;turboArmed=false;mode='local';role=null;controlFeedback(0,0,0);renderPlayerPicks();renderTrackSummary();showView('modeView');
 }
 function bind(){
-  renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');
-  $('localMode').onclick=()=>showView('localSetup');$('multiMode').onclick=()=>showView('multiSetup');
-  $$('[data-back]').forEach(b=>b.onclick=()=>{if(currentView==='hostSetup'||currentView==='joinSetup')resetSession();showView(b.dataset.back)});
+  renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();
+
+  $('localMode').onclick=()=>showView('passMenuView');
+  $('multiMode').onclick=()=>showView('multiSetup');
+  $('openSettings').onclick=()=>showView('settingsView');
+  $('newPassRace').onclick=$('newPassRaceBottom').onclick=()=>{
+    $('localStatus').textContent='';
+    renderPlayerPicks();renderTrackSummary();showView('localSetup');
+  };
+  $('openTrackSelection').onclick=()=>{renderTracks('trackGrid');showView('trackSelectView')};
+
+  $$('[data-back]').forEach(b=>b.onclick=()=>{
+    if(currentView==='hostSetup'||currentView==='joinSetup')resetSession();
+    showView(b.dataset.back);
+  });
+
+  $('addPassPlayer').onclick=()=>$('passRosterOptions').classList.toggle('hidden');
+  $('removePassPlayer').onclick=()=>{
+    const picked=selectedLocal();picked.pop();write(LOCAL_PICK_KEY,picked);renderPlayerPicks();
+  };
+
   $('startLocal').onclick=startLocalRace;
-  $('hostMode').onclick=()=>{showView('hostSetup');syncPlayerSelects();renderTracks('hostTracks');startHostDiscovery()};
+  $('hostMode').onclick=()=>{
+    if(selectedTrack==='random')selectedTrack='harbour';
+    showView('hostSetup');syncPlayerSelects();renderTracks('hostTracks');startHostDiscovery();
+  };
   $('joinMode').onclick=()=>{showView('joinSetup');syncPlayerSelects();startScan()};
-  $('restartHostDiscovery').onclick=startHostDiscovery;$('restartScan').onclick=startScan;
+  $('restartHostDiscovery').onclick=startHostDiscovery;
+  $('restartScan').onclick=startScan;
   $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
   $('hostLaps').onchange=()=>{selectedLaps=Number($('hostLaps').value)||2;updateHostAdvert();broadcastLobby()};
-  $('joinPlayer').onchange=()=>{localPlayerId=$('joinPlayer').value;const p=roster().find(x=>x.id===localPlayerId);if(role==='client'&&session?.peers?.().length&&p)session.sendToHost({type:'hello',player:p})};
-  $('startHost').onclick=startHostRace;$('exitRace').onclick=leaveRace;
+  $('joinPlayer').onchange=()=>{
+    localPlayerId=$('joinPlayer').value;
+    const p=roster().find(x=>x.id===localPlayerId);
+    if(role==='client'&&session?.peers?.().length&&p)session.sendToHost({type:'hello',player:p});
+  };
+
+  $('startHost').onclick=startHostRace;
+  $('exitRace').onclick=leaveRace;
+  $('finishTurnButton').onclick=requestFinishTurn;
   $('turboButton').onclick=()=>{if(localCanShoot()&&activePlayer()?.turbo>0){turboArmed=!turboArmed;renderRace()}};
-  canvas.addEventListener('pointerdown',onPointerDown);canvas.addEventListener('pointermove',onPointerMove);canvas.addEventListener('pointerup',onPointerUp);canvas.addEventListener('pointercancel',()=>{drag=null;$('powerFill').style.width='0%';draw()});
-  document.addEventListener('click',e=>{const host=e.target.closest('[data-host]');if(host)joinHost(host.dataset.host)});
+
+  canvas.addEventListener('pointerdown',onPointerDown);
+  canvas.addEventListener('pointermove',onPointerMove);
+  canvas.addEventListener('pointerup',onPointerUp);
+  canvas.addEventListener('pointercancel',()=>{drag=null;controlFeedback(0,0,0);draw()});
+
+  document.addEventListener('click',e=>{
+    const host=e.target.closest('[data-host]');if(host){joinHost(host.dataset.host);return}
+    const player=e.target.closest('[data-pass-player]');
+    if(player){
+      let picked=selectedLocal(),id=player.dataset.passPlayer;
+      if(picked.includes(id))picked=picked.filter(x=>x!==id);else if(picked.length<4)picked.push(id);
+      write(LOCAL_PICK_KEY,picked);renderPlayerPicks();
+    }
+  });
+
+  const settings=read('gamebox.discrally.settings.v1',{cameraFollow:true,motion:true});
+  $('cameraFollowSetting').checked=settings.cameraFollow!==false;
+  $('motionSetting').checked=settings.motion!==false;
+  const saveSettings=()=>write('gamebox.discrally.settings.v1',{
+    cameraFollow:$('cameraFollowSetting').checked,
+    motion:$('motionSetting').checked
+  });
+  $('cameraFollowSetting').onchange=saveSettings;
+  $('motionSetting').onchange=saveSettings;
+
   const cleanup=()=>{try{session?.close()}catch{}};
   window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup()});
   window.addEventListener('pageshow',e=>{
