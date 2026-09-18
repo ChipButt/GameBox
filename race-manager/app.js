@@ -635,6 +635,7 @@
     $('raceScreen').dataset.phase=game.phase;
     $('activePlayerName').textContent=localPlayer.name;
     if($('profilePlayerName'))$('profilePlayerName').textContent=localPlayer.name;
+    if($('playerLevelText'))$('playerLevelText').textContent='1';
     $('cash').textContent=money(me.cash);
     $('sponsorRate').textContent=money(incomeRate(me))+'/s';
     $('raceNumber').textContent=`Race\n${game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo)}`;
@@ -654,6 +655,14 @@
     const lap=Math.min(track.laps,Math.max(1,Math.floor((racePct/100)*track.laps)+1));
     $('lapText').textContent=`Lap ${lap} / ${track.laps}`;
     $('lapBar').style.width=`${racePct}%`;
+    for(let i=1;i<=8;i++){
+      const marker=$('lapMarker'+i);
+      if(!marker)continue;
+      marker.classList.toggle('hidden',i>track.laps);
+      if(i<=track.laps){
+        marker.src=`${ASSET_ROOT}/ui/hud/${i<=lap?'lap_marker_full.png':'lap_marker_empty.png'}`;
+      }
+    }
     const finalLap=$('finalLapBadge');
     if(finalLap)finalLap.classList.toggle('hidden',!(game.phase==='race'&&lap===track.laps));
     const greenFlag=$('greenFlagBadge');
@@ -767,14 +776,12 @@
 
     if(me.activeEvent){
       const evt=me.activeEvent;
-      const seconds=Math.max(1,Math.ceil((finite(evt.expiresTick,game.tick)-game.tick)*TICK_MS/1000));
       card.className='raceEventCard';
       card.innerHTML=`
         <img class="raceEventAsset" src="${ASSET_ROOT}/ui/popups/choice_50_50.png" alt="">
-        <div class="raceEventCopy">
-          <span class="raceEventEyebrow">PIT WALL · ${seconds}s</span>
-          <strong class="raceEventTitle">${esc(evt.title)}</strong>
-          <small class="raceEventPrompt">${esc(evt.prompt)}</small>
+        <div class="raceEventQuestion">
+          <strong>${esc(evt.title)}</strong>
+          <small>${esc(evt.prompt)}</small>
         </div>
         <div class="raceEventChoices">
           ${evt.choices.map((choice,index)=>`<button type="button" data-event-choice="${index}" data-event-id="${esc(evt.id)}">${esc(choice)}</button>`).join('')}
@@ -812,9 +819,9 @@
     card.innerHTML=complete
       ?`
         <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/race_complete.png" alt="">
-        <div class="resultPrize">+${money(prize)}</div>
-        <div class="resultPosition">${ordinal(me.position||12)} place · ${game.raceNo}/${game.totalRaces}</div>
-        <button class="resultAction" data-exit-series type="button">RETURN TO SETUP</button>
+        <div class="resultPrize">${money(prize)}</div>
+        <div class="resultPosition">${ordinal(me.position||12)}</div>
+        <button class="resultAction" data-exit-series type="button" aria-label="Claim and return to setup">CLAIM</button>
       `
       :`
         <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/ready_next_race.png" alt="">
