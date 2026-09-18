@@ -292,8 +292,53 @@ body.gridline-racing-live .mainView{
 
 /* Lap-state assets from the supplied JSON. */
 #raceScreen .raceStatusFlag{object-fit:contain;pointer-events:none}
-#raceScreen .finalLapBadge{left:14px;top:534px;width:41.444px;height:23.077px;z-index:41}
-#raceScreen .greenFlagBadge{left:21px;top:533.054px;width:30px;height:25.227px;z-index:42}
+#raceScreen .finalLapBadge{
+  left:14px;
+  top:534px;
+  width:41.444px;
+  height:23.077px;
+  z-index:42;
+  transform-origin:center;
+}
+#raceScreen .greenFlagBadge{
+  left:21px;
+  top:533.054px;
+  width:30px;
+  height:25.227px;
+  z-index:42;
+  transform-origin:center;
+}
+#raceScreen .greenFlagBadge.raceStartFlash{
+  animation:gridlineGreenFlagFlash .82s cubic-bezier(.2,.9,.25,1.15) both;
+}
+#raceScreen .finalLapBadge.finalLapIntro{
+  z-index:120;
+  animation:gridlineFinalLapIntro 1.6s cubic-bezier(.18,.82,.2,1) both;
+}
+@keyframes gridlineGreenFlagFlash{
+  0%{opacity:0;transform:scale(2.4);filter:brightness(2.2) drop-shadow(0 0 15px rgba(93,255,150,.95))}
+  35%{opacity:1;transform:scale(.82);filter:brightness(1.7) drop-shadow(0 0 10px rgba(93,255,150,.9))}
+  58%{transform:scale(1.18)}
+  100%{opacity:1;transform:scale(1);filter:brightness(1)}
+}
+@keyframes gridlineFinalLapIntro{
+  0%{
+    left:87.5px;top:362px;width:215px;height:120px;
+    opacity:0;filter:brightness(2.2) drop-shadow(0 0 18px rgba(94,234,255,.95));
+  }
+  12%{
+    left:87.5px;top:362px;width:215px;height:120px;
+    opacity:1;filter:brightness(1.35) drop-shadow(0 0 18px rgba(94,234,255,.9));
+  }
+  56%{
+    left:87.5px;top:362px;width:215px;height:120px;
+    opacity:1;filter:brightness(1.1) drop-shadow(0 0 12px rgba(94,234,255,.75));
+  }
+  100%{
+    left:14px;top:534px;width:41.444px;height:23.077px;
+    opacity:1;filter:none;
+  }
+}
 #raceScreen .raceStatusFlag.hidden{display:none!important}
 
 /* Upgrades are positioned exactly from the JSON layout. */
@@ -329,6 +374,9 @@ body.gridline-racing-live .mainView{
   touch-action:manipulation;
   opacity:1;
   box-shadow:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
 #raceScreen .upgradeButton.engine{left:15px;top:575px;width:85px;height:120px}
 #raceScreen .upgradeButton.tyres{left:107px;top:572px;width:85px;height:125px}
@@ -552,7 +600,33 @@ body.gridline-racing-live .mainView{
 #raceScreen .resultCard:not(.seriesComplete) .resultAction:active{transform:scale(.98)}
 
 #raceScreen .lapMarkers{position:absolute;inset:0;z-index:44;pointer-events:none}
-#raceScreen .lapMarker{position:absolute;top:547px;width:31px;height:14px;object-fit:contain}
+#raceScreen .lapMarker{
+  position:absolute;
+  top:547px;
+  width:31px;
+  height:14px;
+  overflow:hidden;
+}
+#raceScreen .lapMarkerEmpty,
+#raceScreen .lapMarkerFill>img{
+  position:absolute;
+  left:0;
+  top:0;
+  width:31px;
+  height:14px;
+  object-fit:contain;
+  display:block;
+}
+#raceScreen .lapMarkerFill{
+  position:absolute;
+  left:0;
+  top:0;
+  width:var(--lap-fill,0%);
+  height:14px;
+  overflow:hidden;
+  transition:width .22s linear;
+  will-change:width;
+}
 #raceScreen #lapMarker1{left:77px}
 #raceScreen #lapMarker2{left:113px}
 #raceScreen #lapMarker3{left:149px}
