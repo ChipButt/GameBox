@@ -8,12 +8,10 @@
   const RACE_TICKS=200;
 
   const TRACKS=[
-    {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,profile:'Stop-start · Technical',risk:1.0,weights:{engine:1.25,tyres:1.25,brakes:1.40,fuel:.85}},
-    {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,profile:'Corner-heavy · Big braking zones',risk:1.15,weights:{engine:.85,tyres:1.75,brakes:1.55,fuel:.65}},
-    {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,profile:'Long straights · High speed',risk:.85,weights:{engine:1.35,tyres:.55,brakes:.65,fuel:1.80}},
-    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · Constant direction changes',risk:1.50,weights:{engine:.90,tyres:1.55,brakes:1.45,fuel:.70}},
-    {name:'Coastal Run',discipline:'GT',weather:'Breezy',laps:9,profile:'Fast sweepers · Long run to the line',risk:1.05,weights:{engine:1.15,tyres:1.35,brakes:.90,fuel:1.35}},
-    {name:'Metro Circuit',discipline:'Street',weather:'Dry',laps:11,profile:'Tight walls · Repeated braking',risk:1.35,weights:{engine:.95,tyres:1.45,brakes:1.70,fuel:.75}}
+    {name:'Forest Lake',asset:'forest_lake.png',discipline:'GT',weather:'Dry',laps:7,profile:'Flowing · Technical',risk:1.25,weights:{engine:1.00,tyres:1.55,brakes:1.25,fuel:.85}},
+    {name:'Mediterranean Marina',asset:'mediterranean_marina.png',discipline:'Street',weather:'Sunny',laps:8,profile:'Fast sweepers · Braking zones',risk:1.05,weights:{engine:1.20,tyres:1.20,brakes:1.35,fuel:1.10}},
+    {name:'Desert Canyon',asset:'desert_canyon.png',discipline:'GT',weather:'Hot',laps:8,profile:'Long straights · Tight hairpins',risk:1.10,weights:{engine:1.35,tyres:.90,brakes:1.10,fuel:1.55}},
+    {name:'Snowy Alpine',asset:'snowy_alpine.png',discipline:'Open Wheel',weather:'Snow',laps:8,profile:'Low grip · Heavy braking',risk:1.50,weights:{engine:.85,tyres:1.70,brakes:1.55,fuel:.75}}
   ];
 
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
@@ -39,15 +37,8 @@
     {title:'Grip is coming to you',prompt:'What do you do?',choices:['Use the grip now','Wait another lap'],correct:0,boost:{stat:'tyres',amount:2,label:'Cornering grip'},duration:18}
   ];
 
-  const UPGRADE_ICONS={
-    engine:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 10h15l3 4v10H7z"/><path d="M11 7h8v3M4 14h3v7H4M25 16h3v6h-3M10 15h5v5h-5M18 14h4v7h-4"/></svg>`,
-    tyres:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="5"/><path d="M10 7l3 5M18 5l2 6M23 8l-4 5M25 17l-6 1M21 25l-4-6M13 27l1-7M7 22l6-3M6 14l6 1"/></svg>`,
-    brakes:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="15" cy="16" r="10"/><circle cx="15" cy="16" r="3"/><path d="M21 9h5v14h-5l-3-3V12z"/><path d="M11 8l2 4M9 16h5M12 24l2-4"/></svg>`,
-    fuel:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 5h12v22H8z"/><path d="M11 9h6v6h-6zM20 10h3l4 4v10c0 2-1 3-3 3s-3-1-3-3v-5"/><path d="M23 10l3-3"/></svg>`,
-    sponsors:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15l7-7 6 3 4-2 7 7-9 9-4-4-3 3z"/><path d="M11 14l5 5M15 12l5 5M8 17l4 4"/></svg>`,
-    fans:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="9" r="4"/><circle cx="7" cy="13" r="3"/><circle cx="25" cy="13" r="3"/><path d="M9 27v-5c0-4 3-7 7-7s7 3 7 7v5M2 26v-4c0-3 2-5 5-5M30 26v-4c0-3-2-5-5-5"/></svg>`
-  };
-  const upgradeIcon=key=>`<span class="upgradeIcon">${UPGRADE_ICONS[key]||''}</span>`;
+  const ASSET_ROOT='assets';
+  const upgradeAsset=(key,enabled)=>`${ASSET_ROOT}/ui/upgrades/${enabled?'enabled':'disabled'}/${key==='fans'?'fan_base':key}.png`;
 
   const $=id=>document.getElementById(id);
   const $$=sel=>Array.from(document.querySelectorAll(sel));
@@ -643,6 +634,7 @@
 
     $('raceScreen').dataset.phase=game.phase;
     $('activePlayerName').textContent=localPlayer.name;
+    if($('profilePlayerName'))$('profilePlayerName').textContent=localPlayer.name;
     $('cash').textContent=money(me.cash);
     $('sponsorRate').textContent=money(incomeRate(me))+'/s';
     $('raceNumber').textContent=game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo);
@@ -662,6 +654,10 @@
     const lap=Math.min(track.laps,Math.max(1,Math.floor((racePct/100)*track.laps)+1));
     $('lapText').textContent=`Lap ${lap} / ${track.laps}`;
     $('lapBar').style.width=`${racePct}%`;
+    const finalLap=$('finalLapBadge');
+    if(finalLap)finalLap.classList.toggle('hidden',!(game.phase==='race'&&lap===track.laps));
+    const greenFlag=$('greenFlagBadge');
+    if(greenFlag)greenFlag.classList.toggle('hidden',!(game.phase==='race'&&game.tick<=8));
     if($('raceTimer')){
       const seconds=Math.max(0,Math.ceil((game.maxTicks-game.tick)*TICK_MS/1000));
       $('raceTimer').textContent=`0:${String(seconds).padStart(2,'0')}`;
@@ -673,30 +669,22 @@
       const m=UPGRADE_META[key];
       const lvl=Math.max(1,finite(me.levels[key],1));
       const cost=upgradeCost(me,key);
-      const disabled=game.phase!=='race'||me.cash<cost;
-
+      const enabled=game.phase==='race'&&me.cash>=cost;
+      let mathText='';
       if(m.kind==='income'){
         const currentFactor=incomeFactor(lvl,key);
         const nextFactor=incomeFactor(lvl+1,key);
-        return `<button class="upgradeButton incomeUpgrade ${key}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
-          ${upgradeIcon(key)}
-          <strong class="upgradeTitle">${esc(m.label)}</strong>
-          <span class="upgradeLevel">LEVEL ${lvl}</span>
-          <span class="upgradeCost">UPGRADE ${money(cost)}</span>
-          <small class="upgradeMath">${esc(m.desc)} · ×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}</small>
-        </button>`;
+        mathText=`×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}`;
+      }else{
+        const current=statPercent(me,key);
+        const next=current+m.step;
+        const affinity=track.weights[key]||1;
+        mathText=`+${current}% → +${next}% · ×${affinity.toFixed(1)}`;
       }
-
-      const current=statPercent(me,key);
-      const next=current+m.step;
-      const affinity=track.weights[key]||1;
-      const hot=affinity>=1.30?' trackHot':'';
-      return `<button class="upgradeButton carUpgrade${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
-        ${upgradeIcon(key)}
-        <strong class="upgradeTitle">${esc(m.label)}</strong>
-        <span class="upgradeLevel">LEVEL ${lvl}</span>
-        <span class="upgradeCost">UPGRADE ${money(cost)}</span>
-        <small class="upgradeMath">${esc(m.desc)} · +${current}% → +${next}% · Track ×${affinity.toFixed(1)}</small>
+      return `<button class="upgradeButton ${m.kind==='income'?'incomeUpgrade':'carUpgrade'} ${key}" data-upgrade="${key}" type="button" ${enabled?'':'disabled'} style="--upgrade-asset:url('${upgradeAsset(key,enabled)}')">
+        <span class="upgradeLevel">Lv ${lvl}</span>
+        <strong class="upgradeCost">${money(cost)}</strong>
+        <small class="upgradeMath">${esc(mathText)}</small>
       </button>`;
     }).join('');
 
@@ -739,29 +727,24 @@
 
   function renderCountdown(){
     const overlay=$('countdownOverlay');
-    if(!overlay)return;
+    const image=$('countdownAsset');
+    if(!overlay||!image)return;
     if(game.phase!=='countdown'){
       overlay.classList.add('hidden');
       return;
     }
-
     const ticks=Math.max(0,finite(game.countdownTicks,12));
-    const label=ticks>=10?'3':ticks>=7?'2':ticks>=4?'1':'GO!';
-    const lit=label==='3'?1:label==='2'?2:3;
+    const state=ticks>=10?'3':ticks>=7?'2':ticks>=4?'1':'go';
+    image.src=`${ASSET_ROOT}/ui/countdown/state_${state}.png`;
+    image.alt=state==='go'?'GO!':state;
     overlay.classList.remove('hidden');
-    overlay.classList.toggle('go',label==='GO!');
-    $('countdownText').textContent=label;
-    Array.from(overlay.querySelectorAll('.startLight')).forEach((light,index)=>{
-      light.classList.toggle('lit',index<lit);
-      light.classList.toggle('green',label==='GO!');
-    });
   }
 
   function renderRaceEvent(me){
     const card=$('raceEventCard');
     if(!card)return;
     if(game.phase!=='race'){
-      card.classList.add('hidden');
+      card.className='raceEventCard hidden';
       return;
     }
 
@@ -770,9 +753,12 @@
       const seconds=Math.max(1,Math.ceil((finite(evt.expiresTick,game.tick)-game.tick)*TICK_MS/1000));
       card.className='raceEventCard';
       card.innerHTML=`
-        <span class="raceEventEyebrow">PIT WALL</span>
-        <strong class="raceEventTitle">${esc(evt.title)}</strong>
-        <small class="raceEventPrompt">${esc(evt.prompt)} · ${seconds}s</small>
+        <img class="raceEventAsset" src="${ASSET_ROOT}/ui/popups/choice_50_50.png" alt="">
+        <div class="raceEventCopy">
+          <span class="raceEventEyebrow">PIT WALL · ${seconds}s</span>
+          <strong class="raceEventTitle">${esc(evt.title)}</strong>
+          <small class="raceEventPrompt">${esc(evt.prompt)}</small>
+        </div>
         <div class="raceEventChoices">
           ${evt.choices.map((choice,index)=>`<button type="button" data-event-choice="${index}" data-event-id="${esc(evt.id)}">${esc(choice)}</button>`).join('')}
         </div>
@@ -781,49 +767,44 @@
     }
 
     if(me.eventResult&&finite(me.eventResult.untilTick,0)>game.tick){
-      card.className=`raceEventCard eventFeedback ${me.eventResult.correct?'correct':'neutral'}`;
-      card.innerHTML=me.eventResult.correct
-        ?`<strong>GOOD CALL</strong><small>${esc(me.eventResult.text)}</small>`
-        :`<strong>NO GAIN</strong><small>${esc(me.eventResult.text)}</small>`;
+      card.className=`raceEventCard compactEvent ${me.eventResult.correct?'correct':'neutral'}`;
+      card.innerHTML=`<strong>${me.eventResult.correct?'GOOD CALL':'NO GAIN'}</strong><small>${esc(me.eventResult.text)}</small>`;
       return;
     }
 
     if(me.boost&&finite(me.boost.untilTick,0)>game.tick){
       const seconds=Math.max(1,Math.ceil((me.boost.untilTick-game.tick)*TICK_MS/1000));
-      card.className='raceEventCard activeBoost';
+      card.className='raceEventCard compactEvent activeBoost';
       card.innerHTML=`<strong>BOOST ACTIVE</strong><small>${esc(me.boost.label)} · ${seconds}s</small>`;
       return;
     }
 
-    card.classList.add('hidden');
+    card.className='raceEventCard hidden';
   }
 
   function renderResult(me){
     const card=$('resultCard');
-    const gemPayouts=[5,4,3,2,2,1,1,1,1,1,1,1];
     const prize=Math.max(0,finite(me.lastPrize,0));
-    const gems=gemPayouts[(me.position||12)-1]||1;
     const humans=game.entrants.filter(e=>e.human);
     const complete=game.phase==='complete';
     const readyCount=humans.filter(e=>game.ready?.[e.playerId]).length;
     const amReady=!!game.ready?.[me.playerId];
-    const title=complete
-      ?(game.mode==='tournament'?'TOURNAMENT COMPLETE':'QUICK RACE COMPLETE')
-      :`RACE ${game.raceNo} COMPLETE`;
 
     card.classList.remove('hidden');
-    card.innerHTML=`
-      <span class="eyebrow">${title}</span>
-      <h2>${ordinal(me.position||12)} place</h2>
-      <div class="resultGrid">
-        <div class="prizeResult"><span>Prize money</span><strong>+${money(prize)}</strong></div>
-        <div><span>Gems</span><strong>+${gems}</strong></div>
-        <div><span>${complete?'Races':'Players ready'}</span><strong>${complete?`${game.raceNo} / ${game.totalRaces}`:`${readyCount} / ${humans.length}`}</strong></div>
-      </div>
-      ${complete
-        ?'<button class="readyRaceButton" data-exit-series type="button">RETURN TO SETUP</button><small class="readyRaceNote">This session is complete. A new Quick Race or Tournament starts with fresh stats.</small>'
-        :`<button class="readyRaceButton" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'READY FOR NEXT RACE'}</button><small class="readyRaceNote">${amReady?'Waiting for the other players…':'Prize money, upgrades and unspent cash carry into the next race.'}</small>`}
-    `;
+    card.classList.toggle('seriesComplete',complete);
+    card.innerHTML=complete
+      ?`
+        <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/race_complete.png" alt="">
+        <div class="resultPrize">+${money(prize)}</div>
+        <div class="resultPosition">${ordinal(me.position||12)} place · ${game.raceNo}/${game.totalRaces}</div>
+        <button class="resultAction" data-exit-series type="button">RETURN TO SETUP</button>
+      `
+      :`
+        <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/ready_next_race.png" alt="">
+        <div class="resultPosition">${ordinal(me.position||12)} place · Prize +${money(prize)}</div>
+        <div class="resultReady">${readyCount} / ${humans.length} ready</div>
+        <button class="resultAction" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'NEXT RACE'}</button>
+      `;
 
     const prizeKey=`${game.mode}:${game.raceNo}:${me.playerId}:prize`;
     if(game.mode==='tournament'&&prize>0&&!prizeAnimations.has(prizeKey)){
@@ -834,10 +815,6 @@
         animatePrizeTransfer(card,cashEl,()=>{if(cashEl)cashEl.textContent=money(me.cash)});
       },180));
     }
-
-    if($('raceStatus'))$('raceStatus').innerHTML=complete
-      ?'<strong>Session complete</strong><span>Return to setup to choose another race.</span>'
-      :'<strong>Race complete</strong><span>Waiting for every player to confirm the next start.</span>';
   }
 
   function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
@@ -904,7 +881,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
     session=new window.GameBoxLAN.DiscoverySession({
-      game:'gridline-v16',
+      game:'gridline-v17',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onHostsChanged:hosts=>renderAvailableHosts(hosts),
       onPeersChanged:()=>{
