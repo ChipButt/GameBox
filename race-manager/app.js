@@ -1382,8 +1382,9 @@
     document.addEventListener('click',e=>{
       const carChoice=e.target.closest('[data-car-color]');
       if(carChoice&&!carChoice.disabled){
+        const advanceToTrack=!!carChoice.closest('#carSetup');
         selectCarColor(carChoice.dataset.carColor);
-        if(carChoice.closest('#carSetup'))showSetup('trackSetup');
+        if(advanceToTrack)showSetup('trackSetup');
         return;
       }
       const raceMode=e.target.closest('[data-race-mode]');
