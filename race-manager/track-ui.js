@@ -13,16 +13,11 @@
   const VIEW_W=600;
   const VIEW_H=360;
   const CIRCUIT_D='M 108 278 C 62 278 43 242 58 203 C 72 166 109 148 149 160 C 192 173 190 219 231 226 C 271 233 297 208 310 168 C 324 127 361 102 407 109 C 458 117 511 149 528 188 C 546 229 522 270 476 278 L 108 278 Z';
-
+  const UPDATE_MS=300;
   const motion=new Map();
-  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
-  const hash=value=>{
-    let h=0;
-    const s=String(value||'');
-    for(let i=0;i<s.length;i++)h=((h<<5)-h+s.charCodeAt(i))|0;
-    return Math.abs(h);
-  };
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const smoothstep=t=>t*t*(3-2*t);
 
   const totalLaps=()=>{
     const text=document.getElementById('lapText')?.textContent||'';
@@ -30,12 +25,9 @@
     return Math.max(1,Number(match?.[1])||1);
   };
 
-  const progressFromDot=dot=>{
-    const raw=dot?.style?.left||'';
-    const match=raw.match(/calc\(([\d.]+)%/);
-    if(match)return clamp(Number(match[1])/0.96,0,100);
-    const pct=raw.match(/([\d.]+)%/);
-    return pct?clamp(Number(pct[1]),0,100):0;
+  const progressFromRow=row=>{
+    const value=Number(row?.dataset?.progress);
+    return Number.isFinite(value)?clamp(value,0,100):0;
   };
 
   function ensureCircuit(){
@@ -73,7 +65,7 @@
         <rect x="410" y="243" width="22" height="69" rx="2" fill="#fff" opacity=".94"/>
         ${checks}
         <rect x="410" y="243" width="22" height="69" rx="2" fill="none" stroke="#111" stroke-width="2"/>
-        <rect x="374" y="221" width="94" height="18" rx="9" fill="#0d1a31" opacity=".95"/>
+        <rect x="374" y="221" width="94" height="18" rx="9" fill="#0d1a31" opacity=".96"/>
         <text x="421" y="233" text-anchor="middle" fill="#fff" font-size="10" font-family="Arial, sans-serif" font-weight="700">START / FINISH</text>
       </g>
     `;
@@ -86,31 +78,29 @@
     document.body.classList.toggle('gridline-racing-live',!raceScreen.classList.contains('hidden'));
   }
 
-  function launchSpeed(elapsedMs){
-    if(elapsedMs<1200)return .055+(elapsedMs/1200)*.095;
-    if(elapsedMs<3000)return .15+((elapsedMs-1200)/1800)*.12;
-    return .38;
+  function sampledPosition(state,now){
+    if(!Number.isFinite(state.segmentStart)||state.segmentDuration<=0)return state.to;
+    const t=clamp((now-state.segmentStart)/state.segmentDuration,0,1);
+    return state.from+(state.to-state.from)*smoothstep(t);
   }
 
   function syncMotion(rows,laps,now){
     const seen=new Set();
 
     rows.forEach((row,index)=>{
-      const dot=row.querySelector('.carDot');
-      const totalProgress=progressFromDot(dot);
       const name=row.querySelector('.name')?.textContent?.trim()||`Racer ${index+1}`;
-      const key=name;
-      const target=(totalProgress/100)*laps;
+      const key=row.dataset.racerId||name;
+      const target=(progressFromRow(row)/100)*laps;
       seen.add(key);
 
       let state=motion.get(key);
       if(!state){
         state={
           displayed:target,
-          target,
-          lastTarget:target,
-          launchAt:now,
-          lastFrame:now,
+          from:target,
+          to:target,
+          segmentStart:now,
+          segmentDuration:UPDATE_MS+55,
           lastSeen:now,
           lateral:0,
           targetLateral:0,
@@ -119,16 +109,24 @@
         };
         motion.set(key,state);
       }else{
-        const newRace=target+.35<state.lastTarget;
+        const current=sampledPosition(state,now);
+        const newRace=target+.35<state.to;
         if(newRace){
           state.displayed=target;
-          state.launchAt=now;
-          state.lastFrame=now;
+          state.from=target;
+          state.to=target;
+          state.segmentStart=now;
           state.visualShift=0;
           state.targetVisualShift=0;
+        }else if(Math.abs(target-state.to)>.00001){
+          state.displayed=current;
+          state.from=current;
+          state.to=target;
+          state.segmentStart=now;
+          state.segmentDuration=UPDATE_MS+55;
+        }else{
+          state.displayed=current;
         }
-        state.target=target;
-        state.lastTarget=target;
         state.lastSeen=now;
       }
 
@@ -140,31 +138,18 @@
     });
 
     for(const [key,state] of motion){
-      if(!seen.has(key)&&now-state.lastSeen>1500)motion.delete(key);
+      if(!seen.has(key)&&now-state.lastSeen>1200)motion.delete(key);
     }
   }
 
   function assignUniqueColours(states){
-    const others=states.filter(s=>!s.isYou).sort((a,b)=>a.name.localeCompare(b.name));
-    for(const state of states){
-      if(state.isYou)state.colour=YOU_COLOUR;
-    }
-    others.forEach((state,index)=>{
-      state.colour=BOT_PALETTE[index % BOT_PALETTE.length];
-    });
+    const others=states.filter(state=>!state.isYou).sort((a,b)=>a.name.localeCompare(b.name));
+    for(const state of states)if(state.isYou)state.colour=YOU_COLOUR;
+    others.forEach((state,index)=>{state.colour=BOT_PALETTE[index]||BOT_PALETTE[index%BOT_PALETTE.length]});
   }
 
   function advanceMotion(state,now){
-    const dt=clamp((now-state.lastFrame)/1000,0,.05);
-    state.lastFrame=now;
-    if(state.displayed>=state.target)return;
-
-    const age=Math.max(0,now-state.launchAt);
-    const maxSpeed=launchSpeed(age);
-    const gap=state.target-state.displayed;
-    const catchup=gap>.45?Math.min(.18,(gap-.45)*.16):0;
-    const step=(maxSpeed+catchup)*dt;
-    state.displayed=Math.min(state.target,state.displayed+step);
+    state.displayed=sampledPosition(state,now);
   }
 
   function prepareVisualPacking(states){
@@ -173,7 +158,7 @@
       .sort((a,b)=>a.phase-b.phase);
 
     for(const {state} of phased){
-      state.targetLateral=((hash(state.name)%3)-1)*2.4;
+      state.targetLateral=0;
       state.targetVisualShift=0;
       state.contact=false;
     }
@@ -186,7 +171,7 @@
         continue;
       }
       const prev=current[current.length-1];
-      if(item.phase-prev.phase<.014){
+      if(item.phase-prev.phase<.011){
         current.push(item);
       }else{
         groups.push(current);
@@ -198,30 +183,31 @@
     if(groups.length>1){
       const first=groups[0],last=groups[groups.length-1];
       const wrapGap=(first[0].phase+1)-last[last.length-1].phase;
-      if(wrapGap<.014){
+      if(wrapGap<.011){
         groups[0]=last.concat(first);
         groups.pop();
       }
     }
 
-    const laneSlots=[0,-7,7,-13,13];
+    const laneSlots=[0,-7,7,-14,14,-21,21];
 
     for(const group of groups){
       if(group.length<2)continue;
       group.sort((a,b)=>b.state.displayed-a.state.displayed);
 
       group.forEach((item,index)=>{
-        const row=Math.floor(index/laneSlots.length);
-        item.state.targetLateral=laneSlots[index%laneSlots.length];
-        item.state.targetVisualShift=-row*.010;
+        const laneIndex=index%laneSlots.length;
+        const extraRow=Math.floor(index/laneSlots.length);
+        item.state.targetLateral=laneSlots[laneIndex];
+        item.state.targetVisualShift=extraRow?-(extraRow*.009):0;
         item.state.contact=true;
       });
     }
 
     for(const state of states){
-      state.targetLateral=clamp(state.targetLateral,-13,13);
-      state.lateral+=(state.targetLateral-state.lateral)*.2;
-      state.visualShift+=(state.targetVisualShift-state.visualShift)*.18;
+      state.targetLateral=clamp(state.targetLateral,-21,21);
+      state.lateral+=(state.targetLateral-state.lateral)*.12;
+      state.visualShift+=(state.targetVisualShift-state.visualShift)*.08;
     }
   }
 
@@ -242,7 +228,7 @@
 
     const travelled=Math.max(0,state.displayed+state.visualShift);
     let lapProgress=travelled%1;
-    if(state.target>=state.laps&&travelled>=state.laps-.002)lapProgress=.998;
+    if(state.to>=state.laps&&travelled>=state.laps-.002)lapProgress=.998;
 
     const pathDistance=clamp(length*lapProgress,0,Math.max(0,length-.1));
     const point=path.getPointAtLength(pathDistance);
@@ -261,7 +247,6 @@
     const rendered=svgPointToLanePixels(svg,svgX,svgY);
     if(!rendered)return;
 
-    row.style.transition='none';
     row.style.setProperty('--track-x',`${rendered.x}px`);
     row.style.setProperty('--track-y',`${rendered.y}px`);
     row.style.setProperty('--racer-colour',state.colour||'#2f80ed');
@@ -304,7 +289,14 @@
   screenObserver.observe(raceScreen,{attributes:true,attributeFilter:['class']});
 
   window.addEventListener('resize',()=>{
-    for(const state of motion.values())state.lastFrame=performance.now();
+    const now=performance.now();
+    for(const state of motion.values()){
+      const current=sampledPosition(state,now);
+      state.displayed=current;
+      state.from=current;
+      state.to=current;
+      state.segmentStart=now;
+    }
   },{passive:true});
 
   requestAnimationFrame(animate);
