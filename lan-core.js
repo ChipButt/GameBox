@@ -184,6 +184,11 @@
         if(this.role!=='client'||!data||data.game!==this.game)return;
         if(data.closed){
           if(this.hosts.delete(peerId))this._notifyHosts();
+          if(peerId===this.hostPeerId){
+            this.hostPeerId='';
+            this.status('Host closed');
+            this.onPeersChanged([]);
+          }
           return;
         }
         this.hosts.set(peerId,{...data,peerId,lastSeen:Date.now()});
