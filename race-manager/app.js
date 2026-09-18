@@ -11,7 +11,9 @@
     {name:'Harbour Sprint',discipline:'Open Wheel',weather:'Dry',laps:8,profile:'Stop-start · Technical',risk:1.0,weights:{engine:1.25,tyres:1.25,brakes:1.40,fuel:.85}},
     {name:'Alpine Ring',discipline:'Open Wheel',weather:'Cool',laps:10,profile:'Corner-heavy · Big braking zones',risk:1.15,weights:{engine:.85,tyres:1.75,brakes:1.55,fuel:.65}},
     {name:'Desert Oval',discipline:'Stock Car',weather:'Hot',laps:12,profile:'Long straights · High speed',risk:.85,weights:{engine:1.35,tyres:.55,brakes:.65,fuel:1.80}},
-    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · Constant direction changes',risk:1.50,weights:{engine:.90,tyres:1.55,brakes:1.45,fuel:.70}}
+    {name:'Forest Stage',discipline:'Rally',weather:'Damp',laps:7,profile:'Technical · Constant direction changes',risk:1.50,weights:{engine:.90,tyres:1.55,brakes:1.45,fuel:.70}},
+    {name:'Coastal Run',discipline:'GT',weather:'Breezy',laps:9,profile:'Fast sweepers · Long run to the line',risk:1.05,weights:{engine:1.15,tyres:1.35,brakes:.90,fuel:1.35}},
+    {name:'Metro Circuit',discipline:'Street',weather:'Dry',laps:11,profile:'Tight walls · Repeated braking',risk:1.35,weights:{engine:.95,tyres:1.45,brakes:1.70,fuel:.75}}
   ];
 
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
@@ -65,6 +67,8 @@
   let game=null;
   let hostTimer=null;
   let pendingHello=false;
+  let raceSetup={mode:'quick',trackIndex:0,races:5};
+  const prizeAnimations=new Set();
 
   function roster(){
     const items=read(ROSTER_KEY,[]);
@@ -72,6 +76,10 @@
   }
 
   function profiles(){const p=read(PROFILE_KEY,{});return p&&typeof p==='object'?p:{}}
+
+  function baseLevels(){
+    return {engine:1,tyres:1,brakes:1,fuel:1,sponsors:1,fans:1};
+  }
 
   function normaliseLevels(raw={},legacySponsor=0){
     return {
@@ -162,7 +170,7 @@
       name:player.name,
       human:true,
       owner,
-      levels:{...p.levels},
+      levels:baseLevels(),
       cash:0,
       gems:p.gems,
       races:p.races,
