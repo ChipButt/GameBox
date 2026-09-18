@@ -12,12 +12,11 @@
 
   const VIEW_W=600;
   const VIEW_H=360;
-  const CIRCUIT_D='M 108 278 C 62 278 43 242 58 203 C 72 166 109 148 149 160 C 192 173 190 219 231 226 C 271 233 297 208 310 168 C 324 127 361 102 407 109 C 458 117 511 149 528 188 C 546 229 522 270 476 278 L 108 278 Z';
-  const UPDATE_MS=300;
-  const motion=new Map();
+  // 0% race progress is exactly the chequered start/finish line.
+  const CIRCUIT_D='M 421 278 L 108 278 C 62 278 43 242 58 203 C 72 166 109 148 149 160 C 192 173 190 219 231 226 C 271 233 297 208 310 168 C 324 127 361 102 407 109 C 458 117 511 149 528 188 C 546 229 522 270 476 278 L 421 278 Z';
 
+  const motion=new Map();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-  const smoothstep=t=>t*t*(3-2*t);
 
   const totalLaps=()=>{
     const text=document.getElementById('lapText')?.textContent||'';
@@ -29,6 +28,15 @@
     const value=Number(row?.dataset?.progress);
     return Number.isFinite(value)?clamp(value,0,100):0;
   };
+
+  function gridTarget(index){
+    const row=Math.floor(index/2);
+    return -(0.0065*(row+1));
+  }
+
+  function gridLateral(index){
+    return index%2===0?-10:10;
+  }
 
   function ensureCircuit(){
     let svg=lanes.querySelector('.trackSvg');
@@ -62,11 +70,11 @@
       <path d="${CIRCUIT_D}" fill="none" stroke="#666c72" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
       <path id="gridlineCircuitPath" d="${CIRCUIT_D}" fill="none" stroke="#d9dde1" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="10 10" opacity=".92"/>
       <g id="startFinish">
-        <rect x="410" y="243" width="22" height="69" rx="2" fill="#fff" opacity=".94"/>
+        <rect x="410" y="242" width="22" height="72" rx="2" fill="#fff" opacity=".97"/>
         ${checks}
-        <rect x="410" y="243" width="22" height="69" rx="2" fill="none" stroke="#111" stroke-width="2"/>
-        <rect x="374" y="221" width="94" height="18" rx="9" fill="#0d1a31" opacity=".96"/>
-        <text x="421" y="233" text-anchor="middle" fill="#fff" font-size="10" font-family="Arial, sans-serif" font-weight="700">START / FINISH</text>
+        <rect x="410" y="242" width="22" height="72" rx="2" fill="none" stroke="#111" stroke-width="2"/>
+        <rect x="361" y="218" width="120" height="20" rx="10" fill="#0d1a31" opacity=".98"/>
+        <text x="421" y="232" text-anchor="middle" fill="#fff" font-size="10" font-family="Arial, sans-serif" font-weight="800">START / FINISH</text>
       </g>
     `;
 
@@ -78,55 +86,62 @@
     document.body.classList.toggle('gridline-racing-live',!raceScreen.classList.contains('hidden'));
   }
 
-  function sampledPosition(state,now){
-    if(!Number.isFinite(state.segmentStart)||state.segmentDuration<=0)return state.to;
-    const t=clamp((now-state.segmentStart)/state.segmentDuration,0,1);
-    return state.from+(state.to-state.from)*smoothstep(t);
-  }
-
   function syncMotion(rows,laps,now){
+    const phase=raceScreen.dataset.phase||'race';
     const seen=new Set();
 
     rows.forEach((row,index)=>{
       const name=row.querySelector('.name')?.textContent?.trim()||`Racer ${index+1}`;
       const key=row.dataset.racerId||name;
-      const target=(progressFromRow(row)/100)*laps;
+      const rawTarget=(progressFromRow(row)/100)*laps;
+      const target=phase==='countdown'?gridTarget(index):rawTarget;
       seen.add(key);
 
       let state=motion.get(key);
       if(!state){
         state={
-          displayed:target,
-          from:target,
-          to:target,
-          segmentStart:now,
-          segmentDuration:UPDATE_MS+55,
+          rendered:target,
+          target,
+          previousTarget:target,
+          targetAt:now,
+          velocity:0,
+          lastFrame:now,
           lastSeen:now,
-          lateral:0,
-          targetLateral:0,
+          lateral:phase==='countdown'?gridLateral(index):0,
+          targetLateral:phase==='countdown'?gridLateral(index):0,
           visualShift:0,
-          targetVisualShift:0
+          targetVisualShift:0,
+          lastPhase:phase
         };
         motion.set(key,state);
       }else{
-        const current=sampledPosition(state,now);
-        const newRace=target+.35<state.to;
-        if(newRace){
-          state.displayed=target;
-          state.from=target;
-          state.to=target;
-          state.segmentStart=now;
+        const phaseChanged=state.lastPhase!==phase;
+
+        if(phaseChanged&&phase==='countdown'){
+          state.rendered=target;
+          state.target=target;
+          state.previousTarget=target;
+          state.velocity=0;
           state.visualShift=0;
           state.targetVisualShift=0;
-        }else if(Math.abs(target-state.to)>.00001){
-          state.displayed=current;
-          state.from=current;
-          state.to=target;
-          state.segmentStart=now;
-          state.segmentDuration=UPDATE_MS+55;
-        }else{
-          state.displayed=current;
+          state.lateral=gridLateral(index);
+          state.targetLateral=gridLateral(index);
+          state.targetAt=now;
+        }else if(phaseChanged&&phase==='race'){
+          state.previousTarget=state.target;
+          state.target=rawTarget;
+          state.targetAt=now;
+          state.velocity=Math.max(state.velocity,.018);
+        }else if(Math.abs(target-state.target)>.000001){
+          const elapsed=Math.max(.05,(now-state.targetAt)/1000);
+          const measured=(target-state.target)/elapsed;
+          state.velocity=clamp(state.velocity*.38+measured*.62,0,1.4);
+          state.previousTarget=state.target;
+          state.target=target;
+          state.targetAt=now;
         }
+
+        state.lastPhase=phase;
         state.lastSeen=now;
       }
 
@@ -135,6 +150,7 @@
       state.rank=String(index+1);
       state.isYou=row.classList.contains('you');
       state.laps=laps;
+      state.gridIndex=index;
     });
 
     for(const [key,state] of motion){
@@ -149,12 +165,46 @@
   }
 
   function advanceMotion(state,now){
-    state.displayed=sampledPosition(state,now);
+    const dt=clamp((now-state.lastFrame)/1000,0,.05);
+    state.lastFrame=now;
+    const phase=raceScreen.dataset.phase||'race';
+
+    if(phase==='countdown'){
+      state.rendered=state.target;
+      state.velocity=0;
+      return;
+    }
+
+    const age=Math.max(0,(now-state.targetAt)/1000);
+    const prediction=Math.min(.34,age)*state.velocity;
+    const desired=Math.max(state.target,state.target+prediction);
+    const error=desired-state.rendered;
+
+    // Critically damped-looking chase: smooth every frame, never stops between 300ms samples.
+    const response=1-Math.exp(-dt*10.5);
+    state.rendered+=error*response;
+
+    // Keep extrapolation close to the authoritative race state.
+    const leadLimit=.18;
+    state.rendered=clamp(state.rendered,state.target-.04,state.target+leadLimit);
   }
 
   function prepareVisualPacking(states){
+    const phase=raceScreen.dataset.phase||'race';
+
+    if(phase==='countdown'){
+      for(const state of states){
+        state.targetLateral=gridLateral(state.gridIndex||0);
+        state.targetVisualShift=0;
+        state.contact=false;
+        state.lateral+=(state.targetLateral-state.lateral)*.18;
+        state.visualShift+=(0-state.visualShift)*.15;
+      }
+      return;
+    }
+
     const phased=states
-      .map(state=>({state,phase:((state.displayed%1)+1)%1}))
+      .map(state=>({state,phase:((state.rendered%1)+1)%1}))
       .sort((a,b)=>a.phase-b.phase);
 
     for(const {state} of phased){
@@ -171,7 +221,7 @@
         continue;
       }
       const prev=current[current.length-1];
-      if(item.phase-prev.phase<.011){
+      if(item.phase-prev.phase<.0105){
         current.push(item);
       }else{
         groups.push(current);
@@ -183,30 +233,30 @@
     if(groups.length>1){
       const first=groups[0],last=groups[groups.length-1];
       const wrapGap=(first[0].phase+1)-last[last.length-1].phase;
-      if(wrapGap<.011){
+      if(wrapGap<.0105){
         groups[0]=last.concat(first);
         groups.pop();
       }
     }
 
-    const laneSlots=[0,-7,7,-14,14,-21,21];
+    const laneSlots=[-17,-9,0,9,17];
 
     for(const group of groups){
       if(group.length<2)continue;
-      group.sort((a,b)=>b.state.displayed-a.state.displayed);
+      group.sort((a,b)=>b.state.rendered-a.state.rendered);
 
       group.forEach((item,index)=>{
         const laneIndex=index%laneSlots.length;
         const extraRow=Math.floor(index/laneSlots.length);
         item.state.targetLateral=laneSlots[laneIndex];
-        item.state.targetVisualShift=extraRow?-(extraRow*.009):0;
+        item.state.targetVisualShift=extraRow?-(extraRow*.0085):0;
         item.state.contact=true;
       });
     }
 
     for(const state of states){
-      state.targetLateral=clamp(state.targetLateral,-21,21);
-      state.lateral+=(state.targetLateral-state.lateral)*.12;
+      state.targetLateral=clamp(state.targetLateral,-18,18);
+      state.lateral+=(state.targetLateral-state.lateral)*.11;
       state.visualShift+=(state.targetVisualShift-state.visualShift)*.08;
     }
   }
@@ -226,14 +276,13 @@
     const row=state.row;
     if(!row?.isConnected)return;
 
-    const travelled=Math.max(0,state.displayed+state.visualShift);
-    let lapProgress=travelled%1;
-    if(state.to>=state.laps&&travelled>=state.laps-.002)lapProgress=.998;
+    const travelled=state.rendered+state.visualShift;
+    let lapProgress=((travelled%1)+1)%1;
+    if(state.target>=state.laps&&travelled>=state.laps-.002)lapProgress=.998;
 
     const pathDistance=clamp(length*lapProgress,0,Math.max(0,length-.1));
     const point=path.getPointAtLength(pathDistance);
-    const tangentDistance=Math.min(length-.1,pathDistance+3);
-    const tangentPoint=path.getPointAtLength(tangentDistance);
+    const tangentPoint=path.getPointAtLength(Math.min(length-.1,pathDistance+3));
 
     let dx=tangentPoint.x-point.x;
     let dy=tangentPoint.y-point.y;
@@ -290,13 +339,7 @@
 
   window.addEventListener('resize',()=>{
     const now=performance.now();
-    for(const state of motion.values()){
-      const current=sampledPosition(state,now);
-      state.displayed=current;
-      state.from=current;
-      state.to=current;
-      state.segmentStart=now;
-    }
+    for(const state of motion.values())state.lastFrame=now;
   },{passive:true});
 
   requestAnimationFrame(animate);
