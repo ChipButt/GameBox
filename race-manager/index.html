@@ -40,53 +40,80 @@
   </header>
 
   <main class="mainView">
-    <section id="setupHome" class="setupView">
-      <div class="heroPanel">
-        <span class="eyebrow">GRIDLINE RACING</span>
-        <h1>How do you want to play?</h1>
-        <div class="modeChoiceGrid">
-          <button id="chooseSingle" class="modeChoice" type="button"><span>🏁</span><strong>Single Player</strong><small>You vs the computer field</small></button>
-          <button id="chooseMulti" class="modeChoice" type="button"><span>👥</span><strong>Multiplayer</strong><small>Race friends live</small></button>
-        </div>
+    <section id="setupHome" class="setupView menuDesignView crewSizeView">
+      <div class="menuDesignCanvas">
+        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <a class="menuPlacedAsset menuBackAsset" href="../index.html" aria-label="Back to GameBox"><img src="assets/ui/controls/back.png" alt=""></a>
+        <img class="menuPlacedAsset menuSettingsAsset" src="assets/ui/controls/settings.png" alt="">
+        <img class="menuPlacedAsset menuLogoAsset" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+        <strong class="menuScreenTitle">CREW SIZE</strong>
+
+        <button id="chooseSingle" class="menuImageChoice crewSingleChoice" type="button" aria-label="Single Player">
+          <img src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_single_player_card.png" alt="Single Player">
+        </button>
+        <button id="chooseMulti" class="menuImageChoice crewMultiChoice" type="button" aria-label="Multiplayer">
+          <img src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_multiplayer_card.png" alt="Multiplayer">
+        </button>
       </div>
     </section>
 
-    <section id="raceFormatSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>Choose your race</h1></div></header>
-      <section class="panel">
-        <div class="raceModeChoices">
-          <button class="raceModeChoice" data-race-mode="quick" type="button"><strong>Quick Race</strong><small>1 race · fresh stats</small></button>
-          <button class="raceModeChoice" data-race-mode="tournament" type="button"><strong>Tournament</strong><small>3–15 races · upgrades and cash carry over</small></button>
-        </div>
-      </section>
+    <section id="raceFormatSetup" class="setupView menuDesignView raceTypeView hidden">
+      <div class="menuDesignCanvas">
+        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <button class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="setupHome" type="button" aria-label="Back">
+          <img src="assets/ui/controls/back.png" alt="">
+        </button>
+        <img class="menuPlacedAsset menuSettingsAsset" src="assets/ui/controls/settings.png" alt="">
+        <img class="menuPlacedAsset menuLogoAsset" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+        <strong class="menuScreenTitle">RACE TYPE</strong>
+
+        <button class="menuImageChoice raceQuickChoice" data-race-mode="quick" type="button" aria-label="Quick Race">
+          <img src="../Gridline_Menu_Asset_Pack/race_type/race_type_quick_race_card.png" alt="Quick Race">
+        </button>
+        <button class="menuImageChoice raceTournamentChoice" data-race-mode="tournament" type="button" aria-label="Tournament">
+          <img src="../Gridline_Menu_Asset_Pack/race_type/race_type_tournament_card.png" alt="Tournament">
+        </button>
+      </div>
     </section>
 
-    <section id="carSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="raceFormatSetup" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>Choose your car colour</h1></div></header>
-      <section class="panel">
-        <p class="panelIntro">Pick the car you want to race. Your player name will replace that colour's regular racer name.</p>
-        <div id="flowCarChoices" class="carChoices flowCarChoices"></div>
-      </section>
+    <section id="carSetup" class="setupView menuDesignView carSelectionView hidden">
+      <div class="menuDesignCanvas">
+        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <button class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="raceFormatSetup" type="button" aria-label="Back">
+          <img src="assets/ui/controls/back.png" alt="">
+        </button>
+        <img class="menuPlacedAsset menuSettingsAsset" src="assets/ui/controls/settings.png" alt="">
+        <img class="menuPlacedAsset menuLogoAsset" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+        <strong class="menuScreenTitle carSelectionTitle">CAR SELECTION</strong>
+        <div id="flowCarChoices" class="menuChoiceLayer carChoices"></div>
+      </div>
     </section>
 
-    <section id="trackSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="carSetup" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>Choose the track</h1></div></header>
-      <section class="panel">
-        <div id="flowTrackChoices" class="trackChoices"></div>
+    <section id="trackSetup" class="setupView menuDesignView trackChoiceView hidden">
+      <div class="menuDesignCanvas">
+        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <button class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="carSetup" type="button" aria-label="Back">
+          <img src="assets/ui/controls/back.png" alt="">
+        </button>
+        <img class="menuPlacedAsset menuSettingsAsset" src="assets/ui/controls/settings.png" alt="">
+        <img class="menuPlacedAsset menuLogoAsset" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+        <strong class="menuScreenTitle trackChoiceTitle">TRACK CHOICE</strong>
 
-        <div id="singlePlayerBlock" class="trackFinalOptions hidden">
-          <div class="setupSectionTitle"><strong>Playing as</strong><small>Choose your GameBox player.</small></div>
-          <div id="singlePlayerList" class="playerChoices"></div>
-          <div id="singleRosterEmpty" class="emptyState hidden">No players are saved yet. Go back to GameBox and add a player first.</div>
+        <div id="flowTrackChoices" class="menuChoiceLayer trackChoices"></div>
+
+        <div class="menuHiddenControl" aria-hidden="true">
+          <div id="singlePlayerBlock">
+            <div id="singlePlayerList" class="playerChoices"></div>
+            <div id="singleRosterEmpty" class="emptyState hidden"></div>
+          </div>
+          <label id="flowTournamentLength">
+            <input id="flowRaceCount" type="range" min="3" max="15" value="5">
+            <strong id="flowRaceCountValue">5 races</strong>
+          </label>
         </div>
 
-        <label id="flowTournamentLength" class="tournamentLength hidden">Tournament races
-          <input id="flowRaceCount" type="range" min="3" max="15" value="5">
-          <strong id="flowRaceCountValue">5 races</strong>
-        </label>
-
-        <button id="startConfiguredRace" class="primaryButton full trackStartButton" type="button">Start race</button>
-      </section>
+        <button id="startConfiguredRace" class="menuStartRaceButton" type="button">START RACE</button>
+      </div>
     </section>
 
     <section id="multiSetup" class="setupView hidden">
