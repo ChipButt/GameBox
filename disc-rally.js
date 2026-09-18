@@ -116,8 +116,8 @@ function buildRace(players,laps=2){
   const starts=[{x:390,y:500},{x:340,y:500},{x:290,y:500},{x:240,y:500}];
   const raceTrack=selectedTrack==='random'?TRACKS[Math.floor(Math.random()*TRACKS.length)].id:selectedTrack;
   return {
-    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,
-    players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turboCharge:0,turboReady:false,turboHeld:false,finished:false}))
+    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,finishSequence:0,
+    players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turboCharge:0,turboReady:false,turboHeld:false,finished:false,pendingFinish:false,finishCrossedAt:0}))
   };
 }
 function snapshot(){
@@ -126,12 +126,14 @@ function snapshot(){
 function applySnapshot(s){
   if(!s)return;
   clearTurnEndTimer();
-  game=s;if(!game.phase)game.phase='aim';if(!Number.isFinite(game.flicksUsed))game.flicksUsed=0;if(!Number.isFinite(game.turnEndsAt))game.turnEndsAt=0;
+  game=s;if(!game.phase)game.phase='aim';if(!Number.isFinite(game.flicksUsed))game.flicksUsed=0;if(!Number.isFinite(game.turnEndsAt))game.turnEndsAt=0;if(!Number.isFinite(game.finishSequence))game.finishSequence=0;
   game.players=(game.players||[]).map(p=>({
     ...p,
     turboCharge:clamp(Number.isFinite(p.turboCharge)?p.turboCharge:0,0,1),
     turboReady:!!p.turboReady,
-    turboHeld:false
+    turboHeld:false,
+    pendingFinish:!!p.pendingFinish,
+    finishCrossedAt:Number.isFinite(p.finishCrossedAt)?p.finishCrossedAt:0
   }));
   selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||2;
   lookDrag=null;lookYaw=0;lookPitch=0;turboHolding=false;animating=false;
@@ -379,7 +381,7 @@ function processCheckpoints(previous=[]){
   if(!game)return;
   const finish=finishLine();
   game.players.forEach((p,i)=>{
-    if(p.finished)return;
+    if(p.finished||p.pendingFinish)return;
     let zone=0;
     if(p.x>835&&p.y>215&&p.y<385)zone=1;
     else if(p.y<125&&p.x>420&&p.x<580)zone=2;
@@ -394,7 +396,11 @@ function processCheckpoints(previous=[]){
       p.y>=finish.y1-DISC_R&&p.y<=finish.y2+DISC_R;
     if(crossedFinish){
       p.lap++;p.nextCheckpoint=1;
-      if(p.lap>=game.laps){p.finished=true;if(!game.winner)game.winner={id:p.id,name:p.name,turn:game.turn}}
+      if(p.lap>=game.laps){
+        p.pendingFinish=true;
+        game.finishSequence=(Number(game.finishSequence)||0)+1;
+        p.finishCrossedAt=game.finishSequence;
+      }
     }
   });
 }
@@ -612,7 +618,24 @@ function completeTurn(){
   if(!game||game.winner||game.phase!=='settled')return;
   clearTurnEndTimer();
   game.players.forEach(p=>p.turboHeld=false);
-  turboHolding=false;nextTurn();game.phase='aim';resetLook();renderRace();
+  turboHolding=false;
+
+  const finishers=game.players
+    .filter(p=>p.pendingFinish&&!p.finished)
+    .sort((a,b)=>(a.finishCrossedAt||0)-(b.finishCrossedAt||0));
+  if(finishers.length){
+    const winner=finishers[0];
+    winner.pendingFinish=false;
+    winner.finished=true;
+    game.winner={id:winner.id,name:winner.name,turn:game.turn};
+    game.phase='finished';
+    game.turnEndsAt=0;
+    resetLook();renderRace();
+    if(mode==='multi'&&role==='host')broadcastState();
+    return;
+  }
+
+  nextTurn();game.phase='aim';resetLook();renderRace();
   if(mode==='multi'&&role==='host')broadcastState();
 }
 function requestFinishTurn(){
@@ -674,13 +697,18 @@ function renderHudOnly(){
   const secondUsed=game.flicksUsed>=2;
 
   $('turnText').textContent=game.winner?`${game.winner.name} wins!`:p?`${p.name}${(yourShot||yourFinish||canTurbo)?' — your turn':''}`:'—';
+  const finishPending=!!p?.pendingFinish;
   $('turnHint').textContent=game.winner?'Race complete':
+    phase==='moving'&&finishPending?
+      (secondAvailable&&yourShot?'Finish crossed — second flick still available':
+       p?.turboHeld?'Finish crossed — Turbo boosting':
+       canTurbo?'Finish crossed — hold Turbo to boost':'Finish crossed — complete your turn'):
     phase==='moving'?
       (secondAvailable&&yourShot?'Disc moving — second flick available':
        p?.turboHeld?'Turbo boosting — release to save charge':
        canTurbo?'Disc moving — hold Turbo to boost':'Disc moving…'):
     phase==='settled'?
-      (yourFinish?'Finish Turn now · automatic handoff in 3 seconds':`Waiting for ${p?.name||'player'}`):
+      (yourFinish?(finishPending?'Finish crossed — finish your turn':'Finish Turn now · automatic handoff in 3 seconds'):`Waiting for ${p?.name||'player'}`):
     yourShot?'Drag anywhere to look around · drag from your disc to flick':`Waiting for ${p?.name||'player'}`;
   $('turnBanner').classList.toggle('yours',(yourShot||yourFinish||canTurbo)&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
 
