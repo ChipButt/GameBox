@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=6">
-  <link rel="stylesheet" href="track-ui.css?v=12">
+  <link rel="stylesheet" href="track-ui.css?v=13">
 </head>
 <body>
 <div class="appShell">
@@ -113,31 +113,54 @@
 
     <section id="raceScreen" class="hidden">
       <section class="raceBanner">
-        <div class="raceHeader raceHeaderCompact">
-          <div class="teamStamp"><span>YOUR TEAM</span><strong id="activePlayerName">—</strong></div>
-          <div class="yourCarStat"><span>YOUR CAR</span><strong><i class="yourCarDot"></i>GOLD</strong></div>
-          <div class="trackStamp"><strong id="trackName">Harbour Sprint</strong><span id="trackMeta">Open Wheel · Dry</span><span id="trackFocus" class="trackFocus">Stop-start · Technical</span></div>
+        <img class="gridlineRaceLogo" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+
+        <div class="raceIdentityRow">
+          <div class="playerProfileAsset">
+            <img src="assets/ui/hud/player_profile.png" alt="">
+            <strong id="activePlayerName">—</strong>
+          </div>
+
+          <div class="raceNameAsset">
+            <img src="assets/ui/hud/race_name_banner.png" alt="">
+            <div class="raceNameCopy">
+              <strong id="trackName">Forest Lake</strong>
+              <span><b id="trackMeta">GT · Dry</b> · Race <b id="raceNumber">1</b> · <b id="lapText">Lap 1 / 7</b></span>
+              <small id="trackFocus">Flowing · Technical</small>
+            </div>
+          </div>
         </div>
-        <div class="raceBannerStats">
-          <div class="bannerRaceMeta"><span>RACE</span><strong id="raceNumber">1</strong></div>
+
+        <div class="bannerStatPills" aria-label="Live race stats">
+          <div class="assetPill cashPill">
+            <img src="assets/ui/hud/cash_pill.png" alt="">
+            <strong id="cash">£0</strong>
+          </div>
+          <div class="assetPill positionPill">
+            <img src="assets/ui/hud/position_pill.png" alt="">
+            <strong><span id="position">12</span>/12</strong>
+          </div>
+          <div class="assetPill incomePill">
+            <img src="assets/ui/hud/income_per_second_pill.png" alt="">
+            <strong id="sponsorRate">£0/s</strong>
+          </div>
         </div>
-        <div class="lapInfo"><span id="lapText">Lap 1 / 8</span><div class="lapBar compactLap"><i id="lapBar"></i></div></div>
+
+        <div class="lapBar compactLap" aria-hidden="true"><i id="lapBar"></i></div>
       </section>
 
       <section class="trackStage">
-        <div class="mapRacePills" aria-label="Live race stats">
-          <div class="mapPill cashPill"><span>CASH</span><strong id="cash">£0</strong></div>
-          <div class="mapPill positionPill"><span>POSITION</span><strong>P<span id="position">12</span><small>/12</small></strong></div>
-          <div class="mapPill incomePill"><span>INCOME / S</span><strong id="sponsorRate">£0/s</strong></div>
-        </div>
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
+
+        <img id="greenFlagBadge" class="raceStatusFlag greenFlagBadge hidden" src="assets/ui/race_status/green_flag.png" alt="Race started">
+        <img id="finalLapBadge" class="raceStatusFlag finalLapBadge hidden" src="assets/ui/race_status/final_lap.png" alt="Final lap">
+
         <div id="countdownOverlay" class="countdownOverlay hidden" aria-live="assertive">
-          <div class="startLights" aria-hidden="true">
-            <i class="startLight"></i><i class="startLight"></i><i class="startLight"></i>
-          </div>
-          <strong id="countdownText">3</strong>
+          <img id="countdownAsset" src="assets/ui/countdown/state_3.png" alt="3">
         </div>
+
         <section id="raceEventCard" class="raceEventCard hidden" aria-live="polite"></section>
+
         <div class="hiddenRaceMeta" aria-hidden="true">
           <strong id="sponsorName">Chip In Racing</strong>
           <strong id="liveSponsor">+£0</strong>
@@ -146,9 +169,6 @@
       </section>
 
       <section class="upgradeShelf">
-        <div class="upgradeShelfHeader">
-          <div><span class="eyebrow">LIVE UPGRADES</span><strong>CAR PERFORMANCE · INCOME GROWTH</strong></div>
-        </div>
         <div id="upgradeGrid" class="upgradeGrid fourTwoUpgradeGrid"></div>
       </section>
 
@@ -157,7 +177,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=6"></script>
-<script src="app.js?v=19"></script>
-<script src="track-ui.js?v=10"></script>
+<script src="app.js?v=20"></script>
+<script src="track-ui.js?v=11"></script>
 </body>
 </html>
