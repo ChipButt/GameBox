@@ -114,7 +114,7 @@
       name:e.name,
       cash:0,
       gems:Math.max(0,Math.round(e.gems||0)),
-      levels:{...e.levels},
+      levels:old.levels||baseLevels(),
       races:Math.max(finite(old.races,0),finite(e.races,0)),
       best:e.best||old.best||0
     };
