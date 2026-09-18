@@ -392,7 +392,7 @@
         raceMode:'gridline',
         trackName:multiplayerStage==='track'?TRACKS[config.trackIndex].name:'Track chosen by host',
         totalRaces:1,
-        started:false
+        started:multiplayerStage==='track'
       });
       broadcastLobby();
     }
@@ -1662,6 +1662,7 @@
     $('[data-back]').forEach(b=>b.onclick=()=>{
       if(b.closest('#trackSetup')&&playMode==='multi'&&role==='host'){
         multiplayerStage='lobby';
+        session?.updateHost?.({started:false,raceMode:'gridline',trackName:'Track chosen by host'});
         broadcastLobby();
       }
       if(b.closest('#hostSetup,#joinSetup'))resetNetworkSession(false);
