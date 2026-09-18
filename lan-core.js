@@ -115,14 +115,15 @@
   const discoverNetworkKey=()=>new Promise(resolve=>{
     if(!globalThis.RTCPeerConnection){resolve('fallback');return;}
     let settled=false;
+    let pc=null;
+    let timer=null;
     const finish=value=>{
       if(settled)return;
       settled=true;
-      try{pc.close();}catch{}
-      clearTimeout(timer);
+      try{pc?.close();}catch{}
+      if(timer)clearTimeout(timer);
       resolve(shortHash(value||'fallback'));
     };
-    let pc;
     try{
       pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.cloudflare.com:3478'}]});
       pc.createDataChannel('gamebox-network-probe');
@@ -139,7 +140,7 @@
       finish('fallback');
       return;
     }
-    const timer=setTimeout(()=>finish('fallback'),2800);
+    timer=setTimeout(()=>finish('fallback'),2800);
   });
 
   class GameBoxDiscoverySession {
@@ -187,6 +188,10 @@
 
       this.actions.join.onMessage=(data,{peerId})=>{
         if(this.role!=='host'||!data||data.game!==this.game)return;
+        if(this.hostMeta?.started){
+          this.actions.accept.send({game:this.game,ok:false,reason:'Race already started'},{target:peerId});
+          return;
+        }
         if(this.hostPeers.length>=this.maxPlayers-1){
           this.actions.accept.send({game:this.game,ok:false,reason:'Lobby full'},{target:peerId});
           return;
