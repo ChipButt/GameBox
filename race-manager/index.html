@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=7">
-  <link rel="stylesheet" href="track-ui.css?v=13">
+  <link rel="stylesheet" href="track-ui.css?v=14">
 </head>
 <body>
 <div class="appShell">
   <header class="topbar">
     <a id="gameboxBack" class="backLink" href="../index.html">← GameBox</a>
     <img class="chipLogo" src="../chip_in_logo.png?v=1" alt="Chip In">
-    <button id="exitRace" class="iconButton hidden" type="button">Setup</button>
+    <span class="topbarSpacer" aria-hidden="true"></span>
   </header>
 
   <main class="mainView">
@@ -111,73 +111,76 @@
       </section>
     </section>
 
-    <section id="raceScreen" class="hidden">
-      <section class="raceBanner">
-        <img class="gridlineRaceLogo" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
+    <section id="raceScreen" class="hidden" aria-label="Gridline race">
+      <button id="exitRace" class="raceAssetButton raceBackAsset hidden" type="button" aria-label="Back to race setup">
+        <img src="assets/ui/controls/back.png" alt="">
+      </button>
+      <button id="raceSettingsButton" class="raceAssetButton raceSettingsAsset" type="button" aria-label="Race settings">
+        <img src="assets/ui/controls/settings.png" alt="">
+      </button>
 
-        <div class="raceIdentityRow">
-          <div class="playerProfileAsset">
-            <img src="assets/ui/hud/player_profile.png" alt="">
-            <strong id="activePlayerName">—</strong>
-          </div>
+      <img class="racePlacedAsset gridlineRaceLogo" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
 
-          <div class="raceNameAsset">
-            <img src="assets/ui/hud/race_name_banner.png" alt="">
-            <div class="raceNameCopy">
-              <strong id="trackName">Forest Lake</strong>
-              <span><b id="trackMeta">GT · Dry</b> · Race <b id="raceNumber">1</b> · <b id="lapText">Lap 1 / 7</b></span>
-              <small id="trackFocus">Flowing · Technical</small>
-            </div>
-          </div>
-        </div>
+      <div class="racePlacedAsset playerProfileAsset">
+        <img src="assets/ui/hud/player_profile.png" alt="">
+      </div>
+      <strong id="activePlayerName" class="raceText playerNameText">—</strong>
 
-        <div class="bannerStatPills" aria-label="Live race stats">
-          <div class="assetPill cashPill">
-            <img src="assets/ui/hud/cash_pill.png" alt="">
-            <strong id="cash">£0</strong>
-          </div>
-          <div class="assetPill positionPill">
-            <img src="assets/ui/hud/position_pill.png" alt="">
-            <strong><span id="position">12</span>/12</strong>
-          </div>
-          <div class="assetPill incomePill">
-            <img src="assets/ui/hud/income_per_second_pill.png" alt="">
-            <strong id="sponsorRate">£0/s</strong>
-          </div>
-        </div>
+      <div class="racePlacedAsset raceNameAsset">
+        <img src="assets/ui/hud/race_name_banner.png" alt="">
+      </div>
+      <strong id="raceNumber" class="raceText raceNumberText">Race\n1</strong>
+      <strong id="trackName" class="raceText trackNameText">Forest Lake</strong>
 
-        <div class="lapBar compactLap" aria-hidden="true"><i id="lapBar"></i></div>
-      </section>
+      <div class="racePlacedAsset cashPill"><img src="assets/ui/hud/cash_pill.png" alt=""></div>
+      <div class="racePlacedAsset positionPill"><img src="assets/ui/hud/position_pill.png" alt=""></div>
+      <div class="racePlacedAsset incomePill"><img src="assets/ui/hud/income_per_second_pill.png" alt=""></div>
+      <strong id="cash" class="raceText cashValue">£0</strong>
+      <strong id="position" class="raceText positionValue">12th</strong>
+      <strong id="sponsorRate" class="raceText incomeValue">£0/s</strong>
 
       <section class="trackStage">
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
 
-        <img id="greenFlagBadge" class="raceStatusFlag greenFlagBadge hidden" src="assets/ui/race_status/green_flag.png" alt="Race started">
-        <img id="finalLapBadge" class="raceStatusFlag finalLapBadge hidden" src="assets/ui/race_status/final_lap.png" alt="Final lap">
-
         <div id="countdownOverlay" class="countdownOverlay hidden" aria-live="assertive">
-          <img id="countdownAsset" src="assets/ui/countdown/state_3.png" alt="3">
+          <img class="countdownHousing" src="assets/ui/countdown/light_housing_off.png" alt="">
+          <img id="countdownLight1" class="countdownLight light1" src="assets/ui/countdown/light_red.png" alt="">
+          <img id="countdownLight2" class="countdownLight light2" src="assets/ui/countdown/light_red.png" alt="">
+          <img id="countdownLight3" class="countdownLight light3" src="assets/ui/countdown/light_red.png" alt="">
+          <img id="countdownNumber3" class="countdownNumber number3" src="assets/ui/countdown/number_3.png" alt="3">
+          <img id="countdownNumber2" class="countdownNumber number2 hidden" src="assets/ui/countdown/number_2.png" alt="2">
+          <img id="countdownNumber1" class="countdownNumber number1 hidden" src="assets/ui/countdown/number_1.png" alt="1">
+          <img id="countdownGo" class="countdownNumber goText hidden" src="assets/ui/countdown/go_text.png" alt="GO">
         </div>
 
         <section id="raceEventCard" class="raceEventCard hidden" aria-live="polite"></section>
-
-        <div class="hiddenRaceMeta" aria-hidden="true">
-          <strong id="sponsorName">Chip In Racing</strong>
-          <strong id="liveSponsor">+£0</strong>
-          <div id="raceStatus"><strong>Race loading</strong><span>Upgrades happen live.</span></div>
-        </div>
       </section>
 
+      <div class="racePlacedAsset lapBannerAsset"><img src="assets/ui/hud/race_name_banner.png" alt=""></div>
+      <strong id="lapText" class="raceText lapTitleText">Lap 1 / 8</strong>
+      <img id="finalLapBadge" class="raceStatusFlag finalLapBadge hidden" src="assets/ui/race_status/final_lap.png" alt="Final lap">
+      <img id="greenFlagBadge" class="raceStatusFlag greenFlagBadge hidden" src="assets/ui/race_status/green_flag.png" alt="Race started">
+
       <section class="upgradeShelf">
-        <div id="upgradeGrid" class="upgradeGrid fourTwoUpgradeGrid"></div>
+        <div id="upgradeGrid" class="upgradeGrid"></div>
       </section>
 
       <section id="resultCard" class="resultCard hidden" aria-live="polite"></section>
+
+      <div class="hiddenRaceMeta" aria-hidden="true">
+        <span id="profilePlayerName"></span>
+        <span id="trackMeta"></span>
+        <span id="trackFocus"></span>
+        <strong id="sponsorName">Chip In Racing</strong>
+        <strong id="liveSponsor">+£0</strong>
+        <i id="lapBar"></i>
+        <div id="raceStatus"><strong>Race loading</strong><span>Upgrades happen live.</span></div>
+      </div>
     </section>
   </main>
 </div>
 <script src="../lan-core.js?v=6"></script>
-<script src="app.js?v=21"></script>
-<script src="track-ui.js?v=11"></script>
+<script src="app.js?v=22"></script>
+<script src="track-ui.js?v=12"></script>
 </body>
 </html>
