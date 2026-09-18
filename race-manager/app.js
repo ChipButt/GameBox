@@ -43,7 +43,9 @@
     {x:17,y:235},{x:201,y:235},{x:17,y:500},{x:201,y:500}
   ];
   const LEADERBOARD_NAME_Y=[183.318,222.581,262.161,305.741,349.322,392.902,436.482,480.063,523.643,567.224,610.804,654.385];
-  const LEADERBOARD_COLOUR_Y=[185.471,214.58,262.161,305.741,349.322,392.902,436.482,480.063,523.643,567.224,610.804,654.385];
+  // Colour boxes use the same vertical centre as each racer-name box.
+  // Name height is 31.262px and colour height is 26.956px, so colour top = name top + 2.153px.
+  const LEADERBOARD_COLOUR_Y=LEADERBOARD_NAME_Y.map(y=>Number((y+2.153).toFixed(3)));
 
   const UPGRADE_META={
     engine:{label:'Engine',desc:'Acceleration',kind:'car',base:22,step:8},
