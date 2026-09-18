@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071a3a">
+  <title>Gridline Layout Designer</title>
+  <link rel="stylesheet" href="layout-designer.css?v=1">
+</head>
+<body>
+  <header class="designerTopbar">
+    <a class="backLink" href="index.html">← Gridline</a>
+    <div>
+      <strong>Gridline Layout Designer</strong>
+      <small>Arrange the approved assets on a mobile screen</small>
+    </div>
+    <div class="topActions">
+      <button id="starterLayout" type="button">Load race starter</button>
+      <button id="clearLayout" type="button" class="dangerGhost">Clear</button>
+    </div>
+  </header>
+
+  <main class="designerShell">
+    <aside class="assetPanel">
+      <div class="panelHeading">
+        <strong>Assets</strong>
+        <span id="assetCount"></span>
+      </div>
+      <input id="assetSearch" class="searchBox" type="search" placeholder="Search assets">
+      <div class="assetFilters">
+        <button type="button" data-filter="all" class="active">All</button>
+        <button type="button" data-filter="hud">HUD</button>
+        <button type="button" data-filter="upgrade-enabled">Upgrades</button>
+        <button type="button" data-filter="track">Tracks</button>
+        <button type="button" data-filter="car">Cars</button>
+        <button type="button" data-filter="popup">Popups</button>
+      </div>
+      <div id="assetLibrary" class="assetLibrary"></div>
+      <div class="assetPanelFooter">
+        <button id="addText" type="button">+ Add text box</button>
+      </div>
+    </aside>
+
+    <section class="workspacePanel">
+      <div class="workspaceToolbar">
+        <label>Screen
+          <select id="screenPreset">
+            <option value="390x844">390 × 844</option>
+            <option value="393x852">393 × 852</option>
+            <option value="412x915">412 × 915</option>
+            <option value="430x932">430 × 932</option>
+          </select>
+        </label>
+        <label>Zoom
+          <input id="zoomRange" type="range" min="50" max="120" step="5" value="80">
+          <span id="zoomValue">80%</span>
+        </label>
+        <label class="checkLabel"><input id="showGuides" type="checkbox" checked> 20/40/40 guides</label>
+        <label class="checkLabel"><input id="snapGrid" type="checkbox" checked> Snap 4 px</label>
+      </div>
+
+      <div class="workspaceScroller">
+        <div id="phoneFrame" class="phoneFrame">
+          <div id="designSurface" class="designSurface">
+            <div class="regionGuide guide20"></div>
+            <div class="regionGuide guide60"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspaceFooter">
+        <button id="saveLocal" type="button">Save locally</button>
+        <button id="loadLocal" type="button">Load saved</button>
+        <button id="downloadJson" type="button">Download layout JSON</button>
+        <label class="fileButton">Import JSON<input id="importJson" type="file" accept="application/json"></label>
+        <button id="copyJson" type="button">Copy JSON</button>
+      </div>
+    </section>
+
+    <aside class="inspectorPanel">
+      <div class="panelHeading">
+        <strong>Inspector</strong>
+        <button id="deleteSelected" type="button" class="dangerGhost" disabled>Delete</button>
+      </div>
+
+      <div id="noSelection" class="emptyInspector">
+        Select an asset or text box on the phone.
+      </div>
+
+      <div id="inspectorFields" class="inspectorFields hidden">
+        <label>Name
+          <input id="propName" type="text">
+        </label>
+
+        <div class="fieldGrid two">
+          <label>X
+            <input id="propX" type="number" step="1">
+          </label>
+          <label>Y
+            <input id="propY" type="number" step="1">
+          </label>
+        </div>
+
+        <div class="fieldGrid two">
+          <label>Width
+            <input id="propW" type="number" min="1" step="1">
+          </label>
+          <label>Height
+            <input id="propH" type="number" min="1" step="1">
+          </label>
+        </div>
+
+        <div class="fieldGrid two">
+          <label>Z layer
+            <input id="propZ" type="number" step="1">
+          </label>
+          <label>Opacity
+            <input id="propOpacity" type="number" min="0" max="1" step="0.05">
+          </label>
+        </div>
+
+        <label class="checkLabel"><input id="propLockAspect" type="checkbox" checked> Lock aspect ratio</label>
+
+        <div id="imageFields">
+          <label>Image fit
+            <select id="propFit">
+              <option value="contain">Contain</option>
+              <option value="cover">Cover</option>
+              <option value="fill">Stretch / fill</option>
+            </select>
+          </label>
+          <label>Object position X
+            <input id="propObjectX" type="range" min="0" max="100" value="50">
+          </label>
+          <label>Object position Y
+            <input id="propObjectY" type="range" min="0" max="100" value="50">
+          </label>
+        </div>
+
+        <div id="textFields" class="hidden">
+          <label>Text
+            <textarea id="propText" rows="3"></textarea>
+          </label>
+          <label>Data role / key
+            <input id="propRole" type="text" placeholder="e.g. cash, trackName">
+          </label>
+          <div class="fieldGrid two">
+            <label>Font px
+              <input id="propFontSize" type="number" min="6" max="100" step="1">
+            </label>
+            <label>Weight
+              <select id="propFontWeight">
+                <option value="400">Regular</option>
+                <option value="600">Semi bold</option>
+                <option value="700">Bold</option>
+                <option value="900">Heavy</option>
+              </select>
+            </label>
+          </div>
+          <div class="fieldGrid two">
+            <label>Align
+              <select id="propAlign">
+                <option value="left">Left</option>
+                <option value="center">Centre</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <label>Colour
+              <input id="propColor" type="color" value="#ffffff">
+            </label>
+          </div>
+        </div>
+
+        <div class="inspectorActions">
+          <button id="duplicateSelected" type="button">Duplicate</button>
+          <button id="bringFront" type="button">Bring front</button>
+          <button id="sendBack" type="button">Send back</button>
+        </div>
+      </div>
+
+      <div class="layersPanel">
+        <div class="panelHeading"><strong>Layers</strong><span id="layerCount"></span></div>
+        <div id="layerList" class="layerList"></div>
+      </div>
+
+      <div class="helpCard">
+        <strong>Controls</strong>
+        <small>Drag to move. Resize with the corner handle. Arrow keys nudge 1 px; Shift + arrows nudge 10 px. Delete removes the selected item. Cmd/Ctrl + D duplicates it.</small>
+      </div>
+    </aside>
+  </main>
+
+  <script src="layout-designer.js?v=1"></script>
+</body>
+</html>
