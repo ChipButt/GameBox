@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
   <link rel="stylesheet" href="track-ui.css?v=12">
 </head>
 <body>
@@ -60,27 +60,27 @@
       <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">HOST GAME</span><h1>Race lobby</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">This phone is playing as<select id="hostPlayerSelect"></select></label>
-        <button id="createInvite" class="secondaryButton full" type="button">Create player invite</button>
-        <label class="fieldLabel">Invite code<textarea id="hostOffer" rows="4" readonly placeholder="Create an invite and send this code to your friend"></textarea></label>
-        <label class="fieldLabel">Friend answer<textarea id="hostAnswer" rows="4" placeholder="Paste their answer code here"></textarea></label>
-        <button id="acceptAnswer" class="secondaryButton full" type="button">Connect player</button>
-        <div class="lobbyHeader"><strong>Leaderboard / Lobby</strong><span id="hostState" class="tag">Ready</span></div>
+        <div class="autoDiscoveryBanner">
+          <span class="scanPulse"></span>
+          <div><strong>Host is discoverable automatically</strong><small>Other players can open Join Game and tap this lobby.</small></div>
+          <span id="hostState" class="tag">Starting</span>
+        </div>
+        <div class="lobbyHeader"><strong>Players in lobby</strong><span class="tag">Up to 4</span></div>
         <div id="hostLobby" class="leaderboard"></div>
         <button id="startHostRace" class="primaryButton full" type="button" disabled>Start race</button>
-        <p class="smallNote">For additional phones, create another invite after each player connects.</p>
       </section>
     </section>
 
     <section id="joinSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">JOIN GAME</span><h1>Find your host</h1></div></header>
+      <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">JOIN GAME</span><h1>Find a race</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">You are playing as<select id="joinPlayerSelect"></select></label>
-        <label class="fieldLabel">Host invite<textarea id="joinOffer" rows="4" placeholder="Paste the host's invite code"></textarea></label>
-        <button id="makeAnswer" class="secondaryButton full" type="button">Create answer</button>
-        <label class="fieldLabel">Your answer code<textarea id="joinAnswer" rows="4" readonly placeholder="Send this answer back to the host"></textarea></label>
-        <div class="lobbyHeader"><strong>Leaderboard / Lobby</strong><span id="joinState" class="tag">Waiting</span></div>
+        <div class="lobbyHeader"><strong>Available games</strong><span id="joinState" class="tag">Scanning</span></div>
+        <div id="availableHosts" class="hostDiscoveryList">
+          <div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>
+        </div>
+        <div class="lobbyHeader"><strong>Connected lobby</strong></div>
         <div id="joinLobby" class="leaderboard"></div>
-        <p class="smallNote">Keep this screen open. The host starts the race for everyone once all players are connected.</p>
       </section>
     </section>
 
@@ -129,8 +129,8 @@
     </section>
   </main>
 </div>
-<script src="../lan-core.js?v=1"></script>
-<script src="app.js?v=14"></script>
+<script src="../lan-core.js?v=2"></script>
+<script src="app.js?v=15"></script>
 <script src="track-ui.js?v=8"></script>
 </body>
 </html>
