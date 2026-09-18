@@ -27,6 +27,7 @@ body.gridline-racing-live .mainView{
 
 #raceScreen:not(.hidden){
   --race-scale:1;
+  font-family:Arial,sans-serif;
   position:relative;
   display:block;
   flex:0 0 auto;
@@ -89,7 +90,7 @@ body.gridline-racing-live .mainView{
   overflow:hidden;
   white-space:pre-line;
   text-shadow:0 1px 3px rgba(0,0,0,.68);
-  font-family:Inter,Arial,sans-serif;
+  font-family:Arial,sans-serif;
   line-height:1;
   pointer-events:none;
 }
@@ -117,6 +118,14 @@ body.gridline-racing-live .mainView{
 #raceScreen .positionValue{
   left:187px;top:164px;width:49px;height:14px;z-index:35;
   font-size:16px;font-weight:900;text-align:center;
+}
+#raceScreen .ordinalSuffix{
+  font-size:.55em;
+  line-height:1;
+  vertical-align:super;
+  position:relative;
+  top:-.28em;
+  margin-left:1px;
 }
 #raceScreen .incomeValue{
   left:310.556px;top:164px;width:46px;height:14px;z-index:36;
@@ -193,9 +202,54 @@ body.gridline-racing-live .mainView{
   background-size:contain;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.65));
 }
-#raceScreen .raceLane.you{width:8px;height:12px;z-index:18}
+#raceScreen .raceLane.you{
+  width:12px;
+  height:18px;
+  z-index:24;
+}
+#raceScreen .raceLane.you::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:22px;
+  height:22px;
+  transform:translate(-50%,-50%);
+  border:2px solid #5eeaff;
+  border-radius:50%;
+  box-shadow:0 0 3px #fff,0 0 8px #20cfff,0 0 14px rgba(32,207,255,.95);
+  animation:gridlineYouPulse .9s ease-in-out infinite alternate;
+  pointer-events:none;
+}
 #raceScreen .raceLane.you .pos{
-  filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #f7bd18) drop-shadow(0 1px 1px rgba(0,0,0,.72));
+  position:relative;
+  z-index:2;
+  filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 4px #f7bd18) drop-shadow(0 0 7px #5eeaff) drop-shadow(0 2px 1px rgba(0,0,0,.8));
+}
+#raceScreen .raceLane .youTag{display:none}
+#raceScreen .raceLane.you .youTag{
+  display:block;
+  position:absolute;
+  left:50%;
+  top:-13px;
+  z-index:30;
+  min-width:22px;
+  padding:2px 3px;
+  border-radius:4px;
+  background:#03152d;
+  border:1px solid #5eeaff;
+  color:#fff;
+  font:900 7px/1 Arial,sans-serif;
+  letter-spacing:.04em;
+  text-align:center;
+  box-shadow:0 0 6px rgba(94,234,255,.85);
+  transform:translateX(-50%) rotate(var(--counter-angle,0deg));
+  transform-origin:center;
+  pointer-events:none;
+}
+@keyframes gridlineYouPulse{
+  from{opacity:.65;transform:translate(-50%,-50%) scale(.9)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
 }
 #raceScreen .raceLane.contacting .pos{
   filter:drop-shadow(0 0 1px rgba(255,255,255,.92)) drop-shadow(0 1px 1px rgba(0,0,0,.68));
@@ -353,7 +407,7 @@ body.gridline-racing-live .mainView{
   align-items:center;
   justify-content:center;
   color:#fff;
-  font:900 15px/1.05 Inter,Arial,sans-serif;
+  font:900 15px/1.05 Arial,sans-serif;
   text-shadow:0 1px 3px rgba(0,0,0,.68);
   pointer-events:none;
 }
@@ -361,7 +415,7 @@ body.gridline-racing-live .mainView{
   display:block;
   margin-top:4px;
   color:#dcecff;
-  font:700 8px/1.08 Inter,Arial,sans-serif;
+  font:700 8px/1.08 Arial,sans-serif;
 }
 #raceScreen .raceEventChoices{position:absolute;inset:0;pointer-events:none}
 #raceScreen .raceEventChoices button{
@@ -373,7 +427,7 @@ body.gridline-racing-live .mainView{
   border:0;
   background:transparent;
   color:#fff;
-  font:900 15px/1 Inter,Arial,sans-serif;
+  font:900 15px/1 Arial,sans-serif;
   text-align:center;
   text-shadow:0 1px 3px rgba(0,0,0,.7);
   pointer-events:auto;
@@ -397,8 +451,8 @@ body.gridline-racing-live .mainView{
 }
 #raceScreen .compactEvent strong,
 #raceScreen .compactEvent small{display:block}
-#raceScreen .compactEvent strong{font:900 9px/1 Inter,Arial,sans-serif}
-#raceScreen .compactEvent small{margin-top:4px;color:#c6dcf4;font:700 7px/1.1 Inter,Arial,sans-serif}
+#raceScreen .compactEvent strong{font:900 9px/1 Arial,sans-serif}
+#raceScreen .compactEvent small{margin-top:4px;color:#c6dcf4;font:700 7px/1.1 Arial,sans-serif}
 #raceScreen .compactEvent.correct,
 #raceScreen .compactEvent.activeBoost{border-color:#4aff83}
 
@@ -433,7 +487,7 @@ body.gridline-racing-live .mainView{
   align-items:center;
   justify-content:center;
   color:#fff;
-  font:900 27px/1 Inter,Arial,sans-serif;
+  font:900 27px/1 Arial,sans-serif;
   text-align:center;
   text-shadow:0 2px 3px rgba(0,0,0,.65);
 }
@@ -447,7 +501,7 @@ body.gridline-racing-live .mainView{
   align-items:center;
   justify-content:center;
   color:#102246;
-  font:900 10px/1 Inter,Arial,sans-serif;
+  font:900 10px/1 Arial,sans-serif;
   text-align:center;
 }
 #raceScreen .seriesComplete .resultAction{
@@ -470,11 +524,11 @@ body.gridline-racing-live .mainView{
 #raceScreen .resultCard:not(.seriesComplete) .resultAsset{left:28px;top:270px;width:334px;height:auto}
 #raceScreen .resultCard:not(.seriesComplete) .resultPosition{
   position:absolute;left:58px;top:328px;width:274px;text-align:center;color:#d9ebff;
-  font:900 9px/1 Inter,Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
+  font:900 9px/1 Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
 }
 #raceScreen .resultReady{
   position:absolute;left:58px;top:350px;width:274px;text-align:center;color:#77f6a0;
-  font:900 9px/1 Inter,Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
+  font:900 9px/1 Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
 }
 #raceScreen .resultCard:not(.seriesComplete) .resultAction{
   position:absolute;left:90px;top:365px;width:210px;height:50px;border:0;border-radius:12px;
@@ -497,19 +551,32 @@ body.gridline-racing-live .mainView{
 
 #raceScreen .hiddenRaceMeta{display:none!important}
 
-.upgradeCoinFx{
+.cashNoteFx{
   position:fixed;
   z-index:9999;
-  width:16px;
-  height:16px;
-  border-radius:50%;
+  width:22px;
+  height:12px;
+  border-radius:2px;
   display:grid;
   place-items:center;
-  background:#f7bd18;
-  border:1px solid #c28d00;
-  color:#6a4a00;
-  font:900 9px/1 Inter,Arial,sans-serif;
-  box-shadow:0 2px 5px rgba(0,0,0,.22);
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.22) 0 18%,transparent 18% 82%,rgba(255,255,255,.18) 82% 100%),
+    linear-gradient(180deg,#72ee91,#2fbf61);
+  border:1px solid #d7ffe1;
+  color:#075729;
+  font:900 8px/1 Arial,sans-serif;
+  box-shadow:0 1px 1px rgba(0,0,0,.28),0 0 5px rgba(75,230,116,.45);
   pointer-events:none;
   will-change:transform,opacity;
 }
+.cashNoteFx::before,
+.cashNoteFx::after{
+  content:"";
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  width:2px;
+  background:rgba(8,102,49,.35);
+}
+.cashNoteFx::before{left:4px}
+.cashNoteFx::after{right:4px}
