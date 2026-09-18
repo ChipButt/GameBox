@@ -234,11 +234,11 @@
   const STAT_KEYS=UPGRADE_KEYS;
 
   function botSkill(raceNo,i){
-    return clamp(.12+Math.max(0,(raceNo||1)-1)*.045+(i%4)*.025,.12,.94);
+    return clamp(.38+Math.max(0,(raceNo||1)-1)*.08+(i%4)*.04,.38,.94);
   }
 
   function botDecisionDelay(skill){
-    return Math.max(7,Math.round(34-skill*25+Math.random()*7));
+    return Math.max(4,Math.round(10-skill*5+Math.random()*3));
   }
 
   function botEntrant(name,i,track,raceNo=1){
@@ -249,7 +249,7 @@
       cash:0,gems:0,
       aiSkill:skill,
       aiFocus:STAT_KEYS[i%STAT_KEYS.length],
-      nextDecision:18+Math.round(Math.random()*botDecisionDelay(skill)),
+      nextDecision:4+Math.round(Math.random()*botDecisionDelay(skill)),
       progress:0,finishTick:null,position:null,
       eventCount:0,eventCooldownUntil:18,activeEvent:null,boost:null,eventResult:null
     };
@@ -329,7 +329,7 @@
       if(!e.human){
         e.aiSkill=botSkill(game.raceNo,i);
         e.aiFocus=e.aiFocus||STAT_KEYS[i%STAT_KEYS.length];
-        e.nextDecision=12+Math.round(Math.random()*botDecisionDelay(e.aiSkill));
+        e.nextDecision=3+Math.round(Math.random()*botDecisionDelay(e.aiSkill));
       }
     });
     seedGrid(game.entrants);
@@ -424,6 +424,12 @@
   function updateRaceEvents(order){
     const humans=game.entrants.filter(e=>e.human);
     for(const e of humans){
+      if(e.finishTick!==null){
+        e.activeEvent=null;
+        e.boost=null;
+        e.eventResult=null;
+        continue;
+      }
       if(e.boost&&finite(e.boost.untilTick,0)<=game.tick)e.boost=null;
       if(e.eventResult&&finite(e.eventResult.untilTick,0)<=game.tick)e.eventResult=null;
       if(e.activeEvent&&finite(e.activeEvent.expiresTick,0)<=game.tick){
@@ -518,7 +524,9 @@
     if(game.phase!=='race')return;
     game.tick++;
     const order=[...game.entrants].sort((a,b)=>b.progress-a.progress);
-    for(const e of game.entrants)e.cash+=incomeRate(e)*(TICK_MS/1000);
+    for(const e of game.entrants){
+      if(e.finishTick===null)e.cash+=incomeRate(e)*(TICK_MS/1000);
+    }
     updateRaceEvents(order);
     for(const e of game.entrants)maybeBotDecision(e,order);
     for(const e of game.entrants){
@@ -610,7 +618,7 @@
       return;
     }
 
-    if(game.phase!=='race'||msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
+    if(game.phase!=='race'||e.finishTick!==null||msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
     const cost=upgradeCost(e,msg.stat);
     if(e.cash<cost)return;
     e.cash-=cost;
@@ -652,7 +660,7 @@
     if($('profilePlayerName'))$('profilePlayerName').textContent=localPlayer.name;
     if($('playerLevelText'))$('playerLevelText').textContent='1';
     $('cash').textContent=money(me.cash);
-    $('sponsorRate').textContent=money(incomeRate(me))+'/s';
+    $('sponsorRate').textContent=me.finishTick===null?money(incomeRate(me))+'/s':'£0/s';
     $('raceNumber').textContent=`Race\n${game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo)}`;
     if($('gems'))$('gems').textContent=Math.round(me.gems||0);
     $('trackName').textContent=track.name;
@@ -742,7 +750,9 @@
 
     if(game.phase==='race'||game.phase==='countdown'){
       if($('raceStatus'))$('raceStatus').innerHTML=game.phase==='race'
-        ?'<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>'
+        ?(me.finishTick!==null
+          ?'<strong>Finished</strong><span>Your race is complete. Income and upgrades are stopped.</span>'
+          :'<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>')
         :'<strong>Get ready</strong><span>Race start sequence in progress.</span>';
       $('resultCard').classList.add('hidden');
     }else if(game.phase==='intermission'||game.phase==='complete'){
@@ -768,7 +778,7 @@
 
       const lvl=Math.max(1,finite(me.levels[key],1));
       const cost=upgradeCost(me,key);
-      const enabled=game.phase==='race'&&me.cash>=cost;
+      const enabled=game.phase==='race'&&me.finishTick===null&&me.cash>=cost;
       let mathText='';
 
       if(m.kind==='income'){
