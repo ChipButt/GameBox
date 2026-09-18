@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=12">
+<link rel="stylesheet" href="disc-rally.css?v=13">
 </head>
 <body>
 <div class="discApp">
@@ -219,7 +219,12 @@
         </button>
 
         <div id="secondFlickStatus" class="secondFlickStatus" aria-label="Second flick status">
-          <span class="secondFlickDisc"><b>2</b></span>
+          <span class="secondFlickDisc">
+            <svg class="secondFlickIcon" viewBox="0 0 100 100" aria-hidden="true">
+              <path class="swipeArrow" d="M18 26 H69 M57 14 L69 26 L57 38"></path>
+              <path class="swipeFinger" d="M42 72 V46 C42 41 45 38 49 38 C53 38 56 41 56 46 V58 M56 54 C56 50 59 47 63 47 C67 47 70 50 70 54 V61 M70 57 C70 53 73 50 77 50 C81 50 84 53 84 57 V69 C84 80 76 87 64 87 H54 C45 87 39 82 36 75 L31 62 C29 58 31 54 35 52 C39 51 42 53 44 57 L47 64"></path>
+            </svg>
+          </span>
           <small id="secondFlickText">AVAILABLE</small>
         </div>
 
@@ -236,6 +241,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=12"></script>
+<script src="disc-rally.js?v=13"></script>
 </body>
 </html>
