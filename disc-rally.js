@@ -16,6 +16,7 @@ const TRACKS=[
 const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
 const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,BOUNCE=.72,STEPS_MAX=900;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
+const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const read=(k,f=[])=>{try{const v=JSON.parse(localStorage.getItem(k));return v??f}catch{return f}};
@@ -371,7 +372,7 @@ function processCheckpoints(){
     else if(p.nextCheckpoint===2&&zone===2)p.nextCheckpoint=3;
     else if(p.nextCheckpoint===3&&zone===3)p.nextCheckpoint=4;
     else if(p.nextCheckpoint===4&&zone===4){
-      p.lap++;p.nextCheckpoint=1;p.turbo=1;
+      p.lap++;p.nextCheckpoint=1;
       if(p.lap>=game.laps){p.finished=true;if(!game.winner)game.winner={id:p.id,name:p.name,turn:game.turn}}
     }
   });
@@ -465,6 +466,29 @@ function applySurface(p,boosted){
   }
   if(Math.hypot(p.vx,p.vy)<.06){p.vx=0;p.vy=0}
 }
+function updateTurboFromMovement(p,moved,isActive){
+  p.turboCharge=clamp(Number(p.turboCharge)||0,0,1);
+  p.turboReady=!!p.turboReady;
+
+  if(isActive&&p.turboHeld&&p.turboCharge>0){
+    p.turboReady=false;
+    p.turboCharge=clamp(p.turboCharge-TURBO_DRAIN_PER_STEP,0,1);
+    const speed=Math.hypot(p.vx,p.vy);
+    if(speed>.01){
+      const target=Math.min(TURBO_MAX_SPEED,speed+TURBO_ACCEL);
+      const scale=target/speed;p.vx*=scale;p.vy*=scale;
+    }
+    if(p.turboCharge<=0){
+      p.turboCharge=0;p.turboHeld=false;turboHolding=false;
+    }
+    return;
+  }
+
+  if(!p.turboHeld&&moved>0&&p.turboCharge<1){
+    p.turboCharge=clamp(p.turboCharge+moved*TURBO_CHARGE_PER_UNIT,0,1);
+    if(p.turboCharge>=.999){p.turboCharge=1;p.turboReady=true}
+  }
+}
 async function animatePhysics(){
   animating=true;renderRace();
   const boosted=new Set();
@@ -473,9 +497,15 @@ async function animatePhysics(){
     const frame=()=>{
       let moving=false;
       for(let k=0;k<2;k++){
+        const before=game.players.map(p=>({x:p.x,y:p.y}));
         game.players.forEach(p=>{if(Math.hypot(p.vx,p.vy)>.001){moving=true;applyWalls(p);applyBumpers(p)}});
         applyDiscCollisions();
-        game.players.forEach(p=>applySurface(p,boosted));
+        const activeId=activePlayer()?.id;
+        game.players.forEach((p,i)=>{
+          const moved=Math.hypot(p.x-before[i].x,p.y-before[i].y);
+          updateTurboFromMovement(p,moved,p.id===activeId);
+          applySurface(p,boosted);
+        });
         processCheckpoints();steps++;
       }
       draw();renderHudOnly();
@@ -483,16 +513,15 @@ async function animatePhysics(){
     };
     requestAnimationFrame(frame);
   });
-  game.players.forEach(p=>{p.vx=0;p.vy=0});
-  animating=false;
+  game.players.forEach(p=>{p.vx=0;p.vy=0;p.turboHeld=false});
+  turboHolding=false;animating=false;
 }
-async function startAuthoritativeFlick(playerId,vx,vy,useTurbo){
+async function startAuthoritativeFlick(playerId,vx,vy){
   if(!game||game.winner||animating||game.phase!=='aim')return;
   const p=activePlayer();if(!p||p.id!==playerId)return;
-  game.phase='moving';
-  if(useTurbo&&p.turbo>0)p.turbo--;
+  game.phase='moving';p.turboHeld=false;turboHolding=false;
   p.vx=clamp(vx,-36,36);p.vy=clamp(vy,-36,36);
-  if(mode==='multi'&&role==='host')session?.broadcast({type:'flick-start',playerId:p.id,vx:p.vx,vy:p.vy,useTurbo});
+  if(mode==='multi'&&role==='host')session?.broadcast({type:'flick-start',playerId:p.id,vx:p.vx,vy:p.vy});
   await animatePhysics();
   game.phase=game.winner?'finished':'settled';
   renderRace();
@@ -501,8 +530,7 @@ async function startAuthoritativeFlick(playerId,vx,vy,useTurbo){
 async function playRemoteFlick(msg){
   if(!game||animating)return;
   const p=game.players.find(x=>x.id===msg.playerId);if(!p)return;
-  game.phase='moving';
-  if(msg.useTurbo&&p.turbo>0)p.turbo--;
+  game.phase='moving';p.turboHeld=false;
   p.vx=Number(msg.vx)||0;p.vy=Number(msg.vy)||0;
   await animatePhysics();
   if(!game.winner)game.phase='settled';
@@ -510,7 +538,8 @@ async function playRemoteFlick(msg){
 }
 function completeTurn(){
   if(!game||game.winner||game.phase!=='settled')return;
-  nextTurn();game.phase='aim';turboArmed=false;renderRace();
+  game.players.forEach(p=>p.turboHeld=false);
+  turboHolding=false;nextTurn();game.phase='aim';resetLook();renderRace();
   if(mode==='multi'&&role==='host')broadcastState();
 }
 function requestFinishTurn(){
@@ -518,6 +547,35 @@ function requestFinishTurn(){
   const p=activePlayer();
   if(mode==='multi'&&role==='client')session?.sendToHost({type:'finish-turn',playerId:p.id});
   else completeTurn();
+}
+function localCanTurbo(){
+  const p=activePlayer();
+  if(!p||game?.winner||game?.phase!=='moving'||!animating)return false;
+  const owned=mode==='local'||localPlayerId===p.id;
+  return owned&&(p.turboHeld||(p.turboReady&&p.turboCharge>=.999));
+}
+function applyTurboHeld(playerId,held){
+  const p=game?.players?.find(x=>x.id===playerId);if(!p)return false;
+  if(held){
+    if(game?.phase!=='moving'||p.id!==activePlayer()?.id||!p.turboReady||p.turboCharge<.999)return false;
+    p.turboReady=false;p.turboHeld=true;
+  }else{
+    p.turboHeld=false;
+  }
+  renderHudOnly();return true;
+}
+function requestTurboHeld(held){
+  const p=activePlayer();if(!p)return;
+  if(held&&!localCanTurbo())return;
+  if(!held&&!p.turboHeld&&!turboHolding)return;
+  turboHolding=held;
+  if(mode==='multi'&&role==='client'){
+    if(held)applyTurboHeld(p.id,true);else applyTurboHeld(p.id,false);
+    session?.sendToHost({type:'turbo-hold',playerId:p.id,held});
+  }else{
+    const changed=applyTurboHeld(p.id,held);
+    if(changed&&mode==='multi'&&role==='host')session?.broadcast({type:'turbo-hold',playerId:p.id,held});
+  }
 }
 
 function raceProgress(p){
