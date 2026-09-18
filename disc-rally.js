@@ -441,17 +441,21 @@ function applyWalls(p){
     n=sdfNormal(p.x,p.y,TRACK_OUTER); // away from the circuit = out of the legal road
   }
 
-  // Reflect only the velocity component travelling into the wall. Tangential
-  // speed is preserved, so shallow impacts glance along the barrier naturally.
-  const dot=p.vx*n.x+p.vy*n.y;
-  if(dot>0){
-    p.vx-=(1+BOUNCE)*dot*n.x;
-    p.vy-=(1+BOUNCE)*dot*n.y;
+  // Decompose velocity into along-rail and into-rail components. The rail keeps
+  // most forward/tangential motion, while the normal rebound is deliberately
+  // small so corner contacts slide/deflect instead of pinging the disc backwards.
+  const into=p.vx*n.x+p.vy*n.y;
+  if(into>0){
+    const tx=p.vx-into*n.x,ty=p.vy-into*n.y;
+    const tangentSpeed=Math.hypot(tx,ty);
+    const rebound=Math.min(into*RAIL_RESTITUTION,tangentSpeed*.55+1.15);
+    p.vx=tx*RAIL_TANGENT_DAMP-rebound*n.x;
+    p.vy=ty*RAIL_TANGENT_DAMP-rebound*n.y;
   }
 
-  // Tiny inward nudge prevents the following physics sub-step from detecting
-  // the same contact again and producing a double-bounce.
-  p.x-=n.x*1.5;p.y-=n.y*1.5;
+  // Move slightly back into the legal lane so one rail contact cannot be
+  // processed repeatedly over consecutive sub-steps.
+  p.x-=n.x*2.2;p.y-=n.y*2.2;
   p.x=clamp(p.x,DISC_R,1000-DISC_R);p.y=clamp(p.y,DISC_R,600-DISC_R);
 }
 function applyBumpers(p){
