@@ -313,6 +313,7 @@
     row.style.setProperty('--track-x',`${rendered.x}px`);
     row.style.setProperty('--track-y',`${rendered.y}px`);
     row.style.setProperty('--car-angle',`${spriteAngle}deg`);
+    row.style.setProperty('--counter-angle',`${-spriteAngle}deg`);
     row.style.setProperty('--car-image',`url("${state.sprite}")`);
     row.classList.toggle('contacting',!!state.contact);
     row.setAttribute('aria-label',`${state.name}, position ${state.rank}`);
