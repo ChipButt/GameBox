@@ -164,7 +164,7 @@
 
   function renderRaceSetup(){
     const config=setupConfig();
-    $('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
+    $$('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
     for(const prefix of ['single','host']){
       const length=$(prefix+'TournamentLength');
       if(length)length.classList.toggle('hidden',config.mode!=='tournament');
