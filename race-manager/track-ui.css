@@ -232,6 +232,50 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .carDot{display:none!important}
 #raceScreen .hiddenRaceMeta{display:none!important}
 
+#raceScreen .countdownOverlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:10px;
+  background:rgba(7,20,38,.42);
+  backdrop-filter:blur(1px)
+}
+#raceScreen .countdownOverlay.hidden{display:none}
+#raceScreen .startLights{
+  display:flex;
+  gap:9px;
+  padding:8px 12px;
+  border-radius:18px;
+  background:#111a28;
+  border:2px solid rgba(255,255,255,.2);
+  box-shadow:0 8px 20px rgba(0,0,0,.28)
+}
+#raceScreen .startLight{
+  width:22px;height:22px;border-radius:50%;
+  background:#33191b;
+  border:2px solid #5b3235;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.55)
+}
+#raceScreen .startLight.lit{
+  background:#ef3d45;
+  border-color:#ff9da1;
+  box-shadow:0 0 12px rgba(239,61,69,.9),inset 0 2px 3px rgba(255,255,255,.3)
+}
+#raceScreen .startLight.green{
+  background:#23c45e;
+  border-color:#b6ffd0;
+  box-shadow:0 0 14px rgba(35,196,94,.95),inset 0 2px 3px rgba(255,255,255,.32)
+}
+#raceScreen .countdownOverlay>strong{
+  color:#fff;
+  font:900 2.2rem/1 Fredoka,Inter,sans-serif;
+  text-shadow:0 3px 10px rgba(0,0,0,.55)
+}
+#raceScreen .countdownOverlay.go>strong{color:#7dffad}
+
 /* ===== Bottom 2/5: large upgrade controls ===== */
 #raceScreen .upgradeShelf{
   min-height:0;
@@ -275,15 +319,14 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   position:relative;
   min-width:0;
   height:100%;
-  padding:10px 9px 9px;
+  padding:8px 8px 9px;
   border-radius:15px;
-  text-align:left;
   color:#082f68;
   display:grid;
-  grid-template-columns:38px minmax(0,1fr);
-  grid-template-rows:minmax(0,1fr) auto;
-  column-gap:7px;
+  grid-template-rows:auto auto auto 1fr auto;
+  justify-items:center;
   align-items:center;
+  text-align:center;
   opacity:1!important;
   cursor:pointer;
   touch-action:manipulation;
@@ -294,60 +337,60 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 }
 #raceScreen .upgradeButton.incomeUpgrade{grid-column:span 2}
 #raceScreen .upgradeIcon{
-  grid-column:1;
-  grid-row:1 / span 2;
-  width:36px;
-  height:36px;
+  width:38px;
+  height:38px;
   display:grid;
   place-items:center;
-  color:#315f98
+  color:#315f98;
+  margin-bottom:2px
 }
 #raceScreen .upgradeIcon svg{
-  width:34px;
-  height:34px;
+  width:36px;
+  height:36px;
   fill:none;
   stroke:currentColor;
   stroke-width:2;
   stroke-linecap:round;
   stroke-linejoin:round
 }
-#raceScreen .upgradeCopy{
-  grid-column:2;
-  grid-row:1;
-  min-width:0;
-  align-self:center
-}
-#raceScreen .upgradeButton strong{
+#raceScreen .upgradeTitle{
   display:block;
-  font:900 .68rem/1.02 Fredoka,Inter,sans-serif;
+  max-width:100%;
+  color:#082f68;
+  font:900 .78rem/1 Fredoka,Inter,sans-serif;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis
 }
-#raceScreen .upgradeButton small{
-  display:block;
-  margin-top:4px;
-  color:#6e8094;
-  font:700 .48rem/1.14 Inter,sans-serif;
-  white-space:normal;
-  overflow:hidden
+#raceScreen .upgradeLevel{
+  margin-top:2px;
+  color:#6f8195;
+  font:900 .44rem/1 Inter,sans-serif;
+  letter-spacing:.05em
 }
 #raceScreen .upgradeCost{
-  grid-column:2;
-  grid-row:2;
-  justify-self:end;
-  margin-top:3px;
-  padding:4px 7px;
+  margin-top:5px;
+  padding:5px 8px;
   border-radius:8px;
   background:#e3eaf1;
-  color:#40566e;
-  font:900 .55rem/1 Inter,sans-serif
+  color:#334d69;
+  font:900 .58rem/1 Inter,sans-serif;
+  white-space:nowrap
+}
+#raceScreen .upgradeMath{
+  align-self:end;
+  width:100%;
+  padding-top:5px;
+  border-top:1px solid rgba(8,47,104,.11);
+  color:#708095;
+  font:700 .43rem/1.12 Inter,sans-serif;
+  white-space:normal
 }
 #raceScreen .upgradeButton.trackHot:not(:disabled){
   border-color:#d6a91c;
   box-shadow:0 6px 0 #b4880e,0 8px 12px rgba(8,47,104,.14)
 }
-#raceScreen .upgradeButton.trackHot strong::after{content:' ★';color:#c28d00}
+#raceScreen .upgradeButton.trackHot .upgradeTitle::after{content:' ★';color:#c28d00}
 #raceScreen .upgradeButton.incomeUpgrade:not(:disabled){
   border-color:#72b689;
   background:linear-gradient(#fff,#edf8f1);
@@ -367,8 +410,10 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   filter:grayscale(1)
 }
 #raceScreen .upgradeButton:disabled .upgradeIcon{color:#757c83}
-#raceScreen .upgradeButton:disabled small{color:#757d85}
-#raceScreen .upgradeButton:disabled .upgradeCost{background:#aeb4bb;color:#636a71}
+#raceScreen .upgradeButton:disabled .upgradeTitle{color:#686f76}
+#raceScreen .upgradeButton:disabled .upgradeLevel,
+#raceScreen .upgradeButton:disabled .upgradeMath{color:#757d85}
+#raceScreen .upgradeButton:disabled .upgradeCost{background:#aeb4bb;color:#565e66}
 
 .upgradeCoinFx{
   position:fixed;
@@ -405,6 +450,21 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
 #raceScreen .resultGrid div{padding:6px;border-radius:9px}
 #raceScreen .resultGrid span{font-size:.48rem}
 #raceScreen .resultGrid strong{font-size:.68rem}
+#raceScreen .readyRaceButton{
+  width:100%;
+  margin-top:10px;
+  min-height:42px;
+  border:0;
+  border-radius:11px;
+  background:#082f68;
+  color:#fff;
+  font:900 .72rem/1 Fredoka,Inter,sans-serif;
+  box-shadow:0 4px 0 #051f47;
+  touch-action:manipulation
+}
+#raceScreen .readyRaceButton:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 #051f47}
+#raceScreen .readyRaceButton:disabled{background:#4f7e65;box-shadow:0 4px 0 #31513f;opacity:.82}
+#raceScreen .readyRaceNote{display:block;margin-top:8px;text-align:center;color:#6e8094;font:700 .55rem/1.2 Inter,sans-serif}
 
 @media(max-width:420px){
   body.gridline-racing-live .mainView{padding-left:4px;padding-right:4px}
@@ -420,12 +480,13 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   #raceScreen .bannerStat>span{font-size:.37rem}
   #raceScreen .bannerStat>strong{font-size:.61rem}
   #raceScreen .upgradeGrid{gap:5px;padding-bottom:4px}
-  #raceScreen .upgradeButton{padding:8px 5px 8px;grid-template-columns:31px minmax(0,1fr);column-gap:4px;border-radius:13px}
-  #raceScreen .upgradeIcon{width:30px;height:30px}
-  #raceScreen .upgradeIcon svg{width:29px;height:29px}
-  #raceScreen .upgradeButton strong{font-size:.6rem}
-  #raceScreen .upgradeButton small{font-size:.42rem}
-  #raceScreen .upgradeCost{font-size:.48rem;padding:3px 5px}
+  #raceScreen .upgradeButton{padding:7px 4px 7px;border-radius:13px}
+  #raceScreen .upgradeIcon{width:31px;height:31px}
+  #raceScreen .upgradeIcon svg{width:30px;height:30px}
+  #raceScreen .upgradeTitle{font-size:.66rem}
+  #raceScreen .upgradeLevel{font-size:.39rem}
+  #raceScreen .upgradeCost{font-size:.49rem;padding:4px 5px}
+  #raceScreen .upgradeMath{font-size:.37rem;padding-top:4px}
 }
 
 @media(max-height:700px){
@@ -441,10 +502,11 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   #raceScreen .upgradeShelfHeader .eyebrow{font-size:.43rem}
   #raceScreen .upgradeShelfHeader>div>strong{font-size:.58rem}
   #raceScreen .upgradeGrid{gap:4px}
-  #raceScreen .upgradeButton{padding:6px 4px;grid-template-columns:27px minmax(0,1fr);column-gap:3px}
-  #raceScreen .upgradeIcon{width:26px;height:26px}
-  #raceScreen .upgradeIcon svg{width:25px;height:25px}
-  #raceScreen .upgradeButton strong{font-size:.53rem}
-  #raceScreen .upgradeButton small{font-size:.37rem}
-  #raceScreen .upgradeCost{font-size:.43rem;padding:2px 4px}
+  #raceScreen .upgradeButton{padding:5px 3px 6px}
+  #raceScreen .upgradeIcon{width:27px;height:27px}
+  #raceScreen .upgradeIcon svg{width:26px;height:26px}
+  #raceScreen .upgradeTitle{font-size:.58rem}
+  #raceScreen .upgradeLevel{font-size:.34rem}
+  #raceScreen .upgradeCost{font-size:.43rem;padding:3px 4px}
+  #raceScreen .upgradeMath{font-size:.33rem;padding-top:3px}
 }
