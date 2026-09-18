@@ -800,29 +800,77 @@
 
   function renderResult(me){
     const card=$('resultCard');
-    const cashPayouts=[220,180,150,125,105,90,78,68,60,52,46,40];
     const gemPayouts=[5,4,3,2,2,1,1,1,1,1,1,1];
-    const cash=cashPayouts[(me.position||12)-1]||35;
+    const prize=Math.max(0,finite(me.lastPrize,0));
     const gems=gemPayouts[(me.position||12)-1]||1;
     const humans=game.entrants.filter(e=>e.human);
+    const complete=game.phase==='complete';
     const readyCount=humans.filter(e=>game.ready?.[e.playerId]).length;
     const amReady=!!game.ready?.[me.playerId];
+    const title=complete
+      ?(game.mode==='tournament'?'TOURNAMENT COMPLETE':'QUICK RACE COMPLETE')
+      :`RACE ${game.raceNo} COMPLETE`;
+
     card.classList.remove('hidden');
     card.innerHTML=`
-      <span class="eyebrow">RACE COMPLETE</span>
+      <span class="eyebrow">${title}</span>
       <h2>${ordinal(me.position||12)} place</h2>
       <div class="resultGrid">
-        <div><span>Cash</span><strong>+${money(cash)}</strong></div>
+        <div class="prizeResult"><span>Prize money</span><strong>+${money(prize)}</strong></div>
         <div><span>Gems</span><strong>+${gems}</strong></div>
-        <div><span>Players ready</span><strong>${readyCount} / ${humans.length}</strong></div>
+        <div><span>${complete?'Races':'Players ready'}</span><strong>${complete?`${game.raceNo} / ${game.totalRaces}`:`${readyCount} / ${humans.length}`}</strong></div>
       </div>
-      <button class="readyRaceButton" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'READY FOR NEXT RACE'}</button>
-      <small class="readyRaceNote">${amReady?'Waiting for the other players…':'The countdown starts when every player is ready.'}</small>
+      ${complete
+        ?'<button class="readyRaceButton" data-exit-series type="button">RETURN TO SETUP</button><small class="readyRaceNote">This session is complete. A new Quick Race or Tournament starts with fresh stats.</small>'
+        :`<button class="readyRaceButton" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'READY FOR NEXT RACE'}</button><small class="readyRaceNote">${amReady?'Waiting for the other players…':'Prize money, upgrades and unspent cash carry into the next race.'}</small>`}
     `;
-    if($('raceStatus'))$('raceStatus').innerHTML='<strong>Race complete</strong><span>Waiting for every player to confirm the next start.</span>';
+
+    const prizeKey=`${game.mode}:${game.raceNo}:${me.playerId}:prize`;
+    if(game.mode==='tournament'&&prize>0&&!prizeAnimations.has(prizeKey)){
+      prizeAnimations.add(prizeKey);
+      const cashEl=$('cash');
+      if(cashEl)cashEl.textContent=money(finite(me.cashBeforePrize,me.cash-prize));
+      requestAnimationFrame(()=>setTimeout(()=>{
+        animatePrizeTransfer(card,cashEl,()=>{if(cashEl)cashEl.textContent=money(me.cash)});
+      },180));
+    }
+
+    if($('raceStatus'))$('raceStatus').innerHTML=complete
+      ?'<strong>Session complete</strong><span>Return to setup to choose another race.</span>'
+      :'<strong>Race complete</strong><span>Waiting for every player to confirm the next start.</span>';
   }
 
   function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+
+  function animatePrizeTransfer(source,target,onDone){
+    if(!source||!target){onDone?.();return}
+    const from=source.getBoundingClientRect();
+    const to=target.getBoundingClientRect();
+    const sx=from.left+from.width/2;
+    const sy=from.top+Math.min(from.height*.42,55);
+    const tx=to.left+to.width/2;
+    const ty=to.top+to.height/2;
+    let finished=0;
+    for(let i=0;i<8;i++){
+      const coin=document.createElement('span');
+      coin.className='upgradeCoinFx';
+      coin.textContent='£';
+      coin.style.left=`${sx-8}px`;
+      coin.style.top=`${sy-8}px`;
+      document.body.appendChild(coin);
+      const bend=(i-3.5)*10;
+      const animation=coin.animate([
+        {transform:'translate(0,0) scale(.7)',opacity:0},
+        {transform:`translate(${(tx-sx)*.42+bend}px,${(ty-sy)*.30-24-Math.abs(bend)*.18}px) scale(1.05)`,opacity:1,offset:.34},
+        {transform:`translate(${tx-sx+bend*.05}px,${ty-sy}px) scale(.58)`,opacity:.15}
+      ],{duration:500+i*22,delay:i*38,easing:'cubic-bezier(.22,.74,.32,1)',fill:'forwards'});
+      animation.onfinish=()=>{
+        coin.remove();
+        finished++;
+        if(finished===8)onDone?.();
+      };
+    }
+  }
 
   function animateCoinTransfer(button){
     const source=$('cash');
@@ -856,7 +904,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
     session=new window.GameBoxLAN.DiscoverySession({
-      game:'gridline-v15',
+      game:'gridline-v16',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onHostsChanged:hosts=>renderAvailableHosts(hosts),
       onPeersChanged:()=>{
