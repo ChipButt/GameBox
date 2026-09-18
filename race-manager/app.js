@@ -17,12 +17,12 @@
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
 
   const UPGRADE_META={
-    engine:{label:'Engine',desc:'Acceleration',kind:'car',base:38,step:8},
-    tyres:{label:'Tyres',desc:'Cornering grip',kind:'car',base:42,step:8},
-    brakes:{label:'Brakes',desc:'Braking performance',kind:'car',base:40,step:8},
-    fuel:{label:'Fuel',desc:'Top speed',kind:'car',base:46,step:8},
-    sponsors:{label:'Sponsors',desc:'Income multiplier',kind:'income',base:80,factor:1.25},
-    fans:{label:'Fan Base',desc:'Advertising multiplier',kind:'income',base:65,factor:1.15}
+    engine:{label:'Engine',desc:'Acceleration',kind:'car',base:22,step:8},
+    tyres:{label:'Tyres',desc:'Cornering grip',kind:'car',base:24,step:8},
+    brakes:{label:'Brakes',desc:'Braking performance',kind:'car',base:23,step:8},
+    fuel:{label:'Fuel',desc:'Top speed',kind:'car',base:26,step:8},
+    sponsors:{label:'Sponsors',desc:'Income multiplier',kind:'income',base:38,factor:1.25},
+    fans:{label:'Fan Base',desc:'Advertising multiplier',kind:'income',base:34,factor:1.15}
   };
   const CAR_KEYS=['engine','tyres','brakes','fuel'];
   const INCOME_KEYS=['sponsors','fans'];
@@ -251,7 +251,7 @@
   function statPercent(e,stat){return Math.max(0,(Math.max(1,finite(e.levels?.[stat],1))-1)*UPGRADE_META[stat].step)}
   function upgradeCost(e,stat){
     const lvl=Math.max(1,finite(e.levels?.[stat],1));
-    const growth=UPGRADE_META[stat].kind==='income'?1.50:1.40;
+    const growth=UPGRADE_META[stat].kind==='income'?1.34:1.28;
     return Math.round(UPGRADE_META[stat].base*Math.pow(growth,lvl-1));
   }
   function localEntrant(){return game?.entrants?.find(e=>e.human&&e.playerId===localPlayer?.id)||null}
