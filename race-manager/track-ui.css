@@ -65,18 +65,18 @@ body.gridline-racing-live .mainView{
   touch-action:manipulation;
 }
 #raceScreen .raceAssetButton:active{transform:scale(.96)}
-#raceScreen .raceBackAsset{left:4px;top:10px;width:84px;height:32px}
-#raceScreen .raceSettingsAsset{left:328px;top:10px;width:40px;height:32px}
+#raceScreen .raceBackAsset{left:15px;top:5px;width:84px;height:32px}
+#raceScreen .raceSettingsAsset{left:339px;top:5px;width:40px;height:32px}
 
 #raceScreen .gridlineRaceLogo{
-  left:220px;top:42px;width:144px;height:52px;z-index:30;object-fit:contain;
+  left:231px;top:37px;width:144px;height:52px;z-index:30;object-fit:contain;
 }
-#raceScreen .playerProfileAsset{left:0;top:30px;width:260px;height:80px;z-index:30}
-#raceScreen .raceNameAsset{left:4px;top:94px;width:364px;height:64px;z-index:30}
-#raceScreen .cashPill{left:12px;top:148px;width:110px;height:45px;z-index:30}
-#raceScreen .positionPill{left:132px;top:148px;width:110px;height:45px;z-index:30}
-#raceScreen .incomePill{left:252px;top:148px;width:110px;height:45px;z-index:30}
-#raceScreen .lapBannerAsset{left:0;top:504px;width:376px;height:48px;z-index:39}
+#raceScreen .playerProfileAsset{left:11px;top:25px;width:260px;height:80px;z-index:30}
+#raceScreen .raceNameAsset{left:15px;top:89px;width:364px;height:64px;z-index:30}
+#raceScreen .cashPill{left:23px;top:143px;width:110px;height:45px;z-index:30}
+#raceScreen .positionPill{left:143px;top:143px;width:110px;height:45px;z-index:30}
+#raceScreen .incomePill{left:263px;top:143px;width:110px;height:45px;z-index:30}
+#raceScreen .lapBannerAsset{left:7px;top:523px;width:376px;height:48px;z-index:39}
 
 #raceScreen .raceText{
   z-index:40;
@@ -94,40 +94,44 @@ body.gridline-racing-live .mainView{
   pointer-events:none;
 }
 #raceScreen .playerNameText{
-  left:68px;top:54px;width:132px;height:24px;z-index:31;
-  justify-content:flex-start;
-  font-size:12px;font-weight:900;text-align:left;
+  left:78.5px;top:49px;width:132px;height:24px;z-index:31;
+  justify-content:center;
+  font-size:22px;font-weight:900;text-align:center;
+}
+#raceScreen .playerLevelText{
+  left:55.309px;top:82.472px;width:19.382px;height:6.528px;z-index:82;
+  font-size:7px;font-weight:900;text-align:center;color:#fff;
 }
 #raceScreen .trackNameText{
-  left:64px;top:110px;width:292px;height:32px;z-index:32;
-  font-size:12px;font-weight:900;text-align:center;
+  left:75px;top:105px;width:292px;height:32px;z-index:32;
+  font-size:25px;font-weight:900;text-align:center;
 }
 #raceScreen .raceNumberText{
-  left:10px;top:108px;width:44px;height:38px;z-index:43;
+  left:21px;top:103px;width:44px;height:38px;z-index:43;
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .cashValue{
-  left:60px;top:169px;width:45px;height:14px;z-index:34;
-  font-size:11px;font-weight:900;text-align:center;
+  left:71px;top:164px;width:45px;height:14px;z-index:34;
+  font-size:16px;font-weight:900;text-align:center;
 }
 #raceScreen .positionValue{
-  left:176px;top:169px;width:49px;height:14px;z-index:35;
-  font-size:11px;font-weight:900;text-align:center;
+  left:187px;top:164px;width:49px;height:14px;z-index:35;
+  font-size:16px;font-weight:900;text-align:center;
 }
 #raceScreen .incomeValue{
-  left:300px;top:169px;width:46px;height:14px;z-index:36;
-  font-size:11px;font-weight:900;text-align:center;
+  left:310.556px;top:164px;width:46px;height:14px;z-index:36;
+  font-size:16px;font-weight:900;text-align:center;
 }
 #raceScreen .lapTitleText{
-  left:128px;top:513px;width:150px;height:11px;z-index:40;
+  left:127px;top:532px;width:150px;height:11px;z-index:40;
   font-size:7px;font-weight:700;text-align:center;color:#d6e8ff;
 }
 
-/* Exact 2/5 track area: 390 x 340, starting after the first 1/5. */
+/* Approved 390 x 340 track area from the latest layout JSON. */
 #raceScreen .trackStage{
   position:absolute;
   left:0;
-  top:169px;
+  top:187px;
   width:390px;
   height:340px;
   z-index:2;
@@ -197,7 +201,7 @@ body.gridline-racing-live .mainView{
   filter:drop-shadow(0 0 1px rgba(255,255,255,.92)) drop-shadow(0 1px 1px rgba(0,0,0,.68));
 }
 
-/* Countdown assets use the exact JSON placements, relative to track top (169px). */
+/* Countdown placements from the supplied live-race layout, relative to track top y=187. */
 #raceScreen .countdownOverlay{
   position:absolute;
   inset:0;
@@ -206,22 +210,22 @@ body.gridline-racing-live .mainView{
 }
 #raceScreen .countdownOverlay.hidden{display:none}
 #raceScreen .countdownOverlay img{position:absolute;object-fit:contain}
-#raceScreen .countdownHousing{left:30px;top:116px;width:312px;height:113px;z-index:49}
-#raceScreen .countdownLight{top:135px;width:78px;height:76px;z-index:52}
-#raceScreen .countdownLight.light1{left:58px}
-#raceScreen .countdownLight.light2{left:146px}
-#raceScreen .countdownLight.light3{left:235px}
+#raceScreen .countdownHousing{left:41px;top:93px;width:312px;height:113px;z-index:49}
+#raceScreen .countdownLight{top:112px;width:78px;height:76px;z-index:52}
+#raceScreen .countdownLight.light1{left:69px}
+#raceScreen .countdownLight.light2{left:157px}
+#raceScreen .countdownLight.light3{left:246px}
 #raceScreen .countdownNumber{z-index:55}
-#raceScreen .countdownNumber.number3{left:130px;top:210px;width:100px;height:80px}
-#raceScreen .countdownNumber.number2{left:130px;top:212px;width:100px;height:75px}
-#raceScreen .countdownNumber.number1{left:153px;top:211px;width:63.073px;height:75px}
-#raceScreen .countdownNumber.goText{left:73px;top:210px;width:225px;height:83px}
+#raceScreen .countdownNumber.number3{left:141px;top:187px;width:100px;height:80px}
+#raceScreen .countdownNumber.number2{left:141px;top:189px;width:100px;height:75px}
+#raceScreen .countdownNumber.number1{left:164px;top:188px;width:63.073px;height:75px}
+#raceScreen .countdownNumber.goText{left:84px;top:187px;width:225px;height:83px}
 #raceScreen .countdownOverlay .hidden{display:none!important}
 
 /* Lap-state assets from the supplied JSON. */
 #raceScreen .raceStatusFlag{object-fit:contain;pointer-events:none}
-#raceScreen .finalLapBadge{left:10px;top:516px;width:45px;height:25.057px;z-index:41}
-#raceScreen .greenFlagBadge{left:17px;top:514px;width:30px;height:25.227px;z-index:42}
+#raceScreen .finalLapBadge{left:14px;top:534px;width:41.444px;height:23.077px;z-index:41}
+#raceScreen .greenFlagBadge{left:21px;top:533.054px;width:30px;height:25.227px;z-index:42}
 #raceScreen .raceStatusFlag.hidden{display:none!important}
 
 /* Upgrades are positioned exactly from the JSON layout. */
@@ -258,121 +262,138 @@ body.gridline-racing-live .mainView{
   opacity:1;
   box-shadow:none;
 }
-#raceScreen .upgradeButton.engine{left:8px;top:558px;width:85px;height:120px}
-#raceScreen .upgradeButton.tyres{left:100px;top:554px;width:85px;height:125px}
-#raceScreen .upgradeButton.brakes{left:192px;top:554px;width:85px;height:125px}
-#raceScreen .upgradeButton.fuel{left:284px;top:554px;width:85px;height:125px}
-#raceScreen .upgradeButton.sponsors{left:21px;top:654px;width:150px;height:190px}
-#raceScreen .upgradeButton.fans{left:205px;top:654px;width:150px;height:190px}
+#raceScreen .upgradeButton.engine{left:15px;top:575px;width:85px;height:120px}
+#raceScreen .upgradeButton.tyres{left:107px;top:572px;width:85px;height:125px}
+#raceScreen .upgradeButton.brakes{left:199px;top:572px;width:85px;height:125px}
+#raceScreen .upgradeButton.fuel{left:291px;top:572px;width:85px;height:125px}
+#raceScreen .upgradeButton.sponsors{left:28px;top:697px;width:150px;height:141.297px}
+#raceScreen .upgradeButton.fans{left:212px;top:694px;width:149.619px;height:147.264px}
 #raceScreen .upgradeButton:disabled{cursor:not-allowed;opacity:1;filter:none}
 #raceScreen .upgradeButton:not(:disabled):active,
 #raceScreen .upgradeButton.receivingCoins{
   transform:scale(.98);
   filter:drop-shadow(0 0 5px rgba(65,255,125,.85));
 }
-#raceScreen .upgradeLevel{
-  position:absolute;
-  left:12%;
-  right:12%;
-  top:58%;
-  transform:translateY(-50%);
-  color:#dfeeff;
-  text-align:center;
-  font:900 7px/1 Inter,Arial,sans-serif;
-  text-shadow:0 1px 2px rgba(0,0,0,.7);
-}
-#raceScreen .upgradeCost{
-  position:absolute;
-  left:10%;
-  right:10%;
-  top:78%;
-  color:#102246;
-  text-align:center;
-  font:900 9px/1 Inter,Arial,sans-serif;
-}
+#raceScreen .upgradeLevel,
+#raceScreen .upgradeCost,
 #raceScreen .upgradeMath{
   position:absolute;
-  left:8%;
-  right:8%;
-  top:87%;
-  color:#173051;
+  margin:0;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   text-align:center;
-  font:800 5px/1 Inter,Arial,sans-serif;
-  white-space:nowrap;
+  line-height:1;
   overflow:hidden;
+  white-space:nowrap;
   text-overflow:ellipsis;
+  text-shadow:0 1px 2px rgba(0,0,0,.6);
 }
-#raceScreen .upgradeButton.incomeUpgrade .upgradeLevel{top:58%}
-#raceScreen .upgradeButton.incomeUpgrade .upgradeCost{top:79%}
-#raceScreen .upgradeButton.incomeUpgrade .upgradeMath{top:87%}
+#raceScreen .upgradeLevel{color:#fff;font-weight:900}
+#raceScreen .upgradeCost{color:#102246;font-weight:900}
+#raceScreen .upgradeMath{color:#173051;font-weight:800}
+
+/* Text boxes exactly as positioned in the latest layout JSON. */
+#raceScreen .upgradeButton.engine .upgradeLevel{left:13px;top:70px;width:60.936px;height:12.327px;font-size:17px}
+#raceScreen .upgradeButton.engine .upgradeCost{left:8px;top:90px;width:68px;height:14px;font-size:15px}
+#raceScreen .upgradeButton.engine .upgradeMath{left:9.191px;top:103px;width:69.309px;height:7.806px;font-size:6px}
+
+#raceScreen .upgradeButton.tyres .upgradeLevel{left:13px;top:72px;width:60.184px;height:12.399px;font-size:18px}
+#raceScreen .upgradeButton.tyres .upgradeCost{left:8px;top:93px;width:68px;height:14px;font-size:15px}
+#raceScreen .upgradeButton.tyres .upgradeMath{left:7px;top:107px;width:71px;height:9px;font-size:6px}
+
+#raceScreen .upgradeButton.brakes .upgradeLevel{left:13px;top:72px;width:59.979px;height:12.296px;font-size:18px}
+#raceScreen .upgradeButton.brakes .upgradeCost{left:8px;top:93px;width:68px;height:14px;font-size:15px}
+#raceScreen .upgradeButton.brakes .upgradeMath{left:7px;top:107px;width:71px;height:9px;font-size:6px}
+
+#raceScreen .upgradeButton.fuel .upgradeLevel{left:13px;top:73px;width:58.369px;height:11.766px;font-size:18px}
+#raceScreen .upgradeButton.fuel .upgradeCost{left:8px;top:93px;width:68px;height:14px;font-size:15px}
+#raceScreen .upgradeButton.fuel .upgradeMath{left:7px;top:107px;width:71px;height:9px;font-size:6px}
+
+#raceScreen .upgradeButton.sponsors .upgradeLevel{left:18px;top:81px;width:114px;height:14.13px;font-size:18px}
+#raceScreen .upgradeButton.sponsors .upgradeCost{left:18px;top:107.399px;width:114px;height:14.13px;font-size:15px}
+#raceScreen .upgradeButton.sponsors .upgradeMath{left:15px;top:121.218px;width:120px;height:8.924px;font-size:7px}
+
+#raceScreen .upgradeButton.fans .upgradeLevel{left:20px;top:83.485px;width:111.837px;height:14.255px;font-size:18px}
+#raceScreen .upgradeButton.fans .upgradeCost{left:18px;top:110.008px;width:114px;height:13.838px;font-size:15px}
+#raceScreen .upgradeButton.fans .upgradeMath{left:15px;top:123.846px;width:120px;height:8.74px;font-size:7px}
+
 #raceScreen .upgradeButton:disabled .upgradeLevel{color:#d6dde6}
 #raceScreen .upgradeButton:disabled .upgradeCost,
 #raceScreen .upgradeButton:disabled .upgradeMath{color:#58697c}
 
-/* 50/50 event popup remains conditional and overlays only the track area. */
+/* 50/50 event popup positioned from the supplied event-state JSON. */
 #raceScreen .raceEventCard{
   position:absolute;
-  left:30px;
-  top:52px;
-  width:330px;
-  height:242px;
+  inset:0;
   z-index:60;
   color:#fff;
   text-align:center;
+  pointer-events:none;
 }
 #raceScreen .raceEventCard.hidden{display:none}
 #raceScreen .raceEventAsset{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:fill;
+  left:84.76px;
+  top:115.806px;
+  width:220.48px;
+  height:145.194px;
+  object-fit:contain;
   pointer-events:none;
 }
-#raceScreen .raceEventCopy{
+#raceScreen .raceEventQuestion{
   position:absolute;
-  left:28px;
-  right:28px;
-  top:47px;
-  height:108px;
+  left:105.251px;
+  top:149.27px;
+  width:179.499px;
+  height:57.021px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
+  color:#fff;
+  font:900 15px/1.05 Inter,Arial,sans-serif;
+  text-shadow:0 1px 3px rgba(0,0,0,.68);
+  pointer-events:none;
 }
-#raceScreen .raceEventEyebrow{color:#5ee0ff;font:900 7px/1 Inter,Arial,sans-serif;letter-spacing:.08em}
-#raceScreen .raceEventTitle{display:block;margin-top:5px;color:#fff;font:900 13px/1.05 Inter,Arial,sans-serif;text-shadow:0 2px 4px rgba(0,0,0,.55)}
-#raceScreen .raceEventPrompt{display:block;margin-top:5px;color:#c8ddf6;font:700 8px/1.15 Inter,Arial,sans-serif}
-#raceScreen .raceEventChoices{
-  position:absolute;
-  left:25px;
-  right:25px;
-  bottom:20px;
-  height:52px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
+#raceScreen .raceEventQuestion small{
+  display:block;
+  margin-top:4px;
+  color:#dcecff;
+  font:700 8px/1.08 Inter,Arial,sans-serif;
 }
+#raceScreen .raceEventChoices{position:absolute;inset:0;pointer-events:none}
 #raceScreen .raceEventChoices button{
+  position:absolute;
+  top:217.485px;
+  width:91.525px;
+  height:21.294px;
+  padding:0;
   border:0;
-  border-radius:8px;
   background:transparent;
   color:#fff;
-  font:900 9px/1 Inter,Arial,sans-serif;
-  text-shadow:0 2px 3px rgba(0,0,0,.55);
+  font:900 15px/1 Inter,Arial,sans-serif;
+  text-align:center;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+  pointer-events:auto;
   touch-action:manipulation;
 }
+#raceScreen .raceEventChoices button:nth-child(1){left:99px}
+#raceScreen .raceEventChoices button:nth-child(2){left:199px}
+#raceScreen .raceEventChoices button:active{transform:scale(.96)}
 #raceScreen .raceEventCard.compactEvent{
+  inset:auto;
   left:105px;
   top:230px;
   width:180px;
-  height:auto;
   min-height:48px;
   padding:8px 10px;
   border-radius:11px;
   background:rgba(3,23,57,.94);
   border:2px solid #18a9ff;
   box-shadow:0 0 12px rgba(0,153,255,.4);
+  pointer-events:none;
 }
 #raceScreen .compactEvent strong,
 #raceScreen .compactEvent small{display:block}
@@ -381,51 +402,98 @@ body.gridline-racing-live .mainView{
 #raceScreen .compactEvent.correct,
 #raceScreen .compactEvent.activeBoost{border-color:#4aff83}
 
-/* Between-race/result popup. */
+/* Result popup. Complete-state placement follows the supplied result JSON. */
 #raceScreen .resultCard{
   position:absolute;
-  left:28px;
-  top:270px;
-  width:334px;
+  inset:0;
   z-index:80;
   margin:0;
   padding:0;
   background:transparent;
   box-shadow:none;
   color:#fff;
+  pointer-events:none;
 }
 #raceScreen .resultCard.hidden{display:none}
-#raceScreen .resultAsset{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.38))}
-#raceScreen .resultPrize,
-#raceScreen .resultPosition,
-#raceScreen .resultReady{
-  position:absolute;
-  z-index:2;
-  color:#fff;
-  text-shadow:0 2px 3px rgba(0,0,0,.65);
-  font:900 9px/1 Inter,Arial,sans-serif;
+#raceScreen .resultAsset{position:absolute;object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.38));pointer-events:none}
+
+#raceScreen .seriesComplete .resultAsset{
+  left:23.96px;
+  top:282px;
+  width:342.08px;
+  height:125.11px;
 }
-#raceScreen .seriesComplete .resultPrize{left:12%;width:42%;bottom:17%;text-align:center}
-#raceScreen .seriesComplete .resultPosition{right:8%;top:53%;width:38%;text-align:center;color:#d9ebff}
-#raceScreen .resultCard:not(.seriesComplete) .resultPosition{left:9%;right:9%;top:48%;text-align:center;color:#d9ebff}
-#raceScreen .resultReady{left:9%;right:9%;top:61%;text-align:center;color:#77f6a0}
-#raceScreen .resultAction{
+#raceScreen .seriesComplete .resultPrize{
   position:absolute;
-  z-index:3;
-  right:7%;
-  bottom:8%;
-  width:39%;
-  height:30%;
+  left:91.575px;
+  top:359.811px;
+  width:107.85px;
+  height:33.47px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font:900 27px/1 Inter,Arial,sans-serif;
+  text-align:center;
+  text-shadow:0 2px 3px rgba(0,0,0,.65);
+}
+#raceScreen .seriesComplete .resultPosition{
+  position:absolute;
+  left:77px;
+  top:306px;
+  width:20.305px;
+  height:19.591px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#102246;
+  font:900 10px/1 Inter,Arial,sans-serif;
+  text-align:center;
+}
+#raceScreen .seriesComplete .resultAction{
+  position:absolute;
+  left:220px;
+  top:350px;
+  width:133px;
+  height:50px;
   border:0;
-  border-radius:10px;
+  border-radius:12px;
   background:transparent;
   color:transparent;
   font-size:0;
+  pointer-events:auto;
   touch-action:manipulation;
 }
-#raceScreen .resultCard:not(.seriesComplete) .resultAction{left:23%;right:23%;width:auto;height:31%}
-#raceScreen .resultAction:disabled{pointer-events:none}
-#raceScreen .resultAction:active{transform:scale(.98)}
+#raceScreen .seriesComplete .resultAction:active{transform:scale(.97)}
+
+/* Existing between-race state retained until a dedicated layout is supplied. */
+#raceScreen .resultCard:not(.seriesComplete) .resultAsset{left:28px;top:270px;width:334px;height:auto}
+#raceScreen .resultCard:not(.seriesComplete) .resultPosition{
+  position:absolute;left:58px;top:328px;width:274px;text-align:center;color:#d9ebff;
+  font:900 9px/1 Inter,Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
+}
+#raceScreen .resultReady{
+  position:absolute;left:58px;top:350px;width:274px;text-align:center;color:#77f6a0;
+  font:900 9px/1 Inter,Arial,sans-serif;text-shadow:0 2px 3px rgba(0,0,0,.65)
+}
+#raceScreen .resultCard:not(.seriesComplete) .resultAction{
+  position:absolute;left:90px;top:365px;width:210px;height:50px;border:0;border-radius:12px;
+  background:transparent;color:transparent;font-size:0;pointer-events:auto;touch-action:manipulation
+}
+#raceScreen .resultCard:not(.seriesComplete) .resultAction:disabled{pointer-events:none}
+#raceScreen .resultCard:not(.seriesComplete) .resultAction:active{transform:scale(.98)}
+
+#raceScreen .lapMarkers{position:absolute;inset:0;z-index:44;pointer-events:none}
+#raceScreen .lapMarker{position:absolute;top:547px;width:31px;height:14px;object-fit:contain}
+#raceScreen #lapMarker1{left:77px}
+#raceScreen #lapMarker2{left:113px}
+#raceScreen #lapMarker3{left:149px}
+#raceScreen #lapMarker4{left:185px}
+#raceScreen #lapMarker5{left:221px}
+#raceScreen #lapMarker6{left:257px}
+#raceScreen #lapMarker7{left:293px}
+#raceScreen #lapMarker8{left:329px}
+#raceScreen .lapMarker.hidden{display:none!important}
 
 #raceScreen .hiddenRaceMeta{display:none!important}
 
