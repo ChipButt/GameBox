@@ -676,3 +676,144 @@ body.gridline-racing-live .mainView{
 }
 .cashNoteFx::before{left:4px}
 .cashNoteFx::after{right:4px}
+
+
+/* Car-colour selection */
+.carTitle{margin-top:14px}
+.carChoices{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin:8px 0 14px;
+}
+.carChoice{
+  min-height:68px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 8px;
+  border:1px solid #cfe7dd;
+  border-radius:13px;
+  background:#f5fbf8;
+  color:#082f68;
+  text-align:left;
+  touch-action:manipulation;
+}
+.carChoice img{
+  width:27px;
+  height:40px;
+  object-fit:contain;
+  flex:0 0 auto;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
+}
+.carChoice span{min-width:0}
+.carChoice strong,.carChoice small{display:block}
+.carChoice strong{font:900 12px/1.05 Arial,sans-serif}
+.carChoice small{
+  margin-top:3px;
+  color:#5e7182;
+  font:700 8px/1.1 Arial,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.carChoice.selected{
+  border-color:#f7bd18;
+  background:#fff7d3;
+  box-shadow:0 0 0 2px rgba(247,189,24,.24);
+}
+.carChoice:disabled{opacity:.34;cursor:not-allowed}
+@media(max-width:560px){
+  .carChoices{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .carChoice{min-height:62px;padding:6px}
+  .carChoice img{width:23px;height:35px}
+  .carChoice strong{font-size:10px}
+  .carChoice small{font-size:7px}
+}
+
+/* Live race leaderboard. It appears as cars finish, while the race continues behind it. */
+#raceScreen .raceLeaderboard{
+  position:absolute;
+  inset:0;
+  z-index:70;
+  pointer-events:none;
+}
+#raceScreen .raceLeaderboard.hidden{display:none!important}
+#raceScreen .raceLeaderboard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(1,12,30,.30);
+  backdrop-filter:blur(1px);
+}
+#raceScreen .raceLeaderboardFrame{
+  position:absolute;
+  left:15px;
+  top:96px;
+  width:360px;
+  height:640px;
+}
+#raceScreen .raceLeaderboardAsset{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  filter:url(#gridlineGreenKey) drop-shadow(0 8px 18px rgba(0,0,0,.48));
+}
+#raceScreen .raceLeaderboardRows{
+  position:absolute;
+  left:80px;
+  top:92px;
+  width:252px;
+  height:473px;
+  display:grid;
+  grid-template-rows:repeat(12,39.42px);
+}
+#raceScreen .raceLeaderboardRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 88px;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+  color:#eef8ff;
+  text-shadow:0 1px 2px rgba(0,0,0,.9);
+  opacity:.72;
+}
+#raceScreen .raceLeaderboardRow.finished{opacity:1}
+#raceScreen .raceLeaderboardRow.you{
+  color:#fff5b8;
+  text-shadow:0 0 5px rgba(247,189,24,.8),0 1px 2px rgba(0,0,0,.9);
+}
+#raceScreen .raceLeaderboardName{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font:900 11px/1 Arial,sans-serif;
+}
+#raceScreen .raceLeaderboardColour{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+  white-space:nowrap;
+  font:900 8px/1 Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+#raceScreen .raceLeaderboardColour i{
+  width:9px;
+  height:14px;
+  flex:0 0 auto;
+  display:block;
+  background-image:var(--car-swatch);
+  background-position:center;
+  background-size:contain;
+  background-repeat:no-repeat;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.6));
+}
+
+/* The result/claim popup intentionally sits above the leaderboard. */
+#raceScreen .resultCard{z-index:80}
