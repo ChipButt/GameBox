@@ -214,6 +214,12 @@
     });
   }
 
+  function readyMap(){
+    const ready={};
+    for(const e of game?.entrants||[])if(e.human)ready[e.playerId]=false;
+    return ready;
+  }
+
   function buildGame(humans){
     const trackIndex=((humans[0]?.profile?.races??humans[0]?.races??0))%TRACKS.length;
     const track=TRACKS[trackIndex];
@@ -221,7 +227,7 @@
     const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
     for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,(entrants.find(e=>e.human)?.races||0)+1));
     seedGrid(entrants);
-    return {phase:'race',raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[]};
+    return {phase:'countdown',countdownTicks:13,raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[],ready:{}};
   }
 
   function resetRound(){
@@ -229,8 +235,10 @@
     game.trackIndex=(game.trackIndex+1)%TRACKS.length;
     game.raceNo++;
     game.tick=0;
-    game.phase='race';
+    game.phase='countdown';
+    game.countdownTicks=13;
     game.results=[];
+    game.ready={};
     const track=TRACKS[game.trackIndex];
     game.entrants.forEach((e,i)=>{
       e.progress=0;e.finishTick=null;e.position=null;
@@ -360,7 +368,20 @@
   }
 
   function hostTick(){
-    if(!game||game.phase!=='race')return;
+    if(!game)return;
+
+    if(game.phase==='countdown'){
+      game.countdownTicks=Math.max(0,finite(game.countdownTicks,13)-1);
+      if(game.countdownTicks<=0){
+        game.phase='race';
+        game.tick=0;
+      }
+      broadcastGame();
+      renderGame();
+      return;
+    }
+
+    if(game.phase!=='race')return;
     game.tick++;
     const order=[...game.entrants].sort((a,b)=>b.progress-a.progress);
     for(const e of game.entrants)e.cash+=incomeRate(e)*(TICK_MS/1000);
@@ -379,7 +400,7 @@
 
   function finishRound(){
     if(!game||game.phase!=='race')return;
-    game.phase='result';
+    game.phase='intermission';
     const sorted=[...game.entrants].sort((a,b)=>{
       if(a.finishTick!==null&&b.finishTick!==null)return a.finishTick-b.finishTick;
       if(a.finishTick!==null)return -1;
@@ -403,18 +424,32 @@
       }
     }
 
+    game.ready=readyMap();
     broadcastGame();
     renderGame();
-    clearTimeout(nextRaceTimer);
-    nextRaceTimer=setTimeout(()=>{if(role==='host'||playMode==='single')resetRound()},NEXT_RACE_DELAY);
   }
 
   function applyAction(playerId,msg){
-    if(!game||game.phase!=='race')return;
+    if(!game)return;
     const e=game.entrants.find(x=>x.human&&x.playerId===playerId);
     if(!e)return;
 
-    if(msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
+    if(msg.action==='ready'){
+      if(game.phase!=='intermission')return;
+      game.ready=game.ready||readyMap();
+      game.ready[playerId]=true;
+      const humans=game.entrants.filter(x=>x.human);
+      const allReady=humans.length>0&&humans.every(x=>game.ready?.[x.playerId]);
+      if(allReady){
+        resetRound();
+        return;
+      }
+      broadcastGame();
+      renderGame();
+      return;
+    }
+
+    if(game.phase!=='race'||msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
     const cost=upgradeCost(e,msg.stat);
     if(e.cash<cost)return;
     e.cash-=cost;
@@ -425,7 +460,9 @@
   }
 
   function requestAction(msg){
-    if(!localPlayer||!game||game.phase!=='race')return;
+    if(!localPlayer||!game)return;
+    if(msg.action==='upgrade'&&game.phase!=='race')return;
+    if(msg.action==='ready'&&game.phase!=='intermission')return;
     if(playMode==='single'||role==='host')applyAction(localPlayer.id,msg);
     else session?.sendToHost({type:'race-action',playerId:localPlayer.id,...msg});
   }
@@ -433,7 +470,7 @@
   function publicGame(){
     if(!game)return null;
     return {
-      phase:game.phase,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
+      phase:game.phase,countdownTicks:game.countdownTicks,ready:game.ready||{},raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
         id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
       }))
@@ -474,7 +511,7 @@
       $('raceTimer').textContent=`0:${String(seconds).padStart(2,'0')}`;
     }
 
-    $('raceLanes').innerHTML=sorted.map((e,i)=>`<div class="raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}"><span class="pos" aria-hidden="true"></span><span class="name">${esc(e.name)}</span><div class="lane"><i class="carDot" style="left:calc(${clamp(e.progress*.96,0,96)}% - 10px)"></i></div></div>`).join('');
+    renderRaceLanes(sorted);
 
     $('upgradeGrid').innerHTML=UPGRADE_KEYS.map(key=>{
       const m=UPGRADE_META[key];
@@ -487,8 +524,10 @@
         const nextFactor=incomeFactor(lvl+1,key);
         return `<button class="upgradeButton incomeUpgrade ${key}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
           ${upgradeIcon(key)}
-          <span class="upgradeCopy"><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)}<br>×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}</small></span>
-          <span class="upgradeCost">${money(cost)}</span>
+          <strong class="upgradeTitle">${esc(m.label)}</strong>
+          <span class="upgradeLevel">LEVEL ${lvl}</span>
+          <span class="upgradeCost">UPGRADE ${money(cost)}</span>
+          <small class="upgradeMath">${esc(m.desc)} · ×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}</small>
         </button>`;
       }
 
@@ -498,17 +537,67 @@
       const hot=affinity>=1.30?' trackHot':'';
       return `<button class="upgradeButton carUpgrade${hot}" data-upgrade="${key}" type="button" ${disabled?'disabled':''}>
         ${upgradeIcon(key)}
-        <span class="upgradeCopy"><strong>${esc(m.label)} · Lv ${lvl}</strong><small>${esc(m.desc)}<br>+${current}% → +${next}% · Track ×${affinity.toFixed(1)}</small></span>
-        <span class="upgradeCost">${money(cost)}</span>
+        <strong class="upgradeTitle">${esc(m.label)}</strong>
+        <span class="upgradeLevel">LEVEL ${lvl}</span>
+        <span class="upgradeCost">UPGRADE ${money(cost)}</span>
+        <small class="upgradeMath">${esc(m.desc)} · +${current}% → +${next}% · Track ×${affinity.toFixed(1)}</small>
       </button>`;
     }).join('');
 
-    if(game.phase==='race'){
-      if($('raceStatus'))$('raceStatus').innerHTML='<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>';
+    renderCountdown();
+
+    if(game.phase==='race'||game.phase==='countdown'){
+      if($('raceStatus'))$('raceStatus').innerHTML=game.phase==='race'
+        ?'<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>'
+        :'<strong>Get ready</strong><span>Race start sequence in progress.</span>';
       $('resultCard').classList.add('hidden');
-    }else{
+    }else if(game.phase==='intermission'){
       renderResult(me);
     }
+  }
+
+  function renderRaceLanes(sorted){
+    const wrap=$('raceLanes');
+    const existing=new Map(
+      Array.from(wrap.querySelectorAll('.raceLane')).map(row=>[row.dataset.racerId,row])
+    );
+
+    for(const e of sorted){
+      let row=existing.get(e.id);
+      if(!row){
+        row=document.createElement('div');
+        row.className='raceLane';
+        row.dataset.racerId=e.id;
+        row.innerHTML='<span class="pos" aria-hidden="true"></span><span class="name"></span>';
+        wrap.appendChild(row);
+      }
+      row.className=`raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}`;
+      row.dataset.progress=String(clamp(e.progress,0,100));
+      row.querySelector('.name').textContent=e.name;
+      existing.delete(e.id);
+    }
+
+    for(const row of existing.values())row.remove();
+  }
+
+  function renderCountdown(){
+    const overlay=$('countdownOverlay');
+    if(!overlay)return;
+    if(game.phase!=='countdown'){
+      overlay.classList.add('hidden');
+      return;
+    }
+
+    const ticks=Math.max(0,finite(game.countdownTicks,13));
+    const label=ticks>=10?'3':ticks>=7?'2':ticks>=4?'1':'GO!';
+    const lit=label==='3'?1:label==='2'?2:3;
+    overlay.classList.remove('hidden');
+    overlay.classList.toggle('go',label==='GO!');
+    $('countdownText').textContent=label;
+    Array.from(overlay.querySelectorAll('.startLight')).forEach((light,index)=>{
+      light.classList.toggle('lit',index<lit);
+      light.classList.toggle('green',label==='GO!');
+    });
   }
 
   function renderResult(me){
@@ -517,9 +606,22 @@
     const gemPayouts=[5,4,3,2,2,1,1,1,1,1,1,1];
     const cash=cashPayouts[(me.position||12)-1]||35;
     const gems=gemPayouts[(me.position||12)-1]||1;
+    const humans=game.entrants.filter(e=>e.human);
+    const readyCount=humans.filter(e=>game.ready?.[e.playerId]).length;
+    const amReady=!!game.ready?.[me.playerId];
     card.classList.remove('hidden');
-    card.innerHTML=`<span class="eyebrow">RACE COMPLETE</span><h2>${ordinal(me.position||12)} place</h2><div class="resultGrid"><div><span>Cash</span><strong>+${money(cash)}</strong></div><div><span>Gems</span><strong>+${gems}</strong></div><div><span>Next race</span><strong>3 sec</strong></div></div>`;
-    if($('raceStatus'))$('raceStatus').innerHTML='<strong>Race complete</strong><span>The next race starts automatically.</span>';
+    card.innerHTML=`
+      <span class="eyebrow">RACE COMPLETE</span>
+      <h2>${ordinal(me.position||12)} place</h2>
+      <div class="resultGrid">
+        <div><span>Cash</span><strong>+${money(cash)}</strong></div>
+        <div><span>Gems</span><strong>+${gems}</strong></div>
+        <div><span>Players ready</span><strong>${readyCount} / ${humans.length}</strong></div>
+      </div>
+      <button class="readyRaceButton" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'READY FOR NEXT RACE'}</button>
+      <small class="readyRaceNote">${amReady?'Waiting for the other players…':'The countdown starts when every player is ready.'}</small>
+    `;
+    if($('raceStatus'))$('raceStatus').innerHTML='<strong>Race complete</strong><span>Waiting for every player to confirm the next start.</span>';
   }
 
   function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
@@ -556,7 +658,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v10',
+      game:'gridline-v11',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
@@ -660,6 +762,11 @@
     $('exitRace').onclick=leaveRace;
 
     document.addEventListener('click',e=>{
+      const ready=e.target.closest('[data-ready-race]');
+      if(ready&&!ready.disabled){
+        requestAction({action:'ready'});
+        return;
+      }
       const up=e.target.closest('[data-upgrade]');
       if(up&&!up.disabled){
         animateCoinTransfer(up);
