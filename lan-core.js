@@ -290,7 +290,10 @@
         playerName:this.hostMeta.player?.name||'Host',
         playerCount:1+this.hostPeers.length,
         maxPlayers:this.maxPlayers,
-        started:!!this.hostMeta.started
+        started:!!this.hostMeta.started,
+        raceMode:this.hostMeta.raceMode||'quick',
+        trackName:this.hostMeta.trackName||'Harbour Sprint',
+        totalRaces:Number(this.hostMeta.totalRaces)||1
       };
       this.actions.ad.send(payload,target?{target}:undefined);
     }
