@@ -267,7 +267,7 @@
 
       this.pruneTimer=setInterval(()=>{
         if(this.role!=='client')return;
-        const cutoff=Date.now()-6500;
+        const cutoff=Date.now()-20000;
         let changed=false;
         for(const [peerId,host] of this.hosts){
           if(host.lastSeen<cutoff){this.hosts.delete(peerId);changed=true;}
