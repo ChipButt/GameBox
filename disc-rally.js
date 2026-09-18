@@ -106,6 +106,10 @@ function renderTrackSummary(){
   if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${t.icon}"></path></svg>`:'?';
 }
 function track(){return TRACKS.find(t=>t.id===(game?.trackId||selectedTrack))||TRACKS[0]}
+function finishLine(){
+  const t=track(),innerBottom=t.inner.y+t.inner.h,outerBottom=TRACK_OUTER.y+TRACK_OUTER.h;
+  return{x:500,w:28,y1:innerBottom,y2:outerBottom};
+}
 
 function buildRace(players,laps=2){
   const starts=[{x:390,y:500},{x:340,y:500},{x:290,y:500},{x:240,y:500}];
@@ -258,12 +262,18 @@ function drawPerspectiveRoad(){
     ctx.strokeStyle='rgba(222,249,255,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
   }
 
-  const stripe={x:465,y:476,w:80,h:50};
-  for(let i=0;i<8;i++){
+  // Full-width start/finish line: a clear checker strip spanning barrier to barrier.
+  const finish=finishLine(),rows=12,cols=2,rowH=(finish.y2-finish.y1)/rows,colW=finish.w/cols;
+  drawProjectedQuad([
+    {x:finish.x-finish.w/2-5,y:finish.y1},{x:finish.x+finish.w/2+5,y:finish.y1},
+    {x:finish.x+finish.w/2+5,y:finish.y2},{x:finish.x-finish.w/2-5,y:finish.y2}
+  ],'#ffffff');
+  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+    const x1=finish.x-finish.w/2+col*colW,y1=finish.y1+row*rowH;
     drawProjectedQuad([
-      {x:stripe.x+i*10,y:stripe.y},{x:stripe.x+(i+1)*10,y:stripe.y},
-      {x:stripe.x+(i+1)*10,y:stripe.y+stripe.h},{x:stripe.x+i*10,y:stripe.y+stripe.h}
-    ],i%2?'#ffffff':'#092c45');
+      {x:x1,y:y1},{x:x1+colW,y:y1},
+      {x:x1+colW,y:y1+rowH},{x:x1,y:y1+rowH}
+    ],(row+col)%2?'#ffffff':'#092c45');
   }
 
   t.boosts.forEach(b=>{
@@ -359,19 +369,24 @@ function onPointerUp(e){
   e.preventDefault();
 }
 
-function processCheckpoints(){
+function processCheckpoints(previous=[]){
   if(!game)return;
-  game.players.forEach(p=>{
+  const finish=finishLine();
+  game.players.forEach((p,i)=>{
     if(p.finished)return;
     let zone=0;
     if(p.x>835&&p.y>215&&p.y<385)zone=1;
     else if(p.y<125&&p.x>420&&p.x<580)zone=2;
     else if(p.x<165&&p.y>215&&p.y<385)zone=3;
-    else if(p.y>470&&p.x>430&&p.x<590)zone=4;
     if(p.nextCheckpoint===1&&zone===1)p.nextCheckpoint=2;
     else if(p.nextCheckpoint===2&&zone===2)p.nextCheckpoint=3;
     else if(p.nextCheckpoint===3&&zone===3)p.nextCheckpoint=4;
-    else if(p.nextCheckpoint===4&&zone===4){
+
+    const prev=previous[i];
+    const crossedFinish=p.nextCheckpoint===4&&prev&&
+      prev.x<finish.x&&p.x>=finish.x&&
+      p.y>=finish.y1-DISC_R&&p.y<=finish.y2+DISC_R;
+    if(crossedFinish){
       p.lap++;p.nextCheckpoint=1;
       if(p.lap>=game.laps){p.finished=true;if(!game.winner)game.winner={id:p.id,name:p.name,turn:game.turn}}
     }
@@ -506,7 +521,7 @@ async function animatePhysics(){
           updateTurboFromMovement(p,moved,p.id===activeId);
           applySurface(p,boosted);
         });
-        processCheckpoints();steps++;
+        processCheckpoints(before);steps++;
       }
       draw();renderHudOnly();
       if(moving&&steps<STEPS_MAX)requestAnimationFrame(frame);else resolve();
@@ -647,20 +662,27 @@ function updateHostAdvert(){
   session.updateHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,started:false,raceMode:'disc-rally',trackName:selectedTrackLabel(),totalRaces:Number($('hostLaps').value)||2});
 }
 function installSession(kind){
-  resetSession();
   if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Multiplayer discovery is unavailable.');
+  if(!session){
+    session=new window.GameBoxLAN.DiscoverySession({
+      game:'disc-rally-v1',
+      onStatus:text=>{if(role==='host')$('hostStatus').textContent=text;if(role==='client')$('joinStatus').textContent=text},
+      onHostsChanged:hosts=>{lastHosts=hosts;renderHosts(hosts)},
+      onPeersChanged:()=>{
+        if(role==='host'){renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;updateHostAdvert();broadcastLobby()}
+      },
+      onMessage:networkMessage
+    });
+  }else{
+    try{session.suspend?.()}catch{}
+  }
   role=kind;
-  session=new window.GameBoxLAN.DiscoverySession({
-    game:'disc-rally-v1',
-    onStatus:text=>{if(role==='host')$('hostStatus').textContent=text;if(role==='client')$('joinStatus').textContent=text},
-    onHostsChanged:hosts=>{lastHosts=hosts;renderHosts(hosts)},
-    onPeersChanged:()=>{
-      if(role==='host'){renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;updateHostAdvert();broadcastLobby()}
-    },
-    onMessage:networkMessage
-  });
 }
-function resetSession(){try{session?.close()}catch{}session=null;connectedLobby=[];lastHosts=[]}
+function resetSession(hard=false){
+  try{hard?session?.close():session?.suspend?.()}catch{}
+  if(hard)session=null;
+  connectedLobby=[];lastHosts=[];
+}
 async function startHostDiscovery(){
   try{
     installSession('host');localPlayerId=$('hostPlayer').value;
@@ -714,8 +736,18 @@ function networkMessage(msg,source){
 }
 function startHostRace(){
   const players=lobbyPlayers();if(players.length<2)return;
+  const button=$('startHost');button.disabled=true;
   mode='multi';role='host';localPlayerId=$('hostPlayer').value;selectedLaps=Number($('hostLaps').value)||2;
-  game=buildRace(players,selectedLaps);session?.updateHost?.({started:true});session?.broadcast({type:'start',state:snapshot()});renderRace();showView('raceView');
+  game=buildRace(players,selectedLaps);
+  try{
+    renderRace();
+    showView('raceView');
+  }catch(err){
+    console.error('Could not start host race',err);
+    game=null;showView('hostSetup');$('hostStatus').textContent='Could not start race — try again';button.disabled=false;return;
+  }
+  session?.updateHost?.({started:true});
+  session?.broadcast({type:'start',state:snapshot()});
 }
 function startLocalRace(){
   const ids=selectedLocal();if(ids.length<2){$('localStatus').textContent='Choose at least 2 players.';return}
@@ -800,7 +832,7 @@ function bind(){
   $('cameraFollowSetting').onchange=saveSettings;
   $('motionSetting').onchange=saveSettings;
 
-  const cleanup=()=>{try{session?.close()}catch{}};
+  const cleanup=()=>{try{resetSession(true)}catch{}};
   window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup()});
   window.addEventListener('pageshow',e=>{
     if(!e.persisted||!session?.closed)return;
