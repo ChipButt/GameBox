@@ -202,7 +202,7 @@
       state.isYou=row.classList.contains('you');
       state.carColor=row.dataset.carColor||'gold';
       state.laps=laps;
-      state.gridIndex=index;
+      if(!Number.isFinite(state.gridIndex)||phase==='countdown')state.gridIndex=index;
     });
 
     for(const [key,state] of motion){
