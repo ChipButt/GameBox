@@ -1662,7 +1662,7 @@
       renderJoinLobby([]);
       startAutoScan();
     };
-    $('[data-back]').forEach(b=>b.onclick=()=>{
+    $$('[data-back]').forEach(b=>b.onclick=()=>{
       if(b.closest('#trackSetup')&&playMode==='multi'&&role==='host'){
         multiplayerStage='lobby';
         session?.updateHost?.({started:false,raceMode:'gridline',trackName:'Track chosen by host'});
