@@ -671,10 +671,11 @@
     const greenFlag=$('greenFlagBadge');
     const uiRaceKey=`${game.mode}:${game.raceNo}:${game.trackIndex}`;
     const previousUiRaceKey=raceScreen.dataset.uiRaceKey||'';
-    const previousUiPhase=raceScreen.dataset.uiPhase||'';
-    const previousUiLap=Number(raceScreen.dataset.uiLap||0);
+    const isNewUiRace=previousUiRaceKey!==uiRaceKey;
+    const previousUiPhase=isNewUiRace?'':(raceScreen.dataset.uiPhase||'');
+    const previousUiLap=isNewUiRace?0:Number(raceScreen.dataset.uiLap||0);
 
-    if(previousUiRaceKey!==uiRaceKey){
+    if(isNewUiRace){
       raceScreen.dataset.uiRaceKey=uiRaceKey;
       raceScreen.dataset.uiPhase='';
       raceScreen.dataset.uiLap='0';
