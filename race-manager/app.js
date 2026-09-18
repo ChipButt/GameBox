@@ -8,10 +8,10 @@
   const RACE_TICKS=200;
 
   const TRACKS=[
-    {name:'Forest Lake',asset:'forest_lake.png',discipline:'GT',weather:'Dry',laps:7,profile:'Flowing · Technical',risk:1.25,weights:{engine:1.00,tyres:1.55,brakes:1.25,fuel:.85}},
-    {name:'Mediterranean Marina',asset:'mediterranean_marina.png',discipline:'Street',weather:'Sunny',laps:8,profile:'Fast sweepers · Braking zones',risk:1.05,weights:{engine:1.20,tyres:1.20,brakes:1.35,fuel:1.10}},
-    {name:'Desert Canyon',asset:'desert_canyon.png',discipline:'GT',weather:'Hot',laps:8,profile:'Long straights · Tight hairpins',risk:1.10,weights:{engine:1.35,tyres:.90,brakes:1.10,fuel:1.55}},
-    {name:'Snowy Alpine',asset:'snowy_alpine.png',discipline:'Open Wheel',weather:'Snow',laps:8,profile:'Low grip · Heavy braking',risk:1.50,weights:{engine:.85,tyres:1.70,brakes:1.55,fuel:.75}}
+    {name:'Autumn River Valley',asset:'autumn_river_valley_circuit.png',discipline:'GT',weather:'Clear',laps:8,profile:'Flowing bends · River bridge',risk:1.15,weights:{engine:1.05,tyres:1.45,brakes:1.20,fuel:1.00}},
+    {name:'Forest Lake',asset:'forest_lake_circuit.png',discipline:'GT',weather:'Dry',laps:7,profile:'Technical · Lakeside sweepers',risk:1.25,weights:{engine:1.00,tyres:1.55,brakes:1.25,fuel:.85}},
+    {name:'Desert Canyon',asset:'desert_canyon_circuit.png',discipline:'GT',weather:'Hot',laps:8,profile:'Long straights · Tight hairpins',risk:1.10,weights:{engine:1.35,tyres:.90,brakes:1.10,fuel:1.55}},
+    {name:'Tropical Island',asset:'tropical_island_circuit.png',discipline:'GT',weather:'Sunny',laps:8,profile:'Coastal sweepers · Fast exits',risk:1.20,weights:{engine:1.20,tyres:1.35,brakes:1.05,fuel:1.15}}
   ];
 
   const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
@@ -637,7 +637,7 @@
     if($('profilePlayerName'))$('profilePlayerName').textContent=localPlayer.name;
     $('cash').textContent=money(me.cash);
     $('sponsorRate').textContent=money(incomeRate(me))+'/s';
-    $('raceNumber').textContent=game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo);
+    $('raceNumber').textContent=`Race\n${game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo)}`;
     if($('gems'))$('gems').textContent=Math.round(me.gems||0);
     $('trackName').textContent=track.name;
     $('trackMeta').textContent=`${track.discipline} · ${track.weather}`;
@@ -647,7 +647,7 @@
 
     const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));
     const currentPos=me.position||sorted.findIndex(e=>e.id===me.id)+1;
-    $('position').textContent=currentPos;
+    $('position').textContent=ordinal(currentPos);
     if($('liveSponsor'))$('liveSponsor').textContent='+'+money(incomeRate(me));
 
     const racePct=clamp(me.progress,0,100);
@@ -727,17 +727,34 @@
 
   function renderCountdown(){
     const overlay=$('countdownOverlay');
-    const image=$('countdownAsset');
-    if(!overlay||!image)return;
+    if(!overlay)return;
     if(game.phase!=='countdown'){
       overlay.classList.add('hidden');
       return;
     }
+
     const ticks=Math.max(0,finite(game.countdownTicks,12));
     const state=ticks>=10?'3':ticks>=7?'2':ticks>=4?'1':'go';
-    image.src=`${ASSET_ROOT}/ui/countdown/state_${state}.png`;
-    image.alt=state==='go'?'GO!':state;
     overlay.classList.remove('hidden');
+
+    const lights=[$('countdownLight1'),$('countdownLight2'),$('countdownLight3')];
+    const litCount=state==='3'?1:state==='2'?2:3;
+    lights.forEach((light,index)=>{
+      if(!light)return;
+      light.classList.toggle('hidden',index>=litCount);
+      light.src=state==='go'
+        ?`${ASSET_ROOT}/ui/countdown/light_green.png`
+        :`${ASSET_ROOT}/ui/countdown/light_red.png`;
+    });
+
+    const number3=$('countdownNumber3');
+    const number2=$('countdownNumber2');
+    const number1=$('countdownNumber1');
+    const go=$('countdownGo');
+    if(number3)number3.classList.toggle('hidden',state!=='3');
+    if(number2)number2.classList.toggle('hidden',state!=='2');
+    if(number1)number1.classList.toggle('hidden',state!=='1');
+    if(go)go.classList.toggle('hidden',state!=='go');
   }
 
   function renderRaceEvent(me){
@@ -881,7 +898,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
     session=new window.GameBoxLAN.DiscoverySession({
-      game:'gridline-v17',
+      game:'gridline-v18',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onHostsChanged:hosts=>renderAvailableHosts(hosts),
       onPeersChanged:()=>{
