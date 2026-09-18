@@ -32,7 +32,7 @@ const roster=()=>{
 };
 
 let currentView='modeView';
-let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,animating=false,turboArmed=false,lastHosts=[];
+let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[];
 let game=null,pendingSnapshot=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
@@ -111,7 +111,7 @@ function buildRace(players,laps=2){
   const raceTrack=selectedTrack==='random'?TRACKS[Math.floor(Math.random()*TRACKS.length)].id:selectedTrack;
   return {
     id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',
-    players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turbo:1,finished:false}))
+    players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turboCharge:0,turboReady:false,turboHeld:false,finished:false}))
   };
 }
 function snapshot(){
@@ -119,7 +119,16 @@ function snapshot(){
 }
 function applySnapshot(s){
   if(!s)return;
-  game=s;if(!game.phase)game.phase='aim';selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||2;turboArmed=false;animating=false;renderRace();showView('raceView');
+  game=s;if(!game.phase)game.phase='aim';
+  game.players=(game.players||[]).map(p=>({
+    ...p,
+    turboCharge:clamp(Number.isFinite(p.turboCharge)?p.turboCharge:0,0,1),
+    turboReady:!!p.turboReady,
+    turboHeld:false
+  }));
+  selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||2;
+  lookDrag=null;lookYaw=0;lookPitch=0;turboHolding=false;animating=false;
+  renderRace();showView('raceView');
 }
 function activePlayer(){return game?.players?.[game.current]||null}
 function localCanShoot(){
@@ -152,13 +161,12 @@ function hitRect(p,r){return p.x>r.x&&p.x<r.x+r.w&&p.y>r.y&&p.y<r.y+r.h}
 
 function cameraForView(){
   const p=activePlayer()||{x:390,y:500};
-  // Track tangent: bottom -> right -> top -> left -> bottom.
-  // Using an ellipse tangent makes the camera rotate progressively through corners
-  // instead of snapping between four compass directions.
   const dx=p.x-500,dy=p.y-300,rx=420,ry=220;
-  let hx=dy/(ry*ry),hy=-dx/(rx*rx);
-  const m=Math.hypot(hx,hy)||1;hx/=m;hy/=m;
-  return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx};
+  let baseX=dy/(ry*ry),baseY=-dx/(rx*rx);
+  const m=Math.hypot(baseX,baseY)||1;baseX/=m;baseY/=m;
+  const cos=Math.cos(lookYaw),sin=Math.sin(lookYaw);
+  const hx=baseX*cos-baseY*sin,hy=baseX*sin+baseY*cos;
+  return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx,horizon:VIEW.horizon+lookPitch};
 }
 function projectPoint(x,y,camera=cameraForView()){
   const dx=x-camera.x,dy=y-camera.y;
@@ -167,7 +175,7 @@ function projectPoint(x,y,camera=cameraForView()){
   const depth=forward+VIEW.setback;
   if(depth<18)return null;
   const scale=VIEW.focal/depth;
-  return{x:VIEW.w/2+lateral*scale,y:VIEW.horizon+(VIEW.cameraHeight*VIEW.focal)/depth,scale,depth,forward,lateral};
+  return{x:VIEW.w/2+lateral*scale,y:(camera.horizon??VIEW.horizon)+(VIEW.cameraHeight*VIEW.focal)/depth,scale,depth,forward,lateral};
 }
 function roundedRectPoints(rect,edgeSteps=8,cornerSteps=10){
   const x=rect.x,y=rect.y,w=rect.w,h=rect.h,r=Math.min(rect.r,w/2,h/2),pts=[];
