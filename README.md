@@ -34,7 +34,7 @@ A mobile-first browser games hub from **Chip In Games**.
 - Pass & Play: Start New Race → Track Selection → Players → Start Race
 - Local Multiplayer: host/join flow using GameBox WebRTC discovery
 - 2–4 players, explicit Finish Turn handoff, and per-device turn ownership
-- Drag-to-flick controls with variable shot power and one Turbo per lap
+- Drag-to-flick controls with free-look before a shot and a movement-charged Turbo meter; Turbo activates only when full, is held during motion, can be released early, and then recharges from the remaining level
 - Disc-to-disc collisions plus normal-based curved wall rebounds
 - Checkpoint-based laps to prevent shortcut finishes
 - Six original tracks with bumpers, boost pads and slow zones
