@@ -126,8 +126,9 @@
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
-    if(id==='singleSetup')renderSinglePlayers();
-    if(id==='hostSetup'||id==='joinSetup')syncPlayerSelects();
+    if(id==='singleSetup'){renderSinglePlayers();renderRaceSetup()}
+    if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
+    if(id==='joinSetup')syncPlayerSelects();
   }
 
   function showRace(){
@@ -159,6 +160,44 @@
       const select=$(id),old=select.value;
       select.innerHTML=people.length?people.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No GameBox players saved</option>';
       if(people.some(p=>p.id===old))select.value=old;
+    }
+  }
+
+  function setupConfig(){
+    return {
+      mode:raceSetup.mode==='tournament'?'tournament':'quick',
+      trackIndex:clamp(Math.round(finite(raceSetup.trackIndex,0)),0,TRACKS.length-1),
+      totalRaces:raceSetup.mode==='tournament'?clamp(Math.round(finite(raceSetup.races,5)),3,15):1
+    };
+  }
+
+  function renderRaceSetup(){
+    const config=setupConfig();
+    $('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
+    for(const prefix of ['single','host']){
+      const length=$(prefix+'TournamentLength');
+      if(length)length.classList.toggle('hidden',config.mode!=='tournament');
+      const input=$(prefix+'RaceCount');
+      const value=$(prefix+'RaceCountValue');
+      if(input)input.value=String(config.totalRaces===1?raceSetup.races:config.totalRaces);
+      if(value)value.textContent=`${config.totalRaces===1?raceSetup.races:config.totalRaces} races`;
+      const wrap=$(prefix+'TrackChoices');
+      if(wrap)wrap.innerHTML=TRACKS.map((track,index)=>`
+        <button class="trackChoice ${index===config.trackIndex?'selected':''}" data-track-index="${index}" type="button">
+          <strong>${esc(track.name)}</strong>
+          <small>${esc(track.profile)} · ${track.laps} laps</small>
+        </button>
+      `).join('');
+    }
+    if(role==='host'&&session){
+      const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
+      session.updateHost?.({
+        hostName:p?`${p.name}'s Gridline Race`:'Gridline Race',
+        raceMode:config.mode,
+        trackName:TRACKS[config.trackIndex].name,
+        totalRaces:config.totalRaces
+      });
+      broadcastLobby();
     }
   }
 
@@ -241,28 +280,45 @@
     return ready;
   }
 
-  function buildGame(humans){
-    const trackIndex=((humans[0]?.profile?.races??humans[0]?.races??0))%TRACKS.length;
-    const track=TRACKS[trackIndex];
+  function buildGame(humans,config=setupConfig()){
+    const mode=config.mode==='tournament'?'tournament':'quick';
+    const startTrackIndex=clamp(Math.round(finite(config.trackIndex,0)),0,TRACKS.length-1);
+    const totalRaces=mode==='tournament'?clamp(Math.round(finite(config.totalRaces,5)),3,15):1;
+    const track=TRACKS[startTrackIndex];
     const entrants=humans.map(h=>entrantFromPlayer(h.player,h.owner,h.profile||null));
     const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
-    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,(entrants.find(e=>e.human)?.races||0)+1));
+    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,1));
+    entrants.forEach(e=>{e.levels=baseLevels();e.cash=0;e.lastPrize=0;e.cashBeforePrize=0});
     seedGrid(entrants);
-    return {phase:'countdown',countdownTicks:12,raceNo:(entrants.find(e=>e.human)?.races||0)+1,trackIndex,tick:0,maxTicks:RACE_TICKS,entrants,results:[],ready:{}};
+    prizeAnimations.clear();
+    return {
+      phase:'countdown',
+      countdownTicks:12,
+      mode,
+      totalRaces,
+      raceNo:1,
+      startTrackIndex,
+      trackIndex:startTrackIndex,
+      tick:0,
+      maxTicks:RACE_TICKS,
+      entrants,
+      results:[],
+      ready:{}
+    };
   }
 
   function resetRound(){
-    if(!game)return;
-    game.trackIndex=(game.trackIndex+1)%TRACKS.length;
+    if(!game||game.raceNo>=game.totalRaces)return;
     game.raceNo++;
+    game.trackIndex=(game.startTrackIndex+game.raceNo-1)%TRACKS.length;
     game.tick=0;
     game.phase='countdown';
     game.countdownTicks=12;
     game.results=[];
     game.ready={};
-    const track=TRACKS[game.trackIndex];
     game.entrants.forEach((e,i)=>{
-      e.progress=0;e.finishTick=null;e.position=null;e.cash=0;
+      e.progress=0;e.finishTick=null;e.position=null;
+      e.lastPrize=0;e.cashBeforePrize=e.cash;
       e.eventCount=0;e.eventCooldownUntil=18;e.activeEvent=null;e.boost=null;e.eventResult=null;
       if(!e.human){
         e.aiSkill=botSkill(game.raceNo,i);
