@@ -23,7 +23,6 @@ jobs:
           node --check heads-lan-v3.js
           node --check race-manager/app.js
           node --check race-manager/track-ui.js
-          node --check race-manager/race-layout.js
       - name: Check required files
         run: |
           test -f index.html
@@ -35,4 +34,9 @@ jobs:
           test -f race-manager/styles.css
           test -f race-manager/track-ui.css
           test -f race-manager/track-ui.js
-          test -f race-manager/race-layout.js
+          test -f race-manager/assets/ui/logo/gridline_racing_logo.png
+          test -f race-manager/assets/cars/player_gold.png
+          test -f race-manager/assets/tracks/forest_lake.png
+          test -f race-manager/assets/tracks/mediterranean_marina.png
+          test -f race-manager/assets/tracks/desert_canyon.png
+          test -f race-manager/assets/tracks/snowy_alpine.png
