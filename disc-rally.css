@@ -142,12 +142,14 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .turnBanner small{display:block;font-size:10px;opacity:.8}
 .turnBanner.yours{background:rgba(130,95,0,.88)}
 .turnBanner.finished{background:rgba(20,121,87,.9)}
-.raceTouchHud{position:absolute;z-index:6;left:0;right:0;bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 20px;pointer-events:none}
-.aimPad{width:92px;height:92px;border-radius:50%;border:7px solid #073f5e;background:rgba(63,176,246,.72);box-shadow:inset 0 0 0 5px rgba(255,255,255,.18);display:grid;place-items:center}
-.aimPad span{width:28px;height:28px;border-radius:50%;background:#073f5e;transition:transform .04s linear}
-.powerDial{position:relative;width:120px;height:120px;border-radius:50%;border:9px solid #111;background:radial-gradient(circle,#555 0 34%,#6e6e6e 35% 56%,#2e2e2e 57% 70%,#111 71%);box-shadow:0 7px 0 #111}
-.powerDial span{position:absolute;left:50%;top:50%;width:10px;height:40px;background:#bb3b34;border-radius:999px;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(18deg)}
-.powerDial i{position:absolute;inset:-9px;border-radius:50%;border:7px solid transparent;border-bottom-color:#2aa8ff;clip-path:inset(45% 0 0 0);transform:rotate(-45deg)}
+.turboButton{position:absolute;z-index:8;left:20px;bottom:22px;width:104px;height:122px;border:0;background:transparent;color:#fff;padding:0;display:grid;justify-items:center;align-content:end;gap:5px;touch-action:none}
+.turboGauge{position:relative;width:92px;height:92px;border-radius:50%;overflow:hidden;border:7px solid #073f5e;background:#0a5d91;box-shadow:inset 0 0 0 5px rgba(255,255,255,.15),0 6px 0 rgba(1,37,59,.5)}
+.turboGauge i{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(180deg,#fff55d,#ffd116 55%,#ff9f0a);transition:height .08s linear}
+.turboGauge b{position:absolute;inset:0;display:grid;place-items:center;font-size:38px;color:#fff;text-shadow:0 2px 0 #073f5e;z-index:2}
+.turboButton small{font-size:10px;font-weight:900;letter-spacing:.06em;color:#d9f4ff;background:rgba(3,47,75,.82);border-radius:999px;padding:4px 8px}
+.turboButton.ready .turboGauge{box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 4px #ffd116,0 6px 0 rgba(1,37,59,.5)}
+.turboButton.active .turboGauge{transform:scale(.96);box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 5px #fff16b,0 3px 0 rgba(1,37,59,.5)}
+.turboButton:disabled{opacity:.55}
 .finishOverlay{position:absolute;z-index:9;inset:0;background:rgba(3,47,75,.74);display:grid;place-items:center;padding:22px}
 .finishCard{width:min(92%,420px);background:#fff;border-radius:18px;border:5px solid var(--gold);padding:24px;text-align:center;color:var(--navy)}
 .finishCard span,.finishCard strong,.finishCard small{display:block}
@@ -161,15 +163,8 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .scoreIdentity strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scoreRow small{color:#7190a0;text-align:right}
 .scoreRow.active{border-color:#e8c11a;background:#fff9da}
-.raceBottomBar{position:fixed;z-index:15;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);height:94px;background:#073f5e;border-top:3px solid #0b8cc5;display:grid;grid-template-columns:190px 1fr}
-.turboButton,.finishTurnButton{border:0;background:transparent;color:#fff;font-weight:800}
-.turboButton{border-right:2px solid #0b668e;display:grid;grid-template-columns:44px 1fr;grid-template-rows:auto auto;text-align:left;padding:10px 14px}
-.turboButton>span{grid-row:1/3;font-size:33px;color:var(--gold);align-self:center}
-.turboButton strong{align-self:end}
-.turboButton small{color:#5dc3ff}
-.turboButton.active{background:#7b5d00}
-.turboButton:disabled{opacity:.45}
-.finishTurnButton{font-size:23px;background:linear-gradient(#0b6795,#06476b)}
+.raceBottomBar{position:fixed;z-index:15;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);height:94px;background:#073f5e;border-top:3px solid #0b8cc5;display:grid}
+.finishTurnButton{border:0;background:transparent;color:#fff;font-weight:800;font-size:23px;background:linear-gradient(#0b6795,#06476b)}
 .finishTurnButton:enabled{background:linear-gradient(#0b82dd,#07547e);box-shadow:inset 0 0 0 3px #22b5f5}
 .finishTurnButton:disabled{color:#7291a0}
 
@@ -198,9 +193,9 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
   .scoreboard{display:none}
   .hudPlayer strong{font-size:22px;max-width:145px}
   .hudRaceMeta{font-size:23px;gap:12px}
-  .raceBottomBar{grid-template-columns:145px 1fr;height:82px}
+  .raceBottomBar{height:82px}
   .fixedBottomAction{height:82px}
   .raceScreen{padding-bottom:82px}
-  .aimPad{width:78px;height:78px}
-  .powerDial{width:102px;height:102px}
+  .turboButton{left:14px;bottom:16px;width:92px;height:108px}
+  .turboGauge{width:80px;height:80px}
 }
