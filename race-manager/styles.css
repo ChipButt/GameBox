@@ -27,10 +27,19 @@
 .tournamentLength input{width:100%;accent-color:var(--navy)}.tournamentLength strong{white-space:nowrap;font-size:.7rem}
 .trackTitle{margin-top:12px}
 .trackChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.trackChoice{min-height:62px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--navy);padding:8px 9px;text-align:left}
-.trackChoice strong,.trackChoice small{display:block}.trackChoice strong{font-size:.72rem}.trackChoice small{margin-top:3px;color:var(--muted);font-size:.54rem;line-height:1.15}
+.trackChoice{min-height:118px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--navy);padding:6px;text-align:left;display:grid;grid-template-rows:68px auto;gap:6px;overflow:hidden}
+.trackChoice img{width:100%;height:68px;object-fit:cover;border-radius:9px;display:block}
+.trackChoice span{min-width:0;padding:0 3px 3px}.trackChoice strong,.trackChoice small{display:block}.trackChoice strong{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trackChoice small{margin-top:3px;color:var(--muted);font-size:.54rem;line-height:1.15}
 .trackChoice.selected{border-color:#d5a914;background:#fff9df;box-shadow:inset 0 0 0 1px rgba(247,189,24,.35)}
 .trackChoice.selected strong::after{content:' ✓';color:#b68400}
+
+/* Approved setup action artwork. */
+#startSingle,#startHostRace{min-height:66px;border:0;border-radius:0;background:transparent url('assets/ui/controls/race_now.png') center/contain no-repeat;color:transparent;font-size:0;box-shadow:none}
+#startSingle:disabled,#startHostRace:disabled{opacity:.4}
+#chooseHost,#chooseJoin{min-height:92px;border:0;border-radius:0;background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;box-shadow:none}
+#chooseHost{background-image:url('assets/ui/controls/host_game.png')}
+#chooseJoin{background-image:url('assets/ui/controls/join_game.png')}
+#chooseHost>*,#chooseJoin>*{visibility:hidden}
 .joinRaceConfig{margin:12px 0;padding:10px 12px;border-radius:15px;background:#eef5ff;border:1px solid #bed0e7;color:var(--navy)}
 .joinRaceConfig strong,.joinRaceConfig small{display:block}.joinRaceConfig strong{font-size:.8rem}.joinRaceConfig small{margin-top:3px;color:var(--muted);font-size:.64rem}
 @media(max-width:560px){.mainView{padding:10px}.chipLogo{width:96px;height:36px}.modeChoiceGrid{grid-template-columns:1fr}.modeChoice{min-height:104px}.resourceBar{grid-template-columns:repeat(2,1fr)}.upgradeGrid{grid-template-columns:1fr}.tacticGrid{grid-template-columns:1fr}.raceLane{grid-template-columns:22px 74px 1fr}.panel,.raceCard,.heroPanel{border-radius:20px;padding:13px}.resultGrid{grid-template-columns:1fr 1fr}}
