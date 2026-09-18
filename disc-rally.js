@@ -173,3 +173,73 @@ function processCheckpoints(){
   game.players.forEach(p=>{
     if(p.finished)return;
     let zone=0;
+    if(p.x>835&&p.y>215&&p.y<385)zone=1;
+    else if(p.y<125&&p.x>420&&p.x<580)zone=2;
+    else if(p.x<165&&p.y>215&&p.y<385)zone=3;
+    else if(p.y>470&&p.x>430&&p.x<590)zone=4;
+    if(p.nextCheckpoint===1&&zone===1)p.nextCheckpoint=2;
+    else if(p.nextCheckpoint===2&&zone===2)p.nextCheckpoint=3;
+    else if(p.nextCheckpoint===3&&zone===3)p.nextCheckpoint=4;
+    else if(p.nextCheckpoint===4&&zone===4){
+      p.lap++;p.nextCheckpoint=1;p.turbo=1;
+      if(p.lap>=game.laps){p.finished=true;if(!game.winner)game.winner={id:p.id,name:p.name,turn:game.turn}}
+    }
+  });
+}
+
+function applyWalls(p){
+  const sx=p.vx*.5,sy=p.vy*.5,nx=p.x+sx,ny=p.y+sy;
+  if(roadContains(nx,ny)){p.x=nx;p.y=ny;return}
+  const canX=roadContains(p.x+sx,p.y),canY=roadContains(p.x,p.y+sy);
+  if(canX){p.x+=sx;p.vy*=-BOUNCE}
+  else if(canY){p.y+=sy;p.vx*=-BOUNCE}
+  else{p.vx*=-BOUNCE;p.vy*=-BOUNCE}
+  p.x=clamp(p.x,DISC_R,1000-DISC_R);p.y=clamp(p.y,DISC_R,600-DISC_R);
+}
+function applyBumpers(p){
+  track().bumpers.forEach(b=>{
+    const dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),min=DISC_R+b.r;
+    if(d>0&&d<min){
+      const nx=dx/d,ny=dy/d,dot=p.vx*nx+p.vy*ny;
+      p.x=b.x+nx*(min+1);p.y=b.y+ny*(min+1);
+      p.vx=(p.vx-2*dot*nx)*.88;p.vy=(p.vy-2*dot*ny)*.88;
+    }
+  });
+}
+function applyDiscCollisions(){
+  const ps=game.players;
+  for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
+    const a=ps[i],b=ps[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=DISC_R*2;
+    if(d>0&&d<min){
+      const nx=dx/d,ny=dy/d,over=min-d;a.x-=nx*over/2;a.y-=ny*over/2;b.x+=nx*over/2;b.y+=ny*over/2;
+      const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny,swap=(vb-va)*.92;
+      a.vx+=swap*nx;a.vy+=swap*ny;b.vx-=swap*nx;b.vy-=swap*ny;
+    }
+  }
+}
+function applySurface(p,boosted){
+  let friction=FRICTION;
+  if(track().slow.some(s=>hitRect(p,s)))friction=.95;
+  p.vx*=friction;p.vy*=friction;
+  if(!boosted.has(p.id)){
+    for(const b of track().boosts){
+      if(hitRect(p,b)){p.vx*=1.28;p.vy*=1.28;boosted.add(p.id);break}
+    }
+  }
+  if(Math.hypot(p.vx,p.vy)<.06){p.vx=0;p.vy=0}
+}
+async function animatePhysics(){
+  animating=true;renderRace();
+  const boosted=new Set();
+  let steps=0;
+  await new Promise(resolve=>{
+    const frame=()=>{
+      let moving=false;
+      for(let k=0;k<2;k++){
+        game.players.forEach(p=>{if(Math.hypot(p.vx,p.vy)>.001){moving=true;applyWalls(p);applyBumpers(p)}});
+        applyDiscCollisions();
+        game.players.forEach(p=>applySurface(p,boosted));
+        processCheckpoints();steps++;
+      }
+      draw();renderHudOnly();
+      if(moving&&steps<STEPS_MAX)requestAnimationFrame(frame);else resolve();
