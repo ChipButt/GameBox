@@ -43,5 +43,3 @@
 .joinRaceConfig{margin:12px 0;padding:10px 12px;border-radius:15px;background:#eef5ff;border:1px solid #bed0e7;color:var(--navy)}
 .joinRaceConfig strong,.joinRaceConfig small{display:block}.joinRaceConfig strong{font-size:.8rem}.joinRaceConfig small{margin-top:3px;color:var(--muted);font-size:.64rem}
 @media(max-width:560px){.mainView{padding:10px}.chipLogo{width:96px;height:36px}.modeChoiceGrid{grid-template-columns:1fr}.modeChoice{min-height:104px}.resourceBar{grid-template-columns:repeat(2,1fr)}.upgradeGrid{grid-template-columns:1fr}.tacticGrid{grid-template-columns:1fr}.raceLane{grid-template-columns:22px 74px 1fr}.panel,.raceCard,.heroPanel{border-radius:20px;padding:13px}.resultGrid{grid-template-columns:1fr 1fr}}
-.designerToolLink{display:block;margin:12px auto 0;width:max-content;color:var(--navy);font-size:.72rem;font-weight:800;text-decoration:none;border-bottom:1px dashed rgba(8,47,104,.38)}
-.designerToolLink:hover{color:var(--navy2)}
