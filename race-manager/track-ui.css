@@ -28,6 +28,19 @@ body.gridline-racing-live .mainView{
 #raceScreen:not(.hidden){
   --race-scale:1;
   font-family:Arial,sans-serif;
+}
+#raceScreen,
+#raceScreen button,
+#raceScreen .raceText,
+#raceScreen .upgradeButton,
+#raceScreen .upgradeButton *,
+#raceScreen .raceEventCard,
+#raceScreen .raceEventCard *,
+#raceScreen .resultCard,
+#raceScreen .resultCard *{
+  font-family:Arial,sans-serif!important;
+}
+#raceScreen:not(.hidden){
   position:relative;
   display:block;
   flex:0 0 auto;
@@ -72,8 +85,8 @@ body.gridline-racing-live .mainView{
 #raceScreen .gridlineRaceLogo{
   left:231px;top:37px;width:144px;height:52px;z-index:30;object-fit:contain;
 }
-#raceScreen .playerProfileAsset{left:11px;top:25px;width:260px;height:80px;z-index:30}
-#raceScreen .playerProfileAsset>img{object-position:10% 50%}
+#raceScreen .playerProfileAsset{left:15px;top:25.515px;width:204.818px;height:78.485px;z-index:30}
+#raceScreen .playerProfileAsset>img{object-position:50% 50%}
 #raceScreen .raceNameAsset{left:15px;top:89px;width:364px;height:64px;z-index:30}
 #raceScreen .cashPill{left:23px;top:143px;width:110px;height:45px;z-index:30}
 #raceScreen .positionPill{left:143px;top:143px;width:110px;height:45px;z-index:30}
