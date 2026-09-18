@@ -310,11 +310,20 @@ function nextTurn(){
 
 function roadContains(x,y){return nearestTrackPoint(x,y).distance<=trackGeometry().halfWidth}
 
+function updateCameraHeading(){
+  const p=activePlayer()||pointAtProgress(.025),nearest=nearestTrackPoint(p.x,p.y);
+  const desired=Math.atan2(nearest.ty,nearest.tx);
+  if(cameraHeading==null||!animating){
+    cameraHeading=desired;
+    return;
+  }
+  const delta=Math.atan2(Math.sin(desired-cameraHeading),Math.cos(desired-cameraHeading));
+  cameraHeading+=delta*.16;
+}
 function cameraForView(){
   const p=activePlayer()||pointAtProgress(.025),nearest=nearestTrackPoint(p.x,p.y);
-  let baseX=nearest.tx,baseY=nearest.ty;
-  const cos=Math.cos(lookYaw),sin=Math.sin(lookYaw);
-  const hx=baseX*cos-baseY*sin,hy=baseX*sin+baseY*cos;
+  const base=cameraHeading==null?Math.atan2(nearest.ty,nearest.tx):cameraHeading;
+  const angle=base+lookYaw,hx=Math.cos(angle),hy=Math.sin(angle);
   return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx,horizon:VIEW.horizon+lookPitch};
 }
 function projectPoint(x,y,camera=cameraForView()){
@@ -344,6 +353,23 @@ function trackFeatureQuad(spec,t=track()){
 function finishCellQuad(f,across0,across1,along0,along1){
   const p=(across,along)=>({x:f.x+f.nx*across+f.tx*along,y:f.y+f.ny*across+f.ty*along});
   return[p(across0,along0),p(across1,along0),p(across1,along1),p(across0,along1)];
+}
+function drawDirectionChevrons(t,cam){
+  const half=trackGeometry(t).halfWidth;
+  for(let progress=.055;progress<.98;progress+=.065){
+    const f=pointAtProgress(progress,t),back=26,span=Math.min(half*.34,28);
+    const left={x:f.x-f.tx*back+f.nx*span,y:f.y-f.ty*back+f.ny*span};
+    const tip={x:f.x+f.tx*20,y:f.y+f.ty*20};
+    const right={x:f.x-f.tx*back-f.nx*span,y:f.y-f.ty*back-f.ny*span};
+    const a=projectPoint(left.x,left.y,cam),b=projectPoint(tip.x,tip.y,cam),d=projectPoint(right.x,right.y,cam);
+    if(!a||!b||!d||b.forward<8)continue;
+    ctx.save();
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle='rgba(255,255,255,.82)';
+    ctx.lineWidth=Math.max(2.5,Math.min(9,6*b.scale));
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.stroke();
+    ctx.restore();
+  }
 }
 function drawPerspectiveRoad(){
   const t=track(),g=trackGeometry(t),cam=cameraForView();
@@ -404,6 +430,9 @@ function drawPerspectiveRoad(){
     ctx.strokeStyle='rgba(222,249,255,.48)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
   }
 
+  // Repeated chevrons show the correct race direction on every section.
+  drawDirectionChevrons(t,cam);
+
   // Start/finish checker spans the full width of THIS course.
   const finish=finishLine(t),rows=12,cols=2,acrossStep=(finish.half*2)/rows,alongStep=finish.thickness/cols;
   drawProjectedQuad(finishCellQuad(finish,-finish.half,finish.half,-finish.thickness/2,finish.thickness/2),'#ffffff');
@@ -461,7 +490,7 @@ function drawAim(){
   ctx.strokeStyle='#082f68';ctx.lineWidth=3;ctx.stroke();
   ctx.fillStyle='#f7bd18';ctx.beginPath();ctx.arc(sp.x+ux*cap,sp.y+uy*cap,9,0,Math.PI*2);ctx.fill();ctx.restore();
 }
-function draw(){drawTrack();drawDiscs();drawAim()}
+function draw(){updateCameraHeading();drawTrack();drawDiscs();drawAim()}
 function pointerPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
 function resetLook(){lookDrag=null;lookYaw=0;lookPitch=0}
 function onPointerDown(e){
