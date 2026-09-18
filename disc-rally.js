@@ -131,22 +131,43 @@ function renderTrackSummary(){
   if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`:'?';
 }
 function track(){return TRACKS.find(t=>t.id===(game?.trackId||selectedTrack))||TRACKS[0]}
-function catmullPoint(p0,p1,p2,p3,t){
-  const t2=t*t,t3=t2*t;
-  return{
-    x:.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
-    y:.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
-  };
+function chaikinClosed(points,passes=3){
+  let pts=(points||[]).map(p=>({x:Number(p[0]),y:Number(p[1])}));
+  for(let pass=0;pass<passes;pass++){
+    const next=[],n=pts.length;
+    for(let i=0;i<n;i++){
+      const a=pts[i],b=pts[(i+1)%n];
+      next.push({x:a.x*.75+b.x*.25,y:a.y*.75+b.y*.25});
+      next.push({x:a.x*.25+b.x*.75,y:a.y*.25+b.y*.75});
+    }
+    pts=next;
+  }
+  return pts;
+}
+function segmentsIntersect(a,b,c,d){
+  const cross=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);
+  const ab1=cross(a,b,c),ab2=cross(a,b,d),cd1=cross(c,d,a),cd2=cross(c,d,b);
+  return ab1*ab2<0&&cd1*cd2<0;
+}
+function courseHasCrossings(samples){
+  const n=samples.length;
+  for(let i=0;i<n;i++){
+    const a=samples[i],b=samples[(i+1)%n];
+    for(let j=i+2;j<n;j++){
+      if(i===0&&j===n-1)continue;
+      if(Math.abs(i-j)<=1)continue;
+      const c=samples[j],d=samples[(j+1)%n];
+      if(segmentsIntersect(a,b,c,d))return true;
+    }
+  }
+  return false;
 }
 function trackGeometry(t=track()){
   if(TRACK_GEOMETRY.has(t.id))return TRACK_GEOMETRY.get(t.id);
-  const controls=t.points||[],samples=[],steps=t.curve?10:6,n=controls.length;
-  for(let i=0;i<n;i++){
-    const p0=controls[(i-1+n)%n],p1=controls[i],p2=controls[(i+1)%n],p3=controls[(i+2)%n];
-    for(let k=0;k<steps;k++){
-      const u=k/steps;
-      samples.push(t.curve?catmullPoint(p0,p1,p2,p3,u):{x:p1[0]+(p2[0]-p1[0])*u,y:p1[1]+(p2[1]-p1[1])*u});
-    }
+  let samples=chaikinClosed(t.points,t.smooth??3);
+  if(courseHasCrossings(samples)){
+    console.warn('Track geometry crossed itself; using safer single smoothing pass',t.id);
+    samples=chaikinClosed(t.points,1);
   }
   const segs=[],cumulative=[0];let total=0;
   for(let i=0;i<samples.length;i++){
@@ -155,9 +176,15 @@ function trackGeometry(t=track()){
     total+=len;cumulative.push(total);
   }
   const half=t.width/2;
-  const left=samples.map((p,i)=>{const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;return{x:p.x+nx*half,y:p.y+ny*half}});
-  const right=samples.map((p,i)=>{const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;return{x:p.x-nx*half,y:p.y-ny*half}});
-  const g={samples,segs,cumulative,total,left,right};
+  const left=samples.map((p,i)=>{
+    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
+    return{x:p.x+nx*half,y:p.y+ny*half};
+  });
+  const right=samples.map((p,i)=>{
+    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
+    return{x:p.x-nx*half,y:p.y-ny*half};
+  });
+  const g={samples,segs,cumulative,total,left,right,selfCrossing:courseHasCrossings(samples)};
   TRACK_GEOMETRY.set(t.id,g);return g;
 }
 function pointAtProgress(progress,t=track()){
