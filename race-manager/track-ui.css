@@ -465,19 +465,43 @@ body.gridline-racing-live .mainView{
   width:179.499px;
   height:57.021px;
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
   color:#fff;
-  font:900 15px/1.05 Arial,sans-serif;
   text-shadow:0 1px 3px rgba(0,0,0,.68);
   pointer-events:none;
 }
-#raceScreen .raceEventQuestion small{
+#raceScreen .raceEventQuestionCopy{
+  width:100%;
+  max-width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  margin:0;
+  padding:0;
+  font:900 15px/1.02 Arial,sans-serif;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+#raceScreen .raceEventQuestionCopy strong,
+#raceScreen .raceEventQuestionCopy small{
   display:block;
-  margin-top:4px;
+  width:100%;
+  max-width:100%;
+  margin:0;
+  padding:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+#raceScreen .raceEventQuestionCopy strong{font-size:1em;line-height:1.02}
+#raceScreen .raceEventQuestionCopy small{
   color:#dcecff;
-  font:700 8px/1.08 Arial,sans-serif;
+  font-size:.55em;
+  line-height:1.05;
+  font-weight:700;
 }
 #raceScreen .raceEventChoices{position:absolute;inset:0;pointer-events:none}
 #raceScreen .raceEventChoices button{
@@ -485,13 +509,18 @@ body.gridline-racing-live .mainView{
   top:217.485px;
   width:91.525px;
   height:21.294px;
-  padding:0;
+  margin:0;
+  padding:0 2px;
   border:0;
   background:transparent;
   color:#fff;
-  font:900 15px/1 Arial,sans-serif;
+  font:900 15px/1.02 Arial,sans-serif;
   text-align:center;
   text-shadow:0 1px 3px rgba(0,0,0,.7);
+  white-space:normal;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  word-break:normal;
   pointer-events:auto;
   touch-action:manipulation;
 }
@@ -731,12 +760,13 @@ body.gridline-racing-live .mainView{
   .carChoice small{font-size:7px}
 }
 
-/* Live race leaderboard. It appears as cars finish, while the race continues behind it. */
+/* Live race leaderboard. Full-width popup and text geometry from the supplied layout JSON. */
 #raceScreen .raceLeaderboard{
   position:absolute;
   inset:0;
   z-index:70;
   pointer-events:none;
+  font-family:Arial,sans-serif;
 }
 #raceScreen .raceLeaderboard.hidden{display:none!important}
 #raceScreen .raceLeaderboard::before{
@@ -748,34 +778,30 @@ body.gridline-racing-live .mainView{
 }
 #raceScreen .raceLeaderboardFrame{
   position:absolute;
-  left:15px;
-  top:96px;
-  width:360px;
-  height:640px;
+  left:0;
+  top:75.517px;
+  width:390px;
+  height:692.965px;
 }
 #raceScreen .raceLeaderboardAsset{
   position:absolute;
   inset:0;
-  width:100%;
-  height:100%;
-  object-fit:fill;
+  width:390px;
+  height:692.965px;
+  object-fit:contain;
   filter:url(#gridlineGreenKey) drop-shadow(0 8px 18px rgba(0,0,0,.48));
 }
 #raceScreen .raceLeaderboardRows{
   position:absolute;
-  left:80px;
-  top:92px;
-  width:252px;
-  height:473px;
-  display:grid;
-  grid-template-rows:repeat(12,39.42px);
+  inset:0;
+  width:390px;
+  height:844px;
 }
 #raceScreen .raceLeaderboardRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 88px;
-  align-items:center;
-  gap:4px;
-  min-width:0;
+  position:absolute;
+  inset:0;
+  width:390px;
+  height:844px;
   color:#eef8ff;
   text-shadow:0 1px 2px rgba(0,0,0,.9);
   opacity:.72;
@@ -786,33 +812,39 @@ body.gridline-racing-live .mainView{
   text-shadow:0 0 5px rgba(247,189,24,.8),0 1px 2px rgba(0,0,0,.9);
 }
 #raceScreen .raceLeaderboardName{
+  position:absolute;
+  left:101.941px;
+  width:159.559px;
+  height:31.262px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
   min-width:0;
+  margin:0;
+  padding:0;
   overflow:hidden;
-  text-overflow:ellipsis;
   white-space:nowrap;
-  font:900 11px/1 Arial,sans-serif;
+  text-overflow:ellipsis;
+  font:900 15px/1 Arial,sans-serif;
+  text-align:left;
 }
 #raceScreen .raceLeaderboardColour{
+  position:absolute;
+  left:281.896px;
+  width:64.486px;
+  height:26.956px;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:4px;
   min-width:0;
+  margin:0;
+  padding:0;
+  overflow:hidden;
   white-space:nowrap;
-  font:900 8px/1 Arial,sans-serif;
+  font:900 12px/1 Arial,sans-serif;
+  text-align:center;
   text-transform:uppercase;
-  letter-spacing:.02em;
-}
-#raceScreen .raceLeaderboardColour i{
-  width:9px;
-  height:14px;
-  flex:0 0 auto;
-  display:block;
-  background-image:var(--car-swatch);
-  background-position:center;
-  background-size:contain;
-  background-repeat:no-repeat;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.6));
+  letter-spacing:0;
 }
 
 /* The result/claim popup intentionally sits above the leaderboard. */
