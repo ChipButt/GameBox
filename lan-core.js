@@ -169,12 +169,12 @@
 
     async _ensureRoom(){
       if(this.room)return;
-      this.status('Finding local games');
-      const [{joinRoom,selfId},networkKey]=await Promise.all([loadTrystero(),discoverNetworkKey()]);
+      this.status('Finding games');
+      const {joinRoom,selfId}=await loadTrystero();
       if(this.closed)throw new Error('Session closed');
       this.selfId=selfId;
-      const roomId=`network-${networkKey}`;
-      this.room=joinRoom({appId:'chip-in-gamebox-gridline-auto-v1'},roomId);
+      const roomId='gridline-public-lobby-v2';
+      this.room=joinRoom({appId:'chip-in-gamebox-gridline-auto-v2'},roomId);
       this.actions.ad=this.room.makeAction(`${this.game}-host-ad`);
       this.actions.join=this.room.makeAction(`${this.game}-join`);
       this.actions.accept=this.room.makeAction(`${this.game}-accept`);
@@ -239,7 +239,12 @@
       };
 
       this.room.onPeerJoin=peerId=>{
-        if(this.role==='host')this._advertise(peerId);
+        if(this.role==='host'){
+          this.status('Host visible');
+          this._advertise(peerId);
+        }else if(this.role==='client'){
+          this.status('Scanning');
+        }
       };
 
       this.room.onPeerLeave=peerId=>{
@@ -294,7 +299,7 @@
       this.role='host';
       this.hostMeta={...meta,started:false};
       await this._ensureRoom();
-      this.status('Hosting automatically');
+      this.status('Host visible');
       this._advertise();
       clearInterval(this.adTimer);
       this.adTimer=setInterval(()=>this._advertise(),2200);
