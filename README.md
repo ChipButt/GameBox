@@ -38,7 +38,7 @@ A mobile-first browser games hub from **Chip In Games**.
 - Drag-to-flick controls with free-look before a shot, a second flick available only while the first flick is still moving, and a movement-charged Turbo meter; Turbo activates only when full, is held during motion, can be released early, and then recharges from the remaining level
 - Disc-to-disc collisions plus normal-based curved wall rebounds
 - Checkpoint-based laps to prevent shortcut finishes
-- Six original long-form tracks with genuinely different course geometry; track-selection mini-maps are generated from the same paths used by rendering, rails, collisions and lap progress
+- Six original long-form tracks with genuinely different, non-crossing course geometry; corners use non-overshooting smoothing, and track-selection mini-maps are generated from the same paths used by rendering, rails, collisions and lap progress
 
 ### Gridline Racing
 - Mobile-first racing team management game
