@@ -595,20 +595,26 @@ function playerPosition(player){
 function renderHudOnly(){
   if(!game)return;
   const p=activePlayer(),yourShot=localCanShoot(),yourFinish=localCanFinish(),phase=game.phase||'aim';
-  $('turnText').textContent=game.winner?`${game.winner.name} wins!`:p?`${p.name}${(yourShot||yourFinish)?' — your turn':''}`:'—';
+  const turboCharge=clamp(Number(p?.turboCharge)||0,0,1),canTurbo=localCanTurbo();
+  $('turnText').textContent=game.winner?`${game.winner.name} wins!`:p?`${p.name}${(yourShot||yourFinish||canTurbo)?' — your turn':''}`:'—';
   $('turnHint').textContent=game.winner?'Race complete':
-    animating||phase==='moving'?'Disc moving…':
+    phase==='moving'?(p?.turboHeld?'Turbo boosting — release to save charge':canTurbo?'Disc moving — hold Turbo to boost':'Disc moving…'):
     phase==='settled'?(yourFinish?'Review the result, then Finish Turn':`Waiting for ${p?.name||'player'} to finish turn`):
-    yourShot?'Drag upward from your disc to flick':`Waiting for ${p?.name||'player'}`;
-  $('turnBanner').classList.toggle('yours',(yourShot||yourFinish)&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
-  $('turboState').textContent=p?.turbo>0?(turboArmed?'ARMED':'Ready'):'Used this lap';
-  $('turboButton').disabled=!yourShot||animating||!!game.winner||!(p?.turbo>0);$('turboButton').classList.toggle('active',turboArmed);
+    yourShot?'Drag anywhere to look around · drag from your disc to flick':`Waiting for ${p?.name||'player'}`;
+  $('turnBanner').classList.toggle('yours',(yourShot||yourFinish||canTurbo)&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
+
+  $('turboFill').style.height=`${Math.round(turboCharge*100)}%`;
+  $('turboState').textContent=p?.turboHeld?'BOOSTING':p?.turboReady?'READY — HOLD':`CHARGING ${Math.round(turboCharge*100)}%`;
+  $('turboButton').disabled=!canTurbo;
+  $('turboButton').classList.toggle('ready',!!p?.turboReady&&!p?.turboHeld);
+  $('turboButton').classList.toggle('active',!!p?.turboHeld);
+
   $('finishTurnButton').disabled=!yourFinish;
   if($('hudPlayerName'))$('hudPlayerName').textContent=p?.name||'—';
   if($('hudDisc'))$('hudDisc').style.background=p?.color||'#0b82dd';
   if($('hudPosition'))$('hudPosition').textContent=p?ordinal(playerPosition(p)):'—';
   if($('hudLap'))$('hudLap').textContent=p?`${Math.min(p.lap+1,game.laps)}/${game.laps}`:'—';
-  $('scoreboard').innerHTML=game.players.map((x,i)=>`<div class="scoreRow${i===game.current&&!game.winner?' active':''}"><div class="scoreIdentity"><span class="scoreDot" style="background:${x.color}"></span><strong>${esc(x.name)}</strong></div><small>${x.finished?'FINISHED':`Lap ${Math.min(x.lap+1,game.laps)} / ${game.laps}`} · ${ordinal(playerPosition(x))}</small></div>`).join('');
+  $('scoreboard').innerHTML=game.players.map((x,i)=>`<div class="scoreRow${i===game.current&&!game.winner?' active':''}"><div class="scoreIdentity"><span class="scoreDot" style="background:${x.color}"></span><strong>${esc(x.name)}</strong></div><small>${x.finished?'FINISHED':`Lap ${Math.min(x.lap+1,game.laps)} / ${game.laps}`} · ${ordinal(playerPosition(x))} · Turbo ${Math.round((x.turboCharge||0)*100)}%</small></div>`).join('');
 }
 function renderRace(){
   if(!game)return;
@@ -688,12 +694,21 @@ function broadcastLobby(){if(role==='host')session?.broadcast({type:'lobby',play
 function networkMessage(msg,source){
   if(role==='host'){
     if(msg.type==='hello'&&source.peer){source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;broadcastLobby();return}
-    if(msg.type==='flick'){const p=activePlayer();if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)startAuthoritativeFlick(p.id,Number(msg.vx)||0,Number(msg.vy)||0,!!msg.useTurbo);return}
+    if(msg.type==='flick'){const p=activePlayer();if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)startAuthoritativeFlick(p.id,Number(msg.vx)||0,Number(msg.vy)||0);return}
+    if(msg.type==='turbo-hold'){
+      const p=activePlayer();
+      if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id){
+        const changed=applyTurboHeld(p.id,!!msg.held);
+        if(changed)session?.broadcast({type:'turbo-hold',playerId:p.id,held:!!msg.held});
+      }
+      return;
+    }
     if(msg.type==='finish-turn'){const p=activePlayer();if(p&&game?.phase==='settled'&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)completeTurn();return}
   }else{
     if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];selectedTrack=msg.trackId||selectedTrack;selectedLaps=Number(msg.laps)||2;renderLobby('joinLobby',connectedLobby);return}
     if(msg.type==='start'&&msg.state){mode='multi';applySnapshot(msg.state);return}
     if(msg.type==='flick-start'){playRemoteFlick(msg);return}
+    if(msg.type==='turbo-hold'){applyTurboHeld(String(msg.playerId||''),!!msg.held);return}
     if(msg.type==='state'){if(animating)pendingSnapshot=msg.state;else applySnapshot(msg.state);return}
   }
 }
@@ -708,7 +723,7 @@ function startLocalRace(){
   selectedLaps=Number($('localLaps').value)||2;mode='local';role=null;localPlayerId='';game=buildRace(players,selectedLaps);renderRace();showView('raceView');
 }
 function leaveRace(){
-  resetSession();game=null;drag=null;animating=false;turboArmed=false;mode='local';role=null;controlFeedback(0,0,0);renderPlayerPicks();renderTrackSummary();showView('modeView');
+  resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;resetLook();mode='local';role=null;renderPlayerPicks();renderTrackSummary();showView('modeView');
 }
 function bind(){
   renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();
@@ -751,12 +766,19 @@ function bind(){
   $('startHost').onclick=startHostRace;
   $('exitRace').onclick=leaveRace;
   $('finishTurnButton').onclick=requestFinishTurn;
-  $('turboButton').onclick=()=>{if(localCanShoot()&&activePlayer()?.turbo>0){turboArmed=!turboArmed;renderRace()}};
+  const turboButton=$('turboButton');
+  turboButton.addEventListener('pointerdown',e=>{
+    e.preventDefault();turboButton.setPointerCapture?.(e.pointerId);requestTurboHeld(true);
+  });
+  const releaseTurbo=e=>{e?.preventDefault?.();requestTurboHeld(false)};
+  turboButton.addEventListener('pointerup',releaseTurbo);
+  turboButton.addEventListener('pointercancel',releaseTurbo);
+  turboButton.addEventListener('lostpointercapture',()=>{if(turboHolding)requestTurboHeld(false)});
 
   canvas.addEventListener('pointerdown',onPointerDown);
   canvas.addEventListener('pointermove',onPointerMove);
   canvas.addEventListener('pointerup',onPointerUp);
-  canvas.addEventListener('pointercancel',()=>{drag=null;controlFeedback(0,0,0);draw()});
+  canvas.addEventListener('pointercancel',()=>{drag=null;lookDrag=null;draw()});
 
   document.addEventListener('click',e=>{
     const host=e.target.closest('[data-host]');if(host){joinHost(host.dataset.host);return}
