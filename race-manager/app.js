@@ -1640,10 +1640,8 @@
       selectedCarColor='';
       multiplayerStage='lobby';
       raceSetup.mode='quick';
-      showSetup('multiSetup');
+      showSetup('wifiRole');
     };
-    $('chooseWifi').onclick=()=>showSetup('wifiRole');
-    $('chooseBluetooth').onclick=()=>{$('bluetoothNote').classList.remove('hidden')};
     $('chooseHost').onclick=()=>{
       resetNetworkSession(false);
       playMode='multi';
