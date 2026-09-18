@@ -24,3 +24,132 @@
 @media(max-width:560px){
   .gridlineHomeLogo{height:60px}
 }
+
+
+/* Toy-box home: each game is presented as a boxed tabletop game viewed from above. */
+.toyBox{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+  padding:24px 20px 30px;
+  border:8px solid #9a6838;
+  border-radius:30px;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 42px),
+    linear-gradient(180deg,#173e70,#0d2f5d);
+  box-shadow:
+    inset 0 0 0 3px rgba(255,230,187,.22),
+    inset 0 18px 25px rgba(0,0,0,.16),
+    0 16px 32px rgba(8,47,104,.14);
+  overflow:visible;
+}
+.toyBox::before{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  pointer-events:none;
+  border-radius:30px;
+  box-shadow:inset 0 0 0 2px rgba(72,38,13,.28);
+}
+.toyBox .toyGame{min-width:0;transform-origin:center}
+.toyBox .toyGame:nth-child(1){transform:rotate(-2.1deg)}
+.toyBox .toyGame:nth-child(2){transform:rotate(1.6deg)}
+.toyBox .toyGame:nth-child(3){transform:rotate(1deg)}
+.toyBox .toyGame:nth-child(4){transform:rotate(-1.4deg)}
+.toyBox .toyGame:nth-child(5){grid-column:1/-1;transform:rotate(.6deg);width:76%;justify-self:center}
+.toyBox .gameGrid{display:block}
+.toyBox .gameTile{
+  position:relative;
+  width:100%;
+  min-height:148px;
+  padding:18px 14px 16px;
+  overflow:hidden;
+  border:3px solid rgba(255,255,255,.78);
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  text-align:center;
+  text-decoration:none;
+  color:#fff;
+  box-shadow:
+    0 8px 0 rgba(2,14,35,.52),
+    0 14px 22px rgba(0,0,0,.26),
+    inset 0 0 0 2px rgba(0,0,0,.12),
+    inset 0 16px 28px rgba(255,255,255,.12);
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.toyBox .gameTile::before{
+  content:"";
+  position:absolute;
+  inset:7px;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:7px;
+  pointer-events:none;
+}
+.toyBox .gameTile::after{
+  content:"";
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:8px;
+  height:4px;
+  border-radius:999px;
+  background:rgba(0,0,0,.2);
+  pointer-events:none;
+}
+.toyBox .gameTile:active{
+  transform:translateY(5px) scale(.99);
+  box-shadow:0 3px 0 rgba(2,14,35,.5),0 7px 12px rgba(0,0,0,.22),inset 0 0 0 2px rgba(0,0,0,.12);
+}
+.toyBox .gameTileIcon{
+  width:62px;
+  height:62px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:43px;
+  line-height:1;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
+}
+.toyBox .gameTile strong{
+  position:relative;
+  z-index:1;
+  margin:0;
+  font-size:20px;
+  line-height:1;
+  color:#fff;
+  text-shadow:0 2px 2px rgba(0,0,0,.35);
+}
+.toyBox .gameTile small{
+  position:relative;
+  z-index:1;
+  display:block;
+  margin-top:1px;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.18em;
+  color:rgba(255,255,255,.82);
+}
+.toyGameCards .gameTile{background:linear-gradient(145deg,#214f91,#092e68)}
+.toyGameCards .gameTileIcon{color:#082f68}
+.toyGameCoins .gameTile{background:linear-gradient(145deg,#d4a318,#8c6100)}
+.toyGameHeads .gameTile{background:linear-gradient(145deg,#dd6931,#9f351c)}
+.toyGameDisc .gameTile{background:linear-gradient(145deg,#1c90b7,#07517e)}
+.toyGameGridline .gameTile{background:linear-gradient(145deg,#edf6ff,#b8d3ef);border-color:#fff}
+.toyBox .gridlineHomeTile{min-height:156px}
+.toyBox .gridlineHomeLogo{width:min(100%,270px);height:92px;position:relative;z-index:1}
+.toyGameGridline .gameTile small{color:#082f68;text-shadow:none}
+@media(max-width:560px){
+  .toyBox{gap:16px;padding:21px 15px 27px;border-width:7px}
+  .toyBox .gameTile{min-height:132px;padding:15px 10px 14px}
+  .toyBox .gameTileIcon{width:56px;height:56px;font-size:39px}
+  .toyBox .gameTile strong{font-size:18px}
+  .toyBox .toyGame:nth-child(5){width:88%}
+  .toyBox .gridlineHomeTile{min-height:140px}
+  .toyBox .gridlineHomeLogo{height:78px}
+}
