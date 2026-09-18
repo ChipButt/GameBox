@@ -162,6 +162,17 @@ function courseHasCrossings(samples){
   }
   return false;
 }
+function buildTrackRails(samples,half){
+  const left=samples.map((p,i)=>{
+    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
+    return{x:p.x+nx*half,y:p.y+ny*half};
+  });
+  const right=samples.map((p,i)=>{
+    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
+    return{x:p.x-nx*half,y:p.y-ny*half};
+  });
+  return{left,right};
+}
 function trackGeometry(t=track()){
   if(TRACK_GEOMETRY.has(t.id))return TRACK_GEOMETRY.get(t.id);
   let samples=chaikinClosed(t.points,t.smooth??3);
@@ -175,23 +186,34 @@ function trackGeometry(t=track()){
     segs.push({a,b,dx,dy,len,tx:dx/len,ty:dy/len});
     total+=len;cumulative.push(total);
   }
-  const half=t.width/2;
-  const left=samples.map((p,i)=>{
-    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
-    return{x:p.x+nx*half,y:p.y+ny*half};
-  });
-  const right=samples.map((p,i)=>{
-    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
-    return{x:p.x-nx*half,y:p.y-ny*half};
-  });
-  const g={samples,segs,cumulative,total,left,right,selfCrossing:courseHasCrossings(samples)};
+
+  // Validate the actual rail edges as well as the centreline. Tight inside bends
+  // can make an offset rail self-intersect even when the centreline itself is clean.
+  let half=t.width/2,{left,right}=buildTrackRails(samples,half);
+  const minHalf=DISC_R*2+7;
+  while(half>minHalf&&(courseHasCrossings(left)||courseHasCrossings(right))){
+    half-=2;
+    ({left,right}=buildTrackRails(samples,half));
+  }
+  if(courseHasCrossings(left)||courseHasCrossings(right)){
+    console.warn('Rail geometry still too tight',t.id);
+  }
+
+  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing:courseHasCrossings(left)||courseHasCrossings(right)};
   TRACK_GEOMETRY.set(t.id,g);return g;
 }
-function pointAtProgress(progress,t=track()){
+function rawPointAtProgress(progress,t=track()){
   const g=trackGeometry(t),p=((progress%1)+1)%1,target=p*g.total;
   let i=0;while(i<g.segs.length-1&&g.cumulative[i+1]<target)i++;
-  const seg=g.segs[i],within=(target-g.cumulative[i])/seg.len,x=seg.a.x+seg.dx*within,y=seg.a.y+seg.dy*within;
-  return{x,y,tx:seg.tx,ty:seg.ty,nx:-seg.ty,ny:seg.tx,progress:p,index:i};
+  const seg=g.segs[i],within=(target-g.cumulative[i])/seg.len;
+  return{x:seg.a.x+seg.dx*within,y:seg.a.y+seg.dy*within,progress:p,index:i};
+}
+function pointAtProgress(progress,t=track()){
+  const g=trackGeometry(t),p=rawPointAtProgress(progress,t),look=Math.max(.004,Math.min(.012,34/g.total));
+  const before=rawPointAtProgress(progress-look,t),after=rawPointAtProgress(progress+look,t);
+  let dx=after.x-before.x,dy=after.y-before.y,m=Math.hypot(dx,dy)||1;
+  dx/=m;dy/=m;
+  return{...p,tx:dx,ty:dy,nx:-dy,ny:dx};
 }
 function nearestTrackPoint(x,y,t=track()){
   const g=trackGeometry(t);let best=null,bestD2=Infinity;
@@ -200,11 +222,13 @@ function nearestTrackPoint(x,y,t=track()){
     const qx=s.a.x+s.dx*u,qy=s.a.y+s.dy*u,dx=x-qx,dy=y-qy,d2=dx*dx+dy*dy;
     if(d2<bestD2){
       bestD2=d2;
-      best={x:qx,y:qy,distance:Math.sqrt(d2),tx:s.tx,ty:s.ty,nx:-s.ty,ny:s.tx,progress:(g.cumulative[i]+s.len*u)/g.total,index:i};
+      best={x:qx,y:qy,distance:Math.sqrt(d2),progress:(g.cumulative[i]+s.len*u)/g.total,index:i};
     }
   }
-  return best;
+  const frame=pointAtProgress(best.progress,t);
+  return{...best,tx:frame.tx,ty:frame.ty,nx:frame.nx,ny:frame.ny};
 }
+
 function miniMapPath(t){
   const g=trackGeometry(t),pts=g.samples;
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
@@ -215,7 +239,7 @@ function miniMapPath(t){
   return out.length?`M${out.join(' L')} Z`:'';
 }
 function finishLine(t=track()){
-  const p=pointAtProgress(0,t),half=t.width/2-4,thickness=24;
+  const p=pointAtProgress(0,t),half=trackGeometry(t).halfWidth-4,thickness=24;
   return{...p,half,thickness};
 }
 function featureAt(spec,t=track()){
@@ -284,7 +308,7 @@ function nextTurn(){
   game.turn++;game.flicksUsed=0;game.turnEndsAt=0;
 }
 
-function roadContains(x,y){return nearestTrackPoint(x,y).distance<=track().width/2}
+function roadContains(x,y){return nearestTrackPoint(x,y).distance<=trackGeometry().halfWidth}
 
 function cameraForView(){
   const p=activePlayer()||pointAtProgress(.025),nearest=nearestTrackPoint(p.x,p.y);
@@ -508,7 +532,7 @@ function processCheckpoints(previous=[]){
 }
 
 function roadClearContains(x,y){
-  return nearestTrackPoint(x,y).distance<=track().width/2-DISC_R;
+  return nearestTrackPoint(x,y).distance<=trackGeometry().halfWidth-DISC_R;
 }
 function applyWalls(p){
   const sx=p.vx*.5,sy=p.vy*.5,target={x:p.x+sx,y:p.y+sy};
