@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#eefaf5">
 <title>GameBox · Chip In Games</title>
 <link rel="stylesheet" href="gamebox-v3.css?v=1">
-<link rel="stylesheet" href="chipin-gamebox.css?v=2">
+<link rel="stylesheet" href="chipin-gamebox.css?v=3">
 </head>
 <body>
 <main class="app">
@@ -18,10 +18,10 @@
       <div id="homePlayers" class="homePlayers"></div>
     </section>
     <div class="gameSections">
-      <section><div class="sectionLabel">Card Games</div><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>Card Deck</strong></button></div></section>
-      <section><div class="sectionLabel">Quick Games</div><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
-      <section><div class="sectionLabel">Party Games</div><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
-      <section><div class="sectionLabel">Racing Games</div><div class="gameGrid"><a class="gameTile" href="race-manager/index.html"><span class="gameTileIcon">🏎️</span><strong>Gridline Racing</strong></a></div></section>
+      <section><div class="gameGrid"><button class="gameTile" data-go="cards-setup"><span class="gameTileIcon">🂠</span><strong>Card Deck</strong></button></div></section>
+      <section><div class="gameGrid"><button class="gameTile" data-go="coins-setup"><span class="gameTileIcon">🪙</span><strong>Coin Flip</strong></button></div></section>
+      <section><div class="gameGrid"><a class="gameTile" href="heads.html"><span class="gameTileIcon">🤔</span><strong>Heads Up</strong></a></div></section>
+      <section><div class="gameGrid"><a class="gameTile gridlineHomeTile" href="race-manager/index.html" aria-label="Gridline Racing"><img class="gridlineHomeLogo" src="race-manager/assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing"></a></div></section>
     </div>
   </section>
 
@@ -77,7 +77,7 @@
   </section>
 </main>
 <script src="lan-core.js?v=1"></script>
-<script src="gamebox-v4.js?v=1"></script>
+<script src="gamebox-v4.js?v=2"></script>
 <script>
   document.querySelectorAll('.lanPanel h3').forEach(function(el){
     if(el.textContent.indexOf('House Rules')!==-1)el.textContent=el.textContent.replace('House Rules','Card Deck');
