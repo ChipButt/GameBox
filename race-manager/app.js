@@ -331,13 +331,19 @@
 
     const template=RACE_EVENTS[Math.floor(Math.random()*RACE_EVENTS.length)];
     const eventId=uid().slice(0,8);
+    let choices=[...template.choices];
+    let correct=template.correct;
+    if(Math.random()<.5){
+      choices=choices.reverse();
+      correct=1-correct;
+    }
     e.eventCount=finite(e.eventCount,0)+1;
     e.activeEvent={
       id:eventId,
       title:template.title,
       prompt:template.prompt,
-      choices:[...template.choices],
-      correct:template.correct,
+      choices,
+      correct,
       boost:{...template.boost},
       duration:template.duration,
       expiresTick:game.tick+15
