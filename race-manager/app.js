@@ -86,6 +86,32 @@
   }
   prewarmUpgradeArtwork();
 
+  const menuArtworkCache=[];
+  function prewarmMenuArtwork(){
+    const paths=[
+      '../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png',
+      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_single_player_card.png',
+      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_multiplayer_card.png',
+      '../Gridline_Menu_Asset_Pack/race_type/race_type_quick_race_card.png',
+      '../Gridline_Menu_Asset_Pack/race_type/race_type_tournament_card.png',
+      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png',
+      `${ASSET_ROOT}/ui/logo/gridline_racing_logo.png`,
+      `${ASSET_ROOT}/ui/controls/back.png`,
+      `${ASSET_ROOT}/ui/controls/settings.png`,
+      `${ASSET_ROOT}/ui/controls/race_now.png`,
+      ...CAR_ROSTER.map(car=>`${ASSET_ROOT}/cars/${car.asset}`),
+      ...TRACKS.map(track=>`${ASSET_ROOT}/tracks/${track.asset}`)
+    ];
+    for(const src of paths){
+      const img=new Image();
+      img.decoding='async';
+      img.src=src;
+      menuArtworkCache.push(img);
+      if(typeof img.decode==='function')img.decode().catch(()=>{});
+    }
+  }
+  prewarmMenuArtwork();
+
   const $=id=>document.getElementById(id);
   const $$=sel=>Array.from(document.querySelectorAll(sel));
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -169,16 +195,33 @@
     document.documentElement.style.setProperty('--menu-scale',String(scale));
   }
 
+  function closeTrackStartPopup(){
+    const popup=$('trackStartPopup');
+    if(!popup)return;
+    popup.classList.add('hidden');
+    popup.classList.remove('showing');
+  }
+
+  function openTrackStartPopup(){
+    const popup=$('trackStartPopup');
+    if(!popup)return;
+    updateTrackStartButton();
+    popup.classList.remove('hidden','showing');
+    void popup.offsetWidth;
+    popup.classList.add('showing');
+  }
+
   function showSetup(id){
+    closeTrackStartPopup();
     Array.from(document.querySelectorAll('.setupView')).forEach(v=>v.classList.toggle('hidden',v.id!==id));
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     const menuMode=['setupHome','raceFormatSetup','carSetup','trackSetup'].includes(id);
     document.body.classList.toggle('gridline-menu-live',menuMode);
     if(menuMode)updateMenuScale();
-    window.scrollTo({top:0,behavior:'smooth'});
+    window.scrollTo(0,0);
     if(id==='raceFormatSetup')renderRaceSetup();
-    if(id==='carSetup')renderCarChoices('flow');
+    if(id==='carSetup'&&!$('flowCarChoices')?.children.length)renderCarChoices('flow');
     if(id==='trackSetup'){
       renderRaceSetup();
       renderSinglePlayers();
@@ -189,11 +232,12 @@
   }
 
   function showRace(){
-    $$('.setupView').forEach(v=>v.classList.add('hidden'));
+    closeTrackStartPopup();
+    $('.setupView').forEach(v=>v.classList.add('hidden'));
     document.body.classList.remove('gridline-menu-live');
     $('raceScreen').classList.remove('hidden');
     $('exitRace').classList.remove('hidden');
-    window.scrollTo({top:0,behavior:'smooth'});
+    window.scrollTo(0,0);
   }
 
   function renderSinglePlayers(){
@@ -217,6 +261,12 @@
   function renderCarChoices(prefix,lobbyPlayers=[]){
     const wrap=$(prefix+'CarChoices');
     if(!wrap)return;
+    if(prefix==='flow'&&wrap.children.length){
+      wrap.querySelectorAll('[data-car-color]').forEach(button=>{
+        button.classList.toggle('selected',button.dataset.carColor===selectedCarColor);
+      });
+      return;
+    }
 
     let taken=new Set();
     if(prefix==='host'&&session){
@@ -294,17 +344,24 @@
     if(flowValue)flowValue.textContent=`${raceSetup.races} races`;
 
     const flowTracks=$('flowTrackChoices');
-    if(flowTracks)flowTracks.innerHTML=TRACKS.map((track,index)=>{
-      const slot=TRACK_MENU_SLOTS[index]||TRACK_MENU_SLOTS[0];
-      return `
-        <button class="trackChoice ${index===config.trackIndex?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-track-index="${index}" type="button" aria-label="${esc(track.name)}">
-          <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
-          <img class="trackChoiceImage" src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
-          <strong class="trackChoiceName">${esc(track.name.toUpperCase())}</strong>
-          <span class="trackChooseText">CHOOSE</span>
-        </button>
-      `;
-    }).join('');
+    if(flowTracks){
+      if(!flowTracks.children.length){
+        flowTracks.innerHTML=TRACKS.map((track,index)=>{
+          const slot=TRACK_MENU_SLOTS[index]||TRACK_MENU_SLOTS[0];
+          return `
+            <button class="trackChoice ${index===config.trackIndex?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-track-index="${index}" type="button" aria-label="${esc(track.name)}">
+              <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
+              <img class="trackChoiceImage" src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
+              <strong class="trackChoiceName">${esc(track.name.toUpperCase())}</strong>
+              <span class="trackChooseText">CHOOSE</span>
+            </button>
+          `;
+        }).join('');
+      }
+      flowTracks.querySelectorAll('[data-track-index]').forEach(button=>{
+        button.classList.toggle('selected',Number(button.dataset.trackIndex)===config.trackIndex);
+      });
+    }
 
     if(role==='host'&&session){
       const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
@@ -1493,6 +1550,12 @@
       if(trackChoice){
         raceSetup.trackIndex=clamp(Math.round(finite(trackChoice.dataset.trackIndex,0)),0,TRACKS.length-1);
         renderRaceSetup();
+        openTrackStartPopup();
+        return;
+      }
+      const closeTrackStart=e.target.closest('[data-close-track-start]');
+      if(closeTrackStart){
+        closeTrackStartPopup();
         return;
       }
       const exitSeries=e.target.closest('[data-exit-series]');
@@ -1542,6 +1605,8 @@
 
   syncPlayerSelects();
   renderSinglePlayers();
+  renderRaceSetup();
+  renderCarChoices('flow');
   bind();
   showSetup('setupHome');
 })();
