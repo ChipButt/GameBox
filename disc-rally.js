@@ -313,3 +313,93 @@ function installSession(kind){
   if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Multiplayer discovery is unavailable.');
   role=kind;
   session=new window.GameBoxLAN.DiscoverySession({
+    game:'disc-rally-v1',
+    onStatus:text=>{if(role==='host')$('hostStatus').textContent=text;if(role==='client')$('joinStatus').textContent=text},
+    onHostsChanged:hosts=>{lastHosts=hosts;renderHosts(hosts)},
+    onPeersChanged:()=>{
+      if(role==='host'){renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;updateHostAdvert();broadcastLobby()}
+    },
+    onMessage:networkMessage
+  });
+}
+function resetSession(){try{session?.close()}catch{}session=null;connectedLobby=[];lastHosts=[]}
+async function startHostDiscovery(){
+  try{
+    installSession('host');localPlayerId=$('hostPlayer').value;
+    const p=roster().find(x=>x.id===localPlayerId);selectedLaps=Number($('hostLaps').value)||2;
+    $('hostStatus').textContent='Starting…';
+    await session.startHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,raceMode:'disc-rally',trackName:track().name,totalRaces:selectedLaps});
+    renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;
+  }catch(err){console.error(err);$('hostStatus').textContent='Discovery error — tap Restart discovery';}
+}
+async function startScan(){
+  try{
+    installSession('client');localPlayerId=$('joinPlayer').value;$('joinStatus').textContent='Scanning';renderHosts([]);
+    await session.startScanner();
+  }catch(err){console.error(err);$('joinStatus').textContent='Discovery error';}
+}
+function renderHosts(hosts=[]){
+  if(role!=='client')return;
+  const wrap=$('availableHosts');if(session?.peers?.().length){wrap.innerHTML='<div class="scanning"><strong>Connected ✓</strong></div>';$('joinStatus').textContent='Connected';return}
+  const open=hosts.filter(h=>!h.started&&(h.raceMode||'')==='disc-rally'&&Number(h.playerCount||1)<Number(h.maxPlayers||4));
+  if(!open.length){wrap.innerHTML='<div class="scanning"><span class="scanPulse"></span><strong>Scanning for Disc Rally hosts…</strong></div>';$('joinStatus').textContent='Scanning';return}
+  $('joinStatus').textContent=`${open.length} found`;
+  wrap.innerHTML=open.map(h=>`<button class="hostCard" type="button" data-host="${esc(h.peerId)}"><div><strong>${esc(h.hostName||"Disc Rally")}</strong><small>${esc(h.trackName||'Track')} · ${Number(h.totalRaces)||2} laps · ${Number(h.playerCount)||1}/4 players</small></div><span>JOIN</span></button>`).join('');
+}
+async function joinHost(peerId){
+  const p=roster().find(x=>x.id===$('joinPlayer').value);if(!p)return;
+  localPlayerId=p.id;$('joinStatus').textContent='Joining…';
+  try{await session.joinHost(peerId,{player:p});session.sendToHost({type:'hello',player:p});$('joinStatus').textContent='Connected';renderHosts([])}
+  catch(err){console.error(err);$('joinStatus').textContent=err?.message||'Join failed';}
+}
+function broadcastLobby(){if(role==='host')session?.broadcast({type:'lobby',players:lobbyPlayers(),trackId:selectedTrack,laps:Number($('hostLaps').value)||2})}
+function networkMessage(msg,source){
+  if(role==='host'){
+    if(msg.type==='hello'&&source.peer){source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;broadcastLobby();return}
+    if(msg.type==='flick'){const p=activePlayer();if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)startAuthoritativeFlick(p.id,Number(msg.vx)||0,Number(msg.vy)||0,!!msg.useTurbo);return}
+  }else{
+    if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];selectedTrack=msg.trackId||selectedTrack;selectedLaps=Number(msg.laps)||2;renderLobby('joinLobby',connectedLobby);return}
+    if(msg.type==='start'&&msg.state){mode='multi';applySnapshot(msg.state);return}
+    if(msg.type==='flick-start'){playRemoteFlick(msg);return}
+    if(msg.type==='state'){if(animating)pendingSnapshot=msg.state;else applySnapshot(msg.state);return}
+  }
+}
+function startHostRace(){
+  const players=lobbyPlayers();if(players.length<2)return;
+  mode='multi';role='host';localPlayerId=$('hostPlayer').value;selectedLaps=Number($('hostLaps').value)||2;
+  game=buildRace(players,selectedLaps);session?.updateHost?.({started:true});session?.broadcast({type:'start',state:snapshot()});renderRace();showView('raceView');
+}
+function startLocalRace(){
+  const ids=selectedLocal();if(ids.length<2){$('localStatus').textContent='Choose at least 2 players.';return}
+  const map=new Map(roster().map(p=>[p.id,p]));const players=ids.map(id=>map.get(id)).filter(Boolean);
+  selectedLaps=Number($('localLaps').value)||2;mode='local';role=null;localPlayerId='';game=buildRace(players,selectedLaps);renderRace();showView('raceView');
+}
+function leaveRace(){
+  resetSession();game=null;drag=null;animating=false;turboArmed=false;mode='local';role=null;showView('modeView');
+}
+function bind(){
+  renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');
+  $('localMode').onclick=()=>showView('localSetup');$('multiMode').onclick=()=>showView('multiSetup');
+  $$('[data-back]').forEach(b=>b.onclick=()=>{if(currentView==='hostSetup'||currentView==='joinSetup')resetSession();showView(b.dataset.back)});
+  $('startLocal').onclick=startLocalRace;
+  $('hostMode').onclick=()=>{showView('hostSetup');syncPlayerSelects();renderTracks('hostTracks');startHostDiscovery()};
+  $('joinMode').onclick=()=>{showView('joinSetup');syncPlayerSelects();startScan()};
+  $('restartHostDiscovery').onclick=startHostDiscovery;$('restartScan').onclick=startScan;
+  $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
+  $('hostLaps').onchange=()=>{selectedLaps=Number($('hostLaps').value)||2;updateHostAdvert();broadcastLobby()};
+  $('joinPlayer').onchange=()=>{localPlayerId=$('joinPlayer').value;const p=roster().find(x=>x.id===localPlayerId);if(role==='client'&&session?.peers?.().length&&p)session.sendToHost({type:'hello',player:p})};
+  $('startHost').onclick=startHostRace;$('exitRace').onclick=leaveRace;
+  $('turboButton').onclick=()=>{if(localCanShoot()&&activePlayer()?.turbo>0){turboArmed=!turboArmed;renderRace()}};
+  canvas.addEventListener('pointerdown',onPointerDown);canvas.addEventListener('pointermove',onPointerMove);canvas.addEventListener('pointerup',onPointerUp);canvas.addEventListener('pointercancel',()=>{drag=null;$('powerFill').style.width='0%';draw()});
+  document.addEventListener('click',e=>{const host=e.target.closest('[data-host]');if(host)joinHost(host.dataset.host)});
+  const cleanup=()=>{try{session?.close()}catch{}};
+  window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup()});
+  window.addEventListener('pageshow',e=>{
+    if(!e.persisted||!session?.closed)return;
+    if(currentView==='hostSetup')startHostDiscovery();
+    if(currentView==='joinSetup')startScan();
+  });
+  drawTrack();
+}
+bind();
+})();
