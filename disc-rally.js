@@ -673,7 +673,7 @@ async function animatePhysics(){
         });
         processCheckpoints(before);steps++;
       }
-      draw();renderHudOnly();
+      draw();renderMotionHud();
       if(moving&&steps<STEPS_MAX)requestAnimationFrame(frame);else resolve();
     };
     requestAnimationFrame(frame);
@@ -825,6 +825,23 @@ function playerPosition(player){
   const ordered=[...game.players].sort((a,b)=>raceProgress(b)-raceProgress(a));
   return Math.max(1,ordered.findIndex(p=>p.id===player.id)+1);
 }
+function renderMotionHud(){
+  if(!game)return;
+  const p=activePlayer(),phase=game.phase||'aim';
+  const turboCharge=clamp(Number(p?.turboCharge)||0,0,1),canTurbo=localCanTurbo();
+  $('turboFill').style.height=`${Math.round(turboCharge*100)}%`;
+  $('turboState').textContent=p?.turboHeld?'BOOSTING':p?.turboReady?'READY — HOLD':`CHARGING ${Math.round(turboCharge*100)}%`;
+  $('turboButton').disabled=!canTurbo;
+  $('turboButton').classList.toggle('ready',!!p?.turboReady&&!p?.turboHeld);
+  $('turboButton').classList.toggle('active',!!p?.turboHeld);
+
+  const secondAvailable=game.flicksUsed<2&&(phase==='aim'||(phase==='moving'&&Math.hypot(p?.vx||0,p?.vy||0)>.18));
+  const secondUsed=game.flicksUsed>=2,second=$('secondFlickStatus');
+  second.classList.toggle('available',secondAvailable&&!secondUsed);
+  second.classList.toggle('used',secondUsed);
+  $('secondFlickText').textContent=secondUsed?'USED':phase==='settled'?'NOT USED':'AVAILABLE';
+}
+
 function renderHudOnly(){
   if(!game)return;
   const p=activePlayer(),yourShot=localCanShoot(),yourFinish=localCanFinish(),phase=game.phase||'aim';
