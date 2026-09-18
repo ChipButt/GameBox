@@ -980,6 +980,14 @@
     };
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
+    const gameboxBack=document.getElementById('gameboxBack');
+    if(gameboxBack)gameboxBack.onclick=e=>{
+      e.preventDefault();
+      clearInterval(hostTimer);
+      hostTimer=null;
+      resetNetworkSession();
+      window.location.href='../index.html';
+    };
 
     document.addEventListener('click',e=>{
       const autoHost=e.target.closest('[data-auto-host]');
@@ -1004,7 +1012,9 @@
       }
     });
 
-    window.addEventListener('beforeunload',()=>{try{session?.close()}catch{};clearInterval(hostTimer)});
+    const cleanupNetworking=()=>{try{session?.close()}catch{};clearInterval(hostTimer)};
+    window.addEventListener('beforeunload',cleanupNetworking);
+    window.addEventListener('pagehide',cleanupNetworking);
   }
 
   syncPlayerSelects();
