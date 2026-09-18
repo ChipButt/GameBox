@@ -371,3 +371,62 @@ body.gridline-menu-live .mainView{
 }
 .menuStartRaceButton:disabled{opacity:.42}
 .menuStartRaceButton:active{transform:scale(.985)}
+
+
+/* Hard-lock menu card artwork to the exact layout-editor dimensions.
+   These selectors intentionally override the older generic .carChoice img /
+   .trackChoice img rules and their mobile media-query sizes. */
+.carSelectionView .carChoice > img.menuSelectionCardAsset{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  width:105px!important;
+  height:148px!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  object-fit:contain!important;
+  filter:none!important;
+}
+.carSelectionView .carChoice > img.carChoiceSprite{
+  position:absolute!important;
+  left:20.76px!important;
+  top:14.637px!important;
+  width:63.481px!important;
+  height:78.183px!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  object-fit:contain!important;
+}
+
+.trackChoiceView .trackChoice > img.menuSelectionCardAsset{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  width:172px!important;
+  height:242px!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  object-fit:contain!important;
+  filter:none!important;
+}
+.trackChoiceView .trackChoice > img.trackChoiceImage{
+  position:absolute!important;
+  left:14.512px!important;
+  top:14.584px!important;
+  width:142.088px!important;
+  height:145.172px!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  object-fit:cover!important;
+}
