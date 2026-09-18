@@ -7,11 +7,11 @@ const LOCAL_PICK_KEY='gamebox.discrally.players.v1';
 const COLORS=['#f7bd18','#0a65c7','#d94f5c','#24a47f'];
 const TRACKS=[
   {id:'harbour',name:'Harbour Loop',desc:'Fast flowing corners',icon:'M12 52 C12 18 84 18 84 48 C84 75 52 82 32 68 C17 58 18 42 34 37',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[],boosts:[{x:665,y:488,w:120,h:34,a:0}],slow:[]},
-  {id:'bumper',name:'Bumper Beware',desc:'Rebound posts guard the line',icon:'M14 64 L14 24 L52 24 L52 44 L82 44 L82 72 L45 72 L45 55 L27 55',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[{x:820,y:180,r:26},{x:180,y:420,r:26}],boosts:[{x:440,y:72,w:120,h:34,a:0}],slow:[]},
-  {id:'goldrush',name:'Gold Rush',desc:'Boost pads and a slow patch',icon:'M12 60 C20 20 48 18 60 38 C72 58 80 28 88 20 M22 70 L78 70',inner:{x:270,y:170,w:460,h:260,r:105},bumpers:[{x:835,y:390,r:22}],boosts:[{x:640,y:486,w:130,h:34,a:0},{x:205,y:72,w:110,h:34,a:0}],slow:[{x:75,y:225,w:120,h:150}]},
-  {id:'switchback',name:'Switchback',desc:'Slalom through alternating posts',icon:'M15 25 L70 25 L70 45 L30 45 L30 68 L85 68',inner:{x:235,y:145,w:530,h:310,r:95},bumpers:[{x:790,y:205,r:23},{x:680,y:92,r:22},{x:315,y:92,r:22},{x:205,y:395,r:23}],boosts:[{x:635,y:490,w:105,h:32,a:0}],slow:[]},
-  {id:'roundabout',name:'Roundabout',desc:'Busy centre-line obstacles',icon:'M18 50 C18 20 82 20 82 50 C82 80 18 80 18 50 M40 50 C40 38 60 38 60 50 C60 62 40 62 40 50',inner:{x:285,y:175,w:430,h:250,r:125},bumpers:[{x:810,y:300,r:25},{x:500,y:85,r:24},{x:190,y:300,r:25},{x:500,y:515,r:24}],boosts:[],slow:[{x:445,y:55,w:110,h:70}]},
-  {id:'lightning',name:'Force Lightning',desc:'Long boosts reward commitment',icon:'M14 62 L35 23 L35 47 L60 47 L45 76 L86 28',inner:{x:245,y:155,w:510,h:290,r:135},bumpers:[{x:850,y:300,r:20}],boosts:[{x:620,y:485,w:150,h:34,a:0},{x:430,y:62,w:140,h:34,a:0},{x:92,y:245,w:34,h:115,a:0}],slow:[]}
+  {id:'bumper',name:'Bumper Beware',desc:'Rebound posts guard the line',icon:'M14 64 L14 24 L52 24 L52 44 L82 44 L82 72 L45 72 L45 55 L27 55',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[{x:812,y:190,r:15},{x:188,y:410,r:15}],boosts:[{x:440,y:72,w:120,h:34,a:0}],slow:[]},
+  {id:'goldrush',name:'Gold Rush',desc:'Boost pads and a slow patch',icon:'M12 60 C20 20 48 18 60 38 C72 58 80 28 88 20 M22 70 L78 70',inner:{x:270,y:170,w:460,h:260,r:105},bumpers:[{x:830,y:390,r:14}],boosts:[{x:640,y:486,w:130,h:34,a:0},{x:205,y:72,w:110,h:34,a:0}],slow:[{x:75,y:225,w:120,h:150}]},
+  {id:'switchback',name:'Switchback',desc:'Slalom through alternating posts',icon:'M15 25 L70 25 L70 45 L30 45 L30 68 L85 68',inner:{x:235,y:145,w:530,h:310,r:95},bumpers:[{x:798,y:215,r:14},{x:680,y:60,r:12},{x:315,y:120,r:12},{x:202,y:385,r:14}],boosts:[{x:635,y:490,w:105,h:32,a:0}],slow:[]},
+  {id:'roundabout',name:'Roundabout',desc:'Busy centre-line obstacles',icon:'M18 50 C18 20 82 20 82 50 C82 80 18 80 18 50 M40 50 C40 38 60 38 60 50 C60 62 40 62 40 50',inner:{x:285,y:175,w:430,h:250,r:125},bumpers:[{x:805,y:300,r:15},{x:500,y:66,r:13},{x:195,y:300,r:15},{x:500,y:534,r:13}],boosts:[],slow:[{x:445,y:55,w:110,h:70}]},
+  {id:'lightning',name:'Force Lightning',desc:'Long boosts reward commitment',icon:'M14 62 L35 23 L35 47 L60 47 L45 76 L86 28',inner:{x:245,y:155,w:510,h:290,r:135},bumpers:[{x:842,y:300,r:14}],boosts:[{x:620,y:485,w:150,h:34,a:0},{x:430,y:62,w:140,h:34,a:0},{x:92,y:245,w:34,h:115,a:0}],slow:[]}
 ];
 const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
 const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,BOUNCE=.72,STEPS_MAX=900;
@@ -288,10 +288,10 @@ function drawPerspectiveRoad(){
     const pa=projectPoint(a.x,a.y,cam),pb=projectPoint(b.x,b.y,cam);return (pb?.depth||0)-(pa?.depth||0);
   }).forEach(b=>{
     const p=projectPoint(b.x,b.y,cam);if(!p||p.forward<-35)return;
-    const r=Math.max(5,b.r*p.scale),height=Math.max(12,r*2.5);
-    ctx.fillStyle='rgba(0,0,0,.20)';ctx.beginPath();ctx.ellipse(p.x,p.y+4,r*1.15,r*.30,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#343b47';ctx.fillRect(p.x-r*.82,p.y-height,r*1.64,height);
-    ctx.beginPath();ctx.ellipse(p.x,p.y-height,r*.82,r*.32,0,0,Math.PI*2);ctx.fillStyle='#d54a43';ctx.fill();
+    const r=Math.max(4,b.r*p.scale),height=Math.max(9,r*1.35);
+    ctx.fillStyle='rgba(0,0,0,.20)';ctx.beginPath();ctx.ellipse(p.x,p.y+3,r*.95,r*.24,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#343b47';ctx.fillRect(p.x-r*.62,p.y-height,r*1.24,height);
+    ctx.beginPath();ctx.ellipse(p.x,p.y-height,r*.62,r*.25,0,0,Math.PI*2);ctx.fillStyle='#d54a43';ctx.fill();
     ctx.lineWidth=Math.max(2,3*p.scale);ctx.strokeStyle='#ffcf18';ctx.stroke();
   });
 }
