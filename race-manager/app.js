@@ -927,7 +927,7 @@
       }
       if(msg.type==='race-action'){applyAction(String(msg.playerId||''),msg);return}
     }else if(role==='client'){
-      if(msg.type==='lobby'){renderJoinLobby(msg.players||[]);return}
+      if(msg.type==='lobby'){renderJoinLobby(msg.players||[],msg.config||null);return}
       if(msg.type==='race-state'&&msg.game){applyRemoteGame(msg.game);return}
     }
   }
@@ -946,8 +946,18 @@
     $('startHostRace').disabled=players.length<2;
   }
 
-  function renderJoinLobby(players){
+  function renderJoinLobby(players,config=null){
     $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Choose an available host above.</div>';
+    const summary=$('joinRaceConfig');
+    if(summary&&config){
+      const track=TRACKS[clamp(Math.round(finite(config.trackIndex,0)),0,TRACKS.length-1)]||TRACKS[0];
+      const mode=config.mode==='tournament'?'Tournament':'Quick Race';
+      const detail=config.mode==='tournament'?`${clamp(Math.round(finite(config.totalRaces,5)),3,15)} races · starts at ${track.name}`:track.name;
+      summary.classList.remove('hidden');
+      summary.innerHTML=`<strong>${mode}</strong><small>${esc(detail)}</small>`;
+    }else if(summary){
+      summary.classList.add('hidden');
+    }
   }
 
   function renderAvailableHosts(hosts=[]){
@@ -977,7 +987,7 @@
     `).join('');
   }
 
-  function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:hostPlayers()})}
+  function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:hostPlayers(),config:setupConfig()})}
 
   function resetNetworkSession(){
     try{session?.close()}catch{}
@@ -992,10 +1002,14 @@
     const current=ensureSession();
     $('hostState').textContent='Starting';
     try{
+      const config=setupConfig();
       await current.startHost({
         hostName:`${p.name}'s Gridline Race`,
         player:p,
-        profile:getProfile(p)
+        profile:getProfile(p),
+        raceMode:config.mode,
+        trackName:TRACKS[config.trackIndex].name,
+        totalRaces:config.totalRaces
       });
       renderHostLobby();
     }catch(err){
@@ -1043,14 +1057,14 @@
     session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null})});
     if(humans.length<2)return;
     session?.updateHost?.({started:true});
-    game=buildGame(humans);showRace();renderGame();broadcastGame();
+    game=buildGame(humans,setupConfig());showRace();renderGame();broadcastGame();
     clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
   }
 
   function startSingleRace(){
     const p=roster().find(x=>x.id===selectedSingleId);if(!p)return;
     localPlayer=p;playMode='single';role='host';
-    game=buildGame([{player:p,owner:'local',profile:getProfile(p)}]);
+    game=buildGame([{player:p,owner:'local',profile:getProfile(p)}],setupConfig());
     showRace();renderGame();
     clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
   }
@@ -1092,6 +1106,13 @@
       const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
       if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p)});
     };
+    for(const id of ['singleRaceCount','hostRaceCount']){
+      const input=$(id);
+      if(input)input.oninput=()=>{
+        raceSetup.races=clamp(Math.round(finite(input.value,5)),3,15);
+        renderRaceSetup();
+      };
+    }
     $('startHostRace').onclick=startHostRace;
     $('exitRace').onclick=leaveRace;
     const gameboxBack=document.getElementById('gameboxBack');
@@ -1104,6 +1125,23 @@
     };
 
     document.addEventListener('click',e=>{
+      const raceMode=e.target.closest('[data-race-mode]');
+      if(raceMode){
+        raceSetup.mode=raceMode.dataset.raceMode==='tournament'?'tournament':'quick';
+        renderRaceSetup();
+        return;
+      }
+      const trackChoice=e.target.closest('[data-track-index]');
+      if(trackChoice){
+        raceSetup.trackIndex=clamp(Math.round(finite(trackChoice.dataset.trackIndex,0)),0,TRACKS.length-1);
+        renderRaceSetup();
+        return;
+      }
+      const exitSeries=e.target.closest('[data-exit-series]');
+      if(exitSeries){
+        leaveRace();
+        return;
+      }
       const autoHost=e.target.closest('[data-auto-host]');
       if(autoHost){
         joinDiscoveredHost(autoHost.dataset.autoHost);
