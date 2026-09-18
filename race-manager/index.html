@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="track-ui.css?v=9">
+  <link rel="stylesheet" href="track-ui.css?v=10">
 </head>
 <body>
 <div class="appShell">
@@ -102,6 +102,12 @@
 
       <section class="trackStage">
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
+        <div id="countdownOverlay" class="countdownOverlay hidden" aria-live="assertive">
+          <div class="startLights" aria-hidden="true">
+            <i class="startLight"></i><i class="startLight"></i><i class="startLight"></i>
+          </div>
+          <strong id="countdownText">3</strong>
+        </div>
         <div class="hiddenRaceMeta" aria-hidden="true">
           <strong id="sponsorName">Chip In Racing</strong>
           <strong id="liveSponsor">+£0</strong>
@@ -121,7 +127,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=1"></script>
-<script src="app.js?v=10"></script>
-<script src="track-ui.js?v=5"></script>
+<script src="app.js?v=11"></script>
+<script src="track-ui.js?v=6"></script>
 </body>
 </html>
