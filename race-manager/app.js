@@ -28,6 +28,15 @@
   const INCOME_KEYS=['sponsors','fans'];
   const UPGRADE_KEYS=[...CAR_KEYS,...INCOME_KEYS];
 
+  const RACE_EVENTS=[
+    {title:'Rain on the next sector',prompt:'What is the call?',choices:['Change tyres','Push on'],correct:0,boost:{stat:'tyres',amount:2,label:'Cornering grip'},duration:20},
+    {title:'Clear track ahead',prompt:'How do you use it?',choices:['Push on','Save the car'],correct:0,boost:{stat:'engine',amount:2,label:'Acceleration'},duration:18},
+    {title:'Heavy braking zone ahead',prompt:'Choose the approach.',choices:['Brake earlier','Send it deep'],correct:0,boost:{stat:'brakes',amount:2,label:'Braking'},duration:20},
+    {title:'Long straight opening up',prompt:'Choose the setup.',choices:['Lean the fuel mix','Protect the tyres'],correct:0,boost:{stat:'fuel',amount:2,label:'Top speed'},duration:18},
+    {title:'Cars bunching ahead',prompt:'Pick your move.',choices:['Hold the clean line','Dive immediately'],correct:0,boost:{stat:'speed',amount:.035,label:'Clear-air speed'},duration:17},
+    {title:'Grip is coming to you',prompt:'What do you do?',choices:['Use the grip now','Wait another lap'],correct:0,boost:{stat:'tyres',amount:2,label:'Cornering grip'},duration:18}
+  ];
+
   const UPGRADE_ICONS={
     engine:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 10h15l3 4v10H7z"/><path d="M11 7h8v3M4 14h3v7H4M25 16h3v6h-3M10 15h5v5h-5M18 14h4v7h-4"/></svg>`,
     tyres:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="5"/><path d="M10 7l3 5M18 5l2 6M23 8l-4 5M25 17l-6 1M21 25l-4-6M13 27l1-7M7 22l6-3M6 14l6 1"/></svg>`,
@@ -81,7 +90,7 @@
     return {
       playerId:player.id,
       name:player.name,
-      cash:Number.isFinite(savedCash)?savedCash:240,
+      cash:0,
       gems:Math.max(0,finite(saved.gems,0)),
       levels:normaliseLevels(saved.levels,saved.sponsorLevel),
       races:Math.max(0,finite(saved.races,0)),
@@ -95,7 +104,7 @@
     const old=all[e.playerId]||{};
     all[e.playerId]={
       name:e.name,
-      cash:Math.round(e.cash),
+      cash:0,
       gems:Math.max(0,Math.round(e.gems||0)),
       levels:{...e.levels},
       races:Math.max(finite(old.races,0),finite(e.races,0)),
@@ -154,13 +163,18 @@
       human:true,
       owner,
       levels:{...p.levels},
-      cash:p.cash,
+      cash:0,
       gems:p.gems,
       races:p.races,
       best:p.best||0,
       progress:0,
       finishTick:null,
-      position:null
+      position:null,
+      eventCount:0,
+      eventCooldownUntil:18,
+      activeEvent:null,
+      boost:null,
+      eventResult:null
     };
   }
 
@@ -179,11 +193,12 @@
     const skill=botSkill(raceNo,i);
     return {
       id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,
-      cash:180,gems:0,
+      cash:0,gems:0,
       aiSkill:skill,
       aiFocus:STAT_KEYS[i%STAT_KEYS.length],
       nextDecision:18+Math.round(Math.random()*botDecisionDelay(skill)),
-      progress:0,finishTick:null,position:null
+      progress:0,finishTick:null,position:null,
+      eventCount:0,eventCooldownUntil:18,activeEvent:null,boost:null,eventResult:null
     };
   }
 
@@ -239,7 +254,8 @@
     game.ready={};
     const track=TRACKS[game.trackIndex];
     game.entrants.forEach((e,i)=>{
-      e.progress=0;e.finishTick=null;e.position=null;
+      e.progress=0;e.finishTick=null;e.position=null;e.cash=0;
+      e.eventCount=0;e.eventCooldownUntil=18;e.activeEvent=null;e.boost=null;e.eventResult=null;
       if(!e.human){
         e.aiSkill=botSkill(game.raceNo,i);
         e.aiFocus=e.aiFocus||STAT_KEYS[i%STAT_KEYS.length];
@@ -255,10 +271,11 @@
     const track=TRACKS[game.trackIndex]||TRACKS[0];
     const launch=clamp(game.tick/18,.28,1);
     const levels=normaliseLevels(e.levels);
-    const engine=Math.max(0,levels.engine-1);
-    const tyres=Math.max(0,levels.tyres-1);
-    const brakes=Math.max(0,levels.brakes-1);
-    const fuel=Math.max(0,levels.fuel-1);
+    const activeBoost=e.boost&&finite(e.boost.untilTick,0)>game.tick?e.boost:null;
+    const engine=Math.max(0,levels.engine-1)+(activeBoost?.stat==='engine'?finite(activeBoost.amount,0):0);
+    const tyres=Math.max(0,levels.tyres-1)+(activeBoost?.stat==='tyres'?finite(activeBoost.amount,0):0);
+    const brakes=Math.max(0,levels.brakes-1)+(activeBoost?.stat==='brakes'?finite(activeBoost.amount,0):0);
+    const fuel=Math.max(0,levels.fuel-1)+(activeBoost?.stat==='fuel'?finite(activeBoost.amount,0):0);
 
     const lapPhase=((e.progress/100)*(track.laps||8))%1;
     const brakingZone=(lapPhase>.16&&lapPhase<.25)||(lapPhase>.56&&lapPhase<.65);
@@ -290,13 +307,56 @@
     if(ahead&&ahead.finishTick===null){
       const gap=ahead.progress-e.progress;
       if(gap>0&&gap<.24){
-        const control=Math.max(0,(levels.tyres-1)+(levels.brakes-1));
+        const control=Math.max(0,tyres+brakes);
         const contactPenalty=Math.max(.003,.016-control*.0014);
         speed-=contactPenalty*(1-gap/.24);
       }
     }
 
+    if(activeBoost?.stat==='speed')speed+=finite(activeBoost.amount,.035);
+
     return Math.max(.16,(speed+noise+incident)*launch);
+  }
+
+  function eventChanceForRank(rank,total){
+    if(rank<=1||total<=1)return 0;
+    const backness=clamp((rank-1)/(total-1),0,1);
+    return Math.pow(backness,1.55)*.042;
+  }
+
+  function maybeCreateRaceEvent(e,rank,total){
+    if(!e.human||e.finishTick!==null||game.tick<18||game.tick>game.maxTicks-16)return;
+    if(finite(e.eventCount,0)>=3||e.activeEvent||game.tick<finite(e.eventCooldownUntil,0))return;
+    if(Math.random()>=eventChanceForRank(rank,total))return;
+
+    const template=RACE_EVENTS[Math.floor(Math.random()*RACE_EVENTS.length)];
+    const eventId=uid().slice(0,8);
+    e.eventCount=finite(e.eventCount,0)+1;
+    e.activeEvent={
+      id:eventId,
+      title:template.title,
+      prompt:template.prompt,
+      choices:[...template.choices],
+      correct:template.correct,
+      boost:{...template.boost},
+      duration:template.duration,
+      expiresTick:game.tick+15
+    };
+    e.eventCooldownUntil=game.tick+40;
+  }
+
+  function updateRaceEvents(order){
+    const humans=game.entrants.filter(e=>e.human);
+    for(const e of humans){
+      if(e.boost&&finite(e.boost.untilTick,0)<=game.tick)e.boost=null;
+      if(e.eventResult&&finite(e.eventResult.untilTick,0)<=game.tick)e.eventResult=null;
+      if(e.activeEvent&&finite(e.activeEvent.expiresTick,0)<=game.tick){
+        e.activeEvent=null;
+        e.eventCooldownUntil=Math.max(finite(e.eventCooldownUntil,0),game.tick+24);
+      }
+      const rank=Math.max(1,order.findIndex(x=>x.id===e.id)+1);
+      maybeCreateRaceEvent(e,rank,order.length);
+    }
   }
 
   function botUpgradeScore(e,stat,rank,track,remainingSec){
@@ -383,6 +443,7 @@
     game.tick++;
     const order=[...game.entrants].sort((a,b)=>b.progress-a.progress);
     for(const e of game.entrants)e.cash+=incomeRate(e)*(TICK_MS/1000);
+    updateRaceEvents(order);
     for(const e of game.entrants)maybeBotDecision(e,order);
     for(const e of game.entrants){
       if(e.finishTick!==null)continue;
@@ -447,6 +508,30 @@
       return;
     }
 
+    if(msg.action==='event-choice'){
+      if(game.phase!=='race'||!e.activeEvent)return;
+      if(String(msg.eventId)!==String(e.activeEvent.id))return;
+      const choice=Number(msg.choice);
+      const correct=choice===Number(e.activeEvent.correct);
+      if(correct){
+        const bonus=e.activeEvent.boost||{};
+        e.boost={
+          stat:bonus.stat,
+          amount:bonus.amount,
+          label:bonus.label||'Performance',
+          untilTick:game.tick+Math.max(12,finite(e.activeEvent.duration,18))
+        };
+        e.eventResult={correct:true,text:`${e.boost.label} boost`,untilTick:game.tick+8};
+      }else{
+        e.eventResult={correct:false,text:'No bonus — keep racing',untilTick:game.tick+7};
+      }
+      e.activeEvent=null;
+      e.eventCooldownUntil=Math.max(finite(e.eventCooldownUntil,0),game.tick+28);
+      broadcastGame();
+      renderGame();
+      return;
+    }
+
     if(game.phase!=='race'||msg.action!=='upgrade'||!UPGRADE_META[msg.stat])return;
     const cost=upgradeCost(e,msg.stat);
     if(e.cash<cost)return;
@@ -459,7 +544,7 @@
 
   function requestAction(msg){
     if(!localPlayer||!game)return;
-    if(msg.action==='upgrade'&&game.phase!=='race')return;
+    if((msg.action==='upgrade'||msg.action==='event-choice')&&game.phase!=='race')return;
     if(msg.action==='ready'&&game.phase!=='intermission')return;
     if(playMode==='single'||role==='host')applyAction(localPlayer.id,msg);
     else session?.sendToHost({type:'race-action',playerId:localPlayer.id,...msg});
@@ -470,7 +555,7 @@
     return {
       phase:game.phase,countdownTicks:game.countdownTicks,ready:game.ready||{},raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position
+        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,eventCount:e.eventCount,eventCooldownUntil:e.eventCooldownUntil,activeEvent:e.activeEvent,boost:e.boost,eventResult:e.eventResult
       }))
     };
   }
@@ -544,6 +629,7 @@
     }).join('');
 
     renderCountdown();
+    renderRaceEvent(me);
 
     if(game.phase==='race'||game.phase==='countdown'){
       if($('raceStatus'))$('raceStatus').innerHTML=game.phase==='race'
@@ -597,6 +683,47 @@
       light.classList.toggle('lit',index<lit);
       light.classList.toggle('green',label==='GO!');
     });
+  }
+
+  function renderRaceEvent(me){
+    const card=$('raceEventCard');
+    if(!card)return;
+    if(game.phase!=='race'){
+      card.classList.add('hidden');
+      return;
+    }
+
+    if(me.activeEvent){
+      const evt=me.activeEvent;
+      const seconds=Math.max(1,Math.ceil((finite(evt.expiresTick,game.tick)-game.tick)*TICK_MS/1000));
+      card.className='raceEventCard';
+      card.innerHTML=`
+        <span class="raceEventEyebrow">PIT WALL</span>
+        <strong class="raceEventTitle">${esc(evt.title)}</strong>
+        <small class="raceEventPrompt">${esc(evt.prompt)} · ${seconds}s</small>
+        <div class="raceEventChoices">
+          ${evt.choices.map((choice,index)=>`<button type="button" data-event-choice="${index}" data-event-id="${esc(evt.id)}">${esc(choice)}</button>`).join('')}
+        </div>
+      `;
+      return;
+    }
+
+    if(me.eventResult&&finite(me.eventResult.untilTick,0)>game.tick){
+      card.className=`raceEventCard eventFeedback ${me.eventResult.correct?'correct':'neutral'}`;
+      card.innerHTML=me.eventResult.correct
+        ?`<strong>GOOD CALL</strong><small>${esc(me.eventResult.text)}</small>`
+        :`<strong>NO GAIN</strong><small>${esc(me.eventResult.text)}</small>`;
+      return;
+    }
+
+    if(me.boost&&finite(me.boost.untilTick,0)>game.tick){
+      const seconds=Math.max(1,Math.ceil((me.boost.untilTick-game.tick)*TICK_MS/1000));
+      card.className='raceEventCard activeBoost';
+      card.innerHTML=`<strong>BOOST ACTIVE</strong><small>${esc(me.boost.label)} · ${seconds}s</small>`;
+      return;
+    }
+
+    card.classList.add('hidden');
   }
 
   function renderResult(me){
@@ -657,7 +784,7 @@
   function installSession(){
     if(!window.GameBoxLAN?.Session)throw new Error('Local multiplayer is unavailable in this browser.');
     session=new window.GameBoxLAN.Session({
-      game:'gridline-v13',
+      game:'gridline-v14',
       onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
       onPeersChanged:()=>{
         if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
@@ -764,6 +891,11 @@
       const ready=e.target.closest('[data-ready-race]');
       if(ready&&!ready.disabled){
         requestAction({action:'ready'});
+        return;
+      }
+      const eventChoice=e.target.closest('[data-event-choice]');
+      if(eventChoice){
+        requestAction({action:'event-choice',eventId:eventChoice.dataset.eventId,choice:Number(eventChoice.dataset.eventChoice)});
         return;
       }
       const up=e.target.closest('[data-upgrade]');
