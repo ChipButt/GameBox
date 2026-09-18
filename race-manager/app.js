@@ -648,19 +648,20 @@
 
     const sorted=[...game.entrants].sort((a,b)=>(b.progress-a.progress)||String(a.name).localeCompare(String(b.name)));
     const currentPos=me.position||sorted.findIndex(e=>e.id===me.id)+1;
-    $('position').textContent=ordinal(currentPos);
+    $('position').innerHTML=ordinalHTML(currentPos);
     if($('liveSponsor'))$('liveSponsor').textContent='+'+money(incomeRate(me));
 
     const racePct=clamp(me.progress,0,100);
     const lap=Math.min(track.laps,Math.max(1,Math.floor((racePct/100)*track.laps)+1));
     $('lapText').textContent=`Lap ${lap} / ${track.laps}`;
     $('lapBar').style.width=`${racePct}%`;
+    const completedLaps=Math.min(track.laps,Math.max(0,Math.floor((racePct/100)*track.laps+1e-9)));
     for(let i=1;i<=8;i++){
       const marker=$('lapMarker'+i);
       if(!marker)continue;
       marker.classList.toggle('hidden',i>track.laps);
       if(i<=track.laps){
-        marker.src=`${ASSET_ROOT}/ui/hud/${i<=lap?'lap_marker_full.png':'lap_marker_empty.png'}`;
+        marker.src=`${ASSET_ROOT}/ui/hud/${i<=completedLaps?'lap_marker_full.png':'lap_marker_empty.png'}`;
       }
     }
     const finalLap=$('finalLapBadge');
@@ -722,7 +723,7 @@
         row=document.createElement('div');
         row.className='raceLane';
         row.dataset.racerId=e.id;
-        row.innerHTML='<span class="pos" aria-hidden="true"></span><span class="name"></span>';
+        row.innerHTML='<span class="pos" aria-hidden="true"></span><span class="youTag" aria-hidden="true">YOU</span><span class="name"></span>';
         wrap.appendChild(row);
       }
       row.className=`raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}`;
@@ -820,7 +821,7 @@
       ?`
         <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/race_complete.png" alt="">
         <div class="resultPrize">${money(prize)}</div>
-        <div class="resultPosition">${ordinal(me.position||12)}</div>
+        <div class="resultPosition">${ordinalHTML(me.position||12)}</div>
         <button class="resultAction" data-exit-series type="button" aria-label="Claim and return to setup">CLAIM</button>
       `
       :`
@@ -841,7 +842,13 @@
     }
   }
 
-  function ordinal(n){n=Number(n)||0;const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+  function ordinalParts(n){
+    n=Number(n)||0;
+    const suffixes=['th','st','nd','rd'],v=n%100;
+    return {number:n,suffix:suffixes[(v-20)%10]||suffixes[v]||suffixes[0]};
+  }
+  function ordinal(n){const p=ordinalParts(n);return p.number+p.suffix}
+  function ordinalHTML(n){const p=ordinalParts(n);return `${p.number}<sup class="ordinalSuffix">${p.suffix}</sup>`}
 
   function animatePrizeTransfer(source,target,onDone){
     if(!source||!target){onDone?.();return}
@@ -854,10 +861,10 @@
     let finished=0;
     for(let i=0;i<8;i++){
       const coin=document.createElement('span');
-      coin.className='upgradeCoinFx';
+      coin.className='cashNoteFx';
       coin.textContent='£';
-      coin.style.left=`${sx-8}px`;
-      coin.style.top=`${sy-8}px`;
+      coin.style.left=`${sx-11}px`;
+      coin.style.top=`${sy-6}px`;
       document.body.appendChild(coin);
       const bend=(i-3.5)*10;
       const animation=coin.animate([
@@ -886,10 +893,10 @@
     button.classList.add('receivingCoins');
     for(let i=0;i<6;i++){
       const coin=document.createElement('span');
-      coin.className='upgradeCoinFx';
+      coin.className='cashNoteFx';
       coin.textContent='£';
-      coin.style.left=`${sx-8}px`;
-      coin.style.top=`${sy-8}px`;
+      coin.style.left=`${sx-11}px`;
+      coin.style.top=`${sy-6}px`;
       document.body.appendChild(coin);
       const bend=(i-2.5)*9;
       const animation=coin.animate([
