@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="track-ui.css?v=10">
+  <link rel="stylesheet" href="track-ui.css?v=11">
 </head>
 <body>
 <div class="appShell">
@@ -88,19 +88,21 @@
       <section class="raceBanner">
         <div class="raceHeader raceHeaderCompact">
           <div class="teamStamp"><span>YOUR TEAM</span><strong id="activePlayerName">—</strong></div>
-          <div class="positionBadge"><strong id="position">12</strong><small>/ 12</small></div>
+          <div class="yourCarStat"><span>YOUR CAR</span><strong><i class="yourCarDot"></i>GOLD</strong></div>
           <div class="trackStamp"><strong id="trackName">Harbour Sprint</strong><span id="trackMeta">Open Wheel · Dry</span><span id="trackFocus" class="trackFocus">Stop-start · Technical</span></div>
         </div>
         <div class="raceBannerStats">
-          <div class="bannerStat"><span>CASH</span><strong id="cash">£0</strong></div>
-          <div class="bannerStat incomeStat"><span>INCOME / S</span><strong id="sponsorRate">£0/s</strong></div>
-          <div class="bannerStat yourCarStat"><span>YOUR CAR</span><strong><i class="yourCarDot"></i>GOLD</strong></div>
-          <div class="bannerStat raceStat"><span>RACE</span><strong id="raceNumber">1</strong></div>
+          <div class="bannerRaceMeta"><span>RACE</span><strong id="raceNumber">1</strong></div>
         </div>
         <div class="lapInfo"><span id="lapText">Lap 1 / 8</span><div class="lapBar compactLap"><i id="lapBar"></i></div></div>
       </section>
 
       <section class="trackStage">
+        <div class="mapRacePills" aria-label="Live race stats">
+          <div class="mapPill cashPill"><span>CASH</span><strong id="cash">£0</strong></div>
+          <div class="mapPill positionPill"><span>POSITION</span><strong>P<span id="position">12</span><small>/12</small></strong></div>
+          <div class="mapPill incomePill"><span>INCOME / S</span><strong id="sponsorRate">£0/s</strong></div>
+        </div>
         <div id="raceLanes" class="raceLanes" aria-live="polite"></div>
         <div id="countdownOverlay" class="countdownOverlay hidden" aria-live="assertive">
           <div class="startLights" aria-hidden="true">
@@ -127,7 +129,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=1"></script>
-<script src="app.js?v=11"></script>
-<script src="track-ui.js?v=6"></script>
+<script src="app.js?v=13"></script>
+<script src="track-ui.js?v=7"></script>
 </body>
 </html>
