@@ -175,8 +175,8 @@
       const wrap=$(prefix+'TrackChoices');
       if(wrap)wrap.innerHTML=TRACKS.map((track,index)=>`
         <button class="trackChoice ${index===config.trackIndex?'selected':''}" data-track-index="${index}" type="button">
-          <strong>${esc(track.name)}</strong>
-          <small>${esc(track.profile)} · ${track.laps} laps</small>
+          <img src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
+          <span><strong>${esc(track.name)}</strong><small>${esc(track.profile)} · ${track.laps} laps</small></span>
         </button>
       `).join('');
     }
