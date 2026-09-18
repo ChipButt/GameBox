@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#082f68">
   <title>Gridline Racing · Chip In Games</title>
   <link rel="stylesheet" href="styles.css?v=7">
-  <link rel="stylesheet" href="track-ui.css?v=15">
+  <link rel="stylesheet" href="track-ui.css?v=16">
 </head>
 <body>
 <div class="appShell">
@@ -125,6 +125,7 @@
         <img src="assets/ui/hud/player_profile.png" alt="">
       </div>
       <strong id="activePlayerName" class="raceText playerNameText">—</strong>
+      <strong id="playerLevelText" class="raceText playerLevelText">1</strong>
 
       <div class="racePlacedAsset raceNameAsset">
         <img src="assets/ui/hud/race_name_banner.png" alt="">
@@ -158,6 +159,16 @@
 
       <div class="racePlacedAsset lapBannerAsset"><img src="assets/ui/hud/race_name_banner.png" alt=""></div>
       <strong id="lapText" class="raceText lapTitleText">Lap 1 / 8</strong>
+      <div id="lapMarkers" class="lapMarkers" aria-hidden="true">
+        <img id="lapMarker1" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker2" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker3" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker4" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker5" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker6" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker7" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+        <img id="lapMarker8" class="lapMarker" src="assets/ui/hud/lap_marker_empty.png" alt="">
+      </div>
       <img id="finalLapBadge" class="raceStatusFlag finalLapBadge hidden" src="assets/ui/race_status/final_lap.png" alt="Final lap">
       <img id="greenFlagBadge" class="raceStatusFlag greenFlagBadge hidden" src="assets/ui/race_status/green_flag.png" alt="Race started">
 
@@ -180,7 +191,7 @@
   </main>
 </div>
 <script src="../lan-core.js?v=6"></script>
-<script src="app.js?v=22"></script>
+<script src="app.js?v=23"></script>
 <script src="track-ui.js?v=13"></script>
 </body>
 </html>
