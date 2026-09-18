@@ -794,7 +794,7 @@ body.gridline-racing-live .mainView{
 #raceScreen .raceLeaderboardRows{
   position:absolute;
   left:0;
-  top:-75.517px;
+  top:0;
   width:390px;
   height:844px;
 }
@@ -850,3 +850,21 @@ body.gridline-racing-live .mainView{
 
 /* The result/claim popup intentionally sits above the leaderboard. */
 #raceScreen .resultCard{z-index:80}
+
+
+/* Claiming prize: green notes flutter from the prize number into the total cash pot. */
+.cashNoteFx.claimPrizeNote{
+  transform-origin:center;
+  box-shadow:0 1px 2px rgba(0,0,0,.34),0 0 7px rgba(75,230,116,.58);
+}
+#raceScreen .cashValue.cashPotReceive{
+  animation:gridlineCashPotReceive .42s ease-out;
+}
+@keyframes gridlineCashPotReceive{
+  0%{transform:scale(1)}
+  42%{transform:scale(1.22);filter:brightness(1.35)}
+  100%{transform:scale(1);filter:none}
+}
+#raceScreen .resultAction.claimingAction{
+  pointer-events:none!important;
+}
