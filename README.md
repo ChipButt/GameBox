@@ -28,6 +28,16 @@ A mobile-first browser games hub from **Chip In Games**.
 - Optional same-Wi-Fi multiplayer: each player gets their own active round on their own phone while the other phones show whose turn it is, the current clue and running score
 - Multiplayer automatically moves to the next connected player's device and finishes with a shared scoreboard
 
+### Disc Rally
+- Turn-based mobile disc racing inspired by tabletop flick games
+- 2–4 players on one device or separate devices
+- Drag-to-flick controls with variable shot power
+- Disc-to-disc collisions and wall rebounds
+- Checkpoint-based laps to prevent shortcut finishes
+- Three tracks with bumpers, boost pads and slow zones
+- One Turbo per player per lap
+- Automatic WebRTC host discovery for multiplayer
+
 ### Gridline Racing
 - Mobile-first racing team management game
 - Live-race upgrades and tactical decisions
