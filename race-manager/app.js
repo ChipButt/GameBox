@@ -957,7 +957,7 @@
         <span class="hostDiscoveryIcon">🏁</span>
         <span class="hostDiscoveryCopy">
           <strong>${esc(host.hostName||((host.playerName||'Host')+"'s Race"))}</strong>
-          <small>${finite(host.playerCount,1)} / ${finite(host.maxPlayers,4)} players · ${host.raceMode==='tournament'?`${finite(host.totalRaces,5)} race tournament`:'Quick Race'} · ${esc(host.trackName||'Harbour Sprint')}</small>
+          <small>${finite(host.playerCount,1)} / ${finite(host.maxPlayers,4)} players · ${host.raceMode==='tournament'?`${finite(host.totalRaces,5)} race tournament`:'Quick Race'} · ${esc(host.trackName||'Forest Lake')}</small>
         </span>
         <span class="hostDiscoveryJoin">JOIN</span>
       </button>
