@@ -907,9 +907,11 @@
       const car=CAR_BY_COLOR[normaliseCarColor(e.carColor)]||CAR_ROSTER[0];
       const finished=e.finishTick!==null||!!e.position;
       const isYou=e.human&&e.playerId===localPlayer?.id;
+      const nameY=LEADERBOARD_NAME_Y[index]??LEADERBOARD_NAME_Y[LEADERBOARD_NAME_Y.length-1];
+      const colourY=LEADERBOARD_COLOUR_Y[index]??nameY;
       return `<div class="raceLeaderboardRow ${finished?'finished':''} ${isYou?'you':''}" data-place="${index+1}">
-        <strong class="raceLeaderboardName">${esc(e.name)}</strong>
-        <span class="raceLeaderboardColour"><i style="--car-swatch:url('${ASSET_ROOT}/cars/${car.asset}')"></i>${esc(car.label)}</span>
+        <strong class="raceLeaderboardName" style="top:${nameY}px">${esc(e.name)}</strong>
+        <span class="raceLeaderboardColour" style="top:${colourY}px">${esc(car.label)}</span>
       </div>`;
     }).join('');
   }
@@ -1011,6 +1013,25 @@
     if(go)go.classList.toggle('hidden',state!=='go');
   }
 
+  function fitTextInside(el,maxPx,minPx,box=el){
+    if(!el||!box)return;
+    let size=maxPx;
+    el.style.fontSize=`${size}px`;
+    el.style.lineHeight='1.02';
+    const fits=()=>el.scrollWidth<=box.clientWidth+.5&&el.scrollHeight<=box.clientHeight+.5;
+    while(size>minPx&&!fits()){
+      size=Math.max(minPx,size-.5);
+      el.style.fontSize=`${size}px`;
+    }
+  }
+
+  function fitRaceEventText(card){
+    const question=card.querySelector('.raceEventQuestion');
+    const copy=card.querySelector('.raceEventQuestionCopy');
+    if(question&&copy)fitTextInside(copy,15,6.25,question);
+    card.querySelectorAll('.raceEventChoices button').forEach(button=>fitTextInside(button,15,6,button));
+  }
+
   function renderRaceEvent(me){
     const card=$('raceEventCard');
     if(!card)return;
@@ -1025,13 +1046,16 @@
       card.innerHTML=`
         <img class="raceEventAsset" src="${ASSET_ROOT}/ui/popups/choice_50_50.png" alt="">
         <div class="raceEventQuestion">
-          <strong>${esc(evt.title)}</strong>
-          <small>${esc(evt.prompt)}</small>
+          <div class="raceEventQuestionCopy">
+            <strong>${esc(evt.title)}</strong>
+            <small>${esc(evt.prompt)}</small>
+          </div>
         </div>
         <div class="raceEventChoices">
           ${evt.choices.map((choice,index)=>`<button type="button" data-event-choice="${index}" data-event-id="${esc(evt.id)}">${esc(choice)}</button>`).join('')}
         </div>
       `;
+      requestAnimationFrame(()=>fitRaceEventText(card));
       return;
     }
 
