@@ -681,7 +681,7 @@ function installSession(kind){
 function resetSession(hard=false){
   try{hard?session?.close():session?.suspend?.()}catch{}
   if(hard)session=null;
-  connectedLobby=[];lastHosts=[];
+  connectedLobby=[];lastHosts=[];role=null;
 }
 async function startHostDiscovery(){
   try{
