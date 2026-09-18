@@ -125,6 +125,7 @@ function snapshot(){
 }
 function applySnapshot(s){
   if(!s)return;
+  clearTurnEndTimer();
   game=s;if(!game.phase)game.phase='aim';if(!Number.isFinite(game.flicksUsed))game.flicksUsed=0;if(!Number.isFinite(game.turnEndsAt))game.turnEndsAt=0;
   game.players=(game.players||[]).map(p=>({
     ...p,
@@ -669,10 +670,17 @@ function renderHudOnly(){
   if(!game)return;
   const p=activePlayer(),yourShot=localCanShoot(),yourFinish=localCanFinish(),phase=game.phase||'aim';
   const turboCharge=clamp(Number(p?.turboCharge)||0,0,1),canTurbo=localCanTurbo();
+  const secondAvailable=game.flicksUsed<2&&(phase==='aim'||(phase==='moving'&&Math.hypot(p?.vx||0,p?.vy||0)>.18));
+  const secondUsed=game.flicksUsed>=2;
+
   $('turnText').textContent=game.winner?`${game.winner.name} wins!`:p?`${p.name}${(yourShot||yourFinish||canTurbo)?' — your turn':''}`:'—';
   $('turnHint').textContent=game.winner?'Race complete':
-    phase==='moving'?(p?.turboHeld?'Turbo boosting — release to save charge':canTurbo?'Disc moving — hold Turbo to boost':'Disc moving…'):
-    phase==='settled'?(yourFinish?'Review the result, then Finish Turn':`Waiting for ${p?.name||'player'} to finish turn`):
+    phase==='moving'?
+      (secondAvailable&&yourShot?'Disc moving — second flick available':
+       p?.turboHeld?'Turbo boosting — release to save charge':
+       canTurbo?'Disc moving — hold Turbo to boost':'Disc moving…'):
+    phase==='settled'?
+      (yourFinish?'Finish Turn now · automatic handoff in 3 seconds':`Waiting for ${p?.name||'player'}`):
     yourShot?'Drag anywhere to look around · drag from your disc to flick':`Waiting for ${p?.name||'player'}`;
   $('turnBanner').classList.toggle('yours',(yourShot||yourFinish||canTurbo)&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
 
@@ -681,6 +689,11 @@ function renderHudOnly(){
   $('turboButton').disabled=!canTurbo;
   $('turboButton').classList.toggle('ready',!!p?.turboReady&&!p?.turboHeld);
   $('turboButton').classList.toggle('active',!!p?.turboHeld);
+
+  const second=$('secondFlickStatus');
+  second.classList.toggle('available',secondAvailable&&!secondUsed);
+  second.classList.toggle('used',secondUsed);
+  $('secondFlickText').textContent=secondUsed?'USED':phase==='settled'?'NOT USED':'AVAILABLE';
 
   $('finishTurnButton').disabled=!yourFinish;
   if($('hudPlayerName'))$('hudPlayerName').textContent=p?.name||'—';
@@ -774,7 +787,7 @@ function broadcastLobby(){if(role==='host')session?.broadcast({type:'lobby',play
 function networkMessage(msg,source){
   if(role==='host'){
     if(msg.type==='hello'&&source.peer){source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};renderLobby('hostLobby',lobbyPlayers());$('startHost').disabled=lobbyPlayers().length<2;broadcastLobby();return}
-    if(msg.type==='flick'){const p=activePlayer();if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)startAuthoritativeFlick(p.id,Number(msg.vx)||0,Number(msg.vy)||0);return}
+    if(msg.type==='flick'){const p=activePlayer();if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id)handleAuthoritativeFlick(p.id,Number(msg.vx)||0,Number(msg.vy)||0);return}
     if(msg.type==='turbo-hold'){
       const p=activePlayer();
       if(p&&source.peer?.meta?.player?.id===p.id&&msg.playerId===p.id){
@@ -788,6 +801,7 @@ function networkMessage(msg,source){
     if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];selectedTrack=msg.trackId||selectedTrack;selectedLaps=Number(msg.laps)||2;renderLobby('joinLobby',connectedLobby);return}
     if(msg.type==='start'&&msg.state){mode='multi';applySnapshot(msg.state);return}
     if(msg.type==='flick-start'){playRemoteFlick(msg);return}
+    if(msg.type==='second-flick-start'){applySecondFlick(String(msg.playerId||''),Number(msg.vx)||0,Number(msg.vy)||0,true);return}
     if(msg.type==='turbo-hold'){applyTurboHeld(String(msg.playerId||''),!!msg.held,true);return}
     if(msg.type==='state'){if(animating)pendingSnapshot=msg.state;else applySnapshot(msg.state);return}
   }
@@ -813,7 +827,7 @@ function startLocalRace(){
   selectedLaps=Number($('localLaps').value)||2;mode='local';role=null;localPlayerId='';game=buildRace(players,selectedLaps);renderRace();showView('raceView');
 }
 function leaveRace(){
-  resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;resetLook();mode='local';role=null;renderPlayerPicks();renderTrackSummary();showView('modeView');
+  clearTurnEndTimer();resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;resetLook();mode='local';role=null;renderPlayerPicks();renderTrackSummary();showView('modeView');
 }
 function bind(){
   renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();
