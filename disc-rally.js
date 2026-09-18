@@ -370,7 +370,7 @@ function onPointerUp(e){
   const vx=ux*speed,vy=uy*speed;
   resetLook();draw();renderRace();
   if(mode==='multi'&&role==='client')session?.sendToHost({type:'flick',playerId:p.id,vx,vy});
-  else startAuthoritativeFlick(p.id,vx,vy);
+  else handleAuthoritativeFlick(p.id,vx,vy);
   e.preventDefault();
 }
 
@@ -540,21 +540,68 @@ async function animatePhysics(){
   game.players.forEach(p=>{p.vx=0;p.vy=0;p.turboHeld=false});
   turboHolding=false;animating=false;
 }
+function clearTurnEndTimer(){
+  if(turnEndTimer){clearTimeout(turnEndTimer);turnEndTimer=null}
+}
+function scheduleTurnEnd(){
+  clearTurnEndTimer();
+  if(!game||game.winner||game.phase!=='settled')return;
+  game.turnEndsAt=Date.now()+TURN_END_DELAY;
+  renderHudOnly();
+  if(mode==='multi'&&role==='host')broadcastState();
+  if(mode==='local'||role==='host'){
+    turnEndTimer=setTimeout(()=>{
+      turnEndTimer=null;
+      if(game&&!game.winner&&game.phase==='settled')completeTurn();
+    },TURN_END_DELAY);
+  }
+}
+function addSecondFlickImpulse(p,vx,vy){
+  const addX=clamp(vx,-36,36)*SECOND_FLICK_SCALE,addY=clamp(vy,-36,36)*SECOND_FLICK_SCALE;
+  p.vx+=addX;p.vy+=addY;
+  const speed=Math.hypot(p.vx,p.vy),max=34;
+  if(speed>max){const scale=max/speed;p.vx*=scale;p.vy*=scale}
+}
+function applySecondFlick(playerId,vx,vy,force=false){
+  if(!game||game.winner||game.phase!=='moving'||!animating)return false;
+  const p=activePlayer();if(!p||p.id!==playerId)return false;
+  if(!force&&(game.flicksUsed!==1||Math.hypot(p.vx,p.vy)<=.18))return false;
+  if(game.flicksUsed>=2)return false;
+  game.flicksUsed=2;
+  addSecondFlickImpulse(p,vx,vy);
+  resetLook();renderHudOnly();draw();
+  return true;
+}
+function handleAuthoritativeFlick(playerId,vx,vy){
+  if(!game||game.winner)return;
+  if(game.phase==='aim'&&game.flicksUsed===0){
+    startAuthoritativeFlick(playerId,vx,vy);
+    return;
+  }
+  if(game.phase==='moving'&&game.flicksUsed===1){
+    const changed=applySecondFlick(playerId,vx,vy);
+    if(changed&&mode==='multi'&&role==='host'){
+      session?.broadcast({type:'second-flick-start',playerId,vx,vy});
+    }
+  }
+}
 async function startAuthoritativeFlick(playerId,vx,vy){
-  if(!game||game.winner||animating||game.phase!=='aim')return;
+  if(!game||game.winner||animating||game.phase!=='aim'||game.flicksUsed!==0)return;
+  clearTurnEndTimer();
   const p=activePlayer();if(!p||p.id!==playerId)return;
-  game.phase='moving';p.turboHeld=false;turboHolding=false;
+  game.phase='moving';game.flicksUsed=1;game.turnEndsAt=0;p.turboHeld=false;turboHolding=false;
   p.vx=clamp(vx,-36,36);p.vy=clamp(vy,-36,36);
   if(mode==='multi'&&role==='host')session?.broadcast({type:'flick-start',playerId:p.id,vx:p.vx,vy:p.vy});
   await animatePhysics();
   game.phase=game.winner?'finished':'settled';
   renderRace();
+  if(!game.winner)scheduleTurnEnd();
   if(mode==='multi'&&role==='host')broadcastState();
 }
 async function playRemoteFlick(msg){
   if(!game||animating)return;
   const p=game.players.find(x=>x.id===msg.playerId);if(!p)return;
-  game.phase='moving';p.turboHeld=false;
+  game.phase='moving';game.flicksUsed=1;game.turnEndsAt=0;p.turboHeld=false;
   p.vx=Number(msg.vx)||0;p.vy=Number(msg.vy)||0;
   await animatePhysics();
   if(!game.winner)game.phase='settled';
@@ -562,6 +609,7 @@ async function playRemoteFlick(msg){
 }
 function completeTurn(){
   if(!game||game.winner||game.phase!=='settled')return;
+  clearTurnEndTimer();
   game.players.forEach(p=>p.turboHeld=false);
   turboHolding=false;nextTurn();game.phase='aim';resetLook();renderRace();
   if(mode==='multi'&&role==='host')broadcastState();
@@ -572,6 +620,7 @@ function requestFinishTurn(){
   if(mode==='multi'&&role==='client')session?.sendToHost({type:'finish-turn',playerId:p.id});
   else completeTurn();
 }
+
 function localCanTurbo(){
   const p=activePlayer();
   if(!p||game?.winner||game?.phase!=='moving'||!animating)return false;
