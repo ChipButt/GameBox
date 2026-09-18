@@ -14,7 +14,8 @@ const TRACKS=[
   {id:'lightning',name:'Force Lightning',desc:'Long boosts reward commitment',icon:'M14 62 L35 23 L35 47 L60 47 L45 76 L86 28',inner:{x:245,y:155,w:510,h:290,r:135},bumpers:[{x:842,y:300,r:14}],boosts:[{x:620,y:485,w:150,h:34,a:0},{x:430,y:62,w:140,h:34,a:0},{x:92,y:245,w:34,h:115,a:0}],slow:[]}
 ];
 const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
-const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,BOUNCE=.72,STEPS_MAX=900;
+const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
+const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
 const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,7 +35,7 @@ const roster=()=>{
 
 let currentView='modeView';
 let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[];
-let game=null,pendingSnapshot=null;
+let game=null,pendingSnapshot=null,turnEndTimer=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
 
@@ -115,7 +116,7 @@ function buildRace(players,laps=2){
   const starts=[{x:390,y:500},{x:340,y:500},{x:290,y:500},{x:240,y:500}];
   const raceTrack=selectedTrack==='random'?TRACKS[Math.floor(Math.random()*TRACKS.length)].id:selectedTrack;
   return {
-    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',
+    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,
     players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turboCharge:0,turboReady:false,turboHeld:false,finished:false}))
   };
 }
@@ -124,7 +125,7 @@ function snapshot(){
 }
 function applySnapshot(s){
   if(!s)return;
-  game=s;if(!game.phase)game.phase='aim';
+  game=s;if(!game.phase)game.phase='aim';if(!Number.isFinite(game.flicksUsed))game.flicksUsed=0;if(!Number.isFinite(game.turnEndsAt))game.turnEndsAt=0;
   game.players=(game.players||[]).map(p=>({
     ...p,
     turboCharge:clamp(Number.isFinite(p.turboCharge)?p.turboCharge:0,0,1),
@@ -138,8 +139,12 @@ function applySnapshot(s){
 function activePlayer(){return game?.players?.[game.current]||null}
 function localCanShoot(){
   const p=activePlayer();
-  if(!p||animating||game?.winner||game?.phase!=='aim')return false;
-  return mode==='local'||localPlayerId===p.id;
+  if(!p||game?.winner)return false;
+  const owned=mode==='local'||localPlayerId===p.id;
+  if(!owned)return false;
+  if(game?.phase==='aim'&&!animating&&game.flicksUsed===0)return true;
+  if(game?.phase==='moving'&&animating&&game.flicksUsed===1&&Math.hypot(p.vx,p.vy)>.18)return true;
+  return false;
 }
 function localCanFinish(){
   const p=activePlayer();
@@ -150,7 +155,7 @@ function nextTurn(){
   if(!game||game.winner)return;
   let n=game.current;
   for(let i=0;i<game.players.length;i++){n=(n+1)%game.players.length;if(!game.players[n].finished){game.current=n;break}}
-  game.turn++;
+  game.turn++;game.flicksUsed=0;game.turnEndsAt=0;
 }
 
 function roundedRectPath(p,x,y,w,h,r){
