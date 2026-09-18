@@ -655,19 +655,63 @@
     const lap=Math.min(track.laps,Math.max(1,Math.floor((racePct/100)*track.laps)+1));
     $('lapText').textContent=`Lap ${lap} / ${track.laps}`;
     $('lapBar').style.width=`${racePct}%`;
-    const completedLaps=Math.min(track.laps,Math.max(0,Math.floor((racePct/100)*track.laps+1e-9)));
+    const lapProgress=(racePct/100)*track.laps;
     for(let i=1;i<=8;i++){
       const marker=$('lapMarker'+i);
       if(!marker)continue;
       marker.classList.toggle('hidden',i>track.laps);
       if(i<=track.laps){
-        marker.src=`${ASSET_ROOT}/ui/hud/${i<=completedLaps?'lap_marker_full.png':'lap_marker_empty.png'}`;
+        const fill=clamp((lapProgress-(i-1))*100,0,100);
+        marker.style.setProperty('--lap-fill',`${fill}%`);
       }
     }
+
+    const raceScreen=$('raceScreen');
     const finalLap=$('finalLapBadge');
-    if(finalLap)finalLap.classList.toggle('hidden',!(game.phase==='race'&&lap===track.laps));
     const greenFlag=$('greenFlagBadge');
-    if(greenFlag)greenFlag.classList.toggle('hidden',!(game.phase==='race'&&game.tick<=8));
+    const uiRaceKey=`${game.mode}:${game.raceNo}:${game.trackIndex}`;
+    const previousUiRaceKey=raceScreen.dataset.uiRaceKey||'';
+    const previousUiPhase=raceScreen.dataset.uiPhase||'';
+    const previousUiLap=Number(raceScreen.dataset.uiLap||0);
+
+    if(previousUiRaceKey!==uiRaceKey){
+      raceScreen.dataset.uiRaceKey=uiRaceKey;
+      raceScreen.dataset.uiPhase='';
+      raceScreen.dataset.uiLap='0';
+      finalLap?.classList.add('hidden');
+      finalLap?.classList.remove('finalLapIntro');
+      greenFlag?.classList.add('hidden');
+      greenFlag?.classList.remove('raceStartFlash');
+    }
+
+    const raceJustStarted=game.phase==='race'&&previousUiPhase!=='race';
+    const onFinalLap=game.phase==='race'&&lap===track.laps;
+    const finalLapJustStarted=onFinalLap&&previousUiLap!==track.laps;
+
+    if(greenFlag){
+      greenFlag.classList.toggle('hidden',game.phase!=='race'||onFinalLap);
+      if(raceJustStarted&&!onFinalLap){
+        greenFlag.classList.remove('raceStartFlash');
+        void greenFlag.offsetWidth;
+        greenFlag.classList.add('raceStartFlash');
+      }
+      if(game.phase!=='race')greenFlag.classList.remove('raceStartFlash');
+    }
+
+    if(finalLap){
+      finalLap.classList.toggle('hidden',!onFinalLap);
+      if(finalLapJustStarted){
+        finalLap.classList.remove('finalLapIntro');
+        void finalLap.offsetWidth;
+        finalLap.classList.add('finalLapIntro');
+        window.setTimeout(()=>finalLap.classList.remove('finalLapIntro'),1650);
+      }else if(!onFinalLap){
+        finalLap.classList.remove('finalLapIntro');
+      }
+    }
+
+    raceScreen.dataset.uiPhase=game.phase;
+    raceScreen.dataset.uiLap=String(lap);
     if($('raceTimer')){
       const seconds=Math.max(0,Math.ceil((game.maxTicks-game.tick)*TICK_MS/1000));
       $('raceTimer').textContent=`0:${String(seconds).padStart(2,'0')}`;
@@ -675,28 +719,7 @@
 
     renderRaceLanes(sorted);
 
-    $('upgradeGrid').innerHTML=UPGRADE_KEYS.map(key=>{
-      const m=UPGRADE_META[key];
-      const lvl=Math.max(1,finite(me.levels[key],1));
-      const cost=upgradeCost(me,key);
-      const enabled=game.phase==='race'&&me.cash>=cost;
-      let mathText='';
-      if(m.kind==='income'){
-        const currentFactor=incomeFactor(lvl,key);
-        const nextFactor=incomeFactor(lvl+1,key);
-        mathText=`×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}`;
-      }else{
-        const current=statPercent(me,key);
-        const next=current+m.step;
-        const affinity=track.weights[key]||1;
-        mathText=`+${current}% → +${next}% · ×${affinity.toFixed(1)}`;
-      }
-      return `<button class="upgradeButton ${m.kind==='income'?'incomeUpgrade':'carUpgrade'} ${key}" data-upgrade="${key}" type="button" ${enabled?'':'disabled'} style="--upgrade-asset:url('${upgradeAsset(key,enabled)}')">
-        <span class="upgradeLevel">Lv ${lvl}</span>
-        <strong class="upgradeCost">${money(cost)}</strong>
-        <small class="upgradeMath">${esc(mathText)}</small>
-      </button>`;
-    }).join('');
+    renderUpgradeButtons(me,track);
 
     renderCountdown();
     renderRaceEvent(me);
@@ -708,6 +731,46 @@
       $('resultCard').classList.add('hidden');
     }else if(game.phase==='intermission'||game.phase==='complete'){
       renderResult(me);
+    }
+  }
+
+  function renderUpgradeButtons(me,track){
+    const grid=$('upgradeGrid');
+    if(!grid)return;
+
+    for(const key of UPGRADE_KEYS){
+      const m=UPGRADE_META[key];
+      let button=grid.querySelector(`[data-upgrade="${key}"]`);
+      if(!button){
+        button=document.createElement('button');
+        button.type='button';
+        button.dataset.upgrade=key;
+        button.classList.add('upgradeButton',key,m.kind==='income'?'incomeUpgrade':'carUpgrade');
+        button.innerHTML='<span class="upgradeLevel"></span><strong class="upgradeCost"></strong><small class="upgradeMath"></small>';
+        grid.appendChild(button);
+      }
+
+      const lvl=Math.max(1,finite(me.levels[key],1));
+      const cost=upgradeCost(me,key);
+      const enabled=game.phase==='race'&&me.cash>=cost;
+      let mathText='';
+
+      if(m.kind==='income'){
+        const currentFactor=incomeFactor(lvl,key);
+        const nextFactor=incomeFactor(lvl+1,key);
+        mathText=`×${currentFactor.toFixed(2)} → ×${nextFactor.toFixed(2)}`;
+      }else{
+        const current=statPercent(me,key);
+        const next=current+m.step;
+        const affinity=track.weights[key]||1;
+        mathText=`+${current}% → +${next}% · ×${affinity.toFixed(1)}`;
+      }
+
+      button.disabled=!enabled;
+      button.style.setProperty('--upgrade-asset',`url('${upgradeAsset(key,enabled)}')`);
+      button.querySelector('.upgradeLevel').textContent=`Lv ${lvl}`;
+      button.querySelector('.upgradeCost').textContent=money(cost);
+      button.querySelector('.upgradeMath').textContent=mathText;
     }
   }
 
