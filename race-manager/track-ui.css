@@ -148,7 +148,8 @@ body.gridline-racing-live .mainView{
   inset:0;
   width:390px;
   height:340px;
-  object-fit:fill;
+  object-fit:cover;
+  object-position:center;
   z-index:1;
   pointer-events:none;
   user-select:none;
