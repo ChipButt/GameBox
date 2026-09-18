@@ -36,7 +36,7 @@ jobs:
           test -f race-manager/track-ui.js
           test -f race-manager/assets/ui/logo/gridline_racing_logo.png
           test -f race-manager/assets/cars/player_gold.png
-          test -f race-manager/assets/tracks/forest_lake.png
-          test -f race-manager/assets/tracks/mediterranean_marina.png
-          test -f race-manager/assets/tracks/desert_canyon.png
-          test -f race-manager/assets/tracks/snowy_alpine.png
+          test -f race-manager/assets/tracks/autumn_river_valley_circuit.png
+          test -f race-manager/assets/tracks/forest_lake_circuit.png
+          test -f race-manager/assets/tracks/desert_canyon_circuit.png
+          test -f race-manager/assets/tracks/tropical_island_circuit.png
