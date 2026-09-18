@@ -103,7 +103,7 @@ function renderTracks(containerId){
     random.onclick=()=>selectTrack('random',true);wrap.appendChild(random);
     TRACKS.forEach(t=>{
       const b=document.createElement('button');b.type='button';b.className='trackCard'+(t.id===selectedTrack?' selected':'');
-      b.innerHTML=`<span class="trackCardArt"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${t.icon}"></path></svg></span><strong>${esc(t.name)}</strong>`;
+      b.innerHTML=`<span class="trackCardArt"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${miniMapPath(t)}"></path></svg></span><strong>${esc(t.name)}</strong>`;
       b.onclick=()=>selectTrack(t.id,true);wrap.appendChild(b);
     });
     return;
@@ -128,20 +128,91 @@ function selectTrack(id,returnToSetup=false){
 function renderTrackSummary(){
   const t=TRACKS.find(x=>x.id===selectedTrack);
   if($('selectedTrackName'))$('selectedTrackName').textContent=t?t.name:'Random Track';
-  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${t.icon}"></path></svg>`:'?';
+  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`:'?';
 }
 function track(){return TRACKS.find(t=>t.id===(game?.trackId||selectedTrack))||TRACKS[0]}
-function finishLine(){
-  const t=track(),innerBottom=t.inner.y+t.inner.h,outerBottom=TRACK_OUTER.y+TRACK_OUTER.h;
-  return{x:500,w:28,y1:innerBottom,y2:outerBottom};
+function catmullPoint(p0,p1,p2,p3,t){
+  const t2=t*t,t3=t2*t;
+  return{
+    x:.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+    y:.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
+  };
+}
+function trackGeometry(t=track()){
+  if(TRACK_GEOMETRY.has(t.id))return TRACK_GEOMETRY.get(t.id);
+  const controls=t.points||[],samples=[],steps=t.curve?10:6,n=controls.length;
+  for(let i=0;i<n;i++){
+    const p0=controls[(i-1+n)%n],p1=controls[i],p2=controls[(i+1)%n],p3=controls[(i+2)%n];
+    for(let k=0;k<steps;k++){
+      const u=k/steps;
+      samples.push(t.curve?catmullPoint(p0,p1,p2,p3,u):{x:p1[0]+(p2[0]-p1[0])*u,y:p1[1]+(p2[1]-p1[1])*u});
+    }
+  }
+  const segs=[],cumulative=[0];let total=0;
+  for(let i=0;i<samples.length;i++){
+    const j=(i+1)%samples.length,a=samples[i],b=samples[j],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+    segs.push({a,b,dx,dy,len,tx:dx/len,ty:dy/len});
+    total+=len;cumulative.push(total);
+  }
+  const half=t.width/2;
+  const left=samples.map((p,i)=>{const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;return{x:p.x+nx*half,y:p.y+ny*half}});
+  const right=samples.map((p,i)=>{const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;return{x:p.x-nx*half,y:p.y-ny*half}});
+  const g={samples,segs,cumulative,total,left,right};
+  TRACK_GEOMETRY.set(t.id,g);return g;
+}
+function pointAtProgress(progress,t=track()){
+  const g=trackGeometry(t),p=((progress%1)+1)%1,target=p*g.total;
+  let i=0;while(i<g.segs.length-1&&g.cumulative[i+1]<target)i++;
+  const seg=g.segs[i],within=(target-g.cumulative[i])/seg.len,x=seg.a.x+seg.dx*within,y=seg.a.y+seg.dy*within;
+  return{x,y,tx:seg.tx,ty:seg.ty,nx:-seg.ty,ny:seg.tx,progress:p,index:i};
+}
+function nearestTrackPoint(x,y,t=track()){
+  const g=trackGeometry(t);let best=null,bestD2=Infinity;
+  for(let i=0;i<g.segs.length;i++){
+    const s=g.segs[i],px=x-s.a.x,py=y-s.a.y,u=clamp((px*s.dx+py*s.dy)/(s.len*s.len),0,1);
+    const qx=s.a.x+s.dx*u,qy=s.a.y+s.dy*u,dx=x-qx,dy=y-qy,d2=dx*dx+dy*dy;
+    if(d2<bestD2){
+      bestD2=d2;
+      best={x:qx,y:qy,distance:Math.sqrt(d2),tx:s.tx,ty:s.ty,nx:-s.ty,ny:s.tx,progress:(g.cumulative[i]+s.len*u)/g.total,index:i};
+    }
+  }
+  return best;
+}
+function miniMapPath(t){
+  const g=trackGeometry(t),pts=g.samples;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  pts.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});
+  const w=Math.max(1,maxX-minX),h=Math.max(1,maxY-minY),scale=Math.min(82/w,82/h),ox=50-(minX+maxX)*scale/2,oy=50-(minY+maxY)*scale/2;
+  const stride=Math.max(1,Math.floor(pts.length/48)),out=[];
+  for(let i=0;i<pts.length;i+=stride)out.push(`${(pts[i].x*scale+ox).toFixed(1)},${(pts[i].y*scale+oy).toFixed(1)}`);
+  return out.length?`M${out.join(' L')} Z`:'';
+}
+function finishLine(t=track()){
+  const p=pointAtProgress(0,t),half=t.width/2-4,thickness=24;
+  return{...p,half,thickness};
+}
+function featureAt(spec,t=track()){
+  const p=pointAtProgress(spec.s||0,t),offset=spec.offset||0;
+  return{...p,x:p.x+p.nx*offset,y:p.y+p.ny*offset,length:spec.length||40,width:spec.width||40,r:spec.r||12};
+}
+function hitTrackFeature(p,spec,t=track()){
+  const f=featureAt(spec,t),dx=p.x-f.x,dy=p.y-f.y,along=dx*f.tx+dy*f.ty,across=dx*f.nx+dy*f.ny;
+  return Math.abs(along)<=f.length/2&&Math.abs(across)<=f.width/2;
 }
 
 function buildRace(players,laps=2){
-  const starts=[{x:390,y:500},{x:340,y:500},{x:290,y:500},{x:240,y:500}];
   const raceTrack=selectedTrack==='random'?TRACKS[Math.floor(Math.random()*TRACKS.length)].id:selectedTrack;
+  const t=TRACKS.find(x=>x.id===raceTrack)||TRACKS[0],start=pointAtProgress(.025,t);
+  const starts=players.map((_,i)=>{
+    const col=i%2,row=Math.floor(i/2),lateral=(col?1:-1)*24,back=row*48;
+    return{x:start.x+start.nx*lateral-start.tx*back,y:start.y+start.ny*lateral-start.ty*back};
+  });
   return {
     id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,finishSequence:0,
-    players:players.map((p,i)=>({id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:starts[i].x,y:starts[i].y,vx:0,vy:0,lap:0,nextCheckpoint:1,turboCharge:0,turboReady:false,turboHeld:false,finished:false,pendingFinish:false,finishCrossedAt:0}))
+    players:players.map((p,i)=>{
+      const pos=starts[i],nearest=nearestTrackPoint(pos.x,pos.y,t);
+      return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:pos.x,y:pos.y,vx:0,vy:0,lap:0,nextCheckpoint:1,trackProgress:nearest.progress,turboCharge:0,turboReady:false,turboHeld:false,finished:false,pendingFinish:false,finishCrossedAt:0};
+    })
   };
 }
 function snapshot(){
@@ -157,7 +228,8 @@ function applySnapshot(s){
     turboReady:!!p.turboReady,
     turboHeld:false,
     pendingFinish:!!p.pendingFinish,
-    finishCrossedAt:Number.isFinite(p.finishCrossedAt)?p.finishCrossedAt:0
+    finishCrossedAt:Number.isFinite(p.finishCrossedAt)?p.finishCrossedAt:0,
+    trackProgress:Number.isFinite(p.trackProgress)?p.trackProgress:nearestTrackPoint(p.x,p.y,TRACKS.find(t=>t.id===s.trackId)||TRACKS[0]).progress
   }));
   selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||2;
   lookDrag=null;lookYaw=0;lookPitch=0;turboHolding=false;animating=false;
