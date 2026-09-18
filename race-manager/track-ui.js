@@ -7,11 +7,20 @@
   const TRACK_W=390;
   const TRACK_H=340;
 
-  const YOU_SPRITE=`${ASSET_ROOT}/cars/player_gold.png`;
-  const BOT_SPRITES=[
-    'blue.png','red.png','green.png','cyan.png','orange.png',
-    'pink.png','white.png','black_red.png','purple.png','teal.png','silver.png'
-  ].map(name=>`${ASSET_ROOT}/cars/${name}`);
+  const CAR_SPRITES={
+    gold:`${ASSET_ROOT}/cars/player_gold.png`,
+    blue:`${ASSET_ROOT}/cars/blue.png`,
+    red:`${ASSET_ROOT}/cars/red.png`,
+    green:`${ASSET_ROOT}/cars/green.png`,
+    cyan:`${ASSET_ROOT}/cars/cyan.png`,
+    orange:`${ASSET_ROOT}/cars/orange.png`,
+    pink:`${ASSET_ROOT}/cars/pink.png`,
+    white:`${ASSET_ROOT}/cars/white.png`,
+    black_red:`${ASSET_ROOT}/cars/black_red.png`,
+    purple:`${ASSET_ROOT}/cars/purple.png`,
+    teal:`${ASSET_ROOT}/cars/teal.png`,
+    silver:`${ASSET_ROOT}/cars/silver.png`
+  };
 
   const TRACK_ASSETS={
     'Autumn River Valley':`${ASSET_ROOT}/tracks/autumn_river_valley_circuit.png`,
@@ -173,6 +182,7 @@
       state.name=name;
       state.rank=String(index+1);
       state.isYou=row.classList.contains('you');
+      state.carColor=row.dataset.carColor||'gold';
       state.laps=laps;
       state.gridIndex=index;
     });
@@ -183,9 +193,9 @@
   }
 
   function assignUniqueSprites(states){
-    const others=states.filter(state=>!state.isYou).sort((a,b)=>a.name.localeCompare(b.name));
-    for(const state of states)if(state.isYou)state.sprite=YOU_SPRITE;
-    others.forEach((state,index)=>{state.sprite=BOT_SPRITES[index%BOT_SPRITES.length]});
+    for(const state of states){
+      state.sprite=CAR_SPRITES[state.carColor]||CAR_SPRITES.gold;
+    }
   }
 
   function advanceMotion(state,now){
