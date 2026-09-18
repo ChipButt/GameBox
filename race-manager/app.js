@@ -6,6 +6,8 @@
   const TICK_MS=300;
   const MAX_GRID=12;
   const RACE_TICKS=280;
+  const MENU_DESIGN_W=390;
+  const MENU_DESIGN_H=844;
 
   const TRACKS=[
     {name:'Autumn River Valley',asset:'autumn_river_valley_circuit.png',discipline:'GT',weather:'Clear',laps:8,profile:'Flowing bends · River bridge',risk:1.15,weights:{engine:1.05,tyres:1.45,brakes:1.20,fuel:1.00}},
@@ -30,6 +32,18 @@
   ];
   const CAR_BY_COLOR=Object.fromEntries(CAR_ROSTER.map(car=>[car.color,car]));
   const normaliseCarColor=value=>CAR_BY_COLOR[value]?value:'gold';
+
+  const CAR_MENU_SLOTS=[
+    {x:28.5,y:205},{x:143,y:205},{x:255,y:205},
+    {x:28.5,y:359.688},{x:143,y:360},{x:255,y:360},
+    {x:28.5,y:514.875},{x:143,y:515},{x:255,y:514.875},
+    {x:28.5,y:670},{x:143,y:670},{x:255,y:670}
+  ];
+  const TRACK_MENU_SLOTS=[
+    {x:17,y:235},{x:201,y:235},{x:17,y:500},{x:201,y:500}
+  ];
+  const LEADERBOARD_NAME_Y=[183.318,222.581,262.161,305.741,349.322,392.902,436.482,480.063,523.643,567.224,610.804,654.385];
+  const LEADERBOARD_COLOUR_Y=[185.471,214.58,262.161,305.741,349.322,392.902,436.482,480.063,523.643,567.224,610.804,654.385];
 
   const UPGRADE_META={
     engine:{label:'Engine',desc:'Acceleration',kind:'car',base:22,step:8},
@@ -144,18 +158,28 @@
     write(PROFILE_KEY,all);
   }
 
+  function updateMenuScale(){
+    const scale=Math.min(
+      1,
+      window.innerWidth/MENU_DESIGN_W,
+      window.innerHeight/MENU_DESIGN_H
+    );
+    document.documentElement.style.setProperty('--menu-scale',String(scale));
+  }
+
   function showSetup(id){
     Array.from(document.querySelectorAll('.setupView')).forEach(v=>v.classList.toggle('hidden',v.id!==id));
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
+    const menuMode=['setupHome','raceFormatSetup','carSetup','trackSetup'].includes(id);
+    document.body.classList.toggle('gridline-menu-live',menuMode);
+    if(menuMode)updateMenuScale();
     window.scrollTo({top:0,behavior:'smooth'});
     if(id==='raceFormatSetup')renderRaceSetup();
     if(id==='carSetup')renderCarChoices('flow');
     if(id==='trackSetup'){
       renderRaceSetup();
       renderSinglePlayers();
-      const playerBlock=$('singlePlayerBlock');
-      if(playerBlock)playerBlock.classList.toggle('hidden',playMode!=='single');
       updateTrackStartButton();
     }
     if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
@@ -164,6 +188,7 @@
 
   function showRace(){
     $$('.setupView').forEach(v=>v.classList.add('hidden'));
+    document.body.classList.remove('gridline-menu-live');
     $('raceScreen').classList.remove('hidden');
     $('exitRace').classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
@@ -204,8 +229,9 @@
       }
     }
 
-    wrap.innerHTML=CAR_ROSTER.map(car=>{
+    wrap.innerHTML=CAR_ROSTER.map((car,index)=>{
       const unavailable=taken.has(car.color)&&car.color!==selectedCarColor;
+      const slot=CAR_MENU_SLOTS[index]||CAR_MENU_SLOTS[0];
       const replacementName=prefix==='flow'
         ?car.racer
         :prefix==='single'
@@ -214,9 +240,11 @@
             ?(roster().find(p=>p.id===$('hostPlayerSelect')?.value)?.name||car.racer)
             :(roster().find(p=>p.id===$('joinPlayerSelect')?.value)?.name||car.racer);
       return `
-        <button class="carChoice ${car.color===selectedCarColor?'selected':''}" data-car-color="${car.color}" type="button" ${unavailable?'disabled':''}>
-          <img src="${ASSET_ROOT}/cars/${car.asset}" alt="">
-          <span><strong>${esc(car.label)}</strong><small>${esc(car.color===selectedCarColor?replacementName:car.racer)}</small></span>
+        <button class="carChoice ${car.color===selectedCarColor?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-car-color="${car.color}" type="button" ${unavailable?'disabled':''} aria-label="${esc(car.label)} car, ${esc(replacementName)}">
+          <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
+          <img class="carChoiceSprite" src="${ASSET_ROOT}/cars/${car.asset}" alt="">
+          <span class="carDriverName">${esc(replacementName)}</span>
+          <strong class="carChooseText">CHOOSE</strong>
         </button>
       `;
     }).join('');
@@ -264,12 +292,17 @@
     if(flowValue)flowValue.textContent=`${raceSetup.races} races`;
 
     const flowTracks=$('flowTrackChoices');
-    if(flowTracks)flowTracks.innerHTML=TRACKS.map((track,index)=>`
-      <button class="trackChoice ${index===config.trackIndex?'selected':''}" data-track-index="${index}" type="button">
-        <img src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
-        <span><strong>${esc(track.name)}</strong><small>${esc(track.profile)} · ${track.laps} laps</small></span>
-      </button>
-    `).join('');
+    if(flowTracks)flowTracks.innerHTML=TRACKS.map((track,index)=>{
+      const slot=TRACK_MENU_SLOTS[index]||TRACK_MENU_SLOTS[0];
+      return `
+        <button class="trackChoice ${index===config.trackIndex?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-track-index="${index}" type="button" aria-label="${esc(track.name)}">
+          <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
+          <img class="trackChoiceImage" src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
+          <strong class="trackChoiceName">${esc(track.name.toUpperCase())}</strong>
+          <span class="trackChooseText">CHOOSE</span>
+        </button>
+      `;
+    }).join('');
 
     if(role==='host'&&session){
       const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
@@ -1427,7 +1460,8 @@
       }
     });
 
-    const cleanupNetworking=()=>{try{session?.close()}catch{};clearInterval(hostTimer)};
+    window.addEventListener('resize',()=>{if(document.body.classList.contains('gridline-menu-live'))updateMenuScale()},{passive:true});
+        const cleanupNetworking=()=>{try{session?.close()}catch{};clearInterval(hostTimer)};
     window.addEventListener('beforeunload',cleanupNetworking);
     window.addEventListener('pagehide',cleanupNetworking);
   }
