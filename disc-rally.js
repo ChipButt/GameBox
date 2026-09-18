@@ -17,14 +17,14 @@ const TRACKS=[
     bumpers:[{s:.29,offset:20,r:13},{s:.67,offset:-18,r:13}],boosts:[{s:.11,offset:0,length:90,width:48}],slow:[]
   },
   {
-    id:'goldrush',name:'Gold Rush',desc:'Wide sweepers, S-bends and boost lanes',width:132,smooth:3,
+    id:'goldrush',name:'Gold Rush',desc:'Wide sweepers, S-bends and boost lanes',width:120,smooth:3,
     points:[[500,870],[850,900],[1210,820],[1450,650],[1260,500],[1450,320],[1240,120],[950,170],[760,370],[540,190],[270,100],[90,300],[260,480],[100,680],[310,850]],
     bumpers:[{s:.38,offset:18,r:12}],boosts:[{s:.14,offset:0,length:110,width:50},{s:.57,offset:0,length:100,width:50}],slow:[{s:.78,offset:0,length:120,width:78}]
   },
   {
-    id:'switchback',name:'Switchback',desc:'Long rounded switchbacks with generous separation',width:108,smooth:3,
-    points:[[500,1040],[920,1050],[1360,950],[1510,780],[1120,680],[1480,560],[1110,440],[1480,320],[1200,150],[850,100],[560,190],[330,340],[100,230],[80,470],[370,560],[90,690],[380,790],[180,950]],
-    bumpers:[{s:.47,offset:-14,r:10}],boosts:[{s:.09,offset:0,length:90,width:42}],slow:[]
+    id:'switchback',name:'Switchback',desc:'Long rounded switchbacks with generous separation',width:90,smooth:3,
+    points:[[600,1200],[1100,1200],[1550,1050],[1250,850],[1550,650],[1200,450],[1450,180],[1000,100],[750,300],[300,120],[100,350],[420,550],[120,760],[430,930],[250,1150]],
+    bumpers:[{s:.47,offset:-12,r:9}],boosts:[{s:.09,offset:0,length:82,width:38}],slow:[]
   },
   {
     id:'roundabout',name:'Roundabout',desc:'Broad looping bends around a deep central section',width:124,smooth:3,
@@ -33,12 +33,12 @@ const TRACKS=[
   },
   {
     id:'lightning',name:'Force Lightning',desc:'Fast sweeping direction changes without crossovers',width:112,smooth:3,
-    points:[[500,940],[920,940],[1330,820],[1480,640],[1180,550],[1450,410],[1160,310],[1420,160],[1110,90],[800,190],[570,90],[290,120],[90,300],[360,420],[100,550],[330,680],[140,820],[340,930]],
+    points:[[600,1400],[1100,1420],[1600,1300],[1780,1080],[1450,900],[1760,700],[1400,520],[1700,300],[1450,100],[1100,180],[800,80],[480,180],[150,350],[460,560],[120,760],[430,960],[180,1180],[380,1360]],
     bumpers:[{s:.64,offset:14,r:10}],boosts:[{s:.12,offset:0,length:115,width:44},{s:.46,offset:0,length:110,width:44},{s:.82,offset:0,length:100,width:44}],slow:[]
   }
 ];
 const TRACK_GEOMETRY=new Map();
-const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
+const DISC_R=18,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
 const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
 const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
@@ -59,7 +59,7 @@ const roster=()=>{
 
 let currentView='modeView';
 let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[];
-let game=null,pendingSnapshot=null,turnEndTimer=null;
+let game=null,pendingSnapshot=null,turnEndTimer=null,cameraHeading=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
 
