@@ -243,3 +243,73 @@ async function animatePhysics(){
       }
       draw();renderHudOnly();
       if(moving&&steps<STEPS_MAX)requestAnimationFrame(frame);else resolve();
+    };
+    requestAnimationFrame(frame);
+  });
+  game.players.forEach(p=>{p.vx=0;p.vy=0});
+  animating=false;
+}
+async function startAuthoritativeFlick(playerId,vx,vy,useTurbo){
+  if(!game||game.winner||animating)return;
+  const p=activePlayer();if(!p||p.id!==playerId)return;
+  if(useTurbo&&p.turbo>0)p.turbo--;
+  p.vx=clamp(vx,-36,36);p.vy=clamp(vy,-36,36);
+  if(mode==='multi'&&role==='host')session?.broadcast({type:'flick-start',playerId:p.id,vx:p.vx,vy:p.vy,useTurbo});
+  await animatePhysics();
+  if(!game.winner)nextTurn();
+  renderRace();
+  if(mode==='multi'&&role==='host')broadcastState();
+}
+async function playRemoteFlick(msg){
+  if(!game||animating)return;
+  const p=game.players.find(x=>x.id===msg.playerId);if(!p)return;
+  if(msg.useTurbo&&p.turbo>0)p.turbo--;
+  p.vx=Number(msg.vx)||0;p.vy=Number(msg.vy)||0;
+  await animatePhysics();
+  if(pendingSnapshot){const finalState=pendingSnapshot;pendingSnapshot=null;applySnapshot(finalState)}
+}
+
+function renderHudOnly(){
+  if(!game)return;
+  const p=activePlayer(),your=localCanShoot();
+  $('turnText').textContent=game.winner?`${game.winner.name} wins!`:p?`${p.name}${your?' — your shot':''}`:'—';
+  $('turnHint').textContent=game.winner?'Race complete':animating?'Discs moving…':your?'Drag your disc and release':`Waiting for ${p?.name||'player'}`;
+  $('turnBanner').classList.toggle('yours',your&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
+  $('turboState').textContent=p?.turbo>0?(turboArmed?'ARMED':'Ready'):'Used this lap';
+  $('turboButton').disabled=!your||animating||!!game.winner||!(p?.turbo>0);$('turboButton').classList.toggle('active',turboArmed);
+  $('scoreboard').innerHTML=game.players.map((x,i)=>`<div class="scoreRow${i===game.current&&!game.winner?' active':''}"><div class="scoreIdentity"><span class="scoreDot" style="background:${x.color}"></span><strong>${esc(x.name)}</strong></div><small>${x.finished?'FINISHED':`Lap ${Math.min(x.lap+1,game.laps)} / ${game.laps}`} · Turbo ${x.turbo?'⚡':'—'}</small></div>`).join('');
+}
+function renderRace(){
+  if(!game)return;
+  $('trackName').textContent=(TRACKS.find(t=>t.id===game.trackId)||TRACKS[0]).name;
+  $('raceNetwork').classList.toggle('hidden',mode!=='multi');
+  renderHudOnly();draw();
+  if(game.winner){
+    $('finishOverlay').classList.remove('hidden');
+    $('finishOverlay').innerHTML=`<div class="finishCard"><span>RACE WINNER</span><strong>${esc(game.winner.name)}</strong><small>Finished ${game.laps} lap${game.laps===1?'':'s'} on turn ${game.winner.turn}.</small><button id="finishExit" type="button">Back to GameBox</button></div>`;
+    $('finishExit').onclick=leaveRace;
+  }else $('finishOverlay').classList.add('hidden');
+}
+
+function broadcastState(){if(role==='host'&&session&&game)session.broadcast({type:'state',state:snapshot()})}
+function lobbyPlayers(){
+  if(role!=='host')return connectedLobby;
+  const hp=roster().find(p=>p.id===$('hostPlayer').value),list=[];
+  if(hp)list.push({id:hp.id,name:hp.name,host:true});
+  session?.peers().forEach(peer=>{if(peer.meta?.player)list.push({...peer.meta.player,host:false})});
+  return list.slice(0,4);
+}
+function renderLobby(target,players){
+  const wrap=$(target);if(!wrap)return;
+  wrap.innerHTML=players.length?players.map((p,i)=>`<div class="lobbyPlayer"><strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="empty">Waiting for players…</div>';
+}
+function updateHostAdvert(){
+  if(role!=='host'||!session?.updateHost)return;
+  const p=roster().find(x=>x.id===$('hostPlayer').value),t=track();
+  session.updateHost({hostName:`${p?.name||'Host'}'s Disc Rally`,player:p,started:false,raceMode:'disc-rally',trackName:t.name,totalRaces:Number($('hostLaps').value)||2});
+}
+function installSession(kind){
+  resetSession();
+  if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Multiplayer discovery is unavailable.');
+  role=kind;
+  session=new window.GameBoxLAN.DiscoverySession({
