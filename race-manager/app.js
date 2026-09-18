@@ -965,7 +965,7 @@
       renderJoinLobby([]);
       startAutoScan();
     };
-    $('[data-back]').forEach(b=>b.onclick=()=>{
+    $$('[data-back]').forEach(b=>b.onclick=()=>{
       if(b.closest('#hostSetup,#joinSetup')){
         resetNetworkSession();
         role=null;
