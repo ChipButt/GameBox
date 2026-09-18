@@ -257,22 +257,11 @@ function nextTurn(){
   game.turn++;game.flicksUsed=0;game.turnEndsAt=0;
 }
 
-function roundedRectPath(p,x,y,w,h,r){
-  const rr=Math.min(r,w/2,h/2);
-  p.moveTo(x+rr,y);p.lineTo(x+w-rr,y);p.quadraticCurveTo(x+w,y,x+w,y+rr);p.lineTo(x+w,y+h-rr);p.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);p.lineTo(x+rr,y+h);p.quadraticCurveTo(x,y+h,x,y+h-rr);p.lineTo(x,y+rr);p.quadraticCurveTo(x,y,x+rr,y);p.closePath();
-}
-function makeTrackPath(){
-  const p=new Path2D();roundedRectPath(p,TRACK_OUTER.x,TRACK_OUTER.y,TRACK_OUTER.w,TRACK_OUTER.h,TRACK_OUTER.r);
-  const inn=track().inner;roundedRectPath(p,inn.x,inn.y,inn.w,inn.h,inn.r);return p;
-}
-function roadContains(x,y){return ctx.isPointInPath(makeTrackPath(),x,y,'evenodd')}
-function hitRect(p,r){return p.x>r.x&&p.x<r.x+r.w&&p.y>r.y&&p.y<r.y+r.h}
+function roadContains(x,y){return nearestTrackPoint(x,y).distance<=track().width/2}
 
 function cameraForView(){
-  const p=activePlayer()||{x:390,y:500};
-  const dx=p.x-500,dy=p.y-300,rx=420,ry=220;
-  let baseX=dy/(ry*ry),baseY=-dx/(rx*rx);
-  const m=Math.hypot(baseX,baseY)||1;baseX/=m;baseY/=m;
+  const p=activePlayer()||pointAtProgress(.025),nearest=nearestTrackPoint(p.x,p.y);
+  let baseX=nearest.tx,baseY=nearest.ty;
   const cos=Math.cos(lookYaw),sin=Math.sin(lookYaw);
   const hx=baseX*cos-baseY*sin,hy=baseX*sin+baseY*cos;
   return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx,horizon:VIEW.horizon+lookPitch};
@@ -286,31 +275,33 @@ function projectPoint(x,y,camera=cameraForView()){
   const scale=VIEW.focal/depth;
   return{x:VIEW.w/2+lateral*scale,y:(camera.horizon??VIEW.horizon)+(VIEW.cameraHeight*VIEW.focal)/depth,scale,depth,forward,lateral};
 }
-function roundedRectPoints(rect,edgeSteps=8,cornerSteps=10){
-  const x=rect.x,y=rect.y,w=rect.w,h=rect.h,r=Math.min(rect.r,w/2,h/2),pts=[];
-  const line=(ax,ay,bx,by,steps)=>{for(let i=0;i<steps;i++){const t=i/steps;pts.push({x:ax+(bx-ax)*t,y:ay+(by-ay)*t})}};
-  const arc=(cx,cy,a0,a1,steps)=>{for(let i=0;i<steps;i++){const a=a0+(a1-a0)*(i/steps);pts.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r})}};
-  line(x+r,y,x+w-r,y,edgeSteps);arc(x+w-r,y+r,-Math.PI/2,0,cornerSteps);
-  line(x+w,y+r,x+w,y+h-r,edgeSteps);arc(x+w-r,y+h-r,0,Math.PI/2,cornerSteps);
-  line(x+w-r,y+h,x+r,y+h,edgeSteps);arc(x+r,y+h-r,Math.PI/2,Math.PI,cornerSteps);
-  line(x,y+h-r,x,y+r,edgeSteps);arc(x+r,y+r,Math.PI,Math.PI*1.5,cornerSteps);
-  return pts;
-}
 function drawProjectedQuad(points,fill,stroke=null,width=1){
   const ps=points.map(p=>projectPoint(p.x,p.y));
   if(ps.some(p=>!p))return false;
   ctx.beginPath();ctx.moveTo(ps[0].x,ps[0].y);for(let i=1;i<ps.length;i++)ctx.lineTo(ps[i].x,ps[i].y);ctx.closePath();
   if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke()}return true;
 }
+function trackFeatureQuad(spec,t=track()){
+  const f=featureAt(spec,t),hl=f.length/2,hw=f.width/2;
+  return[
+    {x:f.x-f.tx*hl+f.nx*hw,y:f.y-f.ty*hl+f.ny*hw},
+    {x:f.x+f.tx*hl+f.nx*hw,y:f.y+f.ty*hl+f.ny*hw},
+    {x:f.x+f.tx*hl-f.nx*hw,y:f.y+f.ty*hl-f.ny*hw},
+    {x:f.x-f.tx*hl-f.nx*hw,y:f.y-f.ty*hl-f.ny*hw}
+  ];
+}
+function finishCellQuad(f,across0,across1,along0,along1){
+  const p=(across,along)=>({x:f.x+f.nx*across+f.tx*along,y:f.y+f.ny*across+f.ty*along});
+  return[p(across0,along0),p(across1,along0),p(across1,along1),p(across0,along1)];
+}
 function drawPerspectiveRoad(){
-  const t=track(),cam=cameraForView(),outer=roundedRectPoints(TRACK_OUTER),inner=roundedRectPoints(t.inner);
+  const t=track(),g=trackGeometry(t),cam=cameraForView();
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const sky=ctx.createLinearGradient(0,0,0,VIEW.horizon+240);
   sky.addColorStop(0,'#f9fbff');sky.addColorStop(.45,'#f2f1ff');sky.addColorStop(1,'#b8ddff');
   ctx.fillStyle=sky;ctx.fillRect(0,0,VIEW.w,VIEW.horizon+280);
 
-  // Distant stylised skyline/water, deliberately soft so the track stays dominant.
   ctx.fillStyle='rgba(119,111,216,.20)';
   for(let i=0;i<10;i++){
     const w=35+(i%3)*18,h=45+(i%4)*28,x=i*82-35;
@@ -323,72 +314,63 @@ function drawPerspectiveRoad(){
   const roadGrad=ctx.createLinearGradient(0,VIEW.horizon,0,VIEW.h);
   roadGrad.addColorStop(0,'#3ab7ff');roadGrad.addColorStop(.55,'#118fe8');roadGrad.addColorStop(1,'#0879d5');
 
-  for(let i=0;i<outer.length;i++){
-    const j=(i+1)%outer.length;
-    const a=projectPoint(outer[i].x,outer[i].y,cam),b=projectPoint(outer[j].x,outer[j].y,cam),
-          d=projectPoint(inner[i].x,inner[i].y,cam),e=projectPoint(inner[j].x,inner[j].y,cam);
-    if(!a||!b||!d||!e)continue;
-    if(Math.max(a.forward,b.forward,d.forward,e.forward)<-80)continue;
-    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(e.x,e.y);ctx.lineTo(d.x,d.y);ctx.closePath();
+  for(let i=0;i<g.samples.length;i++){
+    const j=(i+1)%g.samples.length;
+    const l0=projectPoint(g.left[i].x,g.left[i].y,cam),l1=projectPoint(g.left[j].x,g.left[j].y,cam),
+          r0=projectPoint(g.right[i].x,g.right[i].y,cam),r1=projectPoint(g.right[j].x,g.right[j].y,cam);
+    if(!l0||!l1||!r0||!r1)continue;
+    if(Math.max(l0.forward,l1.forward,r0.forward,r1.forward)<-80)continue;
+    ctx.beginPath();ctx.moveTo(l0.x,l0.y);ctx.lineTo(l1.x,l1.y);ctx.lineTo(r1.x,r1.y);ctx.lineTo(r0.x,r0.y);ctx.closePath();
     ctx.fillStyle=roadGrad;ctx.fill();
   }
 
-  const drawBarrier=pts=>{
-    for(let i=0;i<pts.length;i++){
-      const a=projectPoint(pts[i].x,pts[i].y,cam),b=projectPoint(pts[(i+1)%pts.length].x,pts[(i+1)%pts.length].y,cam);
+  const drawBarrier=edge=>{
+    for(let i=0;i<edge.length;i++){
+      const a=projectPoint(edge[i].x,edge[i].y,cam),b=projectPoint(edge[(i+1)%edge.length].x,edge[(i+1)%edge.length].y,cam);
       if(!a||!b||Math.max(a.forward,b.forward)<-65)continue;
+      const scale=Math.min(1.3,(a.scale+b.scale)/2);
       ctx.lineCap='round';
-      ctx.strokeStyle='#344354';ctx.lineWidth=Math.max(5,18*Math.min(1.3,(a.scale+b.scale)/2));ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-      ctx.strokeStyle='#d9e1e7';ctx.lineWidth=Math.max(4,12*Math.min(1.2,(a.scale+b.scale)/2));ctx.stroke();
-      ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1.5,3*Math.min(1.2,(a.scale+b.scale)/2));ctx.stroke();
-      if(i%4===0){
-        const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
-        ctx.fillStyle='#ffb914';ctx.beginPath();ctx.ellipse(mx,my,Math.max(2,5*a.scale),Math.max(1.5,2.1*a.scale),0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#344354';ctx.lineWidth=Math.max(5,18*scale);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.strokeStyle='#d9e1e7';ctx.lineWidth=Math.max(4,12*Math.min(1.2,scale));ctx.stroke();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1.5,3*Math.min(1.2,scale));ctx.stroke();
+      if(i%6===0){
+        ctx.fillStyle='#ffb914';ctx.beginPath();ctx.ellipse((a.x+b.x)/2,(a.y+b.y)/2,Math.max(2,5*a.scale),Math.max(1.5,2.1*a.scale),0,0,Math.PI*2);ctx.fill();
       }
     }
   };
-  drawBarrier(outer);drawBarrier(inner);
+  drawBarrier(g.left);drawBarrier(g.right);
 
-  // Bright technical lane markings.
-  ctx.strokeStyle='rgba(232,251,255,.92)';ctx.lineWidth=4;
-  for(let i=0;i<outer.length;i+=2){
-    const j=(i+1)%outer.length;
-    const ca={x:(outer[i].x+inner[i].x)/2,y:(outer[i].y+inner[i].y)/2};
-    const cb={x:(outer[j].x+inner[j].x)/2,y:(outer[j].y+inner[j].y)/2};
-    const a=projectPoint(ca.x,ca.y,cam),b=projectPoint(cb.x,cb.y,cam);
+  // Actual course centre line and transverse seams.
+  ctx.strokeStyle='rgba(232,251,255,.88)';ctx.lineWidth=3;
+  for(let i=0;i<g.samples.length;i+=2){
+    const j=(i+1)%g.samples.length,a=projectPoint(g.samples[i].x,g.samples[i].y,cam),b=projectPoint(g.samples[j].x,g.samples[j].y,cam);
     if(!a||!b||Math.max(a.forward,b.forward)<0)continue;
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
   }
-  // Cross-track seams give a stronger sense of depth/speed.
-  for(let i=0;i<outer.length;i+=6){
-    const a=projectPoint(outer[i].x,outer[i].y,cam),b=projectPoint(inner[i].x,inner[i].y,cam);
+  for(let i=0;i<g.samples.length;i+=10){
+    const a=projectPoint(g.left[i].x,g.left[i].y,cam),b=projectPoint(g.right[i].x,g.right[i].y,cam);
     if(!a||!b||Math.max(a.forward,b.forward)<10)continue;
-    ctx.strokeStyle='rgba(222,249,255,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    ctx.strokeStyle='rgba(222,249,255,.48)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
   }
 
-  // Full-width start/finish line: a clear checker strip spanning barrier to barrier.
-  const finish=finishLine(),rows=12,cols=2,rowH=(finish.y2-finish.y1)/rows,colW=finish.w/cols;
-  drawProjectedQuad([
-    {x:finish.x-finish.w/2-5,y:finish.y1},{x:finish.x+finish.w/2+5,y:finish.y1},
-    {x:finish.x+finish.w/2+5,y:finish.y2},{x:finish.x-finish.w/2-5,y:finish.y2}
-  ],'#ffffff');
+  // Start/finish checker spans the full width of THIS course.
+  const finish=finishLine(t),rows=12,cols=2,acrossStep=(finish.half*2)/rows,alongStep=finish.thickness/cols;
+  drawProjectedQuad(finishCellQuad(finish,-finish.half,finish.half,-finish.thickness/2,finish.thickness/2),'#ffffff');
   for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
-    const x1=finish.x-finish.w/2+col*colW,y1=finish.y1+row*rowH;
-    drawProjectedQuad([
-      {x:x1,y:y1},{x:x1+colW,y:y1},
-      {x:x1+colW,y:y1+rowH},{x:x1,y:y1+rowH}
-    ],(row+col)%2?'#ffffff':'#092c45');
+    const a0=-finish.half+row*acrossStep,a1=a0+acrossStep,l0=-finish.thickness/2+col*alongStep,l1=l0+alongStep;
+    drawProjectedQuad(finishCellQuad(finish,a0,a1,l0,l1),(row+col)%2?'#ffffff':'#092c45');
   }
 
-  t.boosts.forEach(b=>{
-    if(drawProjectedQuad([{x:b.x,y:b.y},{x:b.x+b.w,y:b.y},{x:b.x+b.w,y:b.y+b.h},{x:b.x,y:b.y+b.h}],'#ffd116','#fff0a2',2)){
-      const p=projectPoint(b.x+b.w/2,b.y+b.h/2,cam);
+  t.boosts.forEach(spec=>{
+    const q=trackFeatureQuad(spec,t);
+    if(drawProjectedQuad(q,'#ffd116','#fff0a2',2)){
+      const f=featureAt(spec,t),p=projectPoint(f.x,f.y,cam);
       if(p&&p.forward>12){ctx.fillStyle='#063b5d';ctx.font=`${Math.max(10,Math.min(22,13*p.scale))}px Fredoka`;ctx.textAlign='center';ctx.fillText('BOOST',p.x,p.y)}
     }
   });
-  t.slow.forEach(s=>drawProjectedQuad([{x:s.x,y:s.y},{x:s.x+s.w,y:s.y},{x:s.x+s.w,y:s.y+s.h},{x:s.x,y:s.y+s.h}],'rgba(92,61,191,.48)'));
+  t.slow.forEach(spec=>drawProjectedQuad(trackFeatureQuad(spec,t),'rgba(92,61,191,.48)'));
 
-  [...t.bumpers].sort((a,b)=>{
+  t.bumpers.map(spec=>({...featureAt(spec,t),spec})).sort((a,b)=>{
     const pa=projectPoint(a.x,a.y,cam),pb=projectPoint(b.x,b.y,cam);return (pb?.depth||0)-(pa?.depth||0);
   }).forEach(b=>{
     const p=projectPoint(b.x,b.y,cam);if(!p||p.forward<-35)return;
@@ -475,21 +457,18 @@ function onPointerUp(e){
 
 function processCheckpoints(previous=[]){
   if(!game)return;
-  const finish=finishLine();
+  const t=track();
   game.players.forEach((p,i)=>{
     if(p.finished||p.pendingFinish)return;
-    let zone=0;
-    if(p.x>835&&p.y>215&&p.y<385)zone=1;
-    else if(p.y<125&&p.x>420&&p.x<580)zone=2;
-    else if(p.x<165&&p.y>215&&p.y<385)zone=3;
-    if(p.nextCheckpoint===1&&zone===1)p.nextCheckpoint=2;
-    else if(p.nextCheckpoint===2&&zone===2)p.nextCheckpoint=3;
-    else if(p.nextCheckpoint===3&&zone===3)p.nextCheckpoint=4;
+    const current=nearestTrackPoint(p.x,p.y,t),prev=previous[i]?nearestTrackPoint(previous[i].x,previous[i].y,t):null;
+    const progress=current.progress;
+    if(p.nextCheckpoint===1&&progress>=.20&&progress<.45)p.nextCheckpoint=2;
+    else if(p.nextCheckpoint===2&&progress>=.45&&progress<.70)p.nextCheckpoint=3;
+    else if(p.nextCheckpoint===3&&progress>=.70&&progress<.93)p.nextCheckpoint=4;
 
-    const prev=previous[i];
-    const crossedFinish=p.nextCheckpoint===4&&prev&&
-      prev.x<finish.x&&p.x>=finish.x&&
-      p.y>=finish.y1-DISC_R&&p.y<=finish.y2+DISC_R;
+    const forwardDot=p.vx*current.tx+p.vy*current.ty;
+    const crossedFinish=p.nextCheckpoint===4&&prev&&prev.progress>.82&&progress<.18&&forwardDot>-.05;
+    p.trackProgress=progress;
     if(crossedFinish){
       p.lap++;p.nextCheckpoint=1;
       if(p.lap>=game.laps){
@@ -501,31 +480,13 @@ function processCheckpoints(previous=[]){
   });
 }
 
-function roundedRectSdf(x,y,r){
-  const cx=r.x+r.w/2,cy=r.y+r.h/2;
-  const bx=r.w/2-r.r,by=r.h/2-r.r;
-  const qx=Math.abs(x-cx)-bx,qy=Math.abs(y-cy)-by;
-  const ox=Math.max(qx,0),oy=Math.max(qy,0);
-  return Math.hypot(ox,oy)+Math.min(Math.max(qx,qy),0)-r.r;
-}
 function roadClearContains(x,y){
-  const outer=roundedRectSdf(x,y,TRACK_OUTER);
-  const inner=roundedRectSdf(x,y,track().inner);
-  return outer<=-DISC_R&&inner>=DISC_R;
-}
-function sdfNormal(x,y,rect){
-  const e=1.25;
-  const gx=roundedRectSdf(x+e,y,rect)-roundedRectSdf(x-e,y,rect);
-  const gy=roundedRectSdf(x,y+e,rect)-roundedRectSdf(x,y-e,rect);
-  const m=Math.hypot(gx,gy)||1;
-  return{x:gx/m,y:gy/m};
+  return nearestTrackPoint(x,y).distance<=track().width/2-DISC_R;
 }
 function applyWalls(p){
   const sx=p.vx*.5,sy=p.vy*.5,target={x:p.x+sx,y:p.y+sy};
   if(roadClearContains(target.x,target.y)){p.x=target.x;p.y=target.y;return}
 
-  // Find the last valid point along this movement step so the disc contacts the
-  // barrier rather than teleporting back from a corner.
   let lo=0,hi=1;
   for(let i=0;i<9;i++){
     const mid=(lo+hi)/2,x=p.x+sx*mid,y=p.y+sy*mid;
@@ -533,44 +494,40 @@ function applyWalls(p){
   }
   p.x+=sx*lo;p.y+=sy*lo;
 
-  const probeX=p.x+sx*Math.max(.02,hi-lo),probeY=p.y+sy*Math.max(.02,hi-lo);
-  const outerViolation=roundedRectSdf(probeX,probeY,TRACK_OUTER)+DISC_R;
-  const innerViolation=DISC_R-roundedRectSdf(probeX,probeY,track().inner);
-  let n;
-  if(innerViolation>outerViolation){
-    const g=sdfNormal(p.x,p.y,track().inner);
-    n={x:-g.x,y:-g.y}; // into the infield = out of the legal road
-  }else{
-    n=sdfNormal(p.x,p.y,TRACK_OUTER); // away from the circuit = out of the legal road
+  const hitX=p.x+sx*Math.max(.025,hi-lo),hitY=p.y+sy*Math.max(.025,hi-lo),nearest=nearestTrackPoint(hitX,hitY);
+  let nx=hitX-nearest.x,ny=hitY-nearest.y,m=Math.hypot(nx,ny);
+  if(m<.001){
+    const side=((p.x-nearest.x)*nearest.nx+(p.y-nearest.y)*nearest.ny)>=0?1:-1;
+    nx=nearest.nx*side;ny=nearest.ny*side;m=1;
   }
+  nx/=m;ny/=m;
 
-  // Decompose velocity into along-rail and into-rail components. The rail keeps
-  // most forward/tangential motion, while the normal rebound is deliberately
-  // small so corner contacts slide/deflect instead of pinging the disc backwards.
-  const into=p.vx*n.x+p.vy*n.y;
+  const into=p.vx*nx+p.vy*ny;
   if(into>0){
-    const tx=p.vx-into*n.x,ty=p.vy-into*n.y;
+    const tx=p.vx-into*nx,ty=p.vy-into*ny;
     const tangentSpeed=Math.hypot(tx,ty);
-    const rebound=Math.min(into*RAIL_RESTITUTION,tangentSpeed*.55+1.15);
-    p.vx=tx*RAIL_TANGENT_DAMP-rebound*n.x;
-    p.vy=ty*RAIL_TANGENT_DAMP-rebound*n.y;
+    const rebound=Math.min(into*RAIL_RESTITUTION,tangentSpeed*.45+.9);
+    p.vx=tx*RAIL_TANGENT_DAMP-rebound*nx;
+    p.vy=ty*RAIL_TANGENT_DAMP-rebound*ny;
   }
-
-  // Move slightly back into the legal lane so one rail contact cannot be
-  // processed repeatedly over consecutive sub-steps.
-  p.x-=n.x*2.2;p.y-=n.y*2.2;
-  p.x=clamp(p.x,DISC_R,1000-DISC_R);p.y=clamp(p.y,DISC_R,600-DISC_R);
+  p.x-=nx*2.4;p.y-=ny*2.4;
 }
+
 function applyBumpers(p){
-  track().bumpers.forEach(b=>{
-    const dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),min=DISC_R+b.r;
+  const t=track();
+  t.bumpers.forEach(spec=>{
+    const b=featureAt(spec,t),dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),min=DISC_R+b.r;
     if(d>0&&d<min){
       const nx=dx/d,ny=dy/d,dot=p.vx*nx+p.vy*ny;
       p.x=b.x+nx*(min+1);p.y=b.y+ny*(min+1);
-      p.vx=(p.vx-2*dot*nx)*.88;p.vy=(p.vy-2*dot*ny)*.88;
+      const normalKick=Math.max(0,-dot)*.55;
+      p.vx=(p.vx-dot*nx)+normalKick*nx;
+      p.vy=(p.vy-dot*ny)+normalKick*ny;
+      p.vx*=.9;p.vy*=.9;
     }
   });
 }
+
 function applyDiscCollisions(){
   const ps=game.players;
   for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
@@ -583,16 +540,17 @@ function applyDiscCollisions(){
   }
 }
 function applySurface(p,boosted){
-  let friction=FRICTION;
-  if(track().slow.some(s=>hitRect(p,s)))friction=.95;
+  const t=track();let friction=FRICTION;
+  if(t.slow.some(s=>hitTrackFeature(p,s,t)))friction=.95;
   p.vx*=friction;p.vy*=friction;
   if(!boosted.has(p.id)){
-    for(const b of track().boosts){
-      if(hitRect(p,b)){p.vx*=1.28;p.vy*=1.28;boosted.add(p.id);break}
+    for(const b of t.boosts){
+      if(hitTrackFeature(p,b,t)){p.vx*=1.28;p.vy*=1.28;boosted.add(p.id);break}
     }
   }
   if(Math.hypot(p.vx,p.vy)<.06){p.vx=0;p.vy=0}
 }
+
 function updateTurboFromMovement(p,moved,isActive){
   p.turboCharge=clamp(Number(p.turboCharge)||0,0,1);
   p.turboReady=!!p.turboReady;
@@ -773,10 +731,12 @@ function requestTurboHeld(held){
 
 function raceProgress(p){
   if(p.finished)return 1e9;
-  const angle=Math.atan2(p.y-300,p.x-500);
-  const around=(Math.PI/2-angle+Math.PI*2)%(Math.PI*2);
-  return p.lap*Math.PI*2+around;
+  if(p.pendingFinish)return game.laps+1;
+  const progress=nearestTrackPoint(p.x,p.y).progress;
+  p.trackProgress=progress;
+  return p.lap+progress;
 }
+
 function ordinal(n){
   const m=n%100;if(m>=11&&m<=13)return n+'TH';
   return n+({1:'ST',2:'ND',3:'RD'}[n%10]||'TH');
