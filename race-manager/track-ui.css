@@ -126,12 +126,12 @@ body.gridline-racing-live .mainView{
   font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .cashValue{
-  left:71px;top:164px;width:45px;height:14px;z-index:34;
-  font-size:16px;font-weight:900;text-align:center;
+  left:71px;top:165px;width:45px;height:14px;z-index:34;
+  font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .positionValue{
-  left:187px;top:164px;width:49px;height:14px;z-index:35;
-  font-size:16px;font-weight:900;text-align:center;
+  left:187px;top:165px;width:49px;height:14px;z-index:35;
+  font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .ordinalSuffix{
   font-size:.55em;
@@ -142,8 +142,8 @@ body.gridline-racing-live .mainView{
   margin-left:1px;
 }
 #raceScreen .incomeValue{
-  left:310.556px;top:164px;width:46px;height:14px;z-index:36;
-  font-size:16px;font-weight:900;text-align:center;
+  left:310.556px;top:165px;width:46px;height:14px;z-index:36;
+  font-size:14px;font-weight:900;text-align:center;
 }
 #raceScreen .lapTitleText{
   left:127px;top:532px;width:150px;height:11px;z-index:40;
@@ -313,7 +313,7 @@ body.gridline-racing-live .mainView{
 }
 #raceScreen .finalLapBadge.finalLapIntro{
   z-index:120;
-  animation:gridlineFinalLapIntro 1.6s cubic-bezier(.18,.82,.2,1) both;
+  animation:gridlineFinalLapIntro .9s cubic-bezier(.18,.82,.2,1) both;
 }
 @keyframes gridlineGreenFlagFlash{
   0%{opacity:0;transform:scale(2.4);filter:brightness(2.2) drop-shadow(0 0 15px rgba(93,255,150,.95))}
@@ -326,11 +326,11 @@ body.gridline-racing-live .mainView{
     left:87.5px;top:362px;width:215px;height:120px;
     opacity:0;filter:brightness(2.2) drop-shadow(0 0 18px rgba(94,234,255,.95));
   }
-  12%{
+  14%{
     left:87.5px;top:362px;width:215px;height:120px;
     opacity:1;filter:brightness(1.35) drop-shadow(0 0 18px rgba(94,234,255,.9));
   }
-  56%{
+  42%{
     left:87.5px;top:362px;width:215px;height:120px;
     opacity:1;filter:brightness(1.1) drop-shadow(0 0 12px rgba(94,234,255,.75));
   }
