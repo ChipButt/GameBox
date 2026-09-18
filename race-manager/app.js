@@ -145,13 +145,16 @@
   }
 
   function showSetup(id){
-    $$('.setupView').forEach(v=>v.classList.toggle('hidden',v.id!==id));
+    $('.setupView').forEach(v=>v.classList.toggle('hidden',v.id!==id));
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
-    if(id==='singleSetup'){renderSinglePlayers();renderCarChoices('single');renderRaceSetup()}
-    if(id==='hostSetup'){syncPlayerSelects();renderCarChoices('host');renderRaceSetup()}
-    if(id==='joinSetup'){syncPlayerSelects();renderCarChoices('join',latestLobbyPlayers)}
+    if(id==='setupHome')renderRaceSetup();
+    if(id==='carSetup')renderCarChoices('flow');
+    if(id==='trackSetup')renderRaceSetup();
+    if(id==='singleSetup'){renderSinglePlayers();renderRaceSetup()}
+    if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
+    if(id==='joinSetup')syncPlayerSelects();
   }
 
   function showRace(){
@@ -198,11 +201,13 @@
 
     wrap.innerHTML=CAR_ROSTER.map(car=>{
       const unavailable=taken.has(car.color)&&car.color!==selectedCarColor;
-      const replacementName=prefix==='single'
-        ?(roster().find(p=>p.id===selectedSingleId)?.name||car.racer)
-        :prefix==='host'
-          ?(roster().find(p=>p.id===$('hostPlayerSelect')?.value)?.name||car.racer)
-          :(roster().find(p=>p.id===$('joinPlayerSelect')?.value)?.name||car.racer);
+      const replacementName=prefix==='flow'
+        ?car.racer
+        :prefix==='single'
+          ?(roster().find(p=>p.id===selectedSingleId)?.name||car.racer)
+          :prefix==='host'
+            ?(roster().find(p=>p.id===$('hostPlayerSelect')?.value)?.name||car.racer)
+            :(roster().find(p=>p.id===$('joinPlayerSelect')?.value)?.name||car.racer);
       return `
         <button class="carChoice ${car.color===selectedCarColor?'selected':''}" data-car-color="${car.color}" type="button" ${unavailable?'disabled':''}>
           <img src="${ASSET_ROOT}/cars/${car.asset}" alt="">
@@ -246,7 +251,8 @@
 
   function renderRaceSetup(){
     const config=setupConfig();
-    $$('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
+    $('[data-race-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.raceMode===config.mode));
+
     for(const prefix of ['single','host']){
       const length=$(prefix+'TournamentLength');
       if(length)length.classList.toggle('hidden',config.mode!=='tournament');
@@ -254,14 +260,16 @@
       const value=$(prefix+'RaceCountValue');
       if(input)input.value=String(config.totalRaces===1?raceSetup.races:config.totalRaces);
       if(value)value.textContent=`${config.totalRaces===1?raceSetup.races:config.totalRaces} races`;
-      const wrap=$(prefix+'TrackChoices');
-      if(wrap)wrap.innerHTML=TRACKS.map((track,index)=>`
-        <button class="trackChoice ${index===config.trackIndex?'selected':''}" data-track-index="${index}" type="button">
-          <img src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
-          <span><strong>${esc(track.name)}</strong><small>${esc(track.profile)} · ${track.laps} laps</small></span>
-        </button>
-      `).join('');
     }
+
+    const flowTracks=$('flowTrackChoices');
+    if(flowTracks)flowTracks.innerHTML=TRACKS.map((track,index)=>`
+      <button class="trackChoice ${index===config.trackIndex?'selected':''}" data-track-index="${index}" type="button">
+        <img src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
+        <span><strong>${esc(track.name)}</strong><small>${esc(track.profile)} · ${track.laps} laps</small></span>
+      </button>
+    `).join('');
+
     if(role==='host'&&session){
       const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
       session.updateHost?.({
@@ -1186,10 +1194,17 @@
       wrap.innerHTML='<div class="discoveryConnected">Connected to host ✓</div>';
       return;
     }
-    const open=hosts.filter(host=>!host.started&&finite(host.playerCount,1)<finite(host.maxPlayers,4));
+    const wanted=setupConfig();
+    const wantedTrack=TRACKS[wanted.trackIndex]?.name||TRACKS[0].name;
+    const open=hosts.filter(host=>
+      !host.started&&
+      finite(host.playerCount,1)<finite(host.maxPlayers,4)&&
+      (host.raceMode||'quick')===wanted.mode&&
+      (host.trackName||TRACKS[0].name)===wantedTrack
+    );
     if(!open.length){
       $('joinState').textContent='Scanning';
-      wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>';
+      wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for matching games…</strong><small>Looking for the race format and track you selected.</small></div>';
       return;
     }
     $('joinState').textContent=`${open.length} found`;
@@ -1322,12 +1337,10 @@
     $('startSingle').onclick=startSingleRace;
     $('hostPlayerSelect').onchange=()=>{
       renderHostLobby();
-      renderCarChoices('host');
       const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
       if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p),carColor:selectedCarColor});
     };
     $('joinPlayerSelect').onchange=()=>{
-      renderCarChoices('join',latestLobbyPlayers);
     };
     for(const id of ['singleRaceCount','hostRaceCount']){
       const input=$(id);
@@ -1351,18 +1364,21 @@
       const carChoice=e.target.closest('[data-car-color]');
       if(carChoice&&!carChoice.disabled){
         selectCarColor(carChoice.dataset.carColor);
+        if(carChoice.closest('#carSetup'))showSetup('trackSetup');
         return;
       }
       const raceMode=e.target.closest('[data-race-mode]');
       if(raceMode){
         raceSetup.mode=raceMode.dataset.raceMode==='tournament'?'tournament':'quick';
         renderRaceSetup();
+        if(raceMode.closest('#setupHome'))showSetup('carSetup');
         return;
       }
       const trackChoice=e.target.closest('[data-track-index]');
       if(trackChoice){
         raceSetup.trackIndex=clamp(Math.round(finite(trackChoice.dataset.trackIndex,0)),0,TRACKS.length-1);
         renderRaceSetup();
+        if(trackChoice.closest('#trackSetup'))showSetup('playSetup');
         return;
       }
       const exitSeries=e.target.closest('[data-exit-series]');
