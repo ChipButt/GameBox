@@ -384,6 +384,10 @@
         this.joinWaiter.reject(new Error('Session closed'));
         this.joinWaiter=null;
       }
+      try{
+        const peers=this.room?.getPeers?.()||{};
+        Object.values(peers).forEach(pc=>{try{pc?.close?.()}catch{}});
+      }catch{}
       try{this.room?.leave();}catch{}
       this.room=null;
       this.hostPeers=[];
