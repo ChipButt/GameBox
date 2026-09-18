@@ -5,7 +5,7 @@
   const PROFILE_KEY='gamebox.gridline.profiles.v4';
   const TICK_MS=300;
   const MAX_GRID=12;
-  const RACE_TICKS=200;
+  const RACE_TICKS=280;
 
   const TRACKS=[
     {name:'Autumn River Valley',asset:'autumn_river_valley_circuit.png',discipline:'GT',weather:'Clear',laps:8,profile:'Flowing bends · River bridge',risk:1.15,weights:{engine:1.05,tyres:1.45,brakes:1.20,fuel:1.00}},
@@ -39,6 +39,21 @@
 
   const ASSET_ROOT='assets';
   const upgradeAsset=(key,enabled)=>`${ASSET_ROOT}/ui/upgrades/${enabled?'enabled':'disabled'}/${key==='fans'?'fan_base':key}.png`;
+
+  // Pre-decode both visual states before the first upgrade becomes affordable.
+  // This prevents the one-time grey/colour image flash on first use.
+  const upgradeArtworkCache=[];
+  function prewarmUpgradeArtwork(){
+    for(const key of UPGRADE_KEYS){
+      for(const enabled of [false,true]){
+        const img=new Image();
+        img.src=upgradeAsset(key,enabled);
+        upgradeArtworkCache.push(img);
+        if(typeof img.decode==='function')img.decode().catch(()=>{});
+      }
+    }
+  }
+  prewarmUpgradeArtwork();
 
   const $=id=>document.getElementById(id);
   const $$=sel=>Array.from(document.querySelectorAll(sel));
@@ -705,7 +720,7 @@
         finalLap.classList.remove('finalLapIntro');
         void finalLap.offsetWidth;
         finalLap.classList.add('finalLapIntro');
-        window.setTimeout(()=>finalLap.classList.remove('finalLapIntro'),1650);
+        window.setTimeout(()=>finalLap.classList.remove('finalLapIntro'),950);
       }else if(!onFinalLap){
         finalLap.classList.remove('finalLapIntro');
       }
