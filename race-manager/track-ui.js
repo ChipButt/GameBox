@@ -234,10 +234,11 @@
 
     const groups=[];
     let current=[];
+    const PACK_PHASE_GAP=.024;
     for(const item of phased){
       if(!current.length){current=[item];continue}
       const prev=current[current.length-1];
-      if(item.phase-prev.phase<.012)current.push(item);
+      if(item.phase-prev.phase<PACK_PHASE_GAP)current.push(item);
       else{groups.push(current);current=[item]}
     }
     if(current.length)groups.push(current);
@@ -245,32 +246,46 @@
     if(groups.length>1){
       const first=groups[0],last=groups[groups.length-1];
       const wrapGap=(first[0].phase+1)-last[last.length-1].phase;
-      if(wrapGap<.012){
+      if(wrapGap<PACK_PHASE_GAP){
         groups[0]=last.concat(first);
         groups.pop();
       }
     }
 
-    // The approved roads are about 22–30 design pixels wide.  These small
-    // offsets keep every 8 px-wide car inside the asphalt while still making
-    // overlapping racers visible.
-    const laneSlots=[-6,-3,0,3,6];
+    // Cars must never render directly on top of each other. Keep them within
+    // the road width by using two lateral lanes, then stagger additional cars
+    // slightly forward/back along the centre-line.
+    const packSlots=[
+      {lat:-5.5,shift:0},
+      {lat: 5.5,shift:0},
+      {lat:-5.5,shift:-.009},
+      {lat: 5.5,shift:-.009},
+      {lat:-5.5,shift: .009},
+      {lat: 5.5,shift: .009},
+      {lat:-4.0,shift:-.018},
+      {lat: 4.0,shift:-.018},
+      {lat:-4.0,shift: .018},
+      {lat: 4.0,shift: .018},
+      {lat: 0.0,shift:-.027},
+      {lat: 0.0,shift: .027}
+    ];
+
     for(const group of groups){
       if(group.length<2)continue;
       group.sort((a,b)=>b.state.rendered-a.state.rendered);
       group.forEach((entry,index)=>{
-        const laneIndex=index%laneSlots.length;
-        const extraRow=Math.floor(index/laneSlots.length);
-        entry.state.targetLateral=laneSlots[laneIndex];
-        entry.state.targetVisualShift=extraRow?-(extraRow*.006):0;
+        const slot=packSlots[index%packSlots.length];
+        const extraBand=Math.floor(index/packSlots.length);
+        entry.state.targetLateral=slot.lat;
+        entry.state.targetVisualShift=slot.shift-(extraBand*.036);
         entry.state.contact=true;
       });
     }
 
     for(const state of states){
-      state.targetLateral=clamp(state.targetLateral,-6,6);
-      state.lateral+=(state.targetLateral-state.lateral)*.11;
-      state.visualShift+=(state.targetVisualShift-state.visualShift)*.08;
+      state.targetLateral=clamp(state.targetLateral,-5.5,5.5);
+      state.lateral+=(state.targetLateral-state.lateral)*.20;
+      state.visualShift+=(state.targetVisualShift-state.visualShift)*.18;
     }
   }
 
