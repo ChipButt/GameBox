@@ -870,7 +870,14 @@ function bind(){
   $('startHost').onclick=startHostRace;
   $('exitRace').onclick=leaveRace;
   $('finishTurnButton').onclick=requestFinishTurn;
+  const raceSurface=$('raceView');
+  ['selectstart','contextmenu','dragstart'].forEach(type=>{
+    raceSurface.addEventListener(type,e=>e.preventDefault());
+  });
+
   const turboButton=$('turboButton');
+  turboButton.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+  turboButton.addEventListener('contextmenu',e=>e.preventDefault());
   turboButton.addEventListener('pointerdown',e=>{
     e.preventDefault();turboButton.setPointerCapture?.(e.pointerId);requestTurboHeld(true);
   });
