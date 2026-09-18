@@ -32,6 +32,7 @@
   ];
   const CAR_BY_COLOR=Object.fromEntries(CAR_ROSTER.map(car=>[car.color,car]));
   const normaliseCarColor=value=>CAR_BY_COLOR[value]?value:'gold';
+  const validCarColor=value=>CAR_BY_COLOR[value]?value:'';
 
   const CAR_MENU_SLOTS=[
     {x:28.5,y:205},{x:143,y:205},{x:255,y:205},
@@ -132,6 +133,7 @@
   let pendingHello=false;
   let selectedCarColor='gold';
   let latestLobbyPlayers=[];
+  let multiplayerStage='lobby';
   let raceSetup={mode:'quick',trackIndex:0,races:5};
   const prizeAnimations=new Set();
 
@@ -223,11 +225,13 @@
     if(id==='raceFormatSetup')renderRaceSetup();
     if(id==='carSetup'&&!$('flowCarChoices')?.children.length)renderCarChoices('flow');
     if(id==='trackSetup'){
+      const back=$('trackSetupBack');
+      if(back)back.dataset.back=playMode==='multi'&&role==='host'?'hostSetup':'carSetup';
       renderRaceSetup();
       renderSinglePlayers();
       updateTrackStartButton();
     }
-    if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
+    if(id==='hostSetup'){syncPlayerSelects();renderHostLobby()}
     if(id==='joinSetup')syncPlayerSelects();
   }
 
@@ -271,13 +275,14 @@
     let taken=new Set();
     if(prefix==='host'&&session){
       session.peers().forEach(peer=>{
-        const color=peer.meta?.carColor;
-        if(color)taken.add(normaliseCarColor(color));
+        const color=validCarColor(peer.meta?.carColor);
+        if(color)taken.add(color);
       });
     }else if(prefix==='join'){
       const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
       for(const p of lobbyPlayers||[]){
-        if(String(p.id)!==String(ownId)&&p.carColor)taken.add(normaliseCarColor(p.carColor));
+        const color=validCarColor(p.carColor);
+        if(String(p.id)!==String(ownId)&&color)taken.add(color);
       }
     }
 
@@ -296,23 +301,40 @@
           <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
           <img class="carChoiceSprite" src="${ASSET_ROOT}/cars/${car.asset}" alt="">
           <span class="carDriverName">${esc(replacementName)}</span>
-          <strong class="carChooseText">CHOOSE</strong>
+          <strong class="carChooseText">${unavailable?'TAKEN':car.color===selectedCarColor?'READY':'CHOOSE'}</strong>
         </button>
       `;
     }).join('');
   }
 
   function selectCarColor(color){
-    const next=normaliseCarColor(color);
-    selectedCarColor=next;
-    renderCarChoices('flow');
+    const next=validCarColor(color);
+    if(!next)return false;
 
-    if(role==='host'&&session){
+    if(role==='host'&&playMode==='multi'){
+      const taken=session?.peers?.().some(peer=>validCarColor(peer.meta?.carColor)===next);
+      if(taken&&next!==selectedCarColor)return false;
+      selectedCarColor=next;
       renderHostLobby();
       broadcastLobby();
-    }else if(role==='client'&&session?.peers?.().length){
-      session.sendToHost({type:'color-choice',carColor:selectedCarColor});
+      return true;
     }
+
+    if(role==='client'&&playMode==='multi'){
+      const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
+      const taken=(latestLobbyPlayers||[]).some(player=>String(player.id)!==String(ownId)&&validCarColor(player.carColor)===next);
+      if(taken&&next!==selectedCarColor)return false;
+      selectedCarColor=next;
+      renderCarChoices('join',latestLobbyPlayers);
+      const state=$('joinCarState');
+      if(state)state.textContent='Confirming…';
+      if(session?.peers?.().length)session.sendToHost({type:'color-choice',carColor:selectedCarColor});
+      return true;
+    }
+
+    selectedCarColor=next;
+    renderCarChoices('flow');
+    return true;
   }
 
   function syncPlayerSelects(){
@@ -363,13 +385,14 @@
       });
     }
 
-    if(role==='host'&&session){
+    if(role==='host'&&session&&playMode==='multi'){
       const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
       session.updateHost?.({
         hostName:p?`${p.name}'s Gridline Race`:'Gridline Race',
-        raceMode:config.mode,
-        trackName:TRACKS[config.trackIndex].name,
-        totalRaces:config.totalRaces
+        raceMode:'gridline',
+        trackName:multiplayerStage==='track'?TRACKS[config.trackIndex].name:'Track chosen by host',
+        totalRaces:1,
+        started:false
       });
       broadcastLobby();
     }
@@ -1295,74 +1318,132 @@
       startSingleRace();
       return;
     }
-    closeTrackStartPopup();
-    showSetup('multiSetup');
+    if(playMode==='multi'&&role==='host'){
+      launchHostRace();
+      return;
+    }
   }
 
-  function installSession(){
+  function installSession(kind){
     if(!window.GameBoxLAN?.DiscoverySession)throw new Error('Automatic multiplayer discovery is unavailable in this browser.');
-    session=new window.GameBoxLAN.DiscoverySession({
-      game:'gridline-v18',
-      onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
-      onHostsChanged:hosts=>renderAvailableHosts(hosts),
-      onPeersChanged:()=>{
-        if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
-        if(role==='host'){renderHostLobby();broadcastLobby()}
-      },
-      onMessage:handleNetworkMessage
+    if(!session){
+      session=new window.GameBoxLAN.DiscoverySession({
+        game:'gridline-v19',
+        onStatus:text=>{if(role==='host')$('hostState').textContent=text;if(role==='client')$('joinState').textContent=text},
+        onHostsChanged:hosts=>renderAvailableHosts(hosts),
+        onPeersChanged:()=>{
+          if(role==='host'){renderHostLobby();broadcastLobby()}
+          if(role==='client'&&session.peers().length&&pendingHello){pendingHello=false;sendClientHello()}
+        },
+        onMessage:handleNetworkMessage
+      });
+    }else{
+      try{session.suspend?.()}catch{}
+    }
+    role=kind;
+  }
+
+  function ensureSession(kind=role){
+    if(!session)installSession(kind);
+    return session;
+  }
+
+  function sendClientHello(){
+    if(!localPlayer)return;
+    session?.sendToHost({
+      type:'hello',
+      player:localPlayer,
+      profile:getProfile(localPlayer),
+      carColor:validCarColor(selectedCarColor)||null
     });
   }
 
-  function ensureSession(){if(!session)installSession();return session}
-  function sendClientHello(){if(!localPlayer)return;session?.sendToHost({type:'hello',player:localPlayer,profile:getProfile(localPlayer),carColor:selectedCarColor})}
+  function hostColorTaken(color,excludePeerId=''){
+    const wanted=validCarColor(color);
+    if(!wanted)return false;
+    if(validCarColor(selectedCarColor)===wanted)return true;
+    return !!session?.peers?.().some(peer=>peer.id!==excludePeerId&&validCarColor(peer.meta?.carColor)===wanted);
+  }
 
   function handleNetworkMessage(msg,source){
     if(role==='host'){
       if(msg.type==='hello'&&source.peer){
         source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};
         source.peer.meta.profile=msg.profile||null;
-        source.peer.meta.carColor=normaliseCarColor(msg.carColor);
+        const requested=validCarColor(msg.carColor);
+        if(requested&&!hostColorTaken(requested,source.peer.id))source.peer.meta.carColor=requested;
+        else if(!validCarColor(source.peer.meta.carColor))source.peer.meta.carColor='';
         renderHostLobby();broadcastLobby();return;
       }
       if(msg.type==='color-choice'&&source.peer){
-        source.peer.meta.carColor=normaliseCarColor(msg.carColor);
+        const requested=validCarColor(msg.carColor);
+        if(!requested||hostColorTaken(requested,source.peer.id)){
+          session.sendToPeer?.(source.peer,{type:'color-rejected',carColor:requested,players:hostPlayers(),config:{stage:multiplayerStage}});
+          broadcastLobby();
+          return;
+        }
+        source.peer.meta.carColor=requested;
         renderHostLobby();broadcastLobby();return;
       }
       if(msg.type==='race-action'){applyAction(String(msg.playerId||''),msg);return}
     }else if(role==='client'){
       if(msg.type==='lobby'){renderJoinLobby(msg.players||[],msg.config||null);return}
+      if(msg.type==='color-rejected'){
+        selectedCarColor='';
+        if(Array.isArray(msg.players))renderJoinLobby(msg.players,msg.config||null);
+        const state=$('joinCarState');if(state)state.textContent='Choose another';
+        return;
+      }
       if(msg.type==='race-state'&&msg.game){applyRemoteGame(msg.game);return}
     }
   }
 
   function hostPlayers(){
-    const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);
+    const hp=roster().find(p=>p.id===$('hostPlayerSelect')?.value);
     const players=[];
-    if(hp)players.push({id:hp.id,name:hp.name,host:true,carColor:selectedCarColor});
-    if(session)session.peers().forEach(peer=>{if(peer.meta?.player)players.push({...peer.meta.player,host:false,carColor:normaliseCarColor(peer.meta.carColor)})});
-    return players;
+    const hostColor=validCarColor(selectedCarColor);
+    if(hp)players.push({id:hp.id,name:hp.name,host:true,carColor:hostColor,ready:!!hostColor});
+    session?.peers?.().forEach(peer=>{
+      if(!peer.meta?.player)return;
+      const color=validCarColor(peer.meta?.carColor);
+      players.push({...peer.meta.player,host:false,carColor:color,ready:!!color});
+    });
+    return players.slice(0,4);
   }
 
   function renderHostLobby(){
     const players=hostPlayers();
-    $('hostLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${esc(carLabel(p.carColor))} car · Ready</small></div>`).join(''):'<div class="emptyState">Choose the host player, then connect friends.</div>';
-    $('startHostRace').disabled=players.length<2;
+    const allReady=players.length>=2&&players.every(player=>player.ready);
+    $('hostLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow ${p.ready?'readyPlayer':'waitingPlayer'}"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${p.ready?`${esc(carLabel(p.carColor))} car · Ready`:'Choose a car'}</small></div>`).join(''):'<div class="emptyState">Choose the host player, then connect friends.</div>';
+    $('startHostRace').disabled=!allReady;
+    const state=$('hostCarState');if(state)state.textContent=validCarColor(selectedCarColor)?'Ready':'Not ready';
+    const note=$('hostReadyNote');if(note)note.textContent=allReady?'Everybody is ready. Start Race will move the host to track selection.':'Every player must choose a different car before the host can continue.';
     renderCarChoices('host');
   }
 
   function renderJoinLobby(players,config=null){
     latestLobbyPlayers=Array.isArray(players)?players:[];
-    $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${esc(carLabel(p.carColor))} car · Ready</small></div>`).join(''):'<div class="emptyState">Choose an available host above.</div>';
+    const panel=$('joinCarPanel');
+    if(panel)panel.classList.toggle('hidden',!session?.peers?.().length);
+    const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
+    const mine=latestLobbyPlayers.find(player=>String(player.id)===String(ownId));
+    const authoritativeColor=validCarColor(mine?.carColor);
+    if(authoritativeColor)selectedCarColor=authoritativeColor;
+
+    $('joinLobby').innerHTML=latestLobbyPlayers.length?latestLobbyPlayers.map((p,i)=>`<div class="leaderRow ${p.ready?'readyPlayer':'waitingPlayer'}"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${p.ready?`${esc(carLabel(p.carColor))} car · Ready`:'Choosing a car…'}</small></div>`).join(''):'<div class="emptyState">Waiting for the host lobby.</div>';
     renderCarChoices('join',latestLobbyPlayers);
+
+    const carState=$('joinCarState');
+    if(carState)carState.textContent=authoritativeColor?'Ready':'Not ready';
+
     const summary=$('joinRaceConfig');
-    if(summary&&config){
-      const track=TRACKS[clamp(Math.round(finite(config.trackIndex,0)),0,TRACKS.length-1)]||TRACKS[0];
-      const mode=config.mode==='tournament'?'Tournament':'Quick Race';
-      const detail=config.mode==='tournament'?`${clamp(Math.round(finite(config.totalRaces,5)),3,15)} races · starts at ${track.name}`:track.name;
-      summary.classList.remove('hidden');
-      summary.innerHTML=`<strong>${mode}</strong><small>${esc(detail)}</small>`;
-    }else if(summary){
-      summary.classList.add('hidden');
+    if(summary){
+      const stage=config?.stage||'lobby';
+      if(stage==='track'){
+        summary.innerHTML='<strong>Everybody is ready</strong><small>The host is choosing the track. Your race will start automatically when they press Start Race.</small>';
+      }else{
+        summary.innerHTML='<strong>Waiting for the host</strong><small>Choose an available car. The host will choose the track once everybody is ready.</small>';
+      }
     }
   }
 
@@ -1372,60 +1453,70 @@
     if(session?.peers?.().length){
       $('joinState').textContent='Connected';
       wrap.innerHTML='<div class="discoveryConnected">Connected to host ✓</div>';
+      const panel=$('joinCarPanel');if(panel)panel.classList.remove('hidden');
       return;
     }
-    const wanted=setupConfig();
-    const wantedTrack=TRACKS[wanted.trackIndex]?.name||TRACKS[0].name;
+
     const open=hosts.filter(host=>
       !host.started&&
       finite(host.playerCount,1)<finite(host.maxPlayers,4)&&
-      (host.raceMode||'quick')===wanted.mode&&
-      (host.trackName||TRACKS[0].name)===wantedTrack
+      (host.raceMode||'')==='gridline'
     );
+
     if(!open.length){
       $('joinState').textContent='Scanning';
-      wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for matching games…</strong><small>Looking for the race format and track you selected.</small></div>';
+      wrap.innerHTML='<div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for Gridline hosts…</strong><small>Join first — the host chooses the track later.</small></div>';
       return;
     }
+
     $('joinState').textContent=`${open.length} found`;
     wrap.innerHTML=open.map(host=>`
       <button class="hostDiscoveryCard" type="button" data-auto-host="${esc(host.peerId)}">
         <span class="hostDiscoveryIcon">🏁</span>
         <span class="hostDiscoveryCopy">
           <strong>${esc(host.hostName||((host.playerName||'Host')+"'s Race"))}</strong>
-          <small>${finite(host.playerCount,1)} / ${finite(host.maxPlayers,4)} players · ${host.raceMode==='tournament'?`${finite(host.totalRaces,5)} race tournament`:'Quick Race'} · ${esc(host.trackName||'Forest Lake')}</small>
+          <small>${finite(host.playerCount,1)} / ${finite(host.maxPlayers,4)} players · Track chosen after lobby is ready</small>
         </span>
         <span class="hostDiscoveryJoin">JOIN</span>
       </button>
     `).join('');
   }
 
-  function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:hostPlayers(),config:setupConfig()})}
+  function broadcastLobby(){
+    if(role!=='host'||!session)return;
+    session.broadcast({
+      type:'lobby',
+      players:hostPlayers(),
+      config:{stage:multiplayerStage,trackIndex:setupConfig().trackIndex}
+    });
+  }
 
-  function resetNetworkSession(){
-    try{session?.close()}catch{}
-    session=null;
+  function resetNetworkSession(hard=false){
+    try{hard?session?.close():session?.suspend?.()}catch{}
+    if(hard)session=null;
     pendingHello=false;
+    latestLobbyPlayers=[];
+    multiplayerStage='lobby';
+    role=null;
   }
 
   async function startAutoHost(){
-    const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
+    const p=roster().find(x=>x.id===$('hostPlayerSelect')?.value);
     if(!p){$('hostState').textContent='Choose player';return}
-    role='host';
-    const current=ensureSession();
+    installSession('host');
+    const current=session;
     $('hostState').textContent='Starting';
     try{
-      const config=setupConfig();
       await current.startHost({
         hostName:`${p.name}'s Gridline Race`,
         player:p,
         profile:getProfile(p),
-        carColor:selectedCarColor,
-        raceMode:config.mode,
-        trackName:TRACKS[config.trackIndex].name,
-        totalRaces:config.totalRaces
+        raceMode:'gridline',
+        trackName:'Track chosen by host',
+        totalRaces:1
       });
       renderHostLobby();
+      broadcastLobby();
     }catch(err){
       console.error(err);
       $('hostState').textContent='Discovery error';
@@ -1433,8 +1524,8 @@
   }
 
   async function startAutoScan(){
-    role='client';
-    const current=ensureSession();
+    installSession('client');
+    const current=session;
     $('joinState').textContent='Scanning';
     renderAvailableHosts([]);
     try{
@@ -1448,31 +1539,69 @@
   }
 
   async function joinDiscoveredHost(peerId){
-    const p=roster().find(x=>x.id===$('joinPlayerSelect').value);
+    const p=roster().find(x=>x.id===$('joinPlayerSelect')?.value);
     if(!p)return;
     localPlayer=p;
-    pendingHello=true;
+    selectedCarColor='';
+    pendingHello=false;
     $('joinState').textContent='Joining';
     try{
-      await ensureSession().joinHost(peerId,{player:p,profile:getProfile(p),carColor:selectedCarColor});
+      await ensureSession('client').joinHost(peerId,{player:p,profile:getProfile(p)});
       $('joinState').textContent='Connected';
+      sendClientHello();
       renderAvailableHosts([]);
+      renderCarChoices('join',latestLobbyPlayers);
     }catch(err){
       console.error(err);
-      pendingHello=false;
       $('joinState').textContent=err?.message||'Join failed';
     }
   }
 
   function startHostRace(){
-    const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);if(!hp)return;
-    localPlayer=hp;playMode='multi';role='host';
-    const humans=[{player:hp,owner:'host',profile:getProfile(hp),carColor:selectedCarColor}];
-    session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null,carColor:normaliseCarColor(peer.meta.carColor)})});
+    const players=hostPlayers();
+    if(players.length<2||!players.every(player=>player.ready))return;
+    multiplayerStage='track';
+    raceSetup.mode='quick';
+    broadcastLobby();
+    showSetup('trackSetup');
+  }
+
+  function launchHostRace(){
+    const hp=roster().find(p=>p.id===$('hostPlayerSelect')?.value);
+    if(!hp)return;
+    const players=hostPlayers();
+    if(players.length<2||!players.every(player=>player.ready)){
+      multiplayerStage='lobby';
+      broadcastLobby();
+      showSetup('hostSetup');
+      return;
+    }
+
+    localPlayer=hp;
+    playMode='multi';
+    role='host';
+    const humans=[{player:hp,owner:'host',profile:getProfile(hp),carColor:validCarColor(selectedCarColor)}];
+    session?.peers?.().forEach(peer=>{
+      const color=validCarColor(peer.meta?.carColor);
+      if(peer.meta?.player&&color)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null,carColor:color});
+    });
     if(humans.length<2)return;
-    session?.updateHost?.({started:true});
-    game=buildGame(humans,setupConfig());showRace();renderGame();broadcastGame();
-    clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
+
+    game=buildGame(humans,setupConfig());
+    try{
+      showRace();
+      renderGame();
+    }catch(err){
+      console.error('Could not start Gridline host race',err);
+      game=null;
+      multiplayerStage='track';
+      showSetup('trackSetup');
+      return;
+    }
+    session?.updateHost?.({started:true,raceMode:'gridline',trackName:TRACKS[setupConfig().trackIndex].name});
+    broadcastGame();
+    clearInterval(hostTimer);
+    hostTimer=setInterval(hostTick,TICK_MS);
   }
 
   function startSingleRace(){
@@ -1487,7 +1616,10 @@
 
   function leaveRace(){
     clearInterval(hostTimer);hostTimer=null;game=null;
-    session?.close();session=null;role=null;playMode='single';showSetup('setupHome');
+    resetNetworkSession(false);
+    selectedCarColor='gold';
+    playMode='single';
+    showSetup('setupHome');
   }
 
   function bind(){
@@ -1499,36 +1631,49 @@
     $('chooseMulti').onclick=()=>{
       playMode='multi';
       role=null;
-      showSetup('raceFormatSetup');
+      selectedCarColor='';
+      multiplayerStage='lobby';
+      raceSetup.mode='quick';
+      showSetup('multiSetup');
     };
     $('chooseWifi').onclick=()=>showSetup('wifiRole');
     $('chooseBluetooth').onclick=()=>{$('bluetoothNote').classList.remove('hidden')};
     $('chooseHost').onclick=()=>{
-      resetNetworkSession();
-      role='host';
+      resetNetworkSession(false);
+      playMode='multi';
+      selectedCarColor='';
+      multiplayerStage='lobby';
       showSetup('hostSetup');
       renderHostLobby();
       startAutoHost();
     };
     $('chooseJoin').onclick=()=>{
-      resetNetworkSession();
-      role='client';
+      resetNetworkSession(false);
+      playMode='multi';
+      selectedCarColor='';
+      multiplayerStage='lobby';
       showSetup('joinSetup');
       renderJoinLobby([]);
       startAutoScan();
     };
-    $$('[data-back]').forEach(b=>b.onclick=()=>{
-      if(b.closest('#hostSetup,#joinSetup')){
-        resetNetworkSession();
-        role=null;
+    $('[data-back]').forEach(b=>b.onclick=()=>{
+      if(b.closest('#trackSetup')&&playMode==='multi'&&role==='host'){
+        multiplayerStage='lobby';
+        broadcastLobby();
       }
+      if(b.closest('#hostSetup,#joinSetup'))resetNetworkSession(false);
       showSetup(b.dataset.back);
     });
     $('startConfiguredRace').onclick=startConfiguredRace;
     $('hostPlayerSelect').onchange=()=>{
       renderHostLobby();
       const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
-      if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p),carColor:selectedCarColor});
+      if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p),raceMode:'gridline'});
+      broadcastLobby();
+    };
+    $('joinPlayerSelect').onchange=()=>{
+      localPlayer=roster().find(x=>x.id===$('joinPlayerSelect').value)||localPlayer;
+      if(role==='client'&&session?.peers?.().length)sendClientHello();
     };
     const flowRaceCount=$('flowRaceCount');
     if(flowRaceCount)flowRaceCount.oninput=()=>{
@@ -1549,9 +1694,9 @@
     document.addEventListener('click',e=>{
       const carChoice=e.target.closest('[data-car-color]');
       if(carChoice&&!carChoice.disabled){
-        const advanceToTrack=!!carChoice.closest('#carSetup');
-        selectCarColor(carChoice.dataset.carColor);
-        if(advanceToTrack)showSetup('trackSetup');
+        const advanceToTrack=playMode==='single'&&!!carChoice.closest('#carSetup');
+        const selected=selectCarColor(carChoice.dataset.carColor);
+        if(selected&&advanceToTrack)showSetup('trackSetup');
         return;
       }
       const raceMode=e.target.closest('[data-race-mode]');
@@ -1605,16 +1750,15 @@
     });
 
     window.addEventListener('resize',()=>{if(document.body.classList.contains('gridline-menu-live'))updateMenuScale()},{passive:true});
-        const cleanupNetworking=()=>{try{session?.close()}catch{};clearInterval(hostTimer)};
+        const cleanupNetworking=()=>{try{resetNetworkSession(true)}catch{};clearInterval(hostTimer)};
     // Do not kill a live discovery session when the browser puts this page
     // into the back/forward cache. That left a restored lobby looking alive while
     // its underlying Trystero room had already been closed.
     window.addEventListener('pagehide',event=>{if(!event.persisted)cleanupNetworking()});
     window.addEventListener('pageshow',event=>{
-      if(!event.persisted||!session?.closed)return;
-      session=null;
-      if(role==='host'&&document.getElementById('hostSetup')&&!document.getElementById('hostSetup').classList.contains('hidden'))startAutoHost();
-      if(role==='client'&&document.getElementById('joinSetup')&&!document.getElementById('joinSetup').classList.contains('hidden'))startAutoScan();
+      if(!event.persisted)return;
+      if(document.getElementById('hostSetup')&&!document.getElementById('hostSetup').classList.contains('hidden'))startAutoHost();
+      if(document.getElementById('joinSetup')&&!document.getElementById('joinSetup').classList.contains('hidden'))startAutoScan();
     });
   }
 
