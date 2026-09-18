@@ -157,7 +157,10 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .turboButton:disabled{opacity:.55}
 .secondFlickStatus{position:absolute;z-index:8;right:20px;bottom:22px;width:104px;height:122px;display:grid;justify-items:center;align-content:end;gap:5px;pointer-events:none;color:#fff}
 .secondFlickDisc{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#1d8ee6,#0a66b1);border:7px solid #073f5e;box-shadow:inset 0 0 0 5px rgba(255,255,255,.15),0 6px 0 rgba(1,37,59,.5)}
-.secondFlickDisc b{font-family:Fredoka,Inter,sans-serif;font-size:42px;color:#fff;text-shadow:0 2px 0 #073f5e}
+.secondFlickIcon{width:58px;height:58px;overflow:visible;filter:drop-shadow(0 2px 0 rgba(3,47,75,.7))}
+.secondFlickIcon path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
+.secondFlickIcon .swipeArrow{stroke-width:7}
+.secondFlickIcon .swipeFinger{stroke-width:6}
 .secondFlickStatus small{font-size:10px;font-weight:900;letter-spacing:.06em;color:#d9f4ff;background:rgba(3,47,75,.82);border-radius:999px;padding:4px 8px}
 .secondFlickStatus.available .secondFlickDisc{box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 4px #fff,0 6px 0 rgba(1,37,59,.5)}
 .secondFlickStatus.used{opacity:.48}
