@@ -1053,10 +1053,13 @@
         row.innerHTML='<span class="pos" aria-hidden="true"></span><span class="youTag" aria-hidden="true">YOU</span><span class="name"></span>';
         wrap.appendChild(row);
       }
-      row.className=`raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}`;
+      const isYou=e.playerId===localPlayer.id;
+      row.className=`raceLane ${e.human?'human':''} ${isYou?'you':''}`;
       row.dataset.progress=String(clamp(e.progress,0,100));
       row.dataset.carColor=normaliseCarColor(e.carColor);
       row.querySelector('.name').textContent=e.name;
+      const humanTag=row.querySelector('.youTag');
+      if(humanTag)humanTag.textContent=isYou?'YOU':(e.human?String(e.name||'PLAYER').toUpperCase().slice(0,8):'');
       existing.delete(e.id);
     }
 
