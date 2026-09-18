@@ -868,3 +868,40 @@ body.gridline-racing-live .mainView{
 #raceScreen .resultAction.claimingAction{
   pointer-events:none!important;
 }
+
+
+/* Human racers remain visually distinct from AI traffic. */
+#raceScreen .raceLane.human:not(.you)::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  transform:translate(-50%,-50%);
+  border:2px solid #f7bd18;
+  border-radius:50%;
+  box-shadow:0 0 3px #fff,0 0 8px rgba(247,189,24,.95),0 0 13px rgba(247,189,24,.62);
+  pointer-events:none;
+}
+#raceScreen .raceLane.human:not(.you) .pos{
+  position:relative;
+  z-index:2;
+  filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 5px #f7bd18) drop-shadow(0 2px 1px rgba(0,0,0,.8));
+}
+#raceScreen .raceLane.human .youTag{
+  display:block;
+}
+#raceScreen .raceLane.human:not(.you) .youTag{
+  min-width:30px;
+  max-width:64px;
+  top:-13px;
+  padding:2px 4px;
+  overflow:hidden;
+  border-color:#f7bd18;
+  color:#fff;
+  background:#1c2d43;
+  box-shadow:0 0 6px rgba(247,189,24,.72);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
