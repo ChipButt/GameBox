@@ -1272,17 +1272,30 @@
     setTimeout(()=>button.classList.remove('receivingCoins'),620);
   }
 
+  function resolveSinglePlayer(){
+    const people=roster();
+    const saved=people.find(player=>player.id===selectedSingleId)||people[0]||null;
+    if(saved){
+      selectedSingleId=saved.id;
+      return saved;
+    }
+    return {id:'gridline-local-player',name:'Player'};
+  }
+
   function updateTrackStartButton(){
     const button=$('startConfiguredRace');
     if(!button)return;
-    button.disabled=playMode==='single'&&!selectedSingleId;
+    button.disabled=false;
   }
 
-  function startConfiguredRace(){
+  function startConfiguredRace(event){
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     if(playMode==='single'){
       startSingleRace();
       return;
     }
+    closeTrackStartPopup();
     showSetup('multiSetup');
   }
 
@@ -1463,11 +1476,13 @@
   }
 
   function startSingleRace(){
-    const p=roster().find(x=>x.id===selectedSingleId);if(!p)return;
+    const p=resolveSinglePlayer();
     localPlayer=p;playMode='single';role='host';
     game=buildGame([{player:p,owner:'local',profile:getProfile(p),carColor:selectedCarColor}],setupConfig());
-    showRace();renderGame();
-    clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
+    showRace();
+    renderGame();
+    clearInterval(hostTimer);
+    hostTimer=setInterval(hostTick,TICK_MS);
   }
 
   function leaveRace(){
