@@ -529,7 +529,6 @@
 
   function finishRound(){
     if(!game||game.phase!=='race')return;
-    game.phase='intermission';
     const sorted=[...game.entrants].sort((a,b)=>{
       if(a.finishTick!==null&&b.finishTick!==null)return a.finishTick-b.finishTick;
       if(a.finishTick!==null)return -1;
@@ -542,8 +541,10 @@
     const cashPayouts=[220,180,150,125,105,90,78,68,60,52,46,40];
     const gemPayouts=[5,4,3,2,2,1,1,1,1,1,1,1];
     for(const e of sorted){
-      const cash=cashPayouts[e.position-1]||35;
-      e.cash+=cash;
+      const prize=cashPayouts[e.position-1]||35;
+      e.cashBeforePrize=e.cash;
+      e.lastPrize=prize;
+      e.cash+=prize;
       if(e.human){
         const gems=gemPayouts[e.position-1]||1;
         e.gems=(e.gems||0)+gems;
@@ -553,7 +554,8 @@
       }
     }
 
-    game.ready=readyMap();
+    game.phase=game.raceNo>=game.totalRaces?'complete':'intermission';
+    game.ready=game.phase==='intermission'?readyMap():{};
     broadcastGame();
     renderGame();
   }
@@ -623,9 +625,9 @@
   function publicGame(){
     if(!game)return null;
     return {
-      phase:game.phase,countdownTicks:game.countdownTicks,ready:game.ready||{},raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
+      phase:game.phase,countdownTicks:game.countdownTicks,ready:game.ready||{},mode:game.mode,totalRaces:game.totalRaces,startTrackIndex:game.startTrackIndex,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,eventCount:e.eventCount,eventCooldownUntil:e.eventCooldownUntil,activeEvent:e.activeEvent,boost:e.boost,eventResult:e.eventResult
+        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,cashBeforePrize:e.cashBeforePrize,lastPrize:e.lastPrize,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,eventCount:e.eventCount,eventCooldownUntil:e.eventCooldownUntil,activeEvent:e.activeEvent,boost:e.boost,eventResult:e.eventResult
       }))
     };
   }
@@ -643,7 +645,7 @@
     $('activePlayerName').textContent=localPlayer.name;
     $('cash').textContent=money(me.cash);
     $('sponsorRate').textContent=money(incomeRate(me))+'/s';
-    $('raceNumber').textContent=game.raceNo;
+    $('raceNumber').textContent=game.totalRaces>1?`${game.raceNo}/${game.totalRaces}`:String(game.raceNo);
     if($('gems'))$('gems').textContent=Math.round(me.gems||0);
     $('trackName').textContent=track.name;
     $('trackMeta').textContent=`${track.discipline} · ${track.weather}`;
@@ -706,7 +708,7 @@
         ?'<strong>Race live</strong><span>Income keeps coming in. Upgrade while the field races automatically.</span>'
         :'<strong>Get ready</strong><span>Race start sequence in progress.</span>';
       $('resultCard').classList.add('hidden');
-    }else if(game.phase==='intermission'){
+    }else if(game.phase==='intermission'||game.phase==='complete'){
       renderResult(me);
     }
   }
