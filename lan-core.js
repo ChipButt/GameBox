@@ -299,6 +299,11 @@
     }
 
     async startHost(meta={}){
+      // A page restored from the browser back/forward cache can retain the old
+      // Session object after it was closed. Make repeated host attempts safe.
+      if(this.closed)this.closed=false;
+      this.hosts.clear();
+      this.hostPeerId='';
       this.role='host';
       this.hostMeta={...meta,started:false};
       await this._ensureRoom();
@@ -310,6 +315,10 @@
     }
 
     async startScanner(){
+      // Allow a scanner to be restarted on the same Session instance.
+      if(this.closed)this.closed=false;
+      this.hosts.clear();
+      this.hostPeerId='';
       this.role='client';
       await this._ensureRoom();
       this.status('Scanning for hosts');
@@ -393,6 +402,8 @@
       }catch{}
       try{this.room?.leave();}catch{}
       this.room=null;
+      this.hostMeta=null;
+      this.actions={};
       this.hostPeers=[];
       this.hosts.clear();
       this.hostPeerId='';
