@@ -1099,14 +1099,9 @@
       }
     `;
 
-    const prizeKey=`${game.mode}:${game.raceNo}:${me.playerId}:prize`;
-    if(game.mode==='tournament'&&prize>0&&!prizeAnimations.has(prizeKey)){
-      prizeAnimations.add(prizeKey);
-      const cashEl=$('cash');
-      if(cashEl)cashEl.textContent=money(finite(me.cashBeforePrize,me.cash-prize));
-      requestAnimationFrame(()=>setTimeout(()=>{
-        animatePrizeTransfer(card,cashEl,()=>{if(cashEl)cashEl.textContent=money(me.cash)});
-      },180));
+    const cashEl=$('cash');
+    if(cashEl&&!amClaimed&&prize>0){
+      cashEl.textContent=money(finite(me.cashBeforePrize,me.cash-prize));
     }
   }
 
@@ -1123,29 +1118,70 @@
     const from=source.getBoundingClientRect();
     const to=target.getBoundingClientRect();
     const sx=from.left+from.width/2;
-    const sy=from.top+Math.min(from.height*.42,55);
+    const sy=from.top+from.height/2;
     const tx=to.left+to.width/2;
     const ty=to.top+to.height/2;
+    const count=12;
     let finished=0;
-    for(let i=0;i<8;i++){
-      const coin=document.createElement('span');
-      coin.className='cashNoteFx';
-      coin.textContent='£';
-      coin.style.left=`${sx-11}px`;
-      coin.style.top=`${sy-6}px`;
-      document.body.appendChild(coin);
-      const bend=(i-3.5)*10;
-      const animation=coin.animate([
-        {transform:'translate(0,0) scale(.7)',opacity:0},
-        {transform:`translate(${(tx-sx)*.42+bend}px,${(ty-sy)*.30-24-Math.abs(bend)*.18}px) scale(1.05)`,opacity:1,offset:.34},
-        {transform:`translate(${tx-sx+bend*.05}px,${ty-sy}px) scale(.58)`,opacity:.15}
-      ],{duration:500+i*22,delay:i*38,easing:'cubic-bezier(.22,.74,.32,1)',fill:'forwards'});
+
+    for(let i=0;i<count;i++){
+      const note=document.createElement('span');
+      note.className='cashNoteFx claimPrizeNote';
+      note.textContent='£';
+      note.style.left=`${sx-11}px`;
+      note.style.top=`${sy-6}px`;
+      document.body.appendChild(note);
+
+      const spread=(i-(count-1)/2)*7.5;
+      const lift=22+(i%4)*7;
+      const twist=(i%2?-1:1)*(16+(i%5)*7);
+      const animation=note.animate([
+        {transform:`translate(0,0) rotate(${-twist*.35}deg) scale(.62)`,opacity:0},
+        {transform:`translate(${spread*.35}px,${-lift*.55}px) rotate(${twist}deg) scale(1.05)`,opacity:1,offset:.20},
+        {transform:`translate(${(tx-sx)*.55+spread}px,${(ty-sy)*.42-lift}px) rotate(${-twist*.65}deg) scale(.92)`,opacity:.95,offset:.58},
+        {transform:`translate(${tx-sx}px,${ty-sy}px) rotate(${twist*.18}deg) scale(.48)`,opacity:.08}
+      ],{
+        duration:590+(i%4)*42,
+        delay:i*34,
+        easing:'cubic-bezier(.18,.72,.25,1)',
+        fill:'forwards'
+      });
       animation.onfinish=()=>{
-        coin.remove();
+        note.remove();
         finished++;
-        if(finished===8)onDone?.();
+        if(finished===count)onDone?.();
       };
     }
+  }
+
+  function claimPrizeThen(after){
+    const me=localEntrant();
+    const card=$('resultCard');
+    const cashEl=$('cash');
+    const prizeEl=card?.querySelector('.resultPrize');
+    if(!me){after?.();return}
+
+    const prize=Math.max(0,finite(me.lastPrize,0));
+    const prizeKey=`${game?.mode}:${game?.raceNo}:${me.playerId}:claimed-prize`;
+
+    if(prize<=0||prizeAnimations.has(prizeKey)){
+      if(cashEl)cashEl.textContent=money(me.cash);
+      after?.();
+      return;
+    }
+
+    prizeAnimations.add(prizeKey);
+    if(cashEl)cashEl.textContent=money(finite(me.cashBeforePrize,me.cash-prize));
+
+    animatePrizeTransfer(prizeEl,cashEl,()=>{
+      if(cashEl){
+        cashEl.textContent=money(me.cash);
+        cashEl.classList.remove('cashPotReceive');
+        void cashEl.offsetWidth;
+        cashEl.classList.add('cashPotReceive');
+      }
+      after?.();
+    });
   }
 
   function animateCoinTransfer(button){
@@ -1459,7 +1495,9 @@
       }
       const exitSeries=e.target.closest('[data-exit-series]');
       if(exitSeries){
-        leaveRace();
+        exitSeries.disabled=true;
+        exitSeries.classList.add('claimingAction');
+        claimPrizeThen(()=>leaveRace());
         return;
       }
       const autoHost=e.target.closest('[data-auto-host]');
@@ -1469,7 +1507,9 @@
       }
       const claim=e.target.closest('[data-claim-race]');
       if(claim&&!claim.disabled){
-        requestAction({action:'claim'});
+        claim.disabled=true;
+        claim.classList.add('claimingAction');
+        claimPrizeThen(()=>requestAction({action:'claim'}));
         return;
       }
       const eventChoice=e.target.closest('[data-event-choice]');
