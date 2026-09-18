@@ -125,7 +125,10 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .settingRow small{color:#5ec1ff;margin-top:3px}
 .settingRow input{width:28px;height:28px}
 
-.raceScreen{background:#dff4ff;min-height:100vh;padding:0 0 94px}
+.raceScreen{background:#dff4ff;min-height:100vh;padding:0 0 94px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.raceScreen *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.raceScreen img,.raceScreen svg,.raceScreen canvas{-webkit-user-drag:none;user-drag:none}
+
 .raceStage{width:min(100%,520px);height:min(82vh,930px);margin:0 auto;position:relative;overflow:hidden;background:#8edaff}
 #raceCanvas{display:block;width:100%;height:100%;touch-action:none;background:#8edaff}
 .raceHud{position:absolute;z-index:7;left:0;right:0;top:0;height:94px;background:linear-gradient(135deg,#fff 0 62%,#eef3f7 62% 100%);display:flex;justify-content:space-between;align-items:flex-end;padding:12px 22px 12px;border-bottom:4px solid #0b79ae;box-shadow:0 5px 10px rgba(0,0,0,.12)}
@@ -144,7 +147,7 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .turnBanner small{display:block;font-size:10px;opacity:.8}
 .turnBanner.yours{background:rgba(130,95,0,.88)}
 .turnBanner.finished{background:rgba(20,121,87,.9)}
-.turboButton{position:absolute;z-index:8;left:20px;bottom:22px;width:104px;height:122px;border:0;background:transparent;color:#fff;padding:0;display:grid;justify-items:center;align-content:end;gap:5px;touch-action:none}
+.turboButton{position:absolute;z-index:8;left:20px;bottom:22px;width:104px;height:122px;border:0;background:transparent;color:#fff;padding:0;display:grid;justify-items:center;align-content:end;gap:5px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .turboGauge{position:relative;width:92px;height:92px;border-radius:50%;overflow:hidden;border:7px solid #073f5e;background:#0a5d91;box-shadow:inset 0 0 0 5px rgba(255,255,255,.15),0 6px 0 rgba(1,37,59,.5)}
 .turboGauge i{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(180deg,#fff55d,#ffd116 55%,#ff9f0a);transition:height .08s linear}
 .turboGauge b{position:absolute;inset:0;display:grid;place-items:center;font-size:38px;color:#fff;text-shadow:0 2px 0 #073f5e;z-index:2}
