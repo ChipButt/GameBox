@@ -571,13 +571,13 @@
     const e=game.entrants.find(x=>x.human&&x.playerId===playerId);
     if(!e)return;
 
-    if(msg.action==='ready'){
+    if(msg.action==='claim'){
       if(game.phase!=='intermission')return;
       game.ready=game.ready||readyMap();
       game.ready[playerId]=true;
       const humans=game.entrants.filter(x=>x.human);
-      const allReady=humans.length>0&&humans.every(x=>game.ready?.[x.playerId]);
-      if(allReady){
+      const allClaimed=humans.length>0&&humans.every(x=>game.ready?.[x.playerId]);
+      if(allClaimed){
         resetRound();
         return;
       }
@@ -623,7 +623,7 @@
   function requestAction(msg){
     if(!localPlayer||!game)return;
     if((msg.action==='upgrade'||msg.action==='event-choice')&&game.phase!=='race')return;
-    if(msg.action==='ready'&&game.phase!=='intermission')return;
+    if(msg.action==='claim'&&game.phase!=='intermission')return;
     if(playMode==='single'||role==='host')applyAction(localPlayer.id,msg);
     else session?.sendToHost({type:'race-action',playerId:localPlayer.id,...msg});
   }
@@ -891,24 +891,24 @@
     const prize=Math.max(0,finite(me.lastPrize,0));
     const humans=game.entrants.filter(e=>e.human);
     const complete=game.phase==='complete';
-    const readyCount=humans.filter(e=>game.ready?.[e.playerId]).length;
-    const amReady=!!game.ready?.[me.playerId];
+    const claimedCount=humans.filter(e=>game.ready?.[e.playerId]).length;
+    const amClaimed=!!game.ready?.[me.playerId];
 
     card.classList.remove('hidden');
-    card.classList.toggle('seriesComplete',complete);
-    card.innerHTML=complete
-      ?`
-        <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/race_complete.png" alt="">
-        <div class="resultPrize">${money(prize)}</div>
-        <div class="resultPosition">${ordinalHTML(me.position||12)}</div>
-        <button class="resultAction" data-exit-series type="button" aria-label="Claim and return to setup">CLAIM</button>
-      `
-      :`
-        <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/ready_next_race.png" alt="">
-        <div class="resultPosition">${ordinalHTML(me.position||12)} place · Prize +${money(prize)}</div>
-        <div class="resultReady">${readyCount} / ${humans.length} ready</div>
-        <button class="resultAction" data-ready-race type="button" ${amReady?'disabled':''}>${amReady?'READY ✓':'NEXT RACE'}</button>
-      `;
+    card.classList.add('seriesComplete');
+    card.classList.toggle('awaitingClaims',!complete);
+    card.classList.toggle('claimed',!complete&&amClaimed);
+
+    card.innerHTML=`
+      <img class="resultAsset" src="${ASSET_ROOT}/ui/popups/race_complete.png" alt="">
+      <div class="resultPrize">${money(prize)}</div>
+      <div class="resultPosition">${ordinalHTML(me.position||12)}</div>
+      ${complete
+        ?'<button class="resultAction" data-exit-series type="button" aria-label="Claim and return to setup">CLAIM</button>'
+        :`<button class="resultAction ${amClaimed?'claimedAction':''}" data-claim-race type="button" ${amClaimed?'disabled':''} aria-label="${amClaimed?'Prize claimed. Waiting for other players.':'Claim winnings'}">CLAIM</button>
+           <div class="resultReady">${claimedCount} / ${humans.length} claimed</div>`
+      }
+    `;
 
     const prizeKey=`${game.mode}:${game.raceNo}:${me.playerId}:prize`;
     if(game.mode==='tournament'&&prize>0&&!prizeAnimations.has(prizeKey)){
@@ -1234,9 +1234,9 @@
         joinDiscoveredHost(autoHost.dataset.autoHost);
         return;
       }
-      const ready=e.target.closest('[data-ready-race]');
-      if(ready&&!ready.disabled){
-        requestAction({action:'ready'});
+      const claim=e.target.closest('[data-claim-race]');
+      if(claim&&!claim.disabled){
+        requestAction({action:'claim'});
         return;
       }
       const eventChoice=e.target.closest('[data-event-choice]');
