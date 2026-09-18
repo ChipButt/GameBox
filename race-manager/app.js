@@ -14,7 +14,22 @@
     {name:'Tropical Island',asset:'tropical_island_circuit.png',discipline:'GT',weather:'Sunny',laps:8,profile:'Coastal sweepers · Fast exits',risk:1.20,weights:{engine:1.20,tyres:1.35,brakes:1.05,fuel:1.15}}
   ];
 
-  const BOT_NAMES=['Apex North','Redline Works','Vector GP','Copper Fox','Nightshift','Kestrel','Orion Motorsport','Blackbird','Summit Racing','Halo Autosport','Cinder Team','Blue Arrow','Forge Racing','Velocity Union'];
+  const CAR_ROSTER=[
+    {color:'gold',label:'Gold',asset:'player_gold.png',racer:'Leo Vale'},
+    {color:'blue',label:'Blue',asset:'blue.png',racer:'Mason Frost'},
+    {color:'red',label:'Red',asset:'red.png',racer:'Ruby Kane'},
+    {color:'green',label:'Green',asset:'green.png',racer:'Finn Hart'},
+    {color:'cyan',label:'Cyan',asset:'cyan.png',racer:'Skye Rivers'},
+    {color:'orange',label:'Orange',asset:'orange.png',racer:'Jax Ember'},
+    {color:'pink',label:'Pink',asset:'pink.png',racer:'Lola Vance'},
+    {color:'white',label:'White',asset:'white.png',racer:'Nico Snow'},
+    {color:'black_red',label:'Black / Red',asset:'black_red.png',racer:'Axel Crow'},
+    {color:'purple',label:'Purple',asset:'purple.png',racer:'Nova Quinn'},
+    {color:'teal',label:'Teal',asset:'teal.png',racer:'Theo Cruz'},
+    {color:'silver',label:'Silver',asset:'silver.png',racer:'Max Sterling'}
+  ];
+  const CAR_BY_COLOR=Object.fromEntries(CAR_ROSTER.map(car=>[car.color,car]));
+  const normaliseCarColor=value=>CAR_BY_COLOR[value]?value:'gold';
 
   const UPGRADE_META={
     engine:{label:'Engine',desc:'Acceleration',kind:'car',base:22,step:8},
@@ -73,6 +88,8 @@
   let game=null;
   let hostTimer=null;
   let pendingHello=false;
+  let selectedCarColor='gold';
+  let latestLobbyPlayers=[];
   let raceSetup={mode:'quick',trackIndex:0,races:5};
   const prizeAnimations=new Set();
 
@@ -132,9 +149,9 @@
     $('raceScreen').classList.add('hidden');
     $('exitRace').classList.add('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
-    if(id==='singleSetup'){renderSinglePlayers();renderRaceSetup()}
-    if(id==='hostSetup'){syncPlayerSelects();renderRaceSetup()}
-    if(id==='joinSetup')syncPlayerSelects();
+    if(id==='singleSetup'){renderSinglePlayers();renderCarChoices('single');renderRaceSetup()}
+    if(id==='hostSetup'){syncPlayerSelects();renderCarChoices('host');renderRaceSetup()}
+    if(id==='joinSetup'){syncPlayerSelects();renderCarChoices('join',latestLobbyPlayers)}
   }
 
   function showRace(){
@@ -154,10 +171,60 @@
       b.type='button';
       b.className='playerChoice'+(p.id===selectedSingleId?' selected':'');
       b.textContent=p.name;
-      b.onclick=()=>{selectedSingleId=p.id;renderSinglePlayers()};
+      b.onclick=()=>{selectedSingleId=p.id;renderSinglePlayers();renderCarChoices('single')};
       wrap.appendChild(b);
     });
     $('startSingle').disabled=!selectedSingleId;
+  }
+
+  function carLabel(color){return CAR_BY_COLOR[normaliseCarColor(color)]?.label||'Gold'}
+
+  function renderCarChoices(prefix,lobbyPlayers=[]){
+    const wrap=$(prefix+'CarChoices');
+    if(!wrap)return;
+
+    let taken=new Set();
+    if(prefix==='host'&&session){
+      session.peers().forEach(peer=>{
+        const color=peer.meta?.carColor;
+        if(color)taken.add(normaliseCarColor(color));
+      });
+    }else if(prefix==='join'){
+      const ownId=localPlayer?.id||$('joinPlayerSelect')?.value||'';
+      for(const p of lobbyPlayers||[]){
+        if(String(p.id)!==String(ownId)&&p.carColor)taken.add(normaliseCarColor(p.carColor));
+      }
+    }
+
+    wrap.innerHTML=CAR_ROSTER.map(car=>{
+      const unavailable=taken.has(car.color)&&car.color!==selectedCarColor;
+      const replacementName=prefix==='single'
+        ?(roster().find(p=>p.id===selectedSingleId)?.name||car.racer)
+        :prefix==='host'
+          ?(roster().find(p=>p.id===$('hostPlayerSelect')?.value)?.name||car.racer)
+          :(roster().find(p=>p.id===$('joinPlayerSelect')?.value)?.name||car.racer);
+      return `
+        <button class="carChoice ${car.color===selectedCarColor?'selected':''}" data-car-color="${car.color}" type="button" ${unavailable?'disabled':''}>
+          <img src="${ASSET_ROOT}/cars/${car.asset}" alt="">
+          <span><strong>${esc(car.label)}</strong><small>${esc(car.color===selectedCarColor?replacementName:car.racer)}</small></span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectCarColor(color){
+    const next=normaliseCarColor(color);
+    selectedCarColor=next;
+    renderCarChoices('single');
+    renderCarChoices('host');
+    renderCarChoices('join',latestLobbyPlayers);
+
+    if(role==='host'&&session){
+      renderHostLobby();
+      broadcastLobby();
+    }else if(role==='client'&&session?.peers?.().length){
+      session.sendToHost({type:'color-choice',carColor:selectedCarColor});
+    }
   }
 
   function syncPlayerSelects(){
@@ -207,12 +274,13 @@
     }
   }
 
-  function entrantFromPlayer(player,owner='local',profileOverride=null){
+  function entrantFromPlayer(player,owner='local',profileOverride=null,carColor='gold'){
     const p=getProfile(player,profileOverride);
     return {
       id:'human-'+player.id,
       playerId:player.id,
       name:player.name,
+      carColor:normaliseCarColor(carColor),
       human:true,
       owner,
       levels:baseLevels(),
@@ -241,11 +309,11 @@
     return Math.max(2,Math.round(6-skill*3+Math.random()*2));
   }
 
-  function botEntrant(name,i,track,raceNo=1){
+  function botEntrant(car,i,track,raceNo=1){
     const levels={};STAT_KEYS.forEach(key=>levels[key]=1);
     const skill=botSkill(raceNo,i);
     return {
-      id:'bot-'+i+'-'+uid().slice(0,4),name,human:false,levels,
+      id:'bot-'+car.color,name:car.racer,carColor:car.color,human:false,levels,
       cash:0,gems:0,
       aiSkill:skill,
       aiFocus:STAT_KEYS[i%STAT_KEYS.length],
@@ -291,9 +359,19 @@
     const startTrackIndex=clamp(Math.round(finite(config.trackIndex,0)),0,TRACKS.length-1);
     const totalRaces=mode==='tournament'?clamp(Math.round(finite(config.totalRaces,5)),3,15):1;
     const track=TRACKS[startTrackIndex];
-    const entrants=humans.map(h=>entrantFromPlayer(h.player,h.owner,h.profile||null));
-    const botPool=[...BOT_NAMES].sort(()=>Math.random()-.5);
-    for(let i=entrants.length;i<MAX_GRID;i++)entrants.push(botEntrant(botPool[i%botPool.length],i,track,1));
+
+    const usedColors=new Set();
+    const entrants=humans.map(h=>{
+      let color=normaliseCarColor(h.carColor);
+      if(usedColors.has(color)){
+        color=CAR_ROSTER.find(car=>!usedColors.has(car.color))?.color||color;
+      }
+      usedColors.add(color);
+      return entrantFromPlayer(h.player,h.owner,h.profile||null,color);
+    });
+
+    const remainingCars=CAR_ROSTER.filter(car=>!usedColors.has(car.color));
+    remainingCars.forEach((car,i)=>entrants.push(botEntrant(car,i,track,1)));
     entrants.forEach(e=>{e.levels=baseLevels();e.cash=0;e.lastPrize=0;e.cashBeforePrize=0});
     seedGrid(entrants);
     prizeAnimations.clear();
@@ -641,7 +719,7 @@
     return {
       phase:game.phase,countdownTicks:game.countdownTicks,ready:game.ready||{},mode:game.mode,totalRaces:game.totalRaces,startTrackIndex:game.startTrackIndex,raceNo:game.raceNo,trackIndex:game.trackIndex,tick:game.tick,maxTicks:game.maxTicks,results:game.results,
       entrants:game.entrants.map(e=>({
-        id:e.id,playerId:e.playerId,name:e.name,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,cashBeforePrize:e.cashBeforePrize,lastPrize:e.lastPrize,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,eventCount:e.eventCount,eventCooldownUntil:e.eventCooldownUntil,activeEvent:e.activeEvent,boost:e.boost,eventResult:e.eventResult
+        id:e.id,playerId:e.playerId,name:e.name,carColor:e.carColor,human:e.human,owner:e.owner,levels:e.levels,cash:e.cash,cashBeforePrize:e.cashBeforePrize,lastPrize:e.lastPrize,gems:e.gems,aiSkill:e.aiSkill,aiFocus:e.aiFocus,nextDecision:e.nextDecision,races:e.races,best:e.best,progress:e.progress,finishTick:e.finishTick,position:e.position,eventCount:e.eventCount,eventCooldownUntil:e.eventCooldownUntil,activeEvent:e.activeEvent,boost:e.boost,eventResult:e.eventResult
       }))
     };
   }
@@ -742,6 +820,7 @@
     }
 
     renderRaceLanes(sorted);
+    renderRaceLeaderboard();
 
     renderUpgradeButtons(me,track);
 
@@ -758,6 +837,39 @@
     }else if(game.phase==='intermission'||game.phase==='complete'){
       renderResult(me);
     }
+  }
+
+  function liveLeaderboardOrder(){
+    if(!game)return[];
+    return [...game.entrants].sort((a,b)=>{
+      if(a.position&&b.position)return a.position-b.position;
+      if(a.finishTick!==null&&b.finishTick!==null)return a.finishTick-b.finishTick;
+      if(a.finishTick!==null)return -1;
+      if(b.finishTick!==null)return 1;
+      return b.progress-a.progress||String(a.name).localeCompare(String(b.name));
+    });
+  }
+
+  function renderRaceLeaderboard(){
+    const board=$('raceLeaderboard');
+    const rows=$('raceLeaderboardRows');
+    if(!board||!rows||!game)return;
+
+    const hasFinisher=game.entrants.some(e=>e.finishTick!==null);
+    const visible=(game.phase==='race'&&hasFinisher)||game.phase==='intermission'||game.phase==='complete';
+    board.classList.toggle('hidden',!visible);
+    if(!visible)return;
+
+    const order=liveLeaderboardOrder();
+    rows.innerHTML=order.slice(0,MAX_GRID).map((e,index)=>{
+      const car=CAR_BY_COLOR[normaliseCarColor(e.carColor)]||CAR_ROSTER[0];
+      const finished=e.finishTick!==null||!!e.position;
+      const isYou=e.human&&e.playerId===localPlayer?.id;
+      return `<div class="raceLeaderboardRow ${finished?'finished':''} ${isYou?'you':''}" data-place="${index+1}">
+        <strong class="raceLeaderboardName">${esc(e.name)}</strong>
+        <span class="raceLeaderboardColour"><i style="--car-swatch:url('${ASSET_ROOT}/cars/${car.asset}')"></i>${esc(car.label)}</span>
+      </div>`;
+    }).join('');
   }
 
   function renderUpgradeButtons(me,track){
@@ -817,6 +929,7 @@
       }
       row.className=`raceLane ${e.human?'human':''} ${e.playerId===localPlayer.id?'you':''}`;
       row.dataset.progress=String(clamp(e.progress,0,100));
+      row.dataset.carColor=normaliseCarColor(e.carColor);
       row.querySelector('.name').textContent=e.name;
       existing.delete(e.id);
     }
@@ -1013,13 +1126,18 @@
   }
 
   function ensureSession(){if(!session)installSession();return session}
-  function sendClientHello(){if(!localPlayer)return;session?.sendToHost({type:'hello',player:localPlayer,profile:getProfile(localPlayer)})}
+  function sendClientHello(){if(!localPlayer)return;session?.sendToHost({type:'hello',player:localPlayer,profile:getProfile(localPlayer),carColor:selectedCarColor})}
 
   function handleNetworkMessage(msg,source){
     if(role==='host'){
       if(msg.type==='hello'&&source.peer){
         source.peer.meta.player={id:String(msg.player?.id||uid()),name:String(msg.player?.name||'Friend').slice(0,24)};
         source.peer.meta.profile=msg.profile||null;
+        source.peer.meta.carColor=normaliseCarColor(msg.carColor);
+        renderHostLobby();broadcastLobby();return;
+      }
+      if(msg.type==='color-choice'&&source.peer){
+        source.peer.meta.carColor=normaliseCarColor(msg.carColor);
         renderHostLobby();broadcastLobby();return;
       }
       if(msg.type==='race-action'){applyAction(String(msg.playerId||''),msg);return}
@@ -1032,19 +1150,22 @@
   function hostPlayers(){
     const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);
     const players=[];
-    if(hp)players.push({id:hp.id,name:hp.name,host:true});
-    if(session)session.peers().forEach(peer=>{if(peer.meta?.player)players.push({...peer.meta.player,host:false})});
+    if(hp)players.push({id:hp.id,name:hp.name,host:true,carColor:selectedCarColor});
+    if(session)session.peers().forEach(peer=>{if(peer.meta?.player)players.push({...peer.meta.player,host:false,carColor:normaliseCarColor(peer.meta.carColor)})});
     return players;
   }
 
   function renderHostLobby(){
     const players=hostPlayers();
-    $('hostLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Choose the host player, then connect friends.</div>';
+    $('hostLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${esc(carLabel(p.carColor))} car · Ready</small></div>`).join(''):'<div class="emptyState">Choose the host player, then connect friends.</div>';
     $('startHostRace').disabled=players.length<2;
+    renderCarChoices('host');
   }
 
   function renderJoinLobby(players,config=null){
-    $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="emptyState">Choose an available host above.</div>';
+    latestLobbyPlayers=Array.isArray(players)?players:[];
+    $('joinLobby').innerHTML=players.length?players.map((p,i)=>`<div class="leaderRow"><span class="rank">${i+1}</span><strong>${esc(p.name)}${p.host?' · Host':''}</strong><small>${esc(carLabel(p.carColor))} car · Ready</small></div>`).join(''):'<div class="emptyState">Choose an available host above.</div>';
+    renderCarChoices('join',latestLobbyPlayers);
     const summary=$('joinRaceConfig');
     if(summary&&config){
       const track=TRACKS[clamp(Math.round(finite(config.trackIndex,0)),0,TRACKS.length-1)]||TRACKS[0];
@@ -1104,6 +1225,7 @@
         hostName:`${p.name}'s Gridline Race`,
         player:p,
         profile:getProfile(p),
+        carColor:selectedCarColor,
         raceMode:config.mode,
         trackName:TRACKS[config.trackIndex].name,
         totalRaces:config.totalRaces
@@ -1137,7 +1259,7 @@
     pendingHello=true;
     $('joinState').textContent='Joining';
     try{
-      await ensureSession().joinHost(peerId,{player:p,profile:getProfile(p)});
+      await ensureSession().joinHost(peerId,{player:p,profile:getProfile(p),carColor:selectedCarColor});
       $('joinState').textContent='Connected';
       renderAvailableHosts([]);
     }catch(err){
@@ -1150,8 +1272,8 @@
   function startHostRace(){
     const hp=roster().find(p=>p.id===$('hostPlayerSelect').value);if(!hp)return;
     localPlayer=hp;playMode='multi';role='host';
-    const humans=[{player:hp,owner:'host',profile:getProfile(hp)}];
-    session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null})});
+    const humans=[{player:hp,owner:'host',profile:getProfile(hp),carColor:selectedCarColor}];
+    session.peers().forEach(peer=>{if(peer.meta?.player)humans.push({player:peer.meta.player,owner:peer.id,profile:peer.meta.profile||null,carColor:normaliseCarColor(peer.meta.carColor)})});
     if(humans.length<2)return;
     session?.updateHost?.({started:true});
     game=buildGame(humans,setupConfig());showRace();renderGame();broadcastGame();
@@ -1161,7 +1283,7 @@
   function startSingleRace(){
     const p=roster().find(x=>x.id===selectedSingleId);if(!p)return;
     localPlayer=p;playMode='single';role='host';
-    game=buildGame([{player:p,owner:'local',profile:getProfile(p)}],setupConfig());
+    game=buildGame([{player:p,owner:'local',profile:getProfile(p),carColor:selectedCarColor}],setupConfig());
     showRace();renderGame();
     clearInterval(hostTimer);hostTimer=setInterval(hostTick,TICK_MS);
   }
@@ -1200,8 +1322,12 @@
     $('startSingle').onclick=startSingleRace;
     $('hostPlayerSelect').onchange=()=>{
       renderHostLobby();
+      renderCarChoices('host');
       const p=roster().find(x=>x.id===$('hostPlayerSelect').value);
-      if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p)});
+      if(p&&session?.updateHost)session.updateHost({hostName:`${p.name}'s Gridline Race`,player:p,profile:getProfile(p),carColor:selectedCarColor});
+    };
+    $('joinPlayerSelect').onchange=()=>{
+      renderCarChoices('join',latestLobbyPlayers);
     };
     for(const id of ['singleRaceCount','hostRaceCount']){
       const input=$(id);
@@ -1222,6 +1348,11 @@
     };
 
     document.addEventListener('click',e=>{
+      const carChoice=e.target.closest('[data-car-color]');
+      if(carChoice&&!carChoice.disabled){
+        selectCarColor(carChoice.dataset.carColor);
+        return;
+      }
       const raceMode=e.target.closest('[data-race-mode]');
       if(raceMode){
         raceSetup.mode=raceMode.dataset.raceMode==='tournament'?'tournament':'quick';
