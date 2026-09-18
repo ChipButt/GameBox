@@ -6,14 +6,38 @@ const ROSTER_KEY='gamebox.players.v1';
 const LOCAL_PICK_KEY='gamebox.discrally.players.v1';
 const COLORS=['#f7bd18','#0a65c7','#d94f5c','#24a47f'];
 const TRACKS=[
-  {id:'harbour',name:'Harbour Loop',desc:'Fast flowing corners',icon:'M12 52 C12 18 84 18 84 48 C84 75 52 82 32 68 C17 58 18 42 34 37',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[],boosts:[{x:665,y:488,w:120,h:34,a:0}],slow:[]},
-  {id:'bumper',name:'Bumper Beware',desc:'Rebound posts guard the line',icon:'M14 64 L14 24 L52 24 L52 44 L82 44 L82 72 L45 72 L45 55 L27 55',inner:{x:250,y:160,w:500,h:280,r:120},bumpers:[{x:812,y:190,r:15},{x:188,y:410,r:15}],boosts:[{x:440,y:72,w:120,h:34,a:0}],slow:[]},
-  {id:'goldrush',name:'Gold Rush',desc:'Boost pads and a slow patch',icon:'M12 60 C20 20 48 18 60 38 C72 58 80 28 88 20 M22 70 L78 70',inner:{x:270,y:170,w:460,h:260,r:105},bumpers:[{x:830,y:390,r:14}],boosts:[{x:640,y:486,w:130,h:34,a:0},{x:205,y:72,w:110,h:34,a:0}],slow:[{x:75,y:225,w:120,h:150}]},
-  {id:'switchback',name:'Switchback',desc:'Slalom through alternating posts',icon:'M15 25 L70 25 L70 45 L30 45 L30 68 L85 68',inner:{x:235,y:145,w:530,h:310,r:95},bumpers:[{x:798,y:215,r:14},{x:680,y:60,r:12},{x:315,y:120,r:12},{x:202,y:385,r:14}],boosts:[{x:635,y:490,w:105,h:32,a:0}],slow:[]},
-  {id:'roundabout',name:'Roundabout',desc:'Busy centre-line obstacles',icon:'M18 50 C18 20 82 20 82 50 C82 80 18 80 18 50 M40 50 C40 38 60 38 60 50 C60 62 40 62 40 50',inner:{x:285,y:175,w:430,h:250,r:125},bumpers:[{x:805,y:300,r:15},{x:500,y:66,r:13},{x:195,y:300,r:15},{x:500,y:534,r:13}],boosts:[],slow:[{x:445,y:55,w:110,h:70}]},
-  {id:'lightning',name:'Force Lightning',desc:'Long boosts reward commitment',icon:'M14 62 L35 23 L35 47 L60 47 L45 76 L86 28',inner:{x:245,y:155,w:510,h:290,r:135},bumpers:[{x:842,y:300,r:14}],boosts:[{x:620,y:485,w:150,h:34,a:0},{x:430,y:62,w:140,h:34,a:0},{x:92,y:245,w:34,h:115,a:0}],slow:[]}
+  {
+    id:'harbour',name:'Harbour Loop',desc:'Long flowing waterfront circuit',width:138,curve:true,
+    points:[[500,520],[760,530],[900,430],[850,280],[930,150],[760,70],[540,95],[390,55],[190,100],[80,230],[120,400],[300,500]],
+    bumpers:[],boosts:[{s:.16,offset:0,length:90,width:52}],slow:[]
+  },
+  {
+    id:'bumper',name:'Bumper Beware',desc:'Technical bends with sparse rebound posts',width:126,curve:true,
+    points:[[500,525],[800,520],[915,410],[820,330],[910,210],[800,80],[560,70],[480,170],[360,80],[170,90],[80,200],[170,300],[80,410],[190,510]],
+    bumpers:[{s:.29,offset:20,r:13},{s:.67,offset:-18,r:13}],boosts:[{s:.11,offset:0,length:80,width:48}],slow:[]
+  },
+  {
+    id:'goldrush',name:'Gold Rush',desc:'Wide sweepers, S-bends and boost lanes',width:132,curve:true,
+    points:[[500,525],[770,520],[900,430],[820,330],[900,190],[760,80],[560,105],[430,190],[300,95],[130,120],[80,260],[180,340],[100,450],[280,520]],
+    bumpers:[{s:.38,offset:18,r:12}],boosts:[{s:.14,offset:0,length:95,width:50},{s:.57,offset:0,length:90,width:50}],slow:[{s:.78,offset:0,length:105,width:76}]
+  },
+  {
+    id:'switchback',name:'Switchback',desc:'A long chain of alternating hairpins',width:104,curve:false,
+    points:[[500,525],[820,515],[920,420],[760,360],[900,280],[770,200],[910,115],[760,60],[540,80],[400,160],[250,85],[90,120],[180,220],[80,300],[220,370],[90,450],[250,525]],
+    bumpers:[{s:.47,offset:-14,r:10}],boosts:[{s:.09,offset:0,length:72,width:42}],slow:[]
+  },
+  {
+    id:'roundabout',name:'Roundabout',desc:'Deep inward curves around a tight centre',width:122,curve:true,
+    points:[[500,525],[750,520],[900,420],[820,300],[900,160],[760,70],[600,120],[500,230],[400,120],[240,70],[100,160],[180,300],[100,420],[250,520]],
+    bumpers:[{s:.24,offset:16,r:11},{s:.73,offset:-16,r:11}],boosts:[],slow:[{s:.5,offset:0,length:85,width:70}]
+  },
+  {
+    id:'lightning',name:'Force Lightning',desc:'Fast angular straights and sharp direction changes',width:112,curve:false,
+    points:[[500,530],[780,510],[900,400],[740,340],[910,250],[760,180],[900,90],[660,70],[520,170],[400,80],[180,90],[100,210],[260,280],[90,360],[180,490],[360,520]],
+    bumpers:[{s:.64,offset:14,r:10}],boosts:[{s:.12,offset:0,length:105,width:44},{s:.46,offset:0,length:100,width:44},{s:.82,offset:0,length:90,width:44}],slow:[]
+  }
 ];
-const TRACK_OUTER={x:35,y:35,w:930,h:530,r:155};
+const TRACK_GEOMETRY=new Map();
 const DISC_R=22,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
 const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
