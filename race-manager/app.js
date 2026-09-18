@@ -1528,8 +1528,16 @@
 
     window.addEventListener('resize',()=>{if(document.body.classList.contains('gridline-menu-live'))updateMenuScale()},{passive:true});
         const cleanupNetworking=()=>{try{session?.close()}catch{};clearInterval(hostTimer)};
-    window.addEventListener('beforeunload',cleanupNetworking);
-    window.addEventListener('pagehide',cleanupNetworking);
+    // Do not kill a live discovery session when the browser puts this page
+    // into the back/forward cache. That left a restored lobby looking alive while
+    // its underlying Trystero room had already been closed.
+    window.addEventListener('pagehide',event=>{if(!event.persisted)cleanupNetworking()});
+    window.addEventListener('pageshow',event=>{
+      if(!event.persisted||!session?.closed)return;
+      session=null;
+      if(role==='host'&&document.getElementById('hostSetup')&&!document.getElementById('hostSetup').classList.contains('hidden'))startAutoHost();
+      if(role==='client'&&document.getElementById('joinSetup')&&!document.getElementById('joinSetup').classList.contains('hidden'))startAutoScan();
+    });
   }
 
   syncPlayerSelects();
