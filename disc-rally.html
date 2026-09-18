@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#082f68">
+<title>Disc Rally · Chip In Games</title>
+<link rel="stylesheet" href="disc-rally.css?v=1">
+</head>
+<body>
+<div class="appShell">
+  <header class="topbar">
+    <a class="backLink" href="index.html">← GameBox</a>
+    <img class="chipLogo" src="chip_in_logo.png?v=1" alt="Chip In">
+    <span class="topbarSpacer" aria-hidden="true"></span>
+  </header>
+
+  <main>
+    <section id="modeView" class="view">
+      <div class="hero">
+        <div class="discLogo" aria-hidden="true"><span></span></div>
+        <div><span class="eyebrow">CHIP IN GAMES</span><h1>Disc Rally</h1><p>Flick. Bounce. Overtake. First disc across the line wins.</p></div>
+      </div>
+      <div class="modeGrid">
+        <button id="localMode" class="choiceCard" type="button"><span>👥</span><strong>Same Device</strong><small>Pass one phone between 2–4 players</small></button>
+        <button id="multiMode" class="choiceCard" type="button"><span>📶</span><strong>Online / Wi‑Fi</strong><small>Each player uses their own device</small></button>
+      </div>
+      <div class="infoCard"><strong>How it plays</strong><p>Drag from your disc in the direction you want to shoot and release. Discs collide, walls rebound, boost pads add speed and every player gets one Turbo per lap.</p></div>
+    </section>
+
+    <section id="localSetup" class="view hidden">
+      <header class="viewHeader"><button class="textButton" data-back="modeView">← Back</button><div><span class="eyebrow">SAME DEVICE</span><h1>Set up race</h1></div></header>
+      <section class="panel"><h2>Players</h2><div id="localPlayers" class="playerChoices"></div><small class="hint">Choose 2–4 players from the GameBox player list.</small></section>
+      <section class="panel"><h2>Track</h2><div id="localTracks" class="trackChoices"></div></section>
+      <section class="panel compact"><label>Laps<select id="localLaps"><option value="1">1 lap</option><option value="2" selected>2 laps</option><option value="3">3 laps</option></select></label></section>
+      <button id="startLocal" class="primaryButton" type="button">Start Race</button>
+      <div id="localStatus" class="status"></div>
+    </section>
+
+    <section id="multiSetup" class="view hidden">
+      <header class="viewHeader"><button class="textButton" data-back="modeView">← Back</button><div><span class="eyebrow">MULTIPLAYER</span><h1>Choose role</h1></div></header>
+      <div class="modeGrid">
+        <button id="hostMode" class="choiceCard" type="button"><span>🏁</span><strong>Host Race</strong><small>Create a discoverable lobby</small></button>
+        <button id="joinMode" class="choiceCard" type="button"><span>🔎</span><strong>Join Race</strong><small>Find a nearby/online host</small></button>
+      </div>
+      <div class="infoCard"><strong>Connection</strong><p>This browser version uses WebRTC over Wi‑Fi/internet. True browser-to-browser Bluetooth is not reliable on iPhone, so Bluetooth is reserved for a future native build.</p></div>
+    </section>
+
+    <section id="hostSetup" class="view hidden">
+      <header class="viewHeader"><button class="textButton" data-back="multiSetup">← Back</button><div><span class="eyebrow">HOST RACE</span><h1>Race lobby</h1></div></header>
+      <section class="panel">
+        <label class="fieldLabel">This phone is playing as<select id="hostPlayer"></select></label>
+        <div class="lobbyState"><span class="scanPulse"></span><div><strong>Host discovery</strong><small id="hostStatus">Starting…</small></div></div>
+      </section>
+      <section class="panel"><h2>Track</h2><div id="hostTracks" class="trackChoices"></div></section>
+      <section class="panel compact"><label>Laps<select id="hostLaps"><option value="1">1 lap</option><option value="2" selected>2 laps</option><option value="3">3 laps</option></select></label></section>
+      <section class="panel"><div class="sectionRow"><h2>Players</h2><span class="tag">2–4</span></div><div id="hostLobby" class="lobbyList"></div></section>
+      <button id="startHost" class="primaryButton" type="button" disabled>Start Race</button>
+      <button id="restartHostDiscovery" class="secondaryButton" type="button">Restart discovery</button>
+    </section>
+
+    <section id="joinSetup" class="view hidden">
+      <header class="viewHeader"><button class="textButton" data-back="multiSetup">← Back</button><div><span class="eyebrow">JOIN RACE</span><h1>Find a host</h1></div></header>
+      <section class="panel"><label class="fieldLabel">You are playing as<select id="joinPlayer"></select></label></section>
+      <section class="panel">
+        <div class="sectionRow"><h2>Available races</h2><span id="joinStatus" class="tag">Scanning</span></div>
+        <div id="availableHosts" class="hostList"><div class="scanning"><span class="scanPulse"></span><strong>Scanning for Disc Rally hosts…</strong></div></div>
+      </section>
+      <section class="panel"><h2>Connected lobby</h2><div id="joinLobby" class="lobbyList"><div class="empty">Not connected yet.</div></div></section>
+      <button id="restartScan" class="secondaryButton" type="button">Restart scan</button>
+    </section>
+
+    <section id="raceView" class="view hidden">
+      <header class="raceHeader">
+        <button id="exitRace" class="textButton" type="button">← Exit</button>
+        <div class="raceTitle"><span class="eyebrow">DISC RALLY</span><strong id="trackName">Harbour Loop</strong></div>
+        <span id="raceNetwork" class="networkTag hidden">ONLINE</span>
+      </header>
+      <section class="turnBanner" id="turnBanner"><span>TURN</span><strong id="turnText">—</strong><small id="turnHint">Drag your disc and release</small></section>
+      <div class="canvasWrap">
+        <canvas id="raceCanvas" width="1000" height="600" aria-label="Disc Rally track"></canvas>
+        <div id="finishOverlay" class="finishOverlay hidden"></div>
+      </div>
+      <div class="raceControls">
+        <button id="turboButton" class="turboButton" type="button"><span>⚡</span><strong>Turbo</strong><small id="turboState">Ready</small></button>
+        <div class="powerMeter"><span>SHOT POWER</span><div><i id="powerFill"></i></div></div>
+      </div>
+      <section id="scoreboard" class="scoreboard"></section>
+      <div class="raceFooter"><small>Drag from the active disc toward your shot direction. Longer drag = more power.</small></div>
+    </section>
+  </main>
+</div>
+<script src="lan-core.js?v=7"></script>
+<script src="disc-rally.js?v=1"></script>
+</body>
+</html>
