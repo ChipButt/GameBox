@@ -1,11 +1,54 @@
-/* Gridline Racing live screen: 1/5 banner, 2/5 circuit, 2/5 upgrades. */
-body.gridline-racing-live{height:100dvh;overflow:hidden;background:#edf2f7}
-body.gridline-racing-live .appShell{height:100dvh;min-height:0;overflow:hidden;display:grid;grid-template-rows:40px minmax(0,1fr)}
-body.gridline-racing-live .topbar{position:relative;height:40px;min-height:0;padding:3px 8px;background:#f8fbfd}
-body.gridline-racing-live .chipLogo{width:82px;height:29px;object-fit:contain}
-body.gridline-racing-live .backLink{font-size:.68rem}
-body.gridline-racing-live .iconButton{min-height:29px;padding:4px 9px;font-size:.67rem}
-body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;padding:4px 6px calc(5px + env(safe-area-inset-bottom))}
+/* Gridline Racing live screen built from approved raster assets. */
+body.gridline-racing-live{
+  height:100dvh;
+  overflow:hidden;
+  background:#04132e;
+}
+body.gridline-racing-live .appShell{
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:40px minmax(0,1fr);
+}
+body.gridline-racing-live .topbar{
+  position:relative;
+  height:40px;
+  min-height:0;
+  padding:3px 8px;
+  background:#061a3b;
+  border-bottom:1px solid rgba(62,170,255,.35);
+}
+body.gridline-racing-live .chipLogo{
+  width:72px;
+  height:28px;
+  object-fit:contain;
+  opacity:.88;
+}
+body.gridline-racing-live .backLink{
+  width:118px;
+  height:31px;
+  padding:0;
+  border:0;
+  font-size:0;
+  background:url('assets/ui/controls/back.png') center/contain no-repeat;
+}
+body.gridline-racing-live .iconButton{
+  width:36px;
+  height:32px;
+  min-height:0;
+  padding:0;
+  border:0;
+  font-size:0;
+  background:url('assets/ui/controls/settings.png') center/contain no-repeat;
+  box-shadow:none;
+}
+body.gridline-racing-live .mainView{
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  padding:3px 4px calc(4px + env(safe-area-inset-bottom));
+}
 
 #raceScreen:not(.hidden){
   height:100%;
@@ -16,178 +59,142 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   position:relative;
 }
 
-/* ===== Top 1/5: dark race banner ===== */
+/* ===== Top 1/5 ===== */
 #raceScreen .raceBanner{
   min-height:0;
   overflow:hidden;
-  padding:8px 10px 7px;
-  border-radius:18px 18px 12px 12px;
-  background:#0d1a31;
+  padding:4px 5px 3px;
+  border-radius:12px;
+  background:linear-gradient(180deg,#061c44,#04142e);
   color:#fff;
   display:grid;
-  grid-template-rows:auto auto auto;
-  gap:6px;
-  box-shadow:0 5px 12px rgba(8,47,104,.14)
+  grid-template-rows:31px minmax(0,1fr) 45px 4px;
+  gap:3px;
+  box-shadow:inset 0 0 0 1px rgba(71,175,255,.25),0 4px 12px rgba(0,0,0,.28);
 }
-#raceScreen .raceHeaderCompact{
+#raceScreen .gridlineRaceLogo{
+  display:block;
+  width:min(160px,40%);
+  height:31px;
+  object-fit:contain;
+  justify-self:center;
+}
+#raceScreen .raceIdentityRow{
   min-height:0;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 86px minmax(0,1fr);
-  align-items:center;
-  gap:7px
+  grid-template-columns:minmax(115px,.34fr) minmax(0,.66fr);
+  gap:6px;
 }
-#raceScreen .teamStamp,#raceScreen .trackStamp{min-width:0}
-#raceScreen .teamStamp span{
-  display:block;
-  color:#64a0ff;
-  font:900 .55rem/1 Fredoka,Inter,sans-serif;
-  letter-spacing:.06em
+#raceScreen .playerProfileAsset,
+#raceScreen .raceNameAsset,
+#raceScreen .assetPill{
+  position:relative;
+  min-width:0;
+  min-height:0;
 }
-#raceScreen .teamStamp strong{
-  display:block;
-  margin-top:4px;
-  font:900 .88rem/1 Fredoka,Inter,sans-serif;
-  white-space:nowrap;
+#raceScreen .playerProfileAsset>img,
+#raceScreen .raceNameAsset>img,
+#raceScreen .assetPill>img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  pointer-events:none;
+}
+#raceScreen .playerProfileAsset>strong{
+  position:absolute;
+  left:37%;
+  right:5%;
+  top:34%;
+  transform:translateY(-50%);
   overflow:hidden;
-  text-overflow:ellipsis
-}
-#raceScreen .trackStamp{text-align:right}
-#raceScreen .trackStamp strong{
-  display:block;
-  font:900 .72rem/1 Fredoka,Inter,sans-serif;
+  text-overflow:ellipsis;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
-}
-#raceScreen .trackStamp span{
-  display:block;
-  margin-top:3px;
-  color:#aab9cb;
-  font:700 .47rem/1.05 Inter,sans-serif;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
-}
-#raceScreen .trackStamp .trackFocus{
-  color:#f7bd18;
-  font-size:.45rem;
-  font-weight:900
-}
-#raceScreen .yourCarStat{
-  text-align:center;
-  color:#fff
-}
-#raceScreen .yourCarStat>span{
-  display:block;
-  color:#93a6bd;
-  font:900 .42rem/1 Inter,sans-serif;
-  letter-spacing:.06em
-}
-#raceScreen .yourCarStat>strong{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:5px;
-  margin-top:4px;
-  color:#f7bd18;
-  font:900 .7rem/1 Fredoka,Inter,sans-serif
-}
-#raceScreen .yourCarDot{
-  width:10px;height:10px;border-radius:50%;
-  background:#f7bd18;
-  border:2px solid #fff;
-  box-shadow:0 0 0 2px #082f68
-}
-#raceScreen .raceBannerStats{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:0
-}
-#raceScreen .bannerRaceMeta{
-  display:flex;
-  align-items:baseline;
-  gap:5px;
-  color:#9fb0c7
-}
-#raceScreen .bannerRaceMeta span{
-  font:900 .42rem/1 Inter,sans-serif;
-  letter-spacing:.08em
-}
-#raceScreen .bannerRaceMeta strong{
   color:#fff;
-  font:900 .7rem/1 Fredoka,Inter,sans-serif
+  font:900 clamp(.58rem,2vw,.82rem)/1 Fredoka,Inter,sans-serif;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
 }
-#raceScreen .lapInfo{
+#raceScreen .raceNameCopy{
+  position:absolute;
+  left:15%;
+  right:13%;
+  top:13%;
+  bottom:10%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+}
+#raceScreen .raceNameCopy>strong{
+  color:#fff;
+  font:900 clamp(.58rem,2vw,.82rem)/1 Fredoka,Inter,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
+#raceScreen .raceNameCopy>span{
+  margin-top:3px;
+  color:#d6e8ff;
+  font:700 clamp(.36rem,1.45vw,.52rem)/1.05 Inter,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#raceScreen .raceNameCopy>small{
+  margin-top:2px;
+  color:#75d8ff;
+  font:800 clamp(.32rem,1.25vw,.46rem)/1 Inter,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#raceScreen .bannerStatPills{
+  min-height:0;
   display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;
-  gap:7px;
-  color:#d1dbea;
-  font:900 .48rem/1 Inter,sans-serif
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px;
 }
-#raceScreen .lapInfo>span{white-space:nowrap}
+#raceScreen .assetPill>strong{
+  position:absolute;
+  left:55%;
+  right:5%;
+  top:56%;
+  transform:translateY(-50%);
+  color:#fff;
+  text-align:center;
+  font:900 clamp(.58rem,2.2vw,.86rem)/1 Fredoka,Inter,sans-serif;
+  white-space:nowrap;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
 #raceScreen .compactLap{
-  height:6px;
+  width:100%;
+  height:4px;
   margin:0;
-  background:#253955;
   border-radius:999px;
-  overflow:hidden
+  overflow:hidden;
+  background:#102f5c;
 }
 #raceScreen .compactLap i{
   display:block;
   height:100%;
-  background:#4f90ff;
-  border-radius:inherit
+  width:0;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#19d35c,#62ff9a);
+  box-shadow:0 0 8px rgba(50,255,124,.75);
 }
 
-/* ===== Middle 2/5: circuit ===== */
+/* ===== Middle 2/5: approved track image + approved car sprites ===== */
 #raceScreen .trackStage{
   position:relative;
   min-height:0;
   overflow:hidden;
-  border-radius:12px;
-  background:#67b34f;
-  border:3px solid #0d1a31;
-  box-shadow:0 3px 8px rgba(8,47,104,.12)
+  border-radius:10px;
+  background:#081a35;
+  border:2px solid #0a55b5;
+  box-shadow:0 4px 12px rgba(0,0,0,.32);
 }
-#raceScreen .mapRacePills{
-  position:absolute;
-  z-index:24;
-  top:8px;
-  left:8px;
-  right:8px;
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:7px;
-  pointer-events:none
-}
-#raceScreen .mapPill{
-  min-width:0;
-  padding:6px 8px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.9);
-  background:rgba(255,255,255,.93);
-  box-shadow:0 4px 10px rgba(8,47,104,.18);
-  text-align:center;
-  backdrop-filter:blur(3px)
-}
-#raceScreen .mapPill>span{
-  display:block;
-  color:#74869a;
-  font:900 .42rem/1 Inter,sans-serif;
-  letter-spacing:.06em
-}
-#raceScreen .mapPill>strong{
-  display:block;
-  margin-top:3px;
-  color:#082f68;
-  font:900 .78rem/1 Fredoka,Inter,sans-serif;
-  white-space:nowrap
-}
-#raceScreen .positionPill>strong{color:#2f80ed}
-#raceScreen .positionPill small{font-size:.52rem;color:#6f8195}
-#raceScreen .incomePill>strong{color:#159841}
 #raceScreen .raceLanes{
   display:block;
   position:absolute;
@@ -195,321 +202,276 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   width:100%;
   height:100%;
   overflow:hidden;
-  border-radius:9px;
-  background:#67b34f;
-  isolation:isolate
+  border-radius:8px;
+  isolation:isolate;
 }
-#raceScreen .trackSvg{
+#raceScreen .trackMap{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
+  object-fit:fill;
   z-index:1;
-  pointer-events:none
+  pointer-events:none;
+  user-select:none;
+}
+#raceScreen .trackMotionSvg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:2;
+  opacity:0;
+  pointer-events:none;
 }
 #raceScreen .raceLane{
   position:absolute!important;
   left:var(--track-x,50%)!important;
   top:var(--track-y,50%)!important;
-  width:15px;
-  height:15px;
+  width:18px;
+  height:28px;
   display:block!important;
-  transform:translate(-50%,-50%);
-  z-index:7;
+  transform:translate(-50%,-50%) rotate(var(--car-angle,0deg));
+  transform-origin:center;
+  z-index:8;
   font-size:0;
-  transition:none
+  transition:none;
+  will-change:left,top,transform;
 }
-#raceScreen .raceLane .name,#raceScreen .raceLane .lane{display:none!important}
+#raceScreen .raceLane .name,
+#raceScreen .raceLane .lane{display:none!important}
 #raceScreen .raceLane .pos{
   display:block;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:var(--racer-colour,#2f80ed);
-  border:1.5px solid rgba(255,255,255,.95);
-  box-shadow:0 1px 4px rgba(3,18,36,.48)
+  width:100%;
+  height:100%;
+  background-image:var(--car-image);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48));
 }
-#raceScreen .raceLane.you{z-index:12}
+#raceScreen .raceLane.you{
+  width:21px;
+  height:32px;
+  z-index:14;
+}
 #raceScreen .raceLane.you .pos{
-  width:13px;
-  height:13px;
-  border:2px solid #fff;
-  box-shadow:0 0 0 3px #082f68,0 0 0 5px rgba(247,189,24,.55),0 2px 6px rgba(8,47,104,.55)
-}
-#raceScreen .raceLane.you::after{
-  content:'';
-  position:absolute;
-  left:50%;
-  top:-8px;
-  width:0;height:0;
-  transform:translateX(-50%);
-  border-left:4px solid transparent;
-  border-right:4px solid transparent;
-  border-top:6px solid #082f68
+  filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px #f7bd18) drop-shadow(0 2px 3px rgba(0,0,0,.65));
 }
 #raceScreen .raceLane.contacting .pos{
-  box-shadow:0 0 0 2px rgba(255,255,255,.62),0 1px 5px rgba(3,18,36,.5)
+  filter:drop-shadow(0 0 2px rgba(255,255,255,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.55));
 }
-#raceScreen .carDot{display:none!important}
 #raceScreen .hiddenRaceMeta{display:none!important}
+
+#raceScreen .raceStatusFlag{
+  position:absolute;
+  z-index:24;
+  pointer-events:none;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.35));
+}
+#raceScreen .greenFlagBadge{
+  width:18%;
+  max-width:90px;
+  left:4%;
+  top:4%;
+}
+#raceScreen .finalLapBadge{
+  width:27%;
+  max-width:145px;
+  right:3%;
+  top:4%;
+}
+#raceScreen .raceStatusFlag.hidden{display:none}
 
 #raceScreen .countdownOverlay{
   position:absolute;
   inset:0;
-  z-index:30;
+  z-index:32;
   display:grid;
   place-items:center;
-  align-content:center;
-  gap:10px;
-  background:rgba(7,20,38,.42);
-  backdrop-filter:blur(1px)
+  background:rgba(4,13,31,.22);
 }
 #raceScreen .countdownOverlay.hidden{display:none}
-#raceScreen .startLights{
-  display:flex;
-  gap:9px;
-  padding:8px 12px;
-  border-radius:18px;
-  background:#111a28;
-  border:2px solid rgba(255,255,255,.2);
-  box-shadow:0 8px 20px rgba(0,0,0,.28)
+#raceScreen .countdownOverlay img{
+  width:min(64%,330px);
+  max-height:72%;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.4));
 }
-#raceScreen .startLight{
-  width:22px;height:22px;border-radius:50%;
-  background:#33191b;
-  border:2px solid #5b3235;
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.55)
-}
-#raceScreen .startLight.lit{
-  background:#ef3d45;
-  border-color:#ff9da1;
-  box-shadow:0 0 12px rgba(239,61,69,.9),inset 0 2px 3px rgba(255,255,255,.3)
-}
-#raceScreen .startLight.green{
-  background:#23c45e;
-  border-color:#b6ffd0;
-  box-shadow:0 0 14px rgba(35,196,94,.95),inset 0 2px 3px rgba(255,255,255,.32)
-}
-#raceScreen .countdownOverlay>strong{
-  color:#fff;
-  font:900 2.2rem/1 Fredoka,Inter,sans-serif;
-  text-shadow:0 3px 10px rgba(0,0,0,.55)
-}
-#raceScreen .countdownOverlay.go>strong{color:#7dffad}
 
+/* Approved 50/50 popup. */
 #raceScreen .raceEventCard{
   position:absolute;
-  left:9%;
-  right:9%;
-  bottom:10px;
-  z-index:28;
-  padding:10px 12px;
-  border-radius:16px;
-  background:rgba(255,255,255,.97);
-  border:1px solid rgba(8,47,104,.18);
-  box-shadow:0 10px 28px rgba(8,47,104,.24);
+  left:8%;
+  right:8%;
+  bottom:4%;
+  z-index:30;
+  aspect-ratio:1.36;
+  color:#fff;
   text-align:center;
-  backdrop-filter:blur(5px)
 }
 #raceScreen .raceEventCard.hidden{display:none}
+#raceScreen .raceEventAsset{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  pointer-events:none;
+}
+#raceScreen .raceEventCopy{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:19%;
+  height:45%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
 #raceScreen .raceEventEyebrow{
-  display:block;
-  color:#c98f00;
+  color:#5ee0ff;
   font:900 .46rem/1 Inter,sans-serif;
-  letter-spacing:.08em
+  letter-spacing:.08em;
 }
 #raceScreen .raceEventTitle{
   display:block;
-  margin-top:4px;
-  color:#082f68;
-  font:900 .76rem/1.05 Fredoka,Inter,sans-serif
+  margin-top:5px;
+  color:#fff;
+  font:900 clamp(.72rem,3vw,1rem)/1.05 Fredoka,Inter,sans-serif;
+  text-shadow:0 2px 4px rgba(0,0,0,.55);
 }
 #raceScreen .raceEventPrompt{
   display:block;
-  margin-top:4px;
-  color:#6e8094;
-  font:700 .48rem/1.15 Inter,sans-serif
+  margin-top:5px;
+  color:#c8ddf6;
+  font:700 clamp(.46rem,1.8vw,.62rem)/1.15 Inter,sans-serif;
 }
 #raceScreen .raceEventChoices{
+  position:absolute;
+  left:6%;
+  right:6%;
+  bottom:7%;
+  height:20%;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:9px
+  gap:4%;
 }
 #raceScreen .raceEventChoices button{
-  min-height:38px;
   border:0;
-  border-radius:11px;
-  background:#082f68;
+  border-radius:10px;
+  background:transparent;
   color:#fff;
-  font:900 .6rem/1 Fredoka,Inter,sans-serif;
-  box-shadow:0 3px 0 #051f47;
-  touch-action:manipulation
+  font:900 clamp(.52rem,2vw,.72rem)/1 Fredoka,Inter,sans-serif;
+  text-shadow:0 2px 3px rgba(0,0,0,.55);
+  touch-action:manipulation;
 }
-#raceScreen .raceEventChoices button:active{
-  transform:translateY(2px);
-  box-shadow:0 1px 0 #051f47
+#raceScreen .raceEventChoices button:active{transform:scale(.97)}
+#raceScreen .raceEventCard.compactEvent{
+  left:24%;
+  right:24%;
+  bottom:7%;
+  aspect-ratio:auto;
+  min-height:52px;
+  padding:9px 12px;
+  border-radius:13px;
+  background:rgba(3,23,57,.94);
+  border:2px solid #18a9ff;
+  box-shadow:0 0 16px rgba(0,153,255,.4);
 }
-#raceScreen .raceEventCard.eventFeedback,
-#raceScreen .raceEventCard.activeBoost{
-  left:20%;
-  right:20%;
-  padding:9px 10px
-}
-#raceScreen .raceEventCard.eventFeedback strong,
-#raceScreen .raceEventCard.activeBoost strong{
-  display:block;
-  color:#082f68;
-  font:900 .68rem/1 Fredoka,Inter,sans-serif
-}
-#raceScreen .raceEventCard.eventFeedback small,
-#raceScreen .raceEventCard.activeBoost small{
-  display:block;
-  margin-top:3px;
-  color:#6e8094;
-  font:700 .48rem/1.15 Inter,sans-serif
-}
-#raceScreen .raceEventCard.correct{border-color:#73bf8e;background:rgba(239,252,244,.98)}
-#raceScreen .raceEventCard.activeBoost{border-color:#d9aa18;background:rgba(255,249,226,.98)}
+#raceScreen .compactEvent strong,
+#raceScreen .compactEvent small{display:block}
+#raceScreen .compactEvent strong{font:900 .68rem/1 Fredoka,Inter,sans-serif}
+#raceScreen .compactEvent small{margin-top:4px;color:#c6dcf4;font:700 .46rem/1.1 Inter,sans-serif}
+#raceScreen .compactEvent.correct,
+#raceScreen .compactEvent.activeBoost{border-color:#4aff83}
 
-/* ===== Bottom 2/5: large upgrade controls ===== */
+/* ===== Bottom 2/5: approved upgrade-card artwork ===== */
 #raceScreen .upgradeShelf{
   min-height:0;
   overflow:hidden;
-  padding:5px 0 1px;
-  border-top:1px solid #cad6e3;
-  background:#edf2f7;
-  display:grid;
-  grid-template-rows:31px minmax(0,1fr)
-}
-#raceScreen .upgradeShelfHeader{
-  min-height:0;
-  display:flex;
-  align-items:center;
-  padding:0 3px
-}
-#raceScreen .upgradeShelfHeader .eyebrow{
-  display:block;
-  margin:0 0 2px;
-  color:#c98f00;
-  font:900 .5rem/1 Inter,sans-serif;
-  letter-spacing:.07em
-}
-#raceScreen .upgradeShelfHeader>div>strong{
-  display:block;
-  color:#082f68;
-  font:900 .68rem/1 Fredoka,Inter,sans-serif;
-  letter-spacing:.01em
+  padding:0;
+  background:#04132e;
 }
 #raceScreen .upgradeGrid{
   min-height:0;
+  width:100%;
   height:100%;
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  grid-template-rows:1fr 1fr;
-  gap:7px;
-  padding:0 1px 5px;
-  pointer-events:auto
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:5px;
 }
 #raceScreen .upgradeButton{
   position:relative;
   min-width:0;
+  min-height:0;
+  width:100%;
   height:100%;
-  padding:8px 8px 9px;
-  border-radius:15px;
-  color:#082f68;
-  display:grid;
-  grid-template-rows:auto auto auto 1fr auto;
-  justify-items:center;
-  align-items:center;
-  text-align:center;
-  opacity:1!important;
+  padding:0;
+  border:0;
+  border-radius:12px;
+  overflow:hidden;
+  background-color:transparent;
+  background-image:var(--upgrade-asset);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  color:#fff;
   cursor:pointer;
   touch-action:manipulation;
-  border:1px solid #c3cfda;
-  background:linear-gradient(#fff,#eef3f7);
-  box-shadow:0 6px 0 #a8b5c2,0 8px 12px rgba(8,47,104,.14);
-  transition:transform .08s ease,box-shadow .08s ease,filter .15s ease
+  opacity:1;
+  filter:none;
 }
 #raceScreen .upgradeButton.incomeUpgrade{grid-column:span 2}
-#raceScreen .upgradeIcon{
-  width:38px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  color:#315f98;
-  margin-bottom:2px
-}
-#raceScreen .upgradeIcon svg{
-  width:36px;
-  height:36px;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:2;
-  stroke-linecap:round;
-  stroke-linejoin:round
-}
-#raceScreen .upgradeTitle{
-  display:block;
-  max-width:100%;
-  color:#082f68;
-  font:900 .78rem/1 Fredoka,Inter,sans-serif;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
-}
-#raceScreen .upgradeLevel{
-  margin-top:2px;
-  color:#6f8195;
-  font:900 .44rem/1 Inter,sans-serif;
-  letter-spacing:.05em
-}
-#raceScreen .upgradeCost{
-  margin-top:5px;
-  padding:5px 8px;
-  border-radius:8px;
-  background:#e3eaf1;
-  color:#334d69;
-  font:900 .58rem/1 Inter,sans-serif;
-  white-space:nowrap
-}
-#raceScreen .upgradeMath{
-  align-self:end;
-  width:100%;
-  padding-top:5px;
-  border-top:1px solid rgba(8,47,104,.11);
-  color:#708095;
-  font:700 .43rem/1.12 Inter,sans-serif;
-  white-space:normal
-}
-#raceScreen .upgradeButton.trackHot:not(:disabled){
-  border-color:#d6a91c;
-  box-shadow:0 6px 0 #b4880e,0 8px 12px rgba(8,47,104,.14)
-}
-#raceScreen .upgradeButton.trackHot .upgradeTitle::after{content:' ★';color:#c28d00}
-#raceScreen .upgradeButton.incomeUpgrade:not(:disabled){
-  border-color:#72b689;
-  background:linear-gradient(#fff,#edf8f1);
-  box-shadow:0 6px 0 #62a276,0 8px 12px rgba(8,47,104,.14)
+#raceScreen .upgradeButton:disabled{
+  cursor:not-allowed;
+  opacity:1;
+  filter:none;
 }
 #raceScreen .upgradeButton:not(:disabled):active,
 #raceScreen .upgradeButton.receivingCoins{
-  transform:translateY(4px);
-  box-shadow:0 2px 0 #8795a4,0 4px 6px rgba(8,47,104,.11)
+  transform:scale(.985);
+  filter:drop-shadow(0 0 8px rgba(43,255,116,.8));
 }
-#raceScreen .upgradeButton:disabled{
-  cursor:not-allowed;
-  color:#777f87;
-  border-color:#afb5bb;
-  background:linear-gradient(#d8dce0,#bec4ca);
-  box-shadow:0 6px 0 #90979f,0 7px 9px rgba(35,46,58,.14);
-  filter:grayscale(1)
+#raceScreen .upgradeLevel{
+  position:absolute;
+  top:57%;
+  left:10%;
+  right:10%;
+  transform:translateY(-50%);
+  color:#dfeeff;
+  text-align:center;
+  font:900 clamp(.42rem,1.55vw,.62rem)/1 Fredoka,Inter,sans-serif;
+  text-shadow:0 1px 2px rgba(0,0,0,.7);
 }
-#raceScreen .upgradeButton:disabled .upgradeIcon{color:#757c83}
-#raceScreen .upgradeButton:disabled .upgradeTitle{color:#686f76}
-#raceScreen .upgradeButton:disabled .upgradeLevel,
-#raceScreen .upgradeButton:disabled .upgradeMath{color:#757d85}
-#raceScreen .upgradeButton:disabled .upgradeCost{background:#aeb4bb;color:#565e66}
+#raceScreen .upgradeCost{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:75%;
+  color:#102246;
+  text-align:center;
+  font:900 clamp(.58rem,2vw,.78rem)/1 Fredoka,Inter,sans-serif;
+  text-shadow:0 1px 1px rgba(255,255,255,.35);
+}
+#raceScreen .upgradeMath{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:84%;
+  color:#173051;
+  text-align:center;
+  font:800 clamp(.31rem,1.1vw,.45rem)/1 Inter,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#raceScreen .upgradeButton:disabled .upgradeLevel{color:#d6dde6}
+#raceScreen .upgradeButton:disabled .upgradeCost,
+#raceScreen .upgradeButton:disabled .upgradeMath{color:#58697c}
 
 .upgradeCoinFx{
   position:fixed;
@@ -525,90 +487,115 @@ body.gridline-racing-live .mainView{height:100%;min-height:0;overflow:hidden;pad
   font:900 9px/1 Inter,sans-serif;
   box-shadow:0 2px 5px rgba(0,0,0,.22);
   pointer-events:none;
-  will-change:transform,opacity
+  will-change:transform,opacity;
 }
 
-/* Results overlay the circuit without changing layout. */
+/* Approved between-race/result popup artwork. */
 #raceScreen .resultCard{
   position:absolute;
   left:8%;
   right:8%;
   top:31%;
-  z-index:40;
+  z-index:45;
   margin:0;
-  padding:12px;
-  border-radius:16px;
-  background:#fff;
-  box-shadow:0 15px 40px rgba(8,47,104,.28)
-}
-#raceScreen .resultCard h2{font-size:1rem;margin:2px 0 4px;color:#082f68}
-#raceScreen .resultGrid{gap:5px}
-#raceScreen .resultGrid div{padding:6px;border-radius:9px}
-#raceScreen .resultGrid span{font-size:.48rem}
-#raceScreen .resultGrid strong{font-size:.68rem}
-#raceScreen .readyRaceButton{
-  width:100%;
-  margin-top:10px;
-  min-height:42px;
-  border:0;
-  border-radius:11px;
-  background:#082f68;
+  padding:0;
+  background:transparent;
+  box-shadow:none;
   color:#fff;
-  font:900 .72rem/1 Fredoka,Inter,sans-serif;
-  box-shadow:0 4px 0 #051f47;
-  touch-action:manipulation
 }
-#raceScreen .readyRaceButton:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 #051f47}
-#raceScreen .readyRaceButton:disabled{background:#4f7e65;box-shadow:0 4px 0 #31513f;opacity:.82}
-#raceScreen .readyRaceNote{display:block;margin-top:8px;text-align:center;color:#6e8094;font:700 .55rem/1.2 Inter,sans-serif}
+#raceScreen .resultCard.hidden{display:none}
+#raceScreen .resultAsset{
+  display:block;
+  width:100%;
+  height:auto;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,.38));
+}
+#raceScreen .resultPrize,
+#raceScreen .resultPosition,
+#raceScreen .resultReady{
+  position:absolute;
+  z-index:2;
+  color:#fff;
+  text-shadow:0 2px 3px rgba(0,0,0,.65);
+  font:900 clamp(.48rem,2vw,.72rem)/1 Fredoka,Inter,sans-serif;
+}
+#raceScreen .seriesComplete .resultPrize{
+  left:12%;
+  width:42%;
+  bottom:17%;
+  text-align:center;
+}
+#raceScreen .seriesComplete .resultPosition{
+  right:8%;
+  top:53%;
+  width:38%;
+  text-align:center;
+  color:#d9ebff;
+}
+#raceScreen .resultCard:not(.seriesComplete) .resultPosition{
+  left:9%;
+  right:9%;
+  top:48%;
+  text-align:center;
+  color:#d9ebff;
+}
+#raceScreen .resultReady{
+  left:9%;
+  right:9%;
+  top:61%;
+  text-align:center;
+  color:#77f6a0;
+}
+#raceScreen .resultAction{
+  position:absolute;
+  z-index:3;
+  right:7%;
+  bottom:8%;
+  width:39%;
+  height:30%;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  color:transparent;
+  font-size:0;
+  touch-action:manipulation;
+}
+#raceScreen .resultCard:not(.seriesComplete) .resultAction{
+  left:23%;
+  right:23%;
+  width:auto;
+  height:31%;
+}
+#raceScreen .resultAction:disabled{pointer-events:none}
+#raceScreen .resultAction:active{transform:scale(.98)}
 
 @media(max-width:420px){
-  body.gridline-racing-live .mainView{padding-left:4px;padding-right:4px}
+  body.gridline-racing-live .mainView{padding-left:3px;padding-right:3px}
   #raceScreen:not(.hidden){gap:3px}
-  #raceScreen .raceBanner{padding:7px 7px 6px;gap:5px}
-  #raceScreen .raceHeaderCompact{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr);gap:5px}
-  #raceScreen .teamStamp strong{font-size:.78rem}
-  #raceScreen .trackStamp strong{font-size:.64rem}
-  #raceScreen .trackStamp span{font-size:.42rem}
-  #raceScreen .yourCarStat>strong{font-size:.62rem}
-  #raceScreen .mapRacePills{top:6px;left:6px;right:6px;gap:5px}
-  #raceScreen .mapPill{padding:5px 4px;border-radius:12px}
-  #raceScreen .mapPill>span{font-size:.36rem}
-  #raceScreen .mapPill>strong{font-size:.68rem}
-  #raceScreen .raceEventCard{left:5%;right:5%;bottom:7px;padding:8px 9px}
-  #raceScreen .raceEventTitle{font-size:.68rem}
-  #raceScreen .raceEventChoices{gap:5px;margin-top:7px}
-  #raceScreen .raceEventChoices button{min-height:34px;font-size:.54rem}
-  #raceScreen .upgradeGrid{gap:5px;padding-bottom:4px}
-  #raceScreen .upgradeButton{padding:7px 4px 7px;border-radius:13px}
-  #raceScreen .upgradeIcon{width:31px;height:31px}
-  #raceScreen .upgradeIcon svg{width:30px;height:30px}
-  #raceScreen .upgradeTitle{font-size:.66rem}
-  #raceScreen .upgradeLevel{font-size:.39rem}
-  #raceScreen .upgradeCost{font-size:.49rem;padding:4px 5px}
-  #raceScreen .upgradeMath{font-size:.37rem;padding-top:4px}
+  #raceScreen .raceBanner{
+    padding:3px 4px 2px;
+    grid-template-rows:27px minmax(0,1fr) 42px 3px;
+  }
+  #raceScreen .gridlineRaceLogo{height:27px}
+  #raceScreen .raceIdentityRow{grid-template-columns:minmax(105px,.36fr) minmax(0,.64fr);gap:4px}
+  #raceScreen .bannerStatPills{gap:3px}
+  #raceScreen .upgradeGrid{gap:3px}
+  #raceScreen .raceLane{width:16px;height:25px}
+  #raceScreen .raceLane.you{width:19px;height:29px}
+  #raceScreen .raceEventCard{left:5%;right:5%}
 }
 
 @media(max-height:700px){
-  body.gridline-racing-live .appShell{grid-template-rows:36px minmax(0,1fr)}
-  body.gridline-racing-live .topbar{height:36px}
-  body.gridline-racing-live .chipLogo{height:26px;width:74px}
-  #raceScreen .raceBanner{padding:5px 7px;gap:4px}
-  #raceScreen .raceHeaderCompact{grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)}
-  #raceScreen .yourCarStat>strong{font-size:.56rem}
-  #raceScreen .mapRacePills{top:5px}
-  #raceScreen .mapPill{padding:4px 3px}
-  #raceScreen .mapPill>strong{font-size:.62rem}
-  #raceScreen .lapInfo{font-size:.42rem}
-  #raceScreen .upgradeShelf{grid-template-rows:26px minmax(0,1fr);padding-top:3px}
-  #raceScreen .upgradeShelfHeader .eyebrow{font-size:.43rem}
-  #raceScreen .upgradeShelfHeader>div>strong{font-size:.58rem}
-  #raceScreen .upgradeGrid{gap:4px}
-  #raceScreen .upgradeButton{padding:5px 3px 6px}
-  #raceScreen .upgradeIcon{width:27px;height:27px}
-  #raceScreen .upgradeIcon svg{width:26px;height:26px}
-  #raceScreen .upgradeTitle{font-size:.58rem}
-  #raceScreen .upgradeLevel{font-size:.34rem}
-  #raceScreen .upgradeCost{font-size:.43rem;padding:3px 4px}
-  #raceScreen .upgradeMath{font-size:.33rem;padding-top:3px}
+  body.gridline-racing-live .appShell{grid-template-rows:34px minmax(0,1fr)}
+  body.gridline-racing-live .topbar{height:34px}
+  body.gridline-racing-live .chipLogo{height:24px}
+  body.gridline-racing-live .backLink{height:27px;width:103px}
+  body.gridline-racing-live .iconButton{height:27px;width:31px}
+  #raceScreen .raceBanner{
+    grid-template-rows:23px minmax(0,1fr) 36px 3px;
+    gap:2px;
+  }
+  #raceScreen .gridlineRaceLogo{height:23px}
+  #raceScreen .raceLane{width:14px;height:22px}
+  #raceScreen .raceLane.you{width:17px;height:26px}
 }
