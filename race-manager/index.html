@@ -43,42 +43,53 @@
     <section id="setupHome" class="setupView">
       <div class="heroPanel">
         <span class="eyebrow">GRIDLINE RACING</span>
-        <h1>How do you want to play?</h1>
-        <p>Race bots on your own, or connect with friends and race live together.</p>
+        <h1>Choose your race</h1>
         <div class="modeChoiceGrid">
-          <button id="chooseSingle" class="modeChoice" type="button"><span>🏁</span><strong>Single Player</strong><small>You vs the computer field</small></button>
-          <button id="chooseMulti" class="modeChoice" type="button"><span>👥</span><strong>Multiplayer</strong><small>Race friends live</small></button>
+          <button class="modeChoice raceFormatChoice" data-race-mode="quick" type="button"><span>🏁</span><strong>Quick Race</strong><small>One race · fresh stats</small></button>
+          <button class="modeChoice raceFormatChoice" data-race-mode="tournament" type="button"><span>🏆</span><strong>Tournament</strong><small>Multiple races · upgrades and cash carry over</small></button>
         </div>
       </div>
     </section>
 
+    <section id="carSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>Choose your car colour</h1></div></header>
+      <section class="panel">
+        <p class="panelIntro">Pick the car you want to race. Your player name will replace that colour's regular racer name.</p>
+        <div id="flowCarChoices" class="carChoices flowCarChoices"></div>
+      </section>
+    </section>
+
+    <section id="trackSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="carSetup" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>Choose the track</h1></div></header>
+      <section class="panel">
+        <div id="flowTrackChoices" class="trackChoices"></div>
+      </section>
+    </section>
+
+    <section id="playSetup" class="setupView hidden">
+      <header class="viewHeader"><button class="textButton" data-back="trackSetup" type="button">← Back</button><div><span class="eyebrow">GRIDLINE RACING</span><h1>How do you want to play?</h1></div></header>
+      <div class="modeChoiceGrid">
+        <button id="chooseSingle" class="modeChoice" type="button"><span>🏁</span><strong>Single Player</strong><small>You vs the computer field</small></button>
+        <button id="chooseMulti" class="modeChoice" type="button"><span>👥</span><strong>Multiplayer</strong><small>Race friends live</small></button>
+      </div>
+    </section>
+
     <section id="singleSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">SINGLE PLAYER</span><h1>Choose your player</h1></div></header>
+      <header class="viewHeader"><button class="textButton" data-back="playSetup" type="button">← Back</button><div><span class="eyebrow">SINGLE PLAYER</span><h1>Choose your player</h1></div></header>
       <section class="panel">
         <p class="panelIntro">Choose one name from the player list you created on the GameBox home screen.</p>
         <div id="singlePlayerList" class="playerChoices"></div>
         <div id="singleRosterEmpty" class="emptyState hidden">No players are saved yet. Go back to GameBox and add a player first.</div>
-        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Your name replaces that colour's regular racer.</small></div>
-        <div id="singleCarChoices" class="carChoices"></div>
-        <section class="raceSetupBlock">
-          <div class="setupSectionTitle"><strong>Race format</strong><small>Choose one race or a multi-race tournament.</small></div>
-          <div class="raceModeChoices">
-            <button class="raceModeChoice selected" data-race-mode="quick" type="button"><strong>Quick Race</strong><small>1 race · fresh stats</small></button>
-            <button class="raceModeChoice" data-race-mode="tournament" type="button"><strong>Tournament</strong><small>3–15 races · carry upgrades & cash</small></button>
-          </div>
-          <label id="singleTournamentLength" class="tournamentLength hidden">Tournament races
-            <input id="singleRaceCount" type="range" min="3" max="15" value="5">
-            <strong id="singleRaceCountValue">5 races</strong>
-          </label>
-          <div class="setupSectionTitle trackTitle"><strong>Track</strong><small class="trackHint">Choose the race circuit.</small></div>
-          <div id="singleTrackChoices" class="trackChoices"></div>
-        </section>
+        <label id="singleTournamentLength" class="tournamentLength hidden">Tournament races
+          <input id="singleRaceCount" type="range" min="3" max="15" value="5">
+          <strong id="singleRaceCountValue">5 races</strong>
+        </label>
         <button id="startSingle" class="primaryButton full" type="button" disabled>Start race</button>
       </section>
     </section>
 
     <section id="multiSetup" class="setupView hidden">
-      <header class="viewHeader"><button class="textButton" data-back="setupHome" type="button">← Back</button><div><span class="eyebrow">MULTIPLAYER</span><h1>Choose connection</h1></div></header>
+      <header class="viewHeader"><button class="textButton" data-back="playSetup" type="button">← Back</button><div><span class="eyebrow">MULTIPLAYER</span><h1>Choose connection</h1></div></header>
       <div class="modeChoiceGrid">
         <button id="chooseWifi" class="modeChoice" type="button"><span>📶</span><strong>Wi‑Fi</strong><small>Automatic game discovery</small></button>
         <button id="chooseBluetooth" class="modeChoice disabledChoice" type="button"><span>ᛒ</span><strong>Bluetooth</strong><small>Requires the future native app</small></button>
@@ -98,21 +109,10 @@
       <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">HOST GAME</span><h1>Race lobby</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">This phone is playing as<select id="hostPlayerSelect"></select></label>
-        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Choose the host player's car.</small></div>
-        <div id="hostCarChoices" class="carChoices"></div>
-        <section class="raceSetupBlock hostRaceSetup">
-          <div class="setupSectionTitle"><strong>Race format</strong><small>The host sets the race for everyone.</small></div>
-          <div class="raceModeChoices">
-            <button class="raceModeChoice selected" data-race-mode="quick" type="button"><strong>Quick Race</strong><small>1 race · fresh stats</small></button>
-            <button class="raceModeChoice" data-race-mode="tournament" type="button"><strong>Tournament</strong><small>3–15 races · carry upgrades & cash</small></button>
-          </div>
-          <label id="hostTournamentLength" class="tournamentLength hidden">Tournament races
-            <input id="hostRaceCount" type="range" min="3" max="15" value="5">
-            <strong id="hostRaceCountValue">5 races</strong>
-          </label>
-          <div class="setupSectionTitle trackTitle"><strong>Track</strong><small class="trackHint">Quick Race track / Tournament starting track.</small></div>
-          <div id="hostTrackChoices" class="trackChoices"></div>
-        </section>
+        <label id="hostTournamentLength" class="tournamentLength hidden">Tournament races
+          <input id="hostRaceCount" type="range" min="3" max="15" value="5">
+          <strong id="hostRaceCountValue">5 races</strong>
+        </label>
         <div class="autoDiscoveryBanner">
           <span class="scanPulse"></span>
           <div><strong>Host is discoverable automatically</strong><small>Other players can open Join Game and tap this lobby.</small></div>
@@ -128,11 +128,9 @@
       <header class="viewHeader"><button class="textButton" data-back="wifiRole" type="button">← Back</button><div><span class="eyebrow">JOIN GAME</span><h1>Find a race</h1></div></header>
       <section class="panel">
         <label class="fieldLabel">You are playing as<select id="joinPlayerSelect"></select></label>
-        <div class="setupSectionTitle carTitle"><strong>Car colour</strong><small>Choose your car before joining.</small></div>
-        <div id="joinCarChoices" class="carChoices"></div>
-        <div class="lobbyHeader"><strong>Available games</strong><span id="joinState" class="tag">Scanning</span></div>
+        <div class="lobbyHeader"><strong>Available matching games</strong><span id="joinState" class="tag">Scanning</span></div>
         <div id="availableHosts" class="hostDiscoveryList">
-          <div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for games…</strong><small>Keep the host on the Host Game screen.</small></div>
+          <div class="discoveryScanning"><span class="scanPulse"></span><strong>Scanning for matching games…</strong><small>Looking for the race format and track you selected.</small></div>
         </div>
         <div id="joinRaceConfig" class="joinRaceConfig hidden"></div>
         <div class="lobbyHeader"><strong>Connected lobby</strong></div>
