@@ -182,6 +182,10 @@
 
       this.actions.ad.onMessage=(data,{peerId})=>{
         if(this.role!=='client'||!data||data.game!==this.game)return;
+        if(data.closed){
+          if(this.hosts.delete(peerId))this._notifyHosts();
+          return;
+        }
         this.hosts.set(peerId,{...data,peerId,lastSeen:Date.now()});
         this._notifyHosts();
       };
@@ -299,24 +303,35 @@
     }
 
     async startHost(meta={}){
-      // A page restored from the browser back/forward cache can retain the old
-      // Session object after it was closed. Make repeated host attempts safe.
       if(this.closed)this.closed=false;
+      clearInterval(this.adTimer);
+      this.adTimer=null;
+      if(this.joinWaiter){
+        this.joinWaiter.reject(new Error('Role changed'));
+        this.joinWaiter=null;
+      }
       this.hosts.clear();
       this.hostPeerId='';
+      this.hostPeers=[];
       this.role='host';
       this.hostMeta={...meta,started:false};
       await this._ensureRoom();
       this.status('Host visible');
       this._advertise();
-      clearInterval(this.adTimer);
       this.adTimer=setInterval(()=>this._advertise(),2200);
       this.onPeersChanged(this.peers());
     }
 
     async startScanner(){
-      // Allow a scanner to be restarted on the same Session instance.
       if(this.closed)this.closed=false;
+      clearInterval(this.adTimer);
+      this.adTimer=null;
+      if(this.joinWaiter){
+        this.joinWaiter.reject(new Error('Role changed'));
+        this.joinWaiter=null;
+      }
+      this.hostMeta=null;
+      this.hostPeers=[];
       this.hosts.clear();
       this.hostPeerId='';
       this.role='client';
@@ -384,6 +399,26 @@
       }else{
         this.sendToHost(message);
       }
+    }
+
+    suspend(){
+      if(this.role==='host'&&this.room&&this.actions.ad){
+        try{this.actions.ad.send({game:this.game,closed:true});}catch{}
+      }
+      clearInterval(this.adTimer);
+      this.adTimer=null;
+      if(this.joinWaiter){
+        this.joinWaiter.reject(new Error('Session suspended'));
+        this.joinWaiter=null;
+      }
+      this.hostMeta=null;
+      this.hostPeers=[];
+      this.hostPeerId='';
+      this.hosts.clear();
+      this.role=null;
+      this.onPeersChanged([]);
+      this.onHostsChanged([]);
+      this.status('Idle');
     }
 
     close(){
