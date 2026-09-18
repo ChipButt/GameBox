@@ -234,11 +234,11 @@
   const STAT_KEYS=UPGRADE_KEYS;
 
   function botSkill(raceNo,i){
-    return clamp(.38+Math.max(0,(raceNo||1)-1)*.08+(i%4)*.04,.38,.94);
+    return clamp(.42+Math.max(0,(raceNo||1)-1)*.10+(i%4)*.04,.42,.94);
   }
 
   function botDecisionDelay(skill){
-    return Math.max(4,Math.round(10-skill*5+Math.random()*3));
+    return Math.max(2,Math.round(6-skill*3+Math.random()*2));
   }
 
   function botEntrant(name,i,track,raceNo=1){
@@ -249,7 +249,7 @@
       cash:0,gems:0,
       aiSkill:skill,
       aiFocus:STAT_KEYS[i%STAT_KEYS.length],
-      nextDecision:4+Math.round(Math.random()*botDecisionDelay(skill)),
+      nextDecision:2+Math.round(Math.random()*botDecisionDelay(skill)),
       progress:0,finishTick:null,position:null,
       eventCount:0,eventCooldownUntil:18,activeEvent:null,boost:null,eventResult:null
     };
@@ -329,7 +329,7 @@
       if(!e.human){
         e.aiSkill=botSkill(game.raceNo,i);
         e.aiFocus=e.aiFocus||STAT_KEYS[i%STAT_KEYS.length];
-        e.nextDecision=3+Math.round(Math.random()*botDecisionDelay(e.aiSkill));
+        e.nextDecision=2+Math.round(Math.random()*botDecisionDelay(e.aiSkill));
       }
     });
     seedGrid(game.entrants);
