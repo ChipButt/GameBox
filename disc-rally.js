@@ -143,7 +143,7 @@ function renderTrackSummary(){
   if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=hostIcon;
 }
 function renderLapChoices(){
-  $('[data-laps]').forEach(btn=>{
+  $$('[data-laps]').forEach(btn=>{
     const isSelected=Number(btn.dataset.laps)===selectedLaps;
     btn.classList.toggle('selected',isSelected);
     btn.setAttribute('aria-pressed',isSelected?'true':'false');
@@ -1127,7 +1127,7 @@ function bind(){
   $('restartHostDiscovery').onclick=startHostDiscovery;
   $('restartScan').onclick=startScan;
   $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
-  $('[data-laps]').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
+  $$('[data-laps]').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
   $('joinPlayer').onchange=()=>{
     localPlayerId=$('joinPlayer').value;
     const p=roster().find(x=>x.id===localPlayerId);
