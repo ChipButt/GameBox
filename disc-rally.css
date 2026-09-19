@@ -779,6 +779,7 @@ html,body{height:100%;overflow:hidden}
   aspect-ratio:941 / 1672;
   transform:translate(-50%,-50%);
   overflow:hidden;
+  container-type:inline-size;
 }
 .passPlayShell{
   position:absolute;
@@ -792,9 +793,11 @@ html,body{height:100%;overflow:hidden}
   -webkit-user-select:none;
   -webkit-user-drag:none;
 }
-.passPlayAsset{
+.passPlayAsset,
+.passPlayTrackHit,
+.passPlayLap{
   position:absolute;
-  z-index:3;
+  z-index:5;
   margin:0;
   padding:0;
   border:0;
@@ -803,53 +806,57 @@ html,body{height:100%;overflow:hidden}
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
-.passPlayAsset>img,
-.passPlaySlotAsset{
+.passPlayAsset>img{
   width:100%;
   height:100%;
-  object-fit:fill;
   display:block;
+  object-fit:fill;
   pointer-events:none;
   user-select:none;
   -webkit-user-select:none;
   -webkit-user-drag:none;
 }
-.passPlayAsset:active{transform:scale(.985)}
-.passPlayBack{left:3.6%;top:6.3%;width:13%;height:7.3%}
-.passPlayAdd{left:7.4%;top:36.9%;width:40.5%;height:7.2%}
-.passPlayRemove{left:52%;top:35.9%;width:39.6%;height:9.3%}
-.passPlayTrack{left:4.2%;top:52.1%;width:91.8%;height:14.5%}
-.passPlayLap1{left:6.2%;top:73.3%;width:16%;height:6.5%}
-.passPlayLap3{left:23.3%;top:73%;width:16%;height:7.8%}
-.passPlayLap5{left:40.9%;top:73.5%;width:16%;height:6.5%}
-.passPlayLap7{left:58.5%;top:73.5%;width:16%;height:6.5%}
-.passPlayLap9{left:76%;top:73.5%;width:16%;height:6.5%}
-.passPlayStart{left:6.9%;top:81%;width:86%;height:13.5%}
+.passPlayAsset:active,
+.passPlayLap:active{transform:scale(.985)}
+
+.passPlayBack{left:2.8%;top:2%;width:32.5%;height:7%}
+.passPlayAdd{left:8%;top:36.9%;width:42%;height:6.5%}
+.passPlayRemove{left:50.2%;top:36.6%;width:41.1%;height:7.2%}
+.passPlayStart{left:5%;top:81%;width:90%;height:14.4%}
 
 .passPlayPlayers{
   position:absolute;
   inset:0;
-  z-index:2;
+  z-index:4;
   pointer-events:none;
 }
 .passPlayPlayerSlot{
   position:absolute;
   pointer-events:none;
 }
-.passPlayPlayerSlot:nth-child(1){left:7.9%;top:22.1%;width:39%;height:7.6%}
-.passPlayPlayerSlot:nth-child(2){left:50.2%;top:22%;width:43%;height:7.6%}
-.passPlayPlayerSlot:nth-child(3){left:6%;top:30%;width:43%;height:7.6%}
-.passPlayPlayerSlot:nth-child(4){left:50.2%;top:30%;width:43%;height:7.6%}
+.passPlayPlayerSlot:nth-child(1){left:9.4%;top:22.2%;width:38.5%;height:7%}
+.passPlayPlayerSlot:nth-child(2){left:50%;top:22.2%;width:42%;height:7%}
+.passPlayPlayerSlot:nth-child(3){left:7.8%;top:29.8%;width:42%;height:7%}
+.passPlayPlayerSlot:nth-child(4){left:50%;top:29.7%;width:42%;height:7%}
+.passPlaySlotAsset{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+}
 .passPlayPlayerSlot strong{
   position:absolute;
-  left:34%;
-  right:6%;
-  top:50%;
-  transform:translateY(-50%);
+  left:28.8312%;
+  top:18.5714%;
+  width:62.5974%;
+  height:60%;
+  display:flex;
+  align-items:center;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-weight:800;
-  font-size:clamp(11px,3.9vw,22px);
+  font-weight:900;
+  font-size:1.75cqw;
+  line-height:1;
   text-align:left;
   white-space:nowrap;
   overflow:hidden;
@@ -858,51 +865,107 @@ html,body{height:100%;overflow:hidden}
 }
 .passPlayPlayerSlot.empty strong{display:none}
 
-.passPlayTrackIcon{
+.passPlayTrackHit{
+  left:4.2%;
+  top:52.1%;
+  width:91.8%;
+  height:14.5%;
+  z-index:6;
+}
+.passPlayTrackMap{
   position:absolute;
-  left:4.5%;
-  top:12%;
-  width:24%;
-  height:76%;
+  left:12.5%;
+  top:56.3%;
+  width:13.6%;
+  height:7.7%;
+  border-radius:50%;
+  overflow:hidden;
+  z-index:5;
   display:grid;
   place-items:center;
-  color:#fff;
-  font-family:Fredoka,Inter,sans-serif;
-  font-size:clamp(32px,10vw,64px);
-  font-weight:800;
-  line-height:1;
   pointer-events:none;
-  text-shadow:0 2px 4px rgba(0,30,80,.5);
 }
-.passPlayTrackIcon svg{width:78%;height:72%}
-.passPlayTrackIcon path{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
-.passPlayTrackText{
+.passPlayTrackMap svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.passPlayTrackMap path{
+  fill:none;
+  stroke:#fff;
+  stroke-width:8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.passPlayTrackMap.random{
+  background:radial-gradient(circle at 35% 30%,#167fe8,#073f9e 72%);
+}
+.passPlayTrackName{
   position:absolute;
-  left:31%;
-  right:7%;
-  top:22%;
-  bottom:16%;
-  display:grid;
-  align-content:center;
-  text-align:left;
+  left:32.3%;
+  top:56.7%;
+  width:52.8%;
+  height:3.5%;
+  display:flex;
+  align-items:center;
+  z-index:7;
   pointer-events:none;
-}
-.passPlayTrackText strong{
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-size:clamp(13px,4.4vw,25px);
-  line-height:1.05;
+  font-weight:900;
+  font-size:3.5cqw;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-.passPlayTrackText small{
-  color:#52c8ff;
+.passPlayTrackHelp{
+  position:absolute;
+  left:31.8%;
+  top:61.2%;
+  width:39.8%;
+  height:2.2%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:7;
+  pointer-events:none;
+  color:#61d9ff;
   font-family:Fredoka,Inter,sans-serif;
   font-weight:800;
-  font-size:clamp(8px,2.8vw,15px);
-  margin-top:4px;
+  font-size:1.75cqw;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
 }
 
-.passPlayLaps{position:absolute;inset:0;z-index:4;pointer-events:none}
-.passPlayLap{pointer-events:auto}
+.passPlayLaps{
+  position:absolute;
+  inset:0;
+  z-index:8;
+  pointer-events:none;
+}
+.passPlayLap{
+  width:17.1%;
+  height:5.7%;
+  top:75.4%;
+  pointer-events:auto;
+}
+.passPlayLap1{left:6.6%}
+.passPlayLap3{left:24.4%}
+.passPlayLap5{left:41.6%}
+.passPlayLap7{left:58.4%}
+.passPlayLap9{left:75.6%}
+.passPlaySelectedLap{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:none;
+  pointer-events:none;
+}
+.passPlayLap.selected .passPlaySelectedLap{display:block}
 .passPlayLap>span{
   position:absolute;
   inset:0;
@@ -911,17 +974,21 @@ html,body{height:100%;overflow:hidden}
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
   font-weight:900;
-  font-size:clamp(15px,5vw,28px);
+  font-size:2.5cqw;
+  line-height:1;
   text-shadow:0 2px 2px rgba(0,30,75,.55);
   pointer-events:none;
 }
-.passPlayLap.selected>span{color:#082f68;text-shadow:none}
+.passPlayLap.selected>span{
+  color:#173e72;
+  text-shadow:none;
+}
 
 .passPlayRosterPicker{
   position:absolute;
   z-index:20;
-  left:7%;
-  right:7%;
+  left:8%;
+  right:8%;
   top:35%;
   margin:0;
   padding:10px;
@@ -942,17 +1009,27 @@ html,body{height:100%;overflow:hidden}
   padding:7px 11px;
   font-weight:800;
 }
-.passPlayRosterPicker button.selected{background:#ffd51a;color:#062f5b;border-color:#fff070}
+.passPlayRosterPicker button.selected{
+  background:#ffd51a;
+  color:#062f5b;
+  border-color:#fff070;
+}
 .passPlayStatus{
   position:absolute;
-  z-index:8;
-  left:8%;
-  right:8%;
-  bottom:1.7%;
+  z-index:9;
+  left:15%;
+  top:95%;
+  width:70%;
+  height:2.5%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   color:#fff;
   text-align:center;
-  font-size:11px;
-  font-weight:800;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:3.5cqw;
+  font-weight:700;
+  line-height:1;
   pointer-events:none;
 }
 
