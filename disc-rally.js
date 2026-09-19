@@ -126,19 +126,25 @@ function selectTrack(id,returnToSetup=false){
 function renderTrackSummary(){
   const t=TRACKS.find(x=>x.id===selectedTrack);
   const name=t?t.name:'Random Track';
-  const icon=t?`<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`:'?';
+  const localIcon=t
+    ? `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><rect width="100" height="100" rx="50" fill="#0754b8"></rect><path d="${miniMapPath(t)}"></path></svg>`
+    : '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><rect width="100" height="100" rx="50" fill="#0754b8"></rect><path d="M18 66 C26 34 44 62 52 38 S78 30 84 50 S76 77 62 73" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  const hostIcon=t
+    ? `<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`
+    : '?';
   if($('selectedTrackName'))$('selectedTrackName').textContent=name;
-  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?icon:'';
+  if($('selectedTrackIcon')){
+    $('selectedTrackIcon').innerHTML=localIcon;
+    $('selectedTrackIcon').classList.toggle('random',!t);
+  }
   if($('hostSelectedTrackName'))$('hostSelectedTrackName').textContent=name;
-  if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=icon;
+  if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=hostIcon;
 }
 function renderLapChoices(){
   $('.lapChoiceButton').forEach(btn=>{
     const isSelected=Number(btn.dataset.laps)===selectedLaps;
     btn.classList.toggle('selected',isSelected);
     btn.setAttribute('aria-pressed',isSelected?'true':'false');
-    const img=btn.querySelector('img');
-    if(img)img.src=isSelected?'09_lap_button_selected.png?v=1':'10_lap_button_unselected.png?v=3';
   });
 }
 function setLapCount(laps){
