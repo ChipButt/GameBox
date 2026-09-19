@@ -1219,8 +1219,8 @@ html,body{height:100%;overflow:hidden}
   outline:0;
   background:transparent!important;
   box-shadow:none!important;
-  border-radius:0!important;
-  overflow:visible;
+  border-radius:8%!important;
+  overflow:hidden;
   pointer-events:auto;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
@@ -1233,6 +1233,7 @@ html,body{height:100%;overflow:hidden}
   height:100%;
   object-fit:fill;
   display:block;
+  border-radius:inherit;
   pointer-events:none;
 }
 .trackSelectMap{
