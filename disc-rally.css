@@ -557,7 +557,7 @@ html,body{height:100%;overflow:hidden}
 
 
 /* Host lobby: always reserve enough visible space for all four racers. */
-#hostSetup .setupPanel{margin-bottom:2px}
+#hostSetup .setupPanel{margin-bottom:8px}
 #hostSetup .setupPanel:first-of-type{
   padding-top:34px;
 }
@@ -640,7 +640,7 @@ html,body{height:100%;overflow:hidden}
 }
 
 @media(max-height:760px){
-  #hostSetup .setupPanel{margin-bottom:2px}
+  #hostSetup .setupPanel{margin-bottom:8px}
   #hostSetup .setupPanel:first-of-type{padding-top:31px}
   #hostSetup .gameField{padding:3px 7px 5px}
   #hostSetup .gameField select{height:31px}
