@@ -216,3 +216,235 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
   .secondFlickStatus{right:14px;bottom:16px;width:92px;height:108px}
   .secondFlickDisc{width:80px;height:80px}
 }
+
+
+/* ===== One-screen menu layout ===== */
+html,body{height:100%;overflow:hidden}
+.discApp,main{height:100dvh;min-height:0;overflow:hidden}
+.view{height:100dvh;min-height:0;overflow:hidden}
+.menuScreen{
+  height:100dvh;
+  min-height:0;
+  padding:0 12px calc(74px + env(safe-area-inset-bottom));
+  overflow:hidden;
+}
+.whiteHeader{
+  height:84px;
+  margin:0 -12px 10px;
+  padding:0 18px 17px;
+}
+.whiteHeader h1{font-size:27px}
+.circleBack{
+  left:16px;
+  bottom:12px;
+  width:44px;
+  height:44px;
+}
+.fixedBottomAction{
+  height:72px;
+  padding-bottom:env(safe-area-inset-bottom);
+  font-size:24px;
+}
+.setupScreenBody{
+  position:relative;
+  z-index:2;
+  height:calc(100dvh - 84px - 72px - env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr);
+  align-content:start;
+  gap:9px;
+  padding:0 2px 8px;
+}
+.setupPanel{
+  margin:0;
+  padding-top:43px;
+  border-width:3px;
+  border-radius:13px;
+  box-shadow:0 4px 0 rgba(3,43,71,.48);
+}
+.panelRibbon,.sectionRibbon{
+  border-width:3px;
+  padding:6px 14px;
+  font-size:18px;
+  box-shadow:0 3px 0 #043a5b;
+}
+.panelRibbon{left:-2px;right:-2px;top:-3px}
+.playersSetupPanel .playerSlots{
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  padding:9px;
+}
+.playerSlot{height:48px;border-width:2px}
+.playerDisc{width:50px;height:50px;border-width:3px}
+.playerSlot strong{font-size:16px;padding:0 8px}
+.playerSetupActions{border-top-width:3px}
+.playerSetupActions button{
+  min-height:42px;
+  font-size:15px;
+  border-right-width:2px;
+}
+.playerSetupActions span{font-size:20px}
+.rosterPicker{
+  position:absolute;
+  z-index:30;
+  left:8px;
+  right:8px;
+  bottom:47px;
+  margin:0;
+  padding:8px;
+  gap:6px;
+  box-shadow:0 10px 26px rgba(0,0,0,.34);
+}
+.rosterPicker button{padding:7px 11px;font-size:13px}
+.trackSummaryButton{
+  min-height:82px;
+  padding:8px 14px;
+  gap:12px;
+  justify-content:flex-start;
+}
+.summaryTrackIcon{width:68px;height:58px;font-size:56px}
+.summaryTrackIcon svg{width:66px;height:54px}
+.trackSummaryButton strong{font-size:20px}
+.trackSummaryButton small{font-size:12px}
+.lapsSetupPanel{padding:43px 10px 9px}
+.lapsSetupPanel label{display:block}
+.lapsSetupPanel select{height:40px;font-size:16px}
+.status{min-height:0;font-size:12px;padding:0 6px}
+
+/* Main menu uses the full screen without a large dead zone. */
+#modeView{padding-bottom:74px}
+#modeView .gameLogo{
+  padding-top:calc(50px + env(safe-area-inset-top));
+  transform:scale(.82);
+  transform-origin:top center;
+}
+#modeView .mainMenuArc{
+  position:absolute;
+  left:-48px;
+  right:-48px;
+  bottom:74px;
+  margin:0;
+  min-height:360px;
+  padding:54px 64px 0;
+  gap:18px;
+}
+#modeView .roundMenuButton{width:160px}
+#modeView .roundIcon{width:132px;height:132px}
+#modeView .roundMenuButton strong{font-size:18px}
+.bottomMenuButton{height:74px;font-size:20px}
+
+/* Track picker stays entirely on one screen. */
+#trackSelectView{padding-bottom:8px}
+#trackSelectView .whiteHeader{margin-bottom:8px}
+.trackGrid{
+  height:calc(100dvh - 100px - env(safe-area-inset-bottom));
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:0 0 8px;
+}
+.trackCard{
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-rows:minmax(0,1fr) auto;
+  border-radius:10px;
+  box-shadow:0 3px 0 #032f49;
+}
+.trackCard .trackCardArt{height:auto;min-height:0}
+.trackCard svg{width:86%;height:70%}
+.trackCard strong{padding:7px 4px;font-size:13px;min-height:35px;display:grid;place-items:center}
+.trackCard.random .trackCardArt{font-size:64px}
+
+/* Multiplayer role screen. */
+#multiSetup .sectionRibbon{margin:4px 4px 10px}
+#multiSetup .roleGrid{
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:0 4px;
+}
+#multiSetup .largeMenuCard{
+  min-height:190px;
+  padding:14px 8px;
+}
+#multiSetup .largeMenuCard>span{font-size:44px}
+#multiSetup .largeMenuCard strong{font-size:20px}
+#multiSetup .connectionNote{
+  margin:10px 4px 0;
+  padding:10px;
+  font-size:11px;
+}
+
+/* Host setup compressed vertically but remains comfortable. */
+#hostSetup .setupPanel,
+#joinSetup .setupPanel,
+#settingsView .setupPanel{margin:0 0 8px}
+#hostSetup .setupPanel,
+#joinSetup .setupPanel{padding-top:39px}
+#hostSetup .gameField,
+#joinSetup .gameField{padding:6px 10px 9px;gap:3px;font-size:11px}
+#hostSetup .gameField select,
+#joinSetup .gameField select{height:38px;font-size:14px}
+#hostSetup .hostTrackChoices{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px;
+  padding:7px;
+}
+#hostSetup .hostTrackChoices .trackChoice{
+  min-height:36px;
+  padding:5px 7px;
+  font-size:12px;
+}
+#hostSetup .hostTrackChoices .trackChoice small{display:none}
+#hostSetup .compactSetup{padding:39px 9px 7px}
+#hostSetup .compactSetup label{gap:2px;font-size:10px}
+#hostSetup .compactSetup select{height:36px;font-size:14px}
+.discoveryStrip{margin:7px;padding:7px;font-size:12px}
+#hostSetup .lobbyList,
+#joinSetup .lobbyList,
+#joinSetup .hostList{
+  max-height:94px;
+  overflow:auto;
+  gap:4px;
+  padding:0 7px 7px;
+  overscroll-behavior:contain;
+}
+.lobbyPlayer,.empty,.scanning,.hostCard{
+  padding:7px;
+  border-width:1px;
+  border-radius:9px;
+  font-size:12px;
+}
+.secondaryGameButton{
+  min-height:38px;
+  margin:0 0 4px;
+  width:100%;
+  font-size:12px;
+}
+#joinSetup .hostCard small{font-size:10px}
+#settingsView .settingsPanel{padding-top:39px}
+#settingsView .settingRow{padding:12px 14px}
+
+/* Small-height phones get a second compacting pass without hiding options. */
+@media(max-height:760px){
+  .whiteHeader{height:72px;padding-bottom:11px}
+  .whiteHeader h1{font-size:22px}
+  .circleBack{bottom:8px;width:39px;height:39px}
+  .setupScreenBody{height:calc(100dvh - 72px - 66px - env(safe-area-inset-bottom));gap:6px}
+  .fixedBottomAction{height:66px;font-size:21px}
+  .setupPanel{padding-top:37px}
+  .panelRibbon{font-size:16px;padding:5px 11px}
+  .playersSetupPanel .playerSlots{padding:6px;gap:5px}
+  .playerSlot{height:42px}
+  .playerDisc{width:44px;height:44px}
+  .playerSetupActions button{min-height:36px}
+  .trackSummaryButton{min-height:70px}
+  .summaryTrackIcon{width:58px;height:48px}
+  .summaryTrackIcon svg{width:56px;height:46px}
+  .lapsSetupPanel{padding-top:37px}
+  #trackSelectView .trackGrid{height:calc(100dvh - 82px - env(safe-area-inset-bottom))}
+  #modeView .mainMenuArc{min-height:320px;padding-top:42px}
+  #modeView .roundIcon{width:112px;height:112px}
+  #hostSetup .hostTrackChoices .trackChoice{min-height:31px}
+  #hostSetup .lobbyList,#joinSetup .lobbyList,#joinSetup .hostList{max-height:72px}
+}
