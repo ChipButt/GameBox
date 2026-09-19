@@ -5,31 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=21">
+<link rel="stylesheet" href="disc-rally.css?v=22">
 </head>
 <body>
 <div class="discApp">
   <main>
-    <section id="modeView" class="view menuScreen">
-      <div class="menuBackdrop"></div>
-      <a class="gameboxHomeLink" href="index.html">‹ GAMEBOX</a>
-      <div class="gameLogo" aria-label="Disc Rally">
-        <div class="logoDisc"><span>⚡</span></div>
-        <div class="logoWords"><strong>DISC</strong><strong>RALLY</strong></div>
-      </div>
+    <section id="modeView" class="view discHomeAssetScreen">
+      <div class="discHomeArtboard" aria-label="Disc Rally home">
+        <img class="discHomeShell" src="Blank%20UI.png?v=1" alt="" aria-hidden="true">
 
-      <div class="mainMenuArc">
-        <button id="localMode" class="roundMenuButton" type="button">
-          <span class="roundIcon">▣</span><strong>PASS &amp; PLAY</strong>
+        <a class="discHomeAssetButton discHomeBack" href="index.html" aria-label="Back to GameBox">
+          <img src="GameBox%20back%20button.png?v=1" alt="GameBox">
+        </a>
+
+        <button id="localMode" class="discHomeAssetButton discHomePass" type="button" aria-label="Pass and Play">
+          <img src="Pass%20%26%20Play%20button.png?v=1" alt="Pass & Play">
         </button>
-        <button id="multiMode" class="roundMenuButton" type="button">
-          <span class="roundIcon">●●</span><strong>LOCAL<br>MULTIPLAYER</strong>
+
+        <button id="multiMode" class="discHomeAssetButton discHomeMulti" type="button" aria-label="Local Multiplayer">
+          <img src="Local%20Multiplayer%20button.png?v=1" alt="Local Multiplayer">
+        </button>
+
+        <button id="openSettings" class="discHomeAssetButton discHomeSettings" type="button" aria-label="Settings">
+          <img src="Settings%20button.png?v=1" alt="Settings">
         </button>
       </div>
-
-      <button id="openSettings" class="bottomMenuButton" type="button">
-        <span>⚙</span><strong>SETTINGS</strong>
-      </button>
     </section>
 
     <section id="localSetup" class="view menuScreen setupScreen hidden">
