@@ -38,7 +38,7 @@ const TRACKS=[
   }
 ];
 const TRACK_GEOMETRY=new Map();
-const DISC_R=18,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
+const DISC_R=18,DISC_COLLISION_R=15,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
 const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
 const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
@@ -463,21 +463,60 @@ function drawPerspectiveRoad(){
 }
 function drawTrack(){drawPerspectiveRoad()}
 
+function projectedDiscPath(p,radius=DISC_COLLISION_R,cam=cameraForView(),lift=0){
+  const pts=[];
+  for(let i=0;i<28;i++){
+    const a=i/28*Math.PI*2;
+    const worldX=p.x+Math.cos(a)*radius,worldY=p.y+Math.sin(a)*radius;
+    const sp=projectPoint(worldX,worldY,cam);
+    if(!sp)return null;
+    pts.push({x:sp.x,y:sp.y-lift*sp.scale});
+  }
+  return pts;
+}
+function fillProjectedPath(points,fill,stroke=null,width=1){
+  if(!points?.length)return;
+  ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);
+  for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);
+  ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke()}
+}
 function drawDiscs(){
   if(!game)return;
   const cam=cameraForView();
-  const visible=game.players.map((p,i)=>({p,i,sp:projectPoint(p.x,p.y,cam)})).filter(x=>x.sp&&x.sp.forward>-80).sort((a,b)=>b.sp.depth-a.sp.depth);
+  const visible=game.players
+    .map((p,i)=>({p,i,sp:projectPoint(p.x,p.y,cam)}))
+    .filter(x=>x.sp&&x.sp.forward>-80)
+    .sort((a,b)=>b.sp.depth-a.sp.depth);
+
   visible.forEach(({p,i,sp})=>{
-    const r=Math.max(7,DISC_R*sp.scale),active=i===game.current&&!game.winner;
-    ctx.save();ctx.translate(sp.x,sp.y);
-    ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(0,5,r*1.05,r*.32,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=p.color;ctx.beginPath();ctx.ellipse(0,-2,r,r*.42,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(-r,-2,r*2,Math.max(3,r*.23));
-    ctx.beginPath();ctx.ellipse(0,-4-r*.10,r,r*.42,0,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
-    ctx.lineWidth=active?5:2;ctx.strokeStyle=active?'#fff':'rgba(8,47,104,.7)';ctx.stroke();
-    ctx.beginPath();ctx.ellipse(-r*.28,-r*.18,r*.2,r*.08,0,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.6)';ctx.fill();
-    if(r>15){ctx.fillStyle='#082f68';ctx.font=`800 ${Math.max(10,r*.55)}px Fredoka`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),0,-r*.13)}
-    ctx.restore();
+    const active=i===game.current&&!game.winner;
+    const footprint=projectedDiscPath(p,DISC_COLLISION_R,cam,0);
+    if(!footprint)return;
+
+    // Shadow matches the real collision footprint, so physical contact and
+    // visible contact stay aligned even with perspective/depth differences.
+    const shadow=footprint.map(q=>({x:q.x+2,y:q.y+5}));
+    fillProjectedPath(shadow,'rgba(0,0,0,.20)');
+
+    // Thin puck body and top face, both based on the same world footprint.
+    const body=projectedDiscPath(p,DISC_COLLISION_R,cam,3.2);
+    fillProjectedPath(body,'rgba(0,0,0,.20)');
+    const top=projectedDiscPath(p,DISC_COLLISION_R,cam,5.4);
+    fillProjectedPath(top,p.color,active?'#ffffff':'rgba(8,47,104,.72)',active?4:2);
+
+    // Small highlight and player number stay screen-space for legibility.
+    const label=projectPoint(p.x,p.y,cam);
+    if(label){
+      const rr=Math.max(8,DISC_COLLISION_R*label.scale);
+      ctx.beginPath();ctx.ellipse(label.x-rr*.24,label.y-5*label.scale-rr*.12,rr*.20,rr*.07,0,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.58)';ctx.fill();
+      if(rr>13){
+        ctx.fillStyle='#082f68';ctx.font=`800 ${Math.max(10,rr*.62)}px Fredoka`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(String(i+1),label.x,label.y-5*label.scale);
+      }
+    }
   });
 }
 function drawAim(){
@@ -498,7 +537,7 @@ function onPointerDown(e){
   const q=pointerPoint(e),p=activePlayer(),sp=projectPoint(p.x,p.y);
   if(!sp)return;
   canvas.setPointerCapture?.(e.pointerId);
-  const discHit=Math.hypot(q.x-sp.x,q.y-sp.y)<=Math.max(95,DISC_R*sp.scale*1.35);
+  const discHit=Math.hypot(q.x-sp.x,q.y-sp.y)<=Math.max(82,DISC_COLLISION_R*sp.scale*1.5);
   if(discHit){
     drag=q;
   }else{
@@ -611,7 +650,7 @@ function applyBumpers(p){
 function applyDiscCollisions(){
   const ps=game.players;
   for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
-    const a=ps[i],b=ps[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=DISC_R*2;
+    const a=ps[i],b=ps[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=DISC_COLLISION_R*2;
     if(d>0&&d<min){
       const nx=dx/d,ny=dy/d,over=min-d;a.x-=nx*over/2;a.y-=ny*over/2;b.x+=nx*over/2;b.y+=ny*over/2;
       const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny,swap=(vb-va)*.92;
