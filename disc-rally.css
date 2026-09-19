@@ -1361,7 +1361,8 @@ html,body{height:100%;overflow:hidden}
   outline:0;
   background:transparent!important;
   box-shadow:none!important;
-  border-radius:0!important;
+  border-radius:7%!important;
+  overflow:hidden;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
@@ -1370,6 +1371,7 @@ html,body{height:100%;overflow:hidden}
   height:100%;
   display:block;
   object-fit:fill;
+  border-radius:inherit;
   pointer-events:none;
   user-select:none;
   -webkit-user-select:none;
@@ -1378,13 +1380,13 @@ html,body{height:100%;overflow:hidden}
 .roleSelectionChoice:active{transform:scale(.985)}
 .roleSelectionHost{
   left:3.7cqw;
-  top:43.0cqw;
+  top:53.627cqw;
   width:43.5cqw;
   height:54.0cqw;
 }
 .roleSelectionJoin{
   left:52.8cqw;
-  top:43.0cqw;
+  top:53.627cqw;
   width:43.5cqw;
   height:54.0cqw;
 }
