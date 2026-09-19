@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=24">
+<link rel="stylesheet" href="disc-rally.css?v=25">
 </head>
 <body>
 <div class="discApp">
@@ -32,47 +32,58 @@
       </div>
     </section>
 
-    <section id="localSetup" class="view menuScreen setupScreen hidden">
-      <div class="menuBackdrop"></div>
-      <header class="whiteHeader">
-        <button class="circleBack" data-back="modeView" type="button">‹</button>
-        <h1>🏁 PASS &amp; PLAY</h1>
-      </header>
+    <section id="localSetup" class="view passPlayAssetScreen hidden">
+      <div class="passPlayArtboard">
+        <img class="passPlayShell" src="02_blank_ui.png?v=1" alt="" aria-hidden="true">
 
-      <div class="setupScreenBody">
-        <section class="setupPanel playersSetupPanel">
-          <div class="panelRibbon">♟ PLAYERS</div>
-          <div id="localPlayers" class="playerSlots"></div>
-          <div id="passRosterOptions" class="rosterPicker hidden"></div>
-          <div class="playerSetupActions">
-            <button id="addPassPlayer" type="button"><span>+</span> ADD PLAYER</button>
-            <button id="removePassPlayer" type="button"><span>−</span> REMOVE PLAYER</button>
-          </div>
-        </section>
+        <button class="passPlayAsset passPlayBack" data-back="modeView" type="button" aria-label="Back">
+          <img src="03_back_button.png?v=1" alt="">
+        </button>
 
-        <section class="setupPanel trackSetupPanel">
-          <div class="panelRibbon">▱ TRACK</div>
-          <button id="openTrackSelection" class="trackSummaryButton" type="button">
-            <span id="selectedTrackIcon" class="summaryTrackIcon">?</span>
-            <span><strong id="selectedTrackName">Random Track</strong><small>Tap to choose track</small></span>
+        <div id="localPlayers" class="passPlayPlayers" aria-label="Players"></div>
+
+        <div id="passRosterOptions" class="rosterPicker passPlayRosterPicker hidden"></div>
+
+        <button id="addPassPlayer" class="passPlayAsset passPlayAdd" type="button" aria-label="Add player">
+          <img src="06_add_player_button.png?v=1" alt="Add Player">
+        </button>
+        <button id="removePassPlayer" class="passPlayAsset passPlayRemove" type="button" aria-label="Remove player">
+          <img src="07_remove_player_button.png?v=1" alt="Remove Player">
+        </button>
+
+        <button id="openTrackSelection" class="passPlayAsset passPlayTrack" type="button" aria-label="Choose track">
+          <img src="08_track_selection_card.png?v=1" alt="">
+          <span id="selectedTrackIcon" class="passPlayTrackIcon">?</span>
+          <span class="passPlayTrackText">
+            <strong id="selectedTrackName">Random Track</strong>
+            <small>Tap to choose track</small>
+          </span>
+        </button>
+
+        <div class="passPlayLaps" data-lap-group="local" aria-label="Laps">
+          <button class="passPlayAsset passPlayLap passPlayLap1 lapChoiceButton" type="button" data-laps="1" aria-label="1 lap">
+            <img src="10_lap_button_unselected.png?v=2" alt=""><span>1</span>
           </button>
-        </section>
+          <button class="passPlayAsset passPlayLap passPlayLap3 lapChoiceButton selected" type="button" data-laps="3" aria-label="3 laps">
+            <img src="09_lap_button_selected.png?v=1" alt=""><span>3</span>
+          </button>
+          <button class="passPlayAsset passPlayLap passPlayLap5 lapChoiceButton" type="button" data-laps="5" aria-label="5 laps">
+            <img src="10_lap_button_unselected.png?v=2" alt=""><span>5</span>
+          </button>
+          <button class="passPlayAsset passPlayLap passPlayLap7 lapChoiceButton" type="button" data-laps="7" aria-label="7 laps">
+            <img src="10_lap_button_unselected.png?v=2" alt=""><span>7</span>
+          </button>
+          <button class="passPlayAsset passPlayLap passPlayLap9 lapChoiceButton" type="button" data-laps="9" aria-label="9 laps">
+            <img src="10_lap_button_unselected.png?v=2" alt=""><span>9</span>
+          </button>
+        </div>
 
-        <section class="setupPanel lapsSetupPanel lapChoiceBanner">
-          <div class="lapChoiceTitle">LAPS</div>
-          <div class="lapChoiceButtons" data-lap-group="local">
-            <button class="lapChoiceButton" type="button" data-laps="1">1</button>
-            <button class="lapChoiceButton selected" type="button" data-laps="3">3</button>
-            <button class="lapChoiceButton" type="button" data-laps="5">5</button>
-            <button class="lapChoiceButton" type="button" data-laps="7">7</button>
-            <button class="lapChoiceButton" type="button" data-laps="9">9</button>
-          </div>
-        </section>
+        <button id="startLocal" class="passPlayAsset passPlayStart" type="button" aria-label="Start race">
+          <img src="11_start_race_button.png?v=1" alt="Start Race">
+        </button>
 
-        <div id="localStatus" class="status"></div>
+        <div id="localStatus" class="passPlayStatus"></div>
       </div>
-
-      <button id="startLocal" class="fixedBottomAction" type="button">🏁 START RACE!</button>
       <div id="localTracks" class="hidden"></div>
     </section>
 
@@ -239,6 +250,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=23"></script>
+<script src="disc-rally.js?v=24"></script>
 </body>
 </html>
