@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=35">
+<link rel="stylesheet" href="disc-rally.css?v=36">
 </head>
 <body>
 <div class="discApp">
@@ -98,18 +98,22 @@
       </div>
     </section>
 
-    <section id="multiSetup" class="view menuScreen hidden">
-      <div class="menuBackdrop"></div>
-      <header class="whiteHeader">
-        <button class="circleBack" data-back="modeView" type="button">‹</button>
-        <h1>●● LOCAL MULTIPLAYER</h1>
-      </header>
-      <div class="sectionRibbon">CHOOSE ROLE</div>
-      <div class="roleGrid">
-        <button id="hostMode" class="largeMenuCard" type="button"><span>🏁</span><strong>HOST RACE</strong><small>Create the game lobby</small></button>
-        <button id="joinMode" class="largeMenuCard" type="button"><span>⌕</span><strong>JOIN RACE</strong><small>Find a host on another device</small></button>
+    <section id="multiSetup" class="view roleSelectionAssetScreen hidden">
+      <div class="roleSelectionArtboard">
+        <img class="roleSelectionShell" src="local_multiplayer_role_selection_blank_ui.png?v=1" alt="" aria-hidden="true">
+
+        <button class="roleSelectionBack" data-back="modeView" type="button" aria-label="Back">
+          <img src="DR%20Back%20Button.png?v=1" alt="Back">
+        </button>
+
+        <button id="hostMode" class="roleSelectionChoice roleSelectionHost" type="button" aria-label="Host Race">
+          <img src="host_race_button.png?v=1" alt="Host Race — Create the game lobby">
+        </button>
+
+        <button id="joinMode" class="roleSelectionChoice roleSelectionJoin" type="button" aria-label="Join Race">
+          <img src="join_race_button.png?v=1" alt="Join Race — Find a host on another device">
+        </button>
       </div>
-      <div class="connectionNote">GameBox multiplayer uses direct WebRTC networking over Wi‑Fi/internet.</div>
     </section>
 
     <section id="hostSetup" class="view menuScreen hidden">
