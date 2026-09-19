@@ -97,15 +97,32 @@ function syncPlayerSelects(){
 function renderTracks(containerId){
   const wrap=$(containerId);if(!wrap)return;wrap.innerHTML='';
   if(containerId==='trackGrid'){
-    const random=document.createElement('button');
-    random.type='button';random.className='trackCard random'+(selectedTrack==='random'?' selected':'');
-    random.innerHTML='<span class="trackCardArt">?</span><strong>Random Track</strong>';
-    random.onclick=()=>selectTrack('random',true);wrap.appendChild(random);
-    TRACKS.forEach(t=>{
-      const b=document.createElement('button');b.type='button';b.className='trackCard'+(t.id===selectedTrack?' selected':'');
-      b.innerHTML=`<span class="trackCardArt"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${miniMapPath(t)}"></path></svg></span><strong>${esc(t.name)}</strong>`;
-      b.onclick=()=>selectTrack(t.id,true);wrap.appendChild(b);
+    const entries=[{id:'random',name:'Random Track',random:true},...TRACKS];
+    const cols=3;
+    const x0=4,y0=27,colStep=31.5,rowStep=24.3813;
+    entries.forEach((entry,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const isSelected=entry.id===selectedTrack;
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='trackSelectCard'+(isSelected?' selected':'');
+      b.dataset.track=entry.id;
+      b.style.left=(x0+col*colStep)+'cqw';
+      b.style.top=((y0+row*rowStep)*1.7777778)+'cqw';
+      const map=entry.random
+        ? '<span class="trackSelectMap random">?</span>'
+        : `<span class="trackSelectMap"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${miniMapPath(entry)}"></path></svg></span>`;
+      b.innerHTML=`<img class="trackSelectCardAsset" src="${isSelected?'track_card_selected_gold.png?v=1':'track_card_blue.png?v=1'}" alt="">${map}<strong class="trackSelectTitle">${esc(entry.name)}</strong>`;
+      b.onclick=()=>selectTrack(entry.id,true);
+      wrap.appendChild(b);
     });
+    const rows=Math.ceil(entries.length/cols);
+    const bottomPct=y0+(rows-1)*rowStep+22.7813;
+    const art=$('trackSelectionArtboard');
+    if(art){
+      const h=Math.max(177.7778,bottomPct*1.7777778+1.8);
+      art.style.height=h+'cqw';
+    }
     return;
   }
   if(containerId==='hostTracks'){
