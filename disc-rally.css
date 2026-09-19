@@ -448,3 +448,48 @@ html,body{height:100%;overflow:hidden}
   #hostSetup .hostTrackChoices .trackChoice{min-height:31px}
   #hostSetup .lobbyList,#joinSetup .lobbyList,#joinSetup .hostList{max-height:72px}
 }
+
+
+/* Host setup uses the same track/lap choice cards as Pass & Play. */
+#hostSetup .hostTrackSetupPanel{
+  padding-top:43px;
+}
+#hostSetup .hostTrackSetupPanel .trackSummaryButton{
+  min-height:82px;
+  padding:8px 14px;
+  gap:12px;
+  justify-content:flex-start;
+}
+#hostSetup .hostTrackSetupPanel .summaryTrackIcon{
+  width:68px;
+  height:58px;
+  font-size:56px;
+}
+#hostSetup .hostTrackSetupPanel .summaryTrackIcon svg{
+  width:66px;
+  height:54px;
+}
+#hostSetup .hostTrackSetupPanel .trackSummaryButton strong{font-size:20px}
+#hostSetup .hostTrackSetupPanel .trackSummaryButton small{font-size:12px}
+#hostSetup .hostLapsSetupPanel{
+  padding:43px 10px 9px;
+}
+#hostSetup .hostLapsSetupPanel label{
+  display:block;
+  gap:0;
+  font-size:inherit;
+}
+#hostSetup .hostLapsSetupPanel select{
+  width:100%;
+  height:40px;
+  font-size:16px;
+}
+
+@media(max-height:760px){
+  #hostSetup .hostTrackSetupPanel{padding-top:37px}
+  #hostSetup .hostTrackSetupPanel .trackSummaryButton{min-height:70px}
+  #hostSetup .hostTrackSetupPanel .summaryTrackIcon{width:58px;height:48px}
+  #hostSetup .hostTrackSetupPanel .summaryTrackIcon svg{width:56px;height:46px}
+  #hostSetup .hostLapsSetupPanel{padding:37px 9px 7px}
+  #hostSetup .hostLapsSetupPanel select{height:36px;font-size:14px}
+}
