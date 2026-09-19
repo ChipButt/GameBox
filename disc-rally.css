@@ -838,7 +838,8 @@ html,body{height:100%;overflow:hidden}
   box-shadow:none;
   overflow:visible;
 }
-.passPlayPlayerSlot:nth-child(1){left:9.4%;top:22.2%;width:38.5%;height:7%}
+/* Empty-slot base positions from the player-section editor. */
+.passPlayPlayerSlot:nth-child(1){left:7.8%;top:22.2406%;width:42%;height:7%}
 .passPlayPlayerSlot:nth-child(2){left:50%;top:22.2%;width:42%;height:7%}
 .passPlayPlayerSlot:nth-child(3){left:7.8%;top:29.8%;width:42%;height:7%}
 .passPlayPlayerSlot:nth-child(4){left:50%;top:29.7%;width:42%;height:7%}
@@ -848,18 +849,38 @@ html,body{height:100%;overflow:hidden}
   display:block;
   object-fit:fill;
 }
-.passPlayPlayerSlot strong{
+.passPlayEmptyAsset{
   position:absolute;
-  left:28.8312%;
-  top:18.5714%;
+  inset:0;
+}
+/* Filled template relative to each empty-slot base:
+   x +4.0738%, y -0.9753%, width 91.6667%, height 100%. */
+.passPlayFilledFrame{
+  position:absolute;
+  left:4.0738%;
+  top:-0.9753%;
+  width:91.6667%;
+  height:100%;
+  display:block;
+  container-type:inline-size;
+}
+.passPlayFilledFrame>.passPlaySlotAsset{
+  position:absolute;
+  inset:0;
+}
+/* Player-name geometry is relative to the filled frame, exactly as exported. */
+.passPlayFilledFrame>strong{
+  position:absolute;
+  left:28.1071%;
+  top:18.5513%;
   width:62.5974%;
   height:60%;
   display:flex;
   align-items:center;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-weight:900;
-  font-size:0.7cqw;
+  font-weight:500;
+  font-size:7.7922cqw;
   line-height:1;
   text-align:left;
   white-space:nowrap;
@@ -867,7 +888,6 @@ html,body{height:100%;overflow:hidden}
   text-overflow:ellipsis;
   text-shadow:0 2px 3px rgba(0,26,83,.75);
 }
-.passPlayPlayerSlot.empty strong{display:none}
 
 .passPlayTrackHit{
   left:4.2%;
@@ -992,7 +1012,7 @@ html,body{height:100%;overflow:hidden}
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
   font-weight:900;
-  font-size:2.5cqw;
+  font-size: 3cqw;
   line-height:1;
   text-shadow:0 2px 2px rgba(0,30,75,.55);
   pointer-events:none;
