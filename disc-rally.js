@@ -279,7 +279,7 @@ function buildRace(players,laps=3){
     return{x:start.x+start.nx*lateral-start.tx*back,y:start.y+start.ny*lateral-start.ty*back};
   });
   return {
-    id:uid(),trackId:raceTrack,laps:Number(laps)||2,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,finishSequence:0,
+    id:uid(),trackId:raceTrack,laps:Number(laps)||3,current:0,turn:1,winner:null,phase:'aim',flicksUsed:0,turnEndsAt:0,finishSequence:0,
     players:players.map((p,i)=>{
       const pos=starts[i],nearest=nearestTrackPoint(pos.x,pos.y,t);
       return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i%COLORS.length],x:pos.x,y:pos.y,vx:0,vy:0,lap:0,nextCheckpoint:1,trackProgress:nearest.progress,turboCharge:0,turboReady:false,turboHeld:false,finished:false,pendingFinish:false,finishCrossedAt:0};
@@ -302,7 +302,7 @@ function applySnapshot(s){
     finishCrossedAt:Number.isFinite(p.finishCrossedAt)?p.finishCrossedAt:0,
     trackProgress:Number.isFinite(p.trackProgress)?p.trackProgress:nearestTrackPoint(p.x,p.y,TRACKS.find(t=>t.id===s.trackId)||TRACKS[0]).progress
   }));
-  selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||2;
+  selectedTrack=s.trackId||selectedTrack;selectedLaps=s.laps||3;
   lookDrag=null;lookYaw=0;lookPitch=0;turboHolding=false;animating=false;
   renderRace();showView('raceView');
 }
@@ -1015,7 +1015,7 @@ function renderHosts(hosts=[]){
   const open=hosts.filter(h=>!h.started&&(h.raceMode||'')==='disc-rally'&&Number(h.playerCount||1)<Number(h.maxPlayers||4));
   if(!open.length){wrap.innerHTML='<div class="scanning"><span class="scanPulse"></span><strong>Scanning for Disc Rally hosts…</strong></div>';$('joinStatus').textContent='Scanning';return}
   $('joinStatus').textContent=`${open.length} found`;
-  wrap.innerHTML=open.map(h=>`<button class="hostCard" type="button" data-host="${esc(h.peerId)}"><div><strong>${esc(h.hostName||"Disc Rally")}</strong><small>${esc(h.trackName||'Track')} · ${Number(h.totalRaces)||2} laps · ${Number(h.playerCount)||1}/4 players</small></div><span>JOIN</span></button>`).join('');
+  wrap.innerHTML=open.map(h=>`<button class="hostCard" type="button" data-host="${esc(h.peerId)}"><div><strong>${esc(h.hostName||"Disc Rally")}</strong><small>${esc(h.trackName||'Track')} · ${Number(h.totalRaces)||3} laps · ${Number(h.playerCount)||1}/4 players</small></div><span>JOIN</span></button>`).join('');
 }
 async function joinHost(peerId){
   const p=roster().find(x=>x.id===$('joinPlayer').value);if(!p)return;
