@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=16">
+<link rel="stylesheet" href="disc-rally.css?v=17">
 </head>
 <body>
 <div class="discApp">
@@ -58,15 +58,15 @@
           </button>
         </section>
 
-        <section class="setupPanel compactSetup lapsSetupPanel">
-          <div class="panelRibbon">LAPS</div>
-          <label>
-            <select id="localLaps">
-              <option value="1">1 LAP</option>
-              <option value="2" selected>2 LAPS</option>
-              <option value="3">3 LAPS</option>
-            </select>
-          </label>
+        <section class="setupPanel lapsSetupPanel lapChoiceBanner">
+          <div class="lapChoiceTitle">LAPS</div>
+          <div class="lapChoiceButtons" data-lap-group="local">
+            <button class="lapChoiceButton" type="button" data-laps="1">1</button>
+            <button class="lapChoiceButton selected" type="button" data-laps="3">3</button>
+            <button class="lapChoiceButton" type="button" data-laps="5">5</button>
+            <button class="lapChoiceButton" type="button" data-laps="7">7</button>
+            <button class="lapChoiceButton" type="button" data-laps="9">9</button>
+          </div>
         </section>
 
         <div id="localStatus" class="status"></div>
@@ -121,15 +121,15 @@
         </button>
       </section>
 
-      <section class="setupPanel compactSetup lapsSetupPanel hostLapsSetupPanel">
-        <div class="panelRibbon">LAPS</div>
-        <label>
-          <select id="hostLaps">
-            <option value="1">1 LAP</option>
-            <option value="2" selected>2 LAPS</option>
-            <option value="3">3 LAPS</option>
-          </select>
-        </label>
+      <section class="setupPanel lapsSetupPanel hostLapsSetupPanel lapChoiceBanner">
+        <div class="lapChoiceTitle">LAPS</div>
+        <div class="lapChoiceButtons" data-lap-group="host">
+          <button class="lapChoiceButton" type="button" data-laps="1">1</button>
+          <button class="lapChoiceButton selected" type="button" data-laps="3">3</button>
+          <button class="lapChoiceButton" type="button" data-laps="5">5</button>
+          <button class="lapChoiceButton" type="button" data-laps="7">7</button>
+          <button class="lapChoiceButton" type="button" data-laps="9">9</button>
+        </div>
       </section>
       <div id="hostTracks" class="hidden"></div>
 
@@ -239,6 +239,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=20"></script>
+<script src="disc-rally.js?v=21"></script>
 </body>
 </html>
