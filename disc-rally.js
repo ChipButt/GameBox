@@ -143,7 +143,7 @@ function renderTrackSummary(){
   if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=hostIcon;
 }
 function renderLapChoices(){
-  $('.lapChoiceButton').forEach(btn=>{
+  $('[data-laps]').forEach(btn=>{
     const isSelected=Number(btn.dataset.laps)===selectedLaps;
     btn.classList.toggle('selected',isSelected);
     btn.setAttribute('aria-pressed',isSelected?'true':'false');
