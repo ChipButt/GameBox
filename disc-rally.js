@@ -58,7 +58,7 @@ const roster=()=>{
 };
 
 let currentView='modeView';
-let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[];
+let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=2,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[],trackSelectReturn='localSetup';
 let game=null,pendingSnapshot=null,turnEndTimer=null,cameraHeading=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
@@ -123,12 +123,16 @@ function selectTrack(id,returnToSetup=false){
   selectedTrack=id;
   renderTracks('trackGrid');renderTracks('hostTracks');renderTrackSummary();
   if(role==='host')updateHostAdvert();
-  if(returnToSetup)showView('localSetup');
+  if(returnToSetup)showView(trackSelectReturn);
 }
 function renderTrackSummary(){
   const t=TRACKS.find(x=>x.id===selectedTrack);
-  if($('selectedTrackName'))$('selectedTrackName').textContent=t?t.name:'Random Track';
-  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=t?`<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`:'?';
+  const name=t?t.name:'Random Track';
+  const icon=t?`<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`:'?';
+  if($('selectedTrackName'))$('selectedTrackName').textContent=name;
+  if($('selectedTrackIcon'))$('selectedTrackIcon').innerHTML=icon;
+  if($('hostSelectedTrackName'))$('hostSelectedTrackName').textContent=name;
+  if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=icon;
 }
 function track(){return TRACKS.find(t=>t.id===(game?.trackId||selectedTrack))||TRACKS[0]}
 function chaikinClosed(points,passes=3){
@@ -1049,6 +1053,12 @@ function startLocalRace(){
 function leaveRace(){
   clearTurnEndTimer();resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;resetLook();mode='local';role=null;renderPlayerPicks();renderTrackSummary();showView('modeView');
 }
+function openTrackPicker(returnView){
+  trackSelectReturn=returnView;
+  const back=$('trackSelectBack');if(back)back.dataset.back=returnView;
+  renderTracks('trackGrid');
+  showView('trackSelectView');
+}
 function bind(){
   renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();
 
@@ -1058,7 +1068,8 @@ function bind(){
   };
   $('multiMode').onclick=()=>showView('multiSetup');
   $('openSettings').onclick=()=>showView('settingsView');
-  $('openTrackSelection').onclick=()=>{renderTracks('trackGrid');showView('trackSelectView')};
+  $('openTrackSelection').onclick=()=>openTrackPicker('localSetup');
+  $('hostOpenTrackSelection').onclick=()=>openTrackPicker('hostSetup');
 
   $$('[data-back]').forEach(b=>b.onclick=()=>{
     if(currentView==='hostSetup'||currentView==='joinSetup')resetSession();
@@ -1072,8 +1083,7 @@ function bind(){
 
   $('startLocal').onclick=startLocalRace;
   $('hostMode').onclick=()=>{
-    if(selectedTrack==='random')selectedTrack='harbour';
-    showView('hostSetup');syncPlayerSelects();renderTracks('hostTracks');startHostDiscovery();
+    showView('hostSetup');syncPlayerSelects();renderTrackSummary();startHostDiscovery();
   };
   $('joinMode').onclick=()=>{showView('joinSetup');syncPlayerSelects();startScan()};
   $('restartHostDiscovery').onclick=startHostDiscovery;
