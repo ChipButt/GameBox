@@ -6,57 +6,60 @@
 <meta name="theme-color" content="#071e3c">
 <title>Disc Rally Pass & Play Layout Editor</title>
 <style>
-:root{--bg:#06182f;--panel:#092b50;--line:#1cc4ff;--gold:#ffd719;--text:#fff;--muted:#a8c9e5}
+:root{--bg:#06182f;--panel:#092b50;--gold:#ffd719;--text:#fff;--muted:#a8c9e5}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{padding:12px}
+body{padding:10px}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.editor{width:min(1240px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,590px) minmax(330px,1fr);gap:14px;align-items:start}
+.editor{width:min(1260px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,580px) minmax(330px,1fr);gap:14px;align-items:start}
 .panel{background:linear-gradient(180deg,#0b315b,#072441);border:1px solid rgba(58,194,255,.35);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
 .previewPanel{padding:10px;position:sticky;top:10px}
-.previewHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
 .previewHead h1{margin:0;font-size:17px}
-.previewHead small{color:var(--muted);font-size:10px}
-.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px;overflow:hidden}
+.previewHead small{font-size:10px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px}
 .stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
-.stageBg,.sampleRef{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-.sampleRef{opacity:0;z-index:20}
-.stage.showSample .sampleRef{opacity:.42}
-.asset{position:absolute;z-index:5;cursor:move;touch-action:none;outline:1px dashed transparent}
-.asset.selected{outline:2px dashed var(--gold);outline-offset:1px}
-.textItem{position:absolute;z-index:7;cursor:move;touch-action:none;border:1px dashed rgba(255,215,25,.7);background:rgba(0,35,80,.12);display:flex;overflow:visible}
-.textItem.selected{outline:2px dashed var(--gold);outline-offset:1px}
-.textInner{width:100%;height:100%;display:flex;align-items:center;pointer-events:none;white-space:nowrap;overflow:hidden}
-.textItem .handle{display:none}
-.textItem.selected .handle{display:block}
+.stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.item{position:absolute;z-index:5;touch-action:none}
+.asset{cursor:move}
 .asset img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
-.asset.lap img{border-radius:22%;overflow:hidden}
-.handle{position:absolute;width:20px;height:20px;border-radius:50%;background:var(--gold);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none}
-.asset.selected .handle{display:block}
-.handle.br{right:-10px;bottom:-10px;cursor:nwse-resize}
-.handle.r{right:-10px;top:calc(50% - 10px);cursor:ew-resize}
-.handle.b{bottom:-10px;left:calc(50% - 10px);cursor:ns-resize}
+.asset.circleCrop{border-radius:50%;overflow:visible}
+.asset.circleCrop .cropFrame{position:absolute;inset:0;border-radius:50%;overflow:hidden;border:2px dashed rgba(255,215,25,.8);background:radial-gradient(circle at 35% 30%,#167fe8,#073f9e 72%)}
+.asset.circleCrop svg{width:100%;height:100%;display:block}
+.textItem{cursor:move;display:flex;border:1px dashed rgba(255,215,25,.65);background:rgba(255,255,255,.05);padding:2px;z-index:7}
+.textInner{width:100%;height:100%;display:flex;align-items:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-shadow:0 2px 4px rgba(0,25,65,.7)}
+.item.selected{outline:2px dashed var(--gold);outline-offset:1px}
+.handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:30}
+.item.selected .handle{display:block}
+.handle.br{right:-9px;bottom:-9px;cursor:nwse-resize}
+.handle.r{right:-9px;top:calc(50% - 9px);cursor:ew-resize}
+.handle.b{left:calc(50% - 9px);bottom:-9px;cursor:ns-resize}
 .controls{padding:12px}
 .controls h2{margin:0 0 4px;font-size:18px}
 .controls>p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.45}
-.topActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
-.topActions button,.actionGrid button{min-height:40px;border:0;border-radius:9px;font-weight:800;color:#fff;background:#0d5685}
-.topActions .primary,.actionGrid .primary{background:var(--gold);color:#082747}
-.assetList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:255px;overflow:auto;padding-right:2px;margin-bottom:10px}
-.assetList button{min-height:38px;border:1px solid #1a6da6;border-radius:8px;background:#0a345d;color:white;font-size:11px;font-weight:800;padding:5px}
-.assetList button.active{background:#0e78b5;border-color:#5ee0ff}
+.tabs,.topActions,.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.topActions{margin-bottom:8px}
+.tabs{margin-bottom:8px}
+button{min-height:40px;border:0;border-radius:9px;background:#0d5685;color:#fff;font-weight:800}
+button.primary{background:var(--gold);color:#082747}
+button.active{background:#0e78b5;box-shadow:inset 0 0 0 1px #59dcff}
+.itemList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:250px;overflow:auto;margin-bottom:10px}
+.itemList button{min-height:38px;border:1px solid #1a6da6;background:#0a345d;font-size:11px;padding:5px}
+.itemList button.active{background:#0e78b5;border-color:#5ee0ff}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .field{display:grid;gap:3px}
-.field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
-.field input,.field select{width:100%;height:39px;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:0 9px;font-weight:750}
 .field.full{grid-column:1/-1}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
+.field input,.field select,.field textarea{width:100%;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:8px 9px;font-weight:750}
+.field input,.field select{height:39px}
+.field textarea{min-height:64px;resize:vertical}
 .stateBox,.textBox{grid-column:1/-1;display:none}
 .stateBox.visible,.textBox.visible{display:grid}
-.textBox textarea{width:100%;min-height:64px;margin:0;resize:vertical;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:8px;font:inherit}
-.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
-.actionGrid .danger{background:#783140}
-textarea{width:100%;min-height:235px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.textBox.visible{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.actions{margin-top:9px}
+.actions .danger{background:#783140}
+.code{width:100%;min-height:235px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .note{margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,215,25,.08);color:#ffe778;font-size:10px;line-height:1.4}
 .status{min-height:18px;margin-top:7px;color:#75e5a6;font-size:11px;font-weight:800}
 @media(max-width:850px){body{padding:7px}.editor{grid-template-columns:1fr}.previewPanel{position:relative;top:auto}.stage{width:min(100%,440px)}}
@@ -67,141 +70,147 @@ textarea{width:100%;min-height:235px;margin-top:10px;resize:vertical;border:1px 
   <section class="panel previewPanel">
     <div class="previewHead">
       <h1>Pass &amp; Play Layout</h1>
-      <small>drag · resize · switch states</small>
+      <small>drag · resize · text positioning · circular map crop</small>
     </div>
     <div class="stageWrap">
       <div id="stage" class="stage">
-        <img class="stageBg" src="02_blank_ui.png?v=1" alt="">
-        <img class="sampleRef" src="01_sample_page.png?v=1" alt="">
+        <img class="stageBg" src="Pass%26Play%20UI.png?v=1" alt="">
       </div>
     </div>
   </section>
 
   <aside class="panel controls">
     <h2>Layout Editor</h2>
-    <p>The blank UI is locked. Position the separate image assets and the app-generated text overlays independently. Player names, track text and lap numbers can all be dragged and resized.</p>
+    <p>The new Pass &amp; Play UI is locked as the background. Position only the interactive overlays and app-generated text.</p>
 
     <div class="topActions">
-      <button id="toggleSample">Show sample overlay</button>
       <button id="copyJson" class="primary">Copy JSON</button>
+      <button id="resetAll">Reset all</button>
     </div>
 
-    <div id="assetList" class="assetList"></div>
+    <div class="tabs">
+      <button id="tabAssets" class="active">Assets</button>
+      <button id="tabText">Text overlays</button>
+    </div>
+
+    <div id="itemList" class="itemList"></div>
 
     <div class="fields">
       <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
       <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
-      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1" min="1"></div>
-      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1" min="1"></div>
-      <div id="stateBox" class="field stateBox"><label>Visual state</label><select id="stateSelect"></select></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1"></div>
+      <div id="stateBox" class="field stateBox"><label>Player state</label><select id="stateSelect"><option value="filled">Filled</option><option value="empty">Empty</option></select></div>
+
       <div id="textBox" class="textBox">
-        <div class="field full"><label>Text content</label><textarea id="textContent"></textarea></div>
-        <div class="field"><label>Font size (% of artboard width)</label><input id="fontSize" type="number" step="0.1" min="0.5"></div>
+        <div class="field full"><label>Text</label><textarea id="textContent"></textarea></div>
+        <div class="field"><label>Font size</label><input id="fontSize" type="number" step="0.1" min="0.5"></div>
         <div class="field"><label>Colour</label><input id="textColor" type="color"></div>
         <div class="field"><label>Weight</label><select id="textWeight"><option>500</option><option>600</option><option>700</option><option selected>800</option><option>900</option></select></div>
         <div class="field"><label>Align</label><select id="textAlign"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
       </div>
     </div>
 
-    <div class="actionGrid">
+    <div class="actions">
       <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
       <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
-      <button id="resetOne" class="danger">Reset selected</button><button id="resetAll" class="danger">Reset all</button>
+      <button id="resetOne" class="danger">Reset selected</button>
+      <button id="duplicateText">Duplicate text</button>
     </div>
 
-    <textarea id="json" spellcheck="false"></textarea>
-    <div class="note">The JSON now contains separate <strong>assets</strong> and <strong>text</strong> groups. Use the text overlays for names, track labels, lap numbers and status messages.</div>
+    <textarea id="json" class="code" spellcheck="false"></textarea>
+    <div class="note"><strong>Player name:</strong> position the single Player Name Template on Player 1. I’ll apply the same relative placement to Players 2–4 when I implement it. <strong>Track map:</strong> the preview is always circular-cropped and will stay circular while resizing.</div>
     <div id="status" class="status"></div>
   </aside>
 </div>
+
 <script>
-const PLAYER_STATES={empty:"05_player_slot_empty.png?v=1",filled:"04_player_panel.png?v=1"};
-const LAP_STATES={unselected:"10_lap_button_unselected.png?v=3",selected:"09_lap_button_selected.png?v=1"};
+const PLAYER_STATES={
+  filled:"04_player_panel.png?v=1",
+  empty:"05_player_slot_empty.png?v=1"
+};
 
 const ASSETS={
-  back:{label:"Back",src:"03_back_button.png?v=1",x:3.6,y:6.3,w:13,h:7.3,type:"normal"},
-  player1:{label:"Player 1 slot",x:7.9,y:22.1,w:39,h:7.6,type:"player",state:"filled"},
-  player2:{label:"Player 2 slot",x:50.2,y:22,w:43,h:7.6,type:"player",state:"empty"},
-  player3:{label:"Player 3 slot",x:6,y:30,w:43,h:7.6,type:"player",state:"empty"},
-  player4:{label:"Player 4 slot",x:50.2,y:30,w:43,h:7.6,type:"player",state:"empty"},
-  add:{label:"Add Player",src:"06_add_player_button.png?v=1",x:7.4,y:36.9,w:40.5,h:7.2,type:"normal"},
-  remove:{label:"Remove Player",src:"07_remove_player_button.png?v=1",x:52,y:35.9,w:39.6,h:9.3,type:"normal"},
-  track:{label:"Track card",src:"08_track_selection_card.png?v=1",x:4.2,y:52.1,w:91.8,h:14.5,type:"normal"},
-  lap1:{label:"Lap 1 button",x:6.2,y:73.3,w:16,h:6.5,type:"lap",state:"unselected"},
-  lap3:{label:"Lap 3 button",x:23.3,y:73,w:16,h:7.8,type:"lap",state:"selected"},
-  lap5:{label:"Lap 5 button",x:40.9,y:73.5,w:16,h:6.5,type:"lap",state:"unselected"},
-  lap7:{label:"Lap 7 button",x:58.5,y:73.5,w:16,h:6.5,type:"lap",state:"unselected"},
-  lap9:{label:"Lap 9 button",x:76,y:73.5,w:16,h:6.5,type:"lap",state:"unselected"},
-  start:{label:"Start Race",src:"11_start_race_button.png?v=1",x:6.9,y:81,w:86,h:13.5,type:"normal"}
+  back:{label:"Back button",src:"DR%20Back%20Button.png?v=1",x:3.2,y:3.0,w:33.5,h:7.0,type:"image"},
+  player1:{label:"Player slot 1",x:5.0,y:22.2,w:42.0,h:7.0,type:"player",state:"filled"},
+  player2:{label:"Player slot 2",x:50.0,y:22.2,w:42.0,h:7.0,type:"player",state:"empty"},
+  player3:{label:"Player slot 3",x:5.0,y:29.7,w:42.0,h:7.0,type:"player",state:"empty"},
+  player4:{label:"Player slot 4",x:50.0,y:29.7,w:42.0,h:7.0,type:"player",state:"empty"},
+  add:{label:"Add Player",src:"06_add_player_button.png?v=1",x:5.0,y:37.0,w:42.0,h:6.5,type:"image"},
+  remove:{label:"Remove Player",src:"07_remove_player_button.png?v=1",x:50.0,y:37.0,w:42.0,h:6.5,type:"image"},
+  trackMap:{label:"Track map circle",x:7.6,y:54.6,w:18.0,h:10.1,type:"circle"},
+  selectedLap:{label:"Selected lap pill",src:"Lap%20Pill%20Selected.png?v=1",x:23.0,y:74.2,w:15.5,h:4.8,type:"image"},
+  start:{label:"Start Race",src:"11_start_race_button.png?v=1",x:5.0,y:86.2,w:90.0,h:8.2,type:"image"}
 };
 
 const TEXT={
-  player1Name:{label:"Player 1 name",text:"Chip",x:23.0,y:23.6,w:20,h:3.0,font:2.2,color:"#ffffff",weight:"800",align:"left"},
-  player2Name:{label:"Player 2 name",text:"",x:64.0,y:23.6,w:20,h:3.0,font:2.2,color:"#ffffff",weight:"800",align:"left"},
-  player3Name:{label:"Player 3 name",text:"",x:20.0,y:31.6,w:22,h:3.0,font:2.2,color:"#ffffff",weight:"800",align:"left"},
-  player4Name:{label:"Player 4 name",text:"",x:64.0,y:31.6,w:20,h:3.0,font:2.2,color:"#ffffff",weight:"800",align:"left"},
-  trackName:{label:"Track name",text:"Random Track",x:31.0,y:56.2,w:44,h:3.2,font:2.5,color:"#ffffff",weight:"900",align:"left"},
-  trackHelp:{label:"Track helper",text:"Tap to choose track",x:31.0,y:59.4,w:42,h:2.4,font:1.5,color:"#55c5ff",weight:"800",align:"left"},
-  lap1Text:{label:"Lap 1 number",text:"1",x:10.5,y:74.4,w:7.0,h:3.0,font:2.5,color:"#ffffff",weight:"900",align:"center"},
-  lap3Text:{label:"Lap 3 number",text:"3",x:27.8,y:74.4,w:7.0,h:3.0,font:2.5,color:"#083b73",weight:"900",align:"center"},
-  lap5Text:{label:"Lap 5 number",text:"5",x:45.4,y:74.4,w:7.0,h:3.0,font:2.5,color:"#ffffff",weight:"900",align:"center"},
-  lap7Text:{label:"Lap 7 number",text:"7",x:63.0,y:74.4,w:7.0,h:3.0,font:2.5,color:"#ffffff",weight:"900",align:"center"},
-  lap9Text:{label:"Lap 9 number",text:"9",x:80.5,y:74.4,w:7.0,h:3.0,font:2.5,color:"#ffffff",weight:"900",align:"center"},
-  statusText:{label:"Status / error text",text:"",x:15,y:95,w:70,h:2.5,font:1.4,color:"#ffffff",weight:"700",align:"center"}
+  playerName:{label:"Player name template",text:"PLAYER NAME",x:21.0,y:23.7,w:21.0,h:2.8,font:2.2,color:"#ffffff",weight:"900",align:"left"},
+  trackName:{label:"Track name",text:"Random Track",x:32.0,y:55.7,w:46.0,h:3.2,font:2.4,color:"#ffffff",weight:"900",align:"left"},
+  trackHelp:{label:"Track helper text",text:"Tap to choose track",x:32.0,y:59.2,w:42.0,h:2.2,font:1.5,color:"#61d9ff",weight:"800",align:"left"},
+  lap1:{label:"Lap 1 number",text:"1",x:10.0,y:75.0,w:6.0,h:2.5,font:2.3,color:"#ffffff",weight:"900",align:"center"},
+  lap3:{label:"Lap 3 number",text:"3",x:27.8,y:75.0,w:6.0,h:2.5,font:2.3,color:"#173e72",weight:"900",align:"center"},
+  lap5:{label:"Lap 5 number",text:"5",x:45.6,y:75.0,w:6.0,h:2.5,font:2.3,color:"#ffffff",weight:"900",align:"center"},
+  lap7:{label:"Lap 7 number",text:"7",x:63.3,y:75.0,w:6.0,h:2.5,font:2.3,color:"#ffffff",weight:"900",align:"center"},
+  lap9:{label:"Lap 9 number",text:"9",x:81.0,y:75.0,w:6.0,h:2.5,font:2.3,color:"#ffffff",weight:"900",align:"center"},
+  status:{label:"Status / error text",text:"",x:15.0,y:95.0,w:70.0,h:2.5,font:1.4,color:"#ffffff",weight:"700",align:"center"}
 };
 
-const assetDefaults=JSON.parse(JSON.stringify(ASSETS));
-const textDefaults=JSON.parse(JSON.stringify(TEXT));
+const defaults={assets:JSON.parse(JSON.stringify(ASSETS)),text:JSON.parse(JSON.stringify(TEXT))};
 const assets=JSON.parse(JSON.stringify(ASSETS));
-const texts=JSON.parse(JSON.stringify(TEXT));
-const stage=document.getElementById("stage"),list=document.getElementById("assetList"),json=document.getElementById("json"),status=document.getElementById("status");
+const textItems=JSON.parse(JSON.stringify(TEXT));
+const stage=document.getElementById("stage"),list=document.getElementById("itemList"),json=document.getElementById("json"),status=document.getElementById("status");
 const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
 const stateBox=document.getElementById("stateBox"),stateSelect=document.getElementById("stateSelect");
 const textBox=document.getElementById("textBox");
 const textContent=document.getElementById("textContent"),fontSize=document.getElementById("fontSize"),textColor=document.getElementById("textColor"),textWeight=document.getElementById("textWeight"),textAlign=document.getElementById("textAlign");
-let selectedKind="asset",selectedKey="player1",action=null;
+let mode="assets",selected="back",action=null;
 
-function srcFor(a){if(a.type==="player")return PLAYER_STATES[a.state];if(a.type==="lap")return LAP_STATES[a.state];return a.src}
-function selectedObject(){return selectedKind==="asset"?assets[selectedKey]:texts[selectedKey]}
-
+function collection(){return mode==="assets"?assets:textItems}
+function current(){return collection()[selected]}
+function assetSrc(a){return a.type==="player"?PLAYER_STATES[a.state]:a.src}
+function circleHeight(width){return width*(941/1672)}
 function renderStage(){
-  stage.querySelectorAll(".asset,.textItem").forEach(x=>x.remove());
+  stage.querySelectorAll(".item").forEach(n=>n.remove());
+
   Object.entries(assets).forEach(([key,a])=>{
     const el=document.createElement("div");
-    el.className="asset "+(a.type==="lap"?"lap ":"")+(selectedKind==="asset"&&key===selectedKey?"selected":"");
-    el.dataset.kind="asset";el.dataset.key=key;
+    el.className="item asset "+(a.type==="circle"?"circleCrop ":"")+(mode==="assets"&&key===selected?"selected":"");
+    el.dataset.mode="assets";el.dataset.key=key;
     Object.assign(el.style,{left:a.x+"%",top:a.y+"%",width:a.w+"%",height:a.h+"%"});
-    el.innerHTML='<img src="'+srcFor(a)+'" alt=""><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    if(a.type==="circle"){
+      el.innerHTML='<div class="cropFrame"><svg viewBox="0 0 200 200" aria-hidden="true"><rect width="200" height="200" fill="#0b55be"/><path d="M35 126 C49 83 75 116 89 84 S132 57 150 82 S171 127 151 151" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><circle cx="35" cy="126" r="10" fill="#ffd719"/><circle cx="151" cy="151" r="10" fill="#58e7ff"/></svg></div><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span>';
+    }else{
+      el.innerHTML='<img src="'+assetSrc(a)+'" alt=""><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    }
     el.addEventListener("pointerdown",startPointer);stage.appendChild(el);
   });
-  Object.entries(texts).forEach(([key,t])=>{
+
+  Object.entries(textItems).forEach(([key,t])=>{
     const el=document.createElement("div");
-    el.className="textItem "+(selectedKind==="text"&&key===selectedKey?"selected":"");
-    el.dataset.kind="text";el.dataset.key=key;
+    el.className="item textItem "+(mode==="text"&&key===selected?"selected":"");
+    el.dataset.mode="text";el.dataset.key=key;
     Object.assign(el.style,{left:t.x+"%",top:t.y+"%",width:t.w+"%",height:t.h+"%"});
     const justify=t.align==="left"?"flex-start":t.align==="right"?"flex-end":"center";
-    el.innerHTML='<div class="textInner" style="font-size:'+t.font+'vw;color:'+t.color+';font-weight:'+t.weight+';justify-content:'+justify+';text-align:'+t.align+'">'+(t.text||"")+'</div><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    el.innerHTML='<div class="textInner" style="font-size:'+t.font+'vw;color:'+t.color+';font-weight:'+t.weight+';justify-content:'+justify+';text-align:'+t.align+'">'+(t.text||"[blank]")+'</div><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
     el.addEventListener("pointerdown",startPointer);stage.appendChild(el);
   });
 }
 function renderList(){
   list.innerHTML="";
-  Object.entries(assets).forEach(([key,a])=>{
-    const b=document.createElement("button");b.textContent="ASSET · "+a.label+(a.state?" · "+a.state:"");b.className=selectedKind==="asset"&&key===selectedKey?"active":"";b.onclick=()=>{selectedKind="asset";selectedKey=key;renderAll()};list.appendChild(b)
-  });
-  Object.entries(texts).forEach(([key,t])=>{
-    const b=document.createElement("button");b.textContent="TEXT · "+t.label;b.className=selectedKind==="text"&&key===selectedKey?"active":"";b.onclick=()=>{selectedKind="text";selectedKey=key;renderAll()};list.appendChild(b)
+  Object.entries(collection()).forEach(([key,item])=>{
+    const b=document.createElement("button");
+    b.textContent=item.label+(mode==="assets"&&item.state?" · "+item.state:"");
+    if(key===selected)b.classList.add("active");
+    b.onclick=()=>{selected=key;renderAll()};
+    list.appendChild(b);
   });
 }
 function renderFields(){
-  const a=selectedObject();["x","y","w","h"].forEach(k=>fields[k].value=Number(a[k]).toFixed(1));
-  if(selectedKind==="asset"){
+  const a=current();
+  ["x","y","w","h"].forEach(k=>fields[k].value=Number(a[k]).toFixed(1));
+  if(mode==="assets"){
     textBox.classList.remove("visible");
-    if(a.type==="player"||a.type==="lap"){
-      stateBox.classList.add("visible");stateSelect.innerHTML="";
-      const values=a.type==="player"?["empty","filled"]:["unselected","selected"];
-      values.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v[0].toUpperCase()+v.slice(1);o.selected=a.state===v;stateSelect.appendChild(o)})
-    }else stateBox.classList.remove("visible");
+    if(a.type==="player"){stateBox.classList.add("visible");stateSelect.value=a.state}else stateBox.classList.remove("visible");
   }else{
     stateBox.classList.remove("visible");textBox.classList.add("visible");
     textContent.value=a.text;fontSize.value=a.font;textColor.value=a.color;textWeight.value=a.weight;textAlign.value=a.align;
@@ -209,41 +218,56 @@ function renderFields(){
 }
 function output(){
   const out={assets:{},text:{}};
-  Object.entries(assets).forEach(([key,a])=>{out.assets[key]={x:+a.x.toFixed(1),y:+a.y.toFixed(1),width:+a.w.toFixed(1),height:+a.h.toFixed(1)};if(a.state)out.assets[key].state=a.state});
-  Object.entries(texts).forEach(([key,t])=>{out.text[key]={x:+t.x.toFixed(1),y:+t.y.toFixed(1),width:+t.w.toFixed(1),height:+t.h.toFixed(1),text:t.text,font:+Number(t.font).toFixed(1),color:t.color,weight:t.weight,align:t.align}});
+  Object.entries(assets).forEach(([k,a])=>{
+    out.assets[k]={x:+a.x.toFixed(1),y:+a.y.toFixed(1),width:+a.w.toFixed(1),height:+a.h.toFixed(1)};
+    if(a.state)out.assets[k].state=a.state;
+    if(a.type==="circle")out.assets[k].circularCrop=true;
+  });
+  Object.entries(textItems).forEach(([k,t])=>out.text[k]={x:+t.x.toFixed(1),y:+t.y.toFixed(1),width:+t.w.toFixed(1),height:+t.h.toFixed(1),text:t.text,font:+Number(t.font).toFixed(1),color:t.color,weight:t.weight,align:t.align});
   return out;
 }
 function renderJson(){json.value=JSON.stringify(output(),null,2)}
 function renderAll(){renderStage();renderList();renderFields();renderJson()}
-
-["x","y","w","h"].forEach(k=>fields[k].addEventListener("input",()=>{selectedObject()[k]=Number(fields[k].value)||0;renderAll()}));
-stateSelect.onchange=()=>{assets[selectedKey].state=stateSelect.value;renderAll()};
-textContent.addEventListener("input",()=>{texts[selectedKey].text=textContent.value;renderAll()});
-fontSize.addEventListener("input",()=>{texts[selectedKey].font=Number(fontSize.value)||1;renderAll()});
-textColor.addEventListener("input",()=>{texts[selectedKey].color=textColor.value;renderAll()});
-textWeight.addEventListener("change",()=>{texts[selectedKey].weight=textWeight.value;renderAll()});
-textAlign.addEventListener("change",()=>{texts[selectedKey].align=textAlign.value;renderAll()});
-
 function startPointer(e){
-  e.preventDefault();const el=e.currentTarget;selectedKind=el.dataset.kind;selectedKey=el.dataset.key;
-  const rect=stage.getBoundingClientRect(),a=selectedObject(),handle=e.target.closest(".handle");
-  action={id:e.pointerId,kind:selectedKind,key:selectedKey,mode:handle?"resize":"move",axis:handle?.dataset.resize||"",sx:e.clientX,sy:e.clientY,sw:rect.width,sh:rect.height,start:{...a}};
+  e.preventDefault();
+  const el=e.currentTarget;mode=el.dataset.mode;selected=el.dataset.key;
+  const a=current(),r=stage.getBoundingClientRect(),handle=e.target.closest(".handle");
+  action={id:e.pointerId,mode:handle?"resize":"move",axis:handle?.dataset.resize||"",sx:e.clientX,sy:e.clientY,sw:r.width,sh:r.height,start:{...a},kind:mode,key:selected};
   el.setPointerCapture?.(e.pointerId);renderList();renderFields()
 }
 window.addEventListener("pointermove",e=>{
-  if(!action||e.pointerId!==action.id)return;e.preventDefault();
-  const collection=action.kind==="asset"?assets:texts,a=collection[action.key],dx=(e.clientX-action.sx)/action.sw*100,dy=(e.clientY-action.sy)/action.sh*100;
-  if(action.mode==="move"){a.x=action.start.x+dx;a.y=action.start.y+dy}else{if(action.axis==="both"||action.axis==="x")a.w=Math.max(1,action.start.w+dx);if(action.axis==="both"||action.axis==="y")a.h=Math.max(1,action.start.h+dy)}
+  if(!action||e.pointerId!==action.id)return;
+  e.preventDefault();
+  const coll=action.kind==="assets"?assets:textItems,a=coll[action.key],dx=(e.clientX-action.sx)/action.sw*100,dy=(e.clientY-action.sy)/action.sh*100;
+  if(action.mode==="move"){a.x=action.start.x+dx;a.y=action.start.y+dy}
+  else{
+    if(action.axis==="both"||action.axis==="x")a.w=Math.max(1,action.start.w+dx);
+    if(action.axis==="both"||action.axis==="y")a.h=Math.max(1,action.start.h+dy);
+    if(a.type==="circle")a.h=circleHeight(a.w);
+  }
   renderAll()
 },{passive:false});
 window.addEventListener("pointerup",e=>{if(action&&e.pointerId===action.id)action=null});
 window.addEventListener("pointercancel",()=>action=null);
-function nudge(dx,dy){const a=selectedObject();a.x+=dx;a.y+=dy;renderAll()}
+
+["x","y","w","h"].forEach(k=>fields[k].addEventListener("input",()=>{
+  const a=current();a[k]=Number(fields[k].value)||0;if(a.type==="circle"&&(k==="w"||k==="h")){if(k==="w")a.h=circleHeight(a.w);else a.w=a.h*(1672/941)}renderAll()
+}));
+stateSelect.onchange=()=>{assets[selected].state=stateSelect.value;renderAll()};
+textContent.addEventListener("input",()=>{textItems[selected].text=textContent.value;renderAll()});
+fontSize.addEventListener("input",()=>{textItems[selected].font=Number(fontSize.value)||1;renderAll()});
+textColor.addEventListener("input",()=>{textItems[selected].color=textColor.value;renderAll()});
+textWeight.onchange=()=>{textItems[selected].weight=textWeight.value;renderAll()};
+textAlign.onchange=()=>{textItems[selected].align=textAlign.value;renderAll()};
+
+document.getElementById("tabAssets").onclick=()=>{mode="assets";selected=Object.keys(assets)[0];document.getElementById("tabAssets").classList.add("active");document.getElementById("tabText").classList.remove("active");renderAll()};
+document.getElementById("tabText").onclick=()=>{mode="text";selected=Object.keys(textItems)[0];document.getElementById("tabText").classList.add("active");document.getElementById("tabAssets").classList.remove("active");renderAll()};
+function nudge(dx,dy){const a=current();a.x+=dx;a.y+=dy;renderAll()}
 document.getElementById("up").onclick=()=>nudge(0,-.5);document.getElementById("down").onclick=()=>nudge(0,.5);document.getElementById("left").onclick=()=>nudge(-.5,0);document.getElementById("right").onclick=()=>nudge(.5,0);
-document.getElementById("resetOne").onclick=()=>{if(selectedKind==="asset")assets[selectedKey]=JSON.parse(JSON.stringify(assetDefaults[selectedKey]));else texts[selectedKey]=JSON.parse(JSON.stringify(textDefaults[selectedKey]));renderAll()};
-document.getElementById("resetAll").onclick=()=>{Object.keys(assets).forEach(k=>assets[k]=JSON.parse(JSON.stringify(assetDefaults[k])));Object.keys(texts).forEach(k=>texts[k]=JSON.parse(JSON.stringify(textDefaults[k])));renderAll()};
-document.getElementById("toggleSample").onclick=e=>{stage.classList.toggle("showSample");e.currentTarget.textContent=stage.classList.contains("showSample")?"Hide sample overlay":"Show sample overlay"};
-document.getElementById("copyJson").onclick=async()=>{renderJson();try{await navigator.clipboard.writeText(json.value)}catch{json.select();document.execCommand("copy")}status.textContent="Copied JSON.";setTimeout(()=>status.textContent="",1800)};
+document.getElementById("resetOne").onclick=()=>{if(mode==="assets")assets[selected]=JSON.parse(JSON.stringify(defaults.assets[selected]));else textItems[selected]=JSON.parse(JSON.stringify(defaults.text[selected]));renderAll()};
+document.getElementById("resetAll").onclick=()=>{Object.keys(assets).forEach(k=>assets[k]=JSON.parse(JSON.stringify(defaults.assets[k])));Object.keys(textItems).forEach(k=>textItems[k]=JSON.parse(JSON.stringify(defaults.text[k])));renderAll()};
+document.getElementById("duplicateText").onclick=()=>{if(mode!=="text")return;const source=textItems[selected],key=selected+"_copy";textItems[key]={...source,label:source.label+" copy",y:source.y+3};selected=key;renderAll()};
+document.getElementById("copyJson").onclick=async()=>{renderJson();try{await navigator.clipboard.writeText(json.value);status.textContent="Copied JSON."}catch{json.select();document.execCommand("copy");status.textContent="Copied JSON."}setTimeout(()=>status.textContent="",1800)};
 renderAll();
 </script>
 </body>
