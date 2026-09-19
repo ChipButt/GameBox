@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071e3c">
+<title>Disc Rally Pass & Play Layout Editor</title>
+<style>
+:root{--bg:#06182f;--panel:#092b50;--line:#1cc4ff;--gold:#ffd719;--text:#fff;--muted:#a8c9e5}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:12px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.editor{width:min(1240px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,590px) minmax(330px,1fr);gap:14px;align-items:start}
+.panel{background:linear-gradient(180deg,#0b315b,#072441);border:1px solid rgba(58,194,255,.35);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.previewPanel{padding:10px;position:sticky;top:10px}
+.previewHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.previewHead h1{margin:0;font-size:17px}
+.previewHead small{color:var(--muted);font-size:10px}
+.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px;overflow:hidden}
+.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
+.stageBg,.sampleRef{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.sampleRef{opacity:0;z-index:20}
+.stage.showSample .sampleRef{opacity:.42}
+.asset{position:absolute;z-index:5;cursor:move;touch-action:none;outline:1px dashed transparent}
+.asset.selected{outline:2px dashed var(--gold);outline-offset:1px}
+.asset img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
+.asset.lap img{border-radius:22%;overflow:hidden}
+.handle{position:absolute;width:20px;height:20px;border-radius:50%;background:var(--gold);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none}
+.asset.selected .handle{display:block}
+.handle.br{right:-10px;bottom:-10px;cursor:nwse-resize}
+.handle.r{right:-10px;top:calc(50% - 10px);cursor:ew-resize}
+.handle.b{bottom:-10px;left:calc(50% - 10px);cursor:ns-resize}
+.controls{padding:12px}
+.controls h2{margin:0 0 4px;font-size:18px}
+.controls>p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.45}
+.topActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
+.topActions button,.actionGrid button{min-height:40px;border:0;border-radius:9px;font-weight:800;color:#fff;background:#0d5685}
+.topActions .primary,.actionGrid .primary{background:var(--gold);color:#082747}
+.assetList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:255px;overflow:auto;padding-right:2px;margin-bottom:10px}
+.assetList button{min-height:38px;border:1px solid #1a6da6;border-radius:8px;background:#0a345d;color:white;font-size:11px;font-weight:800;padding:5px}
+.assetList button.active{background:#0e78b5;border-color:#5ee0ff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.field{display:grid;gap:3px}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
+.field input,.field select{width:100%;height:39px;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:0 9px;font-weight:750}
+.field.full{grid-column:1/-1}
+.stateBox{grid-column:1/-1;display:none}
+.stateBox.visible{display:grid}
+.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.actionGrid .danger{background:#783140}
+textarea{width:100%;min-height:235px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.note{margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,215,25,.08);color:#ffe778;font-size:10px;line-height:1.4}
+.status{min-height:18px;margin-top:7px;color:#75e5a6;font-size:11px;font-weight:800}
+@media(max-width:850px){body{padding:7px}.editor{grid-template-columns:1fr}.previewPanel{position:relative;top:auto}.stage{width:min(100%,440px)}}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="panel previewPanel">
+    <div class="previewHead">
+      <h1>Pass &amp; Play Layout</h1>
+      <small>drag · resize · switch states</small>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="stageBg" src="02_blank_ui.png?v=1" alt="">
+        <img class="sampleRef" src="01_sample_page.png?v=1" alt="">
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel controls">
+    <h2>Layout Editor</h2>
+    <p>The blank UI is locked. Position the separate assets over it. Player names and lap numbers are app-generated later, so they are intentionally not part of these image assets.</p>
+
+    <div class="topActions">
+      <button id="toggleSample">Show sample overlay</button>
+      <button id="copyJson" class="primary">Copy JSON</button>
+    </div>
+
+    <div id="assetList" class="assetList"></div>
+
+    <div class="fields">
+      <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
+      <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1" min="1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1" min="1"></div>
+      <div id="stateBox" class="field stateBox"><label>Visual state</label><select id="stateSelect"></select></div>
+    </div>
+
+    <div class="actionGrid">
+      <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
+      <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
+      <button id="resetOne" class="danger">Reset selected</button><button id="resetAll" class="danger">Reset all</button>
+    </div>
+
+    <textarea id="json" spellcheck="false"></textarea>
+    <div class="note">For player slots, switch <strong>Empty / Filled</strong> to check both graphics occupy the same space. For lap buttons, switch <strong>Unselected / Selected</strong>. The JSON includes every instance, its dimensions, and its state.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+<script>
+const PLAYER_STATES={
+  empty:"05_player_slot_empty.png?v=1",
+  filled:"04_player_panel.png?v=1"
+};
+const LAP_STATES={
+  unselected:"10_lap_button_unselected.png?v=1",
+  selected:"09_lap_button_selected.png?v=1"
+};
+
+const DEF={
+  back:{label:"Back",src:"03_back_button.png?v=1",x:3.6,y:6.3,w:13.0,h:7.3,type:"normal"},
+  player1:{label:"Player 1",x:6.0,y:22.0,w:43.0,h:7.6,type:"player",state:"filled"},
+  player2:{label:"Player 2",x:50.2,y:22.0,w:43.0,h:7.6,type:"player",state:"empty"},
+  player3:{label:"Player 3",x:6.0,y:30.0,w:43.0,h:7.6,type:"player",state:"empty"},
+  player4:{label:"Player 4",x:50.2,y:30.0,w:43.0,h:7.6,type:"player",state:"empty"},
+  add:{label:"Add Player",src:"06_add_player_button.png?v=1",x:6.0,y:38.2,w:43.0,h:6.2,type:"normal"},
+  remove:{label:"Remove Player",src:"07_remove_player_button.png?v=1",x:50.2,y:38.2,w:43.0,h:6.2,type:"normal"},
+  track:{label:"Track card",src:"08_track_selection_card.png?v=1",x:5.2,y:52.7,w:89.5,h:12.1,type:"normal"},
+  lap1:{label:"Lap 1",x:6.0,y:73.5,w:16.0,h:6.5,type:"lap",state:"unselected"},
+  lap3:{label:"Lap 3",x:23.5,y:73.5,w:16.0,h:6.5,type:"lap",state:"selected"},
+  lap5:{label:"Lap 5",x:41.0,y:73.5,w:16.0,h:6.5,type:"lap",state:"unselected"},
+  lap7:{label:"Lap 7",x:58.5,y:73.5,w:16.0,h:6.5,type:"lap",state:"unselected"},
+  lap9:{label:"Lap 9",x:76.0,y:73.5,w:16.0,h:6.5,type:"lap",state:"unselected"},
+  start:{label:"Start Race",src:"11_start_race_button.png?v=1",x:7.0,y:84.7,w:86.0,h:8.7,type:"normal"}
+};
+const defaults=JSON.parse(JSON.stringify(DEF));
+const state=JSON.parse(JSON.stringify(DEF));
+const stage=document.getElementById("stage");
+const list=document.getElementById("assetList");
+const json=document.getElementById("json");
+const status=document.getElementById("status");
+const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+const stateBox=document.getElementById("stateBox");
+const stateSelect=document.getElementById("stateSelect");
+let selected="player1",action=null;
+
+function srcFor(a){
+  if(a.type==="player")return PLAYER_STATES[a.state];
+  if(a.type==="lap")return LAP_STATES[a.state];
+  return a.src;
+}
+function renderStage(){
+  stage.querySelectorAll(".asset").forEach(x=>x.remove());
+  Object.entries(state).forEach(([key,a])=>{
+    const el=document.createElement("div");
+    el.className="asset "+(a.type==="lap"?"lap ":"")+(key===selected?"selected":"");
+    el.dataset.key=key;
+    Object.assign(el.style,{left:a.x+"%",top:a.y+"%",width:a.w+"%",height:a.h+"%"});
+    el.innerHTML='<img src="'+srcFor(a)+'" alt=""><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    el.addEventListener("pointerdown",startPointer);
+    stage.appendChild(el);
+  });
+}
+function renderList(){
+  list.innerHTML="";
+  Object.entries(state).forEach(([key,a])=>{
+    const b=document.createElement("button");
+    b.textContent=a.label+(a.state?" · "+a.state:"");
+    b.className=key===selected?"active":"";
+    b.onclick=()=>{selected=key;renderAll()};
+    list.appendChild(b);
+  });
+}
+function renderFields(){
+  const a=state[selected];
+  for(const k of ["x","y","w","h"])fields[k].value=Number(a[k]).toFixed(1);
+  if(a.type==="player"||a.type==="lap"){
+    stateBox.classList.add("visible");
+    stateSelect.innerHTML="";
+    const values=a.type==="player"?["empty","filled"]:["unselected","selected"];
+    values.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v[0].toUpperCase()+v.slice(1);o.selected=a.state===v;stateSelect.appendChild(o)});
+  }else stateBox.classList.remove("visible");
+}
+function output(){
+  const out={};
+  Object.entries(state).forEach(([key,a])=>{
+    out[key]={x:+a.x.toFixed(1),y:+a.y.toFixed(1),width:+a.w.toFixed(1),height:+a.h.toFixed(1)};
+    if(a.state)out[key].state=a.state;
+  });
+  return out;
+}
+function renderJson(){json.value=JSON.stringify(output(),null,2)}
+function renderAll(){renderStage();renderList();renderFields();renderJson()}
+["x","y","w","h"].forEach(k=>fields[k].addEventListener("input",()=>{state[selected][k]=Number(fields[k].value)||0;renderAll()}));
+stateSelect.onchange=()=>{state[selected].state=stateSelect.value;renderAll()};
+
+function startPointer(e){
+  e.preventDefault();
+  const el=e.currentTarget;
+  selected=el.dataset.key;
+  const rect=stage.getBoundingClientRect(),a=state[selected];
+  const handle=e.target.closest(".handle");
+  action={id:e.pointerId,mode:handle?"resize":"move",axis:handle?.dataset.resize||"",sx:e.clientX,sy:e.clientY,sw:rect.width,sh:rect.height,start:{...a}};
+  el.setPointerCapture?.(e.pointerId);
+  renderList();renderFields();
+}
+window.addEventListener("pointermove",e=>{
+  if(!action||e.pointerId!==action.id)return;
+  e.preventDefault();
+  const a=state[selected],dx=(e.clientX-action.sx)/action.sw*100,dy=(e.clientY-action.sy)/action.sh*100;
+  if(action.mode==="move"){a.x=action.start.x+dx;a.y=action.start.y+dy}
+  else{
+    if(action.axis==="both"||action.axis==="x")a.w=Math.max(2,action.start.w+dx);
+    if(action.axis==="both"||action.axis==="y")a.h=Math.max(1,action.start.h+dy);
+  }
+  renderAll();
+},{passive:false});
+window.addEventListener("pointerup",e=>{if(action&&e.pointerId===action.id)action=null});
+window.addEventListener("pointercancel",()=>action=null);
+
+function nudge(dx,dy){state[selected].x+=dx;state[selected].y+=dy;renderAll()}
+document.getElementById("up").onclick=()=>nudge(0,-.5);
+document.getElementById("down").onclick=()=>nudge(0,.5);
+document.getElementById("left").onclick=()=>nudge(-.5,0);
+document.getElementById("right").onclick=()=>nudge(.5,0);
+document.getElementById("resetOne").onclick=()=>{state[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
+document.getElementById("resetAll").onclick=()=>{Object.keys(state).forEach(k=>state[k]=JSON.parse(JSON.stringify(defaults[k])));renderAll()};
+document.getElementById("toggleSample").onclick=e=>{stage.classList.toggle("showSample");e.currentTarget.textContent=stage.classList.contains("showSample")?"Hide sample overlay":"Show sample overlay"};
+document.getElementById("copyJson").onclick=async()=>{
+  renderJson();
+  try{await navigator.clipboard.writeText(json.value)}catch{json.select();document.execCommand("copy")}
+  status.textContent="Copied JSON.";setTimeout(()=>status.textContent="",1800);
+};
+renderAll();
+</script>
+</body>
+</html>
