@@ -78,9 +78,7 @@ function renderPlayerPicks(){
   for(let i=0;i<4;i++){
     const person=map.get(picked[i]),slot=document.createElement('div');
     slot.className='passPlayPlayerSlot '+(person?'filled':'empty');
-    slot.innerHTML=person
-      ? `<img class="passPlaySlotAsset" src="04_player_panel.png?v=1" alt=""><strong>${esc(person.name)}</strong>`
-      : '<span class="passPlayEmptyPill"><i aria-hidden="true"></i><b>EMPTY</b></span>';
+    slot.innerHTML=`<img class="passPlaySlotAsset" src="${person?'04_player_panel.png?v=1':'05_player_slot_empty.png?v=1'}" alt="">${person?`<strong>${esc(person.name)}</strong>`:''}`;
     wrap.appendChild(slot);
   }
   const picker=$('passRosterOptions');
