@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=15">
+<link rel="stylesheet" href="disc-rally.css?v=16">
 </head>
 <body>
 <div class="discApp">
@@ -79,7 +79,7 @@
     <section id="trackSelectView" class="view menuScreen hidden">
       <div class="menuBackdrop"></div>
       <header class="whiteHeader">
-        <button class="circleBack" data-back="localSetup" type="button">‹</button>
+        <button id="trackSelectBack" class="circleBack" data-back="localSetup" type="button">‹</button>
         <h1>▱ TRACK SELECTION</h1>
       </header>
       <div id="trackGrid" class="trackGrid"></div>
@@ -113,13 +113,17 @@
         </label>
       </section>
 
-      <section class="setupPanel">
-        <div class="panelRibbon">TRACK</div>
-        <div id="hostTracks" class="hostTrackChoices"></div>
+      <section class="setupPanel trackSetupPanel hostTrackSetupPanel">
+        <div class="panelRibbon">▱ TRACK</div>
+        <button id="hostOpenTrackSelection" class="trackSummaryButton" type="button">
+          <span id="hostSelectedTrackIcon" class="summaryTrackIcon">?</span>
+          <span><strong id="hostSelectedTrackName">Random Track</strong><small>Tap to choose track</small></span>
+        </button>
       </section>
 
-      <section class="setupPanel compactSetup">
-        <label>LAPS
+      <section class="setupPanel compactSetup lapsSetupPanel hostLapsSetupPanel">
+        <div class="panelRibbon">LAPS</div>
+        <label>
           <select id="hostLaps">
             <option value="1">1 LAP</option>
             <option value="2" selected>2 LAPS</option>
@@ -127,6 +131,7 @@
           </select>
         </label>
       </section>
+      <div id="hostTracks" class="hidden"></div>
 
       <section class="setupPanel">
         <div class="panelRibbon">LOBBY</div>
@@ -234,6 +239,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=19"></script>
+<script src="disc-rally.js?v=20"></script>
 </body>
 </html>
