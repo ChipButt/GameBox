@@ -951,11 +951,11 @@ html,body{height:100%;overflow:hidden}
   top:75.4%;
   pointer-events:auto;
 }
-.passPlayLap1{left:6.6%}
-.passPlayLap3{left:24.4%}
-.passPlayLap5{left:41.6%}
-.passPlayLap7{left:58.4%}
-.passPlayLap9{left:75.6%}
+.passPlayLap1{left:6.6%}   /* lap1 text x 12.3 - 5.7 */
+.passPlayLap3{left:24.4%}  /* lap3 text x 30.1 - 5.7 */
+.passPlayLap5{left:41.6%}  /* lap5 text x 47.3 - 5.7 */
+.passPlayLap7{left:58.4%}  /* lap7 text x 64.1 - 5.7 */
+.passPlayLap9{left:75.6%}  /* lap9 text x 81.3 - 5.7 */
 .passPlaySelectedLap{
   position:absolute;
   inset:0;
@@ -968,7 +968,10 @@ html,body{height:100%;overflow:hidden}
 .passPlayLap.selected .passPlaySelectedLap{display:block}
 .passPlayLap>span{
   position:absolute;
-  inset:0;
+  left:33.3333%;
+  top:19.2982%;
+  width:35.0877%;
+  height:56.1404%;
   display:grid;
   place-items:center;
   color:#fff;
