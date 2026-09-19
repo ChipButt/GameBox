@@ -153,3 +153,31 @@
   .toyBox .gridlineHomeTile{min-height:140px}
   .toyBox .gridlineHomeLogo{height:78px}
 }
+
+
+/* Disc Rally now uses its dedicated game logo on the GameBox home screen. */
+.discRallyHomeTile{
+  justify-content:center;
+  text-align:center;
+  overflow:hidden;
+}
+.discRallyHomeLogo{
+  display:block;
+  width:min(100%,260px);
+  height:100px;
+  object-fit:contain;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+  filter:drop-shadow(0 6px 8px rgba(0,23,70,.22));
+}
+.toyBox .discRallyHomeTile{min-height:156px}
+.toyBox .discRallyHomeLogo{width:min(100%,280px);height:102px}
+.toyGameDisc .discRallyHomeTile small{
+  color:#fff;
+  text-shadow:0 2px 0 rgba(4,46,83,.55);
+}
+@media(max-width:560px){
+  .toyBox .discRallyHomeTile{min-height:140px}
+  .toyBox .discRallyHomeLogo{height:84px}
+}
