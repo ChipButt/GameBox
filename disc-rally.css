@@ -1112,3 +1112,183 @@ html,body{height:100%;overflow:hidden}
   box-sizing:border-box;
 }
 
+
+
+/* ===== Disc Rally asset-based Track Selection ===== */
+#trackSelectView.trackSelectionAssetScreen{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  background:#075fba;
+  overscroll-behavior:contain;
+}
+.trackSelectionArtboard{
+  position:relative;
+  left:50%;
+  width:max(100vw,calc(100dvh * 864 / 1536));
+  min-height:177.7778cqw;
+  height:177.7778cqw;
+  transform:translateX(-50%);
+  overflow:visible;
+  container-type:inline-size;
+}
+.trackSelectionShell{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:top center;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+}
+.trackSelectionBack{
+  position:absolute;
+  z-index:30;
+  left:2.8cqw;
+  top:3.5556cqw;
+  width:32.5cqw;
+  height:10.8444cqw;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.trackSelectionBack img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+.trackSelectionBack:active{transform:scale(.975)}
+
+.trackSelectionBanner{
+  position:absolute;
+  z-index:20;
+  left:-12.155cqw;
+  top:12.819cqw;
+  width:120.8217cqw;
+  height:28.0969cqw;
+  pointer-events:none;
+}
+/* The source PNG has a white canvas around the shaped banner.
+   Clip only that outside canvas; keep the banner's white face intact. */
+.trackSelectionBanner img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+  clip-path:polygon(
+    0% 54%,
+    2.5% 35%,
+    7% 25%,
+    23.5% 25%,
+    27% 33%,
+    97.5% 33%,
+    100% 49%,
+    97% 69%,
+    3% 69%
+  );
+  pointer-events:none;
+}
+
+.trackSelectionGrid{
+  position:absolute;
+  inset:0;
+  z-index:10;
+  pointer-events:none;
+}
+.trackSelectCard{
+  position:absolute;
+  width:27cqw;
+  height:40.5cqw;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  overflow:visible;
+  pointer-events:auto;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  container-type:inline-size;
+}
+.trackSelectCard>.trackSelectCardAsset{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:block;
+  pointer-events:none;
+}
+.trackSelectMap{
+  position:absolute;
+  left:14%;
+  top:10%;
+  width:72%;
+  height:58%;
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+}
+.trackSelectMap svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+}
+.trackSelectMap path{
+  fill:none;
+  stroke:#fff;
+  stroke-width:8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 1px 2px rgba(0,29,83,.28));
+}
+.trackSelectMap.random{
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:23cqw;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 2px 3px rgba(0,30,83,.45);
+}
+.trackSelectTitle{
+  position:absolute;
+  left:6%;
+  top:77%;
+  width:88%;
+  height:16%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:7.2cqw;
+  font-weight:800;
+  line-height:1;
+  text-align:center;
+  pointer-events:none;
+  text-shadow:0 2px 3px rgba(0,29,83,.55);
+}
+.trackSelectCard.selected .trackSelectTitle{
+  color:#fff;
+}
+.trackSelectCard:active{transform:scale(.985)}
