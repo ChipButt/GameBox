@@ -819,7 +819,7 @@ html,body{height:100%;overflow:hidden}
 .passPlayAsset:active,
 .passPlayLap:active{transform:scale(.985)}
 
-.passPlayBack{left:2.8%;top:2%;width:32.5%;height:6.1%}
+.passPlayBack{left:2.8%;top:2%;width:32.5%;aspect-ratio:1168 / 390}
 .passPlayAdd{left:8%;top:36.9%;width:42%;height:6.5%}
 .passPlayRemove{left:50.2%;top:36.6%;width:41.1%;height:7.2%}
 .passPlayStart{left:5%;top:81%;width:90%;height:14.4%}
@@ -1067,27 +1067,6 @@ html,body{height:100%;overflow:hidden}
 
 .passPlayBack>img{object-fit:contain!important}
 
-/* Robust crop for empty player graphic: show only the intended inner pill, never its grey canvas. */
-.passPlayPlayerSlot.empty .passPlaySlotAsset{display:none!important}
-.passPlayEmptyCrop{
-  position:absolute;
-  left:11%;
-  top:22%;
-  width:78%;
-  height:56%;
-  overflow:hidden;
-  border-radius:999px;
-  display:block;
-}
-.passPlayEmptyCrop img{
-  position:absolute;
-  width:128.21%;
-  height:178.57%;
-  left:-14.10%;
-  top:-39.29%;
-  max-width:none;
-  display:block;
-}
 
 /* Pass & Play lap buttons are visual hit areas only. Legacy lap styles must never show through. */
 .passPlayArtboard .passPlayLap,
@@ -1110,4 +1089,59 @@ html,body{height:100%;overflow:hidden}
 /* Picker is intentionally isolated from the old .rosterPicker system. */
 .passPlayRosterPicker{
   box-sizing:border-box;
+}
+
+/* Pass & Play empty slots: CSS-only pill, no image canvas/background. */
+.passPlayPlayerSlot,
+.passPlayPlayerSlot.empty{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  overflow:visible!important;
+}
+.passPlayPlayerSlot.empty .passPlaySlotAsset,
+.passPlayPlayerSlot.empty .passPlayEmptyCrop{
+  display:none!important;
+}
+.passPlayEmptyPill{
+  position:absolute;
+  left:8%;
+  top:20%;
+  width:84%;
+  height:60%;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:4.5%;
+  padding:0 7%;
+  background:
+    linear-gradient(180deg,rgba(10,103,213,.96),rgba(4,54,139,.98));
+  border:2px solid #25dfff;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.10),
+    inset 0 8px 18px rgba(255,255,255,.08),
+    0 0 8px rgba(0,220,255,.50);
+}
+.passPlayEmptyPill i{
+  width:23%;
+  aspect-ratio:1;
+  flex:0 0 auto;
+  border-radius:50%;
+  border:3px solid #fff;
+  box-shadow:
+    inset 0 0 0 5px rgba(122,174,216,.45),
+    0 0 5px rgba(255,255,255,.32);
+  background:rgba(16,83,146,.82);
+}
+.passPlayEmptyPill b{
+  color:#a9bad0;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:2.25cqw;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.01em;
+  white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,20,65,.55);
 }
