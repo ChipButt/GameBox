@@ -1292,3 +1292,99 @@ html,body{height:100%;overflow:hidden}
   color:#fff;
 }
 .trackSelectCard:active{transform:scale(.985)}
+
+
+/* ===== Disc Rally asset-based Local Multiplayer role selection ===== */
+#multiSetup.roleSelectionAssetScreen{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  background:#0868c5;
+}
+.roleSelectionArtboard{
+  position:relative;
+  left:50%;
+  width:max(100vw,calc(100dvh * 941 / 1672));
+  height:177.6833cqw;
+  transform:translateX(-50%);
+  overflow:hidden;
+  container-type:inline-size;
+}
+.roleSelectionShell{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:top center;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* Exact same geometry as the Track Selection back button. */
+.roleSelectionBack{
+  position:absolute;
+  z-index:30;
+  left:2.8cqw;
+  top:3.5556cqw;
+  width:32.5cqw;
+  height:10.8444cqw;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.roleSelectionBack img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+.roleSelectionBack:active{transform:scale(.975)}
+
+.roleSelectionChoice{
+  position:absolute;
+  z-index:20;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.roleSelectionChoice img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+}
+.roleSelectionChoice:active{transform:scale(.985)}
+.roleSelectionHost{
+  left:3.7cqw;
+  top:43.0cqw;
+  width:43.5cqw;
+  height:54.0cqw;
+}
+.roleSelectionJoin{
+  left:52.8cqw;
+  top:43.0cqw;
+  width:43.5cqw;
+  height:54.0cqw;
+}
