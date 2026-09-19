@@ -723,27 +723,28 @@ html,body{height:100%;overflow:hidden}
 }
 .discHomeAssetButton:active{transform:scale(.975)}
 .discHomeBack{
-  left:4.2%;
-  top:2.5%;
-  width:30.5%;
+  left:2.8%;
+  top:2%;
+  width:32.5%;
   aspect-ratio:1168 / 390;
 }
 .discHomePass{
-  left:6.5%;
-  top:49.0%;
-  width:41.0%;
+  left:5.3%;
+  top:49%;
+  width:44%;
   aspect-ratio:775 / 831;
 }
 .discHomeMulti{
-  right:5.6%;
-  top:49.0%;
-  width:42.5%;
+  left:51%;
+  right:auto;
+  top:49%;
+  width:44%;
   aspect-ratio:835 / 905;
 }
 .discHomeSettings{
-  left:21.4%;
-  top:85.8%;
-  width:57.1%;
+  left:19.4%;
+  top:85.2%;
+  width:60.7%;
   aspect-ratio:1122 / 336;
 }
 @media(min-width:760px){
