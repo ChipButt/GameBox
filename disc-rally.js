@@ -99,7 +99,7 @@ function renderTracks(containerId){
   if(containerId==='trackGrid'){
     const entries=[{id:'random',name:'Random Track',random:true},...TRACKS];
     const cols=3;
-    const x0=4,y0=27,colStep=31.5,rowStep=24.3813;
+    const x0=4,y0=23.7448,colStep=31.5,rowStep=24.3813;
     entries.forEach((entry,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
       const isSelected=entry.id===selectedTrack;
