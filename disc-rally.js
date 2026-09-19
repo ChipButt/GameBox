@@ -66,7 +66,7 @@ const trackPath=new Path2D();
 function showView(id){
   currentView=id;
   $$('.view').forEach(v=>v.classList.toggle('hidden',v.id!==id));
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,left:0,behavior:'instant'});
 }
 function selectedLocal(){
   const valid=new Set(roster().map(p=>p.id));
@@ -1052,13 +1052,12 @@ function leaveRace(){
 function bind(){
   renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();
 
-  $('localMode').onclick=()=>showView('passMenuView');
-  $('multiMode').onclick=()=>showView('multiSetup');
-  $('openSettings').onclick=()=>showView('settingsView');
-  $('newPassRace').onclick=$('newPassRaceBottom').onclick=()=>{
+  $('localMode').onclick=()=>{
     $('localStatus').textContent='';
     renderPlayerPicks();renderTrackSummary();showView('localSetup');
   };
+  $('multiMode').onclick=()=>showView('multiSetup');
+  $('openSettings').onclick=()=>showView('settingsView');
   $('openTrackSelection').onclick=()=>{renderTracks('trackGrid');showView('trackSelectView')};
 
   $$('[data-back]').forEach(b=>b.onclick=()=>{
