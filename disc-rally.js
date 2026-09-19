@@ -1109,7 +1109,10 @@ function bind(){
     showView(b.dataset.back);
   });
 
-  $('addPassPlayer').onclick=()=>$('passRosterOptions').classList.toggle('hidden');
+  $('addPassPlayer').onclick=e=>{
+    e.stopPropagation();
+    $('passRosterOptions').classList.toggle('hidden');
+  };
   $('removePassPlayer').onclick=()=>{
     const picked=selectedLocal();picked.pop();write(LOCAL_PICK_KEY,picked);renderPlayerPicks();
   };
@@ -1155,11 +1158,17 @@ function bind(){
 
   document.addEventListener('click',e=>{
     const host=e.target.closest('[data-host]');if(host){joinHost(host.dataset.host);return}
+    const picker=$('passRosterOptions');
     const player=e.target.closest('[data-pass-player]');
     if(player){
       let picked=selectedLocal(),id=player.dataset.passPlayer;
       if(picked.includes(id))picked=picked.filter(x=>x!==id);else if(picked.length<4)picked.push(id);
       write(LOCAL_PICK_KEY,picked);renderPlayerPicks();
+      picker?.classList.add('hidden');
+      return;
+    }
+    if(picker && !picker.classList.contains('hidden') && !e.target.closest('#passRosterOptions') && !e.target.closest('#addPassPlayer')){
+      picker.classList.add('hidden');
     }
   });
 
