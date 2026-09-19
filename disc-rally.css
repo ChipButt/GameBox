@@ -556,75 +556,76 @@ html,body{height:100%;overflow:hidden}
 }
 
 
-/* Host lobby: use the page comfortably while keeping all four racers visible. */
-#hostSetup .setupPanel{margin-bottom:10px}
+/* Host lobby: always reserve enough visible space for all four racers. */
+#hostSetup .setupPanel{margin-bottom:2px}
 #hostSetup .setupPanel:first-of-type{
-  padding-top:38px;
+  padding-top:34px;
 }
 #hostSetup .gameField{
-  padding:6px 10px 9px;
+  padding:4px 8px 6px;
 }
 #hostSetup .gameField select{
-  height:40px;
+  height:34px;
 }
 #hostSetup .hostTrackSetupPanel{
-  padding-top:40px;
+  padding-top:36px;
 }
 #hostSetup .hostTrackSetupPanel .trackSummaryButton{
-  min-height:74px;
-  padding:7px 14px;
+  min-height:62px;
+  padding:5px 12px;
 }
 #hostSetup .hostTrackSetupPanel .summaryTrackIcon{
-  width:62px;
-  height:54px;
-  font-size:52px;
+  width:54px;
+  height:48px;
+  font-size:48px;
 }
 #hostSetup .hostTrackSetupPanel .summaryTrackIcon svg{
-  width:60px;
-  height:50px;
+  width:52px;
+  height:44px;
 }
-#hostSetup .hostTrackSetupPanel .trackSummaryButton strong{font-size:19px}
-#hostSetup .hostTrackSetupPanel .trackSummaryButton small{font-size:12px}
+#hostSetup .hostTrackSetupPanel .trackSummaryButton strong{font-size:18px}
+#hostSetup .hostTrackSetupPanel .trackSummaryButton small{font-size:11px}
 
 #hostSetup .hostLapsSetupPanel{
-  padding:32px 8px 8px!important;
+  padding:29px 6px 6px!important;
 }
 #hostSetup .hostLapsSetupPanel .lapChoiceTitle{
-  top:5px;
-  font-size:15px;
+  top:4px;
+  font-size:14px;
 }
-#hostSetup .hostLapsSetupPanel .lapChoiceButtons{gap:6px}
+#hostSetup .hostLapsSetupPanel .lapChoiceButtons{gap:5px}
 #hostSetup .hostLapsSetupPanel .lapChoiceButton{
-  height:38px;
-  font-size:17px;
+  height:34px;
+  font-size:16px;
 }
 
-/* Four lobby rows remain visible at once, but are given enough height to breathe. */
+/* The lobby itself is sized for 4 rows, so the list never needs to scroll
+   just to see everyone in a full four-player race. */
 #hostSetup .setupPanel:has(#hostLobby){
-  padding-top:38px;
+  padding-top:34px;
 }
 #hostSetup .discoveryStrip{
-  min-height:34px;
-  margin:6px 8px;
-  padding:6px 8px;
+  min-height:30px;
+  margin:4px 6px;
+  padding:5px 7px;
 }
 #hostSetup #hostLobby{
-  height:140px;
-  max-height:140px;
+  height:124px;
+  max-height:124px;
   overflow:hidden;
   display:grid;
-  grid-template-rows:repeat(4,minmax(29px,1fr));
-  gap:5px;
-  padding:0 8px 8px;
+  grid-template-rows:repeat(4,minmax(26px,1fr));
+  gap:3px;
+  padding:0 6px 6px;
 }
 #hostSetup #hostLobby .lobbyPlayer{
   min-height:0;
   height:auto;
-  padding:6px 8px;
-  font-size:12px;
+  padding:4px 7px;
+  font-size:11px;
   align-items:center;
 }
-#hostSetup #hostLobby .lobbyPlayer small{font-size:11px}
+#hostSetup #hostLobby .lobbyPlayer small{font-size:10px}
 #hostSetup #hostLobby .empty{
   grid-row:1 / -1;
   display:grid;
@@ -632,33 +633,32 @@ html,body{height:100%;overflow:hidden}
   min-height:0;
 }
 #hostSetup #restartHostDiscovery{
-  min-height:40px;
-  height:40px;
+  min-height:34px;
+  height:34px;
   margin:0;
-  font-size:12px;
+  font-size:11px;
 }
 
-/* On genuinely short displays, compact just enough to preserve the one-page rule. */
 @media(max-height:760px){
-  #hostSetup .setupPanel{margin-bottom:7px}
-  #hostSetup .setupPanel:first-of-type{padding-top:34px}
-  #hostSetup .gameField{padding:4px 8px 6px}
-  #hostSetup .gameField select{height:35px}
-  #hostSetup .hostTrackSetupPanel{padding-top:36px}
-  #hostSetup .hostTrackSetupPanel .trackSummaryButton{min-height:64px}
-  #hostSetup .hostTrackSetupPanel .summaryTrackIcon{width:54px;height:46px}
-  #hostSetup .hostTrackSetupPanel .summaryTrackIcon svg{width:52px;height:44px}
-  #hostSetup .hostLapsSetupPanel{padding:29px 6px 6px!important}
-  #hostSetup .hostLapsSetupPanel .lapChoiceButton{height:34px}
-  #hostSetup .setupPanel:has(#hostLobby){padding-top:34px}
-  #hostSetup .discoveryStrip{min-height:30px;margin:4px 6px;padding:5px 7px}
+  #hostSetup .setupPanel{margin-bottom:2px}
+  #hostSetup .setupPanel:first-of-type{padding-top:31px}
+  #hostSetup .gameField{padding:3px 7px 5px}
+  #hostSetup .gameField select{height:31px}
+  #hostSetup .hostTrackSetupPanel{padding-top:32px}
+  #hostSetup .hostTrackSetupPanel .trackSummaryButton{min-height:54px}
+  #hostSetup .hostTrackSetupPanel .summaryTrackIcon{width:46px;height:40px}
+  #hostSetup .hostTrackSetupPanel .summaryTrackIcon svg{width:44px;height:38px}
+  #hostSetup .hostLapsSetupPanel{padding:27px 5px 5px!important}
+  #hostSetup .hostLapsSetupPanel .lapChoiceButton{height:31px}
+  #hostSetup .setupPanel:has(#hostLobby){padding-top:31px}
+  #hostSetup .discoveryStrip{min-height:27px;margin:3px 5px;padding:4px 6px}
   #hostSetup #hostLobby{
-    height:124px;
-    max-height:124px;
-    grid-template-rows:repeat(4,minmax(26px,1fr));
-    gap:3px;
-    padding:0 6px 6px;
+    height:112px;
+    max-height:112px;
+    grid-template-rows:repeat(4,minmax(24px,1fr));
+    gap:2px;
+    padding:0 5px 5px;
   }
-  #hostSetup #hostLobby .lobbyPlayer{padding:4px 7px;font-size:11px}
-  #hostSetup #restartHostDiscovery{min-height:34px;height:34px}
+  #hostSetup #hostLobby .lobbyPlayer{padding:3px 6px;font-size:10px}
+  #hostSetup #restartHostDiscovery{min-height:30px;height:30px}
 }
