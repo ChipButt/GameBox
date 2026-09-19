@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061b43">
+<title>Disc Rally Track Selection Layout Editor</title>
+<style>
+:root{--bg:#04152e;--panel:#082c55;--cyan:#22d8ff;--gold:#ffd91a;--muted:#a7c8e5}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:8px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.editor{width:min(1320px,100%);margin:auto;display:grid;grid-template-columns:minmax(340px,600px) minmax(340px,1fr);gap:12px;align-items:start}
+.panel{background:linear-gradient(180deg,#0a315e,#06233f);border:1px solid rgba(49,203,255,.35);border-radius:15px;box-shadow:0 18px 45px rgba(0,0,0,.28)}
+.preview{padding:9px;position:sticky;top:8px}
+.previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+.previewHead h1{margin:0;font-size:17px}
+.previewHead small{font-size:10px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#021127;border-radius:11px;padding:7px;overflow:auto}
+.stage{position:relative;width:min(100%,480px);aspect-ratio:864/1536;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+.item{position:absolute;z-index:10;cursor:move;touch-action:none}
+.item img{width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;-webkit-user-drag:none}
+.item.selected{outline:2px dashed var(--gold);outline-offset:2px}
+.handle{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid #fff;display:none;z-index:40;box-shadow:0 2px 7px rgba(0,0,0,.45)}
+.item.selected .handle{display:block}
+.handle.br{right:-8px;bottom:-8px;cursor:nwse-resize}
+.handle.r{right:-8px;top:calc(50% - 8px);cursor:ew-resize}
+.handle.b{bottom:-8px;left:calc(50% - 8px);cursor:ns-resize}
+
+.gridLayer{position:absolute;inset:0;z-index:4;pointer-events:none}
+.trackCard{position:absolute;pointer-events:none}
+.trackCard>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.trackMapPreview{position:absolute;border:1px dashed rgba(255,255,255,.85);background:rgba(16,92,180,.18);display:grid;place-items:center;color:#dff8ff;font-weight:900;font-size:8px;text-align:center;line-height:1.1;border-radius:4px}
+.trackMapPreview svg{width:72%;height:72%}
+.trackMapPreview path{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
+.trackTitlePreview{position:absolute;display:flex;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff;font-family:Fredoka,Inter,sans-serif}
+.trackCard.selectedCard .trackTitlePreview{color:#082b5c}
+.templateOverlay{position:absolute;z-index:25;pointer-events:none}
+.templateBox{position:absolute;border:2px dashed #ffe34c;background:rgba(255,221,35,.08)}
+.templateLabel{position:absolute;left:2px;top:2px;font:800 7px/1 Inter,sans-serif;color:#fff;background:rgba(3,25,57,.8);padding:2px 3px;border-radius:3px}
+.templateBox.mapRegion{border-color:#69f3ff;background:rgba(52,218,255,.08)}
+.templateBox.titleRegion{border-color:#ffe66a;background:rgba(255,220,42,.08)}
+
+.controls{padding:11px}
+.controls h2{margin:0 0 3px;font-size:18px}
+.controls>p{margin:0 0 9px;font-size:11px;color:var(--muted);line-height:1.4}
+.toolbar,.nudge{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+button{min-height:39px;border:0;border-radius:8px;background:#0c5787;color:#fff;font-weight:850}
+button.primary{background:var(--gold);color:#082a50}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-bottom:9px}
+.list button{min-height:37px;background:#0a365f;border:1px solid #176eaa;font-size:11px;padding:5px}
+.list button.active{background:#0f77b2;border-color:#69edff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.field{display:grid;gap:3px}
+.field.full{grid-column:1/-1}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:850;color:#9ec9e6}
+.field input,.field select,.field textarea{width:100%;border:1px solid #176194;border-radius:7px;background:#031a32;color:#fff;padding:7px 8px;font-weight:750}
+.field input,.field select{height:37px}
+.field textarea{min-height:54px;resize:vertical}
+.section{margin-top:9px;padding-top:9px;border-top:1px solid rgba(106,220,255,.18)}
+.section h3{margin:0 0 7px;font-size:12px;color:#dff8ff}
+.code{width:100%;min-height:320px;margin-top:9px;resize:vertical;border:1px solid #176194;border-radius:8px;background:#02162b;color:#dff8ff;padding:8px;font:10.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.note{margin-top:7px;padding:7px;border-radius:8px;background:rgba(255,217,26,.08);color:#ffe66f;font-size:10px;line-height:1.4}
+.status{min-height:17px;margin-top:6px;color:#78ebb1;font-size:11px;font-weight:800}
+@media(max-width:880px){body{padding:6px}.editor{grid-template-columns:1fr}.preview{position:relative;top:auto}.stage{width:min(100%,430px)}}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="panel preview">
+    <div class="previewHead">
+      <h1>Track Selection Layout</h1>
+      <small>864 × 1536 artboard</small>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="bg" src="track_selection_blank_ui_background.png?v=1" alt="">
+        <div id="gridLayer" class="gridLayer"></div>
+        <div id="templateOverlay" class="templateOverlay"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel controls">
+    <h2>Track Selection Editor</h2>
+    <p>Position the Back button and title banner, then tune the reusable card grid. The map-image box and map-title box are measured relative to each card so every future track inherits the same layout.</p>
+
+    <div class="toolbar">
+      <button id="copyJson" class="primary">Copy JSON</button>
+      <button id="resetAll">Reset all</button>
+    </div>
+
+    <div id="itemList" class="list"></div>
+
+    <div class="fields">
+      <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
+      <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1"></div>
+    </div>
+
+    <div class="nudge" style="margin-top:7px">
+      <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
+      <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
+    </div>
+
+    <div class="section">
+      <h3>Track-card grid</h3>
+      <div class="fields">
+        <div class="field"><label>Columns</label><input id="columns" type="number" min="1" max="4" step="1"></div>
+        <div class="field"><label>Preview cards</label><input id="cardCount" type="number" min="1" max="15" step="1"></div>
+        <div class="field"><label>Column gap %</label><input id="colGap" type="number" step="0.1"></div>
+        <div class="field"><label>Row gap %</label><input id="rowGap" type="number" step="0.1"></div>
+        <div class="field"><label>Selected card #</label><input id="selectedIndex" type="number" min="1" max="15" step="1"></div>
+        <div class="field"><label>Selected state</label><select id="showSelected"><option value="yes">Show gold selected card</option><option value="no">All blue</option></select></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Map image area inside every card</h3>
+      <div class="fields">
+        <div class="field"><label>Left % of card</label><input id="mapX" type="number" step="0.1"></div>
+        <div class="field"><label>Top % of card</label><input id="mapY" type="number" step="0.1"></div>
+        <div class="field"><label>Width % of card</label><input id="mapW" type="number" step="0.1"></div>
+        <div class="field"><label>Height % of card</label><input id="mapH" type="number" step="0.1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Map title inside every card</h3>
+      <div class="fields">
+        <div class="field"><label>Left % of card</label><input id="titleX" type="number" step="0.1"></div>
+        <div class="field"><label>Top % of card</label><input id="titleY" type="number" step="0.1"></div>
+        <div class="field"><label>Width % of card</label><input id="titleW" type="number" step="0.1"></div>
+        <div class="field"><label>Height % of card</label><input id="titleH" type="number" step="0.1"></div>
+        <div class="field"><label>Font (% of card width)</label><input id="titleFont" type="number" step="0.1"></div>
+        <div class="field"><label>Weight</label><select id="titleWeight"><option>500</option><option>600</option><option>700</option><option selected>800</option><option>900</option></select></div>
+        <div class="field"><label>Alignment</label><select id="titleAlign"><option value="left">Left</option><option value="center" selected>Centre</option><option value="right">Right</option></select></div>
+        <div class="field"><label>Colour</label><input id="titleColor" type="color"></div>
+        <div class="field full"><label>Preview title</label><input id="previewTitle" type="text"></div>
+      </div>
+    </div>
+
+    <textarea id="json" class="code" spellcheck="false"></textarea>
+    <div class="note">Extra tracks can continue onto later rows using the exported <strong>rowStep</strong>. The live page can scroll when additional rows extend below the initial screen.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const ASSETS={
+  back:{label:"Back button",src:"DR%20Back%20Button.png?v=1",x:2.8,y:2,w:32.5,h:6.1},
+  banner:{label:"Track Selection title banner",src:"track_selection_title_banner.png?v=1",x:8,y:9.5,w:84,h:15.75},
+  grid:{label:"Track-card grid",x:4,y:27,w:27,h:22.7813}
+};
+const defaults={
+  assets:JSON.parse(JSON.stringify(ASSETS)),
+  grid:{columns:3,count:9,colGap:4.5,rowGap:1.6,selectedIndex:1,showSelected:"yes"},
+  map:{x:14,y:10,w:72,h:58},
+  title:{x:6,y:77,w:88,h:16,font:7.2,weight:"800",align:"center",color:"#ffffff",preview:"Harbour Loop"}
+};
+const state=JSON.parse(JSON.stringify(defaults));
+const sampleTitles=["Random Track","Harbour Loop","Bumper Beware","Gold Rush","Switchback","Roundabout","Force Lightning","Future Track","Future Track"];
+const samplePaths=[
+ "M20 64 C27 38 42 59 51 39 S77 31 83 49 S75 73 61 71",
+ "M18 55 C18 31 75 29 82 52 S69 73 48 72 S18 70 18 55",
+ "M15 61 C21 35 34 49 45 37 S62 50 72 39 S88 47 82 65 S58 71 48 68 S22 76 15 61",
+ "M16 61 C19 41 30 48 40 38 S60 50 70 38 S87 48 82 66 S61 72 49 69 S23 76 16 61",
+ "M18 67 C26 50 17 42 31 35 S45 47 54 34 S72 44 64 53 S82 58 72 71 S50 65 42 72 S24 74 18 67"
+];
+
+let selected="back",pointerAction=null;
+const stage=document.getElementById("stage"),gridLayer=document.getElementById("gridLayer"),templateOverlay=document.getElementById("templateOverlay");
+const list=document.getElementById("itemList"),json=document.getElementById("json"),status=document.getElementById("status");
+const inputs={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+
+function n(v){return +Number(v).toFixed(4)}
+function current(){return state.assets[selected]}
+function pctPxX(p){return stage.clientWidth*p/100}
+function fontPx(){return pctPxX(state.assets.grid.w)*state.title.font/100}
+function titleJustify(){return state.title.align==="left"?"flex-start":state.title.align==="right"?"flex-end":"center"}
+
+function renderAssets(){
+  stage.querySelectorAll(".item").forEach(el=>el.remove());
+  ["back","banner","grid"].forEach(key=>{
+    const a=state.assets[key];
+    const el=document.createElement("div");
+    el.className="item"+(key===selected?" selected":"");
+    el.dataset.key=key;
+    Object.assign(el.style,{left:a.x+"%",top:a.y+"%",width:a.w+"%",height:a.h+"%"});
+    if(key==="grid"){
+      el.style.pointerEvents="auto";
+      el.style.background="rgba(255,215,26,.03)";
+      el.style.border="1px dashed rgba(255,220,50,.35)";
+      el.innerHTML='<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    }else{
+      el.innerHTML='<img src="'+a.src+'" alt=""><span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>';
+    }
+    el.addEventListener("pointerdown",startPointer);
+    stage.appendChild(el);
+  });
+}
+function renderGrid(){
+  gridLayer.innerHTML="";
+  const g=state.assets.grid, cols=Math.max(1,Math.round(state.grid.columns)), count=Math.max(1,Math.round(state.grid.count));
+  const rowStep=g.h+state.grid.rowGap, colStep=g.w+state.grid.colGap;
+  for(let i=0;i<count;i++){
+    const col=i%cols,row=Math.floor(i/cols);
+    const card=document.createElement("div");
+    const isSel=state.grid.showSelected==="yes" && i===state.grid.selectedIndex-1;
+    card.className="trackCard"+(isSel?" selectedCard":"");
+    Object.assign(card.style,{left:(g.x+col*colStep)+"%",top:(g.y+row*rowStep)+"%",width:g.w+"%",height:g.h+"%"});
+    const map=state.map,t=state.title;
+    const path=samplePaths[i%samplePaths.length];
+    const title=sampleTitles[i%sampleTitles.length];
+    card.innerHTML='<img src="'+(isSel?'track_card_selected_gold.png?v=1':'track_card_blue.png?v=1')+'" alt="">'+
+      '<div class="trackMapPreview" style="left:'+map.x+'%;top:'+map.y+'%;width:'+map.w+'%;height:'+map.h+'%"><svg viewBox="0 0 100 100"><path d="'+path+'"></path></svg></div>'+
+      '<div class="trackTitlePreview" style="left:'+t.x+'%;top:'+t.y+'%;width:'+t.w+'%;height:'+t.h+'%;font-size:'+fontPx()+'px;font-weight:'+t.weight+';justify-content:'+titleJustify()+';text-align:'+t.align+';color:'+(isSel?'#082b5c':t.color)+'">'+title+'</div>';
+    gridLayer.appendChild(card);
+  }
+  renderTemplate();
+}
+function renderTemplate(){
+  templateOverlay.innerHTML="";
+  const g=state.assets.grid,m=state.map,t=state.title;
+  Object.assign(templateOverlay.style,{left:g.x+"%",top:g.y+"%",width:g.w+"%",height:g.h+"%"});
+  templateOverlay.innerHTML=
+    '<div class="templateBox mapRegion" style="left:'+m.x+'%;top:'+m.y+'%;width:'+m.w+'%;height:'+m.h+'%"><span class="templateLabel">MAP IMAGE</span></div>'+
+    '<div class="templateBox titleRegion" style="left:'+t.x+'%;top:'+t.y+'%;width:'+t.w+'%;height:'+t.h+'%"><span class="templateLabel">MAP TITLE</span></div>';
+}
+function renderList(){
+  list.innerHTML="";
+  Object.entries(state.assets).forEach(([key,a])=>{
+    const b=document.createElement("button");b.textContent=a.label;
+    if(key===selected)b.classList.add("active");
+    b.onclick=()=>{selected=key;renderAll()};
+    list.appendChild(b);
+  });
+}
+function renderFields(){
+  const a=current();
+  ["x","y","w","h"].forEach(k=>inputs[k].value=Number(a[k]).toFixed(2));
+  document.getElementById("columns").value=state.grid.columns;
+  document.getElementById("cardCount").value=state.grid.count;
+  document.getElementById("colGap").value=state.grid.colGap;
+  document.getElementById("rowGap").value=state.grid.rowGap;
+  document.getElementById("selectedIndex").value=state.grid.selectedIndex;
+  document.getElementById("showSelected").value=state.grid.showSelected;
+  document.getElementById("mapX").value=state.map.x;document.getElementById("mapY").value=state.map.y;document.getElementById("mapW").value=state.map.w;document.getElementById("mapH").value=state.map.h;
+  document.getElementById("titleX").value=state.title.x;document.getElementById("titleY").value=state.title.y;document.getElementById("titleW").value=state.title.w;document.getElementById("titleH").value=state.title.h;
+  document.getElementById("titleFont").value=state.title.font;document.getElementById("titleWeight").value=state.title.weight;document.getElementById("titleAlign").value=state.title.align;document.getElementById("titleColor").value=state.title.color;document.getElementById("previewTitle").value=state.title.preview;
+}
+function output(){
+  const g=state.assets.grid;
+  return {
+    artboard:{width:864,height:1536},
+    background:"track_selection_blank_ui_background.png",
+    back:{x:n(state.assets.back.x),y:n(state.assets.back.y),width:n(state.assets.back.w),height:n(state.assets.back.h),asset:"DR Back Button.png"},
+    titleBanner:{x:n(state.assets.banner.x),y:n(state.assets.banner.y),width:n(state.assets.banner.w),height:n(state.assets.banner.h),asset:"track_selection_title_banner.png"},
+    cardGrid:{
+      x:n(g.x),y:n(g.y),cardWidth:n(g.w),cardHeight:n(g.h),
+      columns:Number(state.grid.columns),columnGap:n(state.grid.colGap),rowGap:n(state.grid.rowGap),
+      columnStep:n(g.w+state.grid.colGap),rowStep:n(g.h+state.grid.rowGap),
+      normalAsset:"track_card_blue.png",selectedAsset:"track_card_selected_gold.png",
+      scrollForAdditionalRows:true
+    },
+    mapImageRelativeToCard:{x:n(state.map.x),y:n(state.map.y),width:n(state.map.w),height:n(state.map.h)},
+    mapTitleRelativeToCard:{
+      x:n(state.title.x),y:n(state.title.y),width:n(state.title.w),height:n(state.title.h),
+      fontVsCardWidth:n(state.title.font),color:state.title.color,weight:state.title.weight,align:state.title.align
+    }
+  };
+}
+function renderJson(){json.value=JSON.stringify(output(),null,2)}
+function renderAll(){renderAssets();renderGrid();renderList();renderFields();renderJson()}
+function startPointer(e){
+  e.preventDefault();selected=e.currentTarget.dataset.key;
+  const a=current(),r=stage.getBoundingClientRect(),handle=e.target.closest(".handle");
+  pointerAction={id:e.pointerId,key:selected,mode:handle?"resize":"move",axis:handle?.dataset.resize||"",sx:e.clientX,sy:e.clientY,sw:r.width,sh:r.height,start:{...a}};
+  e.currentTarget.setPointerCapture?.(e.pointerId);renderList();renderFields()
+}
+window.addEventListener("pointermove",e=>{
+  if(!pointerAction||e.pointerId!==pointerAction.id)return;
+  e.preventDefault();
+  const a=state.assets[pointerAction.key],dx=(e.clientX-pointerAction.sx)/pointerAction.sw*100,dy=(e.clientY-pointerAction.sy)/pointerAction.sh*100;
+  if(pointerAction.mode==="move"){a.x=pointerAction.start.x+dx;a.y=pointerAction.start.y+dy}
+  else{
+    if(pointerAction.axis==="both"||pointerAction.axis==="x")a.w=Math.max(1,pointerAction.start.w+dx);
+    if(pointerAction.axis==="both"||pointerAction.axis==="y")a.h=Math.max(1,pointerAction.start.h+dy);
+  }
+  renderAll()
+},{passive:false});
+window.addEventListener("pointerup",e=>{if(pointerAction&&e.pointerId===pointerAction.id)pointerAction=null});
+window.addEventListener("pointercancel",()=>pointerAction=null);
+
+["x","y","w","h"].forEach(k=>inputs[k].addEventListener("input",()=>{current()[k]=Number(inputs[k].value)||0;renderAll()}));
+function bindNum(id,obj,key){document.getElementById(id).addEventListener("input",e=>{obj[key]=Number(e.target.value)||0;renderAll()})}
+bindNum("columns",state.grid,"columns");bindNum("cardCount",state.grid,"count");bindNum("colGap",state.grid,"colGap");bindNum("rowGap",state.grid,"rowGap");bindNum("selectedIndex",state.grid,"selectedIndex");
+document.getElementById("showSelected").onchange=e=>{state.grid.showSelected=e.target.value;renderAll()};
+bindNum("mapX",state.map,"x");bindNum("mapY",state.map,"y");bindNum("mapW",state.map,"w");bindNum("mapH",state.map,"h");
+bindNum("titleX",state.title,"x");bindNum("titleY",state.title,"y");bindNum("titleW",state.title,"w");bindNum("titleH",state.title,"h");bindNum("titleFont",state.title,"font");
+document.getElementById("titleWeight").onchange=e=>{state.title.weight=e.target.value;renderAll()};
+document.getElementById("titleAlign").onchange=e=>{state.title.align=e.target.value;renderAll()};
+document.getElementById("titleColor").oninput=e=>{state.title.color=e.target.value;renderAll()};
+document.getElementById("previewTitle").oninput=e=>{state.title.preview=e.target.value;renderAll()};
+function nudge(dx,dy){const a=current();a.x+=dx;a.y+=dy;renderAll()}
+document.getElementById("up").onclick=()=>nudge(0,-.5);document.getElementById("down").onclick=()=>nudge(0,.5);document.getElementById("left").onclick=()=>nudge(-.5,0);document.getElementById("right").onclick=()=>nudge(.5,0);
+document.getElementById("resetAll").onclick=()=>{Object.assign(state,JSON.parse(JSON.stringify(defaults)));selected="back";renderAll()};
+document.getElementById("copyJson").onclick=async()=>{renderJson();try{await navigator.clipboard.writeText(json.value);status.textContent="Copied JSON."}catch{json.select();document.execCommand("copy");status.textContent="Copied JSON."}setTimeout(()=>status.textContent="",1500)};
+window.addEventListener("resize",()=>{renderGrid();renderJson()});
+renderAll();
+</script>
+</body>
+</html>
