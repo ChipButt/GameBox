@@ -662,3 +662,99 @@ html,body{height:100%;overflow:hidden}
   #hostSetup #hostLobby .lobbyPlayer{padding:3px 6px;font-size:10px}
   #hostSetup #restartHostDiscovery{min-height:30px;height:30px}
 }
+
+
+/* ===== Disc Rally image-asset home screen ===== */
+#modeView.discHomeAssetScreen{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  background:#075fba;
+}
+.discHomeArtboard{
+  position:absolute;
+  z-index:1;
+  left:50%;
+  top:50%;
+  width:max(100vw,calc(100dvh * 941 / 1672));
+  aspect-ratio:941 / 1672;
+  transform:translate(-50%,-50%);
+  overflow:hidden;
+}
+.discHomeShell{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+}
+.discHomeAssetButton{
+  position:absolute;
+  z-index:3;
+  display:block;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  cursor:pointer;
+}
+.discHomeAssetButton img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+  filter:drop-shadow(0 .35% .4% rgba(0,28,74,.16));
+}
+.discHomeAssetButton:active{transform:scale(.975)}
+.discHomeBack{
+  left:3.7%;
+  top:2.0%;
+  width:30.5%;
+  aspect-ratio:1168 / 390;
+}
+.discHomePass{
+  left:5.0%;
+  top:47.2%;
+  width:41.3%;
+  aspect-ratio:775 / 831;
+}
+.discHomeMulti{
+  right:4.2%;
+  top:46.8%;
+  width:43.2%;
+  aspect-ratio:835 / 905;
+}
+.discHomeSettings{
+  left:20.0%;
+  top:84.0%;
+  width:60.0%;
+  aspect-ratio:1122 / 336;
+}
+@media(min-width:760px){
+  .discHomeArtboard{
+    width:max(760px,calc(100dvh * 941 / 1672));
+  }
+}
+
+/* Hide legacy generated home controls if stale markup is ever cached. */
+#modeView.discHomeAssetScreen .menuBackdrop,
+#modeView.discHomeAssetScreen .gameLogo,
+#modeView.discHomeAssetScreen .mainMenuArc,
+#modeView.discHomeAssetScreen .bottomMenuButton,
+#modeView.discHomeAssetScreen .gameboxHomeLink{display:none!important}
