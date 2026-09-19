@@ -1046,8 +1046,8 @@ html,body{height:100%;overflow:hidden}
 .passPlayStatus{
   position:absolute;
   z-index:9;
-  left:15%;
-  top:95%;
+  left:14.9%;
+  top:97%;
   width:70%;
   height:2.5%;
   display:flex;
