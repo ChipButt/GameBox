@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=14">
+<link rel="stylesheet" href="disc-rally.css?v=15">
 </head>
 <body>
 <div class="discApp">
@@ -32,53 +32,46 @@
       </button>
     </section>
 
-    <section id="passMenuView" class="view menuScreen hidden">
+    <section id="localSetup" class="view menuScreen setupScreen hidden">
       <div class="menuBackdrop"></div>
       <header class="whiteHeader">
         <button class="circleBack" data-back="modeView" type="button">‹</button>
         <h1>🏁 PASS &amp; PLAY</h1>
       </header>
-      <div class="sectionRibbon">PASS &amp; PLAY</div>
-      <button id="newPassRace" class="wideChoice" type="button">🏁 <strong>Start a New Race!</strong></button>
-      <button id="newPassRaceBottom" class="fixedBottomAction" type="button">🏁 NEW RACE</button>
-    </section>
 
-    <section id="localSetup" class="view menuScreen hidden">
-      <div class="menuBackdrop"></div>
-      <header class="whiteHeader">
-        <button class="circleBack" data-back="passMenuView" type="button">‹</button>
-        <h1>🏁 NEW PASS &amp; PLAY</h1>
-      </header>
+      <div class="setupScreenBody">
+        <section class="setupPanel playersSetupPanel">
+          <div class="panelRibbon">♟ PLAYERS</div>
+          <div id="localPlayers" class="playerSlots"></div>
+          <div id="passRosterOptions" class="rosterPicker hidden"></div>
+          <div class="playerSetupActions">
+            <button id="addPassPlayer" type="button"><span>+</span> ADD PLAYER</button>
+            <button id="removePassPlayer" type="button"><span>−</span> REMOVE PLAYER</button>
+          </div>
+        </section>
 
-      <section class="setupPanel trackSetupPanel">
-        <div class="panelRibbon">▱ TRACK SELECTION</div>
-        <button id="openTrackSelection" class="trackSummaryButton" type="button">
-          <span id="selectedTrackIcon" class="summaryTrackIcon">?</span>
-          <span><strong id="selectedTrackName">Random Track</strong><small>Tap to choose track</small></span>
-        </button>
-      </section>
+        <section class="setupPanel trackSetupPanel">
+          <div class="panelRibbon">▱ TRACK</div>
+          <button id="openTrackSelection" class="trackSummaryButton" type="button">
+            <span id="selectedTrackIcon" class="summaryTrackIcon">?</span>
+            <span><strong id="selectedTrackName">Random Track</strong><small>Tap to choose track</small></span>
+          </button>
+        </section>
 
-      <section class="setupPanel playersSetupPanel">
-        <div class="panelRibbon">♟ PLAYERS</div>
-        <div id="localPlayers" class="playerSlots"></div>
-        <div id="passRosterOptions" class="rosterPicker hidden"></div>
-        <div class="playerSetupActions">
-          <button id="addPassPlayer" type="button"><span>+</span> ADD PLAYER</button>
-          <button id="removePassPlayer" type="button"><span>−</span> REMOVE PLAYER</button>
-        </div>
-      </section>
+        <section class="setupPanel compactSetup lapsSetupPanel">
+          <div class="panelRibbon">LAPS</div>
+          <label>
+            <select id="localLaps">
+              <option value="1">1 LAP</option>
+              <option value="2" selected>2 LAPS</option>
+              <option value="3">3 LAPS</option>
+            </select>
+          </label>
+        </section>
 
-      <section class="setupPanel compactSetup">
-        <label>LAPS
-          <select id="localLaps">
-            <option value="1">1 LAP</option>
-            <option value="2" selected>2 LAPS</option>
-            <option value="3">3 LAPS</option>
-          </select>
-        </label>
-      </section>
+        <div id="localStatus" class="status"></div>
+      </div>
 
-      <div id="localStatus" class="status"></div>
       <button id="startLocal" class="fixedBottomAction" type="button">🏁 START RACE!</button>
       <div id="localTracks" class="hidden"></div>
     </section>
@@ -241,6 +234,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=18"></script>
+<script src="disc-rally.js?v=19"></script>
 </body>
 </html>
