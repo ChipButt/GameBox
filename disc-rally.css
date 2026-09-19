@@ -819,7 +819,7 @@ html,body{height:100%;overflow:hidden}
 .passPlayAsset:active,
 .passPlayLap:active{transform:scale(.985)}
 
-.passPlayBack{left:2.8%;top:2%;width:32.5%;height:7%}
+.passPlayBack{left:2.8%;top:2%;width:32.5%;height:auto;aspect-ratio:1168 / 390}
 .passPlayAdd{left:8%;top:36.9%;width:42%;height:6.5%}
 .passPlayRemove{left:50.2%;top:36.6%;width:41.1%;height:7.2%}
 .passPlayStart{left:5%;top:81%;width:90%;height:14.4%}
@@ -843,6 +843,9 @@ html,body{height:100%;overflow:hidden}
   height:100%;
   display:block;
   object-fit:fill;
+}
+.passPlayPlayerSlot.empty .passPlaySlotAsset{
+  clip-path:inset(22% 11% 22% 11% round 999px);
 }
 .passPlayPlayerSlot strong{
   position:absolute;
@@ -908,6 +911,7 @@ html,body{height:100%;overflow:hidden}
   height:3.5%;
   display:flex;
   align-items:center;
+  justify-content:center;
   z-index:7;
   pointer-events:none;
   color:#fff;
@@ -915,6 +919,7 @@ html,body{height:100%;overflow:hidden}
   font-weight:900;
   font-size:3.5cqw;
   line-height:1;
+  text-align:center;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -956,6 +961,15 @@ html,body{height:100%;overflow:hidden}
 .passPlayLap5{left:41.6%}  /* lap5 text x 47.3 - 5.7 */
 .passPlayLap7{left:58.4%}  /* lap7 text x 64.1 - 5.7 */
 .passPlayLap9{left:75.6%}  /* lap9 text x 81.3 - 5.7 */
+.passPlayArtboard .passPlayLap,
+.passPlayArtboard .passPlayLap.selected{
+  min-width:0;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit;
+}
 .passPlaySelectedLap{
   position:absolute;
   inset:0;
@@ -993,6 +1007,11 @@ html,body{height:100%;overflow:hidden}
   left:8%;
   right:8%;
   top:35%;
+  bottom:auto;
+  height:auto;
+  min-height:0;
+  max-height:28%;
+  overflow:auto;
   margin:0;
   padding:10px;
   border-radius:14px;
@@ -1000,16 +1019,22 @@ html,body{height:100%;overflow:hidden}
   border:2px solid #20c8ff;
   display:flex;
   flex-wrap:wrap;
+  align-items:flex-start;
+  align-content:flex-start;
   gap:7px;
   box-shadow:0 8px 24px rgba(0,0,0,.35);
 }
 .passPlayRosterPicker.hidden{display:none}
 .passPlayRosterPicker button{
+  flex:0 0 auto;
+  width:auto;
+  height:auto;
+  min-height:36px;
   border:2px solid #1598cf;
   border-radius:999px;
   background:#0a4f79;
   color:#fff;
-  padding:7px 11px;
+  padding:7px 14px;
   font-weight:800;
 }
 .passPlayRosterPicker button.selected{
