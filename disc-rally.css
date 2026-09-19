@@ -819,7 +819,7 @@ html,body{height:100%;overflow:hidden}
 .passPlayAsset:active,
 .passPlayLap:active{transform:scale(.985)}
 
-.passPlayBack{left:2.8%;top:2%;width:32.5%;height:auto;aspect-ratio:1168 / 390}
+.passPlayBack{left:2.8%;top:2%;width:32.5%;height:6.1%}
 .passPlayAdd{left:8%;top:36.9%;width:42%;height:6.5%}
 .passPlayRemove{left:50.2%;top:36.6%;width:41.1%;height:7.2%}
 .passPlayStart{left:5%;top:81%;width:90%;height:14.4%}
@@ -1063,4 +1063,51 @@ html,body{height:100%;overflow:hidden}
 
 @media(min-width:760px){
   .passPlayArtboard{width:max(760px,calc(100dvh * 941 / 1672))}
+}
+
+.passPlayBack>img{object-fit:contain!important}
+
+/* Robust crop for empty player graphic: show only the intended inner pill, never its grey canvas. */
+.passPlayPlayerSlot.empty .passPlaySlotAsset{display:none!important}
+.passPlayEmptyCrop{
+  position:absolute;
+  left:11%;
+  top:22%;
+  width:78%;
+  height:56%;
+  overflow:hidden;
+  border-radius:999px;
+  display:block;
+}
+.passPlayEmptyCrop img{
+  position:absolute;
+  width:128.21%;
+  height:178.57%;
+  left:-14.10%;
+  top:-39.29%;
+  max-width:none;
+  display:block;
+}
+
+/* Pass & Play lap buttons are visual hit areas only. Legacy lap styles must never show through. */
+.passPlayArtboard .passPlayLap,
+.passPlayArtboard .passPlayLap.selected,
+.passPlayArtboard .passPlayLap:active{
+  min-width:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  transform:none!important;
+  padding:0!important;
+}
+
+/* Keep the chosen lap graphic as the only selected-state artwork. */
+.passPlayArtboard .passPlayLap .passPlaySelectedLap{display:none}
+.passPlayArtboard .passPlayLap.selected .passPlaySelectedLap{display:block}
+
+/* Picker is intentionally isolated from the old .rosterPicker system. */
+.passPlayRosterPicker{
+  box-sizing:border-box;
 }
