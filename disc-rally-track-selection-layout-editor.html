@@ -23,6 +23,9 @@ button{cursor:pointer}
 .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
 .item{position:absolute;z-index:10;cursor:move;touch-action:none}
 .item img{width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;-webkit-user-drag:none}
+.item[data-key="banner"] img{
+  clip-path:polygon(0% 54%,2.5% 35%,7% 25%,23.5% 25%,27% 33%,97.5% 33%,100% 49%,97% 69%,3% 69%);
+}
 .item.selected{outline:2px dashed var(--gold);outline-offset:2px}
 .handle{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid #fff;display:none;z-index:40;box-shadow:0 2px 7px rgba(0,0,0,.45)}
 .item.selected .handle{display:block}
@@ -153,7 +156,7 @@ button.primary{background:var(--gold);color:#082a50}
 <script>
 const ASSETS={
   back:{label:"Back button",src:"DR%20Back%20Button.png?v=1",x:2.8,y:2,w:32.5,h:6.1},
-  banner:{label:"Track Selection title banner",src:"track_selection_title_banner.png?v=1",x:8,y:9.5,w:84,h:15.75},
+  banner:{label:"Track Selection title banner",src:"track_selection_title_banner.png?v=1",x:-12.155,y:7.2107,w:120.8217,h:15.8045},
   grid:{label:"Track-card grid",x:4,y:27,w:27,h:22.7813}
 };
 const defaults={
