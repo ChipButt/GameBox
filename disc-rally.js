@@ -66,7 +66,7 @@ const trackPath=new Path2D();
 function showView(id){
   currentView=id;
   $$('.view').forEach(v=>v.classList.toggle('hidden',v.id!==id));
-  window.scrollTo({top:0,left:0,behavior:'instant'});
+  window.scrollTo(0,0);
 }
 function selectedLocal(){
   const valid=new Set(roster().map(p=>p.id));
@@ -138,7 +138,7 @@ function renderLapChoices(){
     btn.classList.toggle('selected',isSelected);
     btn.setAttribute('aria-pressed',isSelected?'true':'false');
     const img=btn.querySelector('img');
-    if(img)img.src=isSelected?'09_lap_button_selected.png?v=1':'10_lap_button_unselected.png?v=2';
+    if(img)img.src=isSelected?'09_lap_button_selected.png?v=1':'10_lap_button_unselected.png?v=3';
   });
 }
 function setLapCount(laps){
@@ -1077,7 +1077,17 @@ function openTrackPicker(returnView){
   showView('trackSelectView');
 }
 function bind(){
-  renderPlayerPicks();syncPlayerSelects();renderTracks('localTracks');renderTracks('hostTracks');renderTracks('trackGrid');renderTrackSummary();renderLapChoices();
+  try{
+    renderPlayerPicks();
+    syncPlayerSelects();
+    renderTracks('localTracks');
+    renderTracks('hostTracks');
+    renderTracks('trackGrid');
+    renderTrackSummary();
+    renderLapChoices();
+  }catch(err){
+    console.error('Disc Rally initial setup render failed',err);
+  }
 
   $('localMode').onclick=()=>{
     $('localStatus').textContent='';
