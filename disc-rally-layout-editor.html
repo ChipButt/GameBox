@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071e3c">
+<title>Disc Rally Home Layout Editor</title>
+<style>
+:root{
+  --bg:#071e3c;
+  --panel:#0b2e55;
+  --panel2:#0f3f72;
+  --line:#1db9ff;
+  --text:#fff;
+  --muted:#a9c6df;
+  --gold:#ffd41a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:14px}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.editor{
+  width:min(1180px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:minmax(300px,560px) minmax(300px,1fr);
+  gap:16px;
+  align-items:start;
+}
+.previewPanel,.controls{
+  background:linear-gradient(180deg,#0b315c,#082546);
+  border:1px solid rgba(65,190,255,.35);
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.28);
+}
+.previewPanel{padding:12px;position:sticky;top:12px}
+.previewHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.previewHeader h1{margin:0;font-size:18px}
+.previewHeader span{font-size:11px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#04182e;border-radius:14px;padding:10px;overflow:hidden}
+.stage{
+  position:relative;
+  width:min(100%,520px);
+  aspect-ratio:941/1672;
+  overflow:hidden;
+  background:#0864bd;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.asset{
+  position:absolute;
+  border:1px dashed transparent;
+  cursor:move;
+  touch-action:none;
+}
+.asset.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(255,212,26,.35);
+}
+.asset img{
+  width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;
+  -webkit-user-drag:none;
+}
+.resizeHandle{
+  position:absolute;
+  width:22px;height:22px;
+  right:-11px;bottom:-11px;
+  border-radius:50%;
+  border:2px solid #fff;
+  background:var(--gold);
+  box-shadow:0 2px 7px rgba(0,0,0,.4);
+  cursor:nwse-resize;
+  display:none;
+}
+.asset.selected .resizeHandle{display:block}
+.controls{padding:14px}
+.controls h2{margin:0 0 5px;font-size:18px}
+.controls p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.45}
+.assetTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.assetTabs button{
+  min-height:42px;border-radius:10px;border:1px solid #1d6ca7;background:#0c355f;color:#fff;font-weight:800;padding:7px 8px
+}
+.assetTabs button.active{background:#0e76b3;border-color:#50d1ff;color:#fff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.field{display:grid;gap:4px}
+.field label{font-size:10px;font-weight:800;color:#9fcae8;text-transform:uppercase;letter-spacing:.06em}
+.field input{
+  width:100%;height:42px;border:1px solid #195d91;border-radius:9px;background:#061c34;color:#fff;padding:0 10px;font-weight:750
+}
+.field.full{grid-column:1/-1}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.actions button{
+  min-height:44px;border:0;border-radius:10px;font-weight:850;background:#137ab4;color:#fff;padding:8px
+}
+.actions button.primary{background:var(--gold);color:#062848}
+.actions button.secondary{background:#0d416d}
+.actions button.danger{background:#7a3240}
+textarea{
+  width:100%;min-height:210px;margin-top:12px;resize:vertical;
+  border:1px solid #195d91;border-radius:10px;background:#04172c;color:#dff4ff;
+  padding:10px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace
+}
+.hint{
+  margin-top:10px;padding:9px 10px;border-radius:9px;background:rgba(255,212,26,.09);
+  color:#ffe77c;font-size:11px;line-height:1.45
+}
+.status{min-height:20px;margin-top:8px;color:#7fe1ae;font-size:12px;font-weight:800}
+@media(max-width:820px){
+  body{padding:8px}
+  .editor{grid-template-columns:1fr}
+  .previewPanel{position:relative;top:auto}
+  .stage{width:min(100%,430px)}
+  .controls{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="previewPanel">
+    <div class="previewHeader">
+      <h1>Disc Rally Home Layout</h1>
+      <span>Drag assets · resize from yellow handle</span>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="stageBg" src="Blank%20UI.png?v=1" alt="">
+      </div>
+    </div>
+  </section>
+
+  <aside class="controls">
+    <h2>Layout Editor</h2>
+    <p>Select an asset, drag it on the preview or edit the exact percentages. The JSON is updated live and matches the coordinate system used by the Disc Rally home screen.</p>
+
+    <div id="assetTabs" class="assetTabs"></div>
+
+    <div class="fields">
+      <div class="field"><label for="x">Left %</label><input id="x" type="number" min="-20" max="120" step="0.1"></div>
+      <div class="field"><label for="y">Top %</label><input id="y" type="number" min="-20" max="120" step="0.1"></div>
+      <div class="field"><label for="w">Width %</label><input id="w" type="number" min="1" max="150" step="0.1"></div>
+      <div class="field"><label for="h">Height %</label><input id="h" type="number" step="0.1" disabled></div>
+    </div>
+
+    <div class="actions">
+      <button id="nudgeUp" class="secondary">↑ 0.5%</button>
+      <button id="nudgeDown" class="secondary">↓ 0.5%</button>
+      <button id="nudgeLeft" class="secondary">← 0.5%</button>
+      <button id="nudgeRight" class="secondary">→ 0.5%</button>
+      <button id="resetAsset" class="danger">Reset selected</button>
+      <button id="resetAll" class="danger">Reset all</button>
+      <button id="copyJson" class="primary" style="grid-column:1/-1">Copy JSON</button>
+    </div>
+
+    <textarea id="json" spellcheck="false"></textarea>
+    <div class="hint">When you're happy with it, tap <strong>Copy JSON</strong> and paste the whole JSON block into ChatGPT. I can apply those exact values to the live GameBox page.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const ASSET_DEFS = {
+  back: {
+    label: "GameBox back",
+    src: "GameBox%20back%20button.png?v=1",
+    x: 4.2, y: 2.5, w: 30.5,
+    ratio: 1168/390
+  },
+  pass: {
+    label: "Pass & Play",
+    src: "Pass%20%26%20Play%20button.png?v=1",
+    x: 6.5, y: 49.0, w: 41.0,
+    ratio: 775/831
+  },
+  multi: {
+    label: "Local Multiplayer",
+    src: "Local%20Multiplayer%20button.png?v=1",
+    x: 51.9, y: 49.0, w: 42.5,
+    ratio: 835/905
+  },
+  settings: {
+    label: "Settings",
+    src: "Settings%20button.png?v=1",
+    x: 21.4, y: 85.8, w: 57.1,
+    ratio: 1122/336
+  }
+};
+const defaults=JSON.parse(JSON.stringify(ASSET_DEFS));
+const state=JSON.parse(JSON.stringify(ASSET_DEFS));
+const stage=document.getElementById("stage");
+const tabs=document.getElementById("assetTabs");
+const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+const json=document.getElementById("json");
+const status=document.getElementById("status");
+let selected="pass";
+let action=null;
+
+function heightPct(a){
+  const stageAspect=941/1672;
+  return a.w * stageAspect / a.ratio;
+}
+function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
+function renderAssets(){
+  stage.querySelectorAll(".asset").forEach(el=>el.remove());
+  Object.entries(state).forEach(([key,a])=>{
+    const el=document.createElement("div");
+    el.className="asset"+(key===selected?" selected":"");
+    el.dataset.key=key;
+    el.style.left=a.x+"%";
+    el.style.top=a.y+"%";
+    el.style.width=a.w+"%";
+    el.style.height=heightPct(a)+"%";
+    el.innerHTML='<img src="'+a.src+'" alt=""><span class="resizeHandle" aria-hidden="true"></span>';
+    el.addEventListener("pointerdown",pointerDown);
+    stage.appendChild(el);
+  });
+}
+function renderTabs(){
+  tabs.innerHTML="";
+  Object.entries(state).forEach(([key,a])=>{
+    const b=document.createElement("button");
+    b.textContent=a.label;
+    b.className=key===selected?"active":"";
+    b.onclick=()=>{selected=key;renderAll()};
+    tabs.appendChild(b);
+  });
+}
+function renderFields(){
+  const a=state[selected];
+  fields.x.value=a.x.toFixed(1);
+  fields.y.value=a.y.toFixed(1);
+  fields.w.value=a.w.toFixed(1);
+  fields.h.value=heightPct(a).toFixed(1);
+}
+function exportObj(){
+  const out={};
+  Object.entries(state).forEach(([key,a])=>{
+    out[key]={
+      x:Number(a.x.toFixed(1)),
+      y:Number(a.y.toFixed(1)),
+      width:Number(a.w.toFixed(1))
+    };
+  });
+  return out;
+}
+function renderJson(){json.value=JSON.stringify(exportObj(),null,2)}
+function renderAll(){renderAssets();renderTabs();renderFields();renderJson()}
+function updateField(){
+  const a=state[selected];
+  a.x=Number(fields.x.value)||0;
+  a.y=Number(fields.y.value)||0;
+  a.w=Math.max(1,Number(fields.w.value)||1);
+  renderAll();
+}
+["x","y","w"].forEach(k=>fields[k].addEventListener("input",updateField));
+
+function pointerDown(e){
+  e.preventDefault();
+  const asset=e.currentTarget;
+  selected=asset.dataset.key;
+  renderTabs();renderFields();renderJson();
+  const rect=stage.getBoundingClientRect();
+  const a=state[selected];
+  const isResize=e.target.classList.contains("resizeHandle");
+  action={
+    type:isResize?"resize":"move",
+    id:e.pointerId,
+    startX:e.clientX,startY:e.clientY,
+    start:{x:a.x,y:a.y,w:a.w},
+    stageW:rect.width,stageH:rect.height
+  };
+  asset.setPointerCapture?.(e.pointerId);
+}
+window.addEventListener("pointermove",e=>{
+  if(!action||e.pointerId!==action.id)return;
+  e.preventDefault();
+  const a=state[selected];
+  const dx=(e.clientX-action.startX)/action.stageW*100;
+  const dy=(e.clientY-action.startY)/action.stageH*100;
+  if(action.type==="move"){
+    a.x=action.start.x+dx;
+    a.y=action.start.y+dy;
+  }else{
+    a.w=Math.max(4,action.start.w+dx);
+  }
+  renderAll();
+},{passive:false});
+window.addEventListener("pointerup",e=>{if(action&&e.pointerId===action.id)action=null});
+window.addEventListener("pointercancel",()=>action=null);
+
+function nudge(dx,dy){
+  state[selected].x+=dx;
+  state[selected].y+=dy;
+  renderAll();
+}
+document.getElementById("nudgeUp").onclick=()=>nudge(0,-.5);
+document.getElementById("nudgeDown").onclick=()=>nudge(0,.5);
+document.getElementById("nudgeLeft").onclick=()=>nudge(-.5,0);
+document.getElementById("nudgeRight").onclick=()=>nudge(.5,0);
+document.getElementById("resetAsset").onclick=()=>{state[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
+document.getElementById("resetAll").onclick=()=>{Object.keys(state).forEach(k=>state[k]=JSON.parse(JSON.stringify(defaults[k])));renderAll()};
+document.getElementById("copyJson").onclick=async()=>{
+  renderJson();
+  try{
+    await navigator.clipboard.writeText(json.value);
+    status.textContent="Copied JSON.";
+  }catch{
+    json.select();
+    document.execCommand("copy");
+    status.textContent="Copied JSON.";
+  }
+  setTimeout(()=>status.textContent="",1800);
+};
+
+renderAll();
+</script>
+</body>
+</html>
