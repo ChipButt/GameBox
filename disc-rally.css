@@ -493,3 +493,64 @@ html,body{height:100%;overflow:hidden}
   #hostSetup .hostLapsSetupPanel{padding:37px 9px 7px}
   #hostSetup .hostLapsSetupPanel select{height:36px;font-size:14px}
 }
+
+
+/* Five-button lap selector shared by Pass & Play and Host Race. */
+.lapChoiceBanner{
+  position:relative;
+  padding:34px 8px 8px!important;
+  background:linear-gradient(180deg,#084666,#063b5d);
+  border:3px solid #063b5d;
+}
+.lapChoiceTitle{
+  position:absolute;
+  top:6px;
+  left:50%;
+  transform:translateX(-50%);
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:.08em;
+  color:#fff;
+}
+.lapChoiceButtons{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+}
+.lapChoiceButton{
+  min-width:0;
+  height:42px;
+  border:2px solid #0b79ae;
+  border-radius:9px;
+  background:linear-gradient(180deg,#0b6795,#06476b);
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:19px;
+  font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.lapChoiceButton.selected{
+  background:linear-gradient(180deg,#ffe91f,#ffc400);
+  color:#063b5d;
+  border-color:#ffe766;
+  box-shadow:0 0 0 2px rgba(255,209,22,.24),inset 0 0 0 1px rgba(255,255,255,.5);
+}
+.lapChoiceButton:active{transform:translateY(1px)}
+
+#hostSetup .hostLapsSetupPanel{
+  padding:34px 8px 8px!important;
+}
+#hostSetup .hostLapsSetupPanel label,
+#hostSetup .hostLapsSetupPanel select,
+.lapsSetupPanel label,
+.lapsSetupPanel select{display:none!important}
+
+@media(max-height:760px){
+  .lapChoiceBanner{padding:30px 6px 6px!important}
+  .lapChoiceTitle{top:5px;font-size:14px}
+  .lapChoiceButtons{gap:5px}
+  .lapChoiceButton{height:36px;font-size:17px}
+  #hostSetup .hostLapsSetupPanel{padding:30px 6px 6px!important}
+}
