@@ -78,7 +78,9 @@ function renderPlayerPicks(){
   for(let i=0;i<4;i++){
     const person=map.get(picked[i]),slot=document.createElement('div');
     slot.className='passPlayPlayerSlot '+(person?'filled':'empty');
-    slot.innerHTML=`<img class="passPlaySlotAsset" src="${person?'04_player_panel.png?v=1':'05_player_slot_empty.png?v=1'}" alt="">${person?`<strong>${esc(person.name)}</strong>`:''}`;
+    slot.innerHTML=person
+      ? `<img class="passPlaySlotAsset" src="04_player_panel.png?v=1" alt=""><strong>${esc(person.name)}</strong>`
+      : '<span class="passPlayEmptyCrop"><img src="05_player_slot_empty.png?v=1" alt=""></span>';
     wrap.appendChild(slot);
   }
   const picker=$('passRosterOptions');
@@ -1125,7 +1127,7 @@ function bind(){
   $('restartHostDiscovery').onclick=startHostDiscovery;
   $('restartScan').onclick=startScan;
   $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
-  $$('.lapChoiceButton').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
+  $('[data-laps]').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
   $('joinPlayer').onchange=()=>{
     localPlayerId=$('joinPlayer').value;
     const p=roster().find(x=>x.id===localPlayerId);
