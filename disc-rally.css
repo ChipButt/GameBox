@@ -833,6 +833,10 @@ html,body{height:100%;overflow:hidden}
 .passPlayPlayerSlot{
   position:absolute;
   pointer-events:none;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  overflow:visible;
 }
 .passPlayPlayerSlot:nth-child(1){left:9.4%;top:22.2%;width:38.5%;height:7%}
 .passPlayPlayerSlot:nth-child(2){left:50%;top:22.2%;width:42%;height:7%}
@@ -843,9 +847,6 @@ html,body{height:100%;overflow:hidden}
   height:100%;
   display:block;
   object-fit:fill;
-}
-.passPlayPlayerSlot.empty .passPlaySlotAsset{
-  clip-path:inset(22% 11% 22% 11% round 999px);
 }
 .passPlayPlayerSlot strong{
   position:absolute;
@@ -858,7 +859,7 @@ html,body{height:100%;overflow:hidden}
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
   font-weight:900;
-  font-size:1.75cqw;
+  font-size:0.7cqw;
   line-height:1;
   text-align:left;
   white-space:nowrap;
@@ -1091,57 +1092,3 @@ html,body{height:100%;overflow:hidden}
   box-sizing:border-box;
 }
 
-/* Pass & Play empty slots: CSS-only pill, no image canvas/background. */
-.passPlayPlayerSlot,
-.passPlayPlayerSlot.empty{
-  background:transparent!important;
-  border:0!important;
-  border-radius:0!important;
-  box-shadow:none!important;
-  outline:0!important;
-  overflow:visible!important;
-}
-.passPlayPlayerSlot.empty .passPlaySlotAsset,
-.passPlayPlayerSlot.empty .passPlayEmptyCrop{
-  display:none!important;
-}
-.passPlayEmptyPill{
-  position:absolute;
-  left:8%;
-  top:20%;
-  width:84%;
-  height:60%;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  gap:4.5%;
-  padding:0 7%;
-  background:
-    linear-gradient(180deg,rgba(10,103,213,.96),rgba(4,54,139,.98));
-  border:2px solid #25dfff;
-  box-shadow:
-    inset 0 0 0 2px rgba(255,255,255,.10),
-    inset 0 8px 18px rgba(255,255,255,.08),
-    0 0 8px rgba(0,220,255,.50);
-}
-.passPlayEmptyPill i{
-  width:23%;
-  aspect-ratio:1;
-  flex:0 0 auto;
-  border-radius:50%;
-  border:3px solid #fff;
-  box-shadow:
-    inset 0 0 0 5px rgba(122,174,216,.45),
-    0 0 5px rgba(255,255,255,.32);
-  background:rgba(16,83,146,.82);
-}
-.passPlayEmptyPill b{
-  color:#a9bad0;
-  font-family:Fredoka,Inter,sans-serif;
-  font-size:2.25cqw;
-  font-weight:900;
-  line-height:1;
-  letter-spacing:.01em;
-  white-space:nowrap;
-  text-shadow:0 1px 2px rgba(0,20,65,.55);
-}
