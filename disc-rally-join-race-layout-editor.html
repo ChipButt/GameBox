@@ -91,7 +91,7 @@ button.primary{background:var(--gold);color:#082747}
 
   <aside class="panel controls">
     <h2>Join Race Editor</h2>
-    <p>Position the interactive player area, available-races area, scanner status and four-player lobby area over the supplied Join Race artwork. The lobby selection box represents the whole lobby area and always contains four individual player boxes.</p>
+    <p>Position the interactive player area, available-races area and four-player lobby area over the supplied Join Race artwork. The lobby selection box represents the whole lobby area and always contains four individual player boxes.</p>
 
     <div class="toolbar">
       <button id="copyJson" class="primary">Copy JSON</button>
@@ -138,7 +138,6 @@ const ITEMS={
   back:{label:"Back button",kind:"asset",src:"DR Back Button.png?v=1",x:2.8,y:2,w:32.5,h:6.1},
   playerSelect:{label:"Player select hit area",kind:"region",regionLabel:"PLAYER SELECT",x:6.2,y:29.45,w:87.6,h:5.8},
   playerName:{label:"Player name",kind:"text",text:"Chip",x:12.3495,y:30.5739,w:77,h:3.4,font:3.2,color:"#ffffff",weight:"700",align:"left"},
-  status:{label:"Scanner status",kind:"text",text:"Scanning",x:34,y:39.45,w:60,h:1.5,font:1.35,color:"#66dcff",weight:"700",align:"right"},
   availableHosts:{label:"Available races region",kind:"region",regionLabel:"AVAILABLE RACES",sampleHost:true,x:8.9593,y:43.3525,w:82.4013,h:12.1656},
   lobbyRow:{label:"Lobby area (4 player boxes)",kind:"lobbyArea",src:"lobby_blank_button.png?v=1",x:6.8206,y:61.2948,w:86,h:8.9969},
   lobbyName:{label:"Lobby player name",kind:"text",text:"1. Chip · Host",x:8.463,y:64.1453,w:61.92,h:2.6367,font:2.1,color:"#ffffff",weight:"700",align:"left"},
@@ -225,7 +224,6 @@ function output(){
     },
     text:{
       playerName:textOut(I.playerName),
-      status:textOut(I.status),
       lobbyName:textOut(I.lobbyName),
       lobbyState:textOut(I.lobbyState)
     },
