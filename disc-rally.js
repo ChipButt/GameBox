@@ -41,6 +41,9 @@ const TRACK_GEOMETRY=new Map();
 const DISC_R=18,DISC_COLLISION_R=15,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
 const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
 const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
+const GAMEPLAY_VIEW_BOTTOM=VIEW.h*.803;
+const GAMEPLAY_DISC_SAFE_MARGIN=92;
+const GAMEPLAY_CAMERA_HORIZON_OFFSET=200;
 const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -418,7 +421,11 @@ function cameraForView(){
   const p=activePlayer()||pointAtProgress(.025),nearest=nearestTrackPoint(p.x,p.y);
   const base=cameraHeading==null?Math.atan2(nearest.ty,nearest.tx):cameraHeading;
   const angle=base+lookYaw,hx=Math.cos(angle),hy=Math.sin(angle);
-  return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx,horizon:VIEW.horizon+lookPitch};
+  const activeDiscBaseY=(VIEW.cameraHeight*VIEW.focal)/VIEW.setback;
+  const maxHorizon=GAMEPLAY_VIEW_BOTTOM-GAMEPLAY_DISC_SAFE_MARGIN-activeDiscBaseY;
+  const requestedHorizon=VIEW.horizon-GAMEPLAY_CAMERA_HORIZON_OFFSET+lookPitch;
+  const horizon=Math.min(requestedHorizon,maxHorizon);
+  return{x:p.x,y:p.y,hx,hy,rx:-hy,ry:hx,horizon};
 }
 function projectPoint(x,y,camera=cameraForView()){
   const dx=x-camera.x,dy=y-camera.y;
