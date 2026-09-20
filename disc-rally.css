@@ -1916,8 +1916,8 @@ html,body{height:100%;overflow:hidden}
 .joinRacePlayerDisplay{
   position:absolute;
   z-index:12;
-  left:10.5%;
-  top:30.45%;
+  left:12.3495%;
+  top:30.5739%;
   width:77%;
   height:3.4%;
   display:flex;
@@ -1961,10 +1961,10 @@ html,body{height:100%;overflow:hidden}
 #joinSetup.joinRaceAssetScreen #availableHosts{
   position:absolute!important;
   z-index:14!important;
-  left:6.4%!important;
-  top:42.2%!important;
-  width:87.2%!important;
-  height:14.2%!important;
+  left:8.9593%!important;
+  top:43.3525%!important;
+  width:82.4013%!important;
+  height:12.1656%!important;
   max-height:none!important;
   margin:0!important;
   padding:0!important;
@@ -2071,22 +2071,22 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow{
   position:absolute;
-  left:7.4641%;
+  left:6.8206%;
   width:86%;
-  height:3.0307%;
+  height:8.9969%;
   overflow:hidden;
   pointer-events:none;
 }
-.joinRaceLobbyRow:nth-child(1){top:64.25%}
-.joinRaceLobbyRow:nth-child(2){top:67.35%}
-.joinRaceLobbyRow:nth-child(3){top:70.45%}
-.joinRaceLobbyRow:nth-child(4){top:73.55%}
+.joinRaceLobbyRow:nth-child(1){top:61.2948%}
+.joinRaceLobbyRow:nth-child(2){top:64.3948%}
+.joinRaceLobbyRow:nth-child(3){top:67.4948%}
+.joinRaceLobbyRow:nth-child(4){top:70.5948%}
 .joinRaceLobbyRow>img{
   position:absolute;
   left:0;
-  top:-100%;
+  top:0;
   width:100%;
-  height:300%;
+  height:100%;
   display:block;
   object-fit:fill;
   pointer-events:none;
@@ -2094,8 +2094,6 @@ html,body{height:100%;overflow:hidden}
 .joinRaceLobbyRow strong,
 .joinRaceLobbyRow small{
   position:absolute;
-  top:3.5%;
-  height:87%;
   display:flex;
   align-items:center;
   font-family:Fredoka,Inter,sans-serif;
@@ -2103,8 +2101,10 @@ html,body{height:100%;overflow:hidden}
   pointer-events:none;
 }
 .joinRaceLobbyRow strong{
-  left:2.7%;
+  left:1.9098%;
+  top:31.6829%;
   width:72%;
+  height:29.3067%;
   color:#fff;
   font-size:2.1cqw;
   font-weight:700;
@@ -2113,8 +2113,10 @@ html,body{height:100%;overflow:hidden}
   text-overflow:ellipsis;
 }
 .joinRaceLobbyRow small{
-  left:82%;
+  left:82.7483%;
+  top:34.0261%;
   width:14.2%;
+  height:29.3067%;
   justify-content:flex-end;
   color:#61d9ff;
   font-size:1.8cqw;
