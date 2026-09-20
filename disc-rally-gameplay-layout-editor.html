@@ -132,21 +132,21 @@ button.primary{background:var(--gold);color:#082747}
 <script>
 const ITEMS={
   back:{label:"Back button",kind:"asset",src:"DR%20Back%20Button.png?v=1",fit:"fill",x:2.8,y:2,w:32.5,h:6.1},
-  playerName:{label:"Player name",kind:"text",text:"Chip",x:20,y:12.45,w:24,h:5.7,font:3.15,color:"#ffffff",weight:"800",align:"left"},
-  positionPill:{label:"Position pill",kind:"asset",src:"position_pill.png?v=1",x:44.7,y:12.15,w:24.8,h:6.35},
-  positionValue:{label:"Position value",kind:"text",text:"1ST",x:58.712,y:13.1025,w:9.424,h:4.445,font:2.75,color:"#ffffff",weight:"900",align:"center"},
-  lapPill:{label:"Lap pill",kind:"asset",src:"lap_pill.png?v=1",x:71.2,y:12.15,w:25.6,h:6.35},
-  lapValue:{label:"Lap value",kind:"text",text:"1/3",x:85.664,y:13.1025,w:9.728,h:4.445,font:2.75,color:"#ffffff",weight:"900",align:"center"},
-  trackName:{label:"Track name",kind:"text",text:"Roundabout",x:20,y:19.25,w:62.32,h:5.65,font:3,color:"#ffffff",weight:"800",align:"left"},
+  playerName:{label:"Player name",kind:"text",text:"Chip",x:23.3744,y:11.9782,w:61.7126,h:5.7,font:4.7,color:"#ffffff",weight:"800",align:"center"},
+  positionPill:{label:"Position pill",kind:"asset",src:"position_pill.png?v=1",x:52.6052,y:-0.8375,w:48.3209,h:17.0572},
+  positionValue:{label:"Position value",kind:"text",text:"1ST",x:81.9069,y:6.1669,w:11.8211,h:4.445,font:4.5,color:"#ffffff",weight:"900",align:"center"},
+  lapPill:{label:"Lap pill",kind:"asset",src:"lap_pill.png?v=1",x:56.498,y:-6.6413,w:44.5706,h:18.0283},
+  lapValue:{label:"Lap value",kind:"text",text:"1/3",x:78.167,y:.735,w:17.0147,h:4.445,font:4.5,color:"#ffffff",weight:"900",align:"center"},
+  trackName:{label:"Track name",kind:"text",text:"Roundabout",x:23.6749,y:19.7146,w:62.32,h:5.65,font:4.7,color:"#ffffff",weight:"800",align:"center"},
   gameplayViewport:{label:"Gameplay / track viewport",kind:"region",regionLabel:"GAMEPLAY / TRACK CANVAS",x:0,y:25.65,w:100,h:54.65},
-  yourTurn:{label:"Your Turn pill",kind:"asset",src:"your_turn_pill.png?v=1",state:"your",x:25.82,y:27.2,w:48.36,h:10.5},
+  yourTurn:{label:"Your Turn pill",kind:"asset",src:"your_turn_pill.png?v=1",state:"your",x:23.9315,y:22.8488,w:52.5284,h:12.3006},
   waitingTurn:{label:"Waiting pill",kind:"asset",src:"waiting_for_gold_pill.png?v=1",state:"waiting",x:11,y:27.2,w:78,h:10.5},
   waitingName:{label:"Waiting player name",kind:"text",state:"waiting",text:"Jess",x:25.82,y:30.875,w:48.36,h:3.15,font:3.35,color:"#073d91",weight:"900",align:"center"},
-  boost:{label:"Boost button",kind:"asset",src:"boost_button.png?v=1",x:5.815,y:82.05,w:12.87,h:7.2432},
-  boostState:{label:"Boost status text",kind:"text",text:"CHARGING 0%",x:1.525,y:89.65,w:21.45,h:1.65,font:1.2,color:"#ffffff",weight:"900",align:"center"},
-  secondFlick:{label:"Second flick control",kind:"secondFlick",x:80,y:82.2,w:15.5,h:9.2},
-  finishTurn:{label:"Finish Turn pill",kind:"asset",src:"finish_turn_pill.png?v=1",x:21,y:83.35,w:58,h:6.4}
-};
+  boost:{label:"Boost button",kind:"asset",src:"boost_button.png?v=1",x:74.1503,y:66.7933,w:19.8742,h:10.4221},
+  boostState:{label:"Boost status text",kind:"text",text:"CHARGING 0%",x:73.7125,y:76.8526,w:21.45,h:1.65,font:1.2,color:"#ffffff",weight:"900",align:"center"},
+  secondFlick:{label:"Second flick control",kind:"secondFlick",x:1.5092,y:67.3623,w:23.3636,h:13.8514},
+  finishTurn:{label:"Finish Turn pill",kind:"asset",src:"finish_turn_pill.png?v=1",x:18.2266,y:83.265,w:63.5995,h:8.0463}
+}
 const defaults=JSON.parse(JSON.stringify(ITEMS));
 const state={items:JSON.parse(JSON.stringify(ITEMS)),preview:"your"};
 const defaultState=JSON.parse(JSON.stringify(state));
