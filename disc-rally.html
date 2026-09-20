@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=37">
+<link rel="stylesheet" href="disc-rally.css?v=38">
 </head>
 <body>
 <div class="discApp">
@@ -116,48 +116,52 @@
       </div>
     </section>
 
-    <section id="hostSetup" class="view menuScreen hidden">
-      <div class="menuBackdrop"></div>
-      <header class="whiteHeader">
-        <button class="circleBack" data-back="multiSetup" type="button">‹</button>
-        <h1>🏁 HOST RACE</h1>
-      </header>
+    <section id="hostSetup" class="view hostRaceAssetScreen hidden">
+      <div class="hostRaceArtboard">
+        <img class="hostRaceShell" src="host_race_blank_ui.png?v=1" alt="" aria-hidden="true">
 
-      <section class="setupPanel">
-        <div class="panelRibbon">PLAYER</div>
-        <label class="gameField">THIS PHONE IS
-          <select id="hostPlayer"></select>
-        </label>
-      </section>
-
-      <section class="setupPanel trackSetupPanel hostTrackSetupPanel">
-        <div class="panelRibbon">▱ TRACK</div>
-        <button id="hostOpenTrackSelection" class="trackSummaryButton" type="button">
-          <span id="hostSelectedTrackIcon" class="summaryTrackIcon">?</span>
-          <span><strong id="hostSelectedTrackName">Random Track</strong><small>Tap to choose track</small></span>
+        <button class="hostRaceBack" data-back="multiSetup" type="button" aria-label="Back">
+          <img src="DR%20Back%20Button.png?v=1" alt="Back">
         </button>
-      </section>
 
-      <section class="setupPanel lapsSetupPanel hostLapsSetupPanel lapChoiceBanner">
-        <div class="lapChoiceTitle">LAPS</div>
-        <div class="lapChoiceButtons" data-lap-group="host">
-          <button class="lapChoiceButton" type="button" data-laps="1">1</button>
-          <button class="lapChoiceButton selected" type="button" data-laps="3">3</button>
-          <button class="lapChoiceButton" type="button" data-laps="5">5</button>
-          <button class="lapChoiceButton" type="button" data-laps="7">7</button>
-          <button class="lapChoiceButton" type="button" data-laps="9">9</button>
+        <select id="hostPlayer" class="hostRacePlayerSelect" aria-label="This phone is"></select>
+
+        <button id="hostOpenTrackSelection" class="hostRaceTrackHit" type="button" aria-label="Choose track"></button>
+        <span id="hostSelectedTrackIcon" class="hostRaceTrackMap" aria-hidden="true"></span>
+        <strong id="hostSelectedTrackName" class="hostRaceTrackName">Random Track</strong>
+        <span class="hostRaceTrackHelp">Tap to choose track</span>
+
+        <div class="hostRaceLaps" data-lap-group="host" aria-label="Laps">
+          <button class="hostRaceLap hostRaceLap1" type="button" data-laps="1" aria-label="1 lap">
+            <img class="hostRaceSelectedLap" src="Lap%20Pill%20Selected.png?v=2" alt=""><span>1</span>
+          </button>
+          <button class="hostRaceLap hostRaceLap3 selected" type="button" data-laps="3" aria-label="3 laps">
+            <img class="hostRaceSelectedLap" src="Lap%20Pill%20Selected.png?v=2" alt=""><span>3</span>
+          </button>
+          <button class="hostRaceLap hostRaceLap5" type="button" data-laps="5" aria-label="5 laps">
+            <img class="hostRaceSelectedLap" src="Lap%20Pill%20Selected.png?v=2" alt=""><span>5</span>
+          </button>
+          <button class="hostRaceLap hostRaceLap7" type="button" data-laps="7" aria-label="7 laps">
+            <img class="hostRaceSelectedLap" src="Lap%20Pill%20Selected.png?v=2" alt=""><span>7</span>
+          </button>
+          <button class="hostRaceLap hostRaceLap9" type="button" data-laps="9" aria-label="9 laps">
+            <img class="hostRaceSelectedLap" src="Lap%20Pill%20Selected.png?v=2" alt=""><span>9</span>
+          </button>
         </div>
-      </section>
-      <div id="hostTracks" class="hidden"></div>
 
-      <section class="setupPanel">
-        <div class="panelRibbon">LOBBY</div>
-        <div class="discoveryStrip"><span class="scanPulse"></span><strong id="hostStatus">Starting…</strong></div>
-        <div id="hostLobby" class="lobbyList"></div>
-      </section>
+        <div id="hostStatus" class="hostRaceStatus">Starting…</div>
+        <div id="hostLobby" class="hostRaceLobby" aria-label="Lobby players"></div>
 
-      <button id="restartHostDiscovery" class="secondaryGameButton" type="button">RESTART DISCOVERY</button>
-      <button id="startHost" class="fixedBottomAction" type="button" disabled>🏁 START RACE!</button>
+        <button id="restartHostDiscovery" class="hostRaceRestart" type="button" aria-label="Restart discovery">
+          <img src="restart_discovery_button.png?v=1" alt="Restart Discovery">
+        </button>
+
+        <button id="startHost" class="hostRaceStart" type="button" disabled aria-label="Start race">
+          <img src="11_start_race_button.png?v=1" alt="Start Race">
+        </button>
+
+        <div id="hostTracks" class="hidden"></div>
+      </div>
     </section>
 
     <section id="joinSetup" class="view menuScreen hidden">
@@ -256,6 +260,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=36"></script>
+<script src="disc-rally.js?v=37"></script>
 </body>
 </html>
