@@ -93,6 +93,13 @@ function syncPlayerSelects(){
     const el=$(id),prev=el.value;el.innerHTML=roster().map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
     if(roster().some(p=>p.id===prev))el.value=prev;
   });
+  syncHostPlayerDisplay();
+}
+function syncHostPlayerDisplay(){
+  const sel=$('hostPlayer'),display=$('hostPlayerDisplay');
+  if(!sel||!display)return;
+  const p=roster().find(x=>x.id===sel.value);
+  display.textContent=p?.name||sel.options?.[sel.selectedIndex]?.text||'';
 }
 function renderTracks(containerId){
   const wrap=$(containerId);if(!wrap)return;wrap.innerHTML='';
@@ -1186,7 +1193,7 @@ function bind(){
   $('joinMode').onclick=()=>{showView('joinSetup');syncPlayerSelects();startScan()};
   $('restartHostDiscovery').onclick=startHostDiscovery;
   $('restartScan').onclick=startScan;
-  $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
+  $('hostPlayer').onchange=()=>{localPlayerId=$('hostPlayer').value;syncHostPlayerDisplay();updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby()};
   $$('[data-laps]').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
   $('joinPlayer').onchange=()=>{
     localPlayerId=$('joinPlayer').value;
