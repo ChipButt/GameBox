@@ -1391,3 +1391,361 @@ html,body{height:100%;overflow:hidden}
   width:43.5cqw;
   height:54.0cqw;
 }
+
+
+/* ===== Asset-based Host Race screen ===== */
+#hostSetup.hostRaceAssetScreen{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  background:#0874d4;
+}
+.hostRaceArtboard{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:max(100vw,calc(100dvh * 941 / 1672));
+  aspect-ratio:941 / 1672;
+  transform:translate(-50%,-50%);
+  overflow:hidden;
+  container-type:inline-size;
+}
+.hostRaceShell{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* Same placement and scale as Track Selection / Local Multiplayer back control. */
+.hostRaceBack{
+  position:absolute;
+  z-index:30;
+  left:2.8cqw;
+  top:3.5556cqw;
+  width:32.5cqw;
+  height:10.8444cqw;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.hostRaceBack img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+.hostRaceBack:active{transform:scale(.975)}
+
+/* PLAYER */
+.hostRacePlayerSelect{
+  position:absolute;
+  z-index:12;
+  left:6.5%;
+  top:29.55%;
+  width:87%;
+  height:5.75%;
+  border:0;
+  outline:0;
+  border-radius:1.7cqw;
+  background:transparent;
+  color:#fff;
+  padding:0 4.4cqw;
+  appearance:auto;
+  -webkit-appearance:menulist;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:700;
+  font-size:3.2cqw;
+  text-shadow:0 2px 3px rgba(0,28,74,.65);
+}
+
+/* TRACK — visual geometry follows the baked Host Race artwork,
+   while behaviour matches Pass & Play. */
+.hostRaceTrackHit{
+  position:absolute;
+  z-index:10;
+  left:4.2%;
+  top:41.35%;
+  width:91.8%;
+  height:12.75%;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.hostRaceTrackMap{
+  position:absolute;
+  z-index:11;
+  left:10.9%;
+  top:43.15%;
+  width:17.7%;
+  height:9.35%;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  pointer-events:none;
+}
+.hostRaceTrackMap svg{
+  width:88%;
+  height:88%;
+  display:block;
+}
+.hostRaceTrackMap path{
+  fill:none;
+  stroke:#fff;
+  stroke-width:8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 2px 2px rgba(0,27,78,.5));
+}
+.hostRaceTrackName{
+  position:absolute;
+  z-index:12;
+  left:30.45%;
+  top:44.05%;
+  width:55.0%;
+  height:3.65%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:900;
+  font-size:3.5cqw;
+  line-height:1;
+  text-align:center;
+}
+.hostRaceTrackHelp{
+  position:absolute;
+  z-index:12;
+  left:30.5%;
+  top:48.35%;
+  width:42%;
+  height:2.35%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  color:#61d9ff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:800;
+  font-size:1.75cqw;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+}
+
+/* LAPS — same selected graphic, number treatment and interaction as Pass & Play. */
+.hostRaceLaps{
+  position:absolute;
+  inset:0;
+  z-index:14;
+  pointer-events:none;
+}
+.hostRaceLap{
+  position:absolute;
+  top:60.35%;
+  width:17.1%;
+  height:5.7%;
+  margin:0;
+  padding:0;
+  min-width:0!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  pointer-events:auto;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.hostRaceLap1{left:6.4%}
+.hostRaceLap3{left:23.5%}
+.hostRaceLap5{left:40.7%}
+.hostRaceLap7{left:57.9%}
+.hostRaceLap9{left:75.1%}
+.hostRaceSelectedLap{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:none;
+  object-fit:fill;
+  pointer-events:none;
+}
+.hostRaceLap.selected .hostRaceSelectedLap{display:block}
+.hostRaceLap>span{
+  position:absolute;
+  left:33.3333%;
+  top:19.2982%;
+  width:35.0877%;
+  height:56.1404%;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:900;
+  font-size:3cqw;
+  line-height:1;
+  text-shadow:0 2px 2px rgba(0,30,75,.55);
+  pointer-events:none;
+}
+.hostRaceLap.selected>span{
+  color:#173e72;
+  text-shadow:none;
+}
+.hostRaceLap:active{transform:scale(.985)}
+
+/* LOBBY */
+.hostRaceStatus{
+  position:absolute;
+  z-index:13;
+  left:8%;
+  top:72.25%;
+  width:84%;
+  height:1.8%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#68dcff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:700;
+  font-size:1.65cqw;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.hostRaceLobby{
+  position:absolute;
+  z-index:13;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.hostRaceLobbyRow{
+  position:absolute;
+  left:7%;
+  width:86%;
+  height:2.65%;
+  overflow:hidden;
+  pointer-events:none;
+  container-type:inline-size;
+}
+.hostRaceLobbyRow:nth-child(1){top:74.25%}
+.hostRaceLobbyRow:nth-child(2){top:77.15%}
+.hostRaceLobbyRow:nth-child(3){top:80.05%}
+.hostRaceLobbyRow:nth-child(4){top:82.95%}
+.hostRaceLobbyRow>img{
+  position:absolute;
+  left:0;
+  top:-100%;
+  width:100%;
+  height:300%;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+}
+.hostRaceLobbyRow strong,
+.hostRaceLobbyRow small{
+  position:absolute;
+  top:0;
+  height:100%;
+  display:flex;
+  align-items:center;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  line-height:1;
+  pointer-events:none;
+}
+.hostRaceLobbyRow strong{
+  left:3.2%;
+  width:72%;
+  font-size:2.45cqw;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hostRaceLobbyRow small{
+  right:3.2%;
+  justify-content:flex-end;
+  color:#61d9ff;
+  font-size:2.0cqw;
+  font-weight:700;
+}
+
+/* Bottom controls */
+.hostRaceRestart,
+.hostRaceStart{
+  position:absolute;
+  z-index:16;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.hostRaceRestart{
+  left:4%;
+  top:86.25%;
+  width:92%;
+  height:5.8%;
+}
+.hostRaceRestart img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  pointer-events:none;
+}
+.hostRaceStart{
+  left:5%;
+  top:92%;
+  width:90%;
+  height:7%;
+}
+.hostRaceStart img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+}
+.hostRaceStart:disabled{
+  opacity:.34;
+  filter:saturate(.45);
+}
+.hostRaceRestart:active,
+.hostRaceStart:not(:disabled):active{transform:scale(.985)}
+
+@media(min-width:760px){
+  .hostRaceArtboard{width:max(760px,calc(100dvh * 941 / 1672))}
+}
