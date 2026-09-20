@@ -259,36 +259,52 @@ function courseHasCrossings(samples){
   }
   return false;
 }
-function railCrossingSegments(edge){
-  const hidden=new Set(),n=edge.length;
+function railCrossingPairs(edge){
+  const out=[],n=edge.length;
   for(let i=0;i<n;i++){
     const a=edge[i],b=edge[(i+1)%n];
-    for(let j=i+2;j<n;j++){
+    for(let j=i+3;j<n;j++){
       if(i===0&&j===n-1)continue;
-      if(Math.abs(i-j)<=2)continue;
       const c=edge[j],d=edge[(j+1)%n];
-      if(!segmentsIntersect(a,b,c,d))continue;
-      // Remove a short run around each crossing rather than drawing an X/spike.
-      // The underlying road remains open here, which is the correct shape for
-      // overlapping inside corners on the extra-wide courses.
-      for(let k=-2;k<=2;k++){
-        hidden.add((i+k+n)%n);
-        hidden.add((j+k+n)%n);
-      }
+      if(segmentsIntersect(a,b,c,d))out.push([i,j]);
     }
   }
-  return hidden;
+  return out;
 }
-function buildTrackRails(samples,half){
-  const left=samples.map((p,i)=>{
-    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
-    return{x:p.x+nx*half,y:p.y+ny*half};
+function buildTrackRail(samples,widths,side){
+  return samples.map((p,i)=>{
+    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],
+          dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m,d=widths[i]*side;
+    return{x:p.x+nx*d,y:p.y+ny*d};
   });
-  const right=samples.map((p,i)=>{
-    const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
-    return{x:p.x-nx*half,y:p.y-ny*half};
-  });
-  return{left,right};
+}
+function stabiliseTrackRail(samples,half,side){
+  const n=samples.length,widths=Array(n).fill(half),minHalf=Math.max(DISC_R*2+7,half*.30);
+  let edge=buildTrackRail(samples,widths,side),pairs=railCrossingPairs(edge),iterations=0;
+  while(pairs.length&&iterations<80){
+    const affected=new Set();
+    pairs.forEach(([a,b])=>{
+      for(let k=-2;k<=2;k++){
+        affected.add((a+k+n)%n);
+        affected.add((b+k+n)%n);
+      }
+    });
+    affected.forEach(i=>{widths[i]=Math.max(minHalf,widths[i]*.90)});
+    // Spread a reduction gently into neighbouring samples. Width is never
+    // increased here, so a corrected inside corner cannot fold back across itself.
+    for(let pass=0;pass<2;pass++){
+      const next=widths.slice();
+      for(let i=0;i<n;i++){
+        const smooth=(widths[(i-1+n)%n]+2*widths[i]+widths[(i+1)%n])/4;
+        next[i]=Math.min(widths[i],smooth);
+      }
+      for(let i=0;i<n;i++)widths[i]=next[i];
+    }
+    edge=buildTrackRail(samples,widths,side);
+    pairs=railCrossingPairs(edge);
+    iterations++;
+  }
+  return{edge,widths,crossings:pairs.length};
 }
 function trackGeometry(t=track()){
   if(TRACK_GEOMETRY.has(t.id))return TRACK_GEOMETRY.get(t.id);
@@ -304,17 +320,14 @@ function trackGeometry(t=track()){
     total+=len;cumulative.push(total);
   }
 
-  // The requested track width is authoritative. These track widths are now
-  // intentionally doubled from the original game, so do not silently shrink
-  // them on tight bends. A crossing warning is retained for diagnostics.
-  const half=t.width,{left,right}=buildTrackRails(samples,half);
-  const hiddenLeftSegments=railCrossingSegments(left),hiddenRightSegments=railCrossingSegments(right);
-  const railCrossing=hiddenLeftSegments.size>0||hiddenRightSegments.size>0;
-  if(railCrossing){
-    console.warn('Wide track internal rail overlap cleaned up; preserving requested width',t.id);
-  }
+  // Keep the doubled width across normal sections. On a tight inside corner,
+  // only that rail is pulled inward just enough to remain continuous instead
+  // of crossing itself or deleting barrier sections.
+  const half=t.width,leftRail=stabiliseTrackRail(samples,half,1),rightRail=stabiliseTrackRail(samples,half,-1);
+  const left=leftRail.edge,right=rightRail.edge,railCrossing=leftRail.crossings>0||rightRail.crossings>0;
+  if(railCrossing)console.warn('Track rail could not be fully stabilised',t.id);
 
-  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing,hiddenLeftSegments,hiddenRightSegments};
+  const g={samples,segs,cumulative,total,left,right,leftWidths:leftRail.widths,rightWidths:rightRail.widths,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing};
   TRACK_GEOMETRY.set(t.id,g);return g;
 }
 function rawPointAtProgress(progress,t=track()){
@@ -337,7 +350,7 @@ function nearestTrackPoint(x,y,t=track()){
     const qx=s.a.x+s.dx*u,qy=s.a.y+s.dy*u,dx=x-qx,dy=y-qy,d2=dx*dx+dy*dy;
     if(d2<bestD2){
       bestD2=d2;
-      best={x:qx,y:qy,distance:Math.sqrt(d2),progress:(g.cumulative[i]+s.len*u)/g.total,index:i};
+      best={x:qx,y:qy,distance:Math.sqrt(d2),progress:(g.cumulative[i]+s.len*u)/g.total,index:i,u};
     }
   }
   const frame=pointAtProgress(best.progress,t);
@@ -520,9 +533,8 @@ function drawPerspectiveRoad(){
     ctx.fillStyle=roadGrad;ctx.fill();
   }
 
-  const drawBarrier=(edge,hiddenSegments)=>{
+  const drawBarrier=edge=>{
     for(let i=0;i<edge.length;i++){
-      if(hiddenSegments?.has(i))continue;
       const a=projectPoint(edge[i].x,edge[i].y,cam),b=projectPoint(edge[(i+1)%edge.length].x,edge[(i+1)%edge.length].y,cam);
       if(!a||!b||Math.max(a.forward,b.forward)<-65)continue;
       const scale=Math.min(1.3,(a.scale+b.scale)/2);
@@ -535,7 +547,7 @@ function drawPerspectiveRoad(){
       }
     }
   };
-  drawBarrier(g.left,g.hiddenLeftSegments);drawBarrier(g.right,g.hiddenRightSegments);
+  drawBarrier(g.left);drawBarrier(g.right);
 
   // Actual course centre line and transverse seams.
   ctx.strokeStyle='rgba(232,251,255,.88)';ctx.lineWidth=3;
@@ -780,7 +792,10 @@ function processCheckpoints(previous=[]){
 }
 
 function roadClearContains(x,y){
-  return nearestTrackPoint(x,y).distance<=trackGeometry().halfWidth-DISC_R;
+  const g=trackGeometry(),nearest=nearestTrackPoint(x,y),i=nearest.index,j=(i+1)%g.samples.length,u=nearest.u||0;
+  const side=((x-nearest.x)*nearest.nx+(y-nearest.y)*nearest.ny)>=0?'leftWidths':'rightWidths';
+  const widths=g[side]||[],a=Number(widths[i])||g.halfWidth,b=Number(widths[j])||a,half=a+(b-a)*u;
+  return nearest.distance<=half-DISC_R;
 }
 function applyWalls(p){
   const sx=p.vx*.5,sy=p.vy*.5,target={x:p.x+sx,y:p.y+sy};
