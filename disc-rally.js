@@ -61,7 +61,7 @@ const roster=()=>{
 };
 
 let currentView='modeView';
-let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=3,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[],trackSelectReturn='localSetup';
+let mode='local',role=null,session=null,localPlayerId='',selectedTrack='random',selectedLaps=3,connectedLobby=[],drag=null,lookDrag=null,lookYaw=0,lookPitch=0,animating=false,turboHolding=false,lastHosts=[],trackSelectReturn='localSetup',topDownView=false;
 let game=null,pendingSnapshot=null,turnEndTimer=null,cameraHeading=null;
 const canvas=$('raceCanvas'),ctx=canvas.getContext('2d');
 const trackPath=new Path2D();
@@ -259,6 +259,26 @@ function courseHasCrossings(samples){
   }
   return false;
 }
+function railCrossingSegments(edge){
+  const hidden=new Set(),n=edge.length;
+  for(let i=0;i<n;i++){
+    const a=edge[i],b=edge[(i+1)%n];
+    for(let j=i+2;j<n;j++){
+      if(i===0&&j===n-1)continue;
+      if(Math.abs(i-j)<=2)continue;
+      const c=edge[j],d=edge[(j+1)%n];
+      if(!segmentsIntersect(a,b,c,d))continue;
+      // Remove a short run around each crossing rather than drawing an X/spike.
+      // The underlying road remains open here, which is the correct shape for
+      // overlapping inside corners on the extra-wide courses.
+      for(let k=-2;k<=2;k++){
+        hidden.add((i+k+n)%n);
+        hidden.add((j+k+n)%n);
+      }
+    }
+  }
+  return hidden;
+}
 function buildTrackRails(samples,half){
   const left=samples.map((p,i)=>{
     const prev=samples[(i-1+samples.length)%samples.length],next=samples[(i+1)%samples.length],dx=next.x-prev.x,dy=next.y-prev.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m;
@@ -288,12 +308,13 @@ function trackGeometry(t=track()){
   // intentionally doubled from the original game, so do not silently shrink
   // them on tight bends. A crossing warning is retained for diagnostics.
   const half=t.width,{left,right}=buildTrackRails(samples,half);
-  const railCrossing=courseHasCrossings(left)||courseHasCrossings(right);
+  const hiddenLeftSegments=railCrossingSegments(left),hiddenRightSegments=railCrossingSegments(right);
+  const railCrossing=hiddenLeftSegments.size>0||hiddenRightSegments.size>0;
   if(railCrossing){
-    console.warn('Wide track rail overlap detected; preserving requested width',t.id);
+    console.warn('Wide track internal rail overlap cleaned up; preserving requested width',t.id);
   }
 
-  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing};
+  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing,hiddenLeftSegments,hiddenRightSegments};
   TRACK_GEOMETRY.set(t.id,g);return g;
 }
 function rawPointAtProgress(progress,t=track()){
@@ -383,7 +404,7 @@ function applySnapshot(s){
 function activePlayer(){return game?.players?.[game.current]||null}
 function localCanShoot(){
   const p=activePlayer();
-  if(!p||game?.winner)return false;
+  if(topDownView||!p||game?.winner)return false;
   const owned=mode==='local'||localPlayerId===p.id;
   if(!owned)return false;
   if(game?.phase==='aim'&&!animating&&game.flicksUsed===0)return true;
@@ -392,7 +413,7 @@ function localCanShoot(){
 }
 function localCanFinish(){
   const p=activePlayer();
-  if(!p||animating||game?.winner||game?.phase!=='settled')return false;
+  if(topDownView||!p||animating||game?.winner||game?.phase!=='settled')return false;
   return mode==='local'||localPlayerId===p.id;
 }
 function nextTurn(){
@@ -499,8 +520,9 @@ function drawPerspectiveRoad(){
     ctx.fillStyle=roadGrad;ctx.fill();
   }
 
-  const drawBarrier=edge=>{
+  const drawBarrier=(edge,hiddenSegments)=>{
     for(let i=0;i<edge.length;i++){
+      if(hiddenSegments?.has(i))continue;
       const a=projectPoint(edge[i].x,edge[i].y,cam),b=projectPoint(edge[(i+1)%edge.length].x,edge[(i+1)%edge.length].y,cam);
       if(!a||!b||Math.max(a.forward,b.forward)<-65)continue;
       const scale=Math.min(1.3,(a.scale+b.scale)/2);
@@ -513,7 +535,7 @@ function drawPerspectiveRoad(){
       }
     }
   };
-  drawBarrier(g.left);drawBarrier(g.right);
+  drawBarrier(g.left,g.hiddenLeftSegments);drawBarrier(g.right,g.hiddenRightSegments);
 
   // Actual course centre line and transverse seams.
   ctx.strokeStyle='rgba(232,251,255,.88)';ctx.lineWidth=3;
@@ -627,11 +649,71 @@ function drawAim(){
   ctx.strokeStyle='#082f68';ctx.lineWidth=3;ctx.stroke();
   ctx.fillStyle='#f7bd18';ctx.beginPath();ctx.arc(sp.x+ux*cap,sp.y+uy*cap,9,0,Math.PI*2);ctx.fill();ctx.restore();
 }
-function draw(){updateCameraHeading();drawTrack();drawDiscs();drawAim()}
+function drawTopDownMap(){
+  if(!game)return;
+  const t=track(),g=trackGeometry(t);
+  const viewTop=VIEW.h*.257,viewBottom=VIEW.h*.803,pad=34;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  g.samples.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});
+  minX-=g.halfWidth;maxX+=g.halfWidth;minY-=g.halfWidth;maxY+=g.halfWidth;
+  const worldW=Math.max(1,maxX-minX),worldH=Math.max(1,maxY-minY);
+  const scale=Math.min((VIEW.w-pad*2)/worldW,(viewBottom-viewTop-pad*2)/worldH);
+  const ox=(VIEW.w-worldW*scale)/2-minX*scale;
+  const oy=viewTop+(viewBottom-viewTop-worldH*scale)/2-minY*scale;
+  const mp=(x,y)=>({x:x*scale+ox,y:y*scale+oy});
+
+  ctx.clearRect(0,0,VIEW.w,VIEW.h);
+  ctx.fillStyle='#118fd7';ctx.fillRect(0,viewTop,VIEW.w,viewBottom-viewTop);
+
+  const trace=()=>{
+    ctx.beginPath();
+    g.samples.forEach((p,i)=>{const q=mp(p.x,p.y);if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y)});
+    ctx.closePath();
+  };
+
+  ctx.save();
+  ctx.lineJoin='round';ctx.lineCap='round';
+  // Border underneath, then the road on top. Drawing the road last naturally
+  // removes false internal borders wherever wide track sections overlap.
+  trace();ctx.strokeStyle='#344354';ctx.lineWidth=Math.max(8,(g.halfWidth*2+16)*scale);ctx.stroke();
+  trace();ctx.strokeStyle='#eef5f8';ctx.lineWidth=Math.max(6,(g.halfWidth*2+9)*scale);ctx.stroke();
+  trace();ctx.strokeStyle='#138fe0';ctx.lineWidth=Math.max(4,g.halfWidth*2*scale);ctx.stroke();
+
+  trace();ctx.setLineDash([14,18]);ctx.strokeStyle='rgba(232,251,255,.78)';ctx.lineWidth=Math.max(1.5,2.2*scale);ctx.stroke();ctx.setLineDash([]);
+
+  const finish=finishLine(t),fa=mp(finish.x+finish.nx*finish.half,finish.y+finish.ny*finish.half),fb=mp(finish.x-finish.nx*finish.half,finish.y-finish.ny*finish.half);
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(3,7*scale);ctx.beginPath();ctx.moveTo(fa.x,fa.y);ctx.lineTo(fb.x,fb.y);ctx.stroke();
+
+  t.bumpers.forEach(spec=>{
+    const b=featureAt(spec,t),q=mp(b.x,b.y),rr=Math.max(4,b.r*.62*scale);
+    ctx.fillStyle='#d54a43';ctx.beginPath();ctx.arc(q.x,q.y,rr,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#ffcf18';ctx.lineWidth=Math.max(1.5,2*scale);ctx.stroke();
+  });
+
+  game.players.forEach((p,i)=>{
+    const q=mp(p.x,p.y),active=i===game.current&&!game.winner,r=Math.max(10,DISC_COLLISION_R*scale);
+    if(active){
+      ctx.strokeStyle='#ffd116';ctx.lineWidth=5;ctx.beginPath();ctx.arc(q.x,q.y,r+7,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.stroke();
+    ctx.fillStyle='#082f68';ctx.font='900 15px Fredoka';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),q.x,q.y);
+    ctx.fillStyle='#ffffff';ctx.font='800 14px Fredoka';ctx.textBaseline='bottom';
+    ctx.fillText(p.name,q.x,q.y-r-7);
+  });
+
+  ctx.fillStyle='rgba(3,43,96,.82)';ctx.fillRect(18,viewTop+12,190,46);
+  ctx.fillStyle='#ffffff';ctx.font='900 20px Fredoka';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('TOP DOWN · VIEW ONLY',30,viewTop+35);
+  ctx.restore();
+}
+function draw(){
+  if(topDownView){drawTopDownMap();return}
+  updateCameraHeading();drawTrack();drawDiscs();drawAim();
+}
 function pointerPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
 function resetLook(){lookDrag=null;lookYaw=0;lookPitch=0}
 function onPointerDown(e){
-  if(!localCanShoot())return;
+  if(topDownView||!localCanShoot())return;
   const q=pointerPoint(e),p=activePlayer(),sp=projectPoint(p.x,p.y);
   if(!sp)return;
   canvas.setPointerCapture?.(e.pointerId);
@@ -918,7 +1000,7 @@ function requestFinishTurn(){
 
 function localCanTurbo(){
   const p=activePlayer();
-  if(!p||game?.winner||game?.phase!=='moving'||!animating)return false;
+  if(topDownView||!p||game?.winner||game?.phase!=='moving'||!animating)return false;
   const owned=mode==='local'||localPlayerId===p.id;
   return owned&&(p.turboHeld||(p.turboReady&&p.turboCharge>=.999));
 }
@@ -1022,6 +1104,20 @@ function renderHudOnly(){
   if($('hudPosition'))$('hudPosition').textContent=p?ordinal(playerPosition(p)):'—';
   if($('hudLap'))$('hudLap').textContent=p?`${Math.min(p.lap+1,game.laps)}/${game.laps}`:'—';
   $('scoreboard').innerHTML=game.players.map((x,i)=>`<div class="scoreRow${i===game.current&&!game.winner?' active':''}"><div class="scoreIdentity"><span class="scoreDot" style="background:${x.color}"></span><strong>${esc(x.name)}</strong></div><small>${x.finished?'FINISHED':`Lap ${Math.min(x.lap+1,game.laps)} / ${game.laps}`} · ${ordinal(playerPosition(x))} · Turbo ${Math.round((x.turboCharge||0)*100)}%</small></div>`).join('');
+}
+function setTopDownView(enabled){
+  if(!game)return;
+  if(enabled&&turboHolding)requestTurboHeld(false);
+  topDownView=!!enabled;
+  drag=null;lookDrag=null;
+  const button=$('mapViewToggle');
+  if(button){
+    button.setAttribute('aria-pressed',topDownView?'true':'false');
+    button.textContent=topDownView?'RACE':'MAP';
+  }
+  $('raceView')?.classList.toggle('mapViewing',topDownView);
+  renderHudOnly();
+  draw();
 }
 function renderRace(){
   if(!game)return;
@@ -1181,7 +1277,7 @@ function startLocalRace(){
   mode='local';role=null;localPlayerId='';game=buildRace(players,selectedLaps);renderRace();showView('raceView');
 }
 function leaveRace(){
-  clearTurnEndTimer();resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;resetLook();mode='local';role=null;renderPlayerPicks();renderTrackSummary();showView('modeView');
+  clearTurnEndTimer();resetSession();game=null;drag=null;lookDrag=null;animating=false;turboHolding=false;topDownView=false;resetLook();mode='local';role=null;$('raceView')?.classList.remove('mapViewing');const mapButton=$('mapViewToggle');if(mapButton){mapButton.textContent='MAP';mapButton.setAttribute('aria-pressed','false')}renderPlayerPicks();renderTrackSummary();showView('modeView');
 }
 function openTrackPicker(returnView){
   trackSelectReturn=returnView;
@@ -1242,6 +1338,7 @@ function bind(){
 
   $('startHost').onclick=startHostRace;
   $('exitRace').onclick=leaveRace;
+  $('mapViewToggle').onclick=()=>setTopDownView(!topDownView);
   $('finishTurnButton').onclick=requestFinishTurn;
   const raceSurface=$('raceView');
   ['selectstart','contextmenu','dragstart'].forEach(type=>{
