@@ -31,6 +31,12 @@ button{cursor:pointer}
 .hostSample strong{display:block;font-size:9px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hostSample small{display:block;color:#67dcff;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hostSample span{color:#ffd719;font-size:8px;font-weight:900}
+.lobbyAreaRows{position:absolute;inset:0;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:1px;padding:0;pointer-events:none}
+.lobbyAreaRow{position:relative;min-height:0;overflow:hidden}
+.lobbyAreaRow img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.lobbyAreaRow strong,.lobbyAreaRow small{position:absolute;top:0;height:100%;display:flex;align-items:center;white-space:nowrap;overflow:hidden;font-family:Inter,sans-serif;line-height:1}
+.lobbyAreaRow strong{left:1.9%;width:72%;font-size:2.1cqw;color:#fff}
+.lobbyAreaRow small{left:82.75%;width:14.2%;justify-content:flex-end;font-size:1.55cqw;color:#61d9ff}
 .ghost{position:absolute;z-index:5;opacity:.72;pointer-events:none}
 .ghost img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
 .ghost strong,.ghost small{position:absolute;top:3.5%;height:87%;display:flex;align-items:center;font-family:Inter,sans-serif;line-height:1;white-space:nowrap;overflow:hidden}
@@ -85,7 +91,7 @@ button.primary{background:var(--gold);color:#082747}
 
   <aside class="panel controls">
     <h2>Join Race Editor</h2>
-    <p>Position the interactive player area, available-races area, scanner status and connected-lobby rows over the supplied Join Race artwork. The first lobby row is the template; the other three preview rows follow the row-step value.</p>
+    <p>Position the interactive player area, available-races area, scanner status and four-player lobby area over the supplied Join Race artwork. The lobby selection box represents the whole lobby area and always contains four individual player boxes.</p>
 
     <div class="toolbar">
       <button id="copyJson" class="primary">Copy JSON</button>
@@ -108,7 +114,7 @@ button.primary{background:var(--gold);color:#082747}
         <div class="field"><label>Align</label><select id="textAlign"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
       </div>
 
-      <div class="field full">
+      <div class="field full" style="display:none">
         <label>Lobby row step %</label>
         <input id="rowStep" type="number" step="0.05" min="0.1">
       </div>
@@ -134,7 +140,7 @@ const ITEMS={
   playerName:{label:"Player name",kind:"text",text:"Chip",x:12.3495,y:30.5739,w:77,h:3.4,font:3.2,color:"#ffffff",weight:"700",align:"left"},
   status:{label:"Scanner status",kind:"text",text:"Scanning",x:34,y:39.45,w:60,h:1.5,font:1.35,color:"#66dcff",weight:"700",align:"right"},
   availableHosts:{label:"Available races region",kind:"region",regionLabel:"AVAILABLE RACES",sampleHost:true,x:8.9593,y:43.3525,w:82.4013,h:12.1656},
-  lobbyRow:{label:"Lobby row template",kind:"asset",src:"lobby_blank_button.png?v=1",x:6.8206,y:61.2948,w:86,h:8.9969},
+  lobbyRow:{label:"Lobby area (4 player boxes)",kind:"lobbyArea",src:"lobby_blank_button.png?v=1",x:6.8206,y:61.2948,w:86,h:8.9969},
   lobbyName:{label:"Lobby player name",kind:"text",text:"1. Chip · Host",x:8.463,y:64.1453,w:61.92,h:2.6367,font:2.1,color:"#ffffff",weight:"700",align:"left"},
   lobbyState:{label:"Lobby ready state",kind:"text",text:"Ready",x:77.9841,y:64.3561,w:12.212,h:2.6367,font:1.8,color:"#61d9ff",weight:"700",align:"right"}
 };
@@ -153,16 +159,7 @@ function justify(align){return align==="left"?"flex-start":align==="right"?"flex
 function itemBox(el,it){Object.assign(el.style,{left:it.x+"%",top:it.y+"%",width:it.w+"%",height:it.h+"%"})}
 function handles(){return '<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>'}
 
-function renderLobbyGhosts(){
-  const row=state.items.lobbyRow;
-  for(let i=1;i<4;i++){
-    const ghost=document.createElement("div");
-    ghost.className="ghost";
-    Object.assign(ghost.style,{left:row.x+"%",top:(row.y+state.rowStep*i)+"%",width:row.w+"%",height:row.h+"%"});
-    ghost.innerHTML='<img src="lobby_blank_button.png?v=1" alt=""><strong>'+(i+1)+'. Player '+(i+1)+'</strong><small>Ready</small>';
-    stage.appendChild(ghost);
-  }
-}
+function renderLobbyGhosts(){}
 
 function renderStage(){
   stage.querySelectorAll(".item,.ghost").forEach(function(n){n.remove()});
@@ -173,6 +170,8 @@ function renderStage(){
     el.dataset.key=key;itemBox(el,it);
     if(it.kind==="asset"){
       el.innerHTML='<img src="'+it.src+'" alt="">'+handles();
+    }else if(it.kind==="lobbyArea"){
+      el.innerHTML='<div class="lobbyAreaRows">'+[0,1,2,3].map(function(i){return '<div class="lobbyAreaRow"><img src="lobby_blank_button.png?v=1" alt=""><strong>'+(i+1)+'. '+(i===0?'Chip · Host':'Player '+(i+1))+'</strong><small>'+(i===0?'Ready':'Waiting')+'</small></div>'}).join('')+'</div>'+handles();
     }else if(it.kind==="text"){
       el.innerHTML='<div class="textInner" style="font-size:'+textFontPx(it)+'px;color:'+it.color+';font-weight:'+it.weight+';justify-content:'+justify(it.align)+';text-align:'+it.align+'">'+it.text+'</div>'+handles();
     }else{
