@@ -1452,25 +1452,47 @@ html,body{height:100%;overflow:hidden}
 .hostRaceBack:active{transform:scale(.975)}
 
 /* PLAYER */
-.hostRacePlayerSelect{
+.hostRacePlayerDisplay{
   position:absolute;
   z-index:12;
+  left:10.5%;
+  top:30.6286%;
+  width:77.4461%;
+  height:3.4%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-weight:700;
+  font-size:3.2cqw;
+  line-height:1;
+  text-align:left;
+  text-shadow:0 2px 3px rgba(0,28,74,.65);
+  pointer-events:none;
+}
+.hostRacePlayerSelect{
+  position:absolute;
+  z-index:13;
   left:6.5%;
   top:29.55%;
   width:87%;
   height:5.75%;
+  margin:0;
+  padding:0;
   border:0;
   outline:0;
   border-radius:1.7cqw;
-  background:transparent;
-  color:#fff;
-  padding:0 4.6%;
-  appearance:auto;
-  -webkit-appearance:menulist;
-  font-family:Fredoka,Inter,sans-serif;
-  font-weight:700;
-  font-size:3.2cqw;
-  text-shadow:0 2px 3px rgba(0,28,74,.65);
+  background:transparent!important;
+  color:transparent!important;
+  opacity:.001;
+  appearance:none;
+  -webkit-appearance:none;
+  font-size:16px;
+  cursor:pointer;
 }
 
 /* TRACK */
@@ -1580,6 +1602,17 @@ html,body{height:100%;overflow:hidden}
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
+.hostRaceLap1{left:7.208116%;top:60.6420032%;width:16.981812%;height:5.3839424%}
+.hostRaceLap3{left:24.339316%;top:60.6420032%;width:16.981812%;height:5.3839424%}
+.hostRaceLap5{left:41.912716%;top:60.6420032%;width:16.981812%;height:5.3839424%}
+.hostRaceLap7{left:59.271016%;top:60.6420032%;width:16.981812%;height:5.3839424%}
+.hostRaceLap9{left:76.639316%;top:60.6420032%;width:16.981812%;height:5.3839424%}
+.hostRaceLap>span{
+  left:30.389478%;
+  top:15.936218%;
+  width:35.331919%;
+  height:59.436%;
+}
 .hostRaceSelectedLap{
   position:absolute;
   inset:0;
@@ -1615,10 +1648,9 @@ html,body{height:100%;overflow:hidden}
 .hostRaceLobby{
   position:absolute;
   z-index:13;
-  left:0;
-  top:0;
-  width:100%;
-  height:100%;
+  inset:0;
+  width:auto;
+  height:auto;
   pointer-events:none;
 }
 .hostRaceLobbyRow{
@@ -1724,4 +1756,40 @@ html,body{height:100%;overflow:hidden}
 @media(min-width:760px){
   .hostRaceArtboard{width:max(760px,calc(100dvh * 941 / 1672))}
 }
+
+
+/* Host Race final editor-alignment safeguards */
+.hostRaceLap1{left:7.208116%!important;top:60.6420032%!important;width:16.981812%!important;height:5.3839424%!important}
+.hostRaceLap3{left:24.339316%!important;top:60.6420032%!important;width:16.981812%!important;height:5.3839424%!important}
+.hostRaceLap5{left:41.912716%!important;top:60.6420032%!important;width:16.981812%!important;height:5.3839424%!important}
+.hostRaceLap7{left:59.271016%!important;top:60.6420032%!important;width:16.981812%!important;height:5.3839424%!important}
+.hostRaceLap9{left:76.639316%!important;top:60.6420032%!important;width:16.981812%!important;height:5.3839424%!important}
+.hostRaceLap>span{
+  left:30.389478%!important;
+  top:15.936218%!important;
+  width:35.331919%!important;
+  height:59.436%!important;
+}
+#hostLobby>.lobbyPlayer{
+  position:absolute!important;
+  left:7.4641%!important;
+  width:86%!important;
+  height:3.0307%!important;
+  margin:0!important;
+  padding:0 2.6581%!important;
+  border:0!important;
+  border-radius:0!important;
+  background:
+    url("lobby_blank_button.png?v=1") center center / 100% 300% no-repeat!important;
+  box-shadow:none!important;
+}
+#hostLobby>.lobbyPlayer:nth-child(1){top:74.1455%!important}
+#hostLobby>.lobbyPlayer:nth-child(2){top:77.0455%!important}
+#hostLobby>.lobbyPlayer:nth-child(3){top:79.9455%!important}
+#hostLobby>.lobbyPlayer:nth-child(4){top:82.8455%!important}
+#hostLobby>.lobbyPlayer strong,
+#hostLobby>.lobbyPlayer small{
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
 }
