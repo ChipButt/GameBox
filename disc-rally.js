@@ -40,7 +40,7 @@ const TRACKS=[
 const TRACK_GEOMETRY=new Map();
 const DISC_R=18,DISC_COLLISION_R=15,MAX_DRAG_SCREEN=190,MAX_SPEED=24,FRICTION=.982,STEPS_MAX=900;
 const RAIL_RESTITUTION=.26,RAIL_TANGENT_DAMP=.96,SECOND_FLICK_SCALE=.72,TURN_END_DELAY=3000;
-const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
+const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:175,setback:200};
 const GAMEPLAY_VIEW_BOTTOM=VIEW.h*.803;
 const GAMEPLAY_DISC_SAFE_MARGIN=92;
 const GAMEPLAY_CAMERA_HORIZON_OFFSET=200;
@@ -286,7 +286,7 @@ function trackGeometry(t=track()){
 
   // Validate the actual rail edges as well as the centreline. Tight inside bends
   // can make an offset rail self-intersect even when the centreline itself is clean.
-  let half=t.width/2,{left,right}=buildTrackRails(samples,half);
+  let half=t.width,{left,right}=buildTrackRails(samples,half);
   const minHalf=DISC_R*2+7;
   while(half>minHalf&&(courseHasCrossings(left)||courseHasCrossings(right))){
     half-=2;
