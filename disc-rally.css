@@ -162,7 +162,8 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 #raceCanvas{
   position:absolute;
   z-index:2;
-  inset:0;
+  left:0;
+  top:0.8971%;
   width:100%;
   height:100%;
   display:block;
