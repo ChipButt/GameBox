@@ -1783,3 +1783,66 @@ html,body{height:100%;overflow:hidden}
   display:flex!important;
   align-items:center!important;
 }
+
+
+/* Host Race asset screen must not inherit the legacy generated host lobby sizing. */
+#hostSetup.hostRaceAssetScreen #hostLobby{
+  position:absolute!important;
+  inset:0!important;
+  left:0!important;
+  top:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:auto!important;
+  height:auto!important;
+  max-height:none!important;
+  min-height:0!important;
+  display:block!important;
+  grid-template-rows:none!important;
+  gap:0!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+
+#hostSetup.hostRaceAssetScreen #restartHostDiscovery{
+  position:absolute!important;
+  left:34.785%!important;
+  top:64.1804%!important;
+  width:59.06%!important;
+  height:11.0429%!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  font-size:inherit!important;
+  overflow:hidden!important;
+}
+
+#hostSetup.hostRaceAssetScreen #restartHostDiscovery img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+  display:block!important;
+}
+
+#hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow{
+  display:block!important;
+  position:absolute!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+#hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(1){top:74.1455%!important}
+#hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(2){top:77.0455%!important}
+#hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(3){top:79.9455%!important}
+#hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(4){top:82.8455%!important}
