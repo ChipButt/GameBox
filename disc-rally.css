@@ -679,7 +679,7 @@ html,body{height:100%;overflow:hidden}
   z-index:1;
   left:50%;
   top:50%;
-  width:max(100vw,calc(100dvh * 941 / 1672));
+  width:min(100vw,760px,calc(100dvh * 941 / 1672));
   aspect-ratio:941 / 1672;
   transform:translate(-50%,-50%);
   overflow:hidden;
@@ -747,11 +747,6 @@ html,body{height:100%;overflow:hidden}
   width:60.7%;
   aspect-ratio:1122 / 336;
 }
-@media(min-width:760px){
-  .discHomeArtboard{
-    width:max(760px,calc(100dvh * 941 / 1672));
-  }
-}
 
 /* Hide legacy generated home controls if stale markup is ever cached. */
 #modeView.discHomeAssetScreen .menuBackdrop,
@@ -775,7 +770,7 @@ html,body{height:100%;overflow:hidden}
   position:absolute;
   left:50%;
   top:50%;
-  width:max(100vw,calc(100dvh * 941 / 1672));
+  width:min(100vw,760px,calc(100dvh * 941 / 1672));
   aspect-ratio:941 / 1672;
   transform:translate(-50%,-50%);
   overflow:hidden;
@@ -1082,9 +1077,6 @@ html,body{height:100%;overflow:hidden}
   pointer-events:none;
 }
 
-@media(min-width:760px){
-  .passPlayArtboard{width:max(760px,calc(100dvh * 941 / 1672))}
-}
 
 .passPlayBack>img{object-fit:contain!important}
 
@@ -1129,7 +1121,7 @@ html,body{height:100%;overflow:hidden}
 .trackSelectionArtboard{
   position:relative;
   left:50%;
-  width:max(100vw,calc(100dvh * 864 / 1536));
+  width:min(100vw,760px,calc(100dvh * 864 / 1536));
   min-height:177.7778cqw;
   height:177.7778cqw;
   transform:translateX(-50%);
@@ -1308,7 +1300,7 @@ html,body{height:100%;overflow:hidden}
 .roleSelectionArtboard{
   position:relative;
   left:50%;
-  width:max(100vw,calc(100dvh * 941 / 1672));
+  width:min(100vw,760px,calc(100dvh * 941 / 1672));
   height:177.6833cqw;
   transform:translateX(-50%);
   overflow:hidden;
@@ -1407,7 +1399,7 @@ html,body{height:100%;overflow:hidden}
   position:absolute;
   left:50%;
   top:50%;
-  width:max(100vw,calc(100dvh * 941 / 1672));
+  width:min(100vw,760px,calc(100dvh * 941 / 1672));
   aspect-ratio:941 / 1672;
   transform:translate(-50%,-50%);
   overflow:hidden;
@@ -1753,9 +1745,6 @@ html,body{height:100%;overflow:hidden}
 .hostRaceRestart:active,
 .hostRaceStart:not(:disabled):active{transform:scale(.985)}
 
-@media(min-width:760px){
-  .hostRaceArtboard{width:max(760px,calc(100dvh * 941 / 1672))}
-}
 
 
 /* Host Race final editor-alignment safeguards */
