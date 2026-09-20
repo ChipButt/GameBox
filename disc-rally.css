@@ -1298,12 +1298,12 @@ html,body{height:100%;overflow:hidden}
   background:#0868c5;
 }
 .roleSelectionArtboard{
-  position:relative;
+  position:absolute;
   left:50%;
+  top:50%;
   width:min(100vw,760px,calc(100dvh * 941 / 1672));
-  height:auto;
   aspect-ratio:941 / 1672;
-  transform:translateX(-50%);
+  transform:translate(-50%,-50%);
   overflow:hidden;
   container-type:inline-size;
 }
