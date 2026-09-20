@@ -2051,19 +2051,20 @@ html,body{height:100%;overflow:hidden}
   position:absolute;
   left:6.8206%;
   width:86%;
-  height:8.9969%;
+  height:2.9990%;
   overflow:hidden;
   pointer-events:none;
 }
-.joinRaceLobbyRow:nth-child(1){top:61.2948%}
-.joinRaceLobbyRow:nth-child(2){top:64.3948%}
-.joinRaceLobbyRow:nth-child(3){top:67.4948%}
-.joinRaceLobbyRow:nth-child(4){top:70.5948%}
+.joinRaceLobbyRow:nth-child(1){top:64.2938%}
+.joinRaceLobbyRow:nth-child(2){top:67.3938%}
+.joinRaceLobbyRow:nth-child(3){top:70.4938%}
+.joinRaceLobbyRow:nth-child(4){top:73.5938%}
 .joinRaceLobbyRow>img{
   position:absolute;
-  inset:0;
+  left:0;
+  top:-100%;
   width:100%;
-  height:100%;
+  height:300%;
   display:block;
   object-fit:fill;
   pointer-events:none;
@@ -2079,9 +2080,9 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow strong{
   left:1.9098%;
-  top:31.6829%;
+  top:-4.9506%;
   width:72%;
-  height:29.3067%;
+  height:87.9203%;
   color:#fff;
   font-size:2.1cqw;
   font-weight:700;
@@ -2091,9 +2092,9 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow small{
   left:82.7483%;
-  top:34.0261%;
+  top:2.0785%;
   width:14.2%;
-  height:29.3067%;
+  height:87.9203%;
   justify-content:flex-end;
   color:#61d9ff;
   font-size:1.8cqw;
