@@ -176,7 +176,7 @@ function renderLapChoices(){
   };
   const rel={x:-86.0114,y:-26.8124,width:283.0302,height:168.2482};
 
-  $('[data-laps]').forEach(btn=>{
+  document.querySelectorAll('[data-laps]').forEach(btn=>{
     const lap=Number(btn.dataset.laps);
     const isSelected=lap===selectedLaps;
     btn.classList.toggle('selected',isSelected);
