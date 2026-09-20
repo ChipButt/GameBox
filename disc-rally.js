@@ -44,7 +44,7 @@ const VIEW={w:720,h:1280,horizon:250,focal:820,cameraHeight:205,setback:200};
 const GAMEPLAY_VIEW_BOTTOM=VIEW.h*.803;
 const GAMEPLAY_DISC_SAFE_MARGIN=92;
 const GAMEPLAY_CAMERA_HORIZON_OFFSET=200;
-const TURBO_CHARGE_PER_UNIT=.00135,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
+const TURBO_CHARGE_PER_UNIT=.0009,TURBO_DRAIN_PER_STEP=.006,TURBO_ACCEL=.34,TURBO_MAX_SPEED=36;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const read=(k,f=[])=>{try{const v=JSON.parse(localStorage.getItem(k));return v??f}catch{return f}};
