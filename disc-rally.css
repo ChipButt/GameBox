@@ -1846,3 +1846,11 @@ html,body{height:100%;overflow:hidden}
 #hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(2){top:77.0455%!important}
 #hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(3){top:79.9455%!important}
 #hostSetup.hostRaceAssetScreen #hostLobby .hostRaceLobbyRow:nth-child(4){top:82.8455%!important}
+
+
+/* Restart Discovery PNG has transparent padding above/below the visible pill.
+   Restrict hit-testing to the actual opaque button so it cannot block Laps. */
+#hostSetup.hostRaceAssetScreen #restartHostDiscovery{
+  clip-path:inset(34.16% 0 34.75% 0 round 999px);
+  -webkit-clip-path:inset(34.16% 0 34.75% 0 round 999px);
+}
