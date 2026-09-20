@@ -149,8 +149,8 @@ function renderTrackSummary(){
     ? `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><rect width="100" height="100" rx="50" fill="#0754b8"></rect><path d="${miniMapPath(t)}"></path></svg>`
     : '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><rect width="100" height="100" rx="50" fill="#0754b8"></rect><path d="M18 66 C26 34 44 62 52 38 S78 30 84 50 S76 77 62 73" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   const hostIcon=t
-    ? `<svg viewBox="0 0 100 100"><path d="${miniMapPath(t)}"></path></svg>`
-    : '?';
+    ? `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><path d="${miniMapPath(t)}"></path></svg>`
+    : '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><path d="M18 66 C26 34 44 62 52 38 S78 30 84 50 S76 77 62 73"></path></svg>';
   if($('selectedTrackName'))$('selectedTrackName').textContent=name;
   if($('selectedTrackIcon')){
     $('selectedTrackIcon').innerHTML=localIcon;
@@ -990,6 +990,15 @@ function lobbyPlayers(){
 }
 function renderLobby(target,players){
   const wrap=$(target);if(!wrap)return;
+  if(target==='hostLobby'){
+    wrap.innerHTML=(players||[]).slice(0,4).map((p,i)=>`
+      <div class="hostRaceLobbyRow">
+        <img src="lobby_blank_button.png?v=1" alt="">
+        <strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong>
+        <small>Ready</small>
+      </div>`).join('');
+    return;
+  }
   wrap.innerHTML=players.length?players.map((p,i)=>`<div class="lobbyPlayer"><strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="empty">Waiting for players…</div>';
 }
 function selectedTrackLabel(){return selectedTrack==='random'?'Random Track':(TRACKS.find(t=>t.id===selectedTrack)?.name||'Track')}
