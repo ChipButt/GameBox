@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071e3c">
+<title>Disc Rally Host Race Layout Editor</title>
+<style>
+:root{--bg:#06182f;--panel:#092b50;--gold:#ffd719;--text:#fff;--muted:#a8c9e5;--cyan:#29dcff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:10px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.editor{width:min(1280px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,580px) minmax(340px,1fr);gap:14px;align-items:start}
+.panel{background:linear-gradient(180deg,#0b315b,#072441);border:1px solid rgba(58,194,255,.35);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.previewPanel{padding:10px;position:sticky;top:10px}
+.previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.previewHead h1{margin:0;font-size:17px}.previewHead small{font-size:10px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px;overflow:auto}
+.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
+.stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none}
+.item{position:absolute;z-index:5;touch-action:none}
+.asset{cursor:move}
+.asset img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
+.region{cursor:move;border:2px dashed rgba(255,215,25,.85);background:rgba(255,215,25,.07)}
+.region.cyan{border-color:var(--cyan);background:rgba(41,220,255,.07)}
+.regionLabel{position:absolute;left:2px;top:2px;padding:2px 4px;border-radius:4px;background:rgba(2,24,51,.82);font-size:7px;font-weight:900;color:#fff;pointer-events:none}
+.textItem{cursor:move;display:flex;border:1px dashed rgba(255,215,25,.65);background:rgba(255,255,255,.04);padding:2px;z-index:9}
+.textInner{width:100%;height:100%;display:flex;align-items:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,25,65,.7)}
+.circleCrop{cursor:move;border-radius:50%;overflow:hidden;border:2px dashed var(--cyan);background:radial-gradient(circle at 35% 30%,#167fe8,#073f9e 72%);z-index:8}
+.circleCrop svg{width:100%;height:100%;display:block}
+.circleCrop path{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
+.lobbyRowPreview{cursor:move;overflow:hidden;z-index:8}
+.lobbyRowPreview img{position:absolute;left:0;top:-100%;width:100%;height:300%;object-fit:fill;display:block;pointer-events:none}
+.lobbyRowPreview .rowName,.lobbyRowPreview .rowState{position:absolute;top:0;height:100%;display:flex;align-items:center;font-family:Fredoka,Inter,sans-serif;color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lobbyRowPreview .rowName{left:3.2%;width:72%;font-weight:700}
+.lobbyRowPreview .rowState{right:3.2%;justify-content:flex-end;color:#61d9ff;font-weight:700}
+.item.selected{outline:2px dashed var(--gold);outline-offset:1px}
+.handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:30}
+.item.selected .handle{display:block}
+.handle.br{right:-9px;bottom:-9px;cursor:nwse-resize}
+.handle.r{right:-9px;top:calc(50% - 9px);cursor:ew-resize}
+.handle.b{bottom:-9px;left:calc(50% - 9px);cursor:ns-resize}
+.controls{padding:12px}.controls h2{margin:0 0 4px;font-size:19px}.controls>p{margin:0 0 10px;color:var(--muted);font-size:11px;line-height:1.45}
+.toolbar,.nudge{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px}
+button{min-height:40px;border:0;border-radius:9px;background:#0c5787;color:#fff;font-weight:850}
+button.primary{background:var(--gold);color:#082a50}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-bottom:10px}
+.list button{min-height:38px;background:#0a365f;border:1px solid #176eaa;font-size:10.5px;padding:5px}
+.list button.active{background:#0f77b2;border-color:#69edff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.field{display:grid;gap:3px}.field.full{grid-column:1/-1}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:850;color:#9ec9e6}
+.field input,.field select,.field textarea{width:100%;border:1px solid #176194;border-radius:7px;background:#031a32;color:#fff;padding:7px 8px;font-weight:750}
+.field input,.field select{height:37px}
+.section{margin-top:10px;padding-top:10px;border-top:1px solid rgba(106,220,255,.18)}
+.section h3{margin:0 0 7px;font-size:12px;color:#dff8ff}
+.code{width:100%;min-height:360px;margin-top:10px;resize:vertical;border:1px solid #176194;border-radius:8px;background:#02162b;color:#dff8ff;padding:8px;font:10.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.note{margin-top:7px;padding:7px;border-radius:8px;background:rgba(255,217,26,.08);color:#ffe66f;font-size:10px;line-height:1.4}
+.status{min-height:17px;margin-top:6px;color:#78ebb1;font-size:11px;font-weight:800}
+@media(max-width:880px){body{padding:6px}.editor{grid-template-columns:1fr}.previewPanel{position:relative;top:auto}.stage{width:min(100%,430px)}}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="panel previewPanel">
+    <div class="previewHead">
+      <h1>Host Race Layout</h1>
+      <small>941 × 1672 artboard</small>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="stageBg" src="host_race_blank_ui.png?v=1" alt="">
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel controls">
+    <h2>Host Race Editor</h2>
+    <p>Drag and resize the live Host Race overlays. The background UI is locked. Lobby row 1 is the reusable template; its position and row spacing are applied to all four lobby rows.</p>
+
+    <div class="toolbar">
+      <button id="copyJson" class="primary">Copy JSON</button>
+      <button id="resetAll">Reset all</button>
+    </div>
+
+    <div id="itemList" class="list"></div>
+
+    <div class="fields">
+      <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
+      <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1"></div>
+    </div>
+
+    <div class="nudge" style="margin-top:7px">
+      <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
+      <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
+    </div>
+
+    <div id="textControls" class="section">
+      <h3>Text styling</h3>
+      <div class="fields">
+        <div class="field full"><label>Preview text</label><input id="textValue" type="text"></div>
+        <div class="field"><label>Font (% artboard width)</label><input id="font" type="number" step="0.1"></div>
+        <div class="field"><label>Weight</label><select id="weight"><option>500</option><option>600</option><option selected>700</option><option>800</option><option>900</option></select></div>
+        <div class="field"><label>Alignment</label><select id="align"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+        <div class="field"><label>Colour</label><input id="color" type="color"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Lobby rows</h3>
+      <div class="fields">
+        <div class="field"><label>Row spacing %</label><input id="rowStep" type="number" step="0.1"></div>
+        <div class="field"><label>Preview rows</label><select id="rowCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
+      </div>
+    </div>
+
+    <textarea id="json" class="code" spellcheck="false"></textarea>
+    <div class="note">The selected lap overlay is positioned over lap 3 in the editor. The export includes its offset relative to the lap-3 number, so the same relationship can be applied to laps 1, 5, 7 and 9 in the app.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const defaults={
+  items:{
+    back:{label:"Back button",kind:"asset",src:"DR%20Back%20Button.png?v=1",x:2.8,y:2,w:32.5,h:6.1},
+    playerSelect:{label:"Player select area",kind:"region",x:6.5,y:29.55,w:87,h:5.75},
+    playerName:{label:"Player name",kind:"text",x:10.5,y:30.65,w:68,h:3.4,text:"Chip",font:3.2,color:"#ffffff",weight:"700",align:"left"},
+    trackHit:{label:"Track tap area",kind:"region",x:4.2,y:41.35,w:91.8,h:12.75},
+    trackMap:{label:"Track map",kind:"circle",x:10.9,y:43.15,w:17.7,h:9.35},
+    trackName:{label:"Track name",kind:"text",x:30.45,y:44.05,w:55,h:3.65,text:"Random Track",font:3.5,color:"#ffffff",weight:"900",align:"center"},
+    trackHelp:{label:"Track helper",kind:"text",x:30.5,y:48.35,w:42,h:2.35,text:"Tap to choose track",font:1.75,color:"#61d9ff",weight:"800",align:"center"},
+    selectedLap:{label:"Selected lap pill",kind:"asset",src:"Lap%20Pill%20Selected.png?v=2",x:23.5,y:60.35,w:17.1,h:5.7},
+    lap1:{label:"Lap 1 text",kind:"text",x:12.1,y:61.45,w:6,h:3.2,text:"1",font:3,color:"#ffffff",weight:"900",align:"center"},
+    lap3:{label:"Lap 3 text",kind:"text",x:29.2,y:61.45,w:6,h:3.2,text:"3",font:3,color:"#173e72",weight:"900",align:"center"},
+    lap5:{label:"Lap 5 text",kind:"text",x:46.4,y:61.45,w:6,h:3.2,text:"5",font:3,color:"#ffffff",weight:"900",align:"center"},
+    lap7:{label:"Lap 7 text",kind:"text",x:63.6,y:61.45,w:6,h:3.2,text:"7",font:3,color:"#ffffff",weight:"900",align:"center"},
+    lap9:{label:"Lap 9 text",kind:"text",x:80.8,y:61.45,w:6,h:3.2,text:"9",font:3,color:"#ffffff",weight:"900",align:"center"},
+    status:{label:"Discovery status",kind:"text",x:8,y:72.25,w:84,h:1.8,text:"Host visible",font:1.65,color:"#68dcff",weight:"700",align:"center"},
+    lobbyRow:{label:"Lobby row template",kind:"lobby",x:7,y:74.25,w:86,h:2.65},
+    lobbyName:{label:"Lobby name text",kind:"text",x:9.75,y:74.25,w:61.92,h:2.65,text:"1. Chip · Host",font:2.1,color:"#ffffff",weight:"700",align:"left"},
+    lobbyState:{label:"Lobby Ready text",kind:"text",x:78,y:74.25,w:12.25,h:2.65,text:"Ready",font:1.8,color:"#61d9ff",weight:"700",align:"right"},
+    restart:{label:"Restart Discovery",kind:"asset",src:"restart_discovery_button.png?v=1",x:4,y:86.25,w:92,h:5.8},
+    start:{label:"Start Race",kind:"asset",src:"11_start_race_button.png?v=1",x:5,y:92,w:90,h:7}
+  },
+  rowStep:2.9,
+  rowCount:4
+};
+const state=JSON.parse(JSON.stringify(defaults));
+let selected="back",pointerAction=null;
+
+const stage=document.getElementById("stage"),list=document.getElementById("itemList"),json=document.getElementById("json"),status=document.getElementById("status");
+const inputs={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+const textControls=document.getElementById("textControls");
+const textInputs={text:document.getElementById("textValue"),font:document.getElementById("font"),weight:document.getElementById("weight"),align:document.getElementById("align"),color:document.getElementById("color")};
+
+function n(v){return +Number(v).toFixed(4)}
+function current(){return state.items[selected]}
+function fontPx(font){return stage.clientWidth*Number(font||0)/100}
+function justify(a){return a==="right"?"flex-end":a==="center"?"center":"flex-start"}
+function handles(){return '<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>'}
+
+function makeItem(key,item,extraClass=""){
+  const el=document.createElement("div");
+  el.className="item "+extraClass+(key===selected?" selected":"");
+  el.dataset.key=key;
+  Object.assign(el.style,{left:item.x+"%",top:item.y+"%",width:item.w+"%",height:item.h+"%"});
+  el.addEventListener("pointerdown",startPointer);
+  return el;
+}
+function render(){
+  stage.querySelectorAll(".item,.generatedLobbyRow").forEach(el=>el.remove());
+
+  Object.entries(state.items).forEach(([key,item])=>{
+    if(key==="lobbyName"||key==="lobbyState")return;
+    let el;
+    if(item.kind==="asset"){
+      el=makeItem(key,item,"asset");
+      el.innerHTML='<img src="'+item.src+'" alt="">'+handles();
+    }else if(item.kind==="region"){
+      el=makeItem(key,item,"region cyan");
+      el.innerHTML='<span class="regionLabel">'+item.label+'</span>'+handles();
+    }else if(item.kind==="circle"){
+      el=makeItem(key,item,"circleCrop");
+      el.innerHTML='<svg viewBox="0 0 100 100"><path d="M18 66 C26 34 44 62 52 38 S78 30 84 50 S76 77 62 73"></path></svg>'+handles();
+    }else if(item.kind==="text"){
+      el=makeItem(key,item,"textItem");
+      el.innerHTML='<div class="textInner">'+item.text+'</div>'+handles();
+      const inn=el.querySelector(".textInner");
+      Object.assign(inn.style,{fontSize:fontPx(item.font)+"px",fontWeight:item.weight,color:item.color,justifyContent:justify(item.align),textAlign:item.align});
+    }else if(item.kind==="lobby"){
+      el=makeItem(key,item,"lobbyRowPreview");
+      el.innerHTML='<img src="lobby_blank_button.png?v=1" alt=""><span class="rowName">1. Chip · Host</span><span class="rowState">Ready</span>'+handles();
+      el.querySelector(".rowName").style.fontSize=fontPx(state.items.lobbyName.font)+"px";
+      el.querySelector(".rowState").style.fontSize=fontPx(state.items.lobbyState.font)+"px";
+    }
+    stage.appendChild(el);
+  });
+
+  // Extra lobby rows are previews generated from the row template and spacing.
+  const row=state.items.lobbyRow;
+  for(let i=1;i<Number(state.rowCount);i++){
+    const el=document.createElement("div");
+    el.className="generatedLobbyRow lobbyRowPreview";
+    Object.assign(el.style,{left:row.x+"%",top:(row.y+i*state.rowStep)+"%",width:row.w+"%",height:row.h+"%",position:"absolute"});
+    el.innerHTML='<img src="lobby_blank_button.png?v=1" alt=""><span class="rowName">'+(i+1)+'. Waiting for player…</span><span class="rowState"></span>';
+    el.querySelector(".rowName").style.fontSize=fontPx(state.items.lobbyName.font)+"px";
+    stage.appendChild(el);
+  }
+
+  renderList();renderFields();renderJson();
+}
+function renderList(){
+  list.innerHTML="";
+  Object.entries(state.items).forEach(([key,item])=>{
+    const b=document.createElement("button");b.textContent=item.label;
+    if(key===selected)b.classList.add("active");
+    b.onclick=()=>{selected=key;render()};
+    list.appendChild(b);
+  });
+}
+function renderFields(){
+  const a=current();
+  inputs.x.value=Number(a.x).toFixed(3);inputs.y.value=Number(a.y).toFixed(3);inputs.w.value=Number(a.w).toFixed(3);inputs.h.value=Number(a.h).toFixed(3);
+  const isText=a.kind==="text";
+  textControls.style.opacity=isText?"1":".45";
+  [...textControls.querySelectorAll("input,select")].forEach(x=>x.disabled=!isText);
+  if(isText){
+    textInputs.text.value=a.text;textInputs.font.value=a.font;textInputs.weight.value=a.weight;textInputs.align.value=a.align;textInputs.color.value=a.color;
+  }else{
+    textInputs.text.value="";textInputs.font.value="";textInputs.weight.value="700";textInputs.align.value="left";textInputs.color.value="#ffffff";
+  }
+  document.getElementById("rowStep").value=state.rowStep;
+  document.getElementById("rowCount").value=state.rowCount;
+}
+function startPointer(e){
+  e.preventDefault();
+  selected=e.currentTarget.dataset.key;
+  const a=current(),r=stage.getBoundingClientRect(),handle=e.target.closest(".handle");
+  pointerAction={id:e.pointerId,key:selected,mode:handle?"resize":"move",axis:handle?.dataset.resize||"",sx:e.clientX,sy:e.clientY,sw:r.width,sh:r.height,start:{...a}};
+  e.currentTarget.setPointerCapture?.(e.pointerId);
+  renderList();renderFields();
+}
+window.addEventListener("pointermove",e=>{
+  if(!pointerAction||e.pointerId!==pointerAction.id)return;
+  e.preventDefault();
+  const a=state.items[pointerAction.key],dx=(e.clientX-pointerAction.sx)/pointerAction.sw*100,dy=(e.clientY-pointerAction.sy)/pointerAction.sh*100;
+  if(pointerAction.mode==="move"){a.x=pointerAction.start.x+dx;a.y=pointerAction.start.y+dy}
+  else{
+    if(pointerAction.axis==="both"||pointerAction.axis==="x")a.w=Math.max(.5,pointerAction.start.w+dx);
+    if(pointerAction.axis==="both"||pointerAction.axis==="y")a.h=Math.max(.5,pointerAction.start.h+dy);
+  }
+  render();
+},{passive:false});
+window.addEventListener("pointerup",e=>{if(pointerAction&&e.pointerId===pointerAction.id)pointerAction=null});
+window.addEventListener("pointercancel",()=>pointerAction=null);
+
+["x","y","w","h"].forEach(k=>inputs[k].addEventListener("input",()=>{current()[k]=Number(inputs[k].value)||0;render()}));
+textInputs.text.addEventListener("input",e=>{if(current().kind==="text"){current().text=e.target.value;render()}});
+textInputs.font.addEventListener("input",e=>{if(current().kind==="text"){current().font=Number(e.target.value)||0;render()}});
+textInputs.weight.addEventListener("change",e=>{if(current().kind==="text"){current().weight=e.target.value;render()}});
+textInputs.align.addEventListener("change",e=>{if(current().kind==="text"){current().align=e.target.value;render()}});
+textInputs.color.addEventListener("input",e=>{if(current().kind==="text"){current().color=e.target.value;render()}});
+document.getElementById("rowStep").addEventListener("input",e=>{state.rowStep=Number(e.target.value)||0;render()});
+document.getElementById("rowCount").addEventListener("change",e=>{state.rowCount=Number(e.target.value)||1;render()});
+function nudge(dx,dy){const a=current();a.x+=dx;a.y+=dy;render()}
+document.getElementById("up").onclick=()=>nudge(0,-.5);document.getElementById("down").onclick=()=>nudge(0,.5);document.getElementById("left").onclick=()=>nudge(-.5,0);document.getElementById("right").onclick=()=>nudge(.5,0);
+
+function rel(child,parent){
+  return {x:n((child.x-parent.x)/parent.w*100),y:n((child.y-parent.y)/parent.h*100),width:n(child.w/parent.w*100),height:n(child.h/parent.h*100)};
+}
+function output(){
+  const I=state.items;
+  const lap3=I.lap3;
+  const sel=I.selectedLap;
+  const selectedRelativeToLap3={
+    x:n((sel.x-lap3.x)/lap3.w*100),y:n((sel.y-lap3.y)/lap3.h*100),
+    width:n(sel.w/lap3.w*100),height:n(sel.h/lap3.h*100)
+  };
+  return {
+    artboard:{width:941,height:1672},
+    background:"host_race_blank_ui.png",
+    assets:{
+      back:{x:n(I.back.x),y:n(I.back.y),width:n(I.back.w),height:n(I.back.h),asset:"DR Back Button.png"},
+      selectedLap:{x:n(I.selectedLap.x),y:n(I.selectedLap.y),width:n(I.selectedLap.w),height:n(I.selectedLap.h),asset:"Lap Pill Selected.png"},
+      lobbyRow:{x:n(I.lobbyRow.x),y:n(I.lobbyRow.y),width:n(I.lobbyRow.w),height:n(I.lobbyRow.h),asset:"lobby_blank_button.png",rowStep:n(state.rowStep),maxRows:4},
+      restart:{x:n(I.restart.x),y:n(I.restart.y),width:n(I.restart.w),height:n(I.restart.h),asset:"restart_discovery_button.png"},
+      start:{x:n(I.start.x),y:n(I.start.y),width:n(I.start.w),height:n(I.start.h),asset:"11_start_race_button.png"}
+    },
+    regions:{
+      playerSelect:{x:n(I.playerSelect.x),y:n(I.playerSelect.y),width:n(I.playerSelect.w),height:n(I.playerSelect.h)},
+      trackHit:{x:n(I.trackHit.x),y:n(I.trackHit.y),width:n(I.trackHit.w),height:n(I.trackHit.h)},
+      trackMap:{x:n(I.trackMap.x),y:n(I.trackMap.y),width:n(I.trackMap.w),height:n(I.trackMap.h),circularCrop:true}
+    },
+    text:Object.fromEntries(["playerName","trackName","trackHelp","lap1","lap3","lap5","lap7","lap9","status","lobbyName","lobbyState"].map(k=>[k,{
+      x:n(I[k].x),y:n(I[k].y),width:n(I[k].w),height:n(I[k].h),text:I[k].text,font:n(I[k].font),color:I[k].color,weight:I[k].weight,align:I[k].align
+    }])),
+    selectedLapRelativeToLap3:selectedRelativeToLap3,
+    lobbyTextRelativeToRow:{
+      name:{...rel(I.lobbyName,I.lobbyRow),fontVsArtboardWidth:n(I.lobbyName.font),color:I.lobbyName.color,weight:I.lobbyName.weight,align:I.lobbyName.align},
+      state:{...rel(I.lobbyState,I.lobbyRow),fontVsArtboardWidth:n(I.lobbyState.font),color:I.lobbyState.color,weight:I.lobbyState.weight,align:I.lobbyState.align}
+    }
+  };
+}
+function renderJson(){json.value=JSON.stringify(output(),null,2)}
+document.getElementById("copyJson").onclick=async()=>{
+  renderJson();
+  try{await navigator.clipboard.writeText(json.value);status.textContent="Copied JSON."}
+  catch{json.select();document.execCommand("copy");status.textContent="Copied JSON."}
+  setTimeout(()=>status.textContent="",1500);
+};
+document.getElementById("resetAll").onclick=()=>{Object.assign(state,JSON.parse(JSON.stringify(defaults)));selected="back";render()};
+window.addEventListener("resize",render);
+render();
+</script>
+</body>
+</html>
