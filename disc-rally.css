@@ -416,7 +416,7 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 }
 .turboButton:disabled{opacity:.5}
 .turboButton.ready{filter:drop-shadow(0 0 1.1cqw rgba(255,221,22,.9))}
-.turboButton.active .turboAsset{transform:translateX(-50%) scale(.94)}
+.turboButton.active .turboAsset{transform:none}
 
 .secondFlickStatus{
   position:absolute;
