@@ -19,7 +19,7 @@ button{cursor:pointer}
 .previewHead h1{margin:0;font-size:17px}
 .previewHead small{font-size:10px;color:var(--muted)}
 .stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px}
-.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
+.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none;container-type:inline-size}
 .stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .item{position:absolute;z-index:8;touch-action:none;cursor:move}
 .item img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
@@ -176,7 +176,7 @@ function renderStage(){
     }else if(it.kind==="text"){
       el.innerHTML='<div class="textInner" style="font-size:'+textFontPx(it)+'px;color:'+it.color+';font-weight:'+it.weight+';justify-content:'+justify(it.align)+';text-align:'+it.align+'">'+it.text+'</div>'+handles();
     }else{
-      el.innerHTML='<span>'+it.regionLabel+'</span>'+(it.sampleHost?'<div class="hostSample"><div><strong>Chip\\'s Disc Rally</strong><small>Random Track · 3 laps · 1/4 players</small></div><span>JOIN</span></div>':'')+handles();
+      el.innerHTML='<span>'+it.regionLabel+'</span>'+(it.sampleHost?'<div class="hostSample"><div><strong>Chip’s Disc Rally</strong><small>Random Track · 3 laps · 1/4 players</small></div><span>JOIN</span></div>':'')+handles();
     }
     el.addEventListener("pointerdown",startPointer);
     stage.appendChild(el);
