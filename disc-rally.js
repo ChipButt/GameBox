@@ -1048,11 +1048,12 @@ function renderLobby(target,players){
     return;
   }
   if(target==='joinLobby'){
-    wrap.innerHTML=(players||[]).slice(0,4).map((p,i)=>`
-      <div class="joinRaceLobbyRow">
+    const slots=Array.from({length:4},(_,i)=>(players||[])[i]||null);
+    wrap.innerHTML=slots.map((p,i)=>`
+      <div class="joinRaceLobbyRow${p?'':' empty'}">
         <img src="lobby_blank_button.png?v=1" alt="">
-        <strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong>
-        <small>Ready</small>
+        <strong>${i+1}. ${p?esc(p.name)+(p.host?' · Host':''):'Player '+(i+1)}</strong>
+        <small>${p?'Ready':'Waiting'}</small>
       </div>`).join('');
     return;
   }
