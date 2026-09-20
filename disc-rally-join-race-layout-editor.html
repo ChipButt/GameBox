@@ -122,7 +122,7 @@ button.primary{background:var(--gold);color:#082747}
     </div>
 
     <textarea id="json" class="code" spellcheck="false"></textarea>
-    <div class="note">Send the copied JSON back and I can apply the exact editor positions to the live Join Race page. The export includes relative lobby-text measurements so all four lobby rows stay aligned when the row asset moves or resizes.</div>
+    <div class="note">Send the copied JSON back and I can apply the exact editor positions to the live Join Race page. The export includes the lobby row crop metadata and relative lobby-text measurements so the live page can reproduce the same four visible player strips exactly.</div>
     <div id="status" class="status"></div>
   </aside>
 </div>
@@ -217,7 +217,7 @@ function output(){
     background:"join_race_blank_ui.png",
     assets:{
       back:Object.assign(plain(I.back),{asset:"DR Back Button.png"}),
-      lobbyRow:Object.assign(plain(row),{asset:"lobby_blank_button.png",rowStep:pct(state.rowStep),maxRows:4})
+      lobbyRow:Object.assign(plain(row),{asset:"lobby_blank_button.png",rowStep:pct(state.rowStep),maxRows:4,visibleCrop:{topThirds:1,heightThirds:1,totalThirds:3}})
     },
     regions:{
       playerSelect:plain(I.playerSelect),
