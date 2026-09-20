@@ -94,9 +94,16 @@ function syncPlayerSelects(){
     if(roster().some(p=>p.id===prev))el.value=prev;
   });
   syncHostPlayerDisplay();
+  syncJoinPlayerDisplay();
 }
 function syncHostPlayerDisplay(){
   const sel=$('hostPlayer'),display=$('hostPlayerDisplay');
+  if(!sel||!display)return;
+  const p=roster().find(x=>x.id===sel.value);
+  display.textContent=p?.name||sel.options?.[sel.selectedIndex]?.text||'';
+}
+function syncJoinPlayerDisplay(){
+  const sel=$('joinPlayer'),display=$('joinPlayerDisplay');
   if(!sel||!display)return;
   const p=roster().find(x=>x.id===sel.value);
   display.textContent=p?.name||sel.options?.[sel.selectedIndex]?.text||'';
@@ -1040,6 +1047,15 @@ function renderLobby(target,players){
       </div>`).join('');
     return;
   }
+  if(target==='joinLobby'){
+    wrap.innerHTML=(players||[]).slice(0,4).map((p,i)=>`
+      <div class="joinRaceLobbyRow">
+        <img src="lobby_blank_button.png?v=1" alt="">
+        <strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong>
+        <small>Ready</small>
+      </div>`).join('');
+    return;
+  }
   wrap.innerHTML=players.length?players.map((p,i)=>`<div class="lobbyPlayer"><strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong><small>Ready</small></div>`).join(''):'<div class="empty">Waiting for players…</div>';
 }
 function selectedTrackLabel(){return selectedTrack==='random'?'Random Track':(TRACKS.find(t=>t.id===selectedTrack)?.name||'Track')}
@@ -1197,6 +1213,7 @@ function bind(){
   $$('[data-laps]').forEach(btn=>btn.onclick=()=>setLapCount(btn.dataset.laps));
   $('joinPlayer').onchange=()=>{
     localPlayerId=$('joinPlayer').value;
+    syncJoinPlayerDisplay();
     const p=roster().find(x=>x.id===localPlayerId);
     if(role==='client'&&session?.peers?.().length&&p)session.sendToHost({type:'hello',player:p});
   };
