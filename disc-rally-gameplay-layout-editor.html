@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071e3c">
+<title>Disc Rally Gameplay Layout Editor</title>
+<style>
+:root{--bg:#06182f;--panel:#092b50;--gold:#ffd719;--muted:#a8c9e5;--cyan:#41dfff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:10px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.editor{width:min(1280px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,600px) minmax(340px,1fr);gap:14px;align-items:start}
+.panel{background:linear-gradient(180deg,#0b315b,#072441);border:1px solid rgba(58,194,255,.35);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.preview{padding:10px;position:sticky;top:10px}
+.previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.previewHead h1{margin:0;font-size:17px}
+.previewHead small{font-size:10px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px}
+.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#075fc0;touch-action:none;user-select:none;-webkit-user-select:none;container-type:inline-size}
+.stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none}
+.item{position:absolute;z-index:8;touch-action:none;cursor:move}
+.asset img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.asset.fill img{object-fit:fill}
+.textItem{z-index:12;border:1px dashed rgba(255,215,25,.78);background:rgba(255,255,255,.035);padding:2px}
+.textInner{width:100%;height:100%;display:flex;align-items:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,25,65,.78)}
+.regionItem{z-index:5;border:1.5px dashed rgba(65,223,255,.95);background:rgba(65,223,255,.08);display:flex;align-items:center;justify-content:center;color:#c9f9ff;font-size:9px;font-weight:900;text-align:center;padding:4px;pointer-events:auto}
+.secondFlickPreview{z-index:10;display:grid;justify-items:center;align-content:start;gap:3px}
+.secondFlickCircle{width:62%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#1298ec,#074bac);border:3px solid #40e9ff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.12),0 0 8px rgba(35,218,255,.55);pointer-events:none}
+.secondFlickCircle svg{width:62%;height:62%;overflow:visible}
+.secondFlickCircle path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
+.secondFlickCircle .swipeArrow{stroke-width:7}.secondFlickCircle .swipeFinger{stroke-width:6}
+.secondFlickPreview small{font-size:1.15cqw;font-weight:900;color:#fff;text-shadow:0 2px 3px #062b65;pointer-events:none}
+.item.selected{outline:2px dashed var(--gold);outline-offset:1px}
+.handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:30}
+.item.selected .handle{display:block}
+.handle.br{right:-9px;bottom:-9px;cursor:nwse-resize}
+.handle.r{right:-9px;top:calc(50% - 9px);cursor:ew-resize}
+.handle.b{left:calc(50% - 9px);bottom:-9px;cursor:ns-resize}
+.controls{padding:12px}
+.controls h2{margin:0 0 4px;font-size:18px}
+.controls>p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.45}
+.toolbar,.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toolbar{margin-bottom:8px}
+button{min-height:40px;border:0;border-radius:9px;background:#0d5685;color:#fff;font-weight:800}
+button.primary{background:var(--gold);color:#082747}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:330px;overflow:auto;margin-bottom:10px}
+.list button{min-height:38px;border:1px solid #1a6da6;background:#0a345d;font-size:10.5px;padding:5px}
+.list button.active{background:#0e78b5;border-color:#5ee0ff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.field{display:grid;gap:3px}
+.field.full{grid-column:1/-1}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
+.field input,.field select,.field textarea{width:100%;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:8px 9px;font-weight:750}
+.field input,.field select{height:39px}
+.field textarea{min-height:62px;resize:vertical}
+.textFields{grid-column:1/-1;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.textFields.visible{display:grid}
+.actions{margin-top:9px}
+.actions .danger{background:#783140}
+.code{width:100%;min-height:380px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.note{margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,215,25,.08);color:#ffe778;font-size:10px;line-height:1.45}
+.status{min-height:18px;margin-top:7px;color:#75e5a6;font-size:11px;font-weight:800}
+@media(max-width:880px){body{padding:7px}.editor{grid-template-columns:1fr}.preview{position:relative;top:auto}.stage{width:min(100%,440px)}}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="panel preview">
+    <div class="previewHead">
+      <h1>Gameplay Layout</h1>
+      <small>941 × 1672 artboard</small>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="stageBg" src="gameplay_ui_blank.png?v=1" alt="">
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel controls">
+    <h2>Gameplay Editor</h2>
+    <p>Drag and resize the live gameplay overlays over the locked blank gameplay UI. Use the preview-state selector to switch between the Your Turn and Waiting popup layouts.</p>
+
+    <div class="toolbar">
+      <button id="copyJson" class="primary">Copy JSON</button>
+      <button id="resetAll">Reset all</button>
+    </div>
+
+    <div class="fields" style="margin-bottom:9px">
+      <div class="field full">
+        <label>Popup preview</label>
+        <select id="previewState">
+          <option value="your">Your Turn</option>
+          <option value="waiting">Waiting for player</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="itemList" class="list"></div>
+
+    <div class="fields">
+      <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
+      <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1"></div>
+
+      <div id="textFields" class="textFields">
+        <div class="field full"><label>Preview text</label><textarea id="textContent"></textarea></div>
+        <div class="field"><label>Font size (% artboard width)</label><input id="fontSize" type="number" step="0.05" min="0.1"></div>
+        <div class="field"><label>Colour</label><input id="textColor" type="color"></div>
+        <div class="field"><label>Weight</label><select id="textWeight"><option>500</option><option>600</option><option>700</option><option>800</option><option selected>900</option></select></div>
+        <div class="field"><label>Align</label><select id="textAlign"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
+      <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
+      <button id="resetOne" class="danger">Reset selected</button>
+      <button id="resetView">Reset popup preview</button>
+    </div>
+
+    <textarea id="json" class="code" spellcheck="false"></textarea>
+    <div class="note">The export contains the gameplay canvas viewport as well as every movable HUD element. Send the JSON back and it can be applied directly to the live gameplay screen.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const ITEMS={
+  back:{label:"Back button",kind:"asset",src:"DR%20Back%20Button.png?v=1",fit:"fill",x:2.8,y:2,w:32.5,h:6.1},
+  playerName:{label:"Player name",kind:"text",text:"Chip",x:20,y:12.45,w:24,h:5.7,font:3.15,color:"#ffffff",weight:"800",align:"left"},
+  positionPill:{label:"Position pill",kind:"asset",src:"position_pill.png?v=1",x:44.7,y:12.15,w:24.8,h:6.35},
+  positionValue:{label:"Position value",kind:"text",text:"1ST",x:58.712,y:13.1025,w:9.424,h:4.445,font:2.75,color:"#ffffff",weight:"900",align:"center"},
+  lapPill:{label:"Lap pill",kind:"asset",src:"lap_pill.png?v=1",x:71.2,y:12.15,w:25.6,h:6.35},
+  lapValue:{label:"Lap value",kind:"text",text:"1/3",x:85.664,y:13.1025,w:9.728,h:4.445,font:2.75,color:"#ffffff",weight:"900",align:"center"},
+  trackName:{label:"Track name",kind:"text",text:"Roundabout",x:20,y:19.25,w:62.32,h:5.65,font:3,color:"#ffffff",weight:"800",align:"left"},
+  gameplayViewport:{label:"Gameplay / track viewport",kind:"region",regionLabel:"GAMEPLAY / TRACK CANVAS",x:0,y:25.65,w:100,h:54.65},
+  yourTurn:{label:"Your Turn pill",kind:"asset",src:"your_turn_pill.png?v=1",state:"your",x:25.82,y:27.2,w:48.36,h:10.5},
+  waitingTurn:{label:"Waiting pill",kind:"asset",src:"waiting_for_gold_pill.png?v=1",state:"waiting",x:11,y:27.2,w:78,h:10.5},
+  waitingName:{label:"Waiting player name",kind:"text",state:"waiting",text:"Jess",x:25.82,y:30.875,w:48.36,h:3.15,font:3.35,color:"#073d91",weight:"900",align:"center"},
+  boost:{label:"Boost button",kind:"asset",src:"boost_button.png?v=1",x:5.815,y:82.05,w:12.87,h:7.2432},
+  boostState:{label:"Boost status text",kind:"text",text:"CHARGING 0%",x:1.525,y:89.65,w:21.45,h:1.65,font:1.2,color:"#ffffff",weight:"900",align:"center"},
+  secondFlick:{label:"Second flick control",kind:"secondFlick",x:80,y:82.2,w:15.5,h:9.2},
+  finishTurn:{label:"Finish Turn pill",kind:"asset",src:"finish_turn_pill.png?v=1",x:21,y:83.35,w:58,h:6.4}
+};
+const defaults=JSON.parse(JSON.stringify(ITEMS));
+const state={items:JSON.parse(JSON.stringify(ITEMS)),preview:"your"};
+const defaultState=JSON.parse(JSON.stringify(state));
+const stage=document.getElementById("stage"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status");
+const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+const textFields=document.getElementById("textFields"),textContent=document.getElementById("textContent"),fontSize=document.getElementById("fontSize"),textColor=document.getElementById("textColor"),textWeight=document.getElementById("textWeight"),textAlign=document.getElementById("textAlign"),previewState=document.getElementById("previewState");
+let selected="back",action=null;
+
+function current(){return state.items[selected]}
+function pct(v){return +Number(v).toFixed(4)}
+function textFontPx(t){return stage.clientWidth*(t.font/100)}
+function justify(align){return align==="left"?"flex-start":align==="right"?"flex-end":"center"}
+function itemBox(el,it){Object.assign(el.style,{left:it.x+"%",top:it.y+"%",width:it.w+"%",height:it.h+"%"})}
+function handles(){return '<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>'}
+function shouldShow(it){return !it.state||it.state===state.preview||selected===Object.keys(state.items).find(k=>state.items[k]===it)}
+
+function renderStage(){
+  stage.querySelectorAll(".item").forEach(n=>n.remove());
+  Object.entries(state.items).forEach(([key,it])=>{
+    if(it.state&&it.state!==state.preview&&key!==selected)return;
+    const el=document.createElement("div");
+    el.className="item "+(it.kind==="text"?"textItem ":"")+(it.kind==="region"?"regionItem ":"")+(it.kind==="asset"?"asset ":"")+(it.fit==="fill"?"fill ":"")+(it.kind==="secondFlick"?"secondFlickPreview ":"")+(key===selected?"selected":"");
+    el.dataset.key=key;itemBox(el,it);
+    if(it.kind==="asset"){
+      el.innerHTML='<img src="'+it.src+'" alt="">'+handles();
+    }else if(it.kind==="text"){
+      el.innerHTML='<div class="textInner" style="font-size:'+textFontPx(it)+'px;color:'+it.color+';font-weight:'+it.weight+';justify-content:'+justify(it.align)+';text-align:'+it.align+'">'+it.text+'</div>'+handles();
+    }else if(it.kind==="region"){
+      el.innerHTML='<span>'+it.regionLabel+'</span>'+handles();
+    }else if(it.kind==="secondFlick"){
+      el.innerHTML='<span class="secondFlickCircle"><svg viewBox="0 0 100 100" aria-hidden="true"><path class="swipeArrow" d="M18 26 H69 M57 14 L69 26 L57 38"></path><path class="swipeFinger" d="M42 72 V46 C42 41 45 38 49 38 C53 38 56 41 56 46 V58 M56 54 C56 50 59 47 63 47 C67 47 70 50 70 54 V61 M70 57 C70 53 73 50 77 50 C81 50 84 53 84 57 V69 C84 80 76 87 64 87 H54 C45 87 39 82 36 75 L31 62 C29 58 31 54 35 52 C39 51 42 53 44 57 L47 64"></path></svg></span><small>AVAILABLE</small>'+handles();
+    }
+    el.addEventListener("pointerdown",startPointer);
+    stage.appendChild(el);
+  });
+}
+function renderList(){
+  list.innerHTML="";
+  Object.entries(state.items).forEach(([key,it])=>{
+    const b=document.createElement("button");
+    b.textContent=it.label+(it.state?" · "+(it.state==="your"?"Your Turn":"Waiting"):"");
+    if(key===selected)b.classList.add("active");
+    b.onclick=()=>{selected=key;if(it.state){state.preview=it.state;previewState.value=state.preview}renderAll()};
+    list.appendChild(b);
+  });
+}
+function renderFields(){
+  const it=current();
+  ["x","y","w","h"].forEach(k=>fields[k].value=Number(it[k]).toFixed(3));
+  previewState.value=state.preview;
+  if(it.kind==="text"){
+    textFields.classList.add("visible");
+    textContent.value=it.text;fontSize.value=it.font;textColor.value=it.color;textWeight.value=it.weight;textAlign.value=it.align;
+  }else textFields.classList.remove("visible");
+}
+function plain(it){return{x:pct(it.x),y:pct(it.y),width:pct(it.w),height:pct(it.h)}}
+function textOut(it){return{x:pct(it.x),y:pct(it.y),width:pct(it.w),height:pct(it.h),text:it.text,font:pct(it.font),color:it.color,weight:it.weight,align:it.align}}
+function output(){
+  const I=state.items;
+  return{
+    artboard:{width:941,height:1672},
+    background:"gameplay_ui_blank.png",
+    assets:{
+      back:Object.assign(plain(I.back),{asset:"DR Back Button.png"}),
+      positionPill:Object.assign(plain(I.positionPill),{asset:"position_pill.png"}),
+      lapPill:Object.assign(plain(I.lapPill),{asset:"lap_pill.png"}),
+      yourTurn:Object.assign(plain(I.yourTurn),{asset:"your_turn_pill.png"}),
+      waitingTurn:Object.assign(plain(I.waitingTurn),{asset:"waiting_for_gold_pill.png"}),
+      boost:Object.assign(plain(I.boost),{asset:"boost_button.png"}),
+      finishTurn:Object.assign(plain(I.finishTurn),{asset:"finish_turn_pill.png"})
+    },
+    regions:{
+      gameplayViewport:plain(I.gameplayViewport),
+      secondFlick:plain(I.secondFlick)
+    },
+    text:{
+      playerName:textOut(I.playerName),
+      positionValue:textOut(I.positionValue),
+      lapValue:textOut(I.lapValue),
+      trackName:textOut(I.trackName),
+      waitingPlayerName:textOut(I.waitingName),
+      boostState:textOut(I.boostState)
+    }
+  };
+}
+function renderJson(){json.value=JSON.stringify(output(),null,2)}
+function renderAll(){renderStage();renderList();renderFields();renderJson()}
+function startPointer(e){
+  e.preventDefault();
+  const el=e.currentTarget;selected=el.dataset.key;
+  const it=current(),r=stage.getBoundingClientRect(),handle=e.target.closest(".handle");
+  action={id:e.pointerId,mode:handle?"resize":"move",axis:handle?handle.dataset.resize:"",sx:e.clientX,sy:e.clientY,sw:r.width,sh:r.height,start:{...it},key:selected};
+  el.setPointerCapture?.(e.pointerId);
+  renderList();renderFields();
+}
+window.addEventListener("pointermove",e=>{
+  if(!action||e.pointerId!==action.id)return;
+  e.preventDefault();
+  const it=state.items[action.key],dx=(e.clientX-action.sx)/action.sw*100,dy=(e.clientY-action.sy)/action.sh*100;
+  if(action.mode==="move"){it.x=action.start.x+dx;it.y=action.start.y+dy}
+  else{
+    if(action.axis==="both"||action.axis==="x")it.w=Math.max(.5,action.start.w+dx);
+    if(action.axis==="both"||action.axis==="y")it.h=Math.max(.5,action.start.h+dy);
+  }
+  renderAll();
+},{passive:false});
+window.addEventListener("pointerup",e=>{if(action&&e.pointerId===action.id)action=null});
+window.addEventListener("pointercancel",()=>action=null);
+
+["x","y","w","h"].forEach(k=>fields[k].addEventListener("input",()=>{current()[k]=Number(fields[k].value)||0;renderAll()}));
+textContent.addEventListener("input",()=>{if(current().kind==="text"){current().text=textContent.value;renderAll()}});
+fontSize.addEventListener("input",()=>{if(current().kind==="text"){current().font=Number(fontSize.value)||.1;renderAll()}});
+textColor.addEventListener("input",()=>{if(current().kind==="text"){current().color=textColor.value;renderAll()}});
+textWeight.onchange=()=>{if(current().kind==="text"){current().weight=textWeight.value;renderAll()}};
+textAlign.onchange=()=>{if(current().kind==="text"){current().align=textAlign.value;renderAll()}};
+previewState.onchange=()=>{state.preview=previewState.value;renderAll()};
+function nudge(dx,dy){const it=current();it.x+=dx;it.y+=dy;renderAll()}
+document.getElementById("up").onclick=()=>nudge(0,-.5);
+document.getElementById("down").onclick=()=>nudge(0,.5);
+document.getElementById("left").onclick=()=>nudge(-.5,0);
+document.getElementById("right").onclick=()=>nudge(.5,0);
+document.getElementById("resetOne").onclick=()=>{state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
+document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaultState.items));state.preview=defaultState.preview;selected="back";renderAll()};
+document.getElementById("resetView").onclick=()=>{state.preview="your";previewState.value="your";renderAll()};
+document.getElementById("copyJson").onclick=async()=>{
+  renderJson();
+  try{await navigator.clipboard.writeText(json.value);statusEl.textContent="Copied JSON."}
+  catch{json.select();document.execCommand("copy");statusEl.textContent="Copied JSON."}
+  setTimeout(()=>statusEl.textContent="",1600);
+};
+renderAll();
+window.addEventListener("resize",renderStage);
+</script>
+</body>
+</html>
