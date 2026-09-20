@@ -354,6 +354,8 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
   text-overflow:ellipsis;
 }
 .turnBanner.yours #turnText{display:none}
+.turnBanner.noWaiting:not(.yours) .turnAssetWaiting{display:none}
+.turnBanner.noWaiting:not(.yours) #turnText{display:none}
 .turnBanner #turnHint{display:none}
 
 /* Bottom controls inside the baked-in footer panel. */
