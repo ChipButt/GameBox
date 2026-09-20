@@ -1978,8 +1978,7 @@ html,body{height:100%;overflow:hidden}
   scrollbar-width:none;
 }
 #joinSetup.joinRaceAssetScreen #availableHosts::-webkit-scrollbar{display:none}
-#joinSetup.joinRaceAssetScreen #availableHosts .hostCard,
-#joinSetup.joinRaceAssetScreen #availableHosts .scanning{
+#joinSetup.joinRaceAssetScreen #availableHosts .hostCard{
   width:100%!important;
   min-height:4.2cqw!important;
   margin:0!important;
@@ -2016,14 +2015,6 @@ html,body{height:100%;overflow:hidden}
   font-weight:900!important;
   font-size:1.8cqw!important;
 }
-#joinSetup.joinRaceAssetScreen #availableHosts .scanning{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  min-height:5cqw!important;
-  text-align:center!important;
-}
-
 /* Keep scanner state available without adding another visible button to the supplied artwork. */
 .joinRaceStatus{
   display:none!important;
