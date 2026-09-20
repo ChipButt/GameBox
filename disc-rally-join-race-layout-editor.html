@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071e3c">
+<title>Disc Rally Join Race Layout Editor</title>
+<style>
+:root{--bg:#06182f;--panel:#092b50;--gold:#ffd719;--muted:#a8c9e5;--cyan:#41dfff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:10px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.editor{width:min(1260px,100%);margin:auto;display:grid;grid-template-columns:minmax(320px,580px) minmax(330px,1fr);gap:14px;align-items:start}
+.panel{background:linear-gradient(180deg,#0b315b,#072441);border:1px solid rgba(58,194,255,.35);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.preview{padding:10px;position:sticky;top:10px}
+.previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.previewHead h1{margin:0;font-size:17px}
+.previewHead small{font-size:10px;color:var(--muted)}
+.stageWrap{display:grid;place-items:center;background:#031327;border-radius:12px;padding:8px}
+.stage{position:relative;width:min(100%,520px);aspect-ratio:941/1672;overflow:hidden;background:#0874d4;touch-action:none;user-select:none;-webkit-user-select:none}
+.stageBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.item{position:absolute;z-index:8;touch-action:none;cursor:move}
+.item img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
+.textItem{z-index:11;border:1px dashed rgba(255,215,25,.78);background:rgba(255,255,255,.035);padding:2px}
+.textInner{width:100%;height:100%;display:flex;align-items:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-shadow:0 2px 4px rgba(0,25,65,.7)}
+.regionItem{z-index:10;border:1.5px dashed rgba(65,223,255,.9);background:rgba(65,223,255,.12);display:flex;align-items:center;justify-content:center;color:#bff6ff;font-size:10px;font-weight:900;text-align:center;padding:4px}
+.hostSample{position:absolute;left:1%;right:1%;top:4%;min-height:28%;border:1px solid #27d9ff;border-radius:8px;background:linear-gradient(180deg,#0c5f91,#06466d);display:flex;align-items:center;justify-content:space-between;padding:4px 7px;color:#fff;pointer-events:none;overflow:hidden}
+.hostSample div{min-width:0;text-align:left}
+.hostSample strong{display:block;font-size:9px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hostSample small{display:block;color:#67dcff;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hostSample span{color:#ffd719;font-size:8px;font-weight:900}
+.ghost{position:absolute;z-index:5;opacity:.72;pointer-events:none}
+.ghost img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.ghost strong,.ghost small{position:absolute;top:3.5%;height:87%;display:flex;align-items:center;font-family:Inter,sans-serif;line-height:1;white-space:nowrap;overflow:hidden}
+.ghost strong{left:2.7%;width:72%;font-size:2.1cqw;font-weight:700;color:#fff}
+.ghost small{left:82%;width:14.2%;justify-content:flex-end;font-size:1.8cqw;font-weight:700;color:#61d9ff}
+.item.selected{outline:2px dashed var(--gold);outline-offset:1px}
+.handle{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:30}
+.item.selected .handle{display:block}
+.handle.br{right:-9px;bottom:-9px;cursor:nwse-resize}
+.handle.r{right:-9px;top:calc(50% - 9px);cursor:ew-resize}
+.handle.b{left:calc(50% - 9px);bottom:-9px;cursor:ns-resize}
+.controls{padding:12px}
+.controls h2{margin:0 0 4px;font-size:18px}
+.controls>p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.45}
+.toolbar,.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toolbar{margin-bottom:8px}
+button{min-height:40px;border:0;border-radius:9px;background:#0d5685;color:#fff;font-weight:800}
+button.primary{background:var(--gold);color:#082747}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:280px;overflow:auto;margin-bottom:10px}
+.list button{min-height:38px;border:1px solid #1a6da6;background:#0a345d;font-size:11px;padding:5px}
+.list button.active{background:#0e78b5;border-color:#5ee0ff}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.field{display:grid;gap:3px}
+.field.full{grid-column:1/-1}
+.field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
+.field input,.field select,.field textarea{width:100%;border:1px solid #185e91;border-radius:8px;background:#041a31;color:#fff;padding:8px 9px;font-weight:750}
+.field input,.field select{height:39px}
+.field textarea{min-height:62px;resize:vertical}
+.textFields{grid-column:1/-1;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.textFields.visible{display:grid}
+.actions{margin-top:9px}
+.actions .danger{background:#783140}
+.code{width:100%;min-height:310px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.note{margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,215,25,.08);color:#ffe778;font-size:10px;line-height:1.45}
+.status{min-height:18px;margin-top:7px;color:#75e5a6;font-size:11px;font-weight:800}
+@media(max-width:850px){body{padding:7px}.editor{grid-template-columns:1fr}.preview{position:relative;top:auto}.stage{width:min(100%,440px)}}
+</style>
+</head>
+<body>
+<div class="editor">
+  <section class="panel preview">
+    <div class="previewHead">
+      <h1>Join Race Layout</h1>
+      <small>Drag + resize live-page elements</small>
+    </div>
+    <div class="stageWrap">
+      <div id="stage" class="stage">
+        <img class="stageBg" src="join_race_blank_ui.png?v=1" alt="">
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel controls">
+    <h2>Join Race Editor</h2>
+    <p>Position the interactive player area, available-races area, scanner status and connected-lobby rows over the supplied Join Race artwork. The first lobby row is the template; the other three preview rows follow the row-step value.</p>
+
+    <div class="toolbar">
+      <button id="copyJson" class="primary">Copy JSON</button>
+      <button id="resetAll">Reset all</button>
+    </div>
+
+    <div id="itemList" class="list"></div>
+
+    <div class="fields">
+      <div class="field"><label>Left %</label><input id="x" type="number" step="0.1"></div>
+      <div class="field"><label>Top %</label><input id="y" type="number" step="0.1"></div>
+      <div class="field"><label>Width %</label><input id="w" type="number" step="0.1"></div>
+      <div class="field"><label>Height %</label><input id="h" type="number" step="0.1"></div>
+
+      <div id="textFields" class="textFields">
+        <div class="field full"><label>Preview text</label><textarea id="textContent"></textarea></div>
+        <div class="field"><label>Font size (% artboard width)</label><input id="fontSize" type="number" step="0.05" min="0.1"></div>
+        <div class="field"><label>Colour</label><input id="textColor" type="color"></div>
+        <div class="field"><label>Weight</label><select id="textWeight"><option>500</option><option>600</option><option selected>700</option><option>800</option><option>900</option></select></div>
+        <div class="field"><label>Align</label><select id="textAlign"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+      </div>
+
+      <div class="field full">
+        <label>Lobby row step %</label>
+        <input id="rowStep" type="number" step="0.05" min="0.1">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="up">↑ 0.5%</button><button id="down">↓ 0.5%</button>
+      <button id="left">← 0.5%</button><button id="right">→ 0.5%</button>
+      <button id="resetOne" class="danger">Reset selected</button>
+      <button id="snapLobbyText">Snap lobby text</button>
+    </div>
+
+    <textarea id="json" class="code" spellcheck="false"></textarea>
+    <div class="note">Send the copied JSON back and I can apply the exact editor positions to the live Join Race page. The export includes relative lobby-text measurements so all four lobby rows stay aligned when the row asset moves or resizes.</div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const ITEMS={
+  back:{label:"Back button",kind:"asset",src:"DR Back Button.png?v=1",x:2.8,y:2,w:32.5,h:6.1},
+  playerSelect:{label:"Player select hit area",kind:"region",regionLabel:"PLAYER SELECT",x:6.2,y:29.45,w:87.6,h:5.8},
+  playerName:{label:"Player name",kind:"text",text:"Chip",x:10.5,y:30.45,w:77,h:3.4,font:3.2,color:"#ffffff",weight:"700",align:"left"},
+  status:{label:"Scanner status",kind:"text",text:"Scanning",x:34,y:39.45,w:60,h:1.5,font:1.35,color:"#66dcff",weight:"700",align:"right"},
+  availableHosts:{label:"Available races region",kind:"region",regionLabel:"AVAILABLE RACES",sampleHost:true,x:6.4,y:42.2,w:87.2,h:14.2},
+  lobbyRow:{label:"Lobby row template",kind:"asset",src:"lobby_blank_button.png?v=1",x:7.4641,y:64.25,w:86,h:3.0307},
+  lobbyName:{label:"Lobby player name",kind:"text",text:"1. Chip · Host",x:9.7861,y:64.3561,w:61.92,h:2.6367,font:2.1,color:"#ffffff",weight:"700",align:"left"},
+  lobbyState:{label:"Lobby ready state",kind:"text",text:"Ready",x:77.9841,y:64.3561,w:12.212,h:2.6367,font:1.8,color:"#61d9ff",weight:"700",align:"right"}
+};
+const defaults=JSON.parse(JSON.stringify(ITEMS));
+const state={items:JSON.parse(JSON.stringify(ITEMS)),rowStep:3.1};
+const defaultState=JSON.parse(JSON.stringify(state));
+const stage=document.getElementById("stage"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status");
+const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h")};
+const textFields=document.getElementById("textFields"),textContent=document.getElementById("textContent"),fontSize=document.getElementById("fontSize"),textColor=document.getElementById("textColor"),textWeight=document.getElementById("textWeight"),textAlign=document.getElementById("textAlign"),rowStep=document.getElementById("rowStep");
+let selected="back",action=null;
+
+function current(){return state.items[selected]}
+function pct(v){return +Number(v).toFixed(4)}
+function textFontPx(t){return stage.clientWidth*(t.font/100)}
+function justify(align){return align==="left"?"flex-start":align==="right"?"flex-end":"center"}
+function itemBox(el,it){Object.assign(el.style,{left:it.x+"%",top:it.y+"%",width:it.w+"%",height:it.h+"%"})}
+function handles(){return '<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>'}
+
+function renderLobbyGhosts(){
+  const row=state.items.lobbyRow;
+  for(let i=1;i<4;i++){
+    const ghost=document.createElement("div");
+    ghost.className="ghost";
+    Object.assign(ghost.style,{left:row.x+"%",top:(row.y+state.rowStep*i)+"%",width:row.w+"%",height:row.h+"%"});
+    ghost.innerHTML='<img src="lobby_blank_button.png?v=1" alt=""><strong>'+(i+1)+'. Player '+(i+1)+'</strong><small>Ready</small>';
+    stage.appendChild(ghost);
+  }
+}
+
+function renderStage(){
+  stage.querySelectorAll(".item,.ghost").forEach(function(n){n.remove()});
+  renderLobbyGhosts();
+  Object.entries(state.items).forEach(function(entry){
+    const key=entry[0],it=entry[1],el=document.createElement("div");
+    el.className="item "+(it.kind==="text"?"textItem ":"")+(it.kind==="region"?"regionItem ":"")+(key===selected?"selected":"");
+    el.dataset.key=key;itemBox(el,it);
+    if(it.kind==="asset"){
+      el.innerHTML='<img src="'+it.src+'" alt="">'+handles();
+    }else if(it.kind==="text"){
+      el.innerHTML='<div class="textInner" style="font-size:'+textFontPx(it)+'px;color:'+it.color+';font-weight:'+it.weight+';justify-content:'+justify(it.align)+';text-align:'+it.align+'">'+it.text+'</div>'+handles();
+    }else{
+      el.innerHTML='<span>'+it.regionLabel+'</span>'+(it.sampleHost?'<div class="hostSample"><div><strong>Chip\\'s Disc Rally</strong><small>Random Track · 3 laps · 1/4 players</small></div><span>JOIN</span></div>':'')+handles();
+    }
+    el.addEventListener("pointerdown",startPointer);
+    stage.appendChild(el);
+  });
+}
+
+function renderList(){
+  list.innerHTML="";
+  Object.entries(state.items).forEach(function(entry){
+    const key=entry[0],it=entry[1],b=document.createElement("button");
+    b.textContent=it.label;
+    if(key===selected)b.classList.add("active");
+    b.onclick=function(){selected=key;renderAll()};
+    list.appendChild(b);
+  });
+}
+function renderFields(){
+  const it=current();
+  ["x","y","w","h"].forEach(function(k){fields[k].value=Number(it[k]).toFixed(2)});
+  rowStep.value=state.rowStep;
+  if(it.kind==="text"){
+    textFields.classList.add("visible");
+    textContent.value=it.text;fontSize.value=it.font;textColor.value=it.color;textWeight.value=it.weight;textAlign.value=it.align;
+  }else textFields.classList.remove("visible");
+}
+function relative(child,parent){
+  return {x:pct((child.x-parent.x)/parent.w*100),y:pct((child.y-parent.y)/parent.h*100),width:pct(child.w/parent.w*100),height:pct(child.h/parent.h*100)};
+}
+function plain(it){
+  return {x:pct(it.x),y:pct(it.y),width:pct(it.w),height:pct(it.h)};
+}
+function textOut(it){
+  return {x:pct(it.x),y:pct(it.y),width:pct(it.w),height:pct(it.h),text:it.text,font:pct(it.font),color:it.color,weight:it.weight,align:it.align};
+}
+function output(){
+  const I=state.items,row=I.lobbyRow;
+  return {
+    artboard:{width:941,height:1672},
+    background:"join_race_blank_ui.png",
+    assets:{
+      back:Object.assign(plain(I.back),{asset:"DR Back Button.png"}),
+      lobbyRow:Object.assign(plain(row),{asset:"lobby_blank_button.png",rowStep:pct(state.rowStep),maxRows:4})
+    },
+    regions:{
+      playerSelect:plain(I.playerSelect),
+      availableHosts:plain(I.availableHosts)
+    },
+    text:{
+      playerName:textOut(I.playerName),
+      status:textOut(I.status),
+      lobbyName:textOut(I.lobbyName),
+      lobbyState:textOut(I.lobbyState)
+    },
+    lobbyTextRelativeToRow:{
+      name:Object.assign(relative(I.lobbyName,row),{fontVsArtboardWidth:pct(I.lobbyName.font),color:I.lobbyName.color,weight:I.lobbyName.weight,align:I.lobbyName.align}),
+      state:Object.assign(relative(I.lobbyState,row),{fontVsArtboardWidth:pct(I.lobbyState.font),color:I.lobbyState.color,weight:I.lobbyState.weight,align:I.lobbyState.align})
+    }
+  };
+}
+function renderJson(){json.value=JSON.stringify(output(),null,2)}
+function renderAll(){renderStage();renderList();renderFields();renderJson()}
+function startPointer(e){
+  e.preventDefault();
+  const el=e.currentTarget;selected=el.dataset.key;
+  const it=current(),r=stage.getBoundingClientRect(),handle=e.target.closest(".handle");
+  action={id:e.pointerId,mode:handle?"resize":"move",axis:handle?handle.dataset.resize:"",sx:e.clientX,sy:e.clientY,sw:r.width,sh:r.height,start:Object.assign({},it),key:selected};
+  if(el.setPointerCapture)el.setPointerCapture(e.pointerId);
+  renderList();renderFields();
+}
+window.addEventListener("pointermove",function(e){
+  if(!action||e.pointerId!==action.id)return;
+  e.preventDefault();
+  const it=state.items[action.key],dx=(e.clientX-action.sx)/action.sw*100,dy=(e.clientY-action.sy)/action.sh*100;
+  if(action.mode==="move"){it.x=action.start.x+dx;it.y=action.start.y+dy}
+  else{
+    if(action.axis==="both"||action.axis==="x")it.w=Math.max(1,action.start.w+dx);
+    if(action.axis==="both"||action.axis==="y")it.h=Math.max(.5,action.start.h+dy);
+  }
+  renderAll();
+},{passive:false});
+window.addEventListener("pointerup",function(e){if(action&&e.pointerId===action.id)action=null});
+window.addEventListener("pointercancel",function(){action=null});
+
+["x","y","w","h"].forEach(function(k){fields[k].addEventListener("input",function(){current()[k]=Number(fields[k].value)||0;renderAll()})});
+textContent.addEventListener("input",function(){current().text=textContent.value;renderAll()});
+fontSize.addEventListener("input",function(){current().font=Number(fontSize.value)||.1;renderAll()});
+textColor.addEventListener("input",function(){current().color=textColor.value;renderAll()});
+textWeight.onchange=function(){current().weight=textWeight.value;renderAll()};
+textAlign.onchange=function(){current().align=textAlign.value;renderAll()};
+rowStep.addEventListener("input",function(){state.rowStep=Number(rowStep.value)||.1;renderAll()});
+function nudge(dx,dy){const it=current();it.x+=dx;it.y+=dy;renderAll()}
+document.getElementById("up").onclick=function(){nudge(0,-.5)};
+document.getElementById("down").onclick=function(){nudge(0,.5)};
+document.getElementById("left").onclick=function(){nudge(-.5,0)};
+document.getElementById("right").onclick=function(){nudge(.5,0)};
+document.getElementById("resetOne").onclick=function(){state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
+document.getElementById("resetAll").onclick=function(){state.items=JSON.parse(JSON.stringify(defaultState.items));state.rowStep=defaultState.rowStep;selected="back";renderAll()};
+document.getElementById("snapLobbyText").onclick=function(){
+  const row=state.items.lobbyRow,name=state.items.lobbyName,ready=state.items.lobbyState;
+  name.x=row.x+row.w*.027;name.y=row.y+row.h*.035;name.w=row.w*.72;name.h=row.h*.87;
+  ready.x=row.x+row.w*.82;ready.y=row.y+row.h*.035;ready.w=row.w*.142;ready.h=row.h*.87;
+  renderAll();
+};
+document.getElementById("copyJson").onclick=async function(){
+  renderJson();
+  try{await navigator.clipboard.writeText(json.value);statusEl.textContent="Copied JSON."}
+  catch(err){json.select();document.execCommand("copy");statusEl.textContent="Copied JSON."}
+  setTimeout(function(){statusEl.textContent=""},1600);
+};
+renderAll();
+window.addEventListener("resize",renderStage);
+</script>
+</body>
+</html>
