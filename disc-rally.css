@@ -125,63 +125,364 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .settingRow small{color:#5ec1ff;margin-top:3px}
 .settingRow input{width:28px;height:28px}
 
-.raceScreen{background:#dff4ff;min-height:100vh;padding:0 0 94px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.raceScreen{
+  min-height:100dvh;
+  padding:0;
+  overflow:hidden;
+  background:#0875c9;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+}
 .raceScreen *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .raceScreen img,.raceScreen svg,.raceScreen canvas{-webkit-user-drag:none;user-drag:none}
 
-.raceStage{width:min(100%,520px);height:min(82vh,930px);margin:0 auto;position:relative;overflow:hidden;background:#8edaff}
-#raceCanvas{display:block;width:100%;height:100%;touch-action:none;background:#8edaff}
-.raceHud{position:absolute;z-index:7;left:0;right:0;top:0;height:94px;background:linear-gradient(135deg,#fff 0 62%,#eef3f7 62% 100%);display:flex;justify-content:space-between;align-items:flex-end;padding:12px 22px 12px;border-bottom:4px solid #0b79ae;box-shadow:0 5px 10px rgba(0,0,0,.12)}
-.hudPlayer{display:flex;align-items:center;gap:10px;min-width:0}
-.hudDisc{width:64px;height:42px;border-radius:50%;border:4px solid #fff;background:linear-gradient(160deg,#39afff,#0874c8 58%,#ffcc11 60% 100%);box-shadow:0 3px 0 rgba(0,0,0,.15);flex:0 0 auto}
-.hudPlayer small{display:block;color:#229cea;font-weight:900;font-size:13px}
-.hudPlayer strong{display:block;color:var(--navy);font-size:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:235px}
-.hudRaceMeta{display:flex;gap:20px;color:#1a9be9;font-size:28px}
-.raceNavBar{position:absolute;z-index:7;top:94px;left:0;right:0;height:56px;background:#073d5e;border-bottom:3px solid #0a719f;display:grid;grid-template-columns:74px 1fr 74px;align-items:center;color:#fff}
-.raceNavBar button{height:100%;border:0;border-right:2px solid #0b557a;background:transparent;color:#fff;font-size:42px}
-.raceNavBar>span:nth-child(2){text-align:center;font-weight:800}
-.networkTag{justify-self:center;border-radius:999px;background:#0b82dd;padding:5px 8px;font-size:10px;font-weight:900}
-.turnBanner{position:absolute;z-index:6;top:162px;left:50%;transform:translateX(-50%);width:min(92%,430px);padding:7px 12px;border-radius:999px;background:rgba(3,47,75,.84);color:#fff;text-align:center;backdrop-filter:blur(4px)}
-.turnBanner>span{color:var(--gold);font-size:9px;font-weight:900;letter-spacing:.14em}
-.turnBanner strong{display:block;font-size:18px}
-.turnBanner small{display:block;font-size:10px;opacity:.8}
-.turnBanner.yours{background:rgba(130,95,0,.88)}
-.turnBanner.finished{background:rgba(20,121,87,.9)}
-.turboButton{position:absolute;z-index:8;left:20px;bottom:22px;width:104px;height:122px;border:0;background:transparent;color:#fff;padding:0;display:grid;justify-items:center;align-content:end;gap:5px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-.turboGauge{position:relative;width:92px;height:92px;border-radius:50%;overflow:hidden;border:7px solid #073f5e;background:#0a5d91;box-shadow:inset 0 0 0 5px rgba(255,255,255,.15),0 6px 0 rgba(1,37,59,.5)}
-.turboGauge i{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(180deg,#fff55d,#ffd116 55%,#ff9f0a);transition:height .08s linear}
-.turboGauge b{position:absolute;inset:0;display:grid;place-items:center;font-size:38px;color:#fff;text-shadow:0 2px 0 #073f5e;z-index:2}
-.turboButton small{font-size:10px;font-weight:900;letter-spacing:.06em;color:#d9f4ff;background:rgba(3,47,75,.82);border-radius:999px;padding:4px 8px}
-.turboButton.ready .turboGauge{box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 4px #ffd116,0 6px 0 rgba(1,37,59,.5)}
-.turboButton.active .turboGauge{transform:scale(.96);box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 5px #fff16b,0 3px 0 rgba(1,37,59,.5)}
-.turboButton:disabled{opacity:.55}
-.secondFlickStatus{position:absolute;z-index:8;right:20px;bottom:22px;width:104px;height:122px;display:grid;justify-items:center;align-content:end;gap:5px;pointer-events:none;color:#fff}
-.secondFlickDisc{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#1d8ee6,#0a66b1);border:7px solid #073f5e;box-shadow:inset 0 0 0 5px rgba(255,255,255,.15),0 6px 0 rgba(1,37,59,.5)}
-.secondFlickIcon{width:58px;height:58px;overflow:visible;filter:drop-shadow(0 2px 0 rgba(3,47,75,.7))}
+.raceStage{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(100vw,760px,calc(100dvh * 941 / 1672));
+  aspect-ratio:941 / 1672;
+  overflow:hidden;
+  container-type:inline-size;
+  background:#075fc0;
+}
+.gameplayShell{
+  position:absolute;
+  z-index:1;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:fill;
+  pointer-events:none;
+}
+#raceCanvas{
+  position:absolute;
+  z-index:2;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  touch-action:none;
+  background:transparent;
+  clip-path:inset(25.65% 0 19.7% 0);
+}
+
+/* Standard Disc Rally back-button placement: same artboard coordinates as other UIs. */
+.gameplayBack{
+  position:absolute;
+  z-index:20;
+  left:2.8%;
+  top:2%;
+  width:32.5%;
+  height:6.1%;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.gameplayBack img{width:100%;height:100%;display:block;object-fit:fill}
+
+/* Top player banner */
+.raceHud{
+  position:absolute;
+  z-index:10;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.hudPlayer{
+  position:absolute;
+  left:20%;
+  top:12.45%;
+  width:24%;
+  height:5.7%;
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+.hudPlayer strong{
+  width:100%;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:3.15cqw;
+  font-weight:800;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 .28cqw .18cqw rgba(0,31,95,.75);
+}
+.hudRaceMeta{position:absolute;inset:0}
+.gameplayStat{
+  position:absolute;
+  top:12.15%;
+  width:24.8%;
+  height:6.35%;
+}
+.gameplayPosition{left:44.7%}
+.gameplayLap{left:71.2%;width:25.6%}
+.gameplayStat>img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:block;
+}
+.gameplayStat>strong{
+  position:absolute;
+  right:5.5%;
+  top:15%;
+  width:38%;
+  height:70%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:2.75cqw;
+  line-height:1;
+  font-weight:900;
+  text-shadow:0 .25cqw .18cqw rgba(0,25,78,.85);
+}
+
+/* Track-name banner */
+.raceNavBar{
+  position:absolute;
+  z-index:10;
+  left:20%;
+  top:19.25%;
+  width:76%;
+  height:5.65%;
+  display:flex;
+  align-items:center;
+  color:#fff;
+  pointer-events:none;
+}
+.raceNavBar #trackName{
+  display:block;
+  width:82%;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:3cqw;
+  font-weight:800;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 .28cqw .18cqw rgba(0,31,95,.78);
+}
+.networkTag{
+  margin-left:auto;
+  margin-right:2%;
+  border-radius:999px;
+  background:#ffd116;
+  color:#073957;
+  padding:.5cqw .9cqw;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:1.2cqw;
+  font-weight:900;
+  line-height:1;
+}
+
+/* Turn overlays */
+.turnBanner{
+  position:absolute;
+  z-index:12;
+  left:50%;
+  top:27.2%;
+  transform:translateX(-50%);
+  width:78%;
+  height:10.5%;
+  padding:0;
+  background:transparent;
+  pointer-events:none;
+}
+.turnAsset{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:none;
+}
+.turnBanner.yours .turnAssetYour{display:block;width:62%}
+.turnBanner:not(.yours):not(.finished) .turnAssetWaiting{display:block}
+.turnBanner.finished{display:none}
+.turnBanner #turnText{
+  position:absolute;
+  z-index:2;
+  left:19%;
+  right:19%;
+  top:35%;
+  height:30%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#073d91;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:3.35cqw;
+  font-weight:900;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.turnBanner.yours #turnText{display:none}
+.turnBanner #turnHint{display:none}
+
+/* Bottom controls inside the baked-in footer panel. */
+.turboButton{
+  position:absolute;
+  z-index:14;
+  left:4%;
+  top:82.05%;
+  width:16.5%;
+  height:9.3%;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#fff;
+  touch-action:none;
+}
+.turboAsset{
+  position:absolute;
+  left:50%;
+  top:0;
+  transform:translateX(-50%);
+  width:78%;
+  aspect-ratio:1;
+  object-fit:contain;
+  display:block;
+}
+.turboChargeTrack{
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:15%;
+  height:4.5%;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(2,31,85,.75);
+  box-shadow:inset 0 0 0 .16cqw rgba(63,223,255,.55);
+}
+.turboChargeTrack i{
+  display:block;
+  width:100%;
+  height:0%;
+  background:linear-gradient(90deg,#ffd116,#fff56b);
+  transform-origin:left center;
+}
+.turboButton small{
+  position:absolute;
+  left:-15%;
+  right:-15%;
+  bottom:0;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:1.2cqw;
+  font-weight:900;
+  line-height:1;
+  text-align:center;
+  text-shadow:0 .2cqw .15cqw #062b65;
+}
+.turboButton:disabled{opacity:.5}
+.turboButton.ready{filter:drop-shadow(0 0 1.1cqw rgba(255,221,22,.9))}
+.turboButton.active .turboAsset{transform:translateX(-50%) scale(.94)}
+
+.secondFlickStatus{
+  position:absolute;
+  z-index:14;
+  right:4.5%;
+  top:82.2%;
+  width:15.5%;
+  height:9.2%;
+  display:grid;
+  justify-items:center;
+  align-content:start;
+  pointer-events:none;
+  color:#fff;
+}
+.secondFlickDisc{
+  width:62%;
+  aspect-ratio:1;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(180deg,#1298ec,#074bac);
+  border:.55cqw solid #40e9ff;
+  box-shadow:inset 0 0 0 .35cqw rgba(255,255,255,.12),0 0 1cqw rgba(35,218,255,.55);
+}
+.secondFlickIcon{width:62%;height:62%;overflow:visible;filter:drop-shadow(0 .2cqw 0 rgba(3,47,75,.7))}
 .secondFlickIcon path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
 .secondFlickIcon .swipeArrow{stroke-width:7}
 .secondFlickIcon .swipeFinger{stroke-width:6}
-.secondFlickStatus small{font-size:10px;font-weight:900;letter-spacing:.06em;color:#d9f4ff;background:rgba(3,47,75,.82);border-radius:999px;padding:4px 8px}
-.secondFlickStatus.available .secondFlickDisc{box-shadow:inset 0 0 0 5px rgba(255,255,255,.18),0 0 0 4px #fff,0 6px 0 rgba(1,37,59,.5)}
-.secondFlickStatus.used{opacity:.48}
-.secondFlickStatus.used .secondFlickDisc{filter:grayscale(.65)}
-.finishOverlay{position:absolute;z-index:9;inset:0;background:rgba(3,47,75,.74);display:grid;place-items:center;padding:22px}
-.finishCard{width:min(92%,420px);background:#fff;border-radius:18px;border:5px solid var(--gold);padding:24px;text-align:center;color:var(--navy)}
+.secondFlickStatus small{
+  margin-top:.6cqw;
+  color:#fff;
+  font-family:Fredoka,Inter,sans-serif;
+  font-size:1.15cqw;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 .2cqw .15cqw #062b65;
+}
+.secondFlickStatus.available .secondFlickDisc{filter:drop-shadow(0 0 .8cqw #fff)}
+.secondFlickStatus.used{opacity:.44}
+
+.raceBottomBar{
+  position:absolute;
+  z-index:14;
+  left:21%;
+  top:83.35%;
+  width:58%;
+  height:6.4%;
+  background:transparent;
+  display:block;
+  pointer-events:none;
+}
+.finishTurnButton{
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  pointer-events:auto;
+}
+.finishTurnButton img{width:100%;height:100%;display:block;object-fit:contain}
+.finishTurnButton:disabled{opacity:.34}
+.finishTurnButton:enabled{filter:drop-shadow(0 0 .9cqw rgba(62,228,255,.7))}
+
+.finishOverlay{
+  position:absolute;
+  z-index:30;
+  inset:0;
+  background:rgba(3,47,75,.78);
+  display:grid;
+  place-items:center;
+  padding:5%;
+}
+.finishCard{
+  width:min(92%,420px);
+  background:#fff;
+  border-radius:18px;
+  border:5px solid var(--gold);
+  padding:24px;
+  text-align:center;
+  color:var(--navy);
+}
 .finishCard span,.finishCard strong,.finishCard small{display:block}
 .finishCard span{font-size:12px;color:#0b9bea;letter-spacing:.1em}
 .finishCard strong{font-size:38px;margin:5px 0}
 .finishCard button{margin-top:16px;border:0;border-radius:10px;background:#07547e;color:#fff;padding:12px 18px;font-weight:800}
-.scoreboard{width:min(100%,520px);margin:0 auto;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#f8fbfd}
-.scoreRow{border:1px solid #cfe0eb;border-radius:10px;background:#fff;padding:8px 10px;display:flex;justify-content:space-between;gap:8px}
-.scoreIdentity{display:flex;align-items:center;gap:6px;min-width:0}
-.scoreDot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(0,0,0,.15)}
-.scoreIdentity strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.scoreRow small{color:#7190a0;text-align:right}
-.scoreRow.active{border-color:#e8c11a;background:#fff9da}
-.raceBottomBar{position:fixed;z-index:15;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);height:94px;background:#073f5e;border-top:3px solid #0b8cc5;display:grid}
-.finishTurnButton{border:0;background:transparent;color:#fff;font-weight:800;font-size:23px;background:linear-gradient(#0b6795,#06476b)}
-.finishTurnButton:enabled{background:linear-gradient(#0b82dd,#07547e);box-shadow:inset 0 0 0 3px #22b5f5}
-.finishTurnButton:disabled{color:#7291a0}
+.scoreboard{display:none!important}
 
 @media(max-width:600px){
   .menuScreen{padding-left:10px;padding-right:10px}
@@ -204,17 +505,7 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
   .playerSlot strong{font-size:18px}
   .roleGrid{grid-template-columns:1fr}
   .largeMenuCard{min-height:150px}
-  .raceStage{height:calc(100vh - 128px);max-height:none}
-  .scoreboard{display:none}
-  .hudPlayer strong{font-size:22px;max-width:145px}
-  .hudRaceMeta{font-size:23px;gap:12px}
-  .raceBottomBar{height:82px}
   .fixedBottomAction{height:82px}
-  .raceScreen{padding-bottom:82px}
-  .turboButton{left:14px;bottom:16px;width:92px;height:108px}
-  .turboGauge{width:80px;height:80px}
-  .secondFlickStatus{right:14px;bottom:16px;width:92px;height:108px}
-  .secondFlickDisc{width:80px;height:80px}
 }
 
 
