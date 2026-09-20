@@ -736,7 +736,7 @@ function applyWalls(p){
 function applyBumpers(p){
   const t=track();
   t.bumpers.forEach(spec=>{
-    const b=featureAt(spec,t),dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),min=DISC_R+b.r;
+    const b=featureAt(spec,t),dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),visiblePostRadius=b.r*.62,min=DISC_R+visiblePostRadius;
     if(d>0&&d<min){
       const nx=dx/d,ny=dy/d,dot=p.vx*nx+p.vy*ny;
       p.x=b.x+nx*(min+1);p.y=b.y+ny*(min+1);
