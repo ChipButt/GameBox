@@ -2026,22 +2026,7 @@ html,body{height:100%;overflow:hidden}
 
 /* Keep scanner state available without adding another visible button to the supplied artwork. */
 .joinRaceStatus{
-  position:absolute;
-  z-index:15;
-  left:34%;
-  top:39.45%;
-  width:60%;
-  height:1.5%;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  overflow:hidden;
-  color:#66dcff;
-  font-family:Fredoka,Inter,sans-serif;
-  font-size:1.35cqw;
-  font-weight:700;
-  line-height:1;
-  pointer-events:none;
+  display:none!important;
 }
 .joinRaceRestartHidden{
   position:absolute;
