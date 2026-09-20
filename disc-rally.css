@@ -2051,40 +2051,39 @@ html,body{height:100%;overflow:hidden}
   pointer-events:none;
 }
 
-/* LOBBY */
+/* LOBBY
+   The editor's lobby box is the overall four-player area.
+   Four individual lobby_blank_button rows are laid out inside it. */
 #joinSetup.joinRaceAssetScreen #joinLobby{
   position:absolute!important;
   z-index:14!important;
   pointer-events:none!important;
-  left:0!important;
-  top:0!important;
-  right:0!important;
-  bottom:0!important;
-  width:auto!important;
-  height:auto!important;
+  left:6.8206%!important;
+  top:61.2948%!important;
+  width:86%!important;
+  height:8.9969%!important;
   max-height:none!important;
   margin:0!important;
   padding:0!important;
-  display:block!important;
+  display:grid!important;
+  grid-template-rows:repeat(4,minmax(0,1fr))!important;
+  gap:.18cqw!important;
   overflow:visible!important;
   background:transparent!important;
 }
 .joinRaceLobbyRow{
-  position:absolute;
-  left:6.8206%;
-  width:86%;
-  height:8.9969%;
+  position:relative;
+  left:auto;
+  top:auto;
+  width:100%;
+  height:100%;
+  min-height:0;
   overflow:hidden;
   pointer-events:none;
 }
-.joinRaceLobbyRow:nth-child(1){top:61.2948%}
-.joinRaceLobbyRow:nth-child(2){top:64.3948%}
-.joinRaceLobbyRow:nth-child(3){top:67.4948%}
-.joinRaceLobbyRow:nth-child(4){top:70.5948%}
 .joinRaceLobbyRow>img{
   position:absolute;
-  left:0;
-  top:0;
+  inset:0;
   width:100%;
   height:100%;
   display:block;
@@ -2094,6 +2093,8 @@ html,body{height:100%;overflow:hidden}
 .joinRaceLobbyRow strong,
 .joinRaceLobbyRow small{
   position:absolute;
+  top:0;
+  height:100%;
   display:flex;
   align-items:center;
   font-family:Fredoka,Inter,sans-serif;
@@ -2102,9 +2103,7 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow strong{
   left:1.9098%;
-  top:31.6829%;
   width:72%;
-  height:29.3067%;
   color:#fff;
   font-size:2.1cqw;
   font-weight:700;
@@ -2114,11 +2113,11 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow small{
   left:82.7483%;
-  top:34.0261%;
   width:14.2%;
-  height:29.3067%;
   justify-content:flex-end;
   color:#61d9ff;
-  font-size:1.8cqw;
+  font-size:1.55cqw;
   font-weight:700;
 }
+.joinRaceLobbyRow.empty strong{opacity:.72}
+.joinRaceLobbyRow.empty small{opacity:.78}
