@@ -1000,7 +1000,10 @@ function renderHudOnly(){
     phase==='settled'?
       (yourFinish?(finishPending?'Finish crossed — finish your turn':'Finish Turn now · automatic handoff in 3 seconds'):`Waiting for ${p?.name||'player'}`):
     yourShot?'Drag anywhere to look around · drag from your disc to flick':`Waiting for ${p?.name||'player'}`;
-  $('turnBanner').classList.toggle('yours',(yourShot||yourFinish||canTurbo)&&!game.winner);$('turnBanner').classList.toggle('finished',!!game.winner);
+  const turnBanner=$('turnBanner');
+  turnBanner.classList.toggle('yours',(yourShot||yourFinish||canTurbo)&&!game.winner);
+  turnBanner.classList.toggle('finished',!!game.winner);
+  turnBanner.classList.toggle('noWaiting',mode==='local');
 
   $('turboFill').style.height=`${Math.round(turboCharge*100)}%`;
   $('turboState').textContent=p?.turboHeld?'BOOSTING':p?.turboReady?'READY — HOLD':`CHARGING ${Math.round(turboCharge*100)}%`;
