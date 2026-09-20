@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=54">
+<link rel="stylesheet" href="disc-rally.css?v=55">
 </head>
 <body>
 <div class="discApp">
@@ -199,33 +199,46 @@
 
     <section id="raceView" class="view raceScreen hidden">
       <div class="raceStage">
+        <img class="gameplayShell" src="gameplay_ui_blank.png?v=1" alt="" aria-hidden="true">
+
         <canvas id="raceCanvas" width="720" height="1280" aria-label="Disc Rally race"></canvas>
 
-        <header class="raceHud">
+        <button id="exitRace" class="gameplayBack" type="button" aria-label="Back">
+          <img src="DR%20Back%20Button.png?v=1" alt="Back">
+        </button>
+
+        <header class="raceHud" aria-label="Race status">
           <div class="hudPlayer">
-            <span id="hudDisc" class="hudDisc"></span>
-            <div><small>PLAYER:</small><strong id="hudPlayerName">—</strong></div>
+            <strong id="hudPlayerName">—</strong>
           </div>
+
           <div class="hudRaceMeta">
-            <strong id="hudPosition">1ST</strong>
-            <strong id="hudLap">1/2</strong>
+            <div class="gameplayStat gameplayPosition">
+              <img src="position_pill.png?v=1" alt="">
+              <strong id="hudPosition">1ST</strong>
+            </div>
+            <div class="gameplayStat gameplayLap">
+              <img src="lap_pill.png?v=1" alt="">
+              <strong id="hudLap">1/3</strong>
+            </div>
           </div>
         </header>
 
         <div class="raceNavBar">
-          <button id="exitRace" type="button">‹</button>
-          <span id="trackName">Harbour Loop</span>
+          <span id="trackName">Roundabout</span>
           <span id="raceNetwork" class="networkTag hidden">MULTI</span>
         </div>
 
-        <section class="turnBanner" id="turnBanner">
-          <span>TURN</span>
+        <section class="turnBanner" id="turnBanner" aria-live="polite">
+          <img class="turnAsset turnAssetYour" src="your_turn_pill.png?v=1" alt="Your Turn">
+          <img class="turnAsset turnAssetWaiting" src="waiting_for_gold_pill.png?v=1" alt="">
           <strong id="turnText">—</strong>
           <small id="turnHint">Aim and flick</small>
         </section>
 
         <button id="turboButton" class="turboButton" type="button" aria-label="Hold to use turbo">
-          <span class="turboGauge"><i id="turboFill"></i><b>⚡</b></span>
+          <img class="turboAsset" src="boost_button.png?v=1" alt="Boost">
+          <span class="turboChargeTrack" aria-hidden="true"><i id="turboFill"></i></span>
           <small id="turboState">CHARGING</small>
         </button>
 
@@ -239,14 +252,16 @@
           <small id="secondFlickText">AVAILABLE</small>
         </div>
 
+        <div class="raceBottomBar">
+          <button id="finishTurnButton" class="finishTurnButton" type="button" disabled aria-label="Finish Turn">
+            <img src="finish_turn_pill.png?v=1" alt="Finish Turn">
+          </button>
+        </div>
+
         <div id="finishOverlay" class="finishOverlay hidden"></div>
       </div>
 
-      <section id="scoreboard" class="scoreboard"></section>
-
-      <div class="raceBottomBar">
-        <button id="finishTurnButton" class="finishTurnButton" type="button" disabled>FINISH TURN</button>
-      </div>
+      <section id="scoreboard" class="scoreboard" aria-hidden="true"></section>
     </section>
   </main>
 </div>
