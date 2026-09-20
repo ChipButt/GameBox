@@ -240,7 +240,7 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
   inset:0;
   width:100%;
   height:100%;
-  object-fit:fill;
+  object-fit:contain;
   display:block;
 }
 .gameplayStat>strong{
