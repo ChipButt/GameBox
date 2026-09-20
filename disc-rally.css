@@ -197,21 +197,23 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 }
 .hudPlayer{
   position:absolute;
-  left:20%;
-  top:12.45%;
-  width:24%;
+  left:23.3744%;
+  top:11.9782%;
+  width:61.7126%;
   height:5.7%;
   display:flex;
   align-items:center;
+  justify-content:center;
   min-width:0;
 }
 .hudPlayer strong{
   width:100%;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-size:3.15cqw;
+  font-size:4.7cqw;
   font-weight:800;
   line-height:1;
+  text-align:center;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -220,12 +222,19 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .hudRaceMeta{position:absolute;inset:0}
 .gameplayStat{
   position:absolute;
-  top:12.15%;
-  width:24.8%;
-  height:6.35%;
 }
-.gameplayPosition{left:44.7%}
-.gameplayLap{left:71.2%;width:25.6%}
+.gameplayPosition{
+  left:52.6052%;
+  top:-0.8375%;
+  width:48.3209%;
+  height:17.0572%;
+}
+.gameplayLap{
+  left:56.498%;
+  top:-6.6413%;
+  width:44.5706%;
+  height:18.0283%;
+}
 .gameplayStat>img{
   position:absolute;
   inset:0;
@@ -236,18 +245,15 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 }
 .gameplayStat>strong{
   position:absolute;
-  right:5.5%;
-  top:15%;
-  width:38%;
-  height:70%;
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-size:2.75cqw;
+  font-size:4.5cqw;
   line-height:1;
   font-weight:900;
+  text-align:center;
   text-shadow:0 .25cqw .18cqw rgba(0,25,78,.85);
 }
 
@@ -255,31 +261,36 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .raceNavBar{
   position:absolute;
   z-index:10;
-  left:20%;
-  top:19.25%;
-  width:76%;
-  height:5.65%;
-  display:flex;
-  align-items:center;
+  inset:0;
+  width:100%;
+  height:100%;
   color:#fff;
   pointer-events:none;
 }
 .raceNavBar #trackName{
-  display:block;
-  width:82%;
+  position:absolute;
+  left:23.6749%;
+  top:19.7146%;
+  width:62.32%;
+  height:5.65%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
-  font-size:3cqw;
+  font-size:4.7cqw;
   font-weight:800;
   line-height:1;
+  text-align:center;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   text-shadow:0 .28cqw .18cqw rgba(0,31,95,.78);
 }
 .networkTag{
-  margin-left:auto;
-  margin-right:2%;
+  position:absolute;
+  right:3%;
+  top:20.7%;
   border-radius:999px;
   background:#ffd116;
   color:#073957;
@@ -294,35 +305,40 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .turnBanner{
   position:absolute;
   z-index:12;
-  left:50%;
-  top:27.2%;
-  transform:translateX(-50%);
-  width:78%;
-  height:10.5%;
+  inset:0;
+  width:100%;
+  height:100%;
   padding:0;
   background:transparent;
   pointer-events:none;
 }
 .turnAsset{
   position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:100%;
-  height:100%;
   object-fit:contain;
   display:none;
 }
-.turnBanner.yours .turnAssetYour{display:block;width:62%}
-.turnBanner:not(.yours):not(.finished) .turnAssetWaiting{display:block}
+.turnBanner.yours .turnAssetYour{
+  display:block;
+  left:23.9315%;
+  top:22.8488%;
+  width:52.5284%;
+  height:12.3006%;
+}
+.turnBanner:not(.yours):not(.finished) .turnAssetWaiting{
+  display:block;
+  left:11%;
+  top:27.2%;
+  width:78%;
+  height:10.5%;
+}
 .turnBanner.finished{display:none}
 .turnBanner #turnText{
   position:absolute;
   z-index:2;
-  left:19%;
-  right:19%;
-  top:35%;
-  height:30%;
+  left:25.82%;
+  top:30.875%;
+  width:48.36%;
+  height:3.15%;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -343,10 +359,10 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .turboButton{
   position:absolute;
   z-index:14;
-  left:4%;
-  top:82.05%;
-  width:16.5%;
-  height:9.3%;
+  left:74.1503%;
+  top:66.7933%;
+  width:19.8742%;
+  height:10.4221%;
   padding:0;
   border:0;
   background:transparent;
@@ -355,11 +371,9 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 }
 .turboAsset{
   position:absolute;
-  left:50%;
-  top:0;
-  transform:translateX(-50%);
-  width:78%;
-  aspect-ratio:1;
+  inset:0;
+  width:100%;
+  height:100%;
   object-fit:contain;
   display:block;
 }
@@ -383,15 +397,20 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 }
 .turboButton small{
   position:absolute;
-  left:-15%;
-  right:-15%;
-  bottom:0;
+  left:-2.2029%;
+  top:96.5189%;
+  width:107.9289%;
+  height:15.8317%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   color:#fff;
   font-family:Fredoka,Inter,sans-serif;
   font-size:1.2cqw;
   font-weight:900;
   line-height:1;
   text-align:center;
+  white-space:nowrap;
   text-shadow:0 .2cqw .15cqw #062b65;
 }
 .turboButton:disabled{opacity:.5}
@@ -401,13 +420,14 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .secondFlickStatus{
   position:absolute;
   z-index:14;
-  right:4.5%;
-  top:82.2%;
-  width:15.5%;
-  height:9.2%;
+  left:1.5092%;
+  top:67.3623%;
+  width:23.3636%;
+  height:13.8514%;
   display:grid;
   justify-items:center;
   align-content:start;
+  gap:.5cqw;
   pointer-events:none;
   color:#fff;
 }
@@ -440,10 +460,10 @@ h1,h2,h3,strong,button,.sectionRibbon,.panelRibbon{font-family:Fredoka,Inter,san
 .raceBottomBar{
   position:absolute;
   z-index:14;
-  left:21%;
-  top:83.35%;
-  width:58%;
-  height:6.4%;
+  left:18.2266%;
+  top:83.265%;
+  width:63.5995%;
+  height:8.0463%;
   background:transparent;
   display:block;
   pointer-events:none;
@@ -2393,3 +2413,16 @@ html,body{height:100%;overflow:hidden}
 }
 .joinRaceLobbyRow.empty strong{opacity:.72}
 .joinRaceLobbyRow.empty small{opacity:.78}
+
+.gameplayPosition>strong{
+  left:60.6398%;
+  top:41.0642%;
+  width:24.4637%;
+  height:26.0594%;
+}
+.gameplayLap>strong{
+  left:48.6172%;
+  top:40.9151%;
+  width:38.1747%;
+  height:24.6557%;
+}
