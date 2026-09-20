@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0875c9">
 <title>Disc Rally · Chip In Games</title>
-<link rel="stylesheet" href="disc-rally.css?v=44">
+<link rel="stylesheet" href="disc-rally.css?v=45">
 </head>
 <body>
 <div class="discApp">
@@ -165,32 +165,23 @@
       </div>
     </section>
 
-    <section id="joinSetup" class="view menuScreen hidden">
-      <div class="menuBackdrop"></div>
-      <header class="whiteHeader">
-        <button class="circleBack" data-back="multiSetup" type="button">‹</button>
-        <h1>⌕ JOIN RACE</h1>
-      </header>
+    <section id="joinSetup" class="view joinRaceAssetScreen hidden">
+      <div class="joinRaceArtboard">
+        <img class="joinRaceShell" src="join_race_blank_ui.png?v=1" alt="" aria-hidden="true">
 
-      <section class="setupPanel">
-        <div class="panelRibbon">PLAYER</div>
-        <label class="gameField">THIS PHONE IS
-          <select id="joinPlayer"></select>
-        </label>
-      </section>
+        <button class="joinRaceBack" data-back="multiSetup" type="button" aria-label="Back">
+          <img src="DR%20Back%20Button.png?v=1" alt="Back">
+        </button>
 
-      <section class="setupPanel">
-        <div class="panelRibbon">AVAILABLE RACES</div>
-        <div class="discoveryStrip"><span class="scanPulse"></span><strong id="joinStatus">Scanning</strong></div>
-        <div id="availableHosts" class="hostList"></div>
-      </section>
+        <span id="joinPlayerDisplay" class="joinRacePlayerDisplay"></span>
+        <select id="joinPlayer" class="joinRacePlayerSelect" aria-label="This phone is"></select>
 
-      <section class="setupPanel">
-        <div class="panelRibbon">CONNECTED LOBBY</div>
-        <div id="joinLobby" class="lobbyList"><div class="empty">Not connected yet.</div></div>
-      </section>
+        <div id="joinStatus" class="joinRaceStatus" aria-live="polite"></div>
+        <div id="availableHosts" class="joinRaceHosts" aria-label="Available races"></div>
+        <div id="joinLobby" class="joinRaceLobby" aria-label="Connected lobby"></div>
 
-      <button id="restartScan" class="fixedBottomAction" type="button">⌕ RESTART SCAN</button>
+        <button id="restartScan" class="joinRaceRestartHidden" type="button" aria-label="Restart scan"></button>
+      </div>
     </section>
 
     <section id="settingsView" class="view menuScreen hidden">
@@ -261,6 +252,6 @@
 </div>
 
 <script src="lan-core.js?v=8"></script>
-<script src="disc-rally.js?v=41"></script>
+<script src="disc-rally.js?v=40"></script>
 </body>
 </html>
