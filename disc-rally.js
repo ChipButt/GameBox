@@ -160,10 +160,44 @@ function renderTrackSummary(){
   if($('hostSelectedTrackIcon'))$('hostSelectedTrackIcon').innerHTML=hostIcon;
 }
 function renderLapChoices(){
-  $$('[data-laps]').forEach(btn=>{
-    const isSelected=Number(btn.dataset.laps)===selectedLaps;
+  const hostNumberRects={
+    1:{x:12.3688,y:61.5,width:6,height:3.2},
+    3:{x:29.5,y:61.5,width:6,height:3.2},
+    5:{x:47.0734,y:61.5,width:6,height:3.2},
+    7:{x:64.4317,y:61.5,width:6,height:3.2},
+    9:{x:81.8,y:61.5,width:6,height:3.2}
+  };
+  const rel={x:-86.0114,y:-26.8124,width:283.0302,height:168.2482};
+
+  $('[data-laps]').forEach(btn=>{
+    const lap=Number(btn.dataset.laps);
+    const isSelected=lap===selectedLaps;
     btn.classList.toggle('selected',isSelected);
     btn.setAttribute('aria-pressed',isSelected?'true':'false');
+
+    if(btn.classList.contains('hostRaceLap')){
+      const nr=hostNumberRects[lap];
+      if(nr){
+        const pill={
+          x:nr.x+(rel.x/100)*nr.width,
+          y:nr.y+(rel.y/100)*nr.height,
+          width:(rel.width/100)*nr.width,
+          height:(rel.height/100)*nr.height
+        };
+        btn.style.left=pill.x+'%';
+        btn.style.top=pill.y+'%';
+        btn.style.width=pill.width+'%';
+        btn.style.height=pill.height+'%';
+
+        const span=btn.querySelector('span');
+        if(span){
+          span.style.left=((nr.x-pill.x)/pill.width*100)+'%';
+          span.style.top=((nr.y-pill.y)/pill.height*100)+'%';
+          span.style.width=(nr.width/pill.width*100)+'%';
+          span.style.height=(nr.height/pill.height*100)+'%';
+        }
+      }
+    }
   });
 }
 function setLapCount(laps){
