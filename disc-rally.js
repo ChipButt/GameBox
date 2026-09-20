@@ -284,19 +284,16 @@ function trackGeometry(t=track()){
     total+=len;cumulative.push(total);
   }
 
-  // Validate the actual rail edges as well as the centreline. Tight inside bends
-  // can make an offset rail self-intersect even when the centreline itself is clean.
-  let half=t.width,{left,right}=buildTrackRails(samples,half);
-  const minHalf=DISC_R*2+7;
-  while(half>minHalf&&(courseHasCrossings(left)||courseHasCrossings(right))){
-    half-=2;
-    ({left,right}=buildTrackRails(samples,half));
-  }
-  if(courseHasCrossings(left)||courseHasCrossings(right)){
-    console.warn('Rail geometry still too tight',t.id);
+  // The requested track width is authoritative. These track widths are now
+  // intentionally doubled from the original game, so do not silently shrink
+  // them on tight bends. A crossing warning is retained for diagnostics.
+  const half=t.width,{left,right}=buildTrackRails(samples,half);
+  const railCrossing=courseHasCrossings(left)||courseHasCrossings(right);
+  if(railCrossing){
+    console.warn('Wide track rail overlap detected; preserving requested width',t.id);
   }
 
-  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing:courseHasCrossings(left)||courseHasCrossings(right)};
+  const g={samples,segs,cumulative,total,left,right,halfWidth:half,selfCrossing:courseHasCrossings(samples),railCrossing};
   TRACK_GEOMETRY.set(t.id,g);return g;
 }
 function rawPointAtProgress(progress,t=track()){
