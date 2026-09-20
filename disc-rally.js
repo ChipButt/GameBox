@@ -1098,15 +1098,29 @@ async function startHostDiscovery(){
 }
 async function startScan(){
   try{
-    installSession('client');localPlayerId=$('joinPlayer').value;$('joinStatus').textContent='Scanning';renderHosts([]);
+    installSession('client');
+    localPlayerId=$('joinPlayer').value;
+    connectedLobby=[];
+    renderLobby('joinLobby',connectedLobby);
+    $('joinStatus').textContent='Scanning';
+    renderHosts([]);
     await session.startScanner();
   }catch(err){console.error(err);$('joinStatus').textContent='Discovery error';}
 }
 function renderHosts(hosts=[]){
   if(role!=='client')return;
-  const wrap=$('availableHosts');if(session?.peers?.().length){wrap.innerHTML='<div class="scanning"><strong>Connected ✓</strong></div>';$('joinStatus').textContent='Connected';return}
+  const wrap=$('availableHosts');
+  if(session?.peers?.().length){
+    wrap.innerHTML='';
+    $('joinStatus').textContent='Connected';
+    return;
+  }
   const open=hosts.filter(h=>!h.started&&(h.raceMode||'')==='disc-rally'&&Number(h.playerCount||1)<Number(h.maxPlayers||4));
-  if(!open.length){wrap.innerHTML='<div class="scanning"><span class="scanPulse"></span><strong>Scanning for Disc Rally hosts…</strong></div>';$('joinStatus').textContent='Scanning';return}
+  if(!open.length){
+    wrap.innerHTML='';
+    $('joinStatus').textContent='Scanning';
+    return;
+  }
   $('joinStatus').textContent=`${open.length} found`;
   wrap.innerHTML=open.map(h=>`<button class="hostCard" type="button" data-host="${esc(h.peerId)}"><div><strong>${esc(h.hostName||"Disc Rally")}</strong><small>${esc(h.trackName||'Track')} · ${Number(h.totalRaces)||3} laps · ${Number(h.playerCount)||1}/4 players</small></div><span>JOIN</span></button>`).join('');
 }
