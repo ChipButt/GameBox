@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eefaf5">
+<title>GameBox Bingo · Chip In Games</title>
+<link rel="stylesheet" href="bingo.css?v=1">
+</head>
+<body>
+<main class="bingoApp">
+  <header class="bingoTopbar noPrint">
+    <a class="backLink" href="index.html">← GameBox</a>
+    <div>
+      <span class="kicker">CHIP IN GAMES</span>
+      <h1>Bingo</h1>
+    </div>
+  </header>
+
+  <section id="roleScreen" class="screen noPrint">
+    <div class="heroCard">
+      <div class="bingoBalls"><span>9</span><span>0</span></div>
+      <h2>Ready to play?</h2>
+      <p>Run the room as Bingo Master or join a live game on your own device.</p>
+      <div class="roleGrid">
+        <button id="openMaster" class="bigChoice gold"><strong>Bingo Master</strong><small>Create, issue cards and run the game</small></button>
+        <button id="openPlayer" class="bigChoice blue"><strong>Player</strong><small>Join a live digital-card session</small></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="masterScreen" class="screen hidden noPrint">
+    <div class="masterHeader">
+      <div>
+        <span class="kicker">BINGO MASTER</span>
+        <h2 id="masterEventTitle">Bingo Night</h2>
+      </div>
+      <div class="roomCodeBox"><span>ROOM CODE</span><strong id="roomCode">------</strong></div>
+    </div>
+
+    <div class="masterGrid">
+      <section class="panel setupPanel">
+        <h3>Game setup</h3>
+        <label>Event name<input id="eventName" maxlength="50" value="Bingo Night"></label>
+        <div class="twoCol">
+          <label>Caller
+            <select id="callerMode">
+              <option value="digital">Digital bingo caller</option>
+              <option value="physical">Physical ball dispenser</option>
+            </select>
+          </label>
+          <label>Cards
+            <select id="cardMode">
+              <option value="physical">Physical printed cards</option>
+              <option value="digital">Digital player cards</option>
+            </select>
+          </label>
+        </div>
+        <div class="twoCol">
+          <label>Card price / stake (£)<input id="cardPrice" type="number" min="0" max="5" step="0.5" value="1"></label>
+          <label>Current prize
+            <select id="winTarget">
+              <option value="line">1 Line</option>
+              <option value="two">2 Lines</option>
+              <option value="house">Full House</option>
+            </select>
+          </label>
+        </div>
+        <label class="checkRow"><input id="speakCalls" type="checkbox" checked> Speak digitally drawn numbers aloud</label>
+        <div class="buttonRow">
+          <button id="startGame" class="primary">Start / Resume Game</button>
+          <button id="newSession" class="secondary">New Session</button>
+        </div>
+        <p class="legalHint">Physical-card mode is intended for in-person play. Digital-player-card mode should only be used where your licensing arrangements permit it.</p>
+      </section>
+
+      <section class="panel stockPanel">
+        <div class="panelHeading">
+          <div><h3>Permanent card library</h3><p>Print once, reuse at future events.</p></div>
+          <strong id="libraryCount">0 cards</strong>
+        </div>
+        <div class="buttonRow">
+          <button id="addCards" class="secondary">Add 24 Cards</button>
+          <button id="printCards" class="secondary">Print / Save PDF</button>
+        </div>
+        <div class="printOptions">
+          <label>From card<input id="printFrom" type="number" min="1" value="1"></label>
+          <label>How many<input id="printCount" type="number" min="1" max="120" value="24"></label>
+        </div>
+        <p class="smallText">Each card has a permanent serial such as CI-001. You can pre-print a stock at home, laminate it and reuse it with counters or dry-wipe markers.</p>
+      </section>
+
+      <section class="panel salesPanel">
+        <div class="panelHeading">
+          <div><h3>Cards handed out</h3><p>Only the Bingo Master can issue cards.</p></div>
+          <div class="salesStat"><span>GAME POT</span><strong id="potValue">£0.00</strong></div>
+        </div>
+
+        <div id="digitalIssueArea">
+          <h4>Connected players</h4>
+          <div id="playerRoster" class="roster"></div>
+        </div>
+
+        <div class="physicalIssue">
+          <h4>Hand out a physical card</h4>
+          <div class="issueRow">
+            <input id="physicalPlayerName" maxlength="40" placeholder="Player name / table">
+            <select id="physicalCardSelect"></select>
+            <button id="issuePhysical" class="primary">Issue</button>
+          </div>
+        </div>
+
+        <div id="issuedList" class="issuedList"></div>
+      </section>
+
+      <section class="panel callerPanel">
+        <div class="callerTop">
+          <div class="currentBall">
+            <span>CURRENT NUMBER</span>
+            <strong id="currentNumber">—</strong>
+          </div>
+          <div>
+            <span class="miniLabel">CALLED</span>
+            <strong id="calledCount">0 / 90</strong>
+          </div>
+        </div>
+
+        <div id="digitalCallerControls" class="callerControls">
+          <button id="drawNumber" class="drawButton">Draw Next Number</button>
+        </div>
+
+        <div id="manualCallerControls" class="callerControls hidden">
+          <label>Ball drawn<input id="manualNumber" type="number" inputmode="numeric" min="1" max="90" placeholder="1–90"></label>
+          <button id="callManual" class="drawButton">Mark Number Called</button>
+        </div>
+
+        <div class="buttonRow">
+          <button id="undoCall" class="secondary">Void Last Call</button>
+          <button id="advancePrize" class="secondary">Advance Prize Stage</button>
+        </div>
+
+        <div id="numberBoard" class="numberBoard"></div>
+        <div class="historyWrap"><span class="miniLabel">CALL HISTORY</span><div id="callHistory" class="callHistory"></div></div>
+      </section>
+
+      <section class="panel verifyPanel">
+        <h3>Check a physical Bingo claim</h3>
+        <p>Enter the serial printed on the card. The Master checks it against the authoritative call history.</p>
+        <div class="verifyRow">
+          <input id="verifyCardId" placeholder="e.g. CI-017">
+          <select id="verifyType">
+            <option value="line">1 Line</option>
+            <option value="two">2 Lines</option>
+            <option value="house">Full House</option>
+          </select>
+          <button id="verifyCard" class="primary">Verify</button>
+        </div>
+        <div id="verifyResult" class="verifyResult"></div>
+      </section>
+
+      <section class="panel claimsPanel">
+        <div class="panelHeading">
+          <div><h3>Digital claims</h3><p>Claims are verified against the Master's copy of the card.</p></div>
+          <span id="claimCount" class="claimBadge">0</span>
+        </div>
+        <div id="claimList" class="claimList"></div>
+      </section>
+    </div>
+  </section>
+
+  <section id="playerJoinScreen" class="screen hidden noPrint">
+    <div class="playerShell">
+      <span class="kicker">JOIN BINGO</span>
+      <h2>Enter the room</h2>
+      <label>Room code<input id="joinCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="ABC123"></label>
+      <label>Your name<input id="joinName" maxlength="40" autocomplete="name" placeholder="Your name"></label>
+      <button id="joinGame" class="primary big">Join Game</button>
+      <div id="joinStatus" class="status"></div>
+      <button id="playerBack" class="textButton">← Back</button>
+    </div>
+  </section>
+
+  <section id="playerGameScreen" class="screen hidden noPrint">
+    <div class="playerGameHeader">
+      <div><span class="kicker">LIVE BINGO</span><h2 id="playerEventName">Bingo Night</h2></div>
+      <div class="connectionPill" id="playerConnection">Connecting…</div>
+    </div>
+    <div class="playerStatusCard">
+      <span>CURRENT PRIZE</span>
+      <strong id="playerTarget">1 Line</strong>
+      <small id="playerGameStatus">Waiting for the Bingo Master to start.</small>
+    </div>
+    <div id="playerWaiting" class="waitingCard">
+      <div class="spinner"></div>
+      <h3>Waiting for your card</h3>
+      <p>The Bingo Master will issue the card after it has been purchased.</p>
+    </div>
+    <div id="playerCards" class="playerCards"></div>
+    <div class="playerCalled">
+      <span>LAST CALLED</span><strong id="playerLastCalled">—</strong>
+      <small id="playerCalledCount">0 numbers called</small>
+    </div>
+  </section>
+
+  <section id="printArea" class="printArea"></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="bingo.js?v=1"></script>
+</body>
+</html>
