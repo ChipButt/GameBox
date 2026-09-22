@@ -41,6 +41,20 @@ A mobile-first browser games hub from **Chip In Games**.
 - Checkpoint-based laps to prevent shortcut finishes
 - Six original long-form tracks with genuinely different, non-crossing course geometry; rail edges are validated against self-intersections, road chevrons show race direction, and track-selection mini-maps are generated from the same paths used by rendering, rails, collisions and lap progress
 
+
+### Bingo
+- 90-ball Bingo Master and player system
+- Two caller modes: secure digital number draw or manual entry from a physical bingo ball dispenser
+- Permanent reusable card library with unique CI-xxx serials, so physical cards can be printed once and reused across events
+- Master-controlled card issuing: joining a digital room does not automatically grant a playable card
+- Physical-card issue ledger and game-pot tracking
+- Print / Save PDF layout for batches of four physical cards per A4 sheet
+- Authoritative call history with void-last-call audit trail
+- 1 Line, 2 Lines and Full House stages
+- Physical claims can be checked instantly by entering the printed card serial
+- Digital claims are verified against the Bingo Master's copy of the issued card and called-number history
+- Live digital player mode uses a room code and peer connection; use only where the operator's licensing arrangements permit remote bingo
+
 ### Gridline Racing
 - Mobile-first racing team management game
 - Live-race upgrades and tactical decisions
