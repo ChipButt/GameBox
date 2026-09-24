@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Picture Crop Round Builder</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #151b23;
+      --panel-2: #1b2430;
+      --border: #2b3645;
+      --text: #eef3f8;
+      --muted: #9eabb9;
+      --accent: #f3c74f;
+      --accent-2: #e6b92f;
+      --good: #40c980;
+      --bad: #f16c6c;
+      --shadow: 0 18px 45px rgba(0,0,0,.28);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #17202b 0, var(--bg) 46%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      width: min(1460px, calc(100% - 32px));
+      margin: 24px auto 40px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(26px, 3vw, 40px);
+      letter-spacing: -.035em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      border: 1px solid var(--border);
+      background: rgba(21,27,35,.8);
+      padding: 10px 13px;
+      border-radius: 999px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      margin-bottom: 10px;
+      padding: 8px 13px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #202a37;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 800;
+    }
+    .back-link:hover { border-color: #45556b; }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(27,36,48,.96), rgba(21,27,35,.96));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .setup {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(260px, 420px);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .dropzone {
+      min-height: 118px;
+      border: 1.5px dashed #516076;
+      border-radius: 14px;
+      background: rgba(255,255,255,.025);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+      transition: .18s ease;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(243,199,79,.06);
+      transform: translateY(-1px);
+    }
+
+    .dropzone strong { display: block; font-size: 17px; margin-bottom: 5px; }
+    .dropzone span { color: var(--muted); font-size: 14px; }
+
+    .drop-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 9px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px 14px;
+      background: #202a37;
+      color: var(--text);
+      font-weight: 700;
+      transition: .15s ease;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); border-color: #45556b; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); color: #1a1607; border-color: var(--accent); }
+    .btn.primary:hover:not(:disabled) { background: var(--accent-2); }
+    .btn.good { background: #173b2a; border-color: #286842; color: #dff8e9; }
+
+    .settings {
+      padding: 4px 2px 2px;
+      display: grid;
+      align-content: center;
+      gap: 10px;
+    }
+
+    .setting-row {
+      display: grid;
+      grid-template-columns: 1fr 105px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    label { color: #d9e1e9; font-weight: 700; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f151d;
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr) 280px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .thumb-panel { padding: 12px; min-height: 630px; }
+    .thumb-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 4px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .thumb-list {
+      display: grid;
+      gap: 9px;
+      max-height: 570px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .thumb {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 58px minmax(0,1fr) 22px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      background: #111821;
+      color: var(--text);
+      text-align: left;
+    }
+
+    .thumb.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(243,199,79,.22); }
+    .thumb.confirmed { background: #122018; }
+    .thumb img { width: 58px; height: 46px; object-fit: cover; border-radius: 8px; background: #05080c; }
+    .thumb .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 13px; }
+    .thumb .small { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .tick { font-weight: 900; color: var(--good); text-align: center; }
+
+    .editor { padding: 14px; min-height: 0; display: flex; flex-direction: column; }
+    .editor-head {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 11px;
+    }
+    .editor-title { min-width: 0; }
+    .editor-title strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .editor-title span { color: var(--muted); font-size: 12px; }
+
+    .canvas-wrap {
+      flex: none;
+      height: clamp(500px, 66vh, 760px);
+      min-height: 0;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #080c11;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      overscroll-behavior: contain;
+    }
+
+    canvas#editorCanvas { max-width: 100%; max-height: 100%; display: block; }
+
+    .empty-state {
+      color: var(--muted);
+      text-align: center;
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    .nav-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 120px;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .nav-row .status { text-align: center; color: var(--muted); font-size: 13px; }
+
+    .preview-panel {
+      padding: 14px;
+      min-height: 0;
+      position: sticky;
+      top: 16px;
+      align-self: start;
+    }
+    .preview-panel h2 { font-size: 16px; margin: 0 0 6px; }
+    .preview-panel p { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 12px; }
+
+    .preview-box {
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #070a0e;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    #previewCanvas { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; }
+
+    .confirm-block {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px;
+      background: rgba(255,255,255,.02);
+    }
+    .confirm-block .line { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 7px; }
+    .confirm-block .line:last-child { margin-bottom: 0; }
+    .confirm-block span:last-child { color: var(--muted); text-align: right; }
+
+    .confirm-btn { width: 100%; margin-top: 12px; }
+
+    .export-panel {
+      margin-top: 16px;
+      padding: 15px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .export-panel strong { display: block; margin-bottom: 4px; }
+    .export-panel span { color: var(--muted); font-size: 13px; }
+    .export-btn { min-width: 190px; }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      background: #202a37;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+      max-width: 360px;
+      z-index: 20;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 1100px) {
+      .workspace { grid-template-columns: 180px minmax(0,1fr); }
+      .preview-panel { grid-column: 1 / -1; min-height: 0; display: grid; grid-template-columns: 220px 1fr; gap: 16px; position: static; }
+      .preview-panel > * { align-self: start; }
+      .preview-panel h2, .preview-panel p { grid-column: 2; }
+      .preview-box { grid-row: 1 / span 4; }
+      .confirm-block, .confirm-btn { grid-column: 2; }
+    }
+
+    @media (max-width: 760px) {
+      .app { width: min(100% - 18px, 1460px); margin-top: 10px; }
+      .topbar { display: block; }
+      .badge { display: inline-block; margin-top: 10px; }
+      .setup { grid-template-columns: 1fr; }
+      .workspace { grid-template-columns: 1fr; }
+      .thumb-panel { min-height: 0; }
+      .thumb-list { grid-template-columns: repeat(2, minmax(0,1fr)); max-height: 260px; }
+      .editor { min-height: 0; }
+      .canvas-wrap { height: min(62vh, 620px); min-height: 400px; }
+      .preview-panel { grid-column: auto; display: block; min-height: 0; position: static; }
+      .export-panel { grid-template-columns: 1fr; }
+      .export-btn { width: 100%; }
+      .nav-row { grid-template-columns: 92px 1fr 92px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <a class="back-link" href="index.html">← GameBox</a>
+        <h1>Picture Crop Round Builder</h1>
+        <p class="sub">Load exactly 10 images, set one square crop size, position the crop on each image, confirm all ten, then export the originals and cropped question images together as a ZIP.</p>
+      </div>
+      <div class="badge">Runs entirely in your browser</div>
+    </div>
+
+    <section class="panel setup">
+      <div id="dropzone" class="dropzone">
+        <div>
+          <strong>Drop up to 10 images here</strong>
+          <span>Or choose files from your computer. They are never uploaded anywhere.</span>
+          <div class="drop-actions">
+            <button id="chooseBtn" class="btn primary" type="button">Choose images</button>
+            <button id="clearBtn" class="btn" type="button" disabled>Clear all</button>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" multiple hidden />
+        </div>
+      </div>
+
+      <div class="settings">
+        <div class="setting-row">
+          <label for="cropSize">Crop square size</label>
+          <input id="cropSize" type="number" min="20" step="1" value="200" />
+        </div>
+        <input id="cropRange" type="range" min="20" max="1000" value="200" step="1" />
+        <div class="hint">Size is measured in pixels from the original photograph. A smaller square usually makes a harder picture question. Changing this after confirming crops keeps their centre points but asks you to reconfirm them.</div>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <aside class="panel thumb-panel">
+        <div class="thumb-head">
+          <span>Images</span>
+          <span id="countLabel">0 / 10</span>
+        </div>
+        <div id="thumbList" class="thumb-list"></div>
+      </aside>
+
+      <main class="panel editor">
+        <div class="editor-head">
+          <div class="editor-title">
+            <strong id="currentName">No image selected</strong>
+            <span id="currentDims">Upload 10 images to begin</span>
+          </div>
+          <span id="cropCoords" class="hint"></span>
+        </div>
+
+        <div id="canvasWrap" class="canvas-wrap">
+          <canvas id="editorCanvas"></canvas>
+          <div id="emptyState" class="empty-state">Upload your images above.<br>Then drag the yellow square over the section you want to use as the quiz question.</div>
+        </div>
+
+        <div class="nav-row">
+          <button id="prevBtn" class="btn" type="button" disabled>Previous</button>
+          <div id="navStatus" class="status">No images loaded</div>
+          <button id="nextBtn" class="btn" type="button" disabled>Next</button>
+        </div>
+      </main>
+
+      <aside class="panel preview-panel">
+        <h2>Question crop preview</h2>
+        <p>This is exactly the section that will be exported for the current image.</p>
+        <div class="preview-box"><canvas id="previewCanvas" width="500" height="500"></canvas></div>
+        <div class="confirm-block">
+          <div class="line"><span>Crop size</span><span id="previewSize">—</span></div>
+          <div class="line"><span>Filename</span><span id="previewFilename">—</span></div>
+          <div class="line"><span>Status</span><span id="previewStatus">Not confirmed</span></div>
+        </div>
+        <button id="confirmBtn" class="btn good confirm-btn" type="button" disabled>Mark this crop as correct</button>
+      </aside>
+    </div>
+
+    <section class="panel export-panel">
+      <div>
+        <strong id="exportTitle">Export locked</strong>
+        <span id="exportStatus">Upload 10 images and confirm the crop on each one.</span>
+      </div>
+      <button id="exportBtn" class="btn primary export-btn" type="button" disabled>Export 20 images as ZIP</button>
+    </section>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const MAX_IMAGES = 10;
+  const MIN_CROP = 20;
+
+  const els = {
+    dropzone: document.getElementById('dropzone'),
+    chooseBtn: document.getElementById('chooseBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    fileInput: document.getElementById('fileInput'),
+    cropSize: document.getElementById('cropSize'),
+    cropRange: document.getElementById('cropRange'),
+    thumbList: document.getElementById('thumbList'),
+    countLabel: document.getElementById('countLabel'),
+    currentName: document.getElementById('currentName'),
+    currentDims: document.getElementById('currentDims'),
+    cropCoords: document.getElementById('cropCoords'),
+    canvasWrap: document.getElementById('canvasWrap'),
+    editorCanvas: document.getElementById('editorCanvas'),
+    emptyState: document.getElementById('emptyState'),
+    prevBtn: document.getElementById('prevBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    navStatus: document.getElementById('navStatus'),
+    previewCanvas: document.getElementById('previewCanvas'),
+    previewSize: document.getElementById('previewSize'),
+    previewFilename: document.getElementById('previewFilename'),
+    previewStatus: document.getElementById('previewStatus'),
+    confirmBtn: document.getElementById('confirmBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    exportTitle: document.getElementById('exportTitle'),
+    exportStatus: document.getElementById('exportStatus'),
+    toast: document.getElementById('toast')
+  };
+
+  const ectx = els.editorCanvas.getContext('2d');
+  const pctx = els.previewCanvas.getContext('2d');
+
+  let items = [];
+  let currentIndex = -1;
+  let cropSize = 200;
+  let display = { scale: 1, dx: 0, dy: 0, width: 0, height: 0 };
+  let dragging = false;
+  let dragOffset = { x: 0, y: 0 };
+  let dragNeedsUiRefresh = false;
+  let toastTimer = null;
+
+  function showToast(message) {
+    els.toast.textContent = message;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2500);
+  }
+
+  function baseName(filename) {
+    const dot = filename.lastIndexOf('.');
+    return dot > 0 ? filename.slice(0, dot) : filename;
+  }
+
+  function cropFilename(filename) {
+    return `${baseName(filename)}_crop.png`;
+  }
+
+  async function decodeImage(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+      await img.decode();
+      return img;
+    } catch (err) {
+      URL.revokeObjectURL(url);
+      throw err;
+    }
+  }
+
+  async function addFiles(fileList) {
+    const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+
+    const available = MAX_IMAGES - items.length;
+    const chosen = files.slice(0, available);
+    if (files.length > available) showToast(`Only the first ${available} image${available === 1 ? '' : 's'} were added.`);
+
+    for (const file of chosen) {
+      try {
+        const img = await decodeImage(file);
+        const minDim = Math.min(img.naturalWidth, img.naturalHeight);
+        const size = Math.min(cropSize, minDim);
+        items.push({
+          file,
+          img,
+          objectUrl: img.src,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          crop: {
+            x: Math.max(0, Math.round((img.naturalWidth - size) / 2)),
+            y: Math.max(0, Math.round((img.naturalHeight - size) / 2))
+          },
+          confirmed: false
+        });
+      } catch (err) {
+        console.error(err);
+        showToast(`Could not read ${file.name}`);
+      }
+    }
+
+    enforceCropLimit(true);
+    if (currentIndex < 0 && items.length) currentIndex = 0;
+    renderAll();
+  }
+
+  function enforceCropLimit(quiet = false) {
+    if (!items.length) return;
+    const maxAllowed = Math.min(...items.map(i => Math.min(i.width, i.height)));
+    els.cropSize.max = String(maxAllowed);
+    els.cropRange.max = String(maxAllowed);
+    if (cropSize > maxAllowed) {
+      cropSize = maxAllowed;
+      els.cropSize.value = String(cropSize);
+      els.cropRange.value = String(cropSize);
+      items.forEach(i => i.confirmed = false);
+      if (!quiet) showToast(`Crop size reduced to ${maxAllowed}px to fit the smallest image.`);
+    }
+    clampAllCrops();
+  }
+
+  function clampAllCrops() {
+    for (const item of items) {
+      const size = Math.min(cropSize, item.width, item.height);
+      item.crop.x = Math.max(0, Math.min(item.crop.x, item.width - size));
+      item.crop.y = Math.max(0, Math.min(item.crop.y, item.height - size));
+    }
+  }
+
+  function setCropSize(value) {
+    if (!Number.isFinite(value)) return;
+    const maxAllowed = items.length ? Math.min(...items.map(i => Math.min(i.width, i.height))) : 10000;
+    const next = Math.max(MIN_CROP, Math.min(Math.round(value), maxAllowed));
+    if (next === cropSize) {
+      els.cropSize.value = String(next);
+      els.cropRange.value = String(next);
+      return;
+    }
+
+    // Preserve the centre point of every crop while changing the square size.
+    for (const item of items) {
+      const oldSize = Math.min(cropSize, item.width, item.height);
+      const cx = item.crop.x + oldSize / 2;
+      const cy = item.crop.y + oldSize / 2;
+      const newSize = Math.min(next, item.width, item.height);
+      item.crop.x = Math.round(cx - newSize / 2);
+      item.crop.y = Math.round(cy - newSize / 2);
+      item.confirmed = false;
+    }
+
+    cropSize = next;
+    els.cropSize.value = String(next);
+    els.cropRange.value = String(next);
+    clampAllCrops();
+    renderAll();
+    if (items.length) showToast('Crop size changed — reconfirm each crop when happy.');
+  }
+
+  function clearAll() {
+    items.forEach(i => URL.revokeObjectURL(i.objectUrl));
+    items = [];
+    currentIndex = -1;
+    dragging = false;
+    els.fileInput.value = '';
+    renderAll();
+  }
+
+  function currentItem() {
+    return currentIndex >= 0 ? items[currentIndex] : null;
+  }
+
+  function drawEditor() {
+    const item = currentItem();
+    const rect = els.canvasWrap.getBoundingClientRect();
+    const cssW = Math.max(300, Math.floor(rect.width));
+    const cssH = Math.max(360, Math.floor(rect.height));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    els.editorCanvas.width = Math.round(cssW * dpr);
+    els.editorCanvas.height = Math.round(cssH * dpr);
+    els.editorCanvas.style.width = `${cssW}px`;
+    els.editorCanvas.style.height = `${cssH}px`;
+    ectx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ectx.clearRect(0, 0, cssW, cssH);
+
+    if (!item) {
+      els.emptyState.style.display = 'block';
+      return;
+    }
+    els.emptyState.style.display = 'none';
+
+    const margin = 18;
+    const scale = Math.min((cssW - margin * 2) / item.width, (cssH - margin * 2) / item.height);
+    const dw = item.width * scale;
+    const dh = item.height * scale;
+    const dx = (cssW - dw) / 2;
+    const dy = (cssH - dh) / 2;
+    display = { scale, dx, dy, width: dw, height: dh };
+
+    ectx.drawImage(item.img, dx, dy, dw, dh);
+
+    const size = Math.min(cropSize, item.width, item.height);
+    const rx = dx + item.crop.x * scale;
+    const ry = dy + item.crop.y * scale;
+    const rs = size * scale;
+
+    // Darken everything outside the crop square.
+    ectx.save();
+    ectx.fillStyle = 'rgba(0, 0, 0, .58)';
+    ectx.beginPath();
+    ectx.rect(dx, dy, dw, dh);
+    ectx.rect(rx, ry, rs, rs);
+    ectx.fill('evenodd');
+    ectx.restore();
+
+    // Border and subtle inner edge.
+    ectx.save();
+    ectx.strokeStyle = '#f3c74f';
+    ectx.lineWidth = 3;
+    ectx.strokeRect(rx + 1.5, ry + 1.5, Math.max(0, rs - 3), Math.max(0, rs - 3));
+    ectx.strokeStyle = 'rgba(255,255,255,.55)';
+    ectx.lineWidth = 1;
+    ectx.strokeRect(rx + 5.5, ry + 5.5, Math.max(0, rs - 11), Math.max(0, rs - 11));
+    ectx.restore();
+
+    // Handle marker in the centre so tiny crops remain draggable.
+    ectx.save();
+    ectx.fillStyle = 'rgba(243,199,79,.95)';
+    ectx.beginPath();
+    ectx.arc(rx + rs / 2, ry + rs / 2, 4, 0, Math.PI * 2);
+    ectx.fill();
+    ectx.restore();
+  }
+
+  function drawPreview() {
+    const item = currentItem();
+    const size = 500;
+    els.previewCanvas.width = size;
+    els.previewCanvas.height = size;
+    pctx.clearRect(0, 0, size, size);
+    pctx.fillStyle = '#070a0e';
+    pctx.fillRect(0, 0, size, size);
+    if (!item) return;
+
+    const srcSize = Math.min(cropSize, item.width, item.height);
+    pctx.imageSmoothingEnabled = true;
+    pctx.imageSmoothingQuality = 'high';
+    pctx.drawImage(item.img, item.crop.x, item.crop.y, srcSize, srcSize, 0, 0, size, size);
+  }
+
+  function renderThumbs() {
+    els.thumbList.innerHTML = '';
+    items.forEach((item, idx) => {
+      const b = document.createElement('button');
+      b.className = `thumb${idx === currentIndex ? ' active' : ''}${item.confirmed ? ' confirmed' : ''}`;
+      b.type = 'button';
+      b.innerHTML = `
+        <img src="${item.objectUrl}" alt="">
+        <div>
+          <div class="name">${escapeHtml(item.file.name)}</div>
+          <div class="small">Image ${idx + 1}${item.confirmed ? ' · confirmed' : ''}</div>
+        </div>
+        <div class="tick">${item.confirmed ? '✓' : ''}</div>`;
+      b.addEventListener('click', () => {
+        currentIndex = idx;
+        renderAll();
+      });
+      els.thumbList.appendChild(b);
+    });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  }
+
+  function renderMeta() {
+    const item = currentItem();
+    els.countLabel.textContent = `${items.length} / ${MAX_IMAGES}`;
+    els.clearBtn.disabled = items.length === 0;
+    els.chooseBtn.disabled = items.length >= MAX_IMAGES;
+
+    if (!item) {
+      els.currentName.textContent = 'No image selected';
+      els.currentDims.textContent = 'Upload 10 images to begin';
+      els.cropCoords.textContent = '';
+      els.previewSize.textContent = '—';
+      els.previewFilename.textContent = '—';
+      els.previewStatus.textContent = 'Not confirmed';
+      els.confirmBtn.disabled = true;
+      els.prevBtn.disabled = true;
+      els.nextBtn.disabled = true;
+      els.navStatus.textContent = 'No images loaded';
+      return;
+    }
+
+    const size = Math.min(cropSize, item.width, item.height);
+    els.currentName.textContent = item.file.name;
+    els.currentDims.textContent = `${item.width} × ${item.height} px`;
+    els.cropCoords.textContent = `x ${Math.round(item.crop.x)}, y ${Math.round(item.crop.y)}`;
+    els.previewSize.textContent = `${size} × ${size} px`;
+    els.previewFilename.textContent = cropFilename(item.file.name);
+    els.previewStatus.textContent = item.confirmed ? 'Confirmed' : 'Not confirmed';
+    els.previewStatus.style.color = item.confirmed ? 'var(--good)' : 'var(--muted)';
+    els.confirmBtn.disabled = false;
+    els.confirmBtn.textContent = item.confirmed ? 'Crop confirmed ✓' : 'Mark this crop as correct';
+    els.prevBtn.disabled = currentIndex <= 0;
+    els.nextBtn.disabled = currentIndex >= items.length - 1;
+    els.navStatus.textContent = `Image ${currentIndex + 1} of ${items.length}`;
+  }
+
+  function renderExport() {
+    const confirmed = items.filter(i => i.confirmed).length;
+    const ready = items.length === MAX_IMAGES && confirmed === MAX_IMAGES;
+    els.exportBtn.disabled = !ready;
+
+    if (!items.length) {
+      els.exportTitle.textContent = 'Export locked';
+      els.exportStatus.textContent = 'Upload 10 images and confirm the crop on each one.';
+    } else if (items.length < MAX_IMAGES) {
+      els.exportTitle.textContent = `${items.length} of ${MAX_IMAGES} images loaded`;
+      els.exportStatus.textContent = `Add ${MAX_IMAGES - items.length} more image${MAX_IMAGES - items.length === 1 ? '' : 's'}. ${confirmed} crop${confirmed === 1 ? '' : 's'} confirmed so far.`;
+    } else if (confirmed < MAX_IMAGES) {
+      els.exportTitle.textContent = `${confirmed} of ${MAX_IMAGES} crops confirmed`;
+      els.exportStatus.textContent = `Confirm ${MAX_IMAGES - confirmed} more crop${MAX_IMAGES - confirmed === 1 ? '' : 's'} to unlock export.`;
+    } else {
+      els.exportTitle.textContent = 'Ready to export';
+      els.exportStatus.textContent = 'The ZIP will contain all 10 original files plus 10 PNG crop images.';
+    }
+  }
+
+  function renderAll() {
+    renderThumbs();
+    renderMeta();
+    renderExport();
+    requestAnimationFrame(() => {
+      drawEditor();
+      drawPreview();
+    });
+  }
+
+  function pointerToSource(ev) {
+    const item = currentItem();
+    if (!item) return null;
+    const rect = els.editorCanvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    return {
+      x: (x - display.dx) / display.scale,
+      y: (y - display.dy) / display.scale
+    };
+  }
+
+  function isInsideCrop(p, item) {
+    const size = Math.min(cropSize, item.width, item.height);
+    return p.x >= item.crop.x && p.x <= item.crop.x + size && p.y >= item.crop.y && p.y <= item.crop.y + size;
+  }
+
+  function moveCropTo(x, y, preserveOffset = false) {
+    const item = currentItem();
+    if (!item) return;
+    const size = Math.min(cropSize, item.width, item.height);
+    let nx = preserveOffset ? x - dragOffset.x : x - size / 2;
+    let ny = preserveOffset ? y - dragOffset.y : y - size / 2;
+    nx = Math.max(0, Math.min(nx, item.width - size));
+    ny = Math.max(0, Math.min(ny, item.height - size));
+    nx = Math.round(nx);
+    ny = Math.round(ny);
+    if (nx === item.crop.x && ny === item.crop.y) return;
+
+    item.crop.x = nx;
+    item.crop.y = ny;
+    if (item.confirmed) dragNeedsUiRefresh = true;
+    item.confirmed = false;
+
+    // Keep pointer movement lightweight so the editor never shifts under the cursor.
+    drawEditor();
+    drawPreview();
+    els.cropCoords.textContent = `x ${item.crop.x}, y ${item.crop.y}`;
+    els.previewStatus.textContent = 'Not confirmed';
+    els.previewStatus.style.color = 'var(--muted)';
+    els.confirmBtn.textContent = 'Mark this crop as correct';
+  }
+
+  els.editorCanvas.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    const item = currentItem();
+    if (!item) return;
+    const p = pointerToSource(ev);
+    if (!p) return;
+    dragging = true;
+    els.editorCanvas.setPointerCapture(ev.pointerId);
+    if (isInsideCrop(p, item)) {
+      dragOffset.x = p.x - item.crop.x;
+      dragOffset.y = p.y - item.crop.y;
+      moveCropTo(p.x, p.y, true);
+    } else {
+      const size = Math.min(cropSize, item.width, item.height);
+      dragOffset.x = size / 2;
+      dragOffset.y = size / 2;
+      moveCropTo(p.x, p.y, true);
+    }
+  });
+
+  els.editorCanvas.addEventListener('pointermove', ev => {
+    if (!dragging) return;
+    ev.preventDefault();
+    const p = pointerToSource(ev);
+    if (p) moveCropTo(p.x, p.y, true);
+  });
+
+  function endDrag(ev) {
+    if (!dragging) return;
+    dragging = false;
+    try { els.editorCanvas.releasePointerCapture(ev.pointerId); } catch (_) {}
+    renderMeta();
+    if (dragNeedsUiRefresh) {
+      renderThumbs();
+      renderExport();
+      dragNeedsUiRefresh = false;
+    }
+  }
+  els.editorCanvas.addEventListener('pointerup', endDrag);
+  els.editorCanvas.addEventListener('pointercancel', endDrag);
+
+  els.confirmBtn.addEventListener('click', () => {
+    const item = currentItem();
+    if (!item) return;
+    item.confirmed = true;
+    renderAll();
+    showToast(`Crop ${currentIndex + 1} confirmed.`);
+  });
+
+  els.prevBtn.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderAll();
+    }
+  });
+
+  els.nextBtn.addEventListener('click', () => {
+    if (currentIndex < items.length - 1) {
+      currentIndex++;
+      renderAll();
+    }
+  });
+
+  els.chooseBtn.addEventListener('click', () => els.fileInput.click());
+  els.fileInput.addEventListener('change', e => addFiles(e.target.files));
+  els.clearBtn.addEventListener('click', clearAll);
+
+  ['dragenter', 'dragover'].forEach(type => els.dropzone.addEventListener(type, e => {
+    e.preventDefault();
+    els.dropzone.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(type => els.dropzone.addEventListener(type, e => {
+    e.preventDefault();
+    els.dropzone.classList.remove('dragover');
+  }));
+  els.dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+  els.cropSize.addEventListener('change', () => setCropSize(Number(els.cropSize.value)));
+  els.cropRange.addEventListener('input', () => setCropSize(Number(els.cropRange.value)));
+
+  window.addEventListener('resize', () => requestAnimationFrame(drawEditor));
+
+  function canvasToBlob(canvas, type = 'image/png', quality) {
+    return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas export failed')), type, quality));
+  }
+
+  async function makeCropBlob(item) {
+    const size = Math.min(cropSize, item.width, item.height);
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = false; // exact source pixels; no regeneration or resizing.
+    ctx.drawImage(item.img, item.crop.x, item.crop.y, size, size, 0, 0, size, size);
+    return canvasToBlob(c, 'image/png');
+  }
+
+  // Minimal ZIP writer: standard ZIP archive using "stored" (uncompressed) entries.
+  // This keeps the page self-contained and avoids any external library or internet connection.
+  const crcTable = (() => {
+    const table = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function dosDateTime(date = new Date()) {
+    let year = Math.max(1980, date.getFullYear());
+    const dosTime = ((date.getHours() & 0x1F) << 11) | ((date.getMinutes() & 0x3F) << 5) | ((Math.floor(date.getSeconds() / 2)) & 0x1F);
+    const dosDate = (((year - 1980) & 0x7F) << 9) | (((date.getMonth() + 1) & 0x0F) << 5) | (date.getDate() & 0x1F);
+    return { dosTime, dosDate };
+  }
+
+  function u16(n) {
+    const b = new Uint8Array(2);
+    new DataView(b.buffer).setUint16(0, n & 0xFFFF, true);
+    return b;
+  }
+  function u32(n) {
+    const b = new Uint8Array(4);
+    new DataView(b.buffer).setUint32(0, n >>> 0, true);
+    return b;
+  }
+  function concat(parts) {
+    const total = parts.reduce((sum, p) => sum + p.length, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const p of parts) { out.set(p, offset); offset += p.length; }
+    return out;
+  }
+
+  async function createZip(entries) {
+    const enc = new TextEncoder();
+    const locals = [];
+    const centrals = [];
+    let offset = 0;
+    const now = dosDateTime(new Date());
+
+    for (const entry of entries) {
+      const nameBytes = enc.encode(entry.name);
+      const data = entry.bytes;
+      const crc = crc32(data);
+
+      const local = concat([
+        u32(0x04034b50),
+        u16(20),           // version needed
+        u16(0x0800),       // UTF-8 filename
+        u16(0),            // method: stored
+        u16(now.dosTime),
+        u16(now.dosDate),
+        u32(crc),
+        u32(data.length),
+        u32(data.length),
+        u16(nameBytes.length),
+        u16(0),
+        nameBytes,
+        data
+      ]);
+      locals.push(local);
+
+      const central = concat([
+        u32(0x02014b50),
+        u16(20),           // version made by
+        u16(20),           // version needed
+        u16(0x0800),
+        u16(0),
+        u16(now.dosTime),
+        u16(now.dosDate),
+        u32(crc),
+        u32(data.length),
+        u32(data.length),
+        u16(nameBytes.length),
+        u16(0),            // extra len
+        u16(0),            // comment len
+        u16(0),            // disk
+        u16(0),            // internal attrs
+        u32(0),            // external attrs
+        u32(offset),
+        nameBytes
+      ]);
+      centrals.push(central);
+      offset += local.length;
+    }
+
+    const centralSize = centrals.reduce((s, p) => s + p.length, 0);
+    const centralOffset = offset;
+    const end = concat([
+      u32(0x06054b50),
+      u16(0), u16(0),
+      u16(entries.length), u16(entries.length),
+      u32(centralSize),
+      u32(centralOffset),
+      u16(0)
+    ]);
+
+    return new Blob([...locals, ...centrals, end], { type: 'application/zip' });
+  }
+
+  function uniqueName(name, used) {
+    if (!used.has(name.toLowerCase())) {
+      used.add(name.toLowerCase());
+      return name;
