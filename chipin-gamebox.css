@@ -181,3 +181,10 @@
   .toyBox .discRallyHomeTile{min-height:140px}
   .toyBox .discRallyHomeLogo{height:84px}
 }
+
+
+/* Picture Crop round builder */
+.toyGameCrop .gameTile{background:linear-gradient(145deg,#2d856d,#155044)}
+.toyGameCrop .gameTileIcon{color:#155044}
+.toyBox .toyGame:nth-child(6){transform:rotate(-1deg)}
+.toyBox .toyGame:nth-child(7){transform:rotate(1.2deg)}
