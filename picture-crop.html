@@ -1042,3 +1042,57 @@
     if (!used.has(name.toLowerCase())) {
       used.add(name.toLowerCase());
       return name;
+    }
+    const dot = name.lastIndexOf('.');
+    const stem = dot > 0 ? name.slice(0, dot) : name;
+    const ext = dot > 0 ? name.slice(dot) : '';
+    let n = 2;
+    let candidate;
+    do candidate = `${stem}_${n++}${ext}`; while (used.has(candidate.toLowerCase()));
+    used.add(candidate.toLowerCase());
+    return candidate;
+  }
+
+  els.exportBtn.addEventListener('click', async () => {
+    if (!(items.length === MAX_IMAGES && items.every(i => i.confirmed))) return;
+    els.exportBtn.disabled = true;
+    els.exportBtn.textContent = 'Building ZIP…';
+
+    try {
+      const entries = [];
+      const used = new Set();
+      for (const item of items) {
+        const originalBytes = new Uint8Array(await item.file.arrayBuffer());
+        const originalName = uniqueName(item.file.name, used);
+        entries.push({ name: originalName, bytes: originalBytes });
+
+        const cropBlob = await makeCropBlob(item);
+        const cropBytes = new Uint8Array(await cropBlob.arrayBuffer());
+        const cropName = uniqueName(cropFilename(item.file.name), used);
+        entries.push({ name: cropName, bytes: cropBytes });
+      }
+
+      const zipBlob = await createZip(entries);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'picture-round-images.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+      showToast('ZIP exported with 10 originals and 10 crops.');
+    } catch (err) {
+      console.error(err);
+      alert('The ZIP could not be created. Please try again.');
+    } finally {
+      els.exportBtn.textContent = 'Export 20 images as ZIP';
+      renderExport();
+    }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
