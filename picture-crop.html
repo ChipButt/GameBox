@@ -292,6 +292,30 @@
     .confirm-block .line { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 7px; }
     .confirm-block .line:last-child { margin-bottom: 0; }
     .confirm-block span:last-child { color: var(--muted); text-align: right; }
+    .image-crop-size {
+      display: grid;
+      gap: 7px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .image-crop-size label { font-size: 13px; }
+    .image-crop-size-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 8px;
+    }
+    .image-crop-size-row input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f151d;
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+    .image-crop-size-row .btn { padding: 8px 11px; white-space: nowrap; }
 
     .confirm-btn { width: 100%; margin-top: 12px; }
 
@@ -378,11 +402,11 @@
 
       <div class="settings">
         <div class="setting-row">
-          <label for="cropSize">Crop square size</label>
+          <label for="cropSize">Reference crop size (Image 1)</label>
           <input id="cropSize" type="number" min="20" step="1" value="200" />
         </div>
         <input id="cropRange" type="range" min="20" max="1000" value="200" step="1" />
-        <div class="hint">Size is measured in pixels from the original photograph. A smaller square usually makes a harder picture question. Changing this after confirming crops keeps their centre points but asks you to reconfirm them.</div>
+        <div class="hint">Set the crop size on Image 1. Every other image automatically gets the same proportional crop based on its shorter side, so larger images get a larger crop and smaller images get a smaller crop. You can still override any individual image below.</div>
       </div>
     </section>
 
@@ -422,8 +446,17 @@
         <div class="preview-box"><canvas id="previewCanvas" width="500" height="500"></canvas></div>
         <div class="confirm-block">
           <div class="line"><span>Crop size</span><span id="previewSize">—</span></div>
+          <div class="line"><span>Size mode</span><span id="previewScaleMode">—</span></div>
           <div class="line"><span>Filename</span><span id="previewFilename">—</span></div>
           <div class="line"><span>Status</span><span id="previewStatus">Not confirmed</span></div>
+          <div class="image-crop-size">
+            <label for="currentCropSize">This image crop size</label>
+            <div class="image-crop-size-row">
+              <input id="currentCropSize" type="number" min="20" step="1" disabled>
+              <button id="resetCropSizeBtn" class="btn" type="button" disabled>Use auto size</button>
+            </div>
+            <div id="currentCropHint" class="hint">Image 1 sets the reference size.</div>
+          </div>
         </div>
         <button id="confirmBtn" class="btn good confirm-btn" type="button" disabled>Mark this crop as correct</button>
       </aside>
@@ -467,8 +500,12 @@
     navStatus: document.getElementById('navStatus'),
     previewCanvas: document.getElementById('previewCanvas'),
     previewSize: document.getElementById('previewSize'),
+    previewScaleMode: document.getElementById('previewScaleMode'),
     previewFilename: document.getElementById('previewFilename'),
     previewStatus: document.getElementById('previewStatus'),
+    currentCropSize: document.getElementById('currentCropSize'),
+    resetCropSizeBtn: document.getElementById('resetCropSizeBtn'),
+    currentCropHint: document.getElementById('currentCropHint'),
     confirmBtn: document.getElementById('confirmBtn'),
     exportBtn: document.getElementById('exportBtn'),
     exportTitle: document.getElementById('exportTitle'),
@@ -504,6 +541,34 @@
     return `${baseName(filename)}_crop.png`;
   }
 
+  function minDimension(item) {
+    return Math.min(item.width, item.height);
+  }
+
+  function referenceMinDimension() {
+    return items.length ? minDimension(items[0]) : null;
+  }
+
+  function effectiveCropSize(item, index = items.indexOf(item)) {
+    if (!item) return cropSize;
+    const minDim = minDimension(item);
+    if (index > 0 && Number.isFinite(item.cropSizeOverride)) {
+      return Math.max(1, Math.min(minDim, Math.round(item.cropSizeOverride)));
+    }
+
+    const refMin = referenceMinDimension() || minDim;
+    const scaled = Math.round((cropSize / refMin) * minDim);
+    const minimum = Math.min(MIN_CROP, minDim);
+    return Math.max(minimum, Math.min(minDim, scaled));
+  }
+
+  function centreCropForSize(item, oldSize, newSize) {
+    const cx = item.crop.x + oldSize / 2;
+    const cy = item.crop.y + oldSize / 2;
+    item.crop.x = Math.round(cx - newSize / 2);
+    item.crop.y = Math.round(cy - newSize / 2);
+  }
+
   async function decodeImage(file) {
     const url = URL.createObjectURL(file);
     try {
@@ -529,20 +594,20 @@
     for (const file of chosen) {
       try {
         const img = await decodeImage(file);
-        const minDim = Math.min(img.naturalWidth, img.naturalHeight);
-        const size = Math.min(cropSize, minDim);
-        items.push({
+        const item = {
           file,
           img,
           objectUrl: img.src,
           width: img.naturalWidth,
           height: img.naturalHeight,
-          crop: {
-            x: Math.max(0, Math.round((img.naturalWidth - size) / 2)),
-            y: Math.max(0, Math.round((img.naturalHeight - size) / 2))
-          },
+          crop: { x: 0, y: 0 },
+          cropSizeOverride: null,
           confirmed: false
-        });
+        };
+        items.push(item);
+        const size = effectiveCropSize(item, items.length - 1);
+        item.crop.x = Math.max(0, Math.round((item.width - size) / 2));
+        item.crop.y = Math.max(0, Math.round((item.height - size) / 2));
       } catch (err) {
         console.error(err);
         showToast(`Could not read ${file.name}`);
@@ -556,30 +621,32 @@
 
   function enforceCropLimit(quiet = false) {
     if (!items.length) return;
-    const maxAllowed = Math.min(...items.map(i => Math.min(i.width, i.height)));
+    const maxAllowed = minDimension(items[0]);
     els.cropSize.max = String(maxAllowed);
     els.cropRange.max = String(maxAllowed);
     if (cropSize > maxAllowed) {
       cropSize = maxAllowed;
       els.cropSize.value = String(cropSize);
       els.cropRange.value = String(cropSize);
-      items.forEach(i => i.confirmed = false);
-      if (!quiet) showToast(`Crop size reduced to ${maxAllowed}px to fit the smallest image.`);
+      items.forEach((item, index) => {
+        if (index === 0 || !Number.isFinite(item.cropSizeOverride)) item.confirmed = false;
+      });
+      if (!quiet) showToast(`Reference crop size reduced to ${maxAllowed}px to fit Image 1.`);
     }
     clampAllCrops();
   }
 
   function clampAllCrops() {
-    for (const item of items) {
-      const size = Math.min(cropSize, item.width, item.height);
+    items.forEach((item, index) => {
+      const size = effectiveCropSize(item, index);
       item.crop.x = Math.max(0, Math.min(item.crop.x, item.width - size));
       item.crop.y = Math.max(0, Math.min(item.crop.y, item.height - size));
-    }
+    });
   }
 
   function setCropSize(value) {
     if (!Number.isFinite(value)) return;
-    const maxAllowed = items.length ? Math.min(...items.map(i => Math.min(i.width, i.height))) : 10000;
+    const maxAllowed = items.length ? minDimension(items[0]) : 10000;
     const next = Math.max(MIN_CROP, Math.min(Math.round(value), maxAllowed));
     if (next === cropSize) {
       els.cropSize.value = String(next);
@@ -587,23 +654,60 @@
       return;
     }
 
-    // Preserve the centre point of every crop while changing the square size.
-    for (const item of items) {
-      const oldSize = Math.min(cropSize, item.width, item.height);
-      const cx = item.crop.x + oldSize / 2;
-      const cy = item.crop.y + oldSize / 2;
-      const newSize = Math.min(next, item.width, item.height);
-      item.crop.x = Math.round(cx - newSize / 2);
-      item.crop.y = Math.round(cy - newSize / 2);
-      item.confirmed = false;
-    }
-
+    const oldSizes = items.map((item, index) => effectiveCropSize(item, index));
     cropSize = next;
+
+    items.forEach((item, index) => {
+      const newSize = effectiveCropSize(item, index);
+      if (newSize !== oldSizes[index]) {
+        centreCropForSize(item, oldSizes[index], newSize);
+        item.confirmed = false;
+      }
+    });
+
     els.cropSize.value = String(next);
     els.cropRange.value = String(next);
     clampAllCrops();
     renderAll();
-    if (items.length) showToast('Crop size changed — reconfirm each crop when happy.');
+    if (items.length) showToast('Reference size changed — auto-scaled crops were updated proportionally.');
+  }
+
+  function setCurrentImageCropSize(value) {
+    const item = currentItem();
+    if (!item || !Number.isFinite(value)) return;
+
+    if (currentIndex === 0) {
+      setCropSize(value);
+      return;
+    }
+
+    const oldSize = effectiveCropSize(item, currentIndex);
+    const minDim = minDimension(item);
+    const next = Math.max(Math.min(MIN_CROP, minDim), Math.min(Math.round(value), minDim));
+    item.cropSizeOverride = next;
+    const newSize = effectiveCropSize(item, currentIndex);
+    if (newSize !== oldSize) {
+      centreCropForSize(item, oldSize, newSize);
+      item.confirmed = false;
+    }
+    clampAllCrops();
+    renderAll();
+    showToast(`Image ${currentIndex + 1} now uses a custom ${newSize}px crop.`);
+  }
+
+  function resetCurrentImageCropSize() {
+    const item = currentItem();
+    if (!item || currentIndex <= 0 || !Number.isFinite(item.cropSizeOverride)) return;
+    const oldSize = effectiveCropSize(item, currentIndex);
+    item.cropSizeOverride = null;
+    const newSize = effectiveCropSize(item, currentIndex);
+    if (newSize !== oldSize) {
+      centreCropForSize(item, oldSize, newSize);
+      item.confirmed = false;
+    }
+    clampAllCrops();
+    renderAll();
+    showToast(`Image ${currentIndex + 1} is using the automatic proportional size again.`);
   }
 
   function clearAll() {
@@ -649,7 +753,7 @@
 
     ectx.drawImage(item.img, dx, dy, dw, dh);
 
-    const size = Math.min(cropSize, item.width, item.height);
+    const size = effectiveCropSize(item, currentIndex);
     const rx = dx + item.crop.x * scale;
     const ry = dy + item.crop.y * scale;
     const rs = size * scale;
@@ -692,7 +796,7 @@
     pctx.fillRect(0, 0, size, size);
     if (!item) return;
 
-    const srcSize = Math.min(cropSize, item.width, item.height);
+    const srcSize = effectiveCropSize(item, currentIndex);
     pctx.imageSmoothingEnabled = true;
     pctx.imageSmoothingQuality = 'high';
     pctx.drawImage(item.img, item.crop.x, item.crop.y, srcSize, srcSize, 0, 0, size, size);
@@ -734,8 +838,13 @@
       els.currentDims.textContent = 'Upload 10 images to begin';
       els.cropCoords.textContent = '';
       els.previewSize.textContent = '—';
+      els.previewScaleMode.textContent = '—';
       els.previewFilename.textContent = '—';
       els.previewStatus.textContent = 'Not confirmed';
+      els.currentCropSize.value = '';
+      els.currentCropSize.disabled = true;
+      els.resetCropSizeBtn.disabled = true;
+      els.currentCropHint.textContent = 'Upload an image to set its crop size.';
       els.confirmBtn.disabled = true;
       els.prevBtn.disabled = true;
       els.nextBtn.disabled = true;
@@ -743,11 +852,20 @@
       return;
     }
 
-    const size = Math.min(cropSize, item.width, item.height);
+    const size = effectiveCropSize(item, currentIndex);
+    const custom = currentIndex > 0 && Number.isFinite(item.cropSizeOverride);
     els.currentName.textContent = item.file.name;
     els.currentDims.textContent = `${item.width} × ${item.height} px`;
     els.cropCoords.textContent = `x ${Math.round(item.crop.x)}, y ${Math.round(item.crop.y)}`;
     els.previewSize.textContent = `${size} × ${size} px`;
+    els.previewScaleMode.textContent = currentIndex === 0 ? 'Reference' : (custom ? 'Custom' : 'Auto-scaled');
+    els.currentCropSize.value = String(size);
+    els.currentCropSize.max = String(minDimension(item));
+    els.currentCropSize.disabled = false;
+    els.resetCropSizeBtn.disabled = currentIndex === 0 || !custom;
+    els.currentCropHint.textContent = currentIndex === 0
+      ? 'Image 1 sets the reference size used to scale the other images.'
+      : (custom ? 'Custom size for this image only.' : 'Automatically scaled from Image 1. Change the number to override it.');
     els.previewFilename.textContent = cropFilename(item.file.name);
     els.previewStatus.textContent = item.confirmed ? 'Confirmed' : 'Not confirmed';
     els.previewStatus.style.color = item.confirmed ? 'var(--good)' : 'var(--muted)';
@@ -801,14 +919,14 @@
   }
 
   function isInsideCrop(p, item) {
-    const size = Math.min(cropSize, item.width, item.height);
+    const size = effectiveCropSize(item, currentIndex);
     return p.x >= item.crop.x && p.x <= item.crop.x + size && p.y >= item.crop.y && p.y <= item.crop.y + size;
   }
 
   function moveCropTo(x, y, preserveOffset = false) {
     const item = currentItem();
     if (!item) return;
-    const size = Math.min(cropSize, item.width, item.height);
+    const size = effectiveCropSize(item, currentIndex);
     let nx = preserveOffset ? x - dragOffset.x : x - size / 2;
     let ny = preserveOffset ? y - dragOffset.y : y - size / 2;
     nx = Math.max(0, Math.min(nx, item.width - size));
@@ -844,7 +962,7 @@
       dragOffset.y = p.y - item.crop.y;
       moveCropTo(p.x, p.y, true);
     } else {
-      const size = Math.min(cropSize, item.width, item.height);
+      const size = effectiveCropSize(item, currentIndex);
       dragOffset.x = size / 2;
       dragOffset.y = size / 2;
       moveCropTo(p.x, p.y, true);
@@ -910,6 +1028,8 @@
 
   els.cropSize.addEventListener('change', () => setCropSize(Number(els.cropSize.value)));
   els.cropRange.addEventListener('input', () => setCropSize(Number(els.cropRange.value)));
+  els.currentCropSize.addEventListener('change', () => setCurrentImageCropSize(Number(els.currentCropSize.value)));
+  els.resetCropSizeBtn.addEventListener('click', resetCurrentImageCropSize);
 
   window.addEventListener('resize', () => requestAnimationFrame(drawEditor));
 
@@ -918,7 +1038,8 @@
   }
 
   async function makeCropBlob(item) {
-    const size = Math.min(cropSize, item.width, item.height);
+    const index = items.indexOf(item);
+    const size = effectiveCropSize(item, index);
     const c = document.createElement('canvas');
     c.width = size;
     c.height = size;
