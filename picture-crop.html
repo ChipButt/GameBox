@@ -316,6 +316,25 @@
       outline: none;
     }
     .image-crop-size-row .btn { padding: 8px 11px; white-space: nowrap; }
+    .image-effect-controls {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .image-effect-controls select,
+    .image-effect-controls input[type="range"] {
+      width: 100%;
+    }
+    .image-effect-controls select {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f151d;
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+    }
 
     .confirm-btn { width: 100%; margin-top: 12px; }
 
@@ -457,6 +476,20 @@
             </div>
             <div id="currentCropHint" class="hint">Image 1 sets the reference size.</div>
           </div>
+
+          <div class="image-effect-controls">
+            <label for="questionMode">Question style</label>
+            <select id="questionMode">
+              <option value="crop">Crop</option>
+              <option value="blur">Blur full image</option>
+              <option value="distort">Distort full image</option>
+            </select>
+
+            <label for="effectStrength">Effect strength</label>
+            <input id="effectStrength" type="range" min="2" max="40" value="12" step="1">
+
+            <div id="effectHint" class="hint">Crop uses the square crop. Blur and Distort export the full image with the effect applied.</div>
+          </div>
         </div>
         <button id="confirmBtn" class="btn good confirm-btn" type="button" disabled>Mark this crop as correct</button>
       </aside>
@@ -506,6 +539,9 @@
     currentCropSize: document.getElementById('currentCropSize'),
     resetCropSizeBtn: document.getElementById('resetCropSizeBtn'),
     currentCropHint: document.getElementById('currentCropHint'),
+    questionMode: document.getElementById('questionMode'),
+    effectStrength: document.getElementById('effectStrength'),
+    effectHint: document.getElementById('effectHint'),
     confirmBtn: document.getElementById('confirmBtn'),
     exportBtn: document.getElementById('exportBtn'),
     exportTitle: document.getElementById('exportTitle'),
@@ -539,6 +575,13 @@
 
   function cropFilename(filename) {
     return `${baseName(filename)}_crop.png`;
+  }
+
+  function questionFilename(filename, item) {
+    const stem = baseName(filename);
+    if (item.questionMode === 'blur') return `${stem}_blur.png`;
+    if (item.questionMode === 'distort') return `${stem}_distort.png`;
+    return `${stem}_crop.png`;
   }
 
   function minDimension(item) {
@@ -602,6 +645,8 @@
           height: img.naturalHeight,
           crop: { x: 0, y: 0 },
           cropSizeOverride: null,
+          questionMode: 'crop',
+          effectStrength: 12,
           confirmed: false
         };
         items.push(item);
@@ -786,6 +831,60 @@
     ectx.restore();
   }
 
+  function drawQuestionToCanvas(ctx, canvas, item, preview = false) {
+    if (!item) return;
+    const index = items.indexOf(item);
+
+    if (preview) {
+      canvas.width = 500;
+      canvas.height = 500;
+    } else if (item.questionMode === 'crop') {
+      const size = effectiveCropSize(item, index);
+      canvas.width = size;
+      canvas.height = size;
+    } else {
+      canvas.width = item.width;
+      canvas.height = item.height;
+    }
+
+    const outW = canvas.width;
+    const outH = canvas.height;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0, 0, outW, outH);
+    ctx.fillStyle = '#070a0e';
+    ctx.fillRect(0, 0, outW, outH);
+
+    if (item.questionMode === 'crop') {
+      const size = effectiveCropSize(item, index);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(item.img, item.crop.x, item.crop.y, size, size, 0, 0, outW, outH);
+      return;
+    }
+
+    if (item.questionMode === 'blur') {
+      ctx.save();
+      ctx.filter = `blur(${Number(item.effectStrength) || 12}px)`;
+      const pad = Math.ceil((Number(item.effectStrength) || 12) * 2);
+      ctx.drawImage(item.img, -pad, -pad, outW + pad * 2, outH + pad * 2);
+      ctx.restore();
+      return;
+    }
+
+    // Distort by drawing horizontal strips with alternating horizontal offsets.
+    const slices = Math.max(24, Math.floor(outH / 18));
+    const strength = Number(item.effectStrength) || 12;
+    const amplitude = preview ? strength * 1.3 : strength * Math.max(1, outW / 700);
+    for (let i = 0; i < slices; i++) {
+      const sy = item.height * i / slices;
+      const sh = item.height / slices + 1;
+      const dy = outH * i / slices;
+      const dh = outH / slices + 1;
+      const dx = Math.sin((i / slices) * Math.PI * 8) * amplitude;
+      ctx.drawImage(item.img, 0, sy, item.width, sh, dx, dy, outW, dh);
+    }
+  }
+
   function drawPreview() {
     const item = currentItem();
     const size = 500;
@@ -795,11 +894,7 @@
     pctx.fillStyle = '#070a0e';
     pctx.fillRect(0, 0, size, size);
     if (!item) return;
-
-    const srcSize = effectiveCropSize(item, currentIndex);
-    pctx.imageSmoothingEnabled = true;
-    pctx.imageSmoothingQuality = 'high';
-    pctx.drawImage(item.img, item.crop.x, item.crop.y, srcSize, srcSize, 0, 0, size, size);
+    drawQuestionToCanvas(pctx, els.previewCanvas, item, true);
   }
 
   function renderThumbs() {
@@ -845,6 +940,11 @@
       els.currentCropSize.disabled = true;
       els.resetCropSizeBtn.disabled = true;
       els.currentCropHint.textContent = 'Upload an image to set its crop size.';
+      els.questionMode.value = 'crop';
+      els.questionMode.disabled = true;
+      els.effectStrength.value = '12';
+      els.effectStrength.disabled = true;
+      els.effectHint.textContent = 'Choose how the quiz question should disguise the image.';
       els.confirmBtn.disabled = true;
       els.prevBtn.disabled = true;
       els.nextBtn.disabled = true;
@@ -863,10 +963,22 @@
     els.currentCropSize.max = String(minDimension(item));
     els.currentCropSize.disabled = false;
     els.resetCropSizeBtn.disabled = currentIndex === 0 || !custom;
+    const cropMode = item.questionMode === 'crop';
     els.currentCropHint.textContent = currentIndex === 0
       ? 'Image 1 sets the reference size used to scale the other images.'
       : (custom ? 'Custom size for this image only.' : 'Automatically scaled from Image 1. Change the number to override it.');
-    els.previewFilename.textContent = cropFilename(item.file.name);
+    els.currentCropSize.disabled = !cropMode;
+    els.resetCropSizeBtn.disabled = !cropMode || currentIndex === 0 || !custom;
+    els.questionMode.disabled = false;
+    els.questionMode.value = item.questionMode || 'crop';
+    els.effectStrength.disabled = cropMode;
+    els.effectStrength.value = String(item.effectStrength || 12);
+    els.effectHint.textContent = cropMode
+      ? 'Crop mode uses the square selection.'
+      : (item.questionMode === 'blur'
+        ? 'Blur mode exports the full image blurred.'
+        : 'Distort mode exports the full image with horizontal distortion.');
+    els.previewFilename.textContent = questionFilename(item.file.name, item);
     els.previewStatus.textContent = item.confirmed ? 'Confirmed' : 'Not confirmed';
     els.previewStatus.style.color = item.confirmed ? 'var(--good)' : 'var(--muted)';
     els.confirmBtn.disabled = false;
@@ -892,7 +1004,7 @@
       els.exportStatus.textContent = `Confirm ${MAX_IMAGES - confirmed} more crop${MAX_IMAGES - confirmed === 1 ? '' : 's'} to unlock export.`;
     } else {
       els.exportTitle.textContent = 'Ready to export';
-      els.exportStatus.textContent = 'The ZIP will contain all 10 original files plus 10 PNG crop images.';
+      els.exportStatus.textContent = 'The ZIP will contain all 10 original files plus 10 PNG question images.';
     }
   }
 
@@ -1030,6 +1142,22 @@
   els.cropRange.addEventListener('input', () => setCropSize(Number(els.cropRange.value)));
   els.currentCropSize.addEventListener('change', () => setCurrentImageCropSize(Number(els.currentCropSize.value)));
   els.resetCropSizeBtn.addEventListener('click', resetCurrentImageCropSize);
+  els.questionMode.addEventListener('change', () => {
+    const item = currentItem();
+    if (!item) return;
+    item.questionMode = els.questionMode.value;
+    item.confirmed = false;
+    renderAll();
+  });
+  els.effectStrength.addEventListener('input', () => {
+    const item = currentItem();
+    if (!item) return;
+    item.effectStrength = Number(els.effectStrength.value);
+    item.confirmed = false;
+    drawPreview();
+    renderMeta();
+    renderExport();
+  });
 
   window.addEventListener('resize', () => requestAnimationFrame(drawEditor));
 
@@ -1037,15 +1165,10 @@
     return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas export failed')), type, quality));
   }
 
-  async function makeCropBlob(item) {
-    const index = items.indexOf(item);
-    const size = effectiveCropSize(item, index);
+  async function makeQuestionBlob(item) {
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
     const ctx = c.getContext('2d');
-    ctx.imageSmoothingEnabled = false; // exact source pixels; no regeneration or resizing.
-    ctx.drawImage(item.img, item.crop.x, item.crop.y, size, size, 0, 0, size, size);
+    drawQuestionToCanvas(ctx, c, item, false);
     return canvasToBlob(c, 'image/png');
   }
 
@@ -1187,10 +1310,10 @@
         const originalName = uniqueName(item.file.name, used);
         entries.push({ name: originalName, bytes: originalBytes });
 
-        const cropBlob = await makeCropBlob(item);
-        const cropBytes = new Uint8Array(await cropBlob.arrayBuffer());
-        const cropName = uniqueName(cropFilename(item.file.name), used);
-        entries.push({ name: cropName, bytes: cropBytes });
+        const questionBlob = await makeQuestionBlob(item);
+        const questionBytes = new Uint8Array(await questionBlob.arrayBuffer());
+        const questionName = uniqueName(questionFilename(item.file.name, item), used);
+        entries.push({ name: questionName, bytes: questionBytes });
       }
 
       const zipBlob = await createZip(entries);
@@ -1202,7 +1325,7 @@
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 15000);
-      showToast('ZIP exported with 10 originals and 10 crops.');
+      showToast('ZIP exported with 10 originals and 10 question images.');
     } catch (err) {
       console.error(err);
       alert('The ZIP could not be created. Please try again.');
