@@ -56,14 +56,6 @@ A mobile-first browser games hub from **Chip In Games**.
 - Live digital player mode uses a room code and peer connection; use only where the operator's licensing arrangements permit remote bingo
 
 
-### Picture Crop
-- Load exactly 10 source images for a picture-round quiz
-- Choose one square crop size and drag the crop over each source image
-- Live crop preview stays visible while positioning on desktop
-- Confirm each selected crop before export
-- Export one ZIP containing all 10 untouched originals plus 10 PNG question crops named from the original filenames
-- Runs entirely in the browser; uploaded images are not sent to a server
-
 ### Gridline Racing
 - Mobile-first racing team management game
 - Live-race upgrades and tactical decisions
