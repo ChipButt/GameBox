@@ -861,6 +861,43 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   .spareTile{width:64px!important;height:64px!important}
   .rotateBtn{width:48px!important;height:48px!important}
 }
+
+/* FINAL RASTER MAZE TILES */
+.cell{
+  overflow:hidden!important;
+  background:#071923!important;
+  border:1px solid rgba(255,255,255,.035)!important;
+  isolation:isolate;
+}
+.cell.fixed:after{content:none!important;display:none!important}
+.pathCenter,.pathArm{display:none!important}
+.tileRaster{
+  position:absolute;z-index:1;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;pointer-events:none;
+  transform:rotate(calc(var(--tile-rot) * 90deg));
+  transform-origin:50% 50%;
+  backface-visibility:hidden;
+}
+.relicArt,.homeGoal,.pawns{z-index:8!important}
+.spareTile{
+  overflow:hidden!important;background:#071923!important;
+}
+.spareTile .tileRaster{border-radius:8px}
+
+/* SHIFT PHASE PHYSICAL BOARD MOTION */
+.boardFrame{overflow:visible}
+.boardFrame.shifting .insertBtn{opacity:.13!important;animation:none!important;pointer-events:none!important}
+.shiftGhost{
+  position:absolute!important;z-index:60!important;margin:0!important;padding:0!important;
+  display:block!important;overflow:hidden!important;border-radius:5px!important;
+  pointer-events:none!important;will-change:transform,opacity;
+  transform-origin:center center!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.30)!important;
+}
+.shiftGhost.shiftSpareGhost{
+  z-index:65!important;background:#071923!important;border:1px solid rgba(255,255,255,.05)!important;
+}
+.shiftGhost .tileRaster{width:100%!important;height:100%!important}
 </style>
 </head>
 <body>
@@ -1074,6 +1111,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   ];
   var HOME_ASSET=ASSET_ROOT+'22_home.png';
   var SHIFT_ASSET=ASSET_ROOT+'23_shift_arrow.png';
+  var TILE_ASSETS={
+    I:{movable:'MazeShift_Tiles/movable_straight.png',fixed:'MazeShift_Tiles/immovable_straight.png'},
+    L:{movable:'MazeShift_Tiles/movable_corner.png',fixed:'MazeShift_Tiles/immovable_corner.png'},
+    T:{movable:'MazeShift_Tiles/movable_t_junction.png',fixed:'MazeShift_Tiles/immovable_t_junction.png'}
+  };
   var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
   var RELICS=[
     {id:'compass',name:'Compass',asset:ASSET_ROOT+'01_compass.png'},
@@ -1112,6 +1154,8 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   var lastHosts=[];
   var toastTimer=null;
   var moving=false;
+  var shiftRequestPending=false;
+  var pendingSnapshot=null;
 
   function $(id){return document.getElementById(id)}
   function uid(){return globalThis.crypto&&globalThis.crypto.randomUUID?globalThis.crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)}
@@ -1254,7 +1298,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function currentPlayer(){return state.players[state.current]||null}
   function ownPlayer(){if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;return currentPlayer()}
   function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
-  function canControlTurn(){if(moving||!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
+  function canControlTurn(){if(moving||shiftRequestPending||!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
   function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden')}
   function beginTurn(){state.turnReady=true;$('handoff').classList.add('hidden');buzz(12);renderAll()}
   function opposite(side){return{left:'right',right:'left',top:'bottom',bottom:'top'}[side]}
@@ -1270,8 +1314,17 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     if(mode==='multi'&&role==='client'){session&&session.sendToHost({type:'action',action:'rotate',delta:delta,playerId:localPlayerId});return}
     rotateSpareInternal(delta);
   }
-  function shiftMazeInternal(side,index){
-    if(state.phase!=='shift'||isBlockedInsertion(side,index))return;
+  function copyTile(t){return t?JSON.parse(JSON.stringify(t)):null}
+  function wait(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
+  function cellAt(r,c){return document.querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]')}
+  function insertAt(side,index){return document.querySelector('.insertBtn.side-'+side+'[data-index="'+index+'"]')}
+  function setGhostBox(el,rect,frameRect){
+    el.style.left=(rect.left-frameRect.left)+'px';
+    el.style.top=(rect.top-frameRect.top)+'px';
+    el.style.width=rect.width+'px';
+    el.style.height=rect.height+'px';
+  }
+  function mutateShiftState(side,index){
     var r,c,i,ejected;
     if(side==='left'){
       r=index;ejected=state.board[r][6];for(i=6;i>0;i--)state.board[r][i]=state.board[r][i-1];state.board[r][0]=state.spare;state.spare=ejected;
@@ -1285,12 +1338,86 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     }else if(side==='bottom'){
       c=index;ejected=state.board[0][c];for(i=0;i<6;i++)state.board[i][c]=state.board[i+1][c];state.board[6][c]=state.spare;state.spare=ejected;
       state.players.forEach(function(p){if(p.pos.c===c)p.pos.r=(p.pos.r+6)%7});
-    }else return;
-    state.lastShift={side:side,index:index};state.phase='move';buzz(18);pulseBoard();renderAll();publishState();
+    }else return false;
+    state.lastShift={side:side,index:index};state.phase='move';return true;
+  }
+  async function animateShiftVisual(side,index,visualSpare){
+    var frame=$('boardFrame'),grid=$('boardGrid');if(!frame||!grid||!visualSpare)return;
+    var frameRect=frame.getBoundingClientRect(),cells=[],i,r,c;
+    if(side==='left'||side==='right'){
+      r=index;for(i=0;i<7;i++){var hc=cellAt(r,i);if(hc)cells.push(hc)}
+    }else{
+      c=index;for(i=0;i<7;i++){var vc=cellAt(i,c);if(vc)cells.push(vc)}
+    }
+    if(cells.length!==7)return;
+    var insert=insertAt(side,index),exit=insertAt(opposite(side),index);if(!insert||!exit)return;
+    var originals=[],ghosts=[],rects=cells.map(function(el){return el.getBoundingClientRect()});
+    cells.forEach(function(el,idx){
+      var ghost=el.cloneNode(true);ghost.classList.add('shiftGhost');ghost.classList.remove('reachable','currentCell');
+      ghost.removeAttribute('data-r');ghost.removeAttribute('data-c');ghost.disabled=true;
+      setGhostBox(ghost,rects[idx],frameRect);frame.appendChild(ghost);
+      originals.push(el);ghosts.push(ghost);el.style.visibility='hidden';
+    });
+    var sample=rects[0],ir=insert.getBoundingClientRect(),er=exit.getBoundingClientRect();
+    var spare=document.createElement('div');spare.className='shiftGhost shiftSpareGhost';
+    spare.innerHTML=tileMarkup(visualSpare,false,-1,-1);
+    spare.style.left=(ir.left-frameRect.left+ir.width/2-sample.width/2)+'px';
+    spare.style.top=(ir.top-frameRect.top+ir.height/2-sample.height/2)+'px';
+    spare.style.width=sample.width+'px';spare.style.height=sample.height+'px';
+    frame.appendChild(spare);
+    var dockSpare=$('spareTile');if(dockSpare)dockSpare.style.opacity='0';
+    frame.classList.add('shifting');
+    await wait(150);
+    var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var duration=reduced?180:520,easing='cubic-bezier(.22,.72,.22,1)';
+    function center(rect){return{x:rect.left-frameRect.left+rect.width/2,y:rect.top-frameRect.top+rect.height/2}}
+    var insertCenter=center(ir),exitCenter=center(er),targets=[],ejectedIndex=0;
+    for(i=0;i<7;i++){
+      if(side==='left')targets[i]=i<6?center(rects[i+1]):exitCenter;
+      else if(side==='right')targets[i]=i>0?center(rects[i-1]):exitCenter;
+      else if(side==='top')targets[i]=i<6?center(rects[i+1]):exitCenter;
+      else targets[i]=i>0?center(rects[i-1]):exitCenter;
+    }
+    ejectedIndex=(side==='left'||side==='top')?6:0;
+    var animations=ghosts.map(function(g,idx){
+      var start=center(rects[idx]),target=targets[idx];
+      return g.animate([{transform:'translate(0,0)'},{transform:'translate('+(target.x-start.x)+'px,'+(target.y-start.y)+'px)'}],
+        {duration:duration,easing:easing,fill:'forwards'}).finished.catch(function(){});
+    });
+    var spareTarget=(side==='left'||side==='top')?center(rects[0]):center(rects[6]);
+    animations.push(spare.animate([{transform:'translate(0,0)'},{transform:'translate('+(spareTarget.x-insertCenter.x)+'px,'+(spareTarget.y-insertCenter.y)+'px)'}],
+      {duration:duration,easing:easing,fill:'forwards'}).finished.catch(function(){}));
+    await Promise.all(animations);
+    var ejected=ghosts[ejectedIndex];
+    if(ejected){
+      var blink=ejected.animate([
+        {opacity:1},{offset:.18,opacity:.08},{offset:.36,opacity:1},
+        {offset:.54,opacity:.08},{offset:.72,opacity:1},{opacity:0}
+      ],{duration:reduced?260:480,easing:'linear',fill:'forwards'});
+      try{await blink.finished}catch(e){}
+    }
+    ghosts.forEach(function(g){g.remove()});spare.remove();
+    originals.forEach(function(el){el.style.visibility=''});
+    if(dockSpare)dockSpare.style.opacity='';
+    frame.classList.remove('shifting');
+  }
+  async function shiftMazeInternal(side,index){
+    if(state.phase!=='shift'||isBlockedInsertion(side,index)||moving)return;
+    moving=true;shiftRequestPending=false;
+    var visualSpare=copyTile(state.spare);
+    var fx=animateShiftVisual(side,index,visualSpare);
+    if(!mutateShiftState(side,index)){moving=false;return}
+    var nextState=snapshot();
+    if(mode==='multi'&&role==='host'&&session)session.broadcast({type:'shiftFx',side:side,index:index,nextState:nextState});
+    await fx;
+    moving=false;buzz(18);pulseBoard();renderAll();publishState();
   }
   function requestShift(side,index){
     if(!canControlTurn()||state.phase!=='shift'||isBlockedInsertion(side,index))return;
-    if(mode==='multi'&&role==='client'){session&&session.sendToHost({type:'action',action:'shift',side:side,index:index,playerId:localPlayerId});return}
+    if(mode==='multi'&&role==='client'){
+      shiftRequestPending=true;renderAll();
+      session&&session.sendToHost({type:'action',action:'shift',side:side,index:index,playerId:localPlayerId});return;
+    }
     shiftMazeInternal(side,index);
   }
   function canConnect(a,b,dir){var opp={N:'S',E:'W',S:'N',W:'E'}[dir];return openings(a).indexOf(dir)>=0&&openings(b).indexOf(opp)>=0}
@@ -1384,10 +1511,13 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     renderAll();publishState();
   }
 
+  function tileAsset(t){
+    var set=TILE_ASSETS[t.type]||TILE_ASSETS.L;
+    return t.fixed?set.fixed:set.movable;
+  }
   function tileMarkup(t,includePawns,r,c){
-    var html='';
-    openings(t).forEach(function(d){html+='<span class="pathArm '+d.toLowerCase()+'"></span>'});
-    html+='<span class="pathCenter"></span>';
+    var html='<img class="tileRaster" src="'+esc(tileAsset(t))+'" alt="" style="--tile-rot:'+(t.rot%4)+'">';
+
     if(t.relic)html+='<img class="relicArt" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
     if(includePawns){
       var active=currentPlayer();
@@ -1416,6 +1546,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     if(isBlockedInsertion(side,index))b.classList.add('blocked');
     b.disabled=state.phase!=='shift'||!canControlTurn()||isBlockedInsertion(side,index);
     b.innerHTML='<img src="'+SHIFT_ASSET+'" alt="">';b.title='Push maze '+side;b.setAttribute('aria-label','Push maze '+side);
+    b.dataset.side=side;b.dataset.index=String(index);
     b.style.gridRow=String(row+1);b.style.gridColumn=String(col+1);
     b.addEventListener('click',function(){requestShift(side,index)});grid.appendChild(b);
   }
@@ -1480,11 +1611,24 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function snapshot(){
     return{players:state.players,board:state.board,spare:state.spare,current:state.current,phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId};
   }
-  function applySnapshot(s){
-    if(!s||!Array.isArray(s.players)||!Array.isArray(s.board)||!s.spare)return;
+  function adoptSnapshot(s,doRender){
+    if(!s||!Array.isArray(s.players)||!Array.isArray(s.board)||!s.spare)return false;
     state.players=s.players;state.board=s.board;state.spare=s.spare;state.current=Number(s.current)||0;
     state.phase=s.phase==='move'?'move':'shift';state.lastShift=s.lastShift||null;state.targetCount=Math.max(1,Number(s.targetCount)||4);
-    state.winnerId=s.winnerId||null;state.turnReady=true;$('handoff').classList.add('hidden');showView('gameView');renderAll();
+    state.winnerId=s.winnerId||null;state.turnReady=true;shiftRequestPending=false;$('handoff').classList.add('hidden');showView('gameView');
+    if(doRender!==false)renderAll();return true;
+  }
+  function applySnapshot(s){
+    if(moving){pendingSnapshot=s;return}
+    adoptSnapshot(s,true);
+  }
+  async function playRemoteShiftFx(msg){
+    if(!msg||['left','right','top','bottom'].indexOf(msg.side)<0)return;
+    shiftRequestPending=false;if(moving)return;
+    moving=true;var visualSpare=copyTile(state.spare),fx=animateShiftVisual(msg.side,Number(msg.index),visualSpare);
+    if(msg.nextState)adoptSnapshot(msg.nextState,false);
+    await fx;moving=false;renderAll();
+    if(pendingSnapshot){var queued=pendingSnapshot;pendingSnapshot=null;adoptSnapshot(queued,true)}
   }
 
   function lobbyPlayers(){
@@ -1584,6 +1728,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     }else{
       if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];renderLobby('joinLobby',connectedLobby);$('joinedLobbyPanel').classList.remove('hidden');return}
       if(msg.type==='moveFx'&&Array.isArray(msg.path)){var fxPlayer=state.players.find(function(p){return p.id===msg.playerId});if(fxPlayer)animatePawnPath(msg.path,fxPlayer);return}
+      if(msg.type==='shiftFx'){playRemoteShiftFx(msg);return}
       if(msg.type==='start'&&msg.state){mode='multi';state.turnReady=true;applySnapshot(msg.state);return}
       if(msg.type==='state'&&msg.state){applySnapshot(msg.state);return}
     }
