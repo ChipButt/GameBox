@@ -658,6 +658,69 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
   filter:drop-shadow(0 0 1px #fff4d1) drop-shadow(0 3px 3px rgba(0,0,0,.68));
 }
+
+/* COMPACT GAMEPLAY COMPOSITION
+   HUD -> board -> thumb controls. No flexible dead-space row. */
+.playScreen{
+  grid-template-rows:auto auto auto!important;
+  align-content:start!important;
+  gap:7px!important;
+}
+.gameHud{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  min-height:48px!important;
+  padding:2px 3px 1px!important;
+}
+.boardStage{
+  min-height:auto!important;
+  gap:0!important;
+  padding-top:0!important;
+}
+.boardFrame{
+  width:min(calc(100vw - 12px),calc(100dvh - 178px),720px)!important;
+}
+.thumbDock{
+  width:calc(100% - 8px);
+  justify-self:center;
+  min-height:76px!important;
+  margin:0!important;
+  padding:7px 9px max(7px,env(safe-area-inset-bottom))!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,rgba(16,34,51,.86),rgba(7,20,32,.92))!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.objectiveMini{
+  grid-template-columns:52px minmax(0,1fr) auto!important;
+  gap:8px!important;
+}
+.targetToken{width:52px!important;height:52px!important}
+.objectiveText strong{font-size:16px!important}
+.actionZone{
+  min-width:118px;
+  justify-content:flex-end!important;
+  gap:10px!important;
+}
+.spareTile{
+  width:56px!important;height:56px!important;
+}
+.rotateBtn{
+  width:50px!important;height:50px!important;
+  border-radius:50%!important;
+}
+.waitDock{
+  min-width:118px!important;min-height:48px!important;
+}
+@media(max-width:390px){
+  .playScreen{gap:5px!important}
+  .thumbDock{width:calc(100% - 6px);min-height:70px!important;padding-left:7px!important;padding-right:7px!important}
+  .objectiveMini{grid-template-columns:46px minmax(0,1fr) auto!important;gap:6px!important}
+  .targetToken{width:46px!important;height:46px!important}
+  .objectiveText strong{font-size:14px!important}
+  .actionZone{min-width:105px;gap:7px!important}
+  .spareTile{width:50px!important;height:50px!important}
+  .rotateBtn{width:46px!important;height:46px!important}
+}
 </style>
 </head>
 <body>
@@ -775,13 +838,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
         <span class="turnDot" id="turnDot"></span>
         <div class="turnText"><span id="turnLabel">Turn</span><strong id="turnName">—</strong></div>
       </div>
-      <div class="phaseBadge" id="phasePill">Shift</div>
       <button class="iconBtn menuBtn" id="menuBtn" type="button" aria-label="Game menu">•••</button>
     </header>
 
     <section class="boardStage">
       <div class="boardFrame" id="boardFrame"><div class="boardGrid" id="boardGrid"></div></div>
-      <div class="phaseHint" id="phaseHint">Choose an insertion arrow</div>
     </section>
 
     <footer class="thumbDock">
@@ -1260,9 +1321,6 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var p=currentPlayer(),control=canControlTurn();
     $('turnName').textContent=p.name;$('turnDot').style.setProperty('--player',p.color);
     $('turnLabel').textContent=mode==='multi'&&!control?'Waiting for':'Turn';
-    $('phasePill').classList.toggle('waiting',!control&&mode==='multi');
-    $('phasePill').textContent=!control&&mode==='multi'?'Waiting':state.phase==='shift'?'Shift':'Move';
-    $('phaseHint').textContent=!control&&mode==='multi'?'Board updates live':state.phase==='shift'?'Choose an insertion arrow':'Choose a glowing tile';
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
     $('spareTile').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
