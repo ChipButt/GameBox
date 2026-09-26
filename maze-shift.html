@@ -1677,6 +1677,74 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   .thumbDock{height:100%!important;min-height:0!important}
   .boardFrame{padding:0!important;width:100%!important;height:100%!important}
 }
+
+/* TRUE BACKGROUND COMPOSITION
+   Decorative rasters live in their own stacking context below every gameplay element. */
+.playScreen{
+  isolation:isolate!important;
+  background:#040b13!important;
+}
+.mazeBackgroundLayer{
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  overflow:hidden!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+.mazeBackgroundAsset{
+  position:absolute!important;
+  display:block!important;
+  pointer-events:none!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+}
+.mazeBackgroundPortrait{
+  left:-8%!important;
+  top:-5%!important;
+  width:116%!important;
+  height:110%!important;
+  background-image:url('04_portrait_dungeon_background.png')!important;
+  background-size:cover!important;
+}
+.mazeBackgroundBoardFrame1{
+  left:-13%!important;
+  top:9.5%!important;
+  width:126.5%!important;
+  height:61.5%!important;
+  background-image:url('02_board_frame_square.png')!important;
+  background-size:100% 100%!important;
+}
+.mazeBackgroundBoardFrame2{
+  left:-13%!important;
+  top:56.5%!important;
+  width:126.5%!important;
+  height:46%!important;
+  background-image:url('02_board_frame_square.png')!important;
+  background-size:100% 100%!important;
+}
+/* The atmospheric tint belongs to the background layer too. */
+.mazeBackgroundLayer:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:10;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 34%,rgba(19,126,137,.08),transparent 38%),
+    linear-gradient(180deg,rgba(3,10,16,.08),rgba(2,8,14,.23)),
+    linear-gradient(90deg,rgba(0,0,0,.16),transparent 18%,transparent 82%,rgba(0,0,0,.16));
+}
+/* Every real game element is explicitly above the complete background composition. */
+.playScreen>.gameHud{z-index:30!important}
+.playScreen>.boardStage{z-index:40!important}
+.playScreen>.thumbDock{z-index:50!important}
+.playScreen:before{display:none!important}
+
+/* Retire the old foreground-raster implementation completely. */
+.dungeonScreenBackground,
+.dungeonBoardFrameArt,
+.dungeonBoardFrameArt2{display:none!important}
 </style>
 </head>
 <body>
@@ -1789,9 +1857,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   </section>
 
   <section id="gameView" class="view playScreen hidden">
-    <img class="dungeonScreenBackground" src="04_portrait_dungeon_background.png" alt="" aria-hidden="true">
-    <img class="dungeonBoardFrameArt" src="02_board_frame_square.png" alt="" aria-hidden="true">
-    <img class="dungeonBoardFrameArt dungeonBoardFrameArt2" src="02_board_frame_square.png" alt="" aria-hidden="true">
+    <div class="mazeBackgroundLayer" aria-hidden="true">
+      <div class="mazeBackgroundAsset mazeBackgroundPortrait"></div>
+      <div class="mazeBackgroundAsset mazeBackgroundBoardFrame1"></div>
+      <div class="mazeBackgroundAsset mazeBackgroundBoardFrame2"></div>
+    </div>
     <header class="gameHud">
       <div class="turnHud">
         <span class="turnDot" id="turnDot"></span>
