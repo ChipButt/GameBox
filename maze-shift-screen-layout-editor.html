@@ -40,6 +40,59 @@ button{cursor:pointer}
 .handle{position:absolute;width:18px;height:18px;border-radius:5px;background:var(--gold);border:2px solid #06111d;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:100}
 .item.selected:not(.locked) .handle{display:block}
 .handle.br{right:-8px;bottom:-8px;cursor:nwse-resize}.handle.r{right:-8px;top:calc(50% - 9px);cursor:ew-resize}.handle.b{left:calc(50% - 9px);bottom:-8px;cursor:ns-resize}
+
+.gameReference{
+  position:absolute;z-index:500;inset:0;pointer-events:none;
+  opacity:1;transition:opacity .15s ease;
+}
+.gameReference.hiddenRef{display:none}
+.refTopHud{
+  position:absolute;left:1.5%;top:1.4%;width:97%;height:7.2%;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.refTurn{
+  height:84%;width:86%;display:flex;align-items:center;gap:2.2%;
+  padding:0 2%;border-radius:13px;
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);
+}
+.refPawn{height:78%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.refTurnCopy{display:grid;line-height:1}
+.refTurnCopy span{font-size:1.75cqw;color:#72889e;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.refTurnCopy strong{margin-top:.45cqw;font:700 3.7cqw Fredoka,Inter,sans-serif}
+.refMenu{
+  width:8%;height:78%;display:grid;place-items:center;border-radius:11px;
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);font-weight:900;font-size:4cqw
+}
+.refBoard{
+  position:absolute;left:3%;top:15%;width:94%;aspect-ratio:1;
+  padding:1.2%;display:grid;
+  grid-template-columns:7.3% repeat(7,minmax(0,1fr)) 7.3%;
+  grid-template-rows:7.3% repeat(7,minmax(0,1fr)) 7.3%;
+  gap:1px;
+}
+.refCell{position:relative;overflow:hidden;border-radius:3px;background:#071923}
+.refCell img.tile{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.refCell img.relic{position:absolute;z-index:3;left:50%;top:50%;width:60%;height:60%;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
+.refCell img.pawn{position:absolute;z-index:4;left:50%;top:50%;width:78%;height:78%;object-fit:contain;transform:translate(-50%,-70%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.refArrow{display:grid;place-items:center}
+.refArrow img{width:70%;height:70%;object-fit:contain;opacity:.74;filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
+.refBottom{
+  position:absolute;left:1%;top:64.3%;width:98%;height:28.4%;
+}
+.refTarget,.refTile{position:absolute;top:0;height:100%;width:50%}
+.refTarget{left:0}.refTile{left:50%}
+.refLabel{position:absolute;color:#a8b8c7;font-weight:900;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 2px 4px #000}
+.refTarget .refLabel{left:8.33%;top:0;width:58%;font-size:2.15cqw}
+.refTargetName{position:absolute;left:8.33%;top:6.25%;width:66.66%;height:12.5%;display:flex;align-items:center;font:700 5.05cqw Fredoka,Inter,sans-serif;text-shadow:0 2px 5px #000}
+.refTargetArt{position:absolute;left:8.33%;top:18.75%;width:91.66%;height:81.25%;object-fit:contain;filter:drop-shadow(0 4px 4px rgba(0,0,0,.65))}
+.refScore{position:absolute;left:75%;top:0;width:25%;height:18.75%;display:grid;place-items:center;color:#9fb2c5;font-size:4.4cqw;font-weight:900;text-shadow:0 2px 5px #000}
+.refTile .refLabel{left:8.33%;top:6.25%;width:33.33%;font-size:1.95cqw}
+.refSpare{position:absolute;left:8.33%;top:18.75%;width:83.33%;height:75%;object-fit:cover}
+.refRotate{position:absolute;z-index:4;left:87.5%;top:64.3%;width:8.33%;height:3.55%;object-fit:contain}
+.refGuide{
+  position:absolute;z-index:600;inset:0;border:1px solid rgba(91,212,234,.2);pointer-events:none
+}
+
 .controls{padding:12px}
 .controls h2{margin:0 0 4px;font-size:18px}
 .controls>p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.45}
@@ -81,13 +134,15 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
 
   <aside class="panel controls">
     <h2>Full Screen Layout Editor</h2>
-    <p>The cyan phone outline is only the visible viewport. Assets can extend beyond it using negative X/Y values or widths/heights larger than 100%.</p>
+    <p>The dungeon rasters are the editable layers. The confirmed Maze Shift gameplay sits above them as a locked reference so you can position the new artwork around the real board and HUD. The cyan phone outline is only the visible viewport.</p>
 
     <div class="toolbar">
       <button id="copyJson" class="primary">Copy JSON</button>
       <button id="saveDraft" class="good">Save Draft</button>
       <button id="resetAll">Reset all</button>
       <button id="toggleClip">Clip preview</button>
+      <button id="toggleReference">Hide gameplay reference</button>
+      <button id="referenceOpacity">Reference 100%</button>
     </div>
 
     <div id="itemList" class="list"></div>
@@ -122,11 +177,12 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
       <button id="up">↑ 1 snap</button><button id="down">↓ 1 snap</button>
       <button id="left">← 1 snap</button><button id="right">→ 1 snap</button>
       <button id="toggleOne">Add / Remove</button><button id="resetOne" class="danger">Reset selected</button>
-      <button id="front">Bring forward</button><button id="back">Send backward</button>
+      <button id="toFront">Bring to front</button><button id="front">Forward one</button>
+      <button id="back">Backward one</button><button id="toBack">Send to back</button>
     </div>
 
     <textarea id="json" class="code" spellcheck="false"></textarea>
-    <div class="note">Off-screen placement is intentional. Example: X = -15 and W = 130 means the asset bleeds 15% beyond both sides of the visible phone viewport.</div>
+    <div class="note">The gameplay reference is locked and never exported. Use its opacity button if it blocks your view. Off-screen placement is intentional: X = -15 and W = 130 bleeds 15% beyond both sides of the phone viewport.</div>
     <div id="status" class="status"></div>
   </aside>
 </div>
@@ -135,23 +191,12 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
 const STORAGE_KEY="mazeshift.fullscreen.editor.v1";
 const ITEMS={
   screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:1,opacity:100,rotation:0,visible:true,locked:false},
-  landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:1,opacity:0,rotation:0,visible:false,locked:false},
-  topHudRegion:{label:"Top HUD region",kind:"region",text:"TOP HUD",x:2,y:2.5,w:96,h:8.2,z:10,opacity:100,rotation:0,visible:true,locked:false},
-  turnPanel:{label:"Turn panel",kind:"control",text:"TURN   Chip",x:2,y:3,w:86,h:6.5,z:12,opacity:100,rotation:0,visible:true,locked:false},
-  menuButton:{label:"Menu button",kind:"control",text:"•••",x:90,y:3.1,w:8,h:6.2,z:13,opacity:100,rotation:0,visible:true,locked:false},
-  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-1,y:12,w:102,h:54,z:4,opacity:100,rotation:0,visible:true,locked:false},
-  boardRegion:{label:"Interactive board region",kind:"region",text:"7 × 7 BOARD + ARROWS",x:3,y:15,w:94,h:48,z:15,opacity:100,rotation:0,visible:true,locked:false},
-  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:-4,y:64,w:108,h:34,z:3,opacity:92,rotation:0,visible:true,locked:false},
-  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:5,y:66,w:28,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"left",z:20,opacity:100,rotation:0,visible:true,locked:false},
-  targetName:{label:"Target name",kind:"text",text:"Star",x:5,y:68,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"left",z:20,opacity:100,rotation:0,visible:true,locked:false},
-  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:4,y:72,w:43,h:22,z:18,opacity:100,rotation:0,visible:true,locked:false},
-  score:{label:"Score",kind:"text",text:"0 / 4",x:37,y:66,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:21,opacity:100,rotation:0,visible:true,locked:false},
-  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:54,y:66,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"left",z:20,opacity:100,rotation:0,visible:true,locked:false},
-  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:55,y:70,w:34,h:22,z:18,opacity:100,rotation:0,visible:true,locked:false},
-  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",x:88,y:66,w:9,h:5,z:22,opacity:100,rotation:0,visible:true,locked:false}
-};
+  landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:2,opacity:0,rotation:0,visible:false,locked:false},
+  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-1,y:12,w:102,h:54,z:3,opacity:100,rotation:0,visible:true,locked:false},
+  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:-4,y:64,w:108,h:34,z:4,opacity:92,rotation:0,visible:true,locked:false}
+}
 const defaults=JSON.parse(JSON.stringify(ITEMS));
-const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false};
+const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false,reference:true,referenceOpacity:100};
 const screen=document.getElementById("screen"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status");
 const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h"),z:document.getElementById("z"),rotation:document.getElementById("rotation"),opacity:document.getElementById("opacity")};
 const visible=document.getElementById("visible"),locked=document.getElementById("locked"),fit=document.getElementById("fit"),assetName=document.getElementById("assetName"),assetFields=document.getElementById("assetFields"),textFields=document.getElementById("textFields"),textContent=document.getElementById("textContent"),fontSize=document.getElementById("fontSize"),textWeight=document.getElementById("textWeight"),textColor=document.getElementById("textColor"),textAlign=document.getElementById("textAlign"),snap=document.getElementById("snap");
@@ -172,8 +217,49 @@ function renderItem(it){
   if(it.kind==="text")return '<span style="width:100%;display:flex;justify-content:'+justify(it.align)+';font-size:'+fontPx(it)+'px;font-weight:'+it.weight+';color:'+it.color+'">'+it.text+'</span>'+handles();
   return handles();
 }
+
+function buildGameplayReference(){
+  let ref=document.getElementById("gameReference");
+  if(!ref){
+    ref=document.createElement("div");ref.id="gameReference";ref.className="gameReference";
+    screen.appendChild(ref);
+  }
+  const shapes=[
+    ["L",1],["I",1],["T",0],["L",2],["I",0],["T",1],["L",2],
+    ["I",0],["L",1],["T",2],["I",1],["L",3],["I",0],["T",0],
+    ["T",3],["I",1],["L",0],["T",1],["L",2],["I",1],["L",3],
+    ["L",0],["T",2],["I",0],["L",1],["T",3],["L",2],["I",1],
+    ["I",1],["L",3],["T",0],["I",0],["L",2],["T",1],["L",0],
+    ["T",1],["I",0],["L",2],["T",3],["I",1],["L",0],["T",2],
+    ["L",0],["I",1],["T",2],["L",3],["I",0],["T",0],["L",3]
+  ];
+  const assetFor=(type,idx)=>"MazeShift_Tiles/"+(type==="I"?"movable_straight.png":type==="L"?"movable_corner.png":"movable_t_junction.png");
+  let board='<div class="refBoard">';
+  [1,3,5].forEach(col=>board+='<div class="refArrow" style="grid-row:1;grid-column:'+(col+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(90deg)"></div>');
+  [1,3,5].forEach(col=>board+='<div class="refArrow" style="grid-row:9;grid-column:'+(col+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(-90deg)"></div>');
+  [1,3,5].forEach(row=>board+='<div class="refArrow" style="grid-row:'+(row+2)+';grid-column:1"><img src="MazeShift_Assets/23_shift_arrow.png"></div>');
+  [1,3,5].forEach(row=>board+='<div class="refArrow" style="grid-row:'+(row+2)+';grid-column:9"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(180deg)"></div>');
+  let k=0;
+  for(let r=0;r<7;r++)for(let col=0;col<7;col++){
+    const [type,rot]=shapes[k++],style='grid-row:'+(r+2)+';grid-column:'+(col+2);
+    let extra='';
+    if(r===2&&col===4)extra='<img class="relic" src="MazeShift_Assets/18_star.png">';
+    if(r===4&&col===2)extra='<img class="pawn" src="01_player_token_red.png">';
+    board+='<div class="refCell" style="'+style+'"><img class="tile" src="'+assetFor(type,k)+'" style="transform:rotate('+(rot*90)+'deg)">'+extra+'</div>';
+  }
+  board+='</div>';
+  ref.innerHTML=
+    '<div class="refTopHud"><div class="refTurn"><img class="refPawn" src="01_player_token_red.png"><div class="refTurnCopy"><span>TURN</span><strong>Chip</strong></div></div><div class="refMenu">•••</div></div>'+
+    board+
+    '<div class="refBottom"><div class="refTarget"><div class="refLabel">TARGET</div><div class="refTargetName">Star</div><img class="refTargetArt" src="MazeShift_Assets/18_star.png"><div class="refScore">0 / 4</div></div><div class="refTile"><div class="refLabel">YOUR TILE</div><img class="refSpare" src="MazeShift_Tiles/movable_corner.png"></div></div>'+
+    '<img class="refRotate" src="MazeShift_Assets/24_rotate.png"><div class="refGuide"></div>';
+  ref.classList.toggle("hiddenRef",!state.reference);
+  ref.style.opacity=String((state.referenceOpacity||100)/100);
+  return ref;
+}
 function renderStage(){
   screen.querySelectorAll(".item").forEach(n=>n.remove());
+  const oldRef=document.getElementById("gameReference");if(oldRef)oldRef.remove();
   Object.entries(state.items).forEach(([key,it])=>{
     if(!it.visible)return;
     const el=document.createElement("div");
@@ -181,6 +267,7 @@ function renderStage(){
     el.dataset.key=key;itemBox(el,it);el.innerHTML=renderItem(it);
     el.addEventListener("pointerdown",startPointer);screen.appendChild(el);
   });
+  buildGameplayReference();
   screen.classList.toggle("clipMode",state.clip);
 }
 function renderList(){
@@ -197,7 +284,7 @@ function renderFields(){
   if(isAsset(it)){assetFields.classList.add("visible");fit.value=it.fit||"cover";assetName.value=it.src}else assetFields.classList.remove("visible");
   if(isText(it)){textFields.classList.add("visible");textContent.value=it.text||"";fontSize.value=it.font||2;textWeight.value=it.weight||"900";textColor.value=it.color||"#ffffff";textAlign.value=it.align||"left"}else textFields.classList.remove("visible");
 }
-function exportJson(){json.value=JSON.stringify({editor:"maze-shift-full-screen-v1",viewport:{width:390,height:844,units:"percent",allowsOverflow:true},clipPreview:state.clip,items:state.items},null,2)}
+function exportJson(){json.value=JSON.stringify({editor:"maze-shift-full-screen-v2",viewport:{width:390,height:844,units:"percent",allowsOverflow:true},clipPreview:state.clip,gameplayReference:{visible:state.reference,opacity:state.referenceOpacity,exported:false},items:state.items},null,2)}
 function renderAll(){renderStage();renderList();renderFields();exportJson()}
 
 function startPointer(e){
@@ -240,14 +327,19 @@ function nudge(dx,dy){const it=current(),s=Number(state.snap)||.5;if(it.locked)r
 document.getElementById("up").onclick=()=>nudge(0,-1);document.getElementById("down").onclick=()=>nudge(0,1);document.getElementById("left").onclick=()=>nudge(-1,0);document.getElementById("right").onclick=()=>nudge(1,0);
 document.getElementById("toggleOne").onclick=()=>{current().visible=!current().visible;renderAll()};
 document.getElementById("resetOne").onclick=()=>{state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
-document.getElementById("front").onclick=()=>{current().z=(Number(current().z)||1)+1;renderAll()};
-document.getElementById("back").onclick=()=>{current().z=(Number(current().z)||1)-1;renderAll()};
+function sortedVisibleZ(){return Object.values(state.items).filter(x=>x.visible).map(x=>Number(x.z)||0).sort((a,b)=>a-b)}
+document.getElementById("front").onclick=()=>{if(current().locked)return;current().z=(Number(current().z)||0)+1;renderAll();status("Moved forward")};
+document.getElementById("back").onclick=()=>{if(current().locked)return;current().z=(Number(current().z)||0)-1;renderAll();status("Moved backward")};
+document.getElementById("toFront").onclick=()=>{if(current().locked)return;const z=sortedVisibleZ();current().z=(z.length?z[z.length-1]:0)+10;renderAll();status("Brought to front")};
+document.getElementById("toBack").onclick=()=>{if(current().locked)return;const z=sortedVisibleZ();current().z=(z.length?z[0]:0)-10;renderAll();status("Sent to back")};
 document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaults));selected="screenBackground";renderAll();status("Reset to defaults")};
 document.getElementById("toggleClip").onclick=()=>{state.clip=!state.clip;renderAll();status(state.clip?"Preview clipped to screen":"Bleed visible")};
+document.getElementById("toggleReference").onclick=()=>{state.reference=!state.reference;renderAll();document.getElementById("toggleReference").textContent=state.reference?"Hide gameplay reference":"Show gameplay reference";status(state.reference?"Gameplay reference shown":"Gameplay reference hidden")};
+document.getElementById("referenceOpacity").onclick=()=>{state.referenceOpacity=state.referenceOpacity===100?55:state.referenceOpacity===55?25:100;renderAll();document.getElementById("referenceOpacity").textContent="Reference "+state.referenceOpacity+"%"};
 document.getElementById("copyJson").onclick=async()=>{exportJson();try{await navigator.clipboard.writeText(json.value);status("JSON copied")}catch(_){json.select();document.execCommand("copy");status("JSON copied")}};
 document.getElementById("saveDraft").onclick=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));status("Draft saved")};
 function status(t){statusEl.textContent=t;clearTimeout(status._t);status._t=setTimeout(()=>statusEl.textContent="",1800)}
-try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=Object.assign(JSON.parse(JSON.stringify(defaults)),saved.items);state.snap=saved.snap||.5;state.clip=!!saved.clip}}catch(_){}
+try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=Object.assign(JSON.parse(JSON.stringify(defaults)),saved.items);state.snap=saved.snap||.5;state.clip=!!saved.clip;state.reference=saved.reference!==false;state.referenceOpacity=saved.referenceOpacity||100}}catch(_){}
 renderAll();window.addEventListener("resize",renderStage);
 </script>
 </body>
