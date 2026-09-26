@@ -181,3 +181,9 @@
   .toyBox .discRallyHomeTile{min-height:140px}
   .toyBox .discRallyHomeLogo{height:84px}
 }
+
+/* Maze Shift home box */
+.toyGameMaze{grid-column:1/-1;width:76%;justify-self:center;transform:rotate(-.8deg)!important}
+.toyGameMaze .gameTile{background:linear-gradient(145deg,#236359,#103d46)}
+.toyGameMaze .gameTileIcon{color:#173f39}
+@media(max-width:560px){.toyGameMaze{width:88%}}
