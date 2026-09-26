@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0d1514">
-  <title>Core Empires — Dig. Build. Conquer.</title>
+  <meta name="theme-color" content="#0c1513">
+  <title>Core Empires — Mine. Farm. Conquer.</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body data-tab="mine">
@@ -17,67 +17,115 @@
   </header>
 
   <section class="resources">
-    <div><span class="gold icon">◆</span><div><small>ORE RESERVE</small><strong id="ore">120</strong></div></div>
-    <div><span class="icon orange">↓</span><div><small>DEEPEST TUNNEL</small><strong id="depth">3 <small>m</small></strong></div></div>
-    <div><span class="icon mint">⚒</span><div><small>CREW</small><strong id="crewTop">2 <small>miners</small></strong></div></div>
-    <div><span class="icon cart-icon">▣</span><div><small>HAULAGE</small><strong id="cartTop">1 <small>cart</small></strong></div></div>
+    <div class="resource-card gold-res"><span class="resource-icon">●</span><div><small>GOLD</small><strong id="gold">120</strong></div></div>
+    <div class="resource-card diamond-res"><span class="resource-icon">◆</span><div><small>DIAMONDS</small><strong id="diamonds">0</strong></div></div>
+    <div class="resource-card iron-res"><span class="resource-icon">⬢</span><div><small>IRON</small><strong id="iron">20</strong></div></div>
+    <div class="resource-card food-res"><span class="resource-icon">♨</span><div><small>FOOD</small><strong id="food">45</strong></div></div>
+    <div class="resource-card pop-res"><span class="resource-icon">♟</span><div><small>POPULATION</small><strong id="population">4 / 12</strong></div></div>
   </section>
 
   <section id="mineScreen" class="screen mine-screen">
     <div class="mine-shell panel">
-      <div class="mine-head">
+      <div class="section-head">
         <div>
-          <span class="eyebrow">BELOW THE SURFACE</span>
-          <h1>Build the mine. Feed the empire.</h1>
-          <p>Drag through the ground to queue tunnels. Tap an exposed mineral vein to mine it.</p>
+          <span class="eyebrow">THE MINE</span>
+          <h1>Dig for the materials that build your army.</h1>
+          <p>Drag from an open tunnel into the ground. Miners dig it, carts haul the material, and only delivered loads enter your stores.</p>
         </div>
-        <div class="mine-summary">
-          <span><b id="activeMiners">0</b> working</span>
-          <span><b id="waitingLoads">0</b> loads waiting</span>
+        <div class="status-pills">
+          <span>Depth <b id="depth">6m</b></span>
+          <span>Miners <b id="minerCount">2</b></span>
+          <span>Carts <b id="cartCount">1</b></span>
         </div>
       </div>
 
       <div class="mine-workspace">
         <div id="mineViewport" class="mine-viewport">
           <canvas id="mineCanvas" aria-label="Interactive underground mine"></canvas>
-          <div class="mine-help">DRAG TO DIG · TAP ORE TO EXTRACT</div>
+          <div class="mine-help">DRAG SOLID GROUND TO QUEUE DIGGING · DRAG AN OPEN TUNNEL TO SCROLL</div>
         </div>
 
-        <aside class="mine-controls">
+        <aside class="side-controls">
           <div class="control-section">
-            <span class="control-label">TOOLS</span>
-            <div class="tool-row">
-              <button id="digTool" class="tool active"><span>⛏</span><b>Dig</b><small>Draw a tunnel</small></button>
-              <button id="inspectTool" class="tool"><span>◎</span><b>Inspect</b><small>Check a block</small></button>
-            </div>
-            <button id="clearQueue" class="text-button">Clear queued digging</button>
-          </div>
-
-          <div class="control-section live-logistics">
-            <span class="control-label">LIVE LOGISTICS</span>
-            <div><span>Queued tunnel blocks</span><b id="digQueue">0</b></div>
-            <div><span>Loose material underground</span><b id="stockpile">0</b></div>
-            <div><span>Cart capacity</span><b id="capacity">10</b></div>
-            <p id="logistics">Your cart collects mined material and returns it to the surface automatically.</p>
+            <span class="control-label">MINE STATUS</span>
+            <div class="stat-row"><span>Miners working</span><b id="activeMiners">0</b></div>
+            <div class="stat-row"><span>Queued blocks</span><b id="digQueue">0</b></div>
+            <div class="stat-row"><span>Loose loads</span><b id="stockpile">0</b></div>
+            <div class="stat-row"><span>Cart capacity</span><b id="capacity">10</b></div>
+            <p id="logistics">Extend a tunnel to uncover iron, gold and diamonds.</p>
           </div>
 
           <div class="control-section">
-            <span class="control-label">EXPAND THE CREW</span>
-            <button id="upgrade" class="secondary">Hire a miner <span>◆ 60</span></button>
-            <button id="cart" class="secondary">Buy another cart <span>◆ 90</span></button>
+            <span class="control-label">CREW</span>
+            <button id="hireMiner" class="secondary">Hire miner <span id="minerCost">20 Gold · 8 Food</span></button>
+            <button id="buyCart" class="secondary">Buy cart <span id="cartCost">30 Gold · 10 Iron</span></button>
           </div>
 
           <div class="control-section">
-            <span class="control-label">IMPROVE THE MINE</span>
-            <button id="toolUpgrade" class="secondary">Sharper tools <span>◆ 120</span></button>
-            <button id="capacityUpgrade" class="secondary">Bigger carts <span>◆ 140</span></button>
+            <span class="control-label">UPGRADES</span>
+            <button id="toolUpgrade" class="secondary">Mining tools <span id="toolCost">35 Gold · 15 Iron</span></button>
+            <button id="capacityUpgrade" class="secondary">Cart capacity <span id="capacityCost">45 Gold · 20 Iron</span></button>
+            <button id="clearQueue" class="text-button">Clear unstarted digging</button>
           </div>
 
           <div class="material-key">
-            <span><i class="stone-dot"></i> Stone</span>
-            <span><i class="copper-dot"></i> Copper</span>
             <span><i class="iron-dot"></i> Iron</span>
             <span><i class="gold-dot"></i> Gold</span>
+            <span><i class="diamond-dot"></i> Diamonds</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="farmScreen" class="screen farm-screen">
+    <div class="farm-shell panel">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">THE FARMLANDS</span>
+          <h1>Feed the people who power your empire.</h1>
+          <p>Farmers automatically tend active fields. More farmland means more food and a larger population your empire can support.</p>
+        </div>
+        <div class="status-pills">
+          <span>Farmers <b id="farmerCount">2</b></span>
+          <span>Fields <b id="fieldCount">2 / 8</b></span>
+          <span>Food rate <b id="foodRate">+0.0/s</b></span>
+        </div>
+      </div>
+
+      <div class="farm-workspace">
+        <div class="farm-scene">
+          <div class="farm-sky">
+            <span class="sun"></span>
+            <div class="farmstead">
+              <span class="roof"></span>
+              <span class="barn-body"></span>
+              <span class="barn-door"></span>
+            </div>
+          </div>
+          <div id="farmGrid" class="farm-grid" aria-label="Farm fields"></div>
+          <div id="farmerLayer" class="farmer-layer" aria-hidden="true"></div>
+        </div>
+
+        <aside class="side-controls farm-controls">
+          <div class="control-section">
+            <span class="control-label">FOOD & POPULATION</span>
+            <div class="big-stat"><small>FOOD STORED</small><strong id="foodStored">45</strong></div>
+            <div class="population-bar"><span id="populationFill"></span></div>
+            <div class="stat-row"><span>Population supported</span><b id="populationSupported">12</b></div>
+            <p>Miners, farmers and recruited troops all count toward the same population limit.</p>
+          </div>
+
+          <div class="control-section">
+            <span class="control-label">EXPAND</span>
+            <button id="hireFarmer" class="secondary">Hire farmer <span id="farmerCost">15 Gold · 6 Food</span></button>
+            <button id="expandField" class="secondary">Open new field <span id="fieldCost">30 Gold · 10 Iron</span></button>
+            <button id="farmUpgrade" class="secondary">Improve harvest <span id="farmCost">40 Gold · 1 Diamond</span></button>
+          </div>
+
+          <div class="farm-note">
+            <b>THE LINK</b>
+            <p>No food means no army growth. Expand your fields to support more miners, farmers and soldiers.</p>
           </div>
         </aside>
       </div>
@@ -86,49 +134,63 @@
 
   <section id="battleScreen" class="screen battle-screen">
     <section class="battle panel">
-      <div class="panel-head">
-        <div><span class="eyebrow">THE FRONTIER</span><h2 id="battleTitle">The wild lowlands</h2></div>
-        <span class="live"><i></i> <span id="battleState">READY TO ADVANCE</span></span>
+      <div class="section-head battle-head">
+        <div>
+          <span class="eyebrow">THE FRONTIER</span>
+          <h1 id="battleTitle">The wild lowlands</h1>
+          <p>Recruit troops from the resources produced by your mine and farm, then send them to conquer the next territory.</p>
+        </div>
+        <div class="status-pills">
+          <span>Territory <b id="territory">1 / 6</b></span>
+          <span id="battleStatePill">READY</span>
+        </div>
       </div>
+
       <div class="field">
-        <canvas id="battleCanvas" aria-label="Animated battlefield showing your troops fighting enemy troops"></canvas>
+        <canvas id="battleCanvas" aria-label="Animated battlefield"></canvas>
         <div class="base-label home">YOUR OUTPOST <b id="homeHp">100%</b></div>
         <div class="base-label enemy">RIVAL OUTPOST <b id="enemyHp">100%</b></div>
-        <div id="banner">Your mine funds every soldier you send to the frontier.</div>
+        <div id="banner">Mine materials. Grow food. Build the army that wins the frontier.</div>
       </div>
+
       <div class="battle-footer">
-        <span id="armyCount">0 troops in the field</span>
+        <span id="armyCount">0 troops ready</span>
         <button id="attack" class="primary">Start battle <span>↗</span></button>
       </div>
-      <div class="troop-heading"><h3>Assemble your army</h3><span>Tap to deploy · Max 12</span></div>
+
+      <div class="troop-heading">
+        <div><h3>Recruit troops</h3><span>Every soldier uses 1 population</span></div>
+        <span id="populationWarning"></span>
+      </div>
       <div id="troops" class="troops"></div>
-      <div class="hint"><span>↳</span> Everything spent here was physically hauled out of your mine.</div>
     </section>
   </section>
 
   <section id="evolutionScreen" class="screen evolution-screen">
     <section class="evolution panel">
-      <div class="eyebrow">THE NEXT CHAPTER</div>
+      <div class="eyebrow">THE NEXT AGE</div>
       <h2 id="nextAge">Discover the Bronze Age</h2>
-      <p id="evolveDescription">Unlock stronger troops, tougher mining tools and better yields from deeper deposits.</p>
+      <p id="evolveDescription">Advance the whole empire: tougher troops, faster mining and better harvests.</p>
       <div class="ages"><span class="selected">I</span><i></i><span>II</span><i></i><span>III</span></div>
-      <button id="evolve" class="secondary">Evolve civilisation <span>◆ 400</span></button>
+      <div id="evolveRequirements" class="evolve-requirements"></div>
+      <button id="evolve" class="secondary evolve-button">Advance civilisation <span>Pay resources</span></button>
     </section>
   </section>
 
   <nav class="game-tabs" aria-label="Game areas">
-    <button data-tab="mine" class="active">◆ Mine</button>
+    <button data-tab="mine" class="active">⛏ Mine</button>
+    <button data-tab="farm">♨ Farm</button>
     <button data-tab="battle">⚑ Battle</button>
     <button data-tab="evolution">✦ Evolve</button>
   </nav>
 
   <dialog id="gameMenu">
     <h2>Core Empires</h2>
-    <p>Dig tunnels into unexplored ground, expose mineral veins, and let your miners work them. Carts physically collect loose material and only add it to your reserve once they return to the surface.</p>
-    <p>Use those resources to build an army, conquer territory and unlock stronger ages. Your progress saves on this device.</p>
+    <p><b>Mine</b> supplies Gold, Diamonds and Iron. <b>Farm</b> supplies Food and expands the population your empire can support. <b>Battle</b> consumes those resources to recruit troops and conquer territory.</p>
+    <p>All three systems continue running while you move between tabs, but background simulation is throttled so switching screens stays smooth.</p>
     <a href="../index.html">Back to GameBox</a>
     <button id="closeMenu" class="secondary">Return to game</button>
-    <footer><button id="reset">New expedition</button></footer>
+    <footer><button id="reset">New empire</button></footer>
   </dialog>
 </main>
 <div id="toast" role="status"></div>
