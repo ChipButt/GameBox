@@ -1,1 +1,137 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111b1b"><title>Core Empires — Dig. Build. Conquer.</title><link rel="stylesheet" href="style.css"></head><body><main><header><a class="brand" href="../index.html" aria-label="Back to GameBox"><span class="mark">◈</span> CORE<span>EMPIRES</span></a><span id="ageName" class="header-age">Stone Age</span><button id="menu" class="small" aria-label="Game menu">☰</button><button id="pause" class="small" aria-label="Pause game">Ⅱ</button></header><section class="resources"><div><span class="gold icon">◆</span><div><small>ORE RESERVE</small><strong id="ore">120</strong></div><em id="rate">+3 / sec</em></div><div><span class="icon mint">⚑</span><div><small>TERRITORY</small><strong id="territory">01 <small>/ 06</small></strong></div></div><div><span class="icon orange">↓</span><div><small>MINE DEPTH</small><strong id="depth">12 <small>m</small></strong></div></div></section><div class="layout"><section class="battle panel"><div class="panel-head"><div><span class="eyebrow">THE FRONTIER</span><h2 id="battleTitle">The wild lowlands</h2></div><span class="live"><i></i> <span id="battleState">READY TO ADVANCE</span></span></div><div class="field"><canvas id="battleCanvas" aria-label="Animated battlefield showing your troops fighting enemy troops"></canvas><div class="base-label home">YOUR OUTPOST <b id="homeHp">100%</b></div><div class="base-label enemy">RIVAL OUTPOST <b id="enemyHp">100%</b></div><div id="banner">Your empire begins with a single stone.</div></div><div class="battle-footer"><span id="armyCount">0 troops in the field</span><button id="attack" class="primary">Start battle <span>↗</span></button></div><div class="troop-heading"><h3>Assemble your army</h3><span>Tap to deploy · Max 12</span></div><div id="troops" class="troops"></div><div class="hint"><span>↳</span> Mine feeds your army. Your army opens the way.</div></section><aside><section class="mine panel"><div class="panel-head"><div><span class="eyebrow">BELOW THE SURFACE</span><h2>The heart of your empire</h2></div><span class="small-tag">MINE → CART → ARMY</span></div><button id="dig" class="mine-view" aria-label="Mine ore manually"><canvas id="mineCanvas"></canvas><span class="dig-pill">TAP TO MINE <b>+8</b></span></button><div class="mine-details"><div><span>Mining crew</span><b id="crew">2 workers</b></div><div><span>Ore per second</span><b id="production">3 ore</b></div><button id="upgrade" class="secondary">Hire a miner <span>◆ 60</span></button><div class="assignment"><label for="assignment">Worker assignment</label><select id="assignment"><option value="balanced">Balanced crew</option><option value="digging">Focus extraction</option><option value="hauling">Focus hauling</option></select></div><div><span>Transport capacity</span><b id="capacity">5 ore / sec</b></div><div><span>Waiting underground</span><b id="stockpile">0 ore</b></div><button id="cart" class="secondary">Upgrade mine carts <span>◆ 90</span></button><p id="logistics">Mine → cart → your army. Keep ore moving.</p></div></section><section class="evolution panel"><div class="eyebrow">THE NEXT CHAPTER</div><h2 id="nextAge">Discover the Bronze Age</h2><p id="evolveDescription">Stronger steel starts with a little copper. Evolve your army and double mine production.</p><div class="ages"><span class="selected">I</span><i></i><span>II</span><i></i><span>III</span></div><button id="evolve" class="secondary">Evolve civilisation <span>◆ 400</span></button></section></aside></div><nav class="game-tabs" aria-label="Game areas"><button data-tab="battle" class="active">⚑ Battle</button><button data-tab="mine">◆ Mine</button><button data-tab="evolution">✦ Evolve</button></nav><dialog id="gameMenu"><h2>Core Empires</h2><p>Mine ore and manage your crew. Upgrade carts when ore piles up underground. Deploy troops, then start a battle. Conquer six territories and evolve through three ages.</p><p>Your mine keeps working while you fight. Progress saves on this device.</p><a href="../index.html">Back to GameBox</a><button id="closeMenu" class="secondary">Return to game</button><footer><span>CORE EMPIRES <b> / </b> ONE MORE LAYER.</span><button id="reset">New expedition</button><span>Progress saved on this device</span></footer></dialog></main><div id="toast" role="status"></div><script src="game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d1514">
+  <title>Core Empires — Dig. Build. Conquer.</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-tab="mine">
+<main>
+  <header>
+    <a class="brand" href="../index.html" aria-label="Back to GameBox"><span class="mark">◈</span> CORE<span>EMPIRES</span></a>
+    <span id="ageName" class="header-age">Stone Age</span>
+    <button id="menu" class="small" aria-label="Game menu">☰</button>
+    <button id="pause" class="small" aria-label="Pause game">Ⅱ</button>
+  </header>
+
+  <section class="resources">
+    <div><span class="gold icon">◆</span><div><small>ORE RESERVE</small><strong id="ore">120</strong></div></div>
+    <div><span class="icon orange">↓</span><div><small>DEEPEST TUNNEL</small><strong id="depth">3 <small>m</small></strong></div></div>
+    <div><span class="icon mint">⚒</span><div><small>CREW</small><strong id="crewTop">2 <small>miners</small></strong></div></div>
+    <div><span class="icon cart-icon">▣</span><div><small>HAULAGE</small><strong id="cartTop">1 <small>cart</small></strong></div></div>
+  </section>
+
+  <section id="mineScreen" class="screen mine-screen">
+    <div class="mine-shell panel">
+      <div class="mine-head">
+        <div>
+          <span class="eyebrow">BELOW THE SURFACE</span>
+          <h1>Build the mine. Feed the empire.</h1>
+          <p>Drag through the ground to queue tunnels. Tap an exposed mineral vein to mine it.</p>
+        </div>
+        <div class="mine-summary">
+          <span><b id="activeMiners">0</b> working</span>
+          <span><b id="waitingLoads">0</b> loads waiting</span>
+        </div>
+      </div>
+
+      <div class="mine-workspace">
+        <div id="mineViewport" class="mine-viewport">
+          <canvas id="mineCanvas" aria-label="Interactive underground mine"></canvas>
+          <div class="mine-help">DRAG TO DIG · TAP ORE TO EXTRACT</div>
+        </div>
+
+        <aside class="mine-controls">
+          <div class="control-section">
+            <span class="control-label">TOOLS</span>
+            <div class="tool-row">
+              <button id="digTool" class="tool active"><span>⛏</span><b>Dig</b><small>Draw a tunnel</small></button>
+              <button id="inspectTool" class="tool"><span>◎</span><b>Inspect</b><small>Check a block</small></button>
+            </div>
+            <button id="clearQueue" class="text-button">Clear queued digging</button>
+          </div>
+
+          <div class="control-section live-logistics">
+            <span class="control-label">LIVE LOGISTICS</span>
+            <div><span>Queued tunnel blocks</span><b id="digQueue">0</b></div>
+            <div><span>Loose material underground</span><b id="stockpile">0</b></div>
+            <div><span>Cart capacity</span><b id="capacity">10</b></div>
+            <p id="logistics">Your cart collects mined material and returns it to the surface automatically.</p>
+          </div>
+
+          <div class="control-section">
+            <span class="control-label">EXPAND THE CREW</span>
+            <button id="upgrade" class="secondary">Hire a miner <span>◆ 60</span></button>
+            <button id="cart" class="secondary">Buy another cart <span>◆ 90</span></button>
+          </div>
+
+          <div class="control-section">
+            <span class="control-label">IMPROVE THE MINE</span>
+            <button id="toolUpgrade" class="secondary">Sharper tools <span>◆ 120</span></button>
+            <button id="capacityUpgrade" class="secondary">Bigger carts <span>◆ 140</span></button>
+          </div>
+
+          <div class="material-key">
+            <span><i class="stone-dot"></i> Stone</span>
+            <span><i class="copper-dot"></i> Copper</span>
+            <span><i class="iron-dot"></i> Iron</span>
+            <span><i class="gold-dot"></i> Gold</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="battleScreen" class="screen battle-screen">
+    <section class="battle panel">
+      <div class="panel-head">
+        <div><span class="eyebrow">THE FRONTIER</span><h2 id="battleTitle">The wild lowlands</h2></div>
+        <span class="live"><i></i> <span id="battleState">READY TO ADVANCE</span></span>
+      </div>
+      <div class="field">
+        <canvas id="battleCanvas" aria-label="Animated battlefield showing your troops fighting enemy troops"></canvas>
+        <div class="base-label home">YOUR OUTPOST <b id="homeHp">100%</b></div>
+        <div class="base-label enemy">RIVAL OUTPOST <b id="enemyHp">100%</b></div>
+        <div id="banner">Your mine funds every soldier you send to the frontier.</div>
+      </div>
+      <div class="battle-footer">
+        <span id="armyCount">0 troops in the field</span>
+        <button id="attack" class="primary">Start battle <span>↗</span></button>
+      </div>
+      <div class="troop-heading"><h3>Assemble your army</h3><span>Tap to deploy · Max 12</span></div>
+      <div id="troops" class="troops"></div>
+      <div class="hint"><span>↳</span> Everything spent here was physically hauled out of your mine.</div>
+    </section>
+  </section>
+
+  <section id="evolutionScreen" class="screen evolution-screen">
+    <section class="evolution panel">
+      <div class="eyebrow">THE NEXT CHAPTER</div>
+      <h2 id="nextAge">Discover the Bronze Age</h2>
+      <p id="evolveDescription">Unlock stronger troops, tougher mining tools and better yields from deeper deposits.</p>
+      <div class="ages"><span class="selected">I</span><i></i><span>II</span><i></i><span>III</span></div>
+      <button id="evolve" class="secondary">Evolve civilisation <span>◆ 400</span></button>
+    </section>
+  </section>
+
+  <nav class="game-tabs" aria-label="Game areas">
+    <button data-tab="mine" class="active">◆ Mine</button>
+    <button data-tab="battle">⚑ Battle</button>
+    <button data-tab="evolution">✦ Evolve</button>
+  </nav>
+
+  <dialog id="gameMenu">
+    <h2>Core Empires</h2>
+    <p>Dig tunnels into unexplored ground, expose mineral veins, and let your miners work them. Carts physically collect loose material and only add it to your reserve once they return to the surface.</p>
+    <p>Use those resources to build an army, conquer territory and unlock stronger ages. Your progress saves on this device.</p>
+    <a href="../index.html">Back to GameBox</a>
+    <button id="closeMenu" class="secondary">Return to game</button>
+    <footer><button id="reset">New expedition</button></footer>
+  </dialog>
+</main>
+<div id="toast" role="status"></div>
+<script src="game.js"></script>
+</body>
+</html>
