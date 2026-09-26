@@ -485,6 +485,108 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* MAZE SHIFT ART ASSET INTEGRATION */
+.relicArt{
+  position:absolute;z-index:5;left:50%;top:50%;width:58%;height:58%;
+  transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48)) drop-shadow(0 0 3px rgba(255,214,88,.10));
+}
+.homeGoal{
+  position:absolute;z-index:3;left:50%;top:50%;width:58%;height:58%;
+  transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;
+  opacity:.72;filter:drop-shadow(0 0 5px rgba(247,189,24,.48));
+  animation:homeGoalPulse 1.35s ease-in-out infinite;
+}
+.pawns{
+  position:absolute;z-index:10;inset:0;display:block;pointer-events:none;
+}
+.pawnWrap{
+  --player:#3f82e3;position:absolute;left:50%;top:50%;width:48%;height:58%;
+  transform:translate(-50%,-50%);display:grid;place-items:center;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.60));
+}
+.pawnWrap:before{
+  content:"";position:absolute;left:50%;top:58%;width:72%;aspect-ratio:1;
+  transform:translate(-50%,-50%);border-radius:50%;background:var(--player);
+  box-shadow:0 0 0 2px rgba(255,255,255,.90),0 0 8px var(--player);
+  opacity:.95;
+}
+.pawnWrap:after{
+  content:"";position:absolute;left:50%;bottom:-2%;width:52%;height:14%;
+  transform:translateX(-50%);border-radius:999px;background:var(--player);
+  border:1px solid rgba(255,255,255,.88);box-shadow:0 1px 2px rgba(0,0,0,.45);
+}
+.pawnArt{
+  position:relative;z-index:2;width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.42));
+}
+.pawnWrap.count2.slot0{transform:translate(-78%,-50%) scale(.82)}
+.pawnWrap.count2.slot1{transform:translate(-22%,-50%) scale(.82)}
+.pawnWrap.count3.slot0{transform:translate(-50%,-79%) scale(.72)}
+.pawnWrap.count3.slot1{transform:translate(-80%,-27%) scale(.72)}
+.pawnWrap.count3.slot2{transform:translate(-20%,-27%) scale(.72)}
+.pawnWrap.count4.slot0{transform:translate(-76%,-75%) scale(.66)}
+.pawnWrap.count4.slot1{transform:translate(-24%,-75%) scale(.66)}
+.pawnWrap.count4.slot2{transform:translate(-76%,-24%) scale(.66)}
+.pawnWrap.count4.slot3{transform:translate(-24%,-24%) scale(.66)}
+
+.insertBtn{
+  width:88%!important;height:88%!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible;
+}
+.insertBtn img{
+  width:100%;height:100%;object-fit:contain;pointer-events:none;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.50));
+  transition:transform .10s ease,filter .12s ease;
+}
+.insertBtn.side-left img{transform:rotate(0deg)}
+.insertBtn.side-right img{transform:rotate(180deg)}
+.insertBtn.side-top img{transform:rotate(90deg)}
+.insertBtn.side-bottom img{transform:rotate(-90deg)}
+.insertBtn:not(:disabled):hover img{filter:drop-shadow(0 3px 3px rgba(0,0,0,.54)) brightness(1.08)}
+.insertBtn:active{transform:scale(.92)!important;box-shadow:none!important}
+.insertBtn.blocked{opacity:.07!important}
+.insertBtn:disabled{opacity:.10!important}
+
+.targetToken{
+  width:50px!important;height:50px!important;padding:2px;border:0!important;border-radius:12px!important;
+  background:rgba(255,255,255,.035)!important;box-shadow:none!important;overflow:visible;
+}
+.objectiveArt{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+.objectiveArt.homeArt{width:92%;height:92%}
+
+.rotateBtn{
+  display:grid!important;place-items:center;padding:4px!important;background:linear-gradient(180deg,#153b56,#0a243b)!important;
+  border:1px solid rgba(99,197,220,.24)!important;overflow:visible;
+}
+.rotateBtn img{
+  width:82%;height:82%;object-fit:contain;pointer-events:none;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48));
+}
+.rotateBtn.rotateLeft img{transform:scaleX(-1)}
+.rotateBtn.rotateRight img{transform:none}
+
+.turnDot{
+  --player:#3f82e3;background-color:transparent!important;
+  background-image:url("MazeShift_Assets/21_player_pawn.png")!important;
+  background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;
+  border:0!important;border-radius:0!important;
+  box-shadow:0 0 0 2px var(--player),0 0 10px var(--player)!important;
+}
+.menuPawn{
+  width:24px;height:29px;object-fit:contain;padding:1px;border-radius:7px;
+  background:var(--player);box-shadow:0 0 0 1px rgba(255,255,255,.75),0 2px 5px rgba(0,0,0,.28);
+}
+
+.toast{
+  display:flex!important;align-items:center;gap:8px;text-transform:none!important;letter-spacing:0!important;
+  font-size:11px!important;
+}
+.toast img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.42))}
+.toast img.hidden{display:none!important}
+@keyframes homeGoalPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.94)}50%{opacity:.92;transform:translate(-50%,-50%) scale(1.04)}}
+
 </style>
 </head>
 <body>
@@ -619,8 +721,8 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       </div>
       <div class="actionZone">
         <div class="spareTile" id="spareTile" aria-label="Spare maze tile"></div>
-        <button class="rotateBtn" id="rotateLeft" type="button" aria-label="Rotate spare tile left">↺</button>
-        <button class="rotateBtn" id="rotateRight" type="button" aria-label="Rotate spare tile right">↻</button>
+        <button class="rotateBtn rotateLeft" id="rotateLeft" type="button" aria-label="Rotate spare tile left"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
+        <button class="rotateBtn rotateRight" id="rotateRight" type="button" aria-label="Rotate spare tile right"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
         <button class="stayBtn hidden" id="stayBtn" type="button">Stay · End Turn</button>
         <div class="waitDock hidden" id="waitDock">Waiting</div>
       </div>
@@ -679,7 +781,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   </div>
 </div>
 
-<div class="toast" id="toast">Relic found</div>
+<div class="toast" id="toast"><img id="toastArt" class="hidden" alt=""><span id="toastText">Relic found</span></div>
 
 <script src="lan-core.js?v=8"></script>
 <script>
@@ -689,17 +791,32 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   var ROSTER_KEY='gamebox.players.v1';
   var COLORS=['#e64f55','#3f82e3','#12a373','#9965d7'];
   var HOME_POS=[{r:0,c:0},{r:0,c:6},{r:6,c:6},{r:6,c:0}];
+  var ASSET_ROOT='MazeShift_Assets/';
+  var PLAYER_ASSET=ASSET_ROOT+'21_player_pawn.png';
+  var HOME_ASSET=ASSET_ROOT+'22_home.png';
+  var SHIFT_ASSET=ASSET_ROOT+'23_shift_arrow.png';
+  var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
   var RELICS=[
-    {id:'compass',name:'Compass',icon:'CP'},{id:'lantern',name:'Lantern',icon:'LN'},
-    {id:'anchor',name:'Anchor',icon:'AN'},{id:'feather',name:'Feather',icon:'FE'},
-    {id:'gem',name:'Gem',icon:'GM'},{id:'book',name:'Book',icon:'BK'},
-    {id:'hourglass',name:'Hourglass',icon:'HR'},{id:'bell',name:'Bell',icon:'BL'},
-    {id:'shield',name:'Shield',icon:'SH'},{id:'goblet',name:'Goblet',icon:'GB'},
-    {id:'key',name:'Key',icon:'KY'},{id:'crown',name:'Crown',icon:'CR'},
-    {id:'mask',name:'Mask',icon:'MK'},{id:'crystal',name:'Crystal',icon:'CX'},
-    {id:'telescope',name:'Telescope',icon:'TS'},{id:'scroll',name:'Scroll',icon:'SC'},
-    {id:'ring',name:'Ring',icon:'RG'},{id:'star',name:'Star',icon:'ST'},
-    {id:'moon',name:'Moon',icon:'MN'},{id:'sun',name:'Sun',icon:'SN'}
+    {id:'compass',name:'Compass',asset:ASSET_ROOT+'01_compass.png'},
+    {id:'lantern',name:'Lantern',asset:ASSET_ROOT+'02_lantern.png'},
+    {id:'anchor',name:'Anchor',asset:ASSET_ROOT+'03_anchor.png'},
+    {id:'feather',name:'Feather',asset:ASSET_ROOT+'04_feather.png'},
+    {id:'gem',name:'Gem',asset:ASSET_ROOT+'05_gem.png'},
+    {id:'book',name:'Book',asset:ASSET_ROOT+'06_book.png'},
+    {id:'hourglass',name:'Hourglass',asset:ASSET_ROOT+'07_hourglass.png'},
+    {id:'bell',name:'Bell',asset:ASSET_ROOT+'08_bell.png'},
+    {id:'shield',name:'Shield',asset:ASSET_ROOT+'09_shield.png'},
+    {id:'goblet',name:'Goblet',asset:ASSET_ROOT+'10_goblet.png'},
+    {id:'key',name:'Key',asset:ASSET_ROOT+'11_key.png'},
+    {id:'crown',name:'Crown',asset:ASSET_ROOT+'12_crown.png'},
+    {id:'mask',name:'Mask',asset:ASSET_ROOT+'13_mask.png'},
+    {id:'crystal',name:'Crystal',asset:ASSET_ROOT+'14_crystal.png'},
+    {id:'telescope',name:'Telescope',asset:ASSET_ROOT+'15_telescope.png'},
+    {id:'scroll',name:'Scroll',asset:ASSET_ROOT+'16_scroll.png'},
+    {id:'ring',name:'Ring',asset:ASSET_ROOT+'17_ring.png'},
+    {id:'star',name:'Star',asset:ASSET_ROOT+'18_star.png'},
+    {id:'moon',name:'Moon',asset:ASSET_ROOT+'19_moon.png'},
+    {id:'sun',name:'Sun',asset:ASSET_ROOT+'20_sun.png'}
   ];
 
   var state={
@@ -722,8 +839,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));return v||fallback}catch(e){return fallback}}
   function shuffle(input){var out=input.slice();for(var i=out.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=out[i];out[i]=out[j];out[j]=t}return out}
   function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms||10)}catch(e){}}
-  function showToast(text){
-    var el=$('toast');el.textContent=text;el.classList.add('show');
+  function showToast(text,asset){
+    var el=$('toast'),art=$('toastArt'),copy=$('toastText');
+    copy.textContent=text;
+    if(asset){art.src=asset;art.classList.remove('hidden')}else{art.removeAttribute('src');art.classList.add('hidden')}
+    el.classList.add('show');
     clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},1500);
   }
   function pulseBoard(){
@@ -926,12 +1046,12 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function checkCollectionAndEnd(){
     var p=currentPlayer(),target=currentTarget(p),cell=state.board[p.pos.r][p.pos.c],collected=false;
     if(target&&cell.relic&&cell.relic.id===target.id){
-      p.collected.push(target);p.targetIndex++;collected=true;showToast('Relic found · '+target.name);buzz(35);
+      p.collected.push(target);p.targetIndex++;collected=true;showToast('Relic found · '+target.name,target.asset);buzz(35);
     }
     if(!currentTarget(p)&&p.pos.r===p.home.r&&p.pos.c===p.home.c){
       state.winnerId=p.id;renderAll();publishState();return;
     }
-    if(collected&&currentTarget(p))setTimeout(function(){showToast('Next target · '+currentTarget(p).name)},700);
+    if(collected&&currentTarget(p))setTimeout(function(){var next=currentTarget(p);showToast('Next target · '+next.name,next.asset)},700);
     endTurn();
   }
   function endTurn(){
@@ -944,12 +1064,18 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var html='';
     openings(t).forEach(function(d){html+='<span class="pathArm '+d.toLowerCase()+'"></span>'});
     html+='<span class="pathCenter"></span>';
-    if(t.relic)html+='<span class="relicToken" title="'+esc(t.relic.name)+'">'+esc(t.relic.icon)+'</span>';
+    if(t.relic)html+='<img class="relicArt" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
     if(includePawns){
+      var active=currentPlayer();
+      if(active&&!currentTarget(active)&&active.home.r===r&&active.home.c===c){
+        html+='<img class="homeGoal" src="'+HOME_ASSET+'" alt="" title="'+esc(active.name)+' home">';
+      }
       var here=state.players.filter(function(p){return p.pos.r===r&&p.pos.c===c});
       if(here.length){
         html+='<span class="pawns">';
-        here.forEach(function(p){html+='<span class="pawn" title="'+esc(p.name)+'" style="background:'+p.color+'"></span>'});
+        here.forEach(function(p,i){
+          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"><img class="pawnArt" src="'+PLAYER_ASSET+'" alt=""></span>';
+        });
         html+='</span>';
       }
     }
@@ -962,10 +1088,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     $('rotateLeft').disabled=disabled;$('rotateRight').disabled=disabled;
   }
   function addInsertButton(grid,side,index,row,col,symbol){
-    var b=document.createElement('button');b.type='button';b.className='insertBtn';
+    var b=document.createElement('button');b.type='button';b.className='insertBtn side-'+side;
     if(isBlockedInsertion(side,index))b.classList.add('blocked');
     b.disabled=state.phase!=='shift'||!canControlTurn()||isBlockedInsertion(side,index);
-    b.textContent=symbol;b.title='Push maze '+side;b.style.gridRow=String(row+1);b.style.gridColumn=String(col+1);
+    b.innerHTML='<img src="'+SHIFT_ASSET+'" alt="">';b.title='Push maze '+side;b.setAttribute('aria-label','Push maze '+side);
+    b.style.gridRow=String(row+1);b.style.gridColumn=String(col+1);
     b.addEventListener('click',function(){requestShift(side,index)});grid.appendChild(b);
   }
   function renderBoard(){
@@ -987,17 +1114,22 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   }
   function renderObjective(){
     var p=ownPlayer();if(!p)return;
-    var target=currentTarget(p);
+    var target=currentTarget(p),icon=$('objectiveIcon');
     $('objectiveLabel').textContent=mode==='multi'?'Your target':'Target';
-    if(target){$('objectiveIcon').textContent=target.icon;$('objectiveName').textContent=target.name}
-    else{$('objectiveIcon').textContent='HM';$('objectiveName').textContent='Return Home'}
+    if(target){
+      icon.innerHTML='<img class="objectiveArt" src="'+target.asset+'" alt="">';
+      $('objectiveName').textContent=target.name;
+    }else{
+      icon.innerHTML='<img class="objectiveArt homeArt" src="'+HOME_ASSET+'" alt="">';
+      $('objectiveName').textContent='Return Home';
+    }
     $('score').textContent=p.collected.length+' / '+state.targetCount;
   }
   function renderMenuPlayers(){
     var wrap=$('menuPlayers');if(!wrap)return;
     wrap.innerHTML=state.players.map(function(p,i){
       var target=currentTarget(p),active=i===state.current;
-      return'<div class="menuPlayer"><span class="lobbyDot" style="background:'+p.color+'"></span><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
+      return'<div class="menuPlayer"><img class="menuPawn" src="'+PLAYER_ASSET+'" alt="" style="--player:'+p.color+'"><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
     }).join('');
     $('menuMode').textContent=mode==='multi'?'Local Multiplayer':'Pass & Play';
     $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):'Local device';
@@ -1010,7 +1142,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function renderAll(){
     if(!state.players.length)return;
     var p=currentPlayer(),control=canControlTurn();
-    $('turnName').textContent=p.name;$('turnDot').style.background=p.color;
+    $('turnName').textContent=p.name;$('turnDot').style.setProperty('--player',p.color);
     $('turnLabel').textContent=mode==='multi'&&!control?'Waiting for':'Turn';
     $('phasePill').classList.toggle('waiting',!control&&mode==='multi');
     $('phasePill').textContent=!control&&mode==='multi'?'Waiting':state.phase==='shift'?'Shift':'Move';
