@@ -951,6 +951,223 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   }
   .targetZone .objectiveArt{max-height:78px!important}
 }
+
+/* MAZE SHIFT BOTTOM HUD — applied from maze-shift-bottom-hud-v1 editor JSON
+   24 columns × 8 rows. This block intentionally overrides the earlier three-zone layout. */
+.thumbDock{
+  position:relative!important;
+  display:block!important;
+  width:calc(100% - 8px)!important;
+  height:118px!important;
+  min-height:118px!important;
+  padding:0!important;
+  margin:0 auto!important;
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+
+/* Target panel: x0 y0 w12 h8 */
+.targetZone{
+  position:absolute!important;
+  left:0!important;top:0!important;
+  width:50%!important;height:100%!important;
+  min-width:0!important;
+  display:block!important;
+  padding:0!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:17px!important;
+  background:linear-gradient(180deg,rgba(16,34,51,.92),rgba(7,20,32,.96))!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.045)!important;
+  overflow:visible!important;
+}
+
+/* Target label x0 y0 w3 h1 + Target name x0 y1 w6 h2.
+   They share objectiveText in live markup, so that wrapper occupies the exact 6×3 envelope. */
+.targetZone .objectiveText{
+  position:absolute!important;
+  left:0!important;top:0!important;
+  width:50%!important;height:37.5%!important;
+  min-width:0!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-rows:33.333% 66.667%!important;
+  align-items:center!important;
+  z-index:5!important;
+}
+.targetZone .objectiveText span{
+  align-self:center!important;
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  color:#6f879d!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.13em!important;
+  text-transform:uppercase!important;
+}
+.targetZone .objectiveText strong{
+  align-self:center!important;
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font:700 20px/1 Fredoka,sans-serif!important;
+}
+
+/* Target art: x5 y0 w7 h8 */
+.targetZone .targetToken{
+  position:absolute!important;
+  left:41.666667%!important;top:0!important;
+  width:58.333333%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  padding:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  overflow:visible!important;
+  z-index:4!important;
+}
+.targetZone .objectiveArt{
+  width:100%!important;height:100%!important;
+  max-width:100%!important;max-height:100%!important;
+  display:block!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))!important;
+}
+
+/* Score: x0 y5 w3 h3 */
+.targetZone .objectiveScore{
+  position:absolute!important;
+  left:0!important;top:62.5%!important;
+  width:25%!important;height:37.5%!important;
+  min-width:0!important;
+  padding:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:9px!important;
+  background:rgba(255,255,255,.055)!important;
+  color:#9fb2c5!important;
+  font-size:16px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  text-align:center!important;
+  z-index:5!important;
+}
+
+/* Tile panel: x12 y0 w12 h8 */
+.tileZone{
+  position:absolute!important;
+  left:50%!important;top:0!important;
+  width:50%!important;height:100%!important;
+  min-width:0!important;
+  display:block!important;
+  padding:0!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:17px!important;
+  background:linear-gradient(180deg,rgba(16,34,51,.92),rgba(7,20,32,.96))!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.045)!important;
+  opacity:1!important;
+  overflow:visible!important;
+}
+
+/* Tile label: global x12 y0 w3 h2 -> x0 w25% inside tile panel */
+.tileZone .zoneLabel{
+  position:absolute!important;
+  left:0!important;top:0!important;
+  width:25%!important;height:25%!important;
+  display:flex!important;align-items:center!important;
+  overflow:hidden!important;white-space:nowrap!important;
+  color:#6f879d!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.12em!important;
+  text-transform:uppercase!important;
+  z-index:5!important;
+}
+
+/* Spare tile: global x14 y0 w7 h8 -> x16.6667% w58.3333% inside tile panel */
+.tileZone .spareTile{
+  position:absolute!important;
+  left:16.666667%!important;top:0!important;
+  width:58.333333%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  margin:0!important;
+  border-width:2px!important;
+  border-radius:11px!important;
+  overflow:hidden!important;
+  background:#071923!important;
+  box-shadow:0 5px 0 rgba(70,49,19,.78),0 10px 18px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.10)!important;
+  z-index:4!important;
+}
+.tileZone .spareTile .tileRaster{
+  width:100%!important;height:100%!important;
+  object-fit:cover!important;border-radius:8px!important;
+}
+
+/* Controls panel is hidden in the editor JSON.
+   Keep the wrapper transparent and use it only as a positioning layer. */
+.rotateZone{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;height:100%!important;
+  display:block!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+  z-index:8!important;
+}
+
+/* Rotate: x21 y0 w3 h3 */
+.rotateZone .rotateBtn{
+  position:absolute!important;
+  left:87.5%!important;top:0!important;
+  width:12.5%!important;height:37.5%!important;
+  min-width:0!important;min-height:0!important;
+  padding:5px!important;
+  border-radius:50%!important;
+  pointer-events:auto!important;
+}
+.rotateZone .rotateBtn img{
+  width:72%!important;height:72%!important;object-fit:contain!important;
+}
+
+/* End turn + Waiting: x19 y2 w5 h4 */
+.rotateZone .stayBtn,
+.rotateZone .waitDock{
+  position:absolute!important;
+  left:79.166667%!important;top:25%!important;
+  width:20.833333%!important;height:50%!important;
+  min-width:0!important;min-height:0!important;
+  margin:0!important;
+  padding:0 5px!important;
+  pointer-events:auto!important;
+  line-height:1.05!important;
+  text-align:center!important;
+}
+.rotateZone .stayBtn{font-size:10px!important;font-weight:900!important}
+.rotateZone .waitDock{font-size:9px!important;font-weight:900!important}
+
+/* Preserve the editor's 390×110 proportions on compact phones while allowing desktop scaling. */
+@media(max-width:430px){
+  .thumbDock{height:110px!important;min-height:110px!important}
+}
+@media(max-width:360px){
+  .thumbDock{height:106px!important;min-height:106px!important}
+}
 </style>
 </head>
 <body>
@@ -1082,7 +1299,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
         <div class="targetToken" id="objectiveIcon">CP</div>
       </section>
       <section class="tileZone" aria-label="Spare tile">
-        <div class="zoneLabel">Tile</div>
+        <div class="zoneLabel">YOURTILE</div>
         <div class="spareTile" id="spareTile" aria-label="Spare maze tile"></div>
       </section>
       <section class="rotateZone">
@@ -1658,7 +1875,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     $('turnName').textContent=p.name;$('turnDot').style.backgroundImage='url("'+(p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length])+'")';
     $('turnLabel').textContent=mode==='multi'&&!control?'Waiting for':'Turn';
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
-    $('spareTile').classList.toggle('hidden',state.phase!=='shift'||!control);
+    $('spareTile').classList.remove('hidden');
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('waitDock').classList.toggle('hidden',control||mode!=='multi');
     if(mode==='multi'&&!control)$('waitDock').textContent='Waiting · '+p.name;
