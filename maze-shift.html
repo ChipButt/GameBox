@@ -1168,6 +1168,41 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 @media(max-width:360px){
   .thumbDock{height:106px!important;min-height:106px!important}
 }
+
+/* EXPANDED BOTTOM HUD WORKSPACE — 24 × 16 editor grid
+   Existing supplied layout stays in rows 0–8. Rows 8–16 are now real usable space. */
+.thumbDock{
+  height:clamp(180px,56.4103vw,240px)!important;
+  min-height:clamp(180px,56.4103vw,240px)!important;
+}
+/* Existing panels occupy the original top 8 of 16 rows. */
+.targetZone,
+.tileZone{
+  height:50%!important;
+}
+/* Phase controls are positioned from the full 16-row workspace. */
+.rotateZone .rotateBtn{
+  top:0!important;
+  height:18.75%!important; /* 3 / 16 */
+}
+.rotateZone .stayBtn,
+.rotateZone .waitDock{
+  top:12.5%!important;     /* 2 / 16 */
+  height:25%!important;    /* 4 / 16 */
+}
+/* Reserve enough vertical room for the expanded HUD on shorter screens. */
+.boardFrame{
+  width:min(calc(100vw - 12px),calc(100dvh - 300px),720px)!important;
+}
+@media(max-height:700px){
+  .thumbDock{
+    height:clamp(160px,48vw,200px)!important;
+    min-height:clamp(160px,48vw,200px)!important;
+  }
+  .boardFrame{
+    width:min(calc(100vw - 12px),calc(100dvh - 270px),720px)!important;
+  }
+}
 </style>
 </head>
 <body>
