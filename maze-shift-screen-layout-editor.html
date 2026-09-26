@@ -153,30 +153,30 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
 <script>
 const STORAGE_KEY="mazeshift.fullscreen.editor.v3";
 const ITEMS={
-  screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:-9,opacity:100,rotation:0,visible:true,locked:false},
-  landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:2,opacity:0,rotation:0,visible:false,locked:false},
-  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:9.5,w:126.5,h:61.5,z:13,opacity:100,rotation:0,visible:true,locked:false},
-  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:33,y:64.5,w:108,h:34,z:77,opacity:92,rotation:0,visible:false,locked:false},
+  screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:-10,opacity:100,rotation:0,visible:true,locked:false},
+  landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:10,opacity:0,rotation:0,visible:false,locked:false},
+  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:9.5,w:126.5,h:61.5,z:40,opacity:100,rotation:0,visible:true,locked:false},
+  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:33,y:64.5,w:108,h:34,z:190,opacity:92,rotation:0,visible:false,locked:false},
 
-  topHudFrame:{label:"Top HUD frame",kind:"asset",src:"01_maze_shift_top_hud_frame.png",fit:"fill",x:-1.5,y:0.5,w:103,h:11,z:29,opacity:100,rotation:0,visible:true,locked:false},
-  bottomHudFrame:{label:"Bottom HUD frame",kind:"asset",src:"02_maze_shift_bottom_hud_frame.png",fit:"fill",x:-2,y:67,w:104,h:31,z:47,opacity:100,rotation:0,visible:true,locked:false},
+  topHudFrame:{label:"Top HUD frame",kind:"asset",src:"01_maze_shift_top_hud_frame.png",fit:"fill",x:1,y:0,w:99,h:12.5,z:0,opacity:100,rotation:0,visible:true,locked:false},
+  bottomHudFrame:{label:"Bottom HUD frame",kind:"asset",src:"02_maze_shift_bottom_hud_frame.png",fit:"fill",x:.5,y:74,w:98.5,h:22,z:90,opacity:100,rotation:0,visible:true,locked:false},
 
-  turnPanel:{label:"Turn panel",kind:"turnPanel",x:2,y:2.7,w:86,h:6.6,z:30,opacity:100,rotation:0,visible:true,locked:false},
-  menuButton:{label:"Menu button",kind:"menu",x:90,y:3,w:8,h:6.2,z:31,opacity:100,rotation:0,visible:true,locked:false},
-  boardGameplay:{label:"Gameplay board + arrows",kind:"board",x:3,y:15,w:94,h:48,z:40,opacity:100,rotation:0,visible:true,locked:false},
+  turnPanel:{label:"Turn panel",kind:"turnPanel",x:6,y:3,w:81,h:6,z:50,opacity:100,rotation:0,visible:true,locked:false},
+  menuButton:{label:"Menu button",kind:"menu",x:88.5,y:4.5,w:8.5,h:4,z:60,opacity:100,rotation:0,visible:true,locked:false},
+  boardGameplay:{label:"Gameplay board + arrows",kind:"board",x:3,y:15,w:94,h:48,z:70,opacity:100,rotation:0,visible:true,locked:false},
 
-  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:4.5,y:71,w:28,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  targetName:{label:"Target name",kind:"text",text:"Star",x:4.5,y:72.5,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:5,y:76.5,w:40.5,h:20,z:48,opacity:100,rotation:0,visible:true,locked:false},
-  score:{label:"Score",kind:"text",text:"0 / 4",x:35,y:69.5,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:51,opacity:100,rotation:0,visible:true,locked:false},
-  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:51.5,y:73,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:52,y:75.5,w:42,h:21,z:48,opacity:100,rotation:0,visible:true,locked:false},
-  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",state:"shift",x:84.5,y:70.5,w:9,h:5,z:52,opacity:100,rotation:0,visible:true,locked:false},
-  stayButton:{label:"Stay / End Turn",kind:"button",state:"move",text:"STAY · END TURN",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false},
-  waitStatus:{label:"Waiting status",kind:"wait",state:"waiting",text:"WAITING · JESS",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false},
+  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:22.5,y:71,w:12,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"center",z:110,opacity:100,rotation:0,visible:true,locked:false},
+  targetName:{label:"Target name",kind:"text",text:"Star",x:11.5,y:73,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"center",z:120,opacity:100,rotation:0,visible:true,locked:false},
+  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:19,y:78.5,w:30,h:14,z:100,opacity:100,rotation:0,visible:true,locked:false},
+  score:{label:"Score",kind:"text",text:"0 / 4",x:6.5,y:82.5,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:140,opacity:100,rotation:0,visible:true,locked:false},
+  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:62,y:75,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"center",z:130,opacity:100,rotation:0,visible:true,locked:false},
+  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:53.5,y:78.5,w:32,h:14.5,z:80,opacity:100,rotation:0,visible:true,locked:false},
+  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",state:"shift",x:87,y:78,w:9,h:5,z:160,opacity:100,rotation:0,visible:true,locked:false},
+  stayButton:{label:"Stay / End Turn",kind:"button",state:"move",text:"STAY · END TURN",x:79,y:69,w:19,h:7,z:170,opacity:100,rotation:0,visible:true,locked:false},
+  waitStatus:{label:"Waiting status",kind:"wait",state:"waiting",text:"WAITING · JESS",x:79,y:69,w:19,h:7,z:180,opacity:100,rotation:0,visible:true,locked:false},
 
-  boardFrame2:{label:"Board frame raster 2",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:56.5,w:126.5,h:46,z:12,opacity:100,rotation:0,visible:true,locked:false},
-  boardFrame3:{label:"Board frame raster 3",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:5.5,y:-9.5,w:126.5,h:59,z:12,opacity:100,rotation:0,visible:false,locked:false}
+  boardFrame2:{label:"Board frame raster 2",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:8.5,y:66.5,w:126.5,h:46,z:20,opacity:100,rotation:0,visible:false,locked:false},
+  boardFrame3:{label:"Board frame raster 3",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:5.5,y:-9.5,w:126.5,h:59,z:30,opacity:100,rotation:0,visible:false,locked:false}
 }
 const defaults=JSON.parse(JSON.stringify(ITEMS));
 const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false,preview:"shift"};
