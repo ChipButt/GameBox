@@ -66,13 +66,13 @@ A mobile-first browser games hub from **Chip In Games**.
 
 
 ### Maze Shift
-- Mobile-first 2–4 player pass-and-play shifting-maze strategy game
+- Mobile-first 2–4 player shifting-maze strategy game with Pass & Play and Local Multiplayer
 - 7×7 maze with a rotatable spare tile and legal row/column insertion points
 - The tile pushed out becomes the next spare tile, with pawns wrapping correctly across a shifted line
 - Immediate reversal of the previous player's shift is blocked
 - Connected-path movement is calculated from the live tile layout and highlighted on the board
 - Private sequential relic targets, selectable game length, and a return-to-home win condition
-- Uses the existing GameBox player roster stored on the device
+- Local Multiplayer uses the existing GameBox discovery/WebRTC layer with host-authoritative board state and per-device turn ownership\n- Uses the existing GameBox player roster stored on each device
 
 ## Local multiplayer
 
