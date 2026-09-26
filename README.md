@@ -64,6 +64,16 @@ A mobile-first browser games hub from **Chip In Games**.
 - Same-Wi-Fi multiplayer races using direct browser-to-browser WebRTC connections
 - Empty multiplayer grid positions are filled by bots
 
+
+### Maze Shift
+- Mobile-first 2–4 player pass-and-play shifting-maze strategy game
+- 7×7 maze with a rotatable spare tile and legal row/column insertion points
+- The tile pushed out becomes the next spare tile, with pawns wrapping correctly across a shifted line
+- Immediate reversal of the previous player's shift is blocked
+- Connected-path movement is calculated from the live tile layout and highlighted on the board
+- Private sequential relic targets, selectable game length, and a return-to-home win condition
+- Uses the existing GameBox player roster stored on the device
+
 ## Local multiplayer
 
 GameBox uses direct **WebRTC peer-to-peer connections**. One device hosts and creates an invite code. Each friend pastes that invite into their device, creates an answer code, and sends it back to the host. After that, the devices communicate directly.
