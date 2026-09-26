@@ -488,95 +488,108 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 
 /* MAZE SHIFT ART ASSET INTEGRATION */
 .relicArt{
-  position:absolute;z-index:5;left:50%;top:50%;width:58%;height:58%;
+  position:absolute;z-index:5;left:50%;top:50%;width:68%;height:68%;
   transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;
-  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48)) drop-shadow(0 0 3px rgba(255,214,88,.10));
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.50));
 }
 .homeGoal{
-  position:absolute;z-index:3;left:50%;top:50%;width:58%;height:58%;
+  position:absolute;z-index:3;left:50%;top:50%;width:56%;height:56%;
   transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;
-  opacity:.72;filter:drop-shadow(0 0 5px rgba(247,189,24,.48));
+  opacity:.62;filter:drop-shadow(0 0 5px rgba(247,189,24,.40));
   animation:homeGoalPulse 1.35s ease-in-out infinite;
 }
-.pawns{
-  position:absolute;z-index:10;inset:0;display:block;pointer-events:none;
+
+/* Gameplay composition: board begins directly below the glanceable HUD. */
+.boardStage{
+  display:flex!important;flex-direction:column;align-items:center;justify-content:flex-start!important;
+  gap:7px;padding-top:5px!important;
 }
+.phaseHint{
+  position:static!important;left:auto!important;bottom:auto!important;transform:none!important;
+  margin-top:2px;min-height:25px!important;opacity:.72!important;
+}
+
+/* The raster pawn is used as an alpha silhouette so ownership colour dominates.
+   This keeps players visually distinct from the detailed gold/blue relic artwork. */
+.pawns{position:absolute;z-index:10;inset:0;display:block;pointer-events:none}
 .pawnWrap{
-  --player:#3f82e3;position:absolute;left:50%;top:50%;width:48%;height:58%;
-  transform:translate(-50%,-50%);display:grid;place-items:center;
-  filter:drop-shadow(0 2px 2px rgba(0,0,0,.60));
+  --player:#3f82e3;position:absolute;left:50%;top:50%;width:62%;height:70%;
+  transform:translate(-50%,-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.72));
+}
+.pawnWrap:before,.pawnWrap:after{
+  content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
 }
 .pawnWrap:before{
-  content:"";position:absolute;left:50%;top:58%;width:72%;aspect-ratio:1;
-  transform:translate(-50%,-50%);border-radius:50%;background:var(--player);
-  box-shadow:0 0 0 2px rgba(255,255,255,.90),0 0 8px var(--player);
-  opacity:.95;
+  width:112%;height:112%;background:#fff4ce;
+  filter:drop-shadow(0 0 1px rgba(0,0,0,.5));
 }
 .pawnWrap:after{
-  content:"";position:absolute;left:50%;bottom:-2%;width:52%;height:14%;
-  transform:translateX(-50%);border-radius:999px;background:var(--player);
-  border:1px solid rgba(255,255,255,.88);box-shadow:0 1px 2px rgba(0,0,0,.45);
+  width:100%;height:100%;background:var(--player);
+  box-shadow:inset 0 0 0 999px var(--player);
 }
-.pawnArt{
-  position:relative;z-index:2;width:100%;height:100%;object-fit:contain;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.42));
-}
-.pawnWrap.count2.slot0{transform:translate(-78%,-50%) scale(.82)}
-.pawnWrap.count2.slot1{transform:translate(-22%,-50%) scale(.82)}
-.pawnWrap.count3.slot0{transform:translate(-50%,-79%) scale(.72)}
-.pawnWrap.count3.slot1{transform:translate(-80%,-27%) scale(.72)}
-.pawnWrap.count3.slot2{transform:translate(-20%,-27%) scale(.72)}
-.pawnWrap.count4.slot0{transform:translate(-76%,-75%) scale(.66)}
-.pawnWrap.count4.slot1{transform:translate(-24%,-75%) scale(.66)}
-.pawnWrap.count4.slot2{transform:translate(-76%,-24%) scale(.66)}
-.pawnWrap.count4.slot3{transform:translate(-24%,-24%) scale(.66)}
+.pawnWrap.count2.slot0{transform:translate(-80%,-50%) scale(.76)}
+.pawnWrap.count2.slot1{transform:translate(-20%,-50%) scale(.76)}
+.pawnWrap.count3.slot0{transform:translate(-50%,-82%) scale(.64)}
+.pawnWrap.count3.slot1{transform:translate(-82%,-24%) scale(.64)}
+.pawnWrap.count3.slot2{transform:translate(-18%,-24%) scale(.64)}
+.pawnWrap.count4.slot0{transform:translate(-79%,-78%) scale(.58)}
+.pawnWrap.count4.slot1{transform:translate(-21%,-78%) scale(.58)}
+.pawnWrap.count4.slot2{transform:translate(-79%,-20%) scale(.58)}
+.pawnWrap.count4.slot3{transform:translate(-21%,-20%) scale(.58)}
 
+/* Shift arrows remain readable but subordinate to the maze and relics. */
 .insertBtn{
-  width:88%!important;height:88%!important;border:0!important;border-radius:0!important;
-  background:transparent!important;box-shadow:none!important;overflow:visible;
+  width:66%!important;height:66%!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;overflow:visible;opacity:.72;
 }
 .insertBtn img{
   width:100%;height:100%;object-fit:contain;pointer-events:none;
-  filter:drop-shadow(0 3px 2px rgba(0,0,0,.50));
-  transition:transform .10s ease,filter .12s ease;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48)) saturate(.86) brightness(.94);
+  transition:transform .10s ease,filter .12s ease,opacity .12s ease;
 }
 .insertBtn.side-left img{transform:rotate(0deg)}
 .insertBtn.side-right img{transform:rotate(180deg)}
 .insertBtn.side-top img{transform:rotate(90deg)}
 .insertBtn.side-bottom img{transform:rotate(-90deg)}
-.insertBtn:not(:disabled):hover img{filter:drop-shadow(0 3px 3px rgba(0,0,0,.54)) brightness(1.08)}
-.insertBtn:active{transform:scale(.92)!important;box-shadow:none!important}
-.insertBtn.blocked{opacity:.07!important}
-.insertBtn:disabled{opacity:.10!important}
+.insertBtn:not(:disabled):hover{opacity:1}
+.insertBtn:not(:disabled):hover img{filter:drop-shadow(0 2px 3px rgba(0,0,0,.52)) saturate(1) brightness(1.06)}
+.insertBtn:active{transform:scale(.90)!important;box-shadow:none!important}
+.insertBtn.blocked{opacity:.035!important}
+.insertBtn:disabled{opacity:.065!important}
 
 .targetToken{
   width:50px!important;height:50px!important;padding:2px;border:0!important;border-radius:12px!important;
-  background:rgba(255,255,255,.035)!important;box-shadow:none!important;overflow:visible;
+  background:rgba(255,255,255,.025)!important;box-shadow:none!important;overflow:visible;
 }
 .objectiveArt{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
 .objectiveArt.homeArt{width:92%;height:92%}
 
 .rotateBtn{
-  display:grid!important;place-items:center;padding:4px!important;background:linear-gradient(180deg,#153b56,#0a243b)!important;
-  border:1px solid rgba(99,197,220,.24)!important;overflow:visible;
+  display:grid!important;place-items:center;padding:7px!important;background:linear-gradient(180deg,#122f47,#091d30)!important;
+  border:1px solid rgba(99,197,220,.18)!important;overflow:visible;
 }
 .rotateBtn img{
-  width:82%;height:82%;object-fit:contain;pointer-events:none;
-  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48));
+  width:68%;height:68%;object-fit:contain;pointer-events:none;opacity:.80;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) saturate(.82) brightness(.93);
 }
+.rotateBtn:not(:disabled):hover img{opacity:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) saturate(1) brightness(1.05)}
 .rotateBtn.rotateLeft img{transform:scaleX(-1)}
 .rotateBtn.rotateRight img{transform:none}
 
+/* HUD/menu use the same unmistakable player-colour silhouette. */
 .turnDot{
-  --player:#3f82e3;background-color:transparent!important;
-  background-image:url("MazeShift_Assets/21_player_pawn.png")!important;
-  background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;
-  border:0!important;border-radius:0!important;
-  box-shadow:0 0 0 2px var(--player),0 0 10px var(--player)!important;
+  --player:#3f82e3;background:var(--player)!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  filter:drop-shadow(0 1px 0 #fff1c4) drop-shadow(0 2px 3px rgba(0,0,0,.6));
 }
 .menuPawn{
-  width:24px;height:29px;object-fit:contain;padding:1px;border-radius:7px;
-  background:var(--player);box-shadow:0 0 0 1px rgba(255,255,255,.75),0 2px 5px rgba(0,0,0,.28);
+  --player:#3f82e3;width:24px;height:29px;display:block;flex:0 0 auto;background:var(--player);
+  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  filter:drop-shadow(0 1px 0 #fff1c4) drop-shadow(0 2px 2px rgba(0,0,0,.45));
 }
 
 .toast{
@@ -585,8 +598,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 }
 .toast img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.42))}
 .toast img.hidden{display:none!important}
-@keyframes homeGoalPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.94)}50%{opacity:.92;transform:translate(-50%,-50%) scale(1.04)}}
-
+@keyframes homeGoalPulse{0%,100%{opacity:.48;transform:translate(-50%,-50%) scale(.94)}50%{opacity:.82;transform:translate(-50%,-50%) scale(1.03)}}
 </style>
 </head>
 <body>
@@ -1074,7 +1086,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       if(here.length){
         html+='<span class="pawns">';
         here.forEach(function(p,i){
-          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"><img class="pawnArt" src="'+PLAYER_ASSET+'" alt=""></span>';
+          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"></span>';
         });
         html+='</span>';
       }
@@ -1129,7 +1141,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var wrap=$('menuPlayers');if(!wrap)return;
     wrap.innerHTML=state.players.map(function(p,i){
       var target=currentTarget(p),active=i===state.current;
-      return'<div class="menuPlayer"><img class="menuPawn" src="'+PLAYER_ASSET+'" alt="" style="--player:'+p.color+'"><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
+      return'<div class="menuPlayer"><span class="menuPawn" style="--player:'+p.color+'"></span><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
     }).join('');
     $('menuMode').textContent=mode==='multi'?'Local Multiplayer':'Pass & Play';
     $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):'Local device';
