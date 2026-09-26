@@ -951,6 +951,194 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   }
   .targetZone .objectiveArt{max-height:78px!important}
 }
+
+/* BOTTOM HUD FREE-LAYOUT SYSTEM */
+.thumbDock{
+  position:relative!important;
+  display:block!important;
+  width:calc(100% - 8px)!important;
+  height:118px!important;
+  min-height:118px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:18px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  isolation:isolate;
+}
+.hudPiece{
+  position:absolute!important;
+  left:calc(var(--hud-x,0) * 100% / 24)!important;
+  top:calc(var(--hud-y,0) * 100% / 8)!important;
+  width:calc(var(--hud-w,1) * 100% / 24)!important;
+  height:calc(var(--hud-h,1) * 100% / 8)!important;
+  min-width:0!important;min-height:0!important;
+  margin:0!important;
+  z-index:3;
+  pointer-events:none;
+}
+.hudPiece.hudRemoved{display:none!important}
+.hudPanelPiece{
+  z-index:1;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:17px;
+  background:linear-gradient(180deg,rgba(16,34,51,.92),rgba(7,20,32,.96));
+  box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.045);
+}
+.hudTextPiece{
+  display:flex;align-items:center;min-width:0;
+  font-size:var(--hud-font,12px)!important;
+  color:#fff;
+}
+.hudTextPiece>*{font-size:inherit!important;min-width:0}
+.hudTargetLabel,.zoneLabel{
+  display:block;color:#6f879d!important;font-weight:900!important;letter-spacing:.12em!important;text-transform:uppercase;
+}
+.hudTargetName{
+  display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:Fredoka,sans-serif!important;font-weight:700!important;line-height:1!important;
+}
+.hudArtPiece{display:flex;align-items:center;justify-content:flex-start}
+.hudArtPiece .targetToken{
+  width:100%!important;height:100%!important;padding:0!important;border:0!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+.hudArtPiece .objectiveArt{
+  width:100%!important;height:100%!important;max-height:none!important;display:block!important;
+  object-fit:contain!important;object-position:left center!important;
+}
+.hudTextPiece .objectiveScore{
+  width:100%!important;height:100%!important;min-width:0!important;padding:0 5px!important;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(255,255,255,.055);
+  color:#9fb2c5;font-size:inherit!important;font-weight:900!important;text-align:center;
+}
+.hudSparePiece{display:flex;align-items:center;justify-content:center}
+.hudSparePiece .spareTile{
+  width:min(100%,100cqh)!important;height:min(100%,100cqw)!important;
+  max-width:100%!important;max-height:100%!important;aspect-ratio:1!important;
+  margin:auto!important;
+}
+.hudControlPiece{display:flex;align-items:center;justify-content:center}
+.hudControlPiece>button,.hudControlPiece>.waitDock{pointer-events:auto}
+.hudControlPiece .rotateBtn{
+  width:min(100%,100cqh)!important;height:min(100%,100cqw)!important;
+  max-width:100%!important;max-height:100%!important;aspect-ratio:1!important;
+}
+.hudControlPiece .stayBtn,.hudControlPiece .waitDock{
+  width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
+  font-size:var(--hud-font,10px)!important;
+}
+@supports not (width:1cqw){
+  .hudSparePiece .spareTile{width:100%!important;height:100%!important}
+  .hudControlPiece .rotateBtn{width:100%!important;height:100%!important}
+}
+@media(max-width:430px){
+  .thumbDock{height:110px!important;min-height:110px!important}
+}
+@media(max-width:360px){
+  .thumbDock{height:106px!important;min-height:106px!important}
+}
+
+/* HUD LAYOUT EDITOR */
+body.hudEditing{overflow:hidden!important}
+.hudEditLaunch{margin-top:10px!important}
+.hudEditor{
+  position:fixed;z-index:10000;inset:0;background:#06111d;color:#f7fbff;
+  overflow:auto;-webkit-overflow-scrolling:touch;
+}
+.hudEditorShell{width:min(100%,980px);min-height:100dvh;margin:0 auto;padding:0 14px 24px}
+.hudEditorTop{
+  position:sticky;z-index:30;top:0;min-height:68px;display:grid;
+  grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:max(8px,env(safe-area-inset-top)) 0 8px;
+  background:linear-gradient(180deg,rgba(6,17,29,.98) 70%,rgba(6,17,29,.78));
+  backdrop-filter:blur(14px);
+}
+.hudEditorTop>div span{
+  display:block;color:#71879b;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase
+}
+.hudEditorTop h2{margin:1px 0 0;font:700 21px Fredoka,sans-serif}
+.hudEditorIcon,.hudEditorSave{
+  min-height:42px;border:1px solid rgba(255,255,255,.11);border-radius:12px;
+  background:rgba(255,255,255,.055);color:#fff;font-weight:900
+}
+.hudEditorIcon{width:42px;font-size:22px}
+.hudEditorSave{padding:0 15px;background:linear-gradient(180deg,#12b98a,#078f6b);border-color:#16b789}
+.hudEditorMain{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start}
+.hudEditorPreview{min-width:0}
+.hudEditorHint{
+  margin:5px 0 10px;color:#8398aa;font-size:10px;font-weight:700;text-align:center
+}
+.hudEditorCanvas{
+  position:relative;width:100%;height:auto;min-height:120px;overflow:hidden;
+  border:1px solid rgba(95,196,219,.20);border-radius:18px;
+  background:
+    linear-gradient(rgba(102,191,211,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(102,191,211,.10) 1px,transparent 1px),
+    linear-gradient(180deg,#0b1c2c,#07131f);
+  background-size:calc(100% / 24) calc(100% / 8);
+  box-shadow:0 18px 45px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.05);
+  touch-action:none;
+}
+.hudEditorCanvas .hudEditPiece{
+  position:absolute!important;pointer-events:auto!important;cursor:grab;
+  outline:1px dashed rgba(132,195,212,.30);outline-offset:-2px;
+  border-radius:6px;touch-action:none;user-select:none;
+}
+.hudEditorCanvas .hudEditPiece:active{cursor:grabbing}
+.hudEditorCanvas .hudEditPiece.selected{
+  z-index:50!important;outline:2px solid #f7bd18!important;box-shadow:0 0 0 2px rgba(247,189,24,.18)
+}
+.hudEditorCanvas .hudEditPiece *{pointer-events:none!important}
+.hudEditorCanvas .hudPanelPiece{opacity:.82}
+.hudEditorCanvas .hidden{display:flex!important}
+.hudEditorCanvas .hudRemoved{display:none!important}
+.hudResizeHandle{
+  position:absolute!important;z-index:90;right:-3px;bottom:-3px;width:17px;height:17px;
+  border:2px solid #06111d;border-radius:5px;background:#f7bd18;
+  box-shadow:0 2px 5px rgba(0,0,0,.35);pointer-events:auto!important;cursor:nwse-resize!important;
+}
+.hudEditorTools{
+  position:sticky;top:78px;display:grid;gap:10px;
+  padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:17px;
+  background:linear-gradient(180deg,rgba(15,32,49,.96),rgba(7,20,32,.98));
+  box-shadow:0 12px 35px rgba(0,0,0,.22)
+}
+.hudToolSection{display:grid;gap:9px;padding:4px 0 10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.hudToolHeading{display:flex;align-items:end;justify-content:space-between;gap:10px}
+.hudToolHeading span{color:#71879b;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.hudToolHeading strong{font:700 15px Fredoka,sans-serif}
+.hudToolHeading small{color:#71879b;font-size:8px;font-weight:700}
+.hudFontControl{display:grid;gap:6px}
+.hudFontControl>span{color:#93a7ba;font-size:9px;font-weight:800}
+.hudFontControl>div{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center}
+.hudFontControl input{width:100%;accent-color:#f7bd18}
+.hudFontControl output{
+  min-height:30px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;background:rgba(255,255,255,.04);color:#dbe6ef;font-size:9px;font-weight:900
+}
+.hudFontControl.disabled{opacity:.28;pointer-events:none}
+.hudComponentList{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hudComponentToggle{
+  min-height:37px;padding:0 9px;border:1px solid rgba(255,255,255,.08);border-radius:9px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:rgba(255,255,255,.035);color:#9bafc1;font-size:9px;font-weight:850;text-align:left
+}
+.hudComponentToggle:after{content:"+";font-size:15px;color:#5f7488}
+.hudComponentToggle.on{
+  border-color:rgba(8,169,125,.32);background:rgba(8,169,125,.09);color:#e6fff7
+}
+.hudComponentToggle.on:after{content:"✓";font-size:12px;color:#64dab8}
+.hudEditorActions{display:grid;grid-template-columns:auto auto 1fr;gap:7px}
+.hudEditorActions button{min-width:0!important;padding-left:10px!important;padding-right:10px!important}
+@media(max-width:720px){
+  .hudEditorMain{grid-template-columns:1fr}
+  .hudEditorTools{position:static}
+  .hudEditorCanvas{min-height:105px}
+}
 </style>
 </head>
 <body>
@@ -1075,21 +1263,21 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       <div class="boardFrame" id="boardFrame"><div class="boardGrid" id="boardGrid"></div></div>
     </section>
 
-    <footer class="thumbDock">
-      <section class="targetZone" aria-label="Current target">
-        <div class="objectiveText"><span id="objectiveLabel">Target</span><strong id="objectiveName">Compass</strong></div>
-        <div class="objectiveScore" id="score">0 / 4</div>
-        <div class="targetToken" id="objectiveIcon">CP</div>
-      </section>
-      <section class="tileZone" aria-label="Spare tile">
-        <div class="zoneLabel">Tile</div>
-        <div class="spareTile" id="spareTile" aria-label="Spare maze tile"></div>
-      </section>
-      <section class="rotateZone">
-        <button class="rotateBtn rotateRight" id="rotateRight" type="button" aria-label="Rotate spare tile"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
-        <button class="stayBtn hidden" id="stayBtn" type="button">Stay · End Turn</button>
-        <div class="waitDock hidden" id="waitDock">Waiting</div>
-      </section>
+    <footer class="thumbDock" id="thumbDock" aria-label="Game controls">
+      <div class="hudPiece hudPanelPiece" data-hud-key="targetPanel" aria-hidden="true"></div>
+      <div class="hudPiece hudTextPiece" data-hud-key="targetLabel"><span class="hudTargetLabel" id="objectiveLabel">Target</span></div>
+      <div class="hudPiece hudTextPiece" data-hud-key="targetName"><strong class="hudTargetName" id="objectiveName">Compass</strong></div>
+      <div class="hudPiece hudArtPiece" data-hud-key="targetArt"><div class="targetToken" id="objectiveIcon">CP</div></div>
+      <div class="hudPiece hudTextPiece" data-hud-key="score"><div class="objectiveScore" id="score">0 / 4</div></div>
+
+      <div class="hudPiece hudPanelPiece" data-hud-key="tilePanel" aria-hidden="true"></div>
+      <div class="hudPiece hudTextPiece" data-hud-key="tileLabel"><div class="zoneLabel">Tile</div></div>
+      <div class="hudPiece hudSparePiece" data-hud-key="spareTile"><div class="spareTile" id="spareTile" aria-label="Spare maze tile"></div></div>
+
+      <div class="hudPiece hudPanelPiece" data-hud-key="controlsPanel" aria-hidden="true"></div>
+      <div class="hudPiece hudControlPiece" data-hud-key="rotate"><button class="rotateBtn rotateRight" id="rotateRight" type="button" aria-label="Rotate spare tile"><img src="MazeShift_Assets/24_rotate.png" alt=""></button></div>
+      <div class="hudPiece hudControlPiece" data-hud-key="stay"><button class="stayBtn hidden" id="stayBtn" type="button">Stay · End Turn</button></div>
+      <div class="hudPiece hudControlPiece" data-hud-key="wait"><div class="waitDock hidden" id="waitDock">Waiting</div></div>
     </footer>
   </section>
 </main>
@@ -1108,6 +1296,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
         <div class="metaPill"><span>Mode</span><strong id="menuMode">Pass & Play</strong></div>
         <div class="metaPill"><span>Connection</span><strong id="menuNetwork">Local device</strong></div>
       </div>
+      <button class="secondaryBtn full hudEditLaunch" id="editHudBtn" type="button">Edit Bottom Layout</button>
     </section>
     <section class="sheetSection">
       <div class="sheetLabel">How to play</div>
@@ -1120,6 +1309,45 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     <section class="sheetSection">
       <button class="dangerBtn full" id="leaveGameBtn" type="button">Leave Game</button>
     </section>
+  </div>
+</div>
+
+
+<div class="hudEditor hidden" id="hudEditor">
+  <div class="hudEditorShell" role="dialog" aria-modal="true" aria-labelledby="hudEditorTitle">
+    <header class="hudEditorTop">
+      <button class="hudEditorIcon" id="hudEditorCancel" type="button" aria-label="Close without saving">×</button>
+      <div><span>Maze Shift</span><h2 id="hudEditorTitle">Bottom Layout</h2></div>
+      <button class="hudEditorSave" id="hudEditorSave" type="button">Save</button>
+    </header>
+
+    <div class="hudEditorMain">
+      <section class="hudEditorPreview">
+        <div class="hudEditorHint"><strong>Drag</strong> to move · use the corner handle to resize · everything snaps</div>
+        <div class="hudEditorCanvas" id="hudEditorCanvas" aria-label="Bottom HUD layout canvas"></div>
+      </section>
+
+      <aside class="hudEditorTools">
+        <div class="hudToolSection">
+          <div class="hudToolHeading"><span>Selected</span><strong id="hudSelectedName">Nothing</strong></div>
+          <label class="hudFontControl" id="hudFontControl">
+            <span>Font size</span>
+            <div><input id="hudFontRange" type="range" min="7" max="34" step="1" value="16"><output id="hudFontValue">16px</output></div>
+          </label>
+        </div>
+
+        <div class="hudToolSection">
+          <div class="hudToolHeading"><span>Components</span><small>Tap to add / remove</small></div>
+          <div class="hudComponentList" id="hudComponentList"></div>
+        </div>
+
+        <div class="hudEditorActions">
+          <button class="secondaryBtn" id="hudResetBtn" type="button">Reset</button>
+          <button class="secondaryBtn" id="hudCancelBtn" type="button">Cancel</button>
+          <button class="primaryBtn" id="hudApplyBtn" type="button">Save Layout</button>
+        </div>
+      </aside>
+    </div>
   </div>
 </div>
 
@@ -1215,6 +1443,163 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));return v||fallback}catch(e){return fallback}}
   function shuffle(input){var out=input.slice();for(var i=out.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=out[i];out[i]=out[j];out[j]=t}return out}
+
+  var HUD_LAYOUT_KEY='mazeshift.bottomHud.layout.v1';
+  var HUD_COLS=24,HUD_ROWS=8;
+  var HUD_META={
+    targetPanel:{label:'Target panel',panel:true},
+    targetLabel:{label:'Target label',font:true},
+    targetName:{label:'Target name',font:true},
+    targetArt:{label:'Target image'},
+    score:{label:'Score',font:true},
+    tilePanel:{label:'Tile panel',panel:true},
+    tileLabel:{label:'Tile label',font:true},
+    spareTile:{label:'Spare tile'},
+    controlsPanel:{label:'Controls panel',panel:true},
+    rotate:{label:'Rotate button'},
+    stay:{label:'End turn',font:true},
+    wait:{label:'Waiting status',font:true}
+  };
+  var HUD_DEFAULT={
+    targetPanel:{x:0,y:0,w:13,h:8,visible:true},
+    targetLabel:{x:1,y:1,w:7,h:1,visible:true,font:9},
+    targetName:{x:1,y:2,w:8,h:2,visible:true,font:20},
+    targetArt:{x:1,y:4,w:10,h:4,visible:true},
+    score:{x:10,y:1,w:2,h:2,visible:true,font:10},
+    tilePanel:{x:13,y:0,w:6,h:8,visible:true},
+    tileLabel:{x:14,y:1,w:4,h:1,visible:true,font:8},
+    spareTile:{x:14,y:2,w:4,h:5,visible:true},
+    controlsPanel:{x:19,y:0,w:5,h:8,visible:true},
+    rotate:{x:20,y:2,w:3,h:4,visible:true},
+    stay:{x:19,y:2,w:5,h:4,visible:true,font:10},
+    wait:{x:19,y:2,w:5,h:4,visible:true,font:9}
+  };
+  var hudLayout=null,hudDraft=null,hudSelectedKey='';
+  function cloneJson(v){return JSON.parse(JSON.stringify(v))}
+  function normaliseHudLayout(raw){
+    var out=cloneJson(HUD_DEFAULT);
+    if(!raw||typeof raw!=='object')return out;
+    Object.keys(out).forEach(function(key){
+      var src=raw[key];if(!src||typeof src!=='object')return;
+      ['x','y','w','h','font'].forEach(function(prop){if(Number.isFinite(Number(src[prop])))out[key][prop]=Number(src[prop])});
+      if(typeof src.visible==='boolean')out[key].visible=src.visible;
+      out[key].w=Math.max(1,Math.min(HUD_COLS,out[key].w));
+      out[key].h=Math.max(1,Math.min(HUD_ROWS,out[key].h));
+      out[key].x=Math.max(0,Math.min(HUD_COLS-out[key].w,out[key].x));
+      out[key].y=Math.max(0,Math.min(HUD_ROWS-out[key].h,out[key].y));
+      if(HUD_META[key].font)out[key].font=Math.max(7,Math.min(34,out[key].font||HUD_DEFAULT[key].font||12));
+    });
+    return out;
+  }
+  function loadHudLayout(){hudLayout=normaliseHudLayout(read(HUD_LAYOUT_KEY,null));return hudLayout}
+  function saveHudLayout(){
+    try{localStorage.setItem(HUD_LAYOUT_KEY,JSON.stringify(hudLayout))}catch(e){}
+  }
+  function applyHudBox(el,cfg){
+    if(!el||!cfg)return;
+    el.style.setProperty('--hud-x',cfg.x);
+    el.style.setProperty('--hud-y',cfg.y);
+    el.style.setProperty('--hud-w',cfg.w);
+    el.style.setProperty('--hud-h',cfg.h);
+    if(cfg.font)el.style.setProperty('--hud-font',cfg.font+'px');else el.style.removeProperty('--hud-font');
+    el.classList.toggle('hudRemoved',cfg.visible===false);
+  }
+  function applyHudLayout(){
+    if(!hudLayout)loadHudLayout();
+    Object.keys(HUD_META).forEach(function(key){
+      var el=document.querySelector('#thumbDock [data-hud-key="'+key+'"]');
+      if(el)applyHudBox(el,hudLayout[key]);
+    });
+  }
+  function clearCloneIds(root){
+    if(root.id)root.removeAttribute('id');
+    root.querySelectorAll('[id]').forEach(function(el){el.removeAttribute('id')});
+  }
+  function editorCanvasRatio(){
+    var dock=$('thumbDock'),canvas=$('hudEditorCanvas');if(!dock||!canvas)return;
+    var rect=dock.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height);
+    canvas.style.aspectRatio=w+' / '+h;
+  }
+  function selectHudComponent(key){
+    hudSelectedKey=key||'';
+    var name=$('hudSelectedName'),fontControl=$('hudFontControl'),range=$('hudFontRange'),out=$('hudFontValue');
+    document.querySelectorAll('#hudEditorCanvas [data-edit-key]').forEach(function(el){el.classList.toggle('selected',el.dataset.editKey===hudSelectedKey)});
+    if(!key||!HUD_META[key]){name.textContent='Nothing';fontControl.classList.add('disabled');return}
+    name.textContent=HUD_META[key].label;
+    if(HUD_META[key].font){
+      fontControl.classList.remove('disabled');range.value=hudDraft[key].font||12;out.value=range.value+'px';out.textContent=range.value+'px';
+    }else fontControl.classList.add('disabled');
+  }
+  function positionEditorPiece(piece,key){
+    applyHudBox(piece,hudDraft[key]);
+    piece.classList.toggle('hudRemoved',hudDraft[key].visible===false);
+  }
+  function bindHudPieceDrag(piece,key){
+    piece.addEventListener('pointerdown',function(e){
+      if(e.button!==undefined&&e.button!==0)return;
+      e.preventDefault();selectHudComponent(key);
+      var resize=!!e.target.closest('.hudResizeHandle'),canvas=$('hudEditorCanvas'),rect=canvas.getBoundingClientRect();
+      var unitX=rect.width/HUD_COLS,unitY=rect.height/HUD_ROWS,startX=e.clientX,startY=e.clientY,start=cloneJson(hudDraft[key]);
+      piece.setPointerCapture&&piece.setPointerCapture(e.pointerId);
+      function move(ev){
+        var dx=Math.round((ev.clientX-startX)/unitX),dy=Math.round((ev.clientY-startY)/unitY),cfg=hudDraft[key];
+        if(resize){
+          cfg.w=Math.max(1,Math.min(HUD_COLS-start.x,start.w+dx));
+          cfg.h=Math.max(1,Math.min(HUD_ROWS-start.y,start.h+dy));
+        }else{
+          cfg.x=Math.max(0,Math.min(HUD_COLS-start.w,start.x+dx));
+          cfg.y=Math.max(0,Math.min(HUD_ROWS-start.h,start.y+dy));
+        }
+        positionEditorPiece(piece,key);
+      }
+      function up(ev){
+        piece.removeEventListener('pointermove',move);piece.removeEventListener('pointerup',up);piece.removeEventListener('pointercancel',up);
+        try{piece.releasePointerCapture&&piece.releasePointerCapture(ev.pointerId)}catch(err){}
+      }
+      piece.addEventListener('pointermove',move);piece.addEventListener('pointerup',up);piece.addEventListener('pointercancel',up);
+    });
+  }
+  function renderHudComponentList(){
+    var wrap=$('hudComponentList');if(!wrap)return;
+    wrap.innerHTML='';
+    Object.keys(HUD_META).forEach(function(key){
+      var b=document.createElement('button');b.type='button';b.className='hudComponentToggle'+(hudDraft[key].visible?' on':'');
+      b.textContent=HUD_META[key].label;b.dataset.key=key;
+      b.addEventListener('click',function(){
+        hudDraft[key].visible=!hudDraft[key].visible;
+        renderHudEditorCanvas();renderHudComponentList();selectHudComponent(hudDraft[key].visible?key:'');
+      });
+      wrap.appendChild(b);
+    });
+  }
+  function renderHudEditorCanvas(){
+    var canvas=$('hudEditorCanvas');if(!canvas)return;canvas.innerHTML='';editorCanvasRatio();
+    Object.keys(HUD_META).forEach(function(key){
+      if(!hudDraft[key].visible)return;
+      var source=document.querySelector('#thumbDock [data-hud-key="'+key+'"]');if(!source)return;
+      var piece=source.cloneNode(true);clearCloneIds(piece);
+      piece.classList.remove('hudRemoved');piece.classList.add('hudEditPiece');piece.dataset.editKey=key;
+      piece.querySelectorAll('.hidden').forEach(function(el){el.classList.remove('hidden')});
+      var handle=document.createElement('span');handle.className='hudResizeHandle';handle.setAttribute('aria-hidden','true');piece.appendChild(handle);
+      positionEditorPiece(piece,key);bindHudPieceDrag(piece,key);canvas.appendChild(piece);
+    });
+    selectHudComponent(hudSelectedKey&&hudDraft[hudSelectedKey]&&hudDraft[hudSelectedKey].visible?hudSelectedKey:'');
+  }
+  function openHudEditor(){
+    if(!hudLayout)loadHudLayout();hudDraft=cloneJson(hudLayout);hudSelectedKey='';
+    closeMenu();$('hudEditor').classList.remove('hidden');document.body.classList.add('hudEditing');
+    renderHudComponentList();requestAnimationFrame(function(){renderHudEditorCanvas()});
+  }
+  function closeHudEditor(save){
+    if(save){
+      hudLayout=normaliseHudLayout(hudDraft);saveHudLayout();applyHudLayout();
+    }
+    $('hudEditor').classList.add('hidden');document.body.classList.remove('hudEditing');hudDraft=null;hudSelectedKey='';
+  }
+  function resetHudEditor(){
+    hudDraft=cloneJson(HUD_DEFAULT);hudSelectedKey='';renderHudComponentList();renderHudEditorCanvas();
+  }
+
   function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms||10)}catch(e){}}
   function showToast(text,asset){
     var el=$('toast'),art=$('toastArt'),copy=$('toastText');
@@ -1662,7 +2047,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('waitDock').classList.toggle('hidden',control||mode!=='multi');
     if(mode==='multi'&&!control)$('waitDock').textContent='Waiting · '+p.name;
-    renderObjective();renderSpare();renderBoard();renderMenuPlayers();renderWinner();
+    renderObjective();renderSpare();renderBoard();renderMenuPlayers();renderWinner();applyHudLayout();
   }
 
   function snapshot(){
@@ -1832,12 +2217,29 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   $('readyBtn').addEventListener('click',beginTurn);
   $('menuBtn').addEventListener('click',openMenu);
   $('closeMenu').addEventListener('click',closeMenu);
+  $('editHudBtn').addEventListener('click',openHudEditor);
+  $('hudEditorCancel').addEventListener('click',function(){closeHudEditor(false)});
+  $('hudCancelBtn').addEventListener('click',function(){closeHudEditor(false)});
+  $('hudEditorSave').addEventListener('click',function(){closeHudEditor(true)});
+  $('hudApplyBtn').addEventListener('click',function(){closeHudEditor(true)});
+  $('hudResetBtn').addEventListener('click',resetHudEditor);
+  $('hudFontRange').addEventListener('input',function(){
+    if(!hudSelectedKey||!HUD_META[hudSelectedKey]||!HUD_META[hudSelectedKey].font)return;
+    hudDraft[hudSelectedKey].font=Number(this.value)||12;
+    $('hudFontValue').value=this.value+'px';$('hudFontValue').textContent=this.value+'px';
+    var piece=document.querySelector('#hudEditorCanvas [data-edit-key="'+hudSelectedKey+'"]');if(piece)positionEditorPiece(piece,hudSelectedKey);
+  });
   $('gameMenu').addEventListener('click',function(e){if(e.target===$('gameMenu'))closeMenu()});
   $('leaveGameBtn').addEventListener('click',backToModes);
   $('playAgainBtn').addEventListener('click',backToModes);
-  window.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu()});
+  window.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    if(!$('hudEditor').classList.contains('hidden'))closeHudEditor(false);else closeMenu();
+  });
   window.addEventListener('pagehide',function(){try{session&&session.close&&session.close()}catch(e){}});
+  window.addEventListener('resize',function(){if(!$('hudEditor').classList.contains('hidden'))editorCanvasRatio()});
 
+  loadHudLayout();applyHudLayout();
   renderPlayerPicker();populatePlayerSelect('hostPlayer');populatePlayerSelect('joinPlayer');
 })();
 </script>
