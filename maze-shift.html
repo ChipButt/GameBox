@@ -2150,9 +2150,69 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 /* The older lower square-frame experiments are hidden in this confirmed layout. */
 .dungeonBoardFrameArt2,
 .mazeBackgroundBoardFrame2{display:none!important}
+
+/* PORTRAIT-ONLY GAME LOCK
+   Touch devices cannot interact with Maze Shift while held landscape. */
+.rotatePhoneLock{
+  position:fixed;
+  inset:0;
+  z-index:2147483647;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(15,91,105,.22),transparent 34%),
+    linear-gradient(180deg,rgba(3,10,16,.97),rgba(2,7,12,.995)),
+    url('04_portrait_dungeon_background.png') center / cover no-repeat;
+  pointer-events:auto;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+.rotatePhoneLockInner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  text-align:center;
+}
+.rotatePhoneLock img{
+  width:min(112px,22vmin);
+  height:min(112px,22vmin);
+  object-fit:contain;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));
+  animation:mazeRotatePhone 1.8s ease-in-out infinite;
+}
+.rotatePhoneLock strong{
+  display:block;
+  color:#fff;
+  font:700 clamp(24px,6vmin,38px)/1.05 Fredoka,sans-serif;
+  letter-spacing:.01em;
+  text-shadow:0 3px 10px rgba(0,0,0,.8);
+}
+body.mazeLandscapeLocked{
+  overflow:hidden!important;
+  touch-action:none!important;
+}
+body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
+@keyframes mazeRotatePhone{
+  0%,100%{transform:rotate(-12deg)}
+  50%{transform:rotate(78deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .rotatePhoneLock img{animation:none}
+}
 </style>
 </head>
 <body>
+<div class="rotatePhoneLock" id="rotatePhoneLock" role="status" aria-live="polite" aria-label="Rotate Phone To Play">
+  <div class="rotatePhoneLockInner">
+    <img src="MazeShift_Assets/24_rotate.png" alt="">
+    <strong>Rotate Phone To Play</strong>
+  </div>
+</div>
 <main class="app">
   <header class="shellHeader" id="shellHeader">
     <div class="brand">
@@ -3049,6 +3109,23 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   window.addEventListener('pagehide',function(){try{session&&session.close&&session.close()}catch(e){}});
 
   renderPlayerPicker();populatePlayerSelect('hostPlayer');populatePlayerSelect('joinPlayer');
+})();
+</script>
+
+<script>
+(function(){
+  const coarsePointer=()=>window.matchMedia&&window.matchMedia("(pointer: coarse)").matches;
+  const touchDevice=()=>coarsePointer()||navigator.maxTouchPoints>0||("ontouchstart" in window);
+  const updateMazeOrientationLock=()=>{
+    const landscape=window.innerWidth>window.innerHeight;
+    document.body.classList.toggle("mazeLandscapeLocked",touchDevice()&&landscape);
+  };
+  updateMazeOrientationLock();
+  window.addEventListener("resize",updateMazeOrientationLock,{passive:true});
+  window.addEventListener("orientationchange",updateMazeOrientationLock,{passive:true});
+  if(window.screen&&screen.orientation&&screen.orientation.addEventListener){
+    screen.orientation.addEventListener("change",updateMazeOrientationLock);
+  }
 })();
 </script>
 </body>
