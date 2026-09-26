@@ -1371,7 +1371,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var duration=reduced?180:520,easing='cubic-bezier(.22,.72,.22,1)';
     function center(rect){return{x:rect.left-frameRect.left+rect.width/2,y:rect.top-frameRect.top+rect.height/2}}
-    var insertCenter=center(ir),exitCenter=center(er),targets=[],ejectedIndex=0;
+    var insertCenter=center(ir),exitCenter,targets=[],ejectedIndex=0;
+    if(side==='left')exitCenter={x:rects[6].right-frameRect.left+sample.width/2+3,y:center(rects[6]).y};
+    else if(side==='right')exitCenter={x:rects[0].left-frameRect.left-sample.width/2-3,y:center(rects[0]).y};
+    else if(side==='top')exitCenter={x:center(rects[6]).x,y:rects[6].bottom-frameRect.top+sample.height/2+3};
+    else exitCenter={x:center(rects[0]).x,y:rects[0].top-frameRect.top-sample.height/2-3};
     for(i=0;i<7;i++){
       if(side==='left')targets[i]=i<6?center(rects[i+1]):exitCenter;
       else if(side==='right')targets[i]=i>0?center(rects[i-1]):exitCenter;
