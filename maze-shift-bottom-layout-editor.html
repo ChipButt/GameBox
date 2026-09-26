@@ -19,7 +19,7 @@ button{cursor:pointer}
 .previewHead h1{margin:0;font-size:17px}
 .previewHead small{font-size:10px;color:var(--muted)}
 .stageWrap{display:grid;place-items:center;background:#03101b;border-radius:12px;padding:14px 10px}
-.stage{position:relative;width:min(100%,760px);aspect-ratio:390/110;overflow:hidden;border-radius:15px;background:transparent;touch-action:none;user-select:none;-webkit-user-select:none}
+.stage{position:relative;width:min(100%,760px);aspect-ratio:390/220;overflow:hidden;border-radius:15px;background:transparent;touch-action:none;user-select:none;-webkit-user-select:none}
 .gridBg{position:absolute;inset:0;background:
  linear-gradient(rgba(91,212,234,.10) 1px,transparent 1px),
  linear-gradient(90deg,rgba(91,212,234,.10) 1px,transparent 1px);
@@ -80,7 +80,7 @@ button.danger{background:#783140}
   <section class="panel preview">
     <div class="previewHead">
       <h1>Maze Shift · Bottom HUD</h1>
-      <small>390 × 110 mobile artboard · 24 × 8 snap grid</small>
+      <small>390 × 220 mobile artboard · 24 × 16 snap grid</small>
     </div>
     <div class="stageWrap">
       <div id="stage" class="stage"><div class="gridBg"></div></div>
@@ -133,7 +133,7 @@ button.danger{background:#783140}
 </div>
 
 <script>
-const COLS=24,ROWS=8,STORAGE_KEY="mazeshift.bottomHud.editor.v1";
+const COLS=24,ROWS=16,STORAGE_KEY="mazeshift.bottomHud.editor.v2";
 const ITEMS={
   targetPanel:{label:"Target panel",kind:"panel",x:0,y:0,w:13,h:8,visible:true},
   targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:1,y:1,w:7,h:1,font:9,weight:"900",visible:true},
@@ -209,7 +209,7 @@ function renderFields(){
   }else textFields.classList.remove("visible");
 }
 function exportJson(){
-  const out={editor:"maze-shift-bottom-hud-v1",grid:{cols:COLS,rows:ROWS},items:state.items};
+  const out={editor:"maze-shift-bottom-hud-v2",grid:{cols:COLS,rows:ROWS},items:state.items};
   json.value=JSON.stringify(out,null,2);
 }
 function renderAll(){renderStage();renderList();renderFields();exportJson()}
