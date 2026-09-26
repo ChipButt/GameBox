@@ -187,3 +187,5 @@
 .toyGameMaze .gameTile{background:linear-gradient(145deg,#236359,#103d46)}
 .toyGameMaze .gameTileIcon{color:#173f39}
 @media(max-width:560px){.toyGameMaze{width:88%}}
+
+.mazeShiftHomeIcon{font-family:Fredoka,Inter,sans-serif!important;font-size:24px!important;font-weight:800!important;letter-spacing:-.06em;background:linear-gradient(145deg,#fff9df,#e6f8f2)!important;color:#164c44!important;border:2px solid rgba(255,255,255,.88);box-shadow:0 5px 14px rgba(0,0,0,.18),inset 0 0 0 3px rgba(7,155,114,.1)!important}
