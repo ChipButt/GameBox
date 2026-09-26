@@ -575,7 +575,6 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) saturate(.82) brightness(.93);
 }
 .rotateBtn:not(:disabled):hover img{opacity:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) saturate(1) brightness(1.05)}
-.rotateBtn.rotateLeft img{transform:scaleX(-1)}
 .rotateBtn.rotateRight img{transform:none}
 
 /* HUD/menu use the same unmistakable player-colour silhouette. */
@@ -599,6 +598,66 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 .toast img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.42))}
 .toast img.hidden{display:none!important}
 @keyframes homeGoalPulse{0%,100%{opacity:.48;transform:translate(-50%,-50%) scale(.94)}50%{opacity:.82;transform:translate(-50%,-50%) scale(1.03)}}
+
+/* MATERIAL PASS — carved enamel maze tiles */
+.cell,.spareTile{
+  border:1px solid rgba(100,190,159,.19)!important;
+  border-radius:4px!important;
+  background:
+    radial-gradient(circle at 24% 18%,rgba(255,255,255,.10),transparent 24%),
+    radial-gradient(circle at 78% 82%,rgba(0,0,0,.18),transparent 38%),
+    linear-gradient(145deg,#206353 0%,#13483e 46%,#0b332f 100%)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.13),
+    inset 1px 0 0 rgba(255,255,255,.035),
+    inset 0 -3px 5px rgba(0,0,0,.24),
+    0 1px 2px rgba(0,0,0,.42)!important;
+}
+.cell:before{
+  content:"";position:absolute;z-index:0;inset:2px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.035);box-shadow:inset 0 0 8px rgba(0,0,0,.14);
+  pointer-events:none;
+}
+.cell.fixed:after{
+  right:4px!important;top:4px!important;width:4px!important;height:4px!important;
+  background:#c99a32!important;box-shadow:0 0 0 1px rgba(59,38,4,.65),0 1px 2px rgba(0,0,0,.35);
+}
+.pathCenter,.pathArm{
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.10),transparent 22%,transparent 76%,rgba(93,58,17,.12)),
+    linear-gradient(145deg,#f2ddb0 0%,#d5b778 48%,#b78e50 100%)!important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.42),
+    inset -1px -2px 2px rgba(88,57,22,.24),
+    0 1px 2px rgba(0,0,0,.24)!important;
+}
+.pathCenter{z-index:2!important;left:31%!important;top:31%!important;width:38%!important;height:38%!important;border-radius:5px!important}
+.pathArm.n{left:36%!important;top:-2%!important;width:28%!important;height:38%!important;border-radius:0 0 4px 4px}
+.pathArm.s{left:36%!important;bottom:-2%!important;width:28%!important;height:38%!important;border-radius:4px 4px 0 0}
+.pathArm.e{right:-2%!important;top:36%!important;height:28%!important;width:38%!important;border-radius:4px 0 0 4px}
+.pathArm.w{left:-2%!important;top:36%!important;height:28%!important;width:38%!important;border-radius:0 4px 4px 0}
+.boardGrid{gap:2px!important}
+.boardFrame{
+  padding:7px!important;border-color:rgba(81,153,154,.22)!important;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(31,116,98,.25),transparent 60%),
+    linear-gradient(145deg,#0a2534,#071923)!important;
+  box-shadow:0 20px 42px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.055),inset 0 0 0 1px rgba(0,0,0,.42)!important;
+}
+
+/* All insertion arrows use a fixed square footprint, so orientation cannot change their apparent size. */
+.insertBtn{
+  width:clamp(25px,7vw,40px)!important;height:clamp(25px,7vw,40px)!important;aspect-ratio:1!important;
+}
+.insertBtn img{width:100%!important;height:100%!important}
+
+/* Moving pawn overlay follows the actual connected tile route. */
+.movingPawn{
+  --player:#3f82e3;position:absolute;z-index:70;pointer-events:none;background:var(--player);
+  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+  filter:drop-shadow(0 0 1px #fff4d1) drop-shadow(0 3px 3px rgba(0,0,0,.68));
+}
 </style>
 </head>
 <body>
@@ -733,8 +792,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       </div>
       <div class="actionZone">
         <div class="spareTile" id="spareTile" aria-label="Spare maze tile"></div>
-        <button class="rotateBtn rotateLeft" id="rotateLeft" type="button" aria-label="Rotate spare tile left"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
-        <button class="rotateBtn rotateRight" id="rotateRight" type="button" aria-label="Rotate spare tile right"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
+        <button class="rotateBtn rotateRight" id="rotateRight" type="button" aria-label="Rotate spare tile"><img src="MazeShift_Assets/24_rotate.png" alt=""></button>
         <button class="stayBtn hidden" id="stayBtn" type="button">Stay · End Turn</button>
         <div class="waitDock hidden" id="waitDock">Waiting</div>
       </div>
@@ -844,6 +902,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   var connectedLobby=[];
   var lastHosts=[];
   var toastTimer=null;
+  var moving=false;
 
   function $(id){return document.getElementById(id)}
   function uid(){return globalThis.crypto&&globalThis.crypto.randomUUID?globalThis.crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)}
@@ -986,7 +1045,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function currentPlayer(){return state.players[state.current]||null}
   function ownPlayer(){if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;return currentPlayer()}
   function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
-  function canControlTurn(){if(!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
+  function canControlTurn(){if(moving||!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
   function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden')}
   function beginTurn(){state.turnReady=true;$('handoff').classList.add('hidden');buzz(12);renderAll()}
   function opposite(side){return{left:'right',right:'left',top:'bottom',bottom:'top'}[side]}
@@ -1026,24 +1085,68 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     shiftMazeInternal(side,index);
   }
   function canConnect(a,b,dir){var opp={N:'S',E:'W',S:'N',W:'E'}[dir];return openings(a).indexOf(dir)>=0&&openings(b).indexOf(opp)>=0}
-  function reachable(){
-    var p=currentPlayer();if(!p)return[];
-    var seen=new Set(),queue=[{r:p.pos.r,c:p.pos.c}],dirs=[{d:'N',dr:-1,dc:0},{d:'E',dr:0,dc:1},{d:'S',dr:1,dc:0},{d:'W',dr:0,dc:-1}];
+  function movementMap(){
+    var p=currentPlayer();if(!p)return{seen:new Set(),prev:new Map()};
+    var seen=new Set(),prev=new Map(),queue=[{r:p.pos.r,c:p.pos.c}],dirs=[{d:'N',dr:-1,dc:0},{d:'E',dr:0,dc:1},{d:'S',dr:1,dc:0},{d:'W',dr:0,dc:-1}];
     seen.add(p.pos.r+','+p.pos.c);
     while(queue.length){
       var cur=queue.shift(),a=state.board[cur.r][cur.c];
       dirs.forEach(function(x){
-        var nr=cur.r+x.dr,nc=cur.c+x.dc,key=nr+','+nc;
+        var nr=cur.r+x.dr,nc=cur.c+x.dc,key=nr+','+nc,from=cur.r+','+cur.c;
         if(nr<0||nr>6||nc<0||nc>6||seen.has(key))return;
-        if(canConnect(a,state.board[nr][nc],x.d)){seen.add(key);queue.push({r:nr,c:nc})}
+        if(canConnect(a,state.board[nr][nc],x.d)){seen.add(key);prev.set(key,from);queue.push({r:nr,c:nc})}
       });
     }
-    return Array.from(seen);
+    return{seen:seen,prev:prev};
   }
-  function moveToInternal(r,c){
-    if(state.phase!=='move')return;
-    var allowed=new Set(reachable());if(!allowed.has(r+','+c))return;
-    var p=currentPlayer();p.pos={r:r,c:c};buzz(12);checkCollectionAndEnd();
+  function reachable(){return Array.from(movementMap().seen)}
+  function routeTo(r,c){
+    var p=currentPlayer();if(!p)return[];
+    var map=movementMap(),target=r+','+c,start=p.pos.r+','+p.pos.c;
+    if(!map.seen.has(target))return[];
+    var keys=[target],cursor=target;
+    while(cursor!==start){
+      cursor=map.prev.get(cursor);if(!cursor)return[];
+      keys.push(cursor);
+    }
+    keys.reverse();
+    return keys.map(function(k){var parts=k.split(',');return{r:Number(parts[0]),c:Number(parts[1])}});
+  }
+  function cellForPoint(pt){return document.querySelector('.cell[data-r="'+pt.r+'"][data-c="'+pt.c+'"]')}
+  async function animatePawnPath(path,p){
+    if(!path||path.length<2||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    var frame=$('boardFrame'),frameRect=frame&&frame.getBoundingClientRect();if(!frame||!frameRect)return;
+    var source=document.querySelector('.pawnWrap[data-player="'+CSS.escape(String(p.id))+'"]');
+    if(source)source.style.opacity='0';
+    var ghost=document.createElement('span');ghost.className='movingPawn';ghost.style.setProperty('--player',p.color);frame.appendChild(ghost);
+    try{
+      var first=cellForPoint(path[0]);if(!first)return;
+      var firstRect=first.getBoundingClientRect(),w=Math.max(22,firstRect.width*.62),h=Math.max(26,firstRect.height*.70);
+      ghost.style.width=w+'px';ghost.style.height=h+'px';
+      ghost.style.left=(firstRect.left-frameRect.left+firstRect.width/2)+'px';
+      ghost.style.top=(firstRect.top-frameRect.top+firstRect.height/2)+'px';
+      for(var i=1;i<path.length;i++){
+        var cell=cellForPoint(path[i]);if(!cell)break;
+        var rect=cell.getBoundingClientRect(),left=(rect.left-frameRect.left+rect.width/2),top=(rect.top-frameRect.top+rect.height/2);
+        var anim=ghost.animate([
+          {left:ghost.style.left,top:ghost.style.top,transform:'translate(-50%,-50%) scale(1)'},
+          {offset:.52,left:left+'px',top:top+'px',transform:'translate(-50%,-50%) scale(1.08)'},
+          {left:left+'px',top:top+'px',transform:'translate(-50%,-50%) scale(1)'}
+        ],{duration:165,easing:'ease-in-out',fill:'forwards'});
+        try{await anim.finished}catch(e){}
+        ghost.style.left=left+'px';ghost.style.top=top+'px';
+      }
+    }finally{
+      ghost.remove();if(source)source.style.opacity='';
+    }
+  }
+  async function moveToInternal(r,c){
+    if(state.phase!=='move'||moving)return;
+    var path=routeTo(r,c);if(!path.length)return;
+    var p=currentPlayer();moving=true;
+    if(mode==='multi'&&role==='host'&&session)session.broadcast({type:'moveFx',playerId:p.id,path:path});
+    await animatePawnPath(path,p);
+    p.pos={r:r,c:c};moving=false;buzz(12);checkCollectionAndEnd();
   }
   function requestMove(r,c){
     if(!canControlTurn()||state.phase!=='move')return;
@@ -1086,7 +1189,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       if(here.length){
         html+='<span class="pawns">';
         here.forEach(function(p,i){
-          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"></span>';
+          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" data-player="'+esc(p.id)+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"></span>';
         });
         html+='</span>';
       }
@@ -1097,7 +1200,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     if(!state.spare)return;
     $('spareTile').innerHTML=tileMarkup(state.spare,false,-1,-1);
     var disabled=state.phase!=='shift'||!canControlTurn();
-    $('rotateLeft').disabled=disabled;$('rotateRight').disabled=disabled;
+    $('rotateRight').disabled=disabled;
   }
   function addInsertButton(grid,side,index,row,col,symbol){
     var b=document.createElement('button');b.type='button';b.className='insertBtn side-'+side;
@@ -1119,6 +1222,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
         if(cp&&cp.pos.r===rr&&cp.pos.c===cc)b.classList.add('currentCell');
         b.disabled=state.phase!=='move'||!canControlTurn()||!allowed.has(rr+','+cc);
         b.style.gridRow=String(rr+2);b.style.gridColumn=String(cc+2);
+        b.dataset.r=String(rr);b.dataset.c=String(cc);
         b.setAttribute('aria-label','Maze tile row '+(rr+1)+' column '+(cc+1));
         b.innerHTML=tileMarkup(t,true,rr,cc);b.addEventListener('click',function(){requestMove(rr,cc)});grid.appendChild(b);
       })(r,c);
@@ -1161,7 +1265,6 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     $('phaseHint').textContent=!control&&mode==='multi'?'Board updates live':state.phase==='shift'?'Choose an insertion arrow':'Choose a glowing tile';
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
     $('spareTile').classList.toggle('hidden',state.phase!=='shift'||!control);
-    $('rotateLeft').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('waitDock').classList.toggle('hidden',control||mode!=='multi');
     if(mode==='multi'&&!control)$('waitDock').textContent='Waiting · '+p.name;
@@ -1274,6 +1377,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       }
     }else{
       if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];renderLobby('joinLobby',connectedLobby);$('joinedLobbyPanel').classList.remove('hidden');return}
+      if(msg.type==='moveFx'&&Array.isArray(msg.path)){var fxPlayer=state.players.find(function(p){return p.id===msg.playerId});if(fxPlayer)animatePawnPath(msg.path,fxPlayer);return}
       if(msg.type==='start'&&msg.state){mode='multi';state.turnReady=true;applySnapshot(msg.state);return}
       if(msg.type==='state'&&msg.state){applySnapshot(msg.state);return}
     }
@@ -1315,7 +1419,6 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   });
   $('availableHosts').addEventListener('click',function(e){var button=e.target.closest('[data-host]');if(button)joinHost(button.dataset.host)});
   $('startHostGame').addEventListener('click',startHostMaze);
-  $('rotateLeft').addEventListener('click',function(){requestRotate(-1)});
   $('rotateRight').addEventListener('click',function(){requestRotate(1)});
   $('stayBtn').addEventListener('click',requestStay);
   $('readyBtn').addEventListener('click',beginTurn);
