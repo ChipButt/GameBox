@@ -509,35 +509,29 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   margin-top:2px;min-height:25px!important;opacity:.72!important;
 }
 
-/* The raster pawn is used as an alpha silhouette so ownership colour dominates.
-   This keeps players visually distinct from the detailed gold/blue relic artwork. */
-.pawns{position:absolute;z-index:10;inset:0;display:block;pointer-events:none}
+/* Full-colour player figurines.
+   The visual anchor is the projected centre of the circular stone base, not the PNG centre.
+   In these assets that point sits about 70% down the square image. */
+.pawns{position:absolute;z-index:10;inset:0;display:block;pointer-events:none;overflow:visible}
 .pawnWrap{
-  --player:#3f82e3;position:absolute;left:50%;top:50%;width:62%;height:70%;
-  transform:translate(-50%,-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.72));
+  position:absolute;left:50%;top:50%;width:78%;height:78%;
+  transform:translate(-50%,-50%);overflow:visible;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.58));
+  transition:opacity .12s ease;
 }
-.pawnWrap:before,.pawnWrap:after{
-  content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
+.pawnArt{
+  position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:contain;
+  transform:translate(-50%,-70%);pointer-events:none;
 }
-.pawnWrap:before{
-  width:112%;height:112%;background:#fff4ce;
-  filter:drop-shadow(0 0 1px rgba(0,0,0,.5));
-}
-.pawnWrap:after{
-  width:100%;height:100%;background:var(--player);
-  box-shadow:inset 0 0 0 999px var(--player);
-}
-.pawnWrap.count2.slot0{transform:translate(-80%,-50%) scale(.76)}
-.pawnWrap.count2.slot1{transform:translate(-20%,-50%) scale(.76)}
-.pawnWrap.count3.slot0{transform:translate(-50%,-82%) scale(.64)}
-.pawnWrap.count3.slot1{transform:translate(-82%,-24%) scale(.64)}
-.pawnWrap.count3.slot2{transform:translate(-18%,-24%) scale(.64)}
-.pawnWrap.count4.slot0{transform:translate(-79%,-78%) scale(.58)}
-.pawnWrap.count4.slot1{transform:translate(-21%,-78%) scale(.58)}
-.pawnWrap.count4.slot2{transform:translate(-79%,-20%) scale(.58)}
-.pawnWrap.count4.slot3{transform:translate(-21%,-20%) scale(.58)}
+.pawnWrap.count2.slot0{transform:translate(-76%,-50%) scale(.72)}
+.pawnWrap.count2.slot1{transform:translate(-24%,-50%) scale(.72)}
+.pawnWrap.count3.slot0{transform:translate(-50%,-76%) scale(.60)}
+.pawnWrap.count3.slot1{transform:translate(-78%,-27%) scale(.60)}
+.pawnWrap.count3.slot2{transform:translate(-22%,-27%) scale(.60)}
+.pawnWrap.count4.slot0{transform:translate(-76%,-74%) scale(.54)}
+.pawnWrap.count4.slot1{transform:translate(-24%,-74%) scale(.54)}
+.pawnWrap.count4.slot2{transform:translate(-76%,-24%) scale(.54)}
+.pawnWrap.count4.slot3{transform:translate(-24%,-24%) scale(.54)}
 
 /* Shift arrows remain readable but subordinate to the maze and relics. */
 .insertBtn{
@@ -577,18 +571,17 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 .rotateBtn:not(:disabled):hover img{opacity:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) saturate(1) brightness(1.05)}
 .rotateBtn.rotateRight img{transform:none}
 
-/* HUD/menu use the same unmistakable player-colour silhouette. */
+/* HUD and menu reuse the same full-colour figurine assets. */
 .turnDot{
-  --player:#3f82e3;background:var(--player)!important;border:0!important;border-radius:0!important;box-shadow:none!important;
-  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  filter:drop-shadow(0 1px 0 #fff1c4) drop-shadow(0 2px 3px rgba(0,0,0,.6));
+  width:34px!important;height:34px!important;flex:0 0 auto;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background-color:transparent!important;background-size:contain!important;
+  background-position:center!important;background-repeat:no-repeat!important;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.48));
 }
 .menuPawn{
-  --player:#3f82e3;width:24px;height:29px;display:block;flex:0 0 auto;background:var(--player);
-  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  filter:drop-shadow(0 1px 0 #fff1c4) drop-shadow(0 2px 2px rgba(0,0,0,.45));
+  width:30px;height:34px;object-fit:contain;display:block;flex:0 0 auto;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.42));
 }
 
 .toast{
@@ -651,12 +644,12 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 }
 .insertBtn img{width:100%!important;height:100%!important}
 
-/* Moving pawn overlay follows the actual connected tile route. */
+/* Moving figurine overlay follows the actual connected route.
+   Its left/top point is the projected centre of the stone base. */
 .movingPawn{
-  --player:#3f82e3;position:absolute;z-index:70;pointer-events:none;background:var(--player);
-  -webkit-mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  mask:url("MazeShift_Assets/21_player_pawn.png") center/contain no-repeat;
-  filter:drop-shadow(0 0 1px #fff4d1) drop-shadow(0 3px 3px rgba(0,0,0,.68));
+  position:absolute;z-index:70;pointer-events:none;object-fit:contain;
+  transform:translate(-50%,-70%);
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.62));
 }
 
 /* COMPACT GAMEPLAY COMPOSITION
@@ -923,7 +916,12 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   var COLORS=['#e64f55','#3f82e3','#12a373','#9965d7'];
   var HOME_POS=[{r:0,c:0},{r:0,c:6},{r:6,c:6},{r:6,c:0}];
   var ASSET_ROOT='MazeShift_Assets/';
-  var PLAYER_ASSET=ASSET_ROOT+'21_player_pawn.png';
+  var PLAYER_ASSETS=[
+    '01_player_token_red.png',
+    '02_player_token_blue.png',
+    '03_player_token_green.png',
+    '04_player_token_purple.png'
+  ];
   var HOME_ASSET=ASSET_ROOT+'22_home.png';
   var SHIFT_ASSET=ASSET_ROOT+'23_shift_arrow.png';
   var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
@@ -1088,7 +1086,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function createGame(players,targetCount){
     var built=buildBoard();
     state.players=players.map(function(p,i){
-      return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
+      return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i],asset:PLAYER_ASSETS[i]||PLAYER_ASSETS[0],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
     });
     state.board=built.board;state.spare=built.spare;state.current=0;state.phase='shift';state.lastShift=null;
     state.targetCount=targetCount;state.winnerId=null;state.turnReady=mode!=='local';
@@ -1179,7 +1177,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var frame=$('boardFrame'),frameRect=frame&&frame.getBoundingClientRect();if(!frame||!frameRect)return;
     var source=document.querySelector('.pawnWrap[data-player="'+CSS.escape(String(p.id))+'"]');
     if(source)source.style.opacity='0';
-    var ghost=document.createElement('span');ghost.className='movingPawn';ghost.style.setProperty('--player',p.color);frame.appendChild(ghost);
+    var ghost=document.createElement('img');ghost.className='movingPawn';ghost.src=p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length];ghost.alt='';frame.appendChild(ghost);
     try{
       var first=cellForPoint(path[0]);if(!first)return;
       var firstRect=first.getBoundingClientRect(),w=Math.max(22,firstRect.width*.62),h=Math.max(26,firstRect.height*.70);
@@ -1190,9 +1188,9 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
         var cell=cellForPoint(path[i]);if(!cell)break;
         var rect=cell.getBoundingClientRect(),left=(rect.left-frameRect.left+rect.width/2),top=(rect.top-frameRect.top+rect.height/2);
         var anim=ghost.animate([
-          {left:ghost.style.left,top:ghost.style.top,transform:'translate(-50%,-50%) scale(1)'},
-          {offset:.52,left:left+'px',top:top+'px',transform:'translate(-50%,-50%) scale(1.08)'},
-          {left:left+'px',top:top+'px',transform:'translate(-50%,-50%) scale(1)'}
+          {left:ghost.style.left,top:ghost.style.top,transform:'translate(-50%,-70%) scale(1)'},
+          {offset:.52,left:left+'px',top:top+'px',transform:'translate(-50%,-70%) scale(1.08)'},
+          {left:left+'px',top:top+'px',transform:'translate(-50%,-70%) scale(1)'}
         ],{duration:165,easing:'ease-in-out',fill:'forwards'});
         try{await anim.finished}catch(e){}
         ghost.style.left=left+'px';ghost.style.top=top+'px';
@@ -1250,7 +1248,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
       if(here.length){
         html+='<span class="pawns">';
         here.forEach(function(p,i){
-          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" data-player="'+esc(p.id)+'" title="'+esc(p.name)+'" style="--player:'+p.color+'"></span>';
+          html+='<span class="pawnWrap count'+here.length+' slot'+i+'" data-player="'+esc(p.id)+'" title="'+esc(p.name)+'"><img class="pawnArt" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""></span>';
         });
         html+='</span>';
       }
@@ -1306,7 +1304,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
     var wrap=$('menuPlayers');if(!wrap)return;
     wrap.innerHTML=state.players.map(function(p,i){
       var target=currentTarget(p),active=i===state.current;
-      return'<div class="menuPlayer"><span class="menuPawn" style="--player:'+p.color+'"></span><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
+      return'<div class="menuPlayer"><img class="menuPawn" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
     }).join('');
     $('menuMode').textContent=mode==='multi'?'Local Multiplayer':'Pass & Play';
     $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):'Local device';
@@ -1319,7 +1317,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function renderAll(){
     if(!state.players.length)return;
     var p=currentPlayer(),control=canControlTurn();
-    $('turnName').textContent=p.name;$('turnDot').style.setProperty('--player',p.color);
+    $('turnName').textContent=p.name;$('turnDot').style.backgroundImage='url("'+(p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length])+'")';
     $('turnLabel').textContent=mode==='multi'&&!control?'Waiting for':'Turn';
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
     $('spareTile').classList.toggle('hidden',state.phase!=='shift'||!control);
