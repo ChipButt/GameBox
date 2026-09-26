@@ -1159,6 +1159,62 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   }
 }
 
+
+/* ACTIVE TARGET HIGHLIGHT — shown only to the player whose turn it is */
+.targetRelicGlow{
+  position:absolute;z-index:4;left:50%;top:50%;
+  width:82%;height:82%;transform:translate(-50%,-50%);
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,
+    rgba(255,255,225,.88) 0%,
+    rgba(255,239,151,.58) 28%,
+    rgba(247,189,24,.24) 52%,
+    rgba(247,189,24,0) 74%);
+  filter:blur(3px);
+  animation:targetRelicGlow 1.45s ease-in-out infinite;
+}
+.relicArt.targetRelic{
+  z-index:6!important;
+  filter:
+    drop-shadow(0 0 3px rgba(255,255,230,.95))
+    drop-shadow(0 0 8px rgba(255,220,95,.70))
+    drop-shadow(0 2px 2px rgba(0,0,0,.48))!important;
+}
+@keyframes targetRelicGlow{
+  0%,100%{opacity:.62;transform:translate(-50%,-50%) scale(.92)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
+}
+
+/* BOTTOM HUD — remove visible outer box lines */
+.thumbDock .targetZone,
+.thumbDock .tileZone,
+.thumbDock .objectiveScore,
+.thumbDock .spareTile,
+.thumbDock .rotateBtn,
+.thumbDock .stayBtn,
+.thumbDock .waitDock{
+  border-color:transparent!important;
+  outline:0!important;
+}
+.thumbDock .targetZone,
+.thumbDock .tileZone{
+  border:0!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.16)!important;
+}
+.thumbDock .objectiveScore{
+  border:0!important;
+}
+.thumbDock .spareTile{
+  border:0!important;
+  box-shadow:0 7px 14px rgba(0,0,0,.26)!important;
+}
+.thumbDock .rotateBtn{
+  border:0!important;
+}
+.thumbDock .stayBtn,
+.thumbDock .waitDock{
+  border:0!important;
+}
 </style>
 </head>
 <body>
@@ -1783,7 +1839,11 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function tileMarkup(t,includePawns,r,c){
     var html='<img class="tileRaster" src="'+esc(tileAsset(t))+'" alt="" style="--tile-rot:'+(t.rot%4)+'">';
 
-    if(t.relic)html+='<img class="relicArt" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
+    if(t.relic){
+      var glowOwner=canControlTurn()?ownPlayer():null,glowTarget=currentTarget(glowOwner),isTarget=!!(glowTarget&&glowTarget.id===t.relic.id);
+      if(isTarget)html+='<span class="targetRelicGlow" aria-hidden="true"></span>';
+      html+='<img class="relicArt'+(isTarget?' targetRelic':'')+'" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
+    }
     if(includePawns){
       var active=currentPlayer();
       if(active&&!currentTarget(active)&&active.home.r===r&&active.home.c===c){
