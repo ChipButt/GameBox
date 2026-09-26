@@ -3,180 +3,602 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102f4c">
+<meta name="theme-color" content="#071326">
 <title>Maze Shift · GameBox</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#082f68;--navy2:#0a3d80;--gold:#f7bd18;--mint:#eefaf5;--ink:#13314d;
-  --muted:#617487;--line:#cfe7dd;--stone:#ead9ae;--stone2:#c6aa73;--forest:#173f39;
-  --forest2:#0e2d2a;--danger:#b74655;
+  color-scheme:light;
+  --ink:#071326;
+  --ink-2:#12223a;
+  --muted:#607086;
+  --muted-2:#8795a6;
+  --line:#d9e2eb;
+  --line-strong:#c9d4df;
+  --panel:#ffffff;
+  --panel-soft:#f8fbfd;
+  --page:#f3f7fa;
+  --chrome:#071326;
+  --chrome-2:#0c1d33;
+  --navy:#082f68;
+  --teal:#079b72;
+  --teal-dark:#057f63;
+  --teal-soft:#e6f8f2;
+  --amber:#f6a700;
+  --amber-2:#f7bd18;
+  --amber-soft:#fff3cf;
+  --red:#de3d35;
+  --red-soft:#ffe7e4;
+  --maze:#174c44;
+  --maze-dark:#0c312e;
+  --path:#e8d6aa;
+  --path-edge:#b89a61;
+  --shadow-soft:0 12px 32px rgba(8,23,44,.08);
+  --shadow-card:0 18px 48px rgba(7,19,38,.12),0 2px 8px rgba(7,19,38,.05);
+  --shadow-hard:0 6px 0 rgba(7,19,38,.16);
+  --radius:16px;
+  --radius-sm:10px;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:linear-gradient(180deg,#f8fffc 0%,#eefaf5 55%,#eef6ff 100%);color:var(--ink);font-family:Inter,system-ui,sans-serif}
-button,select{font:inherit}
-button{touch-action:manipulation}
+html,body{margin:0;min-height:100%;background:var(--page);color:var(--ink)}
+body{
+  background:
+    radial-gradient(circle at 14% -6%,rgba(7,155,114,.09),transparent 26rem),
+    radial-gradient(circle at 92% 12%,rgba(246,167,0,.08),transparent 24rem),
+    linear-gradient(180deg,#f8fbfd 0%,#f2f6f9 52%,#eef3f6 100%);
+  font-size:14px;
+  letter-spacing:0;
+  overflow-x:hidden;
+}
+button,select{font:inherit;letter-spacing:0}
+button{-webkit-tap-highlight-color:transparent;cursor:pointer}
+button:disabled{cursor:not-allowed}
+img{display:block;max-width:100%}
 .hidden{display:none!important}
-.app{width:min(100%,760px);margin:0 auto;padding:12px 12px 36px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand img{width:92px;height:36px;object-fit:contain}
-.brandTitle{font:700 25px/1 Fredoka,sans-serif;color:var(--navy)}
-.homeBtn,.smallBtn,.mainBtn,.choice,.insertBtn,.cell{border:0;cursor:pointer}
-.homeBtn{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--navy);font:600 14px Fredoka,sans-serif}
-.hero{position:relative;overflow:hidden;border-radius:22px;padding:20px 18px;background:
-  radial-gradient(circle at 80% 20%,rgba(247,189,24,.22),transparent 31%),
-  linear-gradient(145deg,#164f49,#0d2f3b 58%,#082f68);color:#fff;box-shadow:0 16px 36px rgba(8,47,104,.15);margin-bottom:14px}
-.hero:after{content:"";position:absolute;right:-38px;bottom:-48px;width:180px;height:180px;border:22px solid rgba(255,255,255,.07);border-radius:40px;transform:rotate(24deg)}
-.hero h1{position:relative;z-index:1;margin:0 0 5px;font:700 40px/1 Fredoka,sans-serif;letter-spacing:-.03em}
-.hero p{position:relative;z-index:1;margin:0;color:rgba(255,255,255,.82);font-size:14px;line-height:1.45}
-.panel{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:0 10px 26px rgba(8,47,104,.07);margin-bottom:12px}
-.panel h2{margin:0 0 10px;font:700 18px Fredoka,sans-serif;color:var(--navy)}
-.sub{margin:-4px 0 12px;color:var(--muted);font-size:12px;line-height:1.45}
+.app{width:min(100%,820px);margin:0 auto;padding:0 14px 38px}
+.view{animation:viewIn .28s cubic-bezier(.2,.8,.2,1)}
+.appChrome{
+  position:sticky;top:0;z-index:30;
+  margin:0 -14px 16px;
+  padding:10px 14px;
+  min-height:64px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:linear-gradient(90deg,rgba(7,19,38,.98),rgba(12,29,51,.98));
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 24px rgba(7,19,38,.12);
+  backdrop-filter:blur(14px);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:91px;height:34px;object-fit:contain;filter:brightness(0) invert(1)}
+.brandDivider{width:1px;height:25px;background:rgba(255,255,255,.2)}
+.brandTitle{color:#fff;font:700 18px/1 Fredoka,sans-serif;white-space:nowrap}
+.homeBtn,.chromeBtn{
+  min-height:40px;border:1px solid rgba(255,255,255,.22);border-radius:9px;
+  background:rgba(255,255,255,.07);color:#f5fbff;padding:0 12px;
+  font-size:12px;font-weight:800;
+  transition:background .16s ease,border-color .16s ease,transform .12s ease;
+}
+.homeBtn:hover,.chromeBtn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.36)}
+.homeBtn:active,.chromeBtn:active{transform:translateY(1px)}
+.hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);border-radius:24px;
+  min-height:188px;padding:25px 22px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  background:
+    radial-gradient(circle at 78% 18%,rgba(247,189,24,.28),transparent 24%),
+    radial-gradient(circle at 20% 0%,rgba(76,214,176,.18),transparent 30%),
+    linear-gradient(135deg,#071326 0%,#10304a 48%,#0d5148 100%);
+  box-shadow:var(--shadow-card);
+}
+.hero:before,.hero:after{content:"";position:absolute;z-index:-1;pointer-events:none}
+.hero:before{
+  width:235px;height:235px;right:-70px;top:-62px;border-radius:44px;
+  border:28px solid rgba(255,255,255,.055);transform:rotate(31deg);
+  box-shadow:inset 0 0 0 12px rgba(255,255,255,.025);
+}
+.hero:after{
+  left:-42px;bottom:-60px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(7,155,114,.22),rgba(7,155,114,0) 68%);
+}
+.kicker{
+  display:inline-flex;align-items:center;gap:7px;width:max-content;
+  margin-bottom:8px;padding:6px 9px;border:1px solid rgba(255,255,255,.16);border-radius:999px;
+  background:rgba(255,255,255,.08);color:#8fe6c9;
+  font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;
+}
+.kickerDot{width:6px;height:6px;border-radius:99px;background:var(--amber-2);box-shadow:0 0 0 4px rgba(247,189,24,.12)}
+.hero h1{margin:0;color:#fff;font:700 clamp(38px,9vw,58px)/.95 Fredoka,sans-serif;letter-spacing:-.045em}
+.hero p{max-width:520px;margin:10px 0 0;color:#c6d6e5;font-size:14px;line-height:1.52}
+.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:22px 2px 10px}
+.sectionHead div{min-width:0}
+.sectionLabel{display:block;margin-bottom:3px;color:var(--teal-dark);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.sectionHead h2{margin:0;color:var(--ink);font:700 21px/1.1 Fredoka,sans-serif}
+.sectionHead p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+.modeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.modeCard{
+  position:relative;overflow:hidden;min-height:190px;padding:18px;border:1px solid var(--line);
+  border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbfd);color:var(--ink);text-align:left;
+  box-shadow:0 1px 0 rgba(7,19,38,.02),0 10px 28px rgba(7,19,38,.06);
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.modeCard:hover{transform:translateY(-2px);border-color:#b6c5d3;box-shadow:0 16px 34px rgba(7,19,38,.1)}
+.modeCard:active{transform:translateY(1px)}
+.modeCard.primary{background:linear-gradient(145deg,#ffffff,#f4fbf8);border-color:#bfe3d8}
+.modeIcon{
+  width:52px;height:52px;display:grid;place-items:center;margin-bottom:22px;border-radius:14px;
+  color:#fff;background:linear-gradient(145deg,var(--teal),#06765c);
+  box-shadow:0 8px 18px rgba(7,155,114,.24),inset 0 1px rgba(255,255,255,.28);
+  font:700 20px Fredoka,sans-serif;
+}
+.modeCard.secondary .modeIcon{background:linear-gradient(145deg,var(--navy),#071d42);box-shadow:0 8px 18px rgba(8,47,104,.22),inset 0 1px rgba(255,255,255,.2)}
+.modeCard strong{display:block;font:700 20px/1.1 Fredoka,sans-serif}
+.modeCard span{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+.modeArrow{position:absolute;right:17px;bottom:16px;color:var(--muted-2);font-size:22px;font-weight:700}
+.panel{
+  background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:0 1px 0 rgba(7,19,38,.02),0 10px 26px rgba(7,19,38,.055);
+  padding:16px;min-width:0;
+}
+.panel + .panel{margin-top:12px}
+.panelHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.panelHeader h3{margin:0;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.panelHeader span{color:var(--muted);font-size:11px}
+.setupStack{display:grid;gap:12px}
 .playerGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.choice{min-height:48px;border:2px solid var(--line);border-radius:14px;background:#f5fbf8;color:var(--navy);font:600 15px Fredoka,sans-serif}
-.choice.selected{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
-.setupRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-.setupRow label{font-size:13px;font-weight:700;color:var(--navy)}
-.setupRow select{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#f5fbf8;color:var(--ink);padding:0 12px;font-size:16px}
-.mainBtn{width:100%;min-height:54px;border-radius:999px;background:var(--gold);color:var(--navy);font:700 18px Fredoka,sans-serif;box-shadow:0 7px 0 #bd8910,0 12px 22px rgba(8,47,104,.14)}
-.mainBtn:active{transform:translateY(4px);box-shadow:0 3px 0 #bd8910,0 7px 12px rgba(8,47,104,.12)}
-.mainBtn.secondary{background:var(--navy);color:#fff;box-shadow:none}
-.mainBtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.setupStatus{min-height:20px;margin:9px 2px 0;color:var(--danger);font-size:12px;font-weight:700;text-align:center}
-.rules{font-size:12px;color:var(--muted);line-height:1.5}
-.rules ol{padding-left:20px;margin:8px 0 0}
-.gameTop{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:10px}
-.turnCard{min-width:0;padding:12px 14px;border-radius:17px;background:linear-gradient(145deg,#fff,#f4fbf8);border:1px solid var(--line);box-shadow:0 8px 24px rgba(8,47,104,.07)}
-.eyebrow{display:block;margin-bottom:2px;color:#8b6a08;font:700 10px Fredoka,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-.turnCard strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--navy);font:700 20px Fredoka,sans-serif}
-.turnCard small{display:block;margin-top:2px;color:var(--muted);font-size:11px}
-.phasePill{align-self:center;padding:9px 12px;border-radius:999px;background:#fff4c6;border:1px solid #e7d178;color:#755a05;font:700 12px Fredoka,sans-serif;white-space:nowrap}
-.objective{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid #e7d178;border-radius:17px;background:#fff9dd;margin-bottom:10px}
-.objectiveIcon{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:#fff;border:1px solid #eadf9c;font-size:30px}
-.objectiveText{min-width:0}
-.objectiveText strong{display:block;color:var(--navy);font:700 16px Fredoka,sans-serif}
-.objectiveText span{display:block;margin-top:2px;color:#786b37;font-size:11px;line-height:1.35}
-.score{padding:7px 9px;border-radius:12px;background:#fff;color:var(--navy);font:700 12px Fredoka,sans-serif;text-align:center}
-.spareBar{display:grid;grid-template-columns:auto 84px 1fr;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:17px;margin-bottom:8px}
-.spareLabel strong{display:block;color:var(--navy);font:700 14px Fredoka,sans-serif}
-.spareLabel small{color:var(--muted);font-size:10px}
-.spareTile{width:78px;aspect-ratio:1;border-radius:13px;position:relative;overflow:hidden;background:linear-gradient(145deg,#1d5045,#0f342f);border:3px solid #9b7d49;box-shadow:inset 0 0 0 2px rgba(255,255,255,.08)}
-.rotateBtns{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.smallBtn{min-height:42px;border-radius:12px;background:var(--navy);color:#fff;font:700 18px Fredoka,sans-serif}
-.boardShell{position:relative;border:1px solid #0a2943;border-radius:20px;padding:7px;background:linear-gradient(145deg,#123c43,#082d43);box-shadow:0 15px 35px rgba(8,47,104,.17);overflow:hidden}
-.boardGrid{display:grid;grid-template-columns:27px repeat(7,minmax(0,1fr)) 27px;grid-template-rows:27px repeat(7,auto) 27px;gap:2px;align-items:center}
-.cell{position:relative;aspect-ratio:1;min-width:0;padding:0;border-radius:7px;overflow:hidden;background:linear-gradient(145deg,#1d5045,#0d342f);border:1px solid rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
-.cell.fixed:after{content:"•";position:absolute;top:1px;right:4px;color:rgba(247,189,24,.7);font-size:10px;z-index:5}
-.cell.reachable{outline:3px solid #63d7ff;outline-offset:-3px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.3),0 0 12px rgba(99,215,255,.75)}
-.cell.currentCell{box-shadow:inset 0 0 0 3px rgba(247,189,24,.95)}
+.choice{
+  min-height:50px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink-2);
+  font-weight:800;box-shadow:0 2px 0 rgba(7,19,38,.035);
+  transition:border-color .14s ease,background .14s ease,color .14s ease,transform .12s ease;
+}
+.choice:hover{border-color:#9bcfc1;background:#f7fcfa}
+.choice.selected{border-color:#8bd5c2;background:var(--teal-soft);color:var(--teal-dark);box-shadow:inset 0 0 0 1px rgba(7,155,114,.1)}
+.choice:active{transform:translateY(1px)}
+.formRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.65fr);gap:12px;align-items:end}
+.field{display:grid;gap:6px}
+.field label{color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+.field select{
+  width:100%;min-height:46px;border:1px solid var(--line-strong);border-radius:9px;
+  background:#fff;color:var(--ink);padding:0 11px;font-size:16px;font-weight:700;outline:none;
+}
+.field select:focus{border-color:#62bfa6;box-shadow:0 0 0 3px rgba(7,155,114,.1)}
+.primaryBtn,.secondaryBtn,.quietBtn,.joinBtn{
+  min-height:48px;border:1px solid transparent;border-radius:9px;padding:0 15px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-weight:900;text-decoration:none;
+  transition:transform .12s ease,box-shadow .14s ease,background .14s ease,border-color .14s ease;
+}
+.primaryBtn{background:linear-gradient(180deg,#0aa77a,var(--teal));border-color:#068563;color:#fff;box-shadow:0 4px 0 #056f55,0 10px 18px rgba(7,155,114,.18)}
+.primaryBtn:hover{background:linear-gradient(180deg,#0bad80,#078e6a)}
+.primaryBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #056f55,0 5px 10px rgba(7,155,114,.14)}
+.primaryBtn:disabled{opacity:.46;box-shadow:none;transform:none}
+.secondaryBtn{background:#fff;border-color:var(--line-strong);color:var(--ink-2);box-shadow:0 2px 0 rgba(7,19,38,.04)}
+.secondaryBtn:hover{background:#f8fbfd;border-color:#afbdca}
+.quietBtn{min-height:40px;background:transparent;border-color:var(--line);color:var(--muted);font-size:12px}
+.full{width:100%}
+.inlineActions{display:flex;gap:8px;flex-wrap:wrap}
+.helper{margin:0;color:var(--muted);font-size:12px;line-height:1.48}
+.statusBar{
+  min-height:42px;display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:9px;background:var(--panel-soft);color:var(--muted);font-size:12px;font-weight:800;
+}
+.statusBar:before{content:"";width:8px;height:8px;border-radius:99px;background:#aab6c1;box-shadow:0 0 0 4px rgba(170,182,193,.12)}
+.statusBar.good{border-color:#bce4d8;background:var(--teal-soft);color:var(--teal-dark)}
+.statusBar.good:before{background:var(--teal);box-shadow:0 0 0 4px rgba(7,155,114,.12)}
+.statusBar.warn{border-color:#efd37f;background:var(--amber-soft);color:#775500}
+.statusBar.warn:before{background:var(--amber);box-shadow:0 0 0 4px rgba(246,167,0,.12)}
+.lobbyList{display:grid;gap:7px}
+.lobbyRow{
+  min-height:54px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;
+}
+.lobbyDot{width:11px;height:11px;border-radius:99px;box-shadow:0 0 0 4px rgba(7,19,38,.055)}
+.lobbyCopy{min-width:0}
+.lobbyCopy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lobbyCopy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800;letter-spacing:.06em}
+.readyTag{padding:5px 7px;border-radius:6px;background:var(--teal-soft);color:var(--teal-dark);font-size:10px;font-weight:900;text-transform:uppercase}
+.hostList{display:grid;gap:8px}
+.hostCard{
+  width:100%;min-height:66px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);text-align:left;
+  transition:border-color .14s ease,box-shadow .14s ease,transform .12s ease;
+}
+.hostCard:hover{border-color:#91ceb9;box-shadow:0 8px 20px rgba(7,19,38,.07)}
+.hostCard:active{transform:translateY(1px)}
+.hostCard strong{display:block;font-size:14px}
+.hostCard small{display:block;margin-top:4px;color:var(--muted);font-size:11px}
+.joinBtn{min-height:36px;background:var(--teal);color:#fff;border-color:var(--teal);font-size:11px}
+.emptyState{
+  min-height:86px;display:grid;place-items:center;text-align:center;padding:14px;border:1px dashed #cbd6e0;border-radius:10px;
+  background:#fbfdff;color:var(--muted);font-size:12px;line-height:1.45;
+}
+.rules{color:var(--muted);font-size:12px;line-height:1.55}
+.rules summary{cursor:pointer;color:var(--ink-2);font-weight:800}
+.rules ol{margin:10px 0 0;padding-left:20px}
+.gameHeaderGrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;margin-bottom:10px}
+.turnCard{
+  position:relative;overflow:hidden;padding:13px 14px 12px;border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(180deg,#fff,#f8fbfd);box-shadow:0 8px 22px rgba(7,19,38,.06);
+}
+.turnCard:after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--turn-color,var(--teal))}
+.utilityLabel{display:block;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.turnCard strong{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font:700 21px/1 Fredoka,sans-serif}
+.turnCard small{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.35}
+.phasePill{
+  align-self:center;padding:9px 11px;border:1px solid #efd37f;border-radius:8px;background:var(--amber-soft);
+  color:#765400;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;
+}
+.phasePill.waiting{border-color:var(--line);background:#eef3f7;color:var(--muted)}
+.networkStrip{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;padding:9px 11px;
+  border:1px solid #bce4d8;border-radius:10px;background:var(--teal-soft);color:var(--teal-dark);
+}
+.networkStrip strong{font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+.networkStrip span{font-size:11px;font-weight:700;text-align:right}
+.objective{
+  display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:11px;align-items:center;
+  margin-bottom:10px;padding:10px 11px;border:1px solid #ead38d;border-radius:14px;
+  background:linear-gradient(145deg,#fffdf3,#fff5d4);
+  box-shadow:0 8px 22px rgba(128,91,0,.06);
+}
+.objectiveIcon{
+  width:50px;height:50px;display:grid;place-items:center;border:1px solid #eadcaa;border-radius:12px;
+  background:linear-gradient(180deg,#fff,#fffaf0);font-size:27px;box-shadow:inset 0 -3px 8px rgba(128,91,0,.05);
+}
+.objectiveCopy{min-width:0}
+.objectiveCopy strong{display:block;margin-top:2px;color:var(--ink);font:700 16px Fredoka,sans-serif}
+.objectiveCopy span:last-child{display:block;margin-top:3px;color:#766a44;font-size:10px;line-height:1.35}
+.score{
+  min-width:46px;padding:7px 8px;border:1px solid #eadcaa;border-radius:8px;background:#fff;
+  color:#745300;font-size:11px;font-weight:900;text-align:center;
+}
+.spareBar{
+  display:grid;grid-template-columns:minmax(0,1fr) 76px 110px;gap:10px;align-items:center;
+  margin-bottom:8px;padding:9px 10px;border:1px solid var(--line);border-radius:13px;background:#fff;
+  box-shadow:0 7px 18px rgba(7,19,38,.05);
+}
+.spareCopy strong{display:block;color:var(--ink);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.spareCopy span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+.spareTile{
+  width:72px;aspect-ratio:1;position:relative;overflow:hidden;border:3px solid #9c8150;border-radius:10px;
+  background:
+    radial-gradient(circle at 25% 20%,rgba(255,255,255,.08),transparent 30%),
+    linear-gradient(145deg,var(--maze),var(--maze-dark));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 5px 12px rgba(7,19,38,.15);
+}
+.rotateBtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rotateBtn{
+  min-height:42px;border:1px solid #203b58;border-radius:9px;background:linear-gradient(180deg,#153654,#0a213b);color:#fff;
+  font:700 19px Fredoka,sans-serif;box-shadow:0 3px 0 #06172b;
+  transition:transform .1s ease,filter .14s ease;
+}
+.rotateBtn:hover{filter:brightness(1.08)}
+.rotateBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #06172b}
+.rotateBtn:disabled{opacity:.3;box-shadow:none;transform:none}
+.boardShell{
+  position:relative;overflow:hidden;padding:7px;border:1px solid #0a2438;border-radius:17px;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(26,113,96,.34),transparent 62%),
+    linear-gradient(145deg,#0a2636,#071b2a);
+  box-shadow:0 17px 38px rgba(7,19,38,.19),inset 0 0 0 1px rgba(255,255,255,.035);
+}
+.boardShell:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background:linear-gradient(90deg,transparent 49%,rgba(255,255,255,.04) 50%,transparent 51%);
+  background-size:23px 23px;
+}
+.boardGrid{
+  position:relative;z-index:1;display:grid;
+  grid-template-columns:27px repeat(7,minmax(0,1fr)) 27px;
+  grid-template-rows:27px repeat(7,auto) 27px;
+  gap:2px;align-items:center;
+}
+.cell{
+  position:relative;aspect-ratio:1;min-width:0;padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:6px;
+  background:
+    radial-gradient(circle at 28% 20%,rgba(255,255,255,.07),transparent 34%),
+    linear-gradient(145deg,#1a5248,#0e352f);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.17),inset 0 -4px 8px rgba(0,0,0,.08);
+  transition:filter .12s ease,transform .12s ease,box-shadow .14s ease;
+}
+.cell.fixed:after{content:"";position:absolute;top:4px;right:4px;width:4px;height:4px;border-radius:99px;background:rgba(247,189,24,.6);z-index:7}
+.cell.reachable{
+  cursor:pointer;outline:3px solid #5de3bd;outline-offset:-3px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.16),0 0 0 2px rgba(7,19,38,.22),0 0 14px rgba(93,227,189,.34);
+}
+.cell.reachable:hover{filter:brightness(1.1);transform:scale(.985)}
+.cell.currentCell{box-shadow:inset 0 0 0 3px rgba(247,189,24,.92),0 0 13px rgba(247,189,24,.23)}
 .cell:disabled{cursor:default}
-.pathCenter,.pathArm{position:absolute;background:linear-gradient(90deg,#c7a86e,#ead9ae 45%,#c7a86e);z-index:1}
-.pathCenter{left:29%;top:29%;width:42%;height:42%;border-radius:35%}
-.pathArm.n{left:36%;top:-3%;width:28%;height:40%}
-.pathArm.s{left:36%;bottom:-3%;width:28%;height:40%}
-.pathArm.e{right:-3%;top:36%;height:28%;width:40%}
-.pathArm.w{left:-3%;top:36%;height:28%;width:40%}
-.treasure{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);font-size:clamp(12px,4.1vw,23px);filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));pointer-events:none}
-.pawns{position:absolute;z-index:6;inset:3px;display:flex;align-items:flex-start;justify-content:flex-start;gap:1px;flex-wrap:wrap;pointer-events:none}
-.pawn{width:11px;height:11px;border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.45)}
-.insertBtn{display:grid;place-items:center;width:26px;height:26px;padding:0;border-radius:8px;background:var(--gold);color:var(--navy);font:800 16px Fredoka,sans-serif;box-shadow:0 2px 0 #9f7410}
-.insertBtn.blocked{opacity:.18;pointer-events:none}
-.insertBtn:disabled{opacity:.25;cursor:not-allowed}
-.spacer{width:1px;height:1px}
-.moveBar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:9px}
-.moveHint{min-width:0;color:var(--muted);font-size:11px;line-height:1.35}
-.endMove{min-height:44px;padding:0 14px;border:0;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--navy);font:700 12px Fredoka,sans-serif}
-.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.legendItem{display:flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.8);font-size:10px;color:var(--muted)}
+.pathCenter,.pathArm{
+  position:absolute;z-index:1;
+  background:
+    linear-gradient(90deg,rgba(115,86,43,.16),transparent 20%,transparent 80%,rgba(115,86,43,.14)),
+    linear-gradient(180deg,#f0dfb5,#d8bd83 48%,#c3a36a);
+  box-shadow:inset 0 0 0 1px rgba(111,81,38,.13);
+}
+.pathCenter{left:28%;top:28%;width:44%;height:44%;border-radius:34%}
+.pathArm.n{left:35%;top:-3%;width:30%;height:39%}
+.pathArm.s{left:35%;bottom:-3%;width:30%;height:39%}
+.pathArm.e{right:-3%;top:35%;height:30%;width:39%}
+.pathArm.w{left:-3%;top:35%;height:30%;width:39%}
+.treasure{
+  position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:clamp(12px,4vw,23px);filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));pointer-events:none;
+}
+.pawns{position:absolute;z-index:7;inset:3px;display:flex;align-items:flex-start;justify-content:flex-start;gap:1px;flex-wrap:wrap;pointer-events:none}
+.pawn{width:11px;height:11px;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.12)}
+.insertBtn{
+  display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid #d39400;border-radius:7px;
+  background:linear-gradient(180deg,#ffd34f,var(--amber));color:#4c3800;font:900 15px Fredoka,sans-serif;
+  box-shadow:0 3px 0 #855f00,0 4px 8px rgba(0,0,0,.16);
+  transition:transform .1s ease,filter .12s ease;
+}
+.insertBtn:hover{filter:brightness(1.05)}
+.insertBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #855f00}
+.insertBtn.blocked{opacity:.16;pointer-events:none}
+.insertBtn:disabled{opacity:.2;cursor:not-allowed;box-shadow:none;transform:none}
+.moveBar{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;
+  margin-top:9px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.82);
+}
+.moveHint{min-width:0;color:var(--muted);font-size:10px;line-height:1.4}
+.endMove{
+  min-height:39px;padding:0 11px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink-2);
+  font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.legendItem{
+  display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid var(--line);border-radius:999px;
+  background:rgba(255,255,255,.82);color:var(--muted);font-size:9px;font-weight:800;
+}
 .legendItem .pawn{width:9px;height:9px;border-width:1px}
-.handoff{position:fixed;z-index:50;inset:0;display:grid;place-items:center;padding:22px;background:rgba(5,25,47,.86);backdrop-filter:blur(8px)}
-.handoffCard{width:min(100%,390px);padding:24px 20px;border-radius:24px;background:#fff;text-align:center;box-shadow:0 22px 55px rgba(0,0,0,.28)}
-.handoffIcon{font-size:45px;margin-bottom:5px}
-.handoff h2{margin:0;color:var(--navy);font:700 28px Fredoka,sans-serif}
-.handoff p{margin:7px 0 18px;color:var(--muted);font-size:13px;line-height:1.45}
-.winCard{border:3px solid var(--gold)}
-.winCard .handoffIcon{font-size:58px}
-@media(max-width:440px){
-  .app{padding:9px 8px 28px}
-  .hero{padding:16px 14px}.hero h1{font-size:34px}
-  .brand img{width:78px}.brandTitle{font-size:21px}
-  .homeBtn{padding:0 11px;font-size:12px}
-  .boardShell{padding:5px;border-radius:15px}
-  .boardGrid{grid-template-columns:23px repeat(7,minmax(0,1fr)) 23px;grid-template-rows:23px repeat(7,auto) 23px;gap:1px}
-  .insertBtn{width:22px;height:22px;border-radius:6px;font-size:13px}
-  .cell{border-radius:5px}
-  .spareBar{grid-template-columns:auto 66px 1fr;padding:8px 9px;gap:8px}
-  .spareTile{width:62px;border-radius:10px}
-  .smallBtn{min-height:38px}
-  .objective{grid-template-columns:48px 1fr auto;padding:8px 9px}
-  .objectiveIcon{width:43px;height:43px;font-size:25px}
+.handoff{
+  position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:22px;
+  background:rgba(4,12,24,.84);backdrop-filter:blur(10px);
+}
+.handoffCard{
+  width:min(100%,390px);overflow:hidden;border:1px solid rgba(255,255,255,.55);border-radius:21px;
+  background:#fff;box-shadow:0 28px 75px rgba(0,0,0,.35);animation:modalIn .25s cubic-bezier(.2,.8,.2,1);
+}
+.handoffTop{
+  min-height:116px;display:grid;place-items:center;align-content:center;gap:6px;padding:18px;
+  background:
+    radial-gradient(circle at 78% 12%,rgba(247,189,24,.24),transparent 32%),
+    linear-gradient(135deg,#071326,#10304a 60%,#0d5148);color:#fff;
+}
+.handoffGlyph{
+  width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.22);border-radius:12px;
+  background:rgba(255,255,255,.08);font:700 18px Fredoka,sans-serif;
+}
+.handoffTop span{color:#8fe6c9;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.handoffTop h2{margin:0;font:700 27px Fredoka,sans-serif}
+.handoffBody{padding:18px;text-align:center}
+.handoffBody p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.5}
+.winCard{border-color:#e7cb6d}
+.winCard .handoffTop{background:radial-gradient(circle at 50% 10%,rgba(247,189,24,.34),transparent 38%),linear-gradient(135deg,#071326,#4a3704)}
+.focusable:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid rgba(39,102,177,.28);outline-offset:2px}
+@keyframes viewIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:580px){
+  .app{padding:0 9px 28px}
+  .appChrome{margin:0 -9px 12px;padding:8px 9px;min-height:58px}
+  .brand img{width:78px;height:30px}.brandDivider{height:22px}.brandTitle{font-size:16px}
+  .homeBtn{min-height:38px;padding:0 10px;font-size:10px}
+  .hero{min-height:165px;padding:20px 16px;border-radius:18px}.hero h1{font-size:40px}.hero p{font-size:12px}
+  .modeGrid{grid-template-columns:1fr;gap:10px}.modeCard{min-height:132px}.modeIcon{margin-bottom:13px}
+  .sectionHead{margin-top:17px}
+  .formRow{grid-template-columns:1fr}
+  .playerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .boardShell{padding:5px;border-radius:13px}
+  .boardGrid{grid-template-columns:22px repeat(7,minmax(0,1fr)) 22px;grid-template-rows:22px repeat(7,auto) 22px;gap:1px}
+  .insertBtn{width:21px;height:21px;border-radius:5px;font-size:12px;box-shadow:0 2px 0 #855f00}
+  .cell{border-radius:4px}
+  .spareBar{grid-template-columns:minmax(0,1fr) 62px 92px;padding:8px;gap:7px}
+  .spareTile{width:60px;border-radius:8px}.rotateBtn{min-height:38px}
+  .objective{grid-template-columns:47px minmax(0,1fr) auto;padding:8px}
+  .objectiveIcon{width:43px;height:43px;font-size:24px}
+  .objectiveCopy strong{font-size:15px}
   .turnCard strong{font-size:18px}
+  .moveBar{grid-template-columns:1fr}.endMove{width:100%}
+}
+@media(max-width:350px){
+  .brandDivider,.brandTitle{display:none}
+  .spareBar{grid-template-columns:minmax(0,1fr) 56px 82px}
+  .spareTile{width:54px}
+  .boardGrid{grid-template-columns:19px repeat(7,minmax(0,1fr)) 19px;grid-template-rows:19px repeat(7,auto) 19px}
+  .insertBtn{width:18px;height:18px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
 </style>
 </head>
 <body>
 <main class="app">
-  <header class="topbar">
-    <div class="brand"><img src="chip_in_logo.png?v=1" alt="Chip In"><span class="brandTitle">GameBox</span></div>
+  <header class="appChrome">
+    <div class="brand">
+      <img src="chip_in_logo.png?v=1" alt="Chip In">
+      <span class="brandDivider" aria-hidden="true"></span>
+      <span class="brandTitle">GameBox</span>
+    </div>
     <button class="homeBtn" id="homeBtn" type="button">← GameBox</button>
   </header>
 
-  <section id="setupView">
+  <section id="modeView" class="view">
     <section class="hero">
+      <span class="kicker"><span class="kickerDot"></span>Chip In Games</span>
       <h1>Maze Shift</h1>
-      <p>Move the maze. Find your relics. Get back home first.</p>
+      <p>Rebuild the maze every turn, hunt down your hidden relics and make it back to your home corner before anyone else.</p>
     </section>
 
-    <section class="panel">
-      <h2>Who’s playing?</h2>
-      <p class="sub">Choose 2–4 players from your GameBox player list.</p>
-      <div class="playerGrid" id="playerGrid"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Game length</h2>
-      <div class="setupRow">
-        <label for="targetCount">Relics per player</label>
-        <select id="targetCount">
-          <option value="3">3 · Quick</option>
-          <option value="4" selected>4 · Standard</option>
-          <option value="5">5 · Long</option>
-        </select>
+    <div class="sectionHead">
+      <div>
+        <span class="sectionLabel">Play mode</span>
+        <h2>Choose how you want to play</h2>
+        <p>One phone passed around the table, or one device per player.</p>
       </div>
-    </section>
+    </div>
 
-    <button class="mainBtn" id="startBtn" type="button">Start Maze</button>
-    <div class="setupStatus" id="setupStatus"></div>
+    <div class="modeGrid">
+      <button class="modeCard primary" id="passMode" type="button">
+        <span class="modeIcon">P</span>
+        <strong>Pass & Play</strong>
+        <span>2–4 players share one phone. Private targets are hidden behind a handoff screen between turns.</span>
+        <b class="modeArrow">→</b>
+      </button>
+      <button class="modeCard secondary" id="multiMode" type="button">
+        <span class="modeIcon">M</span>
+        <strong>Local Multiplayer</strong>
+        <span>Each player uses their own phone. Find a nearby Maze Shift lobby and play the same board live.</span>
+        <b class="modeArrow">→</b>
+      </button>
+    </div>
 
-    <details class="panel rules">
-      <summary><strong>How to play</strong></summary>
+    <details class="panel rules" style="margin-top:14px">
+      <summary>How Maze Shift works</summary>
       <ol>
         <li>Rotate the spare maze tile, then push it into one of the marked rows or columns.</li>
-        <li>The whole line shifts. The tile pushed out becomes the next spare tile.</li>
+        <li>The entire line moves and the tile pushed out becomes the next spare tile.</li>
         <li>Move your pawn anywhere connected by an unbroken path, or stay where you are.</li>
-        <li>Land on your current relic to collect it and reveal your next one.</li>
-        <li>Collect all your relics, then return to your coloured home corner to win.</li>
+        <li>Land on your current relic to collect it and reveal your next target.</li>
+        <li>Collect every relic, then return to your coloured starting corner to win.</li>
       </ol>
     </details>
   </section>
 
-  <section id="gameView" class="hidden">
-    <div class="gameTop">
-      <div class="turnCard">
-        <span class="eyebrow">Current player</span>
+  <section id="passSetup" class="view hidden">
+    <div class="sectionHead">
+      <div><span class="sectionLabel">Pass & Play</span><h2>Set up the table</h2><p>Choose the players sharing this device.</p></div>
+      <button class="quietBtn" data-view-target="modeView" type="button">← Back</button>
+    </div>
+    <div class="setupStack">
+      <section class="panel">
+        <div class="panelHeader"><h3>Players</h3><span>Choose 2–4</span></div>
+        <div class="playerGrid" id="playerGrid"></div>
+      </section>
+      <section class="panel">
+        <div class="formRow">
+          <div>
+            <div class="panelHeader" style="margin-bottom:5px"><h3>Game length</h3></div>
+            <p class="helper">More relics makes route planning matter for longer.</p>
+          </div>
+          <div class="field">
+            <label for="targetCount">Relics per player</label>
+            <select id="targetCount">
+              <option value="3">3 · Quick</option>
+              <option value="4" selected>4 · Standard</option>
+              <option value="5">5 · Long</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      <button class="primaryBtn full" id="startBtn" type="button">Start Maze</button>
+      <div class="statusBar warn hidden" id="setupStatus"></div>
+    </div>
+  </section>
+
+  <section id="multiRole" class="view hidden">
+    <div class="sectionHead">
+      <div><span class="sectionLabel">Local Multiplayer</span><h2>Host or join</h2><p>Use one phone per player.</p></div>
+      <button class="quietBtn" data-view-target="modeView" type="button">← Back</button>
+    </div>
+    <div class="modeGrid">
+      <button class="modeCard primary" id="hostMode" type="button">
+        <span class="modeIcon">H</span>
+        <strong>Host Game</strong>
+        <span>Create the Maze Shift lobby, choose the game length and start once everyone is connected.</span>
+        <b class="modeArrow">→</b>
+      </button>
+      <button class="modeCard secondary" id="joinMode" type="button">
+        <span class="modeIcon">J</span>
+        <strong>Join Game</strong>
+        <span>Scan for a Maze Shift lobby and join it from this phone.</span>
+        <b class="modeArrow">→</b>
+      </button>
+    </div>
+  </section>
+
+  <section id="hostSetup" class="view hidden">
+    <div class="sectionHead">
+      <div><span class="sectionLabel">Local Multiplayer · Host</span><h2>Your lobby</h2><p>Players on other phones will appear here automatically.</p></div>
+      <button class="quietBtn" id="hostBack" type="button">← Back</button>
+    </div>
+    <div class="setupStack">
+      <section class="panel">
+        <div class="formRow">
+          <div class="field">
+            <label for="hostPlayer">This phone is playing as</label>
+            <select id="hostPlayer"></select>
+          </div>
+          <div class="field">
+            <label for="hostTargetCount">Relics per player</label>
+            <select id="hostTargetCount">
+              <option value="3">3 · Quick</option>
+              <option value="4" selected>4 · Standard</option>
+              <option value="5">5 · Long</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      <div class="statusBar" id="hostStatus">Starting local lobby…</div>
+      <section class="panel">
+        <div class="panelHeader"><h3>Lobby</h3><span id="hostCount">1 / 4</span></div>
+        <div class="lobbyList" id="hostLobby"></div>
+      </section>
+      <div class="inlineActions">
+        <button class="secondaryBtn" id="restartHost" type="button">Restart discovery</button>
+        <button class="primaryBtn" id="startHostGame" type="button" disabled style="flex:1">Start Game</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="joinSetup" class="view hidden">
+    <div class="sectionHead">
+      <div><span class="sectionLabel">Local Multiplayer · Join</span><h2>Find a game</h2><p>Choose who you are, then tap an available lobby.</p></div>
+      <button class="quietBtn" id="joinBack" type="button">← Back</button>
+    </div>
+    <div class="setupStack">
+      <section class="panel">
+        <div class="field">
+          <label for="joinPlayer">This phone is playing as</label>
+          <select id="joinPlayer"></select>
+        </div>
+      </section>
+      <div class="statusBar" id="joinStatus">Scanning for Maze Shift games…</div>
+      <section class="panel">
+        <div class="panelHeader"><h3>Available games</h3><span id="hostFoundCount">Scanning</span></div>
+        <div class="hostList" id="availableHosts"></div>
+      </section>
+      <section class="panel hidden" id="joinedLobbyPanel">
+        <div class="panelHeader"><h3>Connected lobby</h3><span>Waiting for host</span></div>
+        <div class="lobbyList" id="joinLobby"></div>
+      </section>
+      <button class="secondaryBtn full" id="restartScan" type="button">Restart scan</button>
+    </div>
+  </section>
+
+  <section id="gameView" class="view hidden">
+    <div class="networkStrip hidden" id="networkStrip">
+      <strong id="networkRole">Local multiplayer</strong>
+      <span id="networkState">Connected</span>
+    </div>
+
+    <div class="gameHeaderGrid">
+      <div class="turnCard" id="turnCard">
+        <span class="utilityLabel">Current player</span>
         <strong id="turnName">—</strong>
         <small id="turnSub">Rotate the spare tile, then shift the maze.</small>
       </div>
-      <div class="phasePill" id="phasePill">SHIFT MAZE</div>
+      <div class="phasePill" id="phasePill">Shift maze</div>
     </div>
 
     <div class="objective">
       <div class="objectiveIcon" id="objectiveIcon">🧭</div>
-      <div class="objectiveText">
-        <span class="eyebrow">Your target</span>
+      <div class="objectiveCopy">
+        <span class="utilityLabel" id="objectiveLabel">Your target</span>
         <strong id="objectiveName">Compass</strong>
         <span id="objectiveHint">Find this relic in the maze.</span>
       </div>
@@ -184,11 +606,11 @@ button{touch-action:manipulation}
     </div>
 
     <div class="spareBar">
-      <div class="spareLabel"><strong>Spare tile</strong><small>Rotate before shifting</small></div>
-      <div class="spareTile" id="spareTile"></div>
+      <div class="spareCopy"><strong>Spare tile</strong><span>Rotate before shifting</span></div>
+      <div class="spareTile" id="spareTile" aria-label="Current spare maze tile"></div>
       <div class="rotateBtns">
-        <button class="smallBtn" id="rotateLeft" type="button" aria-label="Rotate spare tile left">↺</button>
-        <button class="smallBtn" id="rotateRight" type="button" aria-label="Rotate spare tile right">↻</button>
+        <button class="rotateBtn" id="rotateLeft" type="button" aria-label="Rotate spare tile left">↺</button>
+        <button class="rotateBtn" id="rotateRight" type="button" aria-label="Rotate spare tile right">↻</button>
       </div>
     </div>
 
@@ -202,40 +624,49 @@ button{touch-action:manipulation}
     </div>
     <div class="legend" id="legend"></div>
 
-    <details class="panel rules" style="margin-top:12px">
-      <summary><strong>Game controls</strong></summary>
-      <p>You cannot immediately undo the previous player’s maze shift. Returning to setup starts a fresh board.</p>
-      <button class="mainBtn secondary" id="newGameBtn" type="button" style="margin-top:10px">New Game / Change Players</button>
+    <details class="panel rules" style="margin-top:11px">
+      <summary>Game controls</summary>
+      <p>The previous maze shift cannot be immediately reversed. Leaving the game returns you to the mode screen and closes any multiplayer connection.</p>
+      <button class="secondaryBtn full" id="newGameBtn" type="button" style="margin-top:9px">Leave Game</button>
     </details>
   </section>
 </main>
 
 <div class="handoff hidden" id="handoff">
   <div class="handoffCard">
-    <div class="handoffIcon">🗺️</div>
-    <span class="eyebrow">Pass the phone to</span>
-    <h2 id="handoffName">Player</h2>
-    <p>Your next relic stays hidden until you start your turn.</p>
-    <button class="mainBtn" id="readyBtn" type="button">I’m ready</button>
+    <div class="handoffTop">
+      <div class="handoffGlyph">MS</div>
+      <span>Pass the phone to</span>
+      <h2 id="handoffName">Player</h2>
+    </div>
+    <div class="handoffBody">
+      <p>Your next target stays hidden until you confirm that the phone is in your hands.</p>
+      <button class="primaryBtn full" id="readyBtn" type="button">Show My Turn</button>
+    </div>
   </div>
 </div>
 
 <div class="handoff hidden" id="winner">
   <div class="handoffCard winCard">
-    <div class="handoffIcon">🏆</div>
-    <span class="eyebrow">Maze conquered</span>
-    <h2 id="winnerName">Winner!</h2>
-    <p id="winnerText">You found every relic and made it back home.</p>
-    <button class="mainBtn" id="playAgainBtn" type="button">Play Again</button>
+    <div class="handoffTop">
+      <div class="handoffGlyph">★</div>
+      <span>Maze conquered</span>
+      <h2 id="winnerName">Winner!</h2>
+    </div>
+    <div class="handoffBody">
+      <p id="winnerText">Every relic found. Safely back home.</p>
+      <button class="primaryBtn full" id="playAgainBtn" type="button">Back to Modes</button>
+    </div>
   </div>
 </div>
 
+<script src="lan-core.js?v=8"></script>
 <script>
 (function(){
   'use strict';
 
   var ROSTER_KEY='gamebox.players.v1';
-  var COLORS=['#e84c4f','#3f8efc','#35a66f','#9a63d8'];
+  var COLORS=['#e64f55','#3f82e3','#12a373','#9965d7'];
   var HOME_POS=[{r:0,c:0},{r:0,c:6},{r:6,c:6},{r:6,c:0}];
   var RELICS=[
     {id:'compass',name:'Compass',icon:'🧭'},{id:'lantern',name:'Lantern',icon:'🏮'},
@@ -252,10 +683,20 @@ button{touch-action:manipulation}
 
   var state={
     selected:[],players:[],board:[],spare:null,current:0,phase:'shift',
-    lastShift:null,targetCount:4,winner:null,turnReady:false
+    lastShift:null,targetCount:4,winnerId:null,turnReady:false
   };
+  var mode='local';
+  var role=null;
+  var localPlayerId='';
+  var session=null;
+  var hostIdentity=null;
+  var joinIdentity=null;
+  var connectedLobby=[];
+  var lastHosts=[];
 
   function $(id){return document.getElementById(id)}
+  function uid(){return globalThis.crypto&&globalThis.crypto.randomUUID?globalThis.crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));return v||fallback}catch(e){return fallback}}
   function shuffle(input){
     var out=input.slice();
@@ -268,6 +709,29 @@ button{touch-action:manipulation}
     if(!people.length)people=[{id:'default-chip',name:'Chip'},{id:'default-jess',name:'Jess'}];
     return people.map(function(p){return{id:String(p.id),name:String(p.name).trim()}});
   }
+  function showView(id){
+    document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('hidden',v.id!==id)});
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function populatePlayerSelect(id){
+    var select=$(id),current=select.value,people=roster();
+    select.innerHTML=people.map(function(p){return'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'}).join('');
+    if(people.some(function(p){return p.id===current}))select.value=current;
+  }
+  function setStatus(id,text,tone){
+    var el=$(id);if(!el)return;
+    el.textContent=text;
+    el.className='statusBar'+(tone?' '+tone:'');
+  }
+  function selectedRosterPlayer(selectId){
+    var id=$(selectId).value;
+    return roster().find(function(p){return p.id===id})||roster()[0];
+  }
+  function networkIdentity(player,prefix,existing){
+    if(existing)return{id:existing.id,name:player?player.name:existing.name};
+    return{id:prefix+'-'+uid(),name:player?player.name:'Player'};
+  }
+
   function clampSelection(){
     var ids=new Set(roster().map(function(p){return p.id}));
     state.selected=state.selected.filter(function(id){return ids.has(id)}).slice(0,4);
@@ -288,6 +752,7 @@ button{touch-action:manipulation}
       wrap.appendChild(b);
     });
   }
+
   function tile(type,rot,fixed){return{type:type,rot:rot%4,fixed:!!fixed,relic:null}}
   function openings(t){
     var o=[];
@@ -301,10 +766,9 @@ button{touch-action:manipulation}
     if(r===0&&c===6)return tile('L',2,true);
     if(r===6&&c===0)return tile('L',0,true);
     if(r===6&&c===6)return tile('L',3,true);
-    var centerR=3,centerC=3;
-    var dirs=[];
-    if(r>centerR)dirs.push('N'); else if(r<centerR)dirs.push('S');
-    if(c>centerC)dirs.push('W'); else if(c<centerC)dirs.push('E');
+    var centerR=3,centerC=3,dirs=[];
+    if(r>centerR)dirs.push('N');else if(r<centerR)dirs.push('S');
+    if(c>centerC)dirs.push('W');else if(c<centerC)dirs.push('E');
     if(dirs.length===1){
       if(dirs[0]==='N')return tile('T',0,true);
       if(dirs[0]==='E')return tile('T',3,true);
@@ -317,8 +781,7 @@ button{touch-action:manipulation}
     return tile('L',3,true);
   }
   function buildBoard(){
-    var movable=[];
-    var counts={I:13,L:15,T:6};
+    var movable=[],counts={I:13,L:15,T:6};
     Object.keys(counts).forEach(function(type){
       for(var i=0;i<counts[type];i++)movable.push(tile(type,Math.floor(Math.random()*4),false));
     });
@@ -326,10 +789,7 @@ button{touch-action:manipulation}
     var board=[];
     for(var r=0;r<7;r++){
       var row=[];
-      for(var c=0;c<7;c++){
-        if(r%2===0&&c%2===0)row.push(fixedTile(r,c));
-        else row.push(movable.pop());
-      }
+      for(var c=0;c<7;c++)row.push(r%2===0&&c%2===0?fixedTile(r,c):movable.pop());
       board.push(row);
     }
     return{board:board,spare:movable.pop()};
@@ -337,8 +797,8 @@ button{touch-action:manipulation}
   function assignRelics(board,players,targetCount){
     var available=[];
     for(var r=0;r<7;r++)for(var c=0;c<7;c++){
-      var isHome=HOME_POS.some(function(h){return h.r===r&&h.c===c});
-      if(!isHome)available.push({r:r,c:c});
+      var home=HOME_POS.some(function(h){return h.r===r&&h.c===c});
+      if(!home)available.push({r:r,c:c});
     }
     available=shuffle(available);
     var needed=players.length*targetCount;
@@ -351,27 +811,57 @@ button{touch-action:manipulation}
       p.targetIndex=0;
     });
   }
-  function startGame(){
-    if(state.selected.length<2){$('setupStatus').textContent='Choose at least 2 players.';return}
-    var people=roster(),map=new Map(people.map(function(p){return[p.id,p]}));
-    state.targetCount=parseInt($('targetCount').value,10)||4;
-    state.players=state.selected.map(function(id,i){
-      var p=map.get(id);
-      return{id:id,name:p.name,color:COLORS[i],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
+  function createGame(players,targetCount){
+    var built=buildBoard();
+    state.players=players.map(function(p,i){
+      return{
+        id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i],
+        home:{r:HOME_POS[i].r,c:HOME_POS[i].c},
+        pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},
+        targets:[],collected:[],targetIndex:0
+      };
     });
-    var built=buildBoard();state.board=built.board;state.spare=built.spare;
-    assignRelics(state.board,state.players,state.targetCount);
-    state.current=0;state.phase='shift';state.lastShift=null;state.winner=null;state.turnReady=false;
-    $('setupView').classList.add('hidden');$('gameView').classList.remove('hidden');
+    state.board=built.board;
+    state.spare=built.spare;
+    state.current=0;
+    state.phase='shift';
+    state.lastShift=null;
+    state.targetCount=targetCount;
+    state.winnerId=null;
+    state.turnReady=mode!=='local';
+    assignRelics(state.board,state.players,targetCount);
+  }
+  function startPassGame(){
+    if(state.selected.length<2){
+      setStatus('setupStatus','Choose at least 2 players.','warn');
+      $('setupStatus').classList.remove('hidden');
+      return;
+    }
+    $('setupStatus').classList.add('hidden');
+    resetSession(false);
+    mode='local';role=null;localPlayerId='';
+    var map=new Map(roster().map(function(p){return[p.id,p]}));
+    var players=state.selected.map(function(id){return map.get(id)}).filter(Boolean);
+    createGame(players,parseInt($('targetCount').value,10)||4);
+    showView('gameView');
     showHandoff();
     renderAll();
-    window.scrollTo(0,0);
   }
-  function currentPlayer(){return state.players[state.current]}
-  function currentTarget(p){return p.targets[p.targetIndex]||null}
+
+  function currentPlayer(){return state.players[state.current]||null}
+  function ownPlayer(){
+    if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;
+    return currentPlayer();
+  }
+  function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
+  function canControlTurn(){
+    if(!currentPlayer())return false;
+    if(mode==='local')return !!state.turnReady;
+    return currentPlayer().id===localPlayerId;
+  }
   function showHandoff(){
-    var p=currentPlayer();
-    if(!p)return;
+    if(mode!=='local')return;
+    var p=currentPlayer();if(!p)return;
     state.turnReady=false;
     $('handoffName').textContent=p.name;
     $('handoff').classList.remove('hidden');
@@ -385,7 +875,24 @@ button{touch-action:manipulation}
   function isBlockedInsertion(side,index){
     return !!state.lastShift&&state.lastShift.index===index&&opposite(state.lastShift.side)===side;
   }
-  function shiftMaze(side,index){
+
+  function publishState(){
+    if(mode==='multi'&&role==='host'&&session)session.broadcast({type:'state',state:snapshot()});
+  }
+  function rotateSpareInternal(delta){
+    if(state.phase!=='shift')return;
+    state.spare.rot=(state.spare.rot+delta+4)%4;
+    renderAll();publishState();
+  }
+  function requestRotate(delta){
+    if(!canControlTurn()||state.phase!=='shift')return;
+    if(mode==='multi'&&role==='client'){
+      session&&session.sendToHost({type:'action',action:'rotate',delta:delta,playerId:localPlayerId});
+      return;
+    }
+    rotateSpareInternal(delta);
+  }
+  function shiftMazeInternal(side,index){
     if(state.phase!=='shift'||isBlockedInsertion(side,index))return;
     var r,c,i,ejected;
     if(side==='left'){
@@ -408,15 +915,18 @@ button{touch-action:manipulation}
       for(i=0;i<6;i++)state.board[i][c]=state.board[i+1][c];
       state.board[6][c]=state.spare;state.spare=ejected;
       state.players.forEach(function(p){if(p.pos.c===c)p.pos.r=(p.pos.r+6)%7});
-    }
+    }else return;
     state.lastShift={side:side,index:index};
     state.phase='move';
-    renderAll();
+    renderAll();publishState();
   }
-  function rotateSpare(delta){
-    if(state.phase!=='shift')return;
-    state.spare.rot=(state.spare.rot+delta+4)%4;
-    renderSpare();renderBoard();
+  function requestShift(side,index){
+    if(!canControlTurn()||state.phase!=='shift'||isBlockedInsertion(side,index))return;
+    if(mode==='multi'&&role==='client'){
+      session&&session.sendToHost({type:'action',action:'shift',side:side,index:index,playerId:localPlayerId});
+      return;
+    }
+    shiftMazeInternal(side,index);
   }
   function canConnect(a,b,dir){
     var opp={N:'S',E:'W',S:'N',W:'E'}[dir];
@@ -438,16 +948,34 @@ button{touch-action:manipulation}
     }
     return Array.from(seen);
   }
-  function moveTo(r,c){
+  function moveToInternal(r,c){
     if(state.phase!=='move')return;
     var allowed=new Set(reachable());
     if(!allowed.has(r+','+c))return;
     var p=currentPlayer();p.pos={r:r,c:c};
     checkCollectionAndEnd();
   }
+  function requestMove(r,c){
+    if(!canControlTurn()||state.phase!=='move')return;
+    if(mode==='multi'&&role==='client'){
+      session&&session.sendToHost({type:'action',action:'move',r:r,c:c,playerId:localPlayerId});
+      return;
+    }
+    moveToInternal(r,c);
+  }
+  function requestStay(){
+    if(!canControlTurn()||state.phase!=='move')return;
+    if(mode==='multi'&&role==='client'){
+      session&&session.sendToHost({type:'action',action:'stay',playerId:localPlayerId});
+      return;
+    }
+    checkCollectionAndEnd();
+  }
   function relicLocation(id){
     if(state.spare&&state.spare.relic&&state.spare.relic.id===id)return'spare';
-    for(var r=0;r<7;r++)for(var c=0;c<7;c++)if(state.board[r][c].relic&&state.board[r][c].relic.id===id)return{r:r,c:c};
+    for(var r=0;r<7;r++)for(var c=0;c<7;c++){
+      if(state.board[r][c].relic&&state.board[r][c].relic.id===id)return{r:r,c:c};
+    }
     return null;
   }
   function checkCollectionAndEnd(){
@@ -456,32 +984,29 @@ button{touch-action:manipulation}
       p.collected.push(target);p.targetIndex++;
     }
     if(!currentTarget(p)&&p.pos.r===p.home.r&&p.pos.c===p.home.c){
-      state.winner=p;
-      $('winnerName').textContent=p.name+' wins!';
-      $('winnerText').textContent='All '+state.targetCount+' relics found, and safely back home.';
-      $('winner').classList.remove('hidden');
-      renderAll();
+      state.winnerId=p.id;
+      renderAll();publishState();
       return;
     }
     endTurn();
   }
-  function stayAndEnd(){if(state.phase==='move')checkCollectionAndEnd()}
   function endTurn(){
     state.current=(state.current+1)%state.players.length;
     state.phase='shift';
-    showHandoff();
-    renderAll();
+    if(mode==='local')showHandoff();else state.turnReady=true;
+    renderAll();publishState();
   }
+
   function tileMarkup(t,includePawns,r,c){
     var html='';
     openings(t).forEach(function(d){html+='<span class="pathArm '+d.toLowerCase()+'"></span>'});
     html+='<span class="pathCenter"></span>';
-    if(t.relic)html+='<span class="treasure" title="'+t.relic.name+'">'+t.relic.icon+'</span>';
+    if(t.relic)html+='<span class="treasure" title="'+esc(t.relic.name)+'">'+t.relic.icon+'</span>';
     if(includePawns){
       var here=state.players.filter(function(p){return p.pos.r===r&&p.pos.c===c});
       if(here.length){
         html+='<span class="pawns">';
-        here.forEach(function(p){html+='<span class="pawn" title="'+p.name+'" style="background:'+p.color+'"></span>'});
+        here.forEach(function(p){html+='<span class="pawn" title="'+esc(p.name)+'" style="background:'+p.color+'"></span>'});
         html+='</span>';
       }
     }
@@ -490,16 +1015,16 @@ button{touch-action:manipulation}
   function renderSpare(){
     if(!state.spare)return;
     $('spareTile').innerHTML=tileMarkup(state.spare,false,-1,-1);
-    var disabled=state.phase!=='shift';
+    var disabled=state.phase!=='shift'||!canControlTurn();
     $('rotateLeft').disabled=disabled;$('rotateRight').disabled=disabled;
   }
   function addInsertButton(grid,side,index,row,col,symbol){
     var b=document.createElement('button');b.type='button';b.className='insertBtn';
     if(isBlockedInsertion(side,index))b.classList.add('blocked');
-    b.disabled=state.phase!=='shift'||isBlockedInsertion(side,index);
+    b.disabled=state.phase!=='shift'||!canControlTurn()||isBlockedInsertion(side,index);
     b.textContent=symbol;b.title='Push maze '+side;
     b.style.gridRow=String(row+1);b.style.gridColumn=String(col+1);
-    b.addEventListener('click',function(){shiftMaze(side,index)});
+    b.addEventListener('click',function(){requestShift(side,index)});
     grid.appendChild(b);
   }
   function renderBoard(){
@@ -512,7 +1037,7 @@ button{touch-action:manipulation}
       addInsertButton(grid,'left',r,r+1,0,'→');
       addInsertButton(grid,'right',r,r+1,8,'←');
     });
-    var allowed=new Set(state.phase==='move'?reachable():[]);
+    var allowed=new Set(state.phase==='move'&&canControlTurn()?reachable():[]);
     var cp=currentPlayer();
     for(var r=0;r<7;r++)for(var c=0;c<7;c++){
       (function(rr,cc){
@@ -520,11 +1045,11 @@ button{touch-action:manipulation}
         b.type='button';b.className='cell'+(t.fixed?' fixed':'');
         if(allowed.has(rr+','+cc))b.classList.add('reachable');
         if(cp&&cp.pos.r===rr&&cp.pos.c===cc)b.classList.add('currentCell');
-        b.disabled=state.phase!=='move'||!allowed.has(rr+','+cc);
+        b.disabled=state.phase!=='move'||!canControlTurn()||!allowed.has(rr+','+cc);
         b.style.gridRow=String(rr+2);b.style.gridColumn=String(cc+2);
         b.setAttribute('aria-label','Maze tile row '+(rr+1)+' column '+(cc+1));
         b.innerHTML=tileMarkup(t,true,rr,cc);
-        b.addEventListener('click',function(){moveTo(rr,cc)});
+        b.addEventListener('click',function(){requestMove(rr,cc)});
         grid.appendChild(b);
       })(r,c);
     }
@@ -533,18 +1058,19 @@ button{touch-action:manipulation}
     var wrap=$('legend');wrap.innerHTML='';
     state.players.forEach(function(p){
       var item=document.createElement('div');item.className='legendItem';
-      item.innerHTML='<span class="pawn" style="background:'+p.color+'"></span><span>'+p.name+'</span>';
+      item.innerHTML='<span class="pawn" style="background:'+p.color+'"></span><span>'+esc(p.name)+'</span>';
       wrap.appendChild(item);
     });
   }
   function renderObjective(){
-    var p=currentPlayer();if(!p)return;
+    var p=ownPlayer();if(!p)return;
     var target=currentTarget(p);
+    $('objectiveLabel').textContent=mode==='multi'?'Your private target':'Current target';
     if(target){
       $('objectiveIcon').textContent=target.icon;
       $('objectiveName').textContent=target.name;
       var loc=relicLocation(target.id);
-      $('objectiveHint').textContent=loc==='spare'?'Your relic is currently on the spare tile. Shift it into the maze.':'Find this relic in the maze.';
+      $('objectiveHint').textContent=loc==='spare'?'Your relic is on the spare tile. Shift it back into the maze.':'Find this relic in the maze.';
     }else{
       $('objectiveIcon').textContent='🏠';
       $('objectiveName').textContent='Return Home';
@@ -552,36 +1078,327 @@ button{touch-action:manipulation}
     }
     $('score').textContent=p.collected.length+' / '+state.targetCount;
   }
+  function renderWinner(){
+    if(!state.winnerId){$('winner').classList.add('hidden');return}
+    var p=state.players.find(function(x){return x.id===state.winnerId});
+    if(!p)return;
+    $('winnerName').textContent=p.name+' wins!';
+    $('winnerText').textContent='All '+state.targetCount+' relics found, and safely back home.';
+    $('winner').classList.remove('hidden');
+  }
   function renderAll(){
     if(!state.players.length)return;
-    var p=currentPlayer();
+    var p=currentPlayer(),control=canControlTurn();
     $('turnName').textContent=p.name;
-    $('turnName').style.color=p.color;
-    $('phasePill').textContent=state.phase==='shift'?'SHIFT MAZE':'MOVE PAWN';
-    $('turnSub').textContent=state.phase==='shift'?'Rotate the spare tile, then shift the maze.':'Tap any glowing tile you can reach.';
-    $('moveHint').textContent=state.phase==='shift'
-      ?'Use a gold arrow to insert the spare tile. The faded arrow would undo the last shift.'
-      :'Glowing tiles are connected to your current position. You may move any distance along the path.';
-    $('stayBtn').classList.toggle('hidden',state.phase!=='move');
-    renderObjective();renderSpare();renderBoard();renderLegend();
-  }
-  function backToSetup(){
-    state.players=[];state.board=[];state.spare=null;state.winner=null;
-    $('winner').classList.add('hidden');$('handoff').classList.add('hidden');
-    $('gameView').classList.add('hidden');$('setupView').classList.remove('hidden');
-    renderPlayerPicker();window.scrollTo(0,0);
+    $('turnCard').style.setProperty('--turn-color',p.color);
+    $('phasePill').classList.toggle('waiting',!control&&mode==='multi');
+    $('phasePill').textContent=!control&&mode==='multi'?'Waiting':state.phase==='shift'?'Shift maze':'Move pawn';
+    $('turnSub').textContent=!control&&mode==='multi'
+      ?'Waiting for '+p.name+' to complete their turn.'
+      :state.phase==='shift'?'Rotate the spare tile, then choose a gold insertion arrow.':'Tap any glowing tile you can reach.';
+    $('moveHint').textContent=!control&&mode==='multi'
+      ?'The board updates live when the current player makes a move.'
+      :state.phase==='shift'
+        ?'Insert the spare tile using a gold arrow. The faded arrow would reverse the previous shift.'
+        :'Glowing tiles are connected to your position. Move anywhere along the open path.';
+    $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
+    $('networkStrip').classList.toggle('hidden',mode!=='multi');
+    if(mode==='multi'){
+      $('networkRole').textContent=role==='host'?'Local multiplayer · Host':'Local multiplayer · Joined';
+      $('networkState').textContent=control?'Your turn':'Waiting for '+p.name;
+    }
+    renderObjective();renderSpare();renderBoard();renderLegend();renderWinner();
   }
 
-  $('homeBtn').addEventListener('click',function(){location.href='index.html'});
-  $('startBtn').addEventListener('click',startGame);
-  $('rotateLeft').addEventListener('click',function(){rotateSpare(-1)});
-  $('rotateRight').addEventListener('click',function(){rotateSpare(1)});
-  $('stayBtn').addEventListener('click',stayAndEnd);
+  function snapshot(){
+    return{
+      players:state.players,board:state.board,spare:state.spare,current:state.current,
+      phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId
+    };
+  }
+  function applySnapshot(s){
+    if(!s||!Array.isArray(s.players)||!Array.isArray(s.board)||!s.spare)return;
+    state.players=s.players;
+    state.board=s.board;
+    state.spare=s.spare;
+    state.current=Number(s.current)||0;
+    state.phase=s.phase==='move'?'move':'shift';
+    state.lastShift=s.lastShift||null;
+    state.targetCount=Math.max(1,Number(s.targetCount)||4);
+    state.winnerId=s.winnerId||null;
+    state.turnReady=true;
+    $('handoff').classList.add('hidden');
+    showView('gameView');
+    renderAll();
+  }
+
+  function lobbyPlayers(){
+    if(role!=='host')return connectedLobby.slice();
+    var list=[];
+    if(hostIdentity)list.push({id:hostIdentity.id,name:hostIdentity.name,host:true});
+    if(session&&session.peers){
+      session.peers().forEach(function(peer){
+        if(peer.meta&&peer.meta.player){
+          list.push({id:String(peer.meta.player.id),name:String(peer.meta.player.name||'Player').slice(0,24),host:false});
+        }
+      });
+    }
+    var seen=new Set();
+    return list.filter(function(p){if(seen.has(p.id))return false;seen.add(p.id);return true}).slice(0,4);
+  }
+  function renderLobby(id,players){
+    var wrap=$(id);if(!wrap)return;
+    if(!players.length){wrap.innerHTML='<div class="emptyState">Waiting for players…</div>';return}
+    wrap.innerHTML=players.map(function(p,i){
+      return'<div class="lobbyRow"><span class="lobbyDot" style="background:'+COLORS[i%COLORS.length]+'"></span><div class="lobbyCopy"><strong>'+esc(p.name)+'</strong><span>'+(p.host?'Host':'Player '+(i+1))+'</span></div><span class="readyTag">Ready</span></div>';
+    }).join('');
+  }
+  function updateHostAdvert(){
+    if(role!=='host'||!session||!session.updateHost||!hostIdentity)return;
+    var n=parseInt($('hostTargetCount').value,10)||4;
+    session.updateHost({
+      hostName:hostIdentity.name+"'s Maze Shift",
+      player:hostIdentity,
+      started:false,
+      raceMode:'maze-shift',
+      trackName:n+' relics each',
+      totalRaces:n
+    });
+  }
+  function broadcastLobby(){
+    if(role==='host'&&session)session.broadcast({
+      type:'lobby',
+      players:lobbyPlayers(),
+      targetCount:parseInt($('hostTargetCount').value,10)||4
+    });
+  }
+  function installSession(kind){
+    if(!window.GameBoxLAN||!window.GameBoxLAN.DiscoverySession)throw new Error('Local multiplayer discovery is unavailable.');
+    if(!session){
+      session=new window.GameBoxLAN.DiscoverySession({
+        game:'maze-shift-v1',
+        onStatus:function(text){
+          if(role==='host')setStatus('hostStatus',text,text==='Connected'||text==='Host visible'?'good':'');
+          if(role==='client')setStatus('joinStatus',text,text==='Connected'?'good':'');
+        },
+        onHostsChanged:function(hosts){lastHosts=hosts;renderHosts(hosts)},
+        onPeersChanged:function(){
+          if(role==='host'){
+            var players=lobbyPlayers();
+            renderLobby('hostLobby',players);
+            $('hostCount').textContent=players.length+' / 4';
+            $('startHostGame').disabled=players.length<2;
+            updateHostAdvert();broadcastLobby();
+          }
+        },
+        onMessage:networkMessage
+      });
+      session.maxPlayers=4;
+    }else{
+      try{session.suspend&&session.suspend()}catch(e){}
+    }
+    role=kind;
+  }
+  function resetSession(hard){
+    try{
+      if(session){
+        if(hard&&session.close)session.close();
+        else if(session.suspend)session.suspend();
+      }
+    }catch(e){}
+    if(hard)session=null;
+    connectedLobby=[];lastHosts=[];role=null;hostIdentity=null;joinIdentity=null;localPlayerId='';
+  }
+  async function startHostDiscovery(){
+    try{
+      installSession('host');
+      var p=selectedRosterPlayer('hostPlayer');
+      hostIdentity=networkIdentity(p,'host',hostIdentity);
+      localPlayerId=hostIdentity.id;
+      setStatus('hostStatus','Starting local lobby…','');
+      var n=parseInt($('hostTargetCount').value,10)||4;
+      await session.startHost({
+        hostName:hostIdentity.name+"'s Maze Shift",
+        player:hostIdentity,
+        raceMode:'maze-shift',
+        trackName:n+' relics each',
+        totalRaces:n
+      });
+      var players=lobbyPlayers();
+      renderLobby('hostLobby',players);
+      $('hostCount').textContent=players.length+' / 4';
+      $('startHostGame').disabled=players.length<2;
+      setStatus('hostStatus','Lobby visible · waiting for players','good');
+    }catch(err){
+      console.error(err);
+      setStatus('hostStatus','Discovery error · tap Restart discovery','warn');
+    }
+  }
+  async function startScan(){
+    try{
+      installSession('client');
+      var p=selectedRosterPlayer('joinPlayer');
+      joinIdentity=networkIdentity(p,'join',null);
+      localPlayerId=joinIdentity.id;
+      connectedLobby=[];
+      renderLobby('joinLobby',[]);
+      $('joinedLobbyPanel').classList.add('hidden');
+      setStatus('joinStatus','Scanning for Maze Shift games…','');
+      renderHosts([]);
+      await session.startScanner();
+    }catch(err){
+      console.error(err);
+      setStatus('joinStatus','Discovery error · restart the scan','warn');
+    }
+  }
+  function renderHosts(hosts){
+    if(role!=='client')return;
+    var wrap=$('availableHosts');
+    if(session&&session.peers&&session.peers().length){
+      wrap.innerHTML='';
+      $('hostFoundCount').textContent='Connected';
+      setStatus('joinStatus','Connected · waiting for the host to start','good');
+      return;
+    }
+    var open=(hosts||[]).filter(function(h){
+      return !h.started&&(h.raceMode||'')==='maze-shift'&&Number(h.playerCount||1)<Number(h.maxPlayers||4);
+    });
+    $('hostFoundCount').textContent=open.length?open.length+' found':'Scanning';
+    if(!open.length){
+      wrap.innerHTML='<div class="emptyState">Looking for nearby Maze Shift lobbies.<br>Keep this page open while the host is on their lobby screen.</div>';
+      return;
+    }
+    wrap.innerHTML=open.map(function(h){
+      return'<button class="hostCard" type="button" data-host="'+esc(h.peerId)+'"><div><strong>'+esc(h.hostName||'Maze Shift')+'</strong><small>'+esc(h.trackName||'Standard game')+' · '+Number(h.playerCount||1)+'/4 players</small></div><span class="joinBtn">Join</span></button>';
+    }).join('');
+  }
+  async function joinHost(peerId){
+    var p=selectedRosterPlayer('joinPlayer');
+    joinIdentity=networkIdentity(p,'join',joinIdentity);
+    localPlayerId=joinIdentity.id;
+    setStatus('joinStatus','Joining lobby…','');
+    try{
+      await session.joinHost(peerId,{player:joinIdentity});
+      session.sendToHost({type:'hello',player:joinIdentity});
+      $('joinedLobbyPanel').classList.remove('hidden');
+      setStatus('joinStatus','Connected · waiting for the host to start','good');
+      renderHosts([]);
+    }catch(err){
+      console.error(err);
+      setStatus('joinStatus',err&&err.message?err.message:'Could not join game','warn');
+    }
+  }
+  function networkMessage(msg,source){
+    if(role==='host'){
+      if(msg.type==='hello'&&source.peer){
+        source.peer.meta.player={
+          id:String(msg.player&&msg.player.id||'guest-'+uid()),
+          name:String(msg.player&&msg.player.name||'Player').slice(0,24)
+        };
+        var players=lobbyPlayers();
+        renderLobby('hostLobby',players);
+        $('hostCount').textContent=players.length+' / 4';
+        $('startHostGame').disabled=players.length<2;
+        broadcastLobby();
+        return;
+      }
+      if(msg.type==='action'){
+        var active=currentPlayer();
+        var remoteId=source.peer&&source.peer.meta&&source.peer.meta.player&&source.peer.meta.player.id;
+        if(!active||remoteId!==active.id||msg.playerId!==active.id)return;
+        if(msg.action==='rotate')rotateSpareInternal(Number(msg.delta)<0?-1:1);
+        else if(msg.action==='shift'&&['left','right','top','bottom'].indexOf(msg.side)>=0)shiftMazeInternal(msg.side,Number(msg.index));
+        else if(msg.action==='move')moveToInternal(Number(msg.r),Number(msg.c));
+        else if(msg.action==='stay')requestStayHost();
+        return;
+      }
+    }else{
+      if(msg.type==='lobby'){
+        connectedLobby=Array.isArray(msg.players)?msg.players:[];
+        renderLobby('joinLobby',connectedLobby);
+        $('joinedLobbyPanel').classList.remove('hidden');
+        return;
+      }
+      if(msg.type==='start'&&msg.state){
+        mode='multi';state.turnReady=true;applySnapshot(msg.state);return;
+      }
+      if(msg.type==='state'&&msg.state){applySnapshot(msg.state);return}
+    }
+  }
+  function requestStayHost(){
+    if(role!=='host'||state.phase!=='move')return;
+    checkCollectionAndEnd();
+  }
+  function startHostMaze(){
+    var players=lobbyPlayers();
+    if(players.length<2)return;
+    mode='multi';role='host';localPlayerId=hostIdentity.id;
+    var n=parseInt($('hostTargetCount').value,10)||4;
+    createGame(players,n);
+    state.turnReady=true;
+    showView('gameView');
+    renderAll();
+    if(session&&session.updateHost)session.updateHost({started:true});
+    if(session)session.broadcast({type:'start',state:snapshot()});
+  }
+
+  function backToModes(){
+    resetSession(false);
+    state.players=[];state.board=[];state.spare=null;state.winnerId=null;state.turnReady=false;
+    mode='local';
+    $('winner').classList.add('hidden');$('handoff').classList.add('hidden');
+    showView('modeView');
+  }
+
+  $('homeBtn').addEventListener('click',function(){
+    resetSession(true);
+    location.href='index.html';
+  });
+  $('passMode').addEventListener('click',function(){mode='local';renderPlayerPicker();showView('passSetup')});
+  $('multiMode').addEventListener('click',function(){showView('multiRole')});
+  document.querySelectorAll('[data-view-target]').forEach(function(b){
+    b.addEventListener('click',function(){showView(b.dataset.viewTarget)});
+  });
+  $('startBtn').addEventListener('click',startPassGame);
+  $('hostMode').addEventListener('click',function(){
+    populatePlayerSelect('hostPlayer');showView('hostSetup');startHostDiscovery();
+  });
+  $('joinMode').addEventListener('click',function(){
+    populatePlayerSelect('joinPlayer');showView('joinSetup');startScan();
+  });
+  $('hostBack').addEventListener('click',function(){resetSession(false);showView('multiRole')});
+  $('joinBack').addEventListener('click',function(){resetSession(false);showView('multiRole')});
+  $('restartHost').addEventListener('click',startHostDiscovery);
+  $('restartScan').addEventListener('click',startScan);
+  $('hostPlayer').addEventListener('change',function(){
+    var p=selectedRosterPlayer('hostPlayer');
+    hostIdentity=networkIdentity(p,'host',hostIdentity);
+    localPlayerId=hostIdentity.id;
+    updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby();
+  });
+  $('hostTargetCount').addEventListener('change',function(){updateHostAdvert();broadcastLobby()});
+  $('joinPlayer').addEventListener('change',function(){
+    var p=selectedRosterPlayer('joinPlayer');
+    joinIdentity=networkIdentity(p,'join',joinIdentity);
+    localPlayerId=joinIdentity.id;
+    if(role==='client'&&session&&session.peers&&session.peers().length)session.sendToHost({type:'hello',player:joinIdentity});
+  });
+  $('availableHosts').addEventListener('click',function(e){
+    var button=e.target.closest('[data-host]');
+    if(button)joinHost(button.dataset.host);
+  });
+  $('startHostGame').addEventListener('click',startHostMaze);
+  $('rotateLeft').addEventListener('click',function(){requestRotate(-1)});
+  $('rotateRight').addEventListener('click',function(){requestRotate(1)});
+  $('stayBtn').addEventListener('click',requestStay);
   $('readyBtn').addEventListener('click',beginTurn);
-  $('newGameBtn').addEventListener('click',backToSetup);
-  $('playAgainBtn').addEventListener('click',function(){$('winner').classList.add('hidden');backToSetup()});
+  $('newGameBtn').addEventListener('click',backToModes);
+  $('playAgainBtn').addEventListener('click',backToModes);
+  window.addEventListener('pagehide',function(){try{session&&session.close&&session.close()}catch(e){}});
 
   renderPlayerPicker();
+  populatePlayerSelect('hostPlayer');
+  populatePlayerSelect('joinPlayer');
 })();
 </script>
 </body>
