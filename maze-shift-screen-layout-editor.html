@@ -6,92 +6,53 @@
 <meta name="theme-color" content="#071326">
 <title>Maze Shift Full Screen Layout Editor</title>
 <style>
-:root{--bg:#06111d;--panel:#0b2236;--panel2:#0f2d45;--gold:#f7bd18;--teal:#08a97d;--muted:#8ea4b8;--cyan:#5bd4ea}
+:root{--bg:#06111d;--panel:#0b2236;--gold:#f7bd18;--teal:#08a97d;--muted:#8ea4b8;--cyan:#5bd4ea}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body{padding:10px}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.editor{width:min(1480px,100%);margin:auto;display:grid;grid-template-columns:minmax(480px,820px) minmax(360px,1fr);gap:14px;align-items:start}
+.editor{width:min(1500px,100%);margin:auto;display:grid;grid-template-columns:minmax(500px,840px) minmax(370px,1fr);gap:14px;align-items:start}
 .panel{background:linear-gradient(180deg,#0d2941,#081c2e);border:1px solid rgba(91,212,234,.22);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
 .preview{padding:10px;position:sticky;top:10px}
 .previewHead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
 .previewHead h1{margin:0;font-size:17px}
 .previewHead small{font-size:10px;color:var(--muted)}
 .workspaceOuter{overflow:auto;max-height:calc(100dvh - 90px);background:#020914;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
-.workspace{position:relative;width:max(100%,760px);min-height:1320px;padding:220px 190px 250px;display:flex;justify-content:center;align-items:flex-start;background:
+.workspace{position:relative;width:max(100%,820px);min-height:1360px;padding:230px 215px 270px;display:flex;justify-content:center;align-items:flex-start;background:
  linear-gradient(rgba(91,212,234,.045) 1px,transparent 1px),
  linear-gradient(90deg,rgba(91,212,234,.045) 1px,transparent 1px),
  radial-gradient(circle at 50% 42%,rgba(16,78,96,.18),transparent 55%);
  background-size:32px 32px,32px 32px,auto}
-.screen{position:relative;width:min(390px,52vw);aspect-ratio:390/844;overflow:visible;background:#06111d;box-shadow:0 0 0 2px #7de8f5,0 0 0 7px rgba(125,232,245,.08),0 28px 60px rgba(0,0,0,.50);container-type:inline-size}
-.screen:before{content:"VISIBLE SCREEN";position:absolute;z-index:100;left:50%;top:-28px;transform:translateX(-50%);padding:5px 8px;border-radius:6px;background:#0e3b55;color:#bdf7ff;font-size:9px;font-weight:900;letter-spacing:.09em;pointer-events:none}
-.safe{position:absolute;z-index:80;inset:3.2% 2.6% 3.2%;border:1px dashed rgba(255,255,255,.18);pointer-events:none}
+.screen{position:relative;width:min(390px,50vw);aspect-ratio:390/844;overflow:visible;background:#040b13;box-shadow:0 0 0 2px #7de8f5,0 0 0 7px rgba(125,232,245,.08),0 28px 60px rgba(0,0,0,.50);container-type:inline-size}
+.screen:before{content:"VISIBLE SCREEN";position:absolute;z-index:1000;left:50%;top:-28px;transform:translateX(-50%);padding:5px 8px;border-radius:6px;background:#0e3b55;color:#bdf7ff;font-size:9px;font-weight:900;letter-spacing:.09em;pointer-events:none}
+.safe{position:absolute;z-index:900;inset:3.2% 2.6% 3.2%;border:1px dashed rgba(255,255,255,.18);pointer-events:none}
 .screen.clipMode{overflow:hidden}
-.item{position:absolute;z-index:8;touch-action:none;cursor:move;outline:1px dashed rgba(123,187,207,.30);outline-offset:-1px;user-select:none}
+.item{position:absolute;touch-action:none;cursor:move;outline:1px dashed rgba(123,187,207,.30);outline-offset:-1px;user-select:none}
 .item.asset img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
 .item.asset.contain img{object-fit:contain}.item.asset.cover img{object-fit:cover}.item.asset.fill img{object-fit:fill}
-.item.region{display:flex;align-items:center;justify-content:center;border:1.5px dashed rgba(91,212,234,.95);background:rgba(91,212,234,.08);color:#d5fbff;font-size:1.8cqw;font-weight:900;text-align:center;padding:4px}
 .item.text{display:flex;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,0,0,.82)}
-.item.control{display:grid;place-items:center;border-radius:12px;background:rgba(11,43,71,.80);border:1px solid rgba(91,212,234,.35);font-weight:900;text-align:center}
-.item.hiddenItem{display:none}
-.item.locked{cursor:not-allowed;outline-style:dotted;opacity:.88}
-.item.selected{z-index:90!important;outline:2px solid var(--gold);box-shadow:0 0 0 2px rgba(247,189,24,.16)}
-.handle{position:absolute;width:18px;height:18px;border-radius:5px;background:var(--gold);border:2px solid #06111d;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:100}
+.item.control{display:grid;place-items:center;border-radius:12px;background:rgba(11,43,71,.78);border:1px solid rgba(91,212,234,.32);font-weight:900;text-align:center}
+.item.selected{outline:2px solid var(--gold);box-shadow:0 0 0 2px rgba(247,189,24,.16)}
+.item.locked{cursor:not-allowed;outline-style:dotted}
+.handle{position:absolute;width:18px;height:18px;border-radius:5px;background:var(--gold);border:2px solid #06111d;box-shadow:0 2px 8px rgba(0,0,0,.45);display:none;z-index:1001}
 .item.selected:not(.locked) .handle{display:block}
 .handle.br{right:-8px;bottom:-8px;cursor:nwse-resize}.handle.r{right:-8px;top:calc(50% - 9px);cursor:ew-resize}.handle.b{left:calc(50% - 9px);bottom:-8px;cursor:ns-resize}
 
-.gameReference{
-  position:absolute;z-index:500;inset:0;pointer-events:none;
-  opacity:1;transition:opacity .15s ease;
-}
-.gameReference.hiddenRef{display:none}
-.refTopHud{
-  position:absolute;left:1.5%;top:1.4%;width:97%;height:7.2%;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.refTurn{
-  height:84%;width:86%;display:flex;align-items:center;gap:2.2%;
-  padding:0 2%;border-radius:13px;
-  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);
-}
-.refPawn{height:78%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
-.refTurnCopy{display:grid;line-height:1}
-.refTurnCopy span{font-size:1.75cqw;color:#72889e;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-.refTurnCopy strong{margin-top:.45cqw;font:700 3.7cqw Fredoka,Inter,sans-serif}
-.refMenu{
-  width:8%;height:78%;display:grid;place-items:center;border-radius:11px;
-  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);font-weight:900;font-size:4cqw
-}
-.refBoard{
-  position:absolute;left:3%;top:15%;width:94%;aspect-ratio:1;
-  padding:1.2%;display:grid;
-  grid-template-columns:7.3% repeat(7,minmax(0,1fr)) 7.3%;
-  grid-template-rows:7.3% repeat(7,minmax(0,1fr)) 7.3%;
-  gap:1px;
-}
-.refCell{position:relative;overflow:hidden;border-radius:3px;background:#071923}
-.refCell img.tile{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.refCell img.relic{position:absolute;z-index:3;left:50%;top:50%;width:60%;height:60%;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
-.refCell img.pawn{position:absolute;z-index:4;left:50%;top:50%;width:78%;height:78%;object-fit:contain;transform:translate(-50%,-70%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
-.refArrow{display:grid;place-items:center}
-.refArrow img{width:70%;height:70%;object-fit:contain;opacity:.74;filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
-.refBottom{
-  position:absolute;left:1%;top:64.3%;width:98%;height:28.4%;
-}
-.refTarget,.refTile{position:absolute;top:0;height:100%;width:50%}
-.refTarget{left:0}.refTile{left:50%}
-.refLabel{position:absolute;color:#a8b8c7;font-weight:900;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 2px 4px #000}
-.refTarget .refLabel{left:8.33%;top:0;width:58%;font-size:2.15cqw}
-.refTargetName{position:absolute;left:8.33%;top:6.25%;width:66.66%;height:12.5%;display:flex;align-items:center;font:700 5.05cqw Fredoka,Inter,sans-serif;text-shadow:0 2px 5px #000}
-.refTargetArt{position:absolute;left:8.33%;top:18.75%;width:91.66%;height:81.25%;object-fit:contain;filter:drop-shadow(0 4px 4px rgba(0,0,0,.65))}
-.refScore{position:absolute;left:75%;top:0;width:25%;height:18.75%;display:grid;place-items:center;color:#9fb2c5;font-size:4.4cqw;font-weight:900;text-shadow:0 2px 5px #000}
-.refTile .refLabel{left:8.33%;top:6.25%;width:33.33%;font-size:1.95cqw}
-.refSpare{position:absolute;left:8.33%;top:18.75%;width:83.33%;height:75%;object-fit:cover}
-.refRotate{position:absolute;z-index:4;left:87.5%;top:64.3%;width:8.33%;height:3.55%;object-fit:contain}
-.refGuide{
-  position:absolute;z-index:600;inset:0;border:1px solid rgba(91,212,234,.2);pointer-events:none
-}
+/* Editable gameplay preview */
+.turnPanelPreview{width:100%;height:100%;display:flex;align-items:center;padding:0 5%;gap:3%;border-radius:13px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09)}
+.turnPanelPreview img{height:82%;aspect-ratio:1;object-fit:contain!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.turnCopy{display:grid;line-height:1}.turnCopy span{font-size:18%;color:#72889e;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.turnCopy strong{margin-top:4%;font-size:36%;font-weight:800}
+.menuPreview{width:100%;height:100%;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);font-size:44%;font-weight:900}
+.boardPreview{width:100%;height:100%;display:grid;grid-template-columns:7.3% repeat(7,minmax(0,1fr)) 7.3%;grid-template-rows:7.3% repeat(7,minmax(0,1fr)) 7.3%;gap:1px}
+.boardCell{position:relative;overflow:hidden;border-radius:3px;background:#071923}
+.boardCell .tile{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.boardCell .relic{position:absolute;z-index:3;left:50%;top:50%;width:60%;height:60%;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
+.boardCell .pawn{position:absolute;z-index:4;left:50%;top:50%;width:78%;height:78%;object-fit:contain;transform:translate(-50%,-70%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.boardArrow{display:grid;place-items:center}.boardArrow img{width:70%;height:70%;object-fit:contain;opacity:.76;filter:drop-shadow(0 2px 2px rgba(0,0,0,.48))}
+.buttonPreview{width:100%;height:100%;display:grid;place-items:center;border-radius:12px;background:linear-gradient(180deg,#12b98a,#078f6b);font-size:22%;font-weight:900;text-align:center;padding:4%}
+.waitPreview{background:rgba(255,255,255,.08);color:#9fb2c5}
+.rotatePreview{width:100%;height:100%;object-fit:contain!important}
 
 .controls{padding:12px}
 .controls h2{margin:0 0 4px;font-size:18px}
@@ -99,9 +60,9 @@ button{cursor:pointer}
 .toolbar,.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.toolbar{margin-bottom:9px}
 button{min-height:40px;border:0;border-radius:9px;background:#0d5685;color:#fff;font-weight:800}
 button.primary{background:var(--gold);color:#082747}button.good{background:var(--teal)}button.danger{background:#783140}
-.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:300px;overflow:auto;margin-bottom:10px}
-.list button{min-height:38px;border:1px solid #1a6da6;background:#0a345d;font-size:10.5px;padding:5px;display:flex;align-items:center;justify-content:space-between;gap:6px}
-.list button.active{background:#0e78b5;border-color:#5ee0ff}.list button.off{opacity:.42}
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:320px;overflow:auto;margin-bottom:10px}
+.list button{min-height:40px;border:1px solid #1a6da6;background:#0a345d;font-size:10.5px;padding:5px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.list button.active{background:#0e78b5;border-color:#5ee0ff}.list button.off{opacity:.42}.list .zTag{font-size:8px;color:#9fe9ff}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .field{display:grid;gap:3px}.field.full{grid-column:1/-1}
 .field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#9dc7e5}
@@ -110,10 +71,10 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
 .group{grid-column:1/-1;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.group.visible{display:grid}
 .check{display:flex;align-items:center;gap:8px;height:39px;padding:0 8px;border:1px solid #185e91;border-radius:8px;background:#041a31}.check input{width:auto;height:auto}
 .actions{margin-top:9px}
-.code{width:100%;min-height:320px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.code{width:100%;min-height:330px;margin-top:10px;resize:vertical;border:1px solid #185e91;border-radius:9px;background:#03162a;color:#dff7ff;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .note{margin-top:8px;padding:8px;border-radius:8px;background:rgba(247,189,24,.08);color:#ffe778;font-size:10px;line-height:1.45}
 .status{min-height:18px;margin-top:7px;color:#75e5a6;font-size:11px;font-weight:800}
-@media(max-width:980px){body{padding:7px}.editor{grid-template-columns:1fr}.preview{position:relative;top:auto}.workspaceOuter{max-height:none}.workspace{min-height:1200px}}
+@media(max-width:1000px){body{padding:7px}.editor{grid-template-columns:1fr}.preview{position:relative;top:auto}.workspaceOuter{max-height:none}.workspace{min-height:1220px}}
 </style>
 </head>
 <body>
@@ -121,28 +82,30 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
   <section class="panel preview">
     <div class="previewHead">
       <h1>Maze Shift · Full Screen</h1>
-      <small>390 × 844 viewport · bleed workspace enabled</small>
+      <small>390 × 844 viewport · all components editable</small>
     </div>
     <div class="workspaceOuter">
       <div class="workspace">
-        <div id="screen" class="screen">
-          <div class="safe"></div>
-        </div>
+        <div id="screen" class="screen"><div class="safe"></div></div>
       </div>
     </div>
   </section>
 
   <aside class="panel controls">
     <h2>Full Screen Layout Editor</h2>
-    <p>The dungeon rasters are the editable layers. The confirmed Maze Shift gameplay sits above them as a locked reference so you can position the new artwork around the real board and HUD. The cyan phone outline is only the visible viewport.</p>
+    <p>Your confirmed background and board-frame positions are loaded. Every gameplay component is now movable/resizable, and assets can extend beyond the phone outline.</p>
 
     <div class="toolbar">
       <button id="copyJson" class="primary">Copy JSON</button>
       <button id="saveDraft" class="good">Save Draft</button>
-      <button id="resetAll">Reset all</button>
+      <button id="addBoardFrame" class="good">Add Board Frame</button>
       <button id="toggleClip">Clip preview</button>
-      <button id="toggleReference">Hide gameplay reference</button>
-      <button id="referenceOpacity">Reference 100%</button>
+      <button id="resetAll">Reset all</button>
+      <button id="loadJson">Load JSON below</button>
+    </div>
+
+    <div class="fields" style="margin-bottom:9px">
+      <div class="field full"><label>Gameplay state</label><select id="previewState"><option value="shift">Shift</option><option value="move">Move</option><option value="waiting">Waiting</option></select></div>
     </div>
 
     <div id="itemList" class="list"></div>
@@ -176,115 +139,111 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
     <div class="actions">
       <button id="up">↑ 1 snap</button><button id="down">↓ 1 snap</button>
       <button id="left">← 1 snap</button><button id="right">→ 1 snap</button>
+      <button id="toFront">Bring to front</button><button id="forward">Forward one</button>
+      <button id="backward">Backward one</button><button id="toBack">Send to back</button>
       <button id="toggleOne">Add / Remove</button><button id="resetOne" class="danger">Reset selected</button>
-      <button id="toFront">Bring to front</button><button id="front">Forward one</button>
-      <button id="back">Backward one</button><button id="toBack">Send to back</button>
     </div>
 
     <textarea id="json" class="code" spellcheck="false"></textarea>
-    <div class="note">The gameplay reference is locked and never exported. Use its opacity button if it blocks your view. Off-screen placement is intentional: X = -15 and W = 130 bleeds 15% beyond both sides of the phone viewport.</div>
+    <div class="note">The phone outline is only the visible viewport. Negative X/Y and sizes over 100% are supported. “Add Board Frame” creates another editable copy of the square frame asset, initially positioned around the lower HUD area.</div>
     <div id="status" class="status"></div>
   </aside>
 </div>
 
 <script>
-const STORAGE_KEY="mazeshift.fullscreen.editor.v1";
+const STORAGE_KEY="mazeshift.fullscreen.editor.v3";
 const ITEMS={
-  screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:1,opacity:100,rotation:0,visible:true,locked:false},
+  screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:-9,opacity:100,rotation:0,visible:true,locked:false},
   landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:2,opacity:0,rotation:0,visible:false,locked:false},
-  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-1,y:12,w:102,h:54,z:3,opacity:100,rotation:0,visible:true,locked:false},
-  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:-4,y:64,w:108,h:34,z:4,opacity:92,rotation:0,visible:true,locked:false}
-}
+  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-8,y:9.5,w:116,h:56.5,z:13,opacity:100,rotation:0,visible:true,locked:false},
+  bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:33,y:64.5,w:108,h:34,z:77,opacity:92,rotation:0,visible:false,locked:false},
+
+  turnPanel:{label:"Turn panel",kind:"turnPanel",x:2,y:2.7,w:86,h:6.6,z:30,opacity:100,rotation:0,visible:true,locked:false},
+  menuButton:{label:"Menu button",kind:"menu",x:90,y:3,w:8,h:6.2,z:31,opacity:100,rotation:0,visible:true,locked:false},
+  boardGameplay:{label:"Gameplay board + arrows",kind:"board",x:3,y:15,w:94,h:48,z:40,opacity:100,rotation:0,visible:true,locked:false},
+
+  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:5,y:65.5,w:28,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  targetName:{label:"Target name",kind:"text",text:"Star",x:5,y:67.5,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:4,y:71,w:43,h:22,z:48,opacity:100,rotation:0,visible:true,locked:false},
+  score:{label:"Score",kind:"text",text:"0 / 4",x:37,y:65.5,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:51,opacity:100,rotation:0,visible:true,locked:false},
+  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:54,y:66,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:55,y:70,w:34,h:22,z:48,opacity:100,rotation:0,visible:true,locked:false},
+  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",state:"shift",x:88,y:65.5,w:9,h:5,z:52,opacity:100,rotation:0,visible:true,locked:false},
+  stayButton:{label:"Stay / End Turn",kind:"button",state:"move",text:"STAY · END TURN",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false},
+  waitStatus:{label:"Waiting status",kind:"wait",state:"waiting",text:"WAITING · JESS",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false}
+};
 const defaults=JSON.parse(JSON.stringify(ITEMS));
-const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false,reference:true,referenceOpacity:100};
-const screen=document.getElementById("screen"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status");
+const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false,preview:"shift"};
+const screen=document.getElementById("screen"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status"),previewState=document.getElementById("previewState");
 const fields={x:document.getElementById("x"),y:document.getElementById("y"),w:document.getElementById("w"),h:document.getElementById("h"),z:document.getElementById("z"),rotation:document.getElementById("rotation"),opacity:document.getElementById("opacity")};
 const visible=document.getElementById("visible"),locked=document.getElementById("locked"),fit=document.getElementById("fit"),assetName=document.getElementById("assetName"),assetFields=document.getElementById("assetFields"),textFields=document.getElementById("textFields"),textContent=document.getElementById("textContent"),fontSize=document.getElementById("fontSize"),textWeight=document.getElementById("textWeight"),textColor=document.getElementById("textColor"),textAlign=document.getElementById("textAlign"),snap=document.getElementById("snap");
-let selected="screenBackground",action=null;
+let selected="boardFrame",action=null;
 
 function current(){return state.items[selected]}
-function round(v){const s=Number(state.snap)||.5;return Math.round(v/s)*s}
+function snapVal(v){const s=Number(state.snap)||.5;return Math.round(v/s)*s}
 function isText(it){return it.kind==="text"}
 function isAsset(it){return it.kind==="asset"}
 function justify(a){return a==="left"?"flex-start":a==="right"?"flex-end":"center"}
 function fontPx(it){return screen.clientWidth*((it.font||2)/100)}
-function itemBox(el,it){Object.assign(el.style,{left:it.x+"%",top:it.y+"%",width:it.w+"%",height:it.h+"%",zIndex:String(it.z||1),opacity:String((it.opacity??100)/100),transform:"rotate("+(it.rotation||0)+"deg)"})}
+function visibleInState(it){return !it.state||it.state===state.preview}
+function itemBox(el,it){Object.assign(el.style,{left:it.x+"%",top:it.y+"%",width:it.w+"%",height:it.h+"%",zIndex:String(it.z||0),opacity:String((it.opacity??100)/100),transform:"rotate("+(it.rotation||0)+"deg)"})}
 function handles(){return '<span class="handle br" data-resize="both"></span><span class="handle r" data-resize="x"></span><span class="handle b" data-resize="y"></span>'}
+
+function boardMarkup(){
+  const shapes=[["L",1],["I",1],["T",0],["L",2],["I",0],["T",1],["L",2],["I",0],["L",1],["T",2],["I",1],["L",3],["I",0],["T",0],["T",3],["I",1],["L",0],["T",1],["L",2],["I",1],["L",3],["L",0],["T",2],["I",0],["L",1],["T",3],["L",2],["I",1],["I",1],["L",3],["T",0],["I",0],["L",2],["T",1],["L",0],["T",1],["I",0],["L",2],["T",3],["I",1],["L",0],["T",2],["L",0],["I",1],["T",2],["L",3],["I",0],["T",0],["L",3]];
+  const asset=t=>t==="I"?"MazeShift_Tiles/movable_straight.png":t==="L"?"MazeShift_Tiles/movable_corner.png":"MazeShift_Tiles/movable_t_junction.png";
+  let s='<div class="boardPreview">';
+  [1,3,5].forEach(c=>s+='<div class="boardArrow" style="grid-row:1;grid-column:'+(c+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(90deg)"></div>');
+  [1,3,5].forEach(c=>s+='<div class="boardArrow" style="grid-row:9;grid-column:'+(c+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(-90deg)"></div>');
+  [1,3,5].forEach(r=>s+='<div class="boardArrow" style="grid-row:'+(r+2)+';grid-column:1"><img src="MazeShift_Assets/23_shift_arrow.png"></div>');
+  [1,3,5].forEach(r=>s+='<div class="boardArrow" style="grid-row:'+(r+2)+';grid-column:9"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(180deg)"></div>');
+  let k=0;
+  for(let r=0;r<7;r++)for(let c=0;c<7;c++){
+    const [type,rot]=shapes[k++];let extra="";
+    if(r===2&&c===4)extra='<img class="relic" src="MazeShift_Assets/18_star.png">';
+    if(r===4&&c===2)extra='<img class="pawn" src="01_player_token_red.png">';
+    s+='<div class="boardCell" style="grid-row:'+(r+2)+';grid-column:'+(c+2)+'"><img class="tile" src="'+asset(type)+'" style="transform:rotate('+(rot*90)+'deg)">'+extra+'</div>';
+  }
+  return s+'</div>';
+}
 function renderItem(it){
   if(it.kind==="asset")return '<img src="'+it.src+'" alt="">'+handles();
-  if(it.kind==="region")return (it.text||"REGION")+handles();
-  if(it.kind==="control")return (it.text||"CONTROL")+handles();
   if(it.kind==="text")return '<span style="width:100%;display:flex;justify-content:'+justify(it.align)+';font-size:'+fontPx(it)+'px;font-weight:'+it.weight+';color:'+it.color+'">'+it.text+'</span>'+handles();
+  if(it.kind==="turnPanel")return '<div class="turnPanelPreview"><img src="01_player_token_red.png"><div class="turnCopy"><span>TURN</span><strong>Chip</strong></div></div>'+handles();
+  if(it.kind==="menu")return '<div class="menuPreview">•••</div>'+handles();
+  if(it.kind==="board")return boardMarkup()+handles();
+  if(it.kind==="button")return '<div class="buttonPreview">'+it.text+'</div>'+handles();
+  if(it.kind==="wait")return '<div class="buttonPreview waitPreview">'+it.text+'</div>'+handles();
   return handles();
-}
-
-function buildGameplayReference(){
-  let ref=document.getElementById("gameReference");
-  if(!ref){
-    ref=document.createElement("div");ref.id="gameReference";ref.className="gameReference";
-    screen.appendChild(ref);
-  }
-  const shapes=[
-    ["L",1],["I",1],["T",0],["L",2],["I",0],["T",1],["L",2],
-    ["I",0],["L",1],["T",2],["I",1],["L",3],["I",0],["T",0],
-    ["T",3],["I",1],["L",0],["T",1],["L",2],["I",1],["L",3],
-    ["L",0],["T",2],["I",0],["L",1],["T",3],["L",2],["I",1],
-    ["I",1],["L",3],["T",0],["I",0],["L",2],["T",1],["L",0],
-    ["T",1],["I",0],["L",2],["T",3],["I",1],["L",0],["T",2],
-    ["L",0],["I",1],["T",2],["L",3],["I",0],["T",0],["L",3]
-  ];
-  const assetFor=(type,idx)=>"MazeShift_Tiles/"+(type==="I"?"movable_straight.png":type==="L"?"movable_corner.png":"movable_t_junction.png");
-  let board='<div class="refBoard">';
-  [1,3,5].forEach(col=>board+='<div class="refArrow" style="grid-row:1;grid-column:'+(col+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(90deg)"></div>');
-  [1,3,5].forEach(col=>board+='<div class="refArrow" style="grid-row:9;grid-column:'+(col+2)+'"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(-90deg)"></div>');
-  [1,3,5].forEach(row=>board+='<div class="refArrow" style="grid-row:'+(row+2)+';grid-column:1"><img src="MazeShift_Assets/23_shift_arrow.png"></div>');
-  [1,3,5].forEach(row=>board+='<div class="refArrow" style="grid-row:'+(row+2)+';grid-column:9"><img src="MazeShift_Assets/23_shift_arrow.png" style="transform:rotate(180deg)"></div>');
-  let k=0;
-  for(let r=0;r<7;r++)for(let col=0;col<7;col++){
-    const [type,rot]=shapes[k++],style='grid-row:'+(r+2)+';grid-column:'+(col+2);
-    let extra='';
-    if(r===2&&col===4)extra='<img class="relic" src="MazeShift_Assets/18_star.png">';
-    if(r===4&&col===2)extra='<img class="pawn" src="01_player_token_red.png">';
-    board+='<div class="refCell" style="'+style+'"><img class="tile" src="'+assetFor(type,k)+'" style="transform:rotate('+(rot*90)+'deg)">'+extra+'</div>';
-  }
-  board+='</div>';
-  ref.innerHTML=
-    '<div class="refTopHud"><div class="refTurn"><img class="refPawn" src="01_player_token_red.png"><div class="refTurnCopy"><span>TURN</span><strong>Chip</strong></div></div><div class="refMenu">•••</div></div>'+
-    board+
-    '<div class="refBottom"><div class="refTarget"><div class="refLabel">TARGET</div><div class="refTargetName">Star</div><img class="refTargetArt" src="MazeShift_Assets/18_star.png"><div class="refScore">0 / 4</div></div><div class="refTile"><div class="refLabel">YOUR TILE</div><img class="refSpare" src="MazeShift_Tiles/movable_corner.png"></div></div>'+
-    '<img class="refRotate" src="MazeShift_Assets/24_rotate.png"><div class="refGuide"></div>';
-  ref.classList.toggle("hiddenRef",!state.reference);
-  ref.style.opacity=String((state.referenceOpacity||100)/100);
-  return ref;
 }
 function renderStage(){
   screen.querySelectorAll(".item").forEach(n=>n.remove());
-  const oldRef=document.getElementById("gameReference");if(oldRef)oldRef.remove();
   Object.entries(state.items).forEach(([key,it])=>{
-    if(!it.visible)return;
+    if(!it.visible||!visibleInState(it))return;
     const el=document.createElement("div");
     el.className="item "+it.kind+(isAsset(it)?" "+(it.fit||"cover"):"")+(key===selected?" selected":"")+(it.locked?" locked":"");
     el.dataset.key=key;itemBox(el,it);el.innerHTML=renderItem(it);
     el.addEventListener("pointerdown",startPointer);screen.appendChild(el);
   });
-  buildGameplayReference();
   screen.classList.toggle("clipMode",state.clip);
 }
 function renderList(){
   list.innerHTML="";
   Object.entries(state.items).forEach(([key,it])=>{
     const b=document.createElement("button");b.className=(key===selected?"active ":"")+(it.visible?"":"off");
-    b.innerHTML="<span>"+it.label+"</span><span>"+(it.locked?"🔒":it.visible?"✓":"＋")+"</span>";
+    const stateTag=it.state?" · "+it.state:"";
+    b.innerHTML="<span>"+it.label+stateTag+"</span><span class='zTag'>z "+it.z+(it.locked?" 🔒":"")+"</span>";
     b.onclick=()=>{selected=key;renderAll()};list.appendChild(b);
   });
 }
 function renderFields(){
-  const it=current();Object.keys(fields).forEach(k=>fields[k].value=it[k]??(k==="opacity"?100:0));
-  visible.checked=!!it.visible;locked.checked=!!it.locked;snap.value=String(state.snap);
+  const it=current();if(!it)return;
+  Object.keys(fields).forEach(k=>fields[k].value=it[k]??(k==="opacity"?100:0));
+  visible.checked=!!it.visible;locked.checked=!!it.locked;snap.value=String(state.snap);previewState.value=state.preview;
   if(isAsset(it)){assetFields.classList.add("visible");fit.value=it.fit||"cover";assetName.value=it.src}else assetFields.classList.remove("visible");
   if(isText(it)){textFields.classList.add("visible");textContent.value=it.text||"";fontSize.value=it.font||2;textWeight.value=it.weight||"900";textColor.value=it.color||"#ffffff";textAlign.value=it.align||"left"}else textFields.classList.remove("visible");
 }
-function exportJson(){json.value=JSON.stringify({editor:"maze-shift-full-screen-v2",viewport:{width:390,height:844,units:"percent",allowsOverflow:true},clipPreview:state.clip,gameplayReference:{visible:state.reference,opacity:state.referenceOpacity,exported:false},items:state.items},null,2)}
+function exportJson(){json.value=JSON.stringify({editor:"maze-shift-full-screen-v3",viewport:{width:390,height:844,units:"percent",allowsOverflow:true},clipPreview:state.clip,previewState:state.preview,items:state.items},null,2)}
 function renderAll(){renderStage();renderList();renderFields();exportJson()}
 
 function startPointer(e){
@@ -298,11 +257,11 @@ function startPointer(e){
 }
 function movePointer(e){
   if(!action||e.pointerId!==action.id)return;
-  const it=state.items[action.key],dx=round((e.clientX-action.startX)/action.ux),dy=round((e.clientY-action.startY)/action.uy);
+  const it=state.items[action.key],dx=snapVal((e.clientX-action.startX)/action.ux),dy=snapVal((e.clientY-action.startY)/action.uy);
   if(action.resize){
-    if(action.resize==="both"||action.resize==="x")it.w=Math.max(.5,round(action.start.w+dx));
-    if(action.resize==="both"||action.resize==="y")it.h=Math.max(.5,round(action.start.h+dy));
-  }else{it.x=round(action.start.x+dx);it.y=round(action.start.y+dy)}
+    if(action.resize==="both"||action.resize==="x")it.w=Math.max(.5,snapVal(action.start.w+dx));
+    if(action.resize==="both"||action.resize==="y")it.h=Math.max(.5,snapVal(action.start.h+dy));
+  }else{it.x=snapVal(action.start.x+dx);it.y=snapVal(action.start.y+dy)}
   itemBox(action.el,it);renderFields();exportJson();
 }
 function endPointer(e){
@@ -317,29 +276,40 @@ visible.onchange=()=>{current().visible=visible.checked;renderAll()};
 locked.onchange=()=>{current().locked=locked.checked;renderAll()};
 fit.onchange=()=>{if(isAsset(current())){current().fit=fit.value;renderAll()}};
 snap.onchange=()=>{state.snap=Number(snap.value)||.5};
+previewState.onchange=()=>{state.preview=previewState.value;renderAll()};
 textContent.oninput=()=>{if(isText(current())){current().text=textContent.value;renderAll()}};
 fontSize.oninput=()=>{if(isText(current())){current().font=Math.max(.1,Number(fontSize.value)||.1);renderAll()}};
 textWeight.onchange=()=>{if(isText(current())){current().weight=textWeight.value;renderAll()}};
 textColor.oninput=()=>{if(isText(current())){current().color=textColor.value;renderAll()}};
 textAlign.onchange=()=>{if(isText(current())){current().align=textAlign.value;renderAll()}};
 
-function nudge(dx,dy){const it=current(),s=Number(state.snap)||.5;if(it.locked)return;it.x=round(it.x+dx*s);it.y=round(it.y+dy*s);renderAll()}
+function nudge(dx,dy){const it=current(),s=Number(state.snap)||.5;if(!it||it.locked)return;it.x=snapVal(it.x+dx*s);it.y=snapVal(it.y+dy*s);renderAll()}
+function orderedKeys(){return Object.keys(state.items).sort((a,b)=>(Number(state.items[a].z)||0)-(Number(state.items[b].z)||0)||a.localeCompare(b))}
+function layerStep(dir){
+  const keys=orderedKeys(),i=keys.indexOf(selected),j=i+dir;if(i<0||j<0||j>=keys.length)return;
+  const a=state.items[keys[i]],b=state.items[keys[j]],za=a.z,zb=b.z;
+  if(za===zb){keys.forEach((k,n)=>state.items[k].z=n*10);return layerStep(dir)}
+  a.z=zb;b.z=za;renderAll();status(dir>0?"Moved forward":"Moved backward");
+}
 document.getElementById("up").onclick=()=>nudge(0,-1);document.getElementById("down").onclick=()=>nudge(0,1);document.getElementById("left").onclick=()=>nudge(-1,0);document.getElementById("right").onclick=()=>nudge(1,0);
+document.getElementById("forward").onclick=()=>layerStep(1);
+document.getElementById("backward").onclick=()=>layerStep(-1);
+document.getElementById("toFront").onclick=()=>{const zs=Object.values(state.items).map(x=>Number(x.z)||0);current().z=Math.max(...zs)+10;renderAll();status("Brought to front")};
+document.getElementById("toBack").onclick=()=>{const zs=Object.values(state.items).map(x=>Number(x.z)||0);current().z=Math.min(...zs)-10;renderAll();status("Sent to back")};
 document.getElementById("toggleOne").onclick=()=>{current().visible=!current().visible;renderAll()};
-document.getElementById("resetOne").onclick=()=>{state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));renderAll()};
-function sortedVisibleZ(){return Object.values(state.items).filter(x=>x.visible).map(x=>Number(x.z)||0).sort((a,b)=>a-b)}
-document.getElementById("front").onclick=()=>{if(current().locked)return;current().z=(Number(current().z)||0)+1;renderAll();status("Moved forward")};
-document.getElementById("back").onclick=()=>{if(current().locked)return;current().z=(Number(current().z)||0)-1;renderAll();status("Moved backward")};
-document.getElementById("toFront").onclick=()=>{if(current().locked)return;const z=sortedVisibleZ();current().z=(z.length?z[z.length-1]:0)+10;renderAll();status("Brought to front")};
-document.getElementById("toBack").onclick=()=>{if(current().locked)return;const z=sortedVisibleZ();current().z=(z.length?z[0]:0)-10;renderAll();status("Sent to back")};
-document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaults));selected="screenBackground";renderAll();status("Reset to defaults")};
+document.getElementById("resetOne").onclick=()=>{if(defaults[selected])state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));else delete state.items[selected];selected=Object.keys(state.items)[0];renderAll()};
+document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaults));state.preview="shift";selected="boardFrame";renderAll();status("Reset to confirmed defaults")};
 document.getElementById("toggleClip").onclick=()=>{state.clip=!state.clip;renderAll();status(state.clip?"Preview clipped to screen":"Bleed visible")};
-document.getElementById("toggleReference").onclick=()=>{state.reference=!state.reference;renderAll();document.getElementById("toggleReference").textContent=state.reference?"Hide gameplay reference":"Show gameplay reference";status(state.reference?"Gameplay reference shown":"Gameplay reference hidden")};
-document.getElementById("referenceOpacity").onclick=()=>{state.referenceOpacity=state.referenceOpacity===100?55:state.referenceOpacity===55?25:100;renderAll();document.getElementById("referenceOpacity").textContent="Reference "+state.referenceOpacity+"%"};
+document.getElementById("addBoardFrame").onclick=()=>{
+  let n=2,key="boardFrame"+n;while(state.items[key]){n++;key="boardFrame"+n}
+  state.items[key]={label:"Board frame raster "+n,kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-8,y:62,w:116,h:36,z:12,opacity:100,rotation:0,visible:true,locked:false};
+  selected=key;renderAll();status("Added board frame "+n);
+};
 document.getElementById("copyJson").onclick=async()=>{exportJson();try{await navigator.clipboard.writeText(json.value);status("JSON copied")}catch(_){json.select();document.execCommand("copy");status("JSON copied")}};
 document.getElementById("saveDraft").onclick=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));status("Draft saved")};
-function status(t){statusEl.textContent=t;clearTimeout(status._t);status._t=setTimeout(()=>statusEl.textContent="",1800)}
-try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=Object.assign(JSON.parse(JSON.stringify(defaults)),saved.items);state.snap=saved.snap||.5;state.clip=!!saved.clip;state.reference=saved.reference!==false;state.referenceOpacity=saved.referenceOpacity||100}}catch(_){}
+document.getElementById("loadJson").onclick=()=>{try{const d=JSON.parse(json.value);if(!d||!d.items)throw new Error("No items");state.items=d.items;state.preview=d.previewState||"shift";state.clip=!!d.clipPreview;selected=Object.keys(state.items)[0];renderAll();status("JSON loaded")}catch(e){status("Invalid JSON")}};
+function status(t){statusEl.textContent=t;clearTimeout(status._t);status._t=setTimeout(()=>statusEl.textContent="",1900)}
+try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=saved.items;state.snap=saved.snap||.5;state.clip=!!saved.clip;state.preview=saved.preview||"shift"}}catch(_){}
 renderAll();window.addEventListener("resize",renderStage);
 </script>
 </body>
