@@ -155,23 +155,26 @@ const STORAGE_KEY="mazeshift.fullscreen.editor.v3";
 const ITEMS={
   screenBackground:{label:"Portrait dungeon background",kind:"asset",src:"04_portrait_dungeon_background.png",fit:"cover",x:-8,y:-5,w:116,h:110,z:-9,opacity:100,rotation:0,visible:true,locked:false},
   landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:2,opacity:0,rotation:0,visible:false,locked:false},
-  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-8,y:9.5,w:116,h:56.5,z:13,opacity:100,rotation:0,visible:true,locked:false},
+  boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:9.5,w:126.5,h:61.5,z:13,opacity:100,rotation:0,visible:true,locked:false},
   bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:33,y:64.5,w:108,h:34,z:77,opacity:92,rotation:0,visible:false,locked:false},
 
   turnPanel:{label:"Turn panel",kind:"turnPanel",x:2,y:2.7,w:86,h:6.6,z:30,opacity:100,rotation:0,visible:true,locked:false},
   menuButton:{label:"Menu button",kind:"menu",x:90,y:3,w:8,h:6.2,z:31,opacity:100,rotation:0,visible:true,locked:false},
   boardGameplay:{label:"Gameplay board + arrows",kind:"board",x:3,y:15,w:94,h:48,z:40,opacity:100,rotation:0,visible:true,locked:false},
 
-  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:5,y:65.5,w:28,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  targetName:{label:"Target name",kind:"text",text:"Star",x:5,y:67.5,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:4,y:71,w:43,h:22,z:48,opacity:100,rotation:0,visible:true,locked:false},
-  score:{label:"Score",kind:"text",text:"0 / 4",x:37,y:65.5,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:51,opacity:100,rotation:0,visible:true,locked:false},
-  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:54,y:66,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
-  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:55,y:70,w:34,h:22,z:48,opacity:100,rotation:0,visible:true,locked:false},
-  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",state:"shift",x:88,y:65.5,w:9,h:5,z:52,opacity:100,rotation:0,visible:true,locked:false},
+  targetLabel:{label:"Target label",kind:"text",text:"TARGET",x:4.5,y:71,w:28,h:2,font:2.3,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  targetName:{label:"Target name",kind:"text",text:"Star",x:4.5,y:72.5,w:34,h:4,font:5.1,color:"#ffffff",weight:"700",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  targetArt:{label:"Target artwork",kind:"asset",src:"MazeShift_Assets/18_star.png",fit:"contain",x:5,y:76.5,w:40.5,h:20,z:48,opacity:100,rotation:0,visible:true,locked:false},
+  score:{label:"Score",kind:"text",text:"0 / 4",x:35,y:69.5,w:11,h:5,font:4.1,color:"#9fb2c5",weight:"900",align:"center",z:51,opacity:100,rotation:0,visible:true,locked:false},
+  tileLabel:{label:"Your Tile label",kind:"text",text:"YOUR TILE",x:51.5,y:73,w:20,h:2,font:2.1,color:"#a8b8c7",weight:"900",align:"left",z:50,opacity:100,rotation:0,visible:true,locked:false},
+  spareTile:{label:"Spare tile",kind:"asset",src:"MazeShift_Tiles/movable_corner.png",fit:"fill",x:52,y:75.5,w:42,h:21,z:48,opacity:100,rotation:0,visible:true,locked:false},
+  rotateButton:{label:"Rotate button",kind:"asset",src:"MazeShift_Assets/24_rotate.png",fit:"contain",state:"shift",x:84.5,y:70.5,w:9,h:5,z:52,opacity:100,rotation:0,visible:true,locked:false},
   stayButton:{label:"Stay / End Turn",kind:"button",state:"move",text:"STAY · END TURN",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false},
-  waitStatus:{label:"Waiting status",kind:"wait",state:"waiting",text:"WAITING · JESS",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false}
-};
+  waitStatus:{label:"Waiting status",kind:"wait",state:"waiting",text:"WAITING · JESS",x:79,y:69,w:19,h:7,z:52,opacity:100,rotation:0,visible:true,locked:false},
+
+  boardFrame2:{label:"Board frame raster 2",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:56.5,w:126.5,h:46,z:12,opacity:100,rotation:0,visible:true,locked:false},
+  boardFrame3:{label:"Board frame raster 3",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:5.5,y:-9.5,w:126.5,h:59,z:12,opacity:100,rotation:0,visible:false,locked:false}
+}
 const defaults=JSON.parse(JSON.stringify(ITEMS));
 const state={items:JSON.parse(JSON.stringify(ITEMS)),snap:.5,clip:false,preview:"shift"};
 const screen=document.getElementById("screen"),list=document.getElementById("itemList"),json=document.getElementById("json"),statusEl=document.getElementById("status"),previewState=document.getElementById("previewState");
@@ -298,7 +301,7 @@ document.getElementById("toFront").onclick=()=>{const zs=Object.values(state.ite
 document.getElementById("toBack").onclick=()=>{const zs=Object.values(state.items).map(x=>Number(x.z)||0);current().z=Math.min(...zs)-10;renderAll();status("Sent to back")};
 document.getElementById("toggleOne").onclick=()=>{current().visible=!current().visible;renderAll()};
 document.getElementById("resetOne").onclick=()=>{if(defaults[selected])state.items[selected]=JSON.parse(JSON.stringify(defaults[selected]));else delete state.items[selected];selected=Object.keys(state.items)[0];renderAll()};
-document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaults));state.preview="shift";selected="boardFrame";renderAll();status("Reset to confirmed defaults")};
+document.getElementById("resetAll").onclick=()=>{state.items=JSON.parse(JSON.stringify(defaults));state.preview="shift";selected="boardFrame";renderAll();status("Reset to confirmed v3 layout")};
 document.getElementById("toggleClip").onclick=()=>{state.clip=!state.clip;renderAll();status(state.clip?"Preview clipped to screen":"Bleed visible")};
 document.getElementById("addBoardFrame").onclick=()=>{
   let n=2,key="boardFrame"+n;while(state.items[key]){n++;key="boardFrame"+n}
