@@ -145,7 +145,7 @@ button.primary{background:var(--gold);color:#082747}button.good{background:var(-
     </div>
 
     <textarea id="json" class="code" spellcheck="false"></textarea>
-    <div class="note">The phone outline is only the visible viewport. Negative X/Y and sizes over 100% are supported. “Add Board Frame” creates another editable copy of the square frame asset, initially positioned around the lower HUD area.</div>
+    <div class="note">The exact Top HUD Frame and Bottom HUD Frame assets are now editable layers behind the confirmed components. The phone outline is only the visible viewport; negative X/Y and sizes over 100% are supported. “Add Board Frame” still creates another editable square frame if needed.</div>
     <div id="status" class="status"></div>
   </aside>
 </div>
@@ -157,6 +157,9 @@ const ITEMS={
   landscapeFrame:{label:"Landscape / desktop frame",kind:"asset",src:"01_full_screen_landscape_frame.png",fit:"cover",x:-10,y:-2,w:120,h:104,z:2,opacity:0,rotation:0,visible:false,locked:false},
   boardFrame:{label:"Board frame raster",kind:"asset",src:"02_board_frame_square.png",fit:"fill",x:-13,y:9.5,w:126.5,h:61.5,z:13,opacity:100,rotation:0,visible:true,locked:false},
   bottomHudBackground:{label:"Bottom HUD raster",kind:"asset",src:"03_bottom_hud_panel.png",fit:"cover",x:33,y:64.5,w:108,h:34,z:77,opacity:92,rotation:0,visible:false,locked:false},
+
+  topHudFrame:{label:"Top HUD frame",kind:"asset",src:"01_maze_shift_top_hud_frame.png",fit:"fill",x:-1.5,y:0.5,w:103,h:11,z:29,opacity:100,rotation:0,visible:true,locked:false},
+  bottomHudFrame:{label:"Bottom HUD frame",kind:"asset",src:"02_maze_shift_bottom_hud_frame.png",fit:"fill",x:-2,y:67,w:104,h:31,z:47,opacity:100,rotation:0,visible:true,locked:false},
 
   turnPanel:{label:"Turn panel",kind:"turnPanel",x:2,y:2.7,w:86,h:6.6,z:30,opacity:100,rotation:0,visible:true,locked:false},
   menuButton:{label:"Menu button",kind:"menu",x:90,y:3,w:8,h:6.2,z:31,opacity:100,rotation:0,visible:true,locked:false},
@@ -310,9 +313,9 @@ document.getElementById("addBoardFrame").onclick=()=>{
 };
 document.getElementById("copyJson").onclick=async()=>{exportJson();try{await navigator.clipboard.writeText(json.value);status("JSON copied")}catch(_){json.select();document.execCommand("copy");status("JSON copied")}};
 document.getElementById("saveDraft").onclick=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));status("Draft saved")};
-document.getElementById("loadJson").onclick=()=>{try{const d=JSON.parse(json.value);if(!d||!d.items)throw new Error("No items");state.items=d.items;state.preview=d.previewState||"shift";state.clip=!!d.clipPreview;selected=Object.keys(state.items)[0];renderAll();status("JSON loaded")}catch(e){status("Invalid JSON")}};
+document.getElementById("loadJson").onclick=()=>{try{const d=JSON.parse(json.value);if(!d||!d.items)throw new Error("No items");state.items=Object.assign(JSON.parse(JSON.stringify(defaults)),d.items);state.preview=d.previewState||"shift";state.clip=!!d.clipPreview;selected=Object.keys(state.items)[0];renderAll();status("JSON loaded · new editor assets preserved")}catch(e){status("Invalid JSON")}};
 function status(t){statusEl.textContent=t;clearTimeout(status._t);status._t=setTimeout(()=>statusEl.textContent="",1900)}
-try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=saved.items;state.snap=saved.snap||.5;state.clip=!!saved.clip;state.preview=saved.preview||"shift"}}catch(_){}
+try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(saved&&saved.items){state.items=Object.assign(JSON.parse(JSON.stringify(defaults)),saved.items);state.snap=saved.snap||.5;state.clip=!!saved.clip;state.preview=saved.preview||"shift"}}catch(_){}
 renderAll();window.addEventListener("resize",renderStage);
 </script>
 </body>
