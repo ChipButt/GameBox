@@ -898,6 +898,59 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   z-index:65!important;background:#071923!important;border:1px solid rgba(255,255,255,.05)!important;
 }
 .shiftGhost .tileRaster{width:100%!important;height:100%!important}
+
+/* TARGET PANEL — text above, artwork given the width */
+.targetZone{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  align-items:start!important;
+  gap:5px 8px!important;
+}
+.targetZone .objectiveText{
+  grid-column:1;
+  grid-row:1;
+  align-self:start;
+  min-width:0;
+}
+.targetZone .objectiveText span{
+  display:block!important;
+  margin:0 0 2px!important;
+}
+.targetZone .objectiveText strong{
+  margin:0!important;
+}
+.targetZone .objectiveScore{
+  grid-column:2;
+  grid-row:1;
+  align-self:start!important;
+}
+.targetZone .targetToken{
+  grid-column:1 / -1;
+  grid-row:2;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  overflow:visible!important;
+}
+.targetZone .objectiveArt{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:86px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+@media(max-width:430px){
+  .targetZone{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:4px 6px!important;
+  }
+  .targetZone .objectiveArt{max-height:78px!important}
+}
 </style>
 </head>
 <body>
@@ -1024,9 +1077,9 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 
     <footer class="thumbDock">
       <section class="targetZone" aria-label="Current target">
-        <div class="targetToken" id="objectiveIcon">CP</div>
         <div class="objectiveText"><span id="objectiveLabel">Target</span><strong id="objectiveName">Compass</strong></div>
         <div class="objectiveScore" id="score">0 / 4</div>
+        <div class="targetToken" id="objectiveIcon">CP</div>
       </section>
       <section class="tileZone" aria-label="Spare tile">
         <div class="zoneLabel">Tile</div>
