@@ -1215,6 +1215,33 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 .thumbDock .waitDock{
   border:0!important;
 }
+
+/* BOTTOM HUD — fully transparent component backgrounds */
+.thumbDock,
+.thumbDock .targetZone,
+.thumbDock .tileZone,
+.thumbDock .rotateZone,
+.thumbDock .objectiveScore,
+.thumbDock .spareTile,
+.thumbDock .rotateBtn,
+.thumbDock .stayBtn,
+.thumbDock .waitDock{
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.thumbDock .targetZone,
+.thumbDock .tileZone,
+.thumbDock .objectiveScore,
+.thumbDock .spareTile,
+.thumbDock .rotateBtn,
+.thumbDock .stayBtn,
+.thumbDock .waitDock{
+  border:0!important;
+  outline:0!important;
+}
 </style>
 </head>
 <body>
