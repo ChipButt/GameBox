@@ -1679,7 +1679,8 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 }
 
 /* TRUE BACKGROUND COMPOSITION
-   Decorative rasters live in their own stacking context below every gameplay element. */
+   Decorative layers live in their own stacking context below every gameplay element.
+   The whole environment is painted in CSS - no raster art. */
 .playScreen{
   isolation:isolate!important;
   background:#040b13!important;
@@ -1688,9 +1689,6 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   position:absolute!important;
   inset:0!important;
   z-index:0!important;
-  overflow:hidden!important;
-  pointer-events:none!important;
-  user-select:none!important;
 }
 .mazeBackgroundAsset{
   position:absolute!important;
@@ -1699,32 +1697,51 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   background-repeat:no-repeat!important;
   background-position:center!important;
 }
+/* Atmospheric backdrop - deep teal-slate gradient, soft top glow, faint woven texture. */
 .mazeBackgroundPortrait{
-  left:-8%!important;
-  top:-5%!important;
-  width:116%!important;
-  height:110%!important;
+  left:0!important;
+  top:0!important;
+  width:100%!important;
+  height:100%!important;
   z-index:1!important;
-  background-image:url('04_portrait_dungeon_background.png')!important;
-  background-size:cover!important;
+  background:
+    radial-gradient(120% 55% at 50% -10%,rgba(25,138,114,.16),transparent 58%),
+    radial-gradient(110% 45% at 50% 115%,rgba(8,58,72,.30),transparent 62%),
+    repeating-linear-gradient(115deg,rgba(255,255,255,.014) 0 2px,transparent 2px 7px),
+    linear-gradient(180deg,#0e1b26 0%,#091219 52%,#040b13 100%)!important;
 }
+/* Board plate - a quiet slate surface framing the maze. */
 .mazeBackgroundBoardFrame1{
-  left:-13%!important;
-  top:9.5%!important;
-  width:126.5%!important;
-  height:61.5%!important;
+  left:1.5%!important;
+  top:12.8%!important;
+  width:97%!important;
+  height:52.6%!important;
   z-index:3!important;
-  background-image:url('02_board_frame_square.png')!important;
-  background-size:100% 100%!important;
+  border-radius:22px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0) 22%),
+    linear-gradient(180deg,#182734 0%,#101b25 100%)!important;
+  border:1px solid rgba(140,170,182,.15)!important;
+  box-shadow:
+    0 26px 55px rgba(0,0,0,.50),
+    0 0 46px rgba(25,138,114,.10),
+    inset 0 0 0 1px rgba(0,0,0,.30)!important;
 }
+/* Bottom deck - one translucent control surface under the thumb controls. */
 .mazeBackgroundBoardFrame2{
-  left:-13%!important;
-  top:56.5%!important;
-  width:126.5%!important;
-  height:46%!important;
+  left:2%!important;
+  top:67%!important;
+  width:96%!important;
+  height:31.5%!important;
   z-index:2!important;
-  background-image:url('02_board_frame_square.png')!important;
-  background-size:100% 100%!important;
+  border-radius:24px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 18%),
+    linear-gradient(180deg,rgba(24,38,51,.72) 0%,rgba(9,17,25,.88) 100%)!important;
+  border:1px solid rgba(140,170,182,.12)!important;
+  box-shadow:
+    0 20px 44px rgba(0,0,0,.42),
+    inset 0 1px 0 rgba(255,255,255,.05)!important;
 }
 /* The atmospheric tint belongs to the background layer too. */
 .mazeBackgroundLayer:after{
