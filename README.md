@@ -4,6 +4,15 @@ A mobile-first browser games hub from **Chip In Games**.
 
 ## Included games
 
+### Core Empires
+- Single-player mining and army evolution prototype
+- Worker assignments, transport bottlenecks, cart upgrades, and tap mining
+- Three troop classes across Stone, Bronze, and Iron ages
+- Six territories with automatic battles and live reinforcement deployment
+- Mobile Battle / Mine / Evolve tabs and local saved progression
+- Play at `core-empires/`
+
+
 ### Card Deck
 - 1–4 players
 - 54-card deck including red and black jokers

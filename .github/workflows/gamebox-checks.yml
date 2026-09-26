@@ -16,6 +16,7 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax
         run: |
+          node --check core-empires/game.js
           node --check lan-core.js
           node --check gamebox-v4.js
           node --check heads-v3.js
@@ -25,6 +26,8 @@ jobs:
           node --check race-manager/track-ui.js
       - name: Check required files
         run: |
+          test -f core-empires/index.html
+          test -f core-empires/style.css
           test -f index.html
           test -f heads.html
           test -f chipin-gamebox.css
