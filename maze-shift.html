@@ -1845,7 +1845,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   function renderObjective(){
     var p=ownPlayer();if(!p)return;
     var target=currentTarget(p),icon=$('objectiveIcon');
-    $('objectiveLabel').textContent=mode==='multi'?'Your target':'Target';
+    $('objectiveLabel').textContent='Target';
     if(target){
       icon.innerHTML='<img class="objectiveArt" src="'+target.asset+'" alt="">';
       $('objectiveName').textContent=target.name;
