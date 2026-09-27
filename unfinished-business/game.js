@@ -201,7 +201,7 @@ function applyGraveyardStoryBeat(id){
 const TUTORIAL_TARGETS={
  1:{id:9101,x:1120,y:1940,title:'Reach the Speed token',hint:'20 Echoes · reach the golden ghost.',cost:20,upgrade:'speed'},
  3:{id:9102,x:1500,y:1740,title:'Reach the Vanish token',hint:'25 Echoes · reach the golden ghost.',cost:25,upgrade:'invisibility'},
- 5:{id:9103,x:1320,y:1510,title:'Get past the lookout',hint:'Vanish past the lookout.'},
+ 5:{id:9103,x:1320,y:1505,title:'Get past the lookout',hint:'Vanish past the lookout.'},
  6:{id:9104,x:1470,y:1360,title:'Reach the Phase token',hint:'26 Echoes · reach the golden ghost.',cost:26,upgrade:'phase'},
  8:{id:9105,x:1320,y:1120,title:'Phase through the wall',hint:'Phase through the wall to finish.'}
 };
@@ -282,7 +282,7 @@ function tutorialTaskDetail(task){
 function setupTutorialCourse(){
  // The memorial lawn becomes a compact sequence of real gameplay gates.
  const add=(x,y,w,h,kind='hedge',phase=99,extra={})=>{const b={x,y,w,h,kind,phase,open:false,tutorial:true,...extra};blocks.push(b);return b};
- add(1010,1570,270,28);add(1360,1570,240,28); // watched gap at x 1280–1360
+ add(1010,1570,190,28);add(1440,1570,160,28); // broad watched gap at x 1200–1440
  add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'wall',1,{tutorialGate:'phase'});
  nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];prepareTutorialTasks();
 }
@@ -484,7 +484,7 @@ function move(dx,dy,dt){
  }
  if(tutorial.active){
   if(tutorial.stage<5&&ny<1605){note('Follow the golden ghost first.',1.4);return}
-  if(tutorial.stage===5&&ny<1570&&!active('invisibility')){note('Use VANISH to cross.',1.5);return}
+  if(tutorial.stage===5&&ghost.y>=1570&&ny<1570&&!active('invisibility')){note('Use VANISH to cross.',1.5);return}
  }
  ghost.x=nx;ghost.y=ny;tutorialBounds();
  if(!hits.length){lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
