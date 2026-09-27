@@ -26,7 +26,7 @@ function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('ob
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
 function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Upgrade controls stay grey while you cannot afford them. When one becomes available it turns <b>bright gold and sparkles</b>. Speed sits beneath your Echoes; VANISH, PHASE and TOUCH each have their own upgrade tab. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p><b>Mystery tokens are worth exploring for.</b> Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / TOUCH upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Level objectives change the living world and story, but they never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';if(k==='phase')return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';return run.touch?`Touch tier ${run.touch} → ${run.touch+1}`:'Unlock TOUCH';}
-function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT IN THE LIVING WORLD'}</span><h2>${win?'You made it through.':'The memory slips away.'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
+function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT'}</span><h2>${win?'You made it through.':'Someone Saw You'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 function buyUpgrade(k){
  if(mode!=='play')return;
  const expected=tutorial.active?tutorialExpectedUpgrade():null;
@@ -234,7 +234,7 @@ function tutorialBounds(){
 function tutorialCheckpoint(){
  const target=tutorialTarget();if(!target||Math.hypot(ghost.x-target.x,ghost.y-target.y)>26)return;
  const need=target.cost||0;
- if(need&&run.echoes<need){note(`This token is calling to you · explore until you have ${need} Echoes (${run.echoes}/${need}).`,2);return}
+ if(need&&run.echoes<need){note(`Need ${need} Echoes · ${run.echoes}/${need}.`,2);return}
  if(tutorial.stage===1){tutorial.stage=2;tutorialUpgradeReady('speed');return}
  if(tutorial.stage===3){tutorial.stage=4;tutorialUpgradeReady('invisibility');return}
  if(tutorial.stage===5){
@@ -394,8 +394,8 @@ function move(dx,dy,dt){
   return;
  }
  if(tutorial.active){
-  if(tutorial.stage<5&&ny<1605){note('The watched exit can wait · follow the sparkling tutorial token first.',1.4);return}
-  if(tutorial.stage===5&&ny<1570&&!active('invisibility')){note('Too exposed · activate VANISH before crossing the lookout.',1.5);return}
+  if(tutorial.stage<5&&ny<1605){note('Follow the golden ghost first.',1.4);return}
+  if(tutorial.stage===5&&ny<1570&&!active('invisibility')){note('Use VANISH to cross.',1.5);return}
  }
  ghost.x=nx;ghost.y=ny;tutorialBounds();
  if(!hits.length){lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
@@ -446,13 +446,19 @@ updateEchoDisplay();refreshUpgradeStates();
 }
 
 function drawToken(token){
- const {x,y}=token,pulse=reduced?0:Math.sin(t*5+token.id)*3,glow=18+pulse;
- ctx.save();ctx.translate(x,y+(reduced?0:Math.sin(t*3+token.id)*3));
- ctx.fillStyle='#07141f88';ctx.beginPath();ctx.ellipse(0,13,16,5,0,0,Math.PI*2);ctx.fill();
- const g=ctx.createRadialGradient(0,0,2,0,0,glow);g.addColorStop(0,'#fff4b899');g.addColorStop(.45,'#f3ce8748');g.addColorStop(1,'#f3ce8700');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
- rect(ctx,-10,-12,20,22,'#263642');rect(ctx,-8,-10,16,18,'#435653');ctx.strokeStyle='#f3ce87';ctx.lineWidth=2;ctx.strokeRect(-10,-12,20,22);
- rect(ctx,-2,-7,4,4,'#fff0ae');rect(ctx,1,-4,3,3,'#f3ce87');rect(ctx,-1,-1,3,3,'#f3ce87');rect(ctx,-1,5,3,2,'#fff0ae');
- for(let i=0;i<4;i++){const a=t*2+i*Math.PI/2+token.id;rect(ctx,Math.cos(a)*(17+pulse)-1,Math.sin(a)*(13+pulse)-1,3,3,'#fff1ae')}
+ const x=token.x,y=token.y,bob=reduced?0:Math.round(Math.sin(t*4+token.id)*3),scale=1.5;
+ ctx.save();ctx.translate(x,y+bob);
+ const glow=20+(reduced?0:Math.sin(t*6+token.id)*4);
+ const aura=ctx.createRadialGradient(0,0,2,0,0,glow);aura.addColorStop(0,'#fff2a8aa');aura.addColorStop(.45,'#f3c64f66');aura.addColorStop(1,'#f3c64f00');
+ ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#15120b66';ctx.beginPath();ctx.ellipse(0,13,9,3,0,0,Math.PI*2);ctx.fill();
+ for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){
+  const v=GHOST_PIXELS[j][i];if(v==='0')continue;
+  rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,v==='2'?'#d6a942':'#ffd970');
+ }
+ // Tiny dark eyes keep the pickup recognisably the same ghost.
+ rect(ctx,-4.5,-4.5,1.5,4.5,'#49391f');rect(ctx,1.5,-4.5,1.5,4.5,'#49391f');
+ for(let i=0;i<4;i++){const a=t*2.5+token.id+i*Math.PI/2,r=17+(i%2)*3;const sx=Math.cos(a)*r,sy=Math.sin(a)*r;rect(ctx,sx-1.5,sy-1.5,3,3,i%2?'#fff4bc':'#ffd970')}
  ctx.restore();
 }
 function draw(){
