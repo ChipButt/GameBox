@@ -1,11 +1,28 @@
 import {WORLD} from './world.js';
 export const MATERIALS=['None','Fabric','Wood','Plaster','Brick','Stone','Metal','Reinforced metal'];
-export const MAX={speed:12,invisibility:12,phase:7,touch:5};
-export const initial=()=>({bank:0,best:0,runs:0,speed:0,invisibility:0,phase:0,touch:0,won:false,sound:true,worldSeed:2717,worldVersion:WORLD.version,level:0,unlockedLevel:0,visited:[],visitedByLevel:[[],[],[],[],[]]});
-export function sanitize(raw){const p=initial(),limit=Math.ceil(WORLD.width/WORLD.cell)*Math.ceil(WORLD.height/WORLD.cell),clean=a=>Array.isArray(a)?[...new Set(a.filter(n=>Number.isInteger(n)&&n>=0&&n<limit))]:[];for(const k of ['bank','best','runs',...Object.keys(MAX)])p[k]=Math.max(0,Math.min(MAX[k]??1e7,Math.floor(Number(raw?.[k])||0)));p.worldSeed=Number.isInteger(raw?.worldSeed)?raw.worldSeed>>>0:2717;p.level=Math.max(0,Math.min(4,Math.floor(Number(raw?.level)||0)));p.unlockedLevel=Math.max(p.level,Math.min(4,Math.floor(Number(raw?.unlockedLevel)||0)));if(Array.isArray(raw?.visitedByLevel))p.visitedByLevel=[0,1,2,3,4].map(i=>clean(raw.visitedByLevel[i]));else p.visitedByLevel[0]=clean(raw?.visited);const legacy=clean(raw?.visited);if(legacy.length&&!p.visitedByLevel[p.level].length)p.visitedByLevel[p.level]=legacy;p.visited=p.visitedByLevel[p.level];p.won=raw?.won===true;p.sound=raw?.sound!==false;return p;}
-export const speed=p=>48+p.speed*11;
-export const capacity=p=>p.invisibility?0.65+(p.invisibility-1)*0.65:0;
-export const cost=(p,k)=>Math.round(({speed:50,invisibility:55,phase:90,touch:90}[k])*Math.pow(1.38,k==='speed'?p[k]:p[k]-1));
-export function buy(p,k){if(!(k in MAX)||p[k]>=MAX[k]||(k!=='speed'&&!p[k])||p.bank<cost(p,k))return false;p.bank-=cost(p,k);p[k]++;return true;}
+export const RUN_MAX={speed:8,invisibility:7,phase:7,touch:5};
+export const initial=()=>({best:0,runs:0,won:false,sound:true,worldSeed:2717,worldVersion:WORLD.version,level:0,unlockedLevel:0});
+export function sanitize(raw){
+ const p=initial();
+ p.best=Math.max(0,Math.floor(Number(raw?.best)||0));
+ p.runs=Math.max(0,Math.floor(Number(raw?.runs)||0));
+ p.worldSeed=Number.isInteger(raw?.worldSeed)?raw.worldSeed>>>0:2717;
+ p.level=Math.max(0,Math.min(4,Math.floor(Number(raw?.level)||0)));
+ p.unlockedLevel=Math.max(p.level,Math.min(4,Math.floor(Number(raw?.unlockedLevel)||0)));
+ p.won=raw?.won===true;p.sound=raw?.sound!==false;return p;
+}
+export const newRun=level=>({echoes:0,speed:0,invisibility:0,phase:0,touch:0,level,explored:0,awardedBands:0});
+export const runSpeed=r=>62+r.level*3+r.speed*12;
+export const runCapacity=r=>r.invisibility?1.15+(r.invisibility-1)*.8:0;
+export const runCost=(r,k)=>{
+ const base={speed:20,invisibility:25,phase:28,touch:26}[k]??9999;
+ const n=r[k]||0;
+ return Math.round(base*Math.pow(1.34,n));
+};
+export function buyRun(r,k){
+ if(!(k in RUN_MAX)||r[k]>=RUN_MAX[k])return false;
+ const price=runCost(r,k);if(r.echoes<price)return false;
+ r.echoes-=price;r[k]++;return true;
+}
 export const overlap=(x,y,b,r=10)=>!b.open&&x+r>b.x&&x-r<b.x+b.w&&y+r>b.y&&y-r<b.y+b.h;
 export function rayBlocked(ax,ay,bx,by,blocks){const n=Math.ceil(Math.hypot(bx-ax,by-ay)/6);for(let i=1;i<n;i++){const x=ax+(bx-ax)*i/n,y=ay+(by-ay)*i/n;if(blocks.some(b=>overlap(x,y,b,0)))return true;}return false;}
