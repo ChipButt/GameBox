@@ -1,7 +1,7 @@
 import {WORLD} from './world.js';
 export const MATERIALS=['None','Fabric','Wood','Plaster','Brick','Stone','Metal','Reinforced metal'];
-export const RUN_MAX={speed:8,invisibility:7,phase:7,touch:5};
-export const initial=()=>({best:0,runs:0,won:false,sound:true,worldSeed:2717,worldVersion:WORLD.version,level:0,unlockedLevel:0});
+export const RUN_MAX={invisibility:7,phase:7,touch:5};
+export const initial=()=>({best:0,runs:0,won:false,sound:true,worldSeed:2717,worldVersion:WORLD.version,level:0,unlockedLevel:0,introSeen:false,tutorialSeen:false});
 export function sanitize(raw){
  const p=initial();
  p.best=Math.max(0,Math.floor(Number(raw?.best)||0));
@@ -9,13 +9,15 @@ export function sanitize(raw){
  p.worldSeed=Number.isInteger(raw?.worldSeed)?raw.worldSeed>>>0:2717;
  p.level=Math.max(0,Math.min(4,Math.floor(Number(raw?.level)||0)));
  p.unlockedLevel=Math.max(p.level,Math.min(4,Math.floor(Number(raw?.unlockedLevel)||0)));
- p.won=raw?.won===true;p.sound=raw?.sound!==false;return p;
+ p.won=raw?.won===true;p.sound=raw?.sound!==false;
+ p.introSeen=raw?.introSeen===true;p.tutorialSeen=raw?.tutorialSeen===true;
+ return p;
 }
-export const newRun=level=>({echoes:0,speed:0,invisibility:0,phase:0,touch:0,level,explored:0,awardedBands:0});
-export const runSpeed=r=>62+r.level*3+r.speed*12;
-export const runCapacity=r=>r.invisibility?1.15+(r.invisibility-1)*.8:0;
+export const newRun=level=>({echoes:0,invisibility:0,phase:0,touch:0,level,explored:0});
+export const runSpeed=r=>78+r.level*4;
+export const runCapacity=r=>r.invisibility?1.4+(r.invisibility-1)*.85:0;
 export const runCost=(r,k)=>{
- const base={speed:20,invisibility:25,phase:28,touch:26}[k]??9999;
+ const base={invisibility:25,phase:28,touch:26}[k]??9999;
  const n=r[k]||0;
  return Math.round(base*Math.pow(1.34,n));
 };
