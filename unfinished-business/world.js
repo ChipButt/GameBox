@@ -52,7 +52,7 @@ export const levelInfo=(level=0)=>LEVELS[Math.max(0,Math.min(4,level|0))];
 export const areaAt=(x,y,level=0)=>regionsForLevel(level).find(r=>contains(r,x,y))||{name:level===0?'Cemetery paths':'Lantern streets',floor:'#424958',kind:3};
 
 function baseLayout(add,decor,random){
- const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;touch=99}return add(x,y,w,h,kind,phase,touch)};
+ const wall=(x,y,w,h,phase=99,unused=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;unused=99}return add(x,y,w,h,kind,phase)};
  // Cemetery perimeter. The north gate is a physical obstacle rather than a magic level trigger.
  wall(120,120,1100,28);wall(1420,120,800,28);wall(120,120,28,2140);wall(2192,120,28,2140);wall(120,2232,2100,28);
  const exitGate=wall(1220,120,200,28,2,99,'gate');exitGate.exit=true;
@@ -81,7 +81,7 @@ function baseLayout(add,decor,random){
  for(const [x,y] of [[280,780],[860,760],[1180,760],[1560,760],[2110,760],[1040,1550],[1600,1550],[2240,1550]])decor.push({x,y,kind:'lamp'});
 }
 function variantLayout(level,add,decor){
- const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;touch=99}return add(x,y,w,h,kind,phase,touch)};
+ const wall=(x,y,w,h,phase=99,unused=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;unused=99}return add(x,y,w,h,kind,phase)};
  if(level===1){
   wall(830,24,250,750,99,99,'water');wall(830,910,250,610,99,99,'water');wall(830,1660,250,716,99,99,'water');
   for(const y of [760,1508]){wall(820,y,270,20);wall(935,y,45,20,2,2,'gate');}
@@ -113,7 +113,7 @@ function variantLayout(level,add,decor){
 export function generateWorld(seed=2717,level=0){
  level=Math.max(0,Math.min(4,level|0));let state=(seed+level*982451653)>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
  const blocks=[],decor=[],regions=regionsForLevel(level),info=levelInfo(level);
- const add=(x,y,w,h,kind='wall',phase=99,touch=99)=>{const b={x,y,w,h,kind,phase,touch,open:false};blocks.push(b);return b};
+ const add=(x,y,w,h,kind='wall',phase=99)=>{const b={x,y,w,h,kind,phase,open:false};blocks.push(b);return b};
  add(0,0,WORLD.width,24);add(0,0,24,WORLD.height);add(0,WORLD.height-24,WORLD.width,24);add(WORLD.width-24,0,24,WORLD.height);
  if(level===0)baseLayout(add,decor,random);else variantLayout(level,add,decor);
  for(const r of regions.filter(r=>r.kind===2||r.kind===4)){
@@ -125,7 +125,6 @@ export function generateWorld(seed=2717,level=0){
  if(level===0)for(const [x,y] of [[940,440],[940,1150],[940,1800],[1820,1410],[700,720],[2050,1100]])decor.push({x,y,kind:'lamp'});
  // Phase progression: doors are always low-tier; ordinary walls carry the stronger materials.
  for(const b of blocks){
-  b.touch=99;
   if(b.kind==='door'||b.kind==='gate'){
    const seeded=Number.isFinite(b.phase)&&b.phase<99?b.phase:1+((Math.floor(b.x/120)+Math.floor(b.y/120)+level)%3);
    b.phase=Math.max(1,Math.min(3,seeded));
