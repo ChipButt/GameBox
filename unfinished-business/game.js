@@ -6,7 +6,7 @@ import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260927i';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
-let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0};
+let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0,refillActive:false};
 const names={speed:'Speed',invisibility:'Vanish',phase:'Phase',touch:'Touch'},labels={invisibility:'VANISH',phase:'PHASE',touch:'TOUCH'};
 const GRAVEYARD_OBJECTIVES=[
  {title:'Find your grave',hint:'Something about the old graves feels familiar.',x:630,y:1870,complete:'That name… that is mine.'},
@@ -68,7 +68,7 @@ function animateStoryScene(scene){
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
 function tutorialPrompt(){
- mode='story';show(`<span class="eyebrow">BEFORE YOU LEAVE THE GRAVEYARD</span><h2>Learn how being dead works?</h2><p class="subtitle">A short playable tutorial takes you through movement, Speed, Vanish, Phase and Touch one at a time.</p><button class="primary" id="doTutorial">Play tutorial</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
+ mode='story';show(`<span class="eyebrow">BEFORE YOU LEAVE THE GRAVEYARD</span><h2>Learn how being dead works?</h2><p class="subtitle">Learn the basics. Try each skill for yourself.</p><button class="primary" id="doTutorial">Play tutorial</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
  $('doTutorial').onclick=()=>start(true);$('skipTutorial').onclick=()=>{p.tutorialSeen=true;save();start(false)};
 }
 function tutorialCard(title,body,button='Continue',action=()=>resumeTutorial(),demo=null){
@@ -82,8 +82,8 @@ function tutorialUpgradeReady(k){
  tutorialCard(
   k==='speed'?'Your first upgrade':`Unlock ${labels[k]}`,
   k==='speed'
-   ?`Moving feels slow because your spirit is still weak. You have enough Echoes to strengthen it. Back in the game, the <b>SPEED +${price}</b> button will turn bright gold and sparkle. Tap that real upgrade button.`
-   :`You have <b>${price} Echoes</b>. Back in the game, the ${labels[k]} upgrade tab will turn bright gold and sparkle. Tap that real upgrade button to unlock it.`,
+   ?`<b>SPEED is ready.</b><br>Tap the sparkling gold upgrade.`
+   :`<b>${labels[k]} is ready.</b><br>Tap the sparkling gold upgrade.`,
   'Back to game',
   ()=>resumeTutorial(),
   k==='speed'?'speed':null
@@ -97,21 +97,21 @@ function afterTutorialPurchase(k){
  tone(780,.14);updateEchoDisplay();updateSkills();refreshUpgradeStates();
  if(k==='speed'){
   tutorial.stage=3;
-  tutorialCard('Speed',`Every Speed tier permanently increases your movement for this attempt. You can buy more whenever its upgrade button turns gold. Now collect <b>25 Echoes</b> and reach the next sparkling token.`,'Find the Vanish token',()=>resumeTutorial(),'speed');
+  tutorialCard('Speed',`Faster.<br><b>Next: find the golden ghost.</b>`,'Find the Vanish token',()=>resumeTutorial(),'speed');
  }else if(k==='invisibility'){
-  energy=runCapacity(run);tutorial.stage=5;spawnTutorialLookout();
-  tutorialCard('Vanish',`The person at the memorial-lawn exit watches <b>outward for a couple of seconds, then pivots 180° and watches inward</b>. Tap VANISH to disappear, then move through the gap. You cannot pass this lesson without using Vanish successfully.`,'Practise Vanish',()=>resumeTutorial(),'invisibility');
+  energy=runCapacity(run);tutorial.stage=5;tutorial.refillActive=false;spawnTutorialLookout();
+  tutorialCard('Vanish',`The lookout keeps turning.<br><b>VANISH. Slip past unseen.</b>`,'Practise Vanish',()=>resumeTutorial(),'invisibility');
  }else if(k==='phase'){
   tutorial.stage=8;
-  tutorialCard('Phase',`Doors and barriers have different materials. Your Phase tier determines what your spirit can pass through. Tap PHASE to arm it, then move directly through the glowing <b>Phase 1 doorway</b> ahead.`,'Practise Phase',()=>resumeTutorial(),'phase');
+  tutorialCard('Phase',`<b>PHASE</b> lets you pass through matching materials.<br>Try the door ahead.`,'Practise Phase',()=>resumeTutorial(),'phase');
  }else if(k==='touch'){
   tutorial.stage=11;
-  tutorialCard('Touch',`Touch lets you affect physical objects instead of passing through them. Tap TOUCH, then push into the wooden barrier ahead until it opens. Touching things can make noise in the real levels.`,'Practise Touch',()=>resumeTutorial(),'touch');
+  tutorialCard('Touch',`<b>TOUCH</b> moves the physical world.<br>Open the barrier ahead.`,'Practise Touch',()=>resumeTutorial(),'touch');
  }
 }
 function completeTutorial(){
  p.tutorialSeen=true;save();tutorial={active:false,stage:0,useTime:0};
- tutorialCard('You remember enough.',`You now know the rhythm: <b>explore → collect → upgrade → use your powers</b>. In the real level, the story objectives are separate from your abilities. Tokens and Echoes simply give you more ways to survive.`,'Begin Level 1',()=>start(false));
+ tutorialCard('You remember enough.',`Explore. Collect. Upgrade. Survive.`,'Begin Level 1',()=>start(false));
 }
 function animateTutorialDemo(kind){
  const c=$('tutorialDemo');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
@@ -177,14 +177,46 @@ function applyGraveyardStoryBeat(step){
  }
 }
 const TUTORIAL_TARGETS={
- 1:{id:9101,x:1120,y:1940,title:'Reach the Speed token',hint:'Explore the memorial lawn until you have 20 Echoes, then collect the sparkling token.',cost:20,upgrade:'speed'},
- 3:{id:9102,x:1500,y:1740,title:'Reach the Vanish token',hint:'Collect 25 Echoes and make your way to the sparkling token.',cost:25,upgrade:'invisibility'},
- 5:{id:9103,x:1320,y:1510,title:'Get past the lookout',hint:'Use Vanish and slip through the watched gap to the token outside the memorial lawn.'},
- 6:{id:9104,x:1470,y:1360,title:'Reach the Phase token',hint:'Explore until you have 26 Echoes, then reach the token beside the locked doorway.',cost:26,upgrade:'phase'},
- 8:{id:9105,x:1320,y:1120,title:'Phase through the doorway',hint:'Arm Phase and pass through the Phase 1 doorway to reach the token beyond it.'},
- 9:{id:9106,x:1480,y:1020,title:'Reach the Touch token',hint:'Explore until you have 30 Echoes, then collect the token beside the wooden barrier.',cost:30,upgrade:'touch'},
- 11:{id:9107,x:1320,y:780,title:'Open the way with Touch',hint:'Arm Touch and push against the wooden barrier, then collect the final token.'}
+ 1:{id:9101,x:1120,y:1940,title:'Reach the Speed token',hint:'20 Echoes · reach the golden ghost.',cost:20,upgrade:'speed'},
+ 3:{id:9102,x:1500,y:1740,title:'Reach the Vanish token',hint:'25 Echoes · reach the golden ghost.',cost:25,upgrade:'invisibility'},
+ 5:{id:9103,x:1320,y:1510,title:'Get past the lookout',hint:'Vanish past the lookout.'},
+ 6:{id:9104,x:1470,y:1360,title:'Reach the Phase token',hint:'26 Echoes · reach the golden ghost.',cost:26,upgrade:'phase'},
+ 8:{id:9105,x:1320,y:1120,title:'Phase through the doorway',hint:'Phase through the door.'},
+ 9:{id:9106,x:1480,y:1020,title:'Reach the Touch token',hint:'30 Echoes · reach the golden ghost.',cost:30,upgrade:'touch'},
+ 11:{id:9107,x:1320,y:780,title:'Open the way with Touch',hint:'Touch the barrier open.'}
 };
+const TUTORIAL_SECTION_STARTS={
+ 5:{x:1320,y:1710},
+ 8:{x:1320,y:1365},
+ 11:{x:1320,y:1015}
+};
+const TUTORIAL_REFILL={id:9199,x:1160,y:1695,title:'Vanish refill'};
+function resetTutorialSection(){
+ const start=TUTORIAL_SECTION_STARTS[tutorial.stage]||{x:1320,y:2130};
+ ghost.x=start.x;ghost.y=start.y;lastSafe={...start};seen=0;held=false;contact=null;contactTime=0;phaseExit=null;
+ if(tutorial.stage===5){energy=runCapacity(run);tutorial.refillActive=false;spawnTutorialLookout();}
+ const touchGate=blocks.find(b=>b.tutorialGate==='touch');if(tutorial.stage===11&&touchGate)touchGate.open=false;
+ if(nav)nav=navigation(blocks);
+ mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateObjectiveHud();
+}
+function tutorialCaught(){
+ if(mode!=='play')return;
+ mode='tutorialCaught';resetInput();tone(150,.2);
+ show(`<span class="eyebrow">CAUGHT</span><h2>Someone Saw You</h2><p class="subtitle">Try that bit again.</p><button class="primary" id="tutorialRetry">Retry</button><button class="secondary" id="tutorialMenu">Main Menu</button>`);
+ $('tutorialRetry').onclick=resetTutorialSection;
+ $('tutorialMenu').onclick=home;
+}
+function tutorialRefillToken(){
+ if(!tutorial.active||tutorial.stage!==5||!tutorial.refillActive)return null;
+ return TUTORIAL_REFILL;
+}
+function updateTutorialRefill(){
+ if(!tutorial.active||tutorial.stage!==5)return;
+ if(energy<=0&&!tutorial.refillActive){tutorial.refillActive=true;held=false;note('VANISH EMPTY · REFILL APPEARED',1.8);updateSkills();}
+ if(tutorial.refillActive&&Math.hypot(ghost.x-TUTORIAL_REFILL.x,ghost.y-TUTORIAL_REFILL.y)<24){
+  energy=runCapacity(run);tutorial.refillActive=false;held=false;tone(820,.12);note('VANISH REFILLED',1.3);updateSkills();
+ }
+}
 function tutorialTarget(){return tutorial.active?TUTORIAL_TARGETS[tutorial.stage]||null:null}
 function setupTutorialCourse(){
  // The memorial lawn becomes a compact sequence of real gameplay gates.
@@ -207,13 +239,13 @@ function tutorialCheckpoint(){
  if(tutorial.stage===3){tutorial.stage=4;tutorialUpgradeReady('invisibility');return}
  if(tutorial.stage===5){
   people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();
-  tutorialCard('That worked.',`Vanish got you through a watched route. Ahead is a locked doorway. Collect <b>26 Echoes</b> and reach the next sparkling token to learn how materials and Phase work.`,'Continue',()=>resumeTutorial());
+  tutorialCard('That worked.',`Unseen.<br><b>Next: 26 Echoes and the golden ghost.</b>`,'Continue',()=>resumeTutorial());
   return;
  }
  if(tutorial.stage===6){tutorial.stage=7;tutorialUpgradeReady('phase');return}
  if(tutorial.stage===8){
   held=false;tutorial.stage=9;updateSkills();
-  tutorialCard('You passed through it.',`Phase ignores a material when your tier is high enough. Some objects are better handled physically instead. Collect <b>30 Echoes</b> and reach the next token.`,'Continue',()=>resumeTutorial());
+  tutorialCard('You passed through it.',`Through.<br><b>Next: 30 Echoes and the golden ghost.</b>`,'Continue',()=>resumeTutorial());
   return;
  }
  if(tutorial.stage===9){tutorial.stage=10;tutorialUpgradeReady('touch');return}
@@ -280,7 +312,7 @@ function start(isTutorial=false){
  mode='play';
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};if(isTutorial)setupTutorialCourse();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
+ run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
  updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move around the memorial lawn. Every new patch of ground gives you <b>1 Echo</b>. Your first target is the sparkling token. Explore until you have <b>20 Echoes</b> and reach it. This first lesson will show you how to make your ghost faster.`,'Start tutorial');
  else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
  tone(320);
@@ -383,14 +415,15 @@ checkObjectives();
 let invisible=active('invisibility');
 if(invisible){
  energy=Math.max(0,energy-dt);
- if(energy<=0){held=false;invisible=false;updateSkills();note('Vanish exhausted.',1.4)}
+ if(energy<=0){held=false;invisible=false;updateSkills();if(!(tutorial.active&&tutorial.stage===5))note('Vanish exhausted.',1.4)}
 }
-if(tutorial.active)tutorialCheckpoint();
+if(tutorial.active){updateTutorialRefill();tutorialCheckpoint();}
 const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
 if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · charge used.',3);tone(180,.22);updateTokenInventory()}
 const spotted=sight.danger;
 if(tutorial.active&&tutorial.stage===5&&spotted&&!invisible){
- seen=0;ghost.x=1320;ghost.y=1710;lastSafe={x:ghost.x,y:ghost.y};held=false;updateSkills();note('Spotted. Try again — activate VANISH before crossing the lookout.',2.2);tone(150,.12);
+ seen+=dt;
+ if(seen>.18){tutorialCaught();return}
 }else{
  seen=spotted?seen+dt:Math.max(0,seen-dt*3);
  if(seen>.18){finish();return}
@@ -433,12 +466,12 @@ function draw(){
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
  if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
 
- for(const token of tokens)if(!token.collected&&token.x>camX-30&&token.x<camX+510&&token.y>cam-30&&token.y<cam+viewH+30)drawToken(token);const tutorialPickup=tutorialTarget();if(tutorialPickup)drawToken(tutorialPickup);
+ for(const token of tokens)if(!token.collected&&token.x>camX-30&&token.x<camX+510&&token.y>cam-30&&token.y<cam+viewH+30)drawToken(token);const tutorialPickup=tutorialTarget();if(tutorialPickup)drawToken(tutorialPickup);const refill=tutorialRefillToken();if(refill)drawToken(refill);
  const obj=currentObjective();if(obj){const pulse=12+(reduced?0:Math.sin(t*4)*4);ctx.strokeStyle='#f3ce87';ctx.lineWidth=3;ctx.beginPath();ctx.arc(obj.x,obj.y,pulse,0,Math.PI*2);ctx.stroke();rect(ctx,obj.x-3,obj.y-3,6,6,'#fff1ae');}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
  if(active('touch')){ctx.strokeStyle='#e9c58a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ghost.x,ghost.y-7,24,0,7);ctx.stroke()}ctx.restore();
  if(mode==='play')drawMap();
 }
-function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}const tt=tutorialTarget();if(tt){const tw=reduced?3:(Math.sin(t*6)>.1?5:3);rect(ctx,x+tt.x*sx-tw/2,y+tt.y*sy-tw/2,tw,tw,'#fff0a8')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
+function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}const tt=tutorialTarget();if(tt){const tw=reduced?3:(Math.sin(t*6)>.1?5:3);rect(ctx,x+tt.x*sx-tw/2,y+tt.y*sy-tw/2,tw,tw,'#fff0a8')}const rf=tutorialRefillToken();if(rf){const tw=4;rect(ctx,x+rf.x*sx-2,y+rf.y*sy-2,tw,tw,'#fff0a8')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
 function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
