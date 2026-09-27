@@ -6,7 +6,7 @@ export const REGIONS=[
  {x:120,y:850,w:780,h:510,name:'Back gardens',floor:'#3c594c',kind:2},
  {x:1060,y:1630,w:500,h:520,name:'The garage',floor:'#465359',kind:1},
  {x:1640,y:1630,w:540,h:570,name:'Orchard lane',floor:'#3d5547',kind:2},
- {x:1160,y:760,w:800,h:560,name:'Corner shops',floor:'#615451',kind:0},
+ {x:1160,y:760,w:800,h:560,name:'Bank & shops',floor:'#615451',kind:0},
  {x:1120,y:100,w:800,h:520,name:'Willow park',floor:'#3d5b4d',kind:2},
  {x:120,y:100,w:740,h:580,name:'The churchyard',floor:'#49524e',kind:4},
  {x:1970,y:80,w:250,h:550,name:'The crossing',floor:'#657273',kind:4}
@@ -15,7 +15,7 @@ export const contains=(r,x,y)=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h;
 export const areaAt=(x,y)=>REGIONS.find(r=>contains(r,x,y))||{name:'Lantern streets',floor:'#424958',kind:3};
 export function generateWorld(seed=2717){
  let state=seed>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
- const blocks=[],people=[],decor=[];
+ const blocks=[],decor=[];
  const add=(x,y,w,h,kind='wall',phase=99,touch=99)=>{const b={x,y,w,h,kind,phase,touch,open:false};blocks.push(b);return b};
  const horizontal=(x,y,w,gap,material=0,touch=99)=>{add(x,y,gap-x,22);add(gap+120,y,x+w-gap-120,22);if(material)add(gap,y,120,22,material===1?'curtain':'gate',material,touch)};
  const vertical=(x,y,h,gap,material=0,touch=99)=>{add(x,y,22,gap-y);add(x,gap+120,22,y+h-gap-120);if(material)add(x,gap,22,120,material===1?'curtain':'door',material,touch)};
@@ -49,11 +49,7 @@ export function generateWorld(seed=2717){
   }
  }
  for(const [x,y] of [[940,440],[940,1150],[940,1800],[1820,1410],[700,720],[2050,1100]])decor.push({x,y,kind:'lamp'});
- // Patrol routes are explicit clear street segments, including vertical movement.
- const routes=[[[210,1770],[750,1770]],[[640,1900],[640,2110]],[[1080,1920],[1430,1920]],[[300,1420],[860,1420]],[[970,900],[970,1540]],[[1100,1440],[1900,1440]],[[1610,1020],[1830,1020]],[[1060,670],[1920,670]],[[2020,850],[2020,1450]],[[460,740],[940,740]],[[1000,180],[1000,620]],[[2050,550],[2160,550]]];
- routes.forEach((path,i)=>{people.push({path,x:path[0][0],y:path[0][1],speed:30+i*2,offset:i*43,range:150+i*4,angle:0})});
- return {blocks,people,decor,regions:REGIONS};
+ return {blocks,decor,regions:REGIONS};
 }
-export function patrolPosition(h,time){const a=h.path[0],b=h.path[1],length=Math.hypot(b[0]-a[0],b[1]-a[1]),travel=(time*h.speed+h.offset)%(length*2),forward=travel<length,u=(forward?travel:2*length-travel)/length;h.x=a[0]+(b[0]-a[0])*u;h.y=a[1]+(b[1]-a[1])*u;h.angle=Math.atan2(b[1]-a[1],b[0]-a[0])+(forward?0:Math.PI);}
 export const cellId=(x,y)=>x<0||y<0||x>=WORLD.width||y>=WORLD.height?-1:Math.floor(y/WORLD.cell)*Math.ceil(WORLD.width/WORLD.cell)+Math.floor(x/WORLD.cell);
 export function discover(visited,x,y){const id=cellId(x,y);if(id<0||visited.has(id))return false;visited.add(id);return true;}
