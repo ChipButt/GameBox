@@ -228,7 +228,7 @@ function move(dx,dy,dt){
  if(tutorial.active){ghost.x=Math.max(1010,Math.min(1600,ghost.x));ghost.y=Math.max(1580,Math.min(2250,ghost.y))}
  if(!hits.length){lastSafe={x:nx,y:ny};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
 }
-function update(dt){t+=dt;effects.boost=Math.max(0,effects.boost-dt);updateEntities(people,nav,blocks,dt);
+function update(dt){t+=dt;effects.boost=Math.max(0,effects.boost-dt);if(nav)updateEntities(people,nav,blocks,dt);
 let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
 // Finish the current crossing on release; fall back safely if another material blocks the exit.
 if(phaseExit&&!active('phase')){const length=Math.hypot(phaseExit.x,phaseExit.y)||1;let exit=null;for(let d=1;d<160;d++){const x=ghost.x+phaseExit.x/length*d,y=ghost.y+phaseExit.y/length*d;if(blocks.some(b=>overlap(x,y,b)&&b.phase>run.phase))break;if(!blocks.some(b=>overlap(x,y,b))){exit={x,y};break}}ghost.x=(exit||lastSafe).x;ghost.y=(exit||lastSafe).y;lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}
@@ -256,7 +256,7 @@ if(tutorial.active&&tutorial.stage===3&&invisible){
   tutorialCard('That is Vanish.',`Your invisibility is limited, so use it when a witness is about to see you. Now keep exploring until you have enough Echoes to unlock <b>PHASE</b>.`,'Keep exploring',()=>resumeTutorial());
  }
 }
-const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>investigate(people,nav,source,max));
+const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
 if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · token used.',3);tone(180,.22)}
 const spotted=sight.danger;
 seen=spotted?seen+dt:Math.max(0,seen-dt*3);
