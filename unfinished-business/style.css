@@ -24,3 +24,20 @@
 .ability.locked::after{content:'?';position:absolute;top:8px;left:9px;width:17px;height:17px;display:grid;place-items:center;border:1px solid #68736f;background:#15232dcc;color:#8d9994;font:950 11px Georgia,serif}
 @media(max-width:360px){#paceUpgrade{gap:7px;margin-bottom:9px}.paceBuy{padding-inline:8px}.echoPurse{min-width:78px;padding-inline:8px}#abilityBar{gap:7px}.abilitySlot{max-width:105px}.abilityUpgrade{min-width:38px;height:27px}}
 @media(max-height:650px){#controls{padding-top:22px}.paceBuy,.echoPurse{min-height:37px}.paceUpgrade{margin-bottom:7px}.abilitySlot{padding-top:9px}.abilityUpgrade{height:25px;top:0}}
+
+/* Story/tutorial pass */
+#hud .echoBox{pointer-events:none;min-width:86px;padding:8px 11px 7px;border:2px solid #718780;border-radius:4px;background:repeating-linear-gradient(0deg,#ffffff03 0 1px,transparent 1px 4px),linear-gradient(#344746dd,#1d2f36e8);box-shadow:0 4px #061219,inset 0 2px #d7e8bf24,inset 0 -3px #0005}
+#hud .echoBox small{color:var(--mint)}
+#hud .echoBox strong{display:block;color:var(--gold);font-size:24px}
+#controls{padding-top:24px}
+#abilityBar{max-width:390px;gap:12px}
+.storyScene{display:block;width:100%;max-width:310px;height:170px;margin:2px auto 14px;border:3px solid #708176;background:#0d1821;image-rendering:pixelated;box-shadow:0 5px #08131a,inset 0 0 0 2px #c6d4af1b}
+.storyText{min-height:72px;display:flex;align-items:center;justify-content:center;padding:8px 12px;margin:10px 0 4px;border-block:2px solid #65786755;background:#0b172080;color:#f0ead5;font:900 17px/1.45 Georgia,serif;text-shadow:0 2px #081218}
+.tutorialCard .eyebrow{margin-bottom:8px}.tutorialCard h2{font-size:29px;margin:8px 0 12px}
+.tutorialDemo{display:block;width:100%;max-width:270px;height:120px;margin:10px auto 14px;border:2px solid #687c70;background:#0c1922;image-rendering:pixelated;box-shadow:0 4px #07131a,inset 0 2px #d7e8bf18}
+.tutorialHint{font-size:12px;line-height:1.6;color:#c7d2c1;margin:10px auto;max-width:310px}
+.tutorialHint b{color:var(--gold)}
+.tutorialForced{border-color:#f3ce87!important;box-shadow:0 0 0 2px #5e5138,0 4px #061019,inset 0 2px #fff0bc55!important}
+.levelTitle{font-size:10px;letter-spacing:2px;color:#b6f7d2;font-weight:950;margin-bottom:4px}
+.objectiveStrip{margin:8px 0 4px;padding:9px 10px;border:2px solid #62766e;background:#0a1720aa;color:#e8e6cf;font-size:11px;font-weight:850;letter-spacing:.4px}
+@media(max-height:650px){.storyScene{height:125px}.storyText{min-height:58px;font-size:15px}.tutorialDemo{height:92px}#controls{padding-top:14px}}
