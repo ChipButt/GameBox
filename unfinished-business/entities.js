@@ -64,7 +64,7 @@ export function createEntities(nav,level=0){
  ['human','Night porter',66,[[380,350,.5,0],[820,360,.5,0],[1180,420,.5,0],[1640,420,.5,0],[2060,380,.7,3.14],[1640,420,.5,3.14],[1180,420,.5,3.14],[820,360,.5,3.14]]]
  ];
  const wanted=20+level*3;
- const source=[...base,...extra,...base.slice(0,8).map(r=>[r[0],r[1]+' II',r[2]+8,r[3].map(([x,y,w,f])=>[Math.min(2180,x+70),Math.max(150,y-55),Math.max(.2,w*.75),f])])];
+ const source=level===0?[...graveyard,...graveyard.slice(0,8).map(r=>[r[0],r[1]+' · second round',r[2]+6,r[3].map(([x,y,w,f])=>[Math.min(2140,x+55),Math.max(180,y-45),Math.max(.2,w*.8),f])])]:[...base,...extra,...base.slice(0,8).map(r=>[r[0],r[1]+' II',r[2]+8,r[3].map(([x,y,w,f])=>[Math.min(2180,x+70),Math.max(150,y-55),Math.max(.2,w*.75),f])])];
  const routines=source.slice(0,Math.min(source.length,wanted));
  const entities=[];
  for(const [kind,task,speed,points] of routines){
@@ -72,7 +72,11 @@ export function createEntities(nav,level=0){
   if(route.length<2)continue;
   entities.push({id,kind,task,speed:speed+level*4,route,...route[0],index:0,state:'wait',wait:route[0].wait+id*.07,range:148+level*7+(id%4)*12,angle:route[0].face,half:.61,frozen:0,path:null,search:0,cooldown:0,walk:0,tint:['#b18f78','#7b96a0','#8f9671','#9d8299'][id%4]});
  }
- const cats=[
+ const cats=level===0?[
+  ['Prowling between graves',70,[[360,1810,.4,0],[760,1780,.4,-1.57],[760,1420,.4,3.14],[360,1450,.4,1.57]]],
+  ['Stalking the funeral lawn',74,[[1030,1390,.4,0],[1490,1380,.4,-1.57],[1490,1000,.4,3.14],[1080,1010,.4,1.57]]],
+  ['Hunting by the chapel',80,[[1660,1500,.4,0],[2110,1500,.4,-1.57],[2110,860,.4,3.14],[1680,860,.4,1.57]]]
+ ]:[
   ['Prowling the garden',68,[[430,1230,.5,0],[820,1130,.5,1.57],[930,1390,.5,3.14],[450,1410,.5,-1.57]]],
   ['Hunting behind the garage',72,[[1100,2220,.5,0],[1500,2260,.5,1.57],[1640,2150,.5,3.14],[1530,2210,.5,-1.57]]],
   ['Crossing rooftops',78,[[1030,700,.4,0],[1370,700,.4,0],[1690,720,.4,1.57],[1780,980,.5,3.14],[1320,980,.4,3.14]]],
@@ -86,7 +90,7 @@ export function createEntities(nav,level=0){
  const cycleRoute=cyclePoints.map(([x,y,wait,face])=>{const n=nav.nearest({x,y});return n?{...n,wait,face}:null}).filter(Boolean);
  if(cycleRoute.length>4){const id=entities.length;entities.push({id,kind:'cyclist',task:'Cycling the neighbourhood',speed:145+level*10,route:cycleRoute,...cycleRoute[0],index:0,state:'wait',wait:.05,range:165+level*7,angle:cycleRoute[0].face,half:.56,frozen:0,path:null,search:0,cooldown:0,walk:0,tint:'#6f8798'});}
  const cameras=[[904,1530,0,'House exterior'],[1040,1640,2.3,'Garage corner'],[1170,738,-1.1,'Shop entrance'],[1900,800,2.2,'Bank security'],[1580,1250,-.9,'Bank security'],[1948,1290,1.1,'Bank exterior'],[840,720,.2,'Main crossing'],[1500,720,2.9,'Upper street'],[2160,1450,2.3,'East lane'],[900,1450,-.2,'Lower crossing'],[1750,1550,-1.8,'Freight yard'],[2050,620,1.5,'North approach']];
- for(const [x,y,angle,task] of cameras.slice(0,6+level*2)){const n=nav.nearest({x,y});if(!n)continue;entities.push({id:entities.length,kind:'camera',task,...n,angle,baseAngle:angle,clock:0,range:210+level*12,half:.48,frozen:0});}
+ if(level>0)for(const [x,y,angle,task] of cameras.slice(0,6+level*2)){const n=nav.nearest({x,y});if(!n)continue;entities.push({id:entities.length,kind:'camera',task,...n,angle,baseAngle:angle,clock:0,range:210+level*12,half:.48,frozen:0});}
  return entities;
 }
 function follow(e,dt,blocks){if(!e.path?.length)return true;let budget=e.speed*dt;while(budget>0&&e.path.length){const target=e.path[0],d=distance(e,target);if(d<.2){e.path.shift();continue}const amount=Math.min(d,budget),next={x:e.x+(target.x-e.x)/d*amount,y:e.y+(target.y-e.y)/d*amount};if(!clearSegment(e,next,blocks)){e.path=null;return false}e.angle=Math.atan2(target.y-e.y,target.x-e.x);e.x=next.x;e.y=next.y;e.walk+=amount;budget-=amount;if(amount===d)e.path.shift();}return !e.path.length;}
