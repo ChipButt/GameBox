@@ -62,12 +62,8 @@
 
 /* Tutorial affordance pass: upgrades are dull until affordable, then sparkle hard. */
 .echoStack{display:flex;flex-direction:column;align-items:stretch;gap:6px;pointer-events:none}
-#speedUpgrade{pointer-events:auto;min-height:34px;padding:5px 8px;border:2px solid #4e5959;border-radius:4px;background:linear-gradient(#303b3d,#1b272e);box-shadow:0 3px #061219,inset 0 2px #ffffff09;color:#7f8a87;text-align:center}
-#speedUpgrade small{font-size:7px;letter-spacing:1.2px;color:inherit}
-#speedUpgrade strong{display:block;font-size:11px;color:inherit;text-shadow:none}
-#speedUpgrade.affordable,.abilityUpgrade.affordable{border-color:#ffe59b!important;background:linear-gradient(#ffe8a8,#d0a554)!important;color:#2c2418!important;box-shadow:0 3px #6a5328,inset 0 2px #fff8d2,0 0 8px #ffd96b,0 0 18px #ffd96b88!important;animation:upgradePulse 1s steps(2,end) infinite}
-#speedUpgrade.affordable::after,.abilityUpgrade.affordable::after{content:'✦';position:absolute;right:-7px;top:-8px;color:#fff2a8;font-size:13px;text-shadow:0 0 6px #fff0a5;animation:upgradeSpark .8s steps(2,end) infinite}
-#speedUpgrade{position:relative}
+.abilityUpgrade.affordable{border-color:#ffe59b!important;background:linear-gradient(#ffe8a8,#d0a554)!important;color:#2c2418!important;box-shadow:0 3px #6a5328,inset 0 2px #fff8d2,0 0 8px #ffd96b,0 0 18px #ffd96b88!important;animation:upgradePulse 1s steps(2,end) infinite}
+.abilityUpgrade.affordable::after{content:'✦';position:absolute;right:-7px;top:-8px;color:#fff2a8;font-size:13px;text-shadow:0 0 6px #fff0a5;animation:upgradeSpark .8s steps(2,end) infinite}
 .abilityUpgrade{background:linear-gradient(#3a4747,#222f35);border-color:#5c6962;color:#77847d;box-shadow:0 3px #0b171e;text-shadow:none}
 .abilityUpgrade:disabled{opacity:.55}
 .abilityUpgrade.affordable{opacity:1}
