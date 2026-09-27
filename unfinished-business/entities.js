@@ -103,22 +103,40 @@ export function updateEntities(entities,nav,blocks,dt){for(const e of entities){
 export function sees(e,target,blocks,invisible=false){if(invisible||e.frozen>0)return false;const dx=target.x-e.x,dy=target.y-e.y,angle=Math.atan2(dy,dx),delta=Math.atan2(Math.sin(angle-e.angle),Math.cos(angle-e.angle));return Math.hypot(dx,dy)<e.range&&Math.abs(delta)<e.half&&!rayBlocked(e.x,e.y,target.x,target.y,blocks);}
 export function resolveSightings(entities,target,blocks,effects,invisible,alert){let danger=false,blocked=false;for(const e of entities){if(!sees(e,target,blocks,invisible))continue;if(effects.stiff>0){effects.stiff--;e.frozen=8;blocked=true;continue}if(e.kind==='cat'){if(e.cooldown<=0){e.cooldown=9;e.meow=1.5;alert({x:e.x,y:e.y},1)}continue}danger=true;}return {danger,blocked};}
 export function createTokens(nav,level=0){
- const points=[[430,2100],[800,1770],[1380,2070],[830,970],[370,1240],[1220,1210],[1840,1190],[1850,470],[730,560],[2100,2100],[1670,1880],[1940,690],[610,1870],[1460,910],[520,430],[2050,980]];
- const rewards=['echo25','speed','stiff','echo50','refill','echo25','speed','stiff','echo25','refill','echo50','speed','stiff','echo25','refill','echo50'];
- return points.map(([x,y],id)=>({id,...nav.nearest({x,y}),reward:rewards[(id+level*3)%rewards.length],secret:id>=12,collected:false})).filter(t=>Number.isFinite(t.x)&&Number.isFinite(t.y));
+ const points=[
+  [300,2140],[520,2050],[760,1910],[1040,2100],[1390,2070],[1600,1920],[1900,2050],[2110,1840],
+  [360,1660],[650,1560],[1080,1710],[1450,1590],[1800,1690],[2080,1450],
+  [330,1320],[720,1190],[1050,1320],[1390,1180],[1770,1320],[2070,1120],
+  [380,920],[760,830],[1110,930],[1450,760],[1810,900],[2100,680],
+  [520,520],[880,430],[1270,560],[1660,470],[2020,390],[1320,300]
+ ];
+ const rewards=['echo25','speedTier','stiff','echo50','invisibilityTier','echo25','phaseTier','stiff',
+  'touchTier','echo25','speedTier','refill','echo50','stiff','phaseTier','echo25',
+  'invisibilityTier','speedTier','echo50','touchTier','stiff','echo25','refill','speedTier',
+  'phaseTier','echo50','invisibilityTier','stiff','touchTier','echo25','speedTier','echo50'];
+ return points.map(([x,y],id)=>{
+  const n=nav.nearest({x,y});return n?{id,...n,reward:rewards[(id+level*5)%rewards.length],collected:false}:null;
+ }).filter(Boolean);
 }
 export function collectTokens(tokens,ghost,effects,run,maxEnergy){
  const messages=[];
  for(const token of tokens){
   if(token.collected||distance(token,ghost)>21)continue;
   token.collected=true;
-  if(token.reward==='speed'){effects.boost=10;messages.push('A cold rush surges through you · speed boosted.')}
+  const upgrade=(k,label)=>{
+   if(run[k]<(k==='speed'?6:k==='touch'?5:7)){run[k]++;messages.push(`${label} strengthened to tier ${run[k]}.`);return true}
+   run.echoes+=25;messages.push(`${label} is already at maximum · token became 25 Echoes.`);return false;
+  };
+  if(token.reward==='speedTier')upgrade('speed','Movement');
+  else if(token.reward==='invisibilityTier'){if(upgrade('invisibility','Vanish'))effects.energy=1.4+(run.invisibility-1)*.85}
+  else if(token.reward==='phaseTier')upgrade('phase','Phase');
+  else if(token.reward==='touchTier')upgrade('touch','Touch');
   else if(token.reward==='refill'){
-   if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Your outline sharpens · invisibility restored.')}
-   else{run.echoes+=20;messages.push('The token dissolves into 20 Echoes.')}
+   if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Vanish fully restored.')}
+   else{run.echoes+=20;messages.push('The token releases 20 Echoes.')}
   }
-  else if(token.reward==='stiff'){effects.stiff++;messages.push('Scared Stiff · your next witness freezes.')}
-  else{const amount=token.reward==='echo50'?50:25;run.echoes+=amount;messages.push(`A hidden cache releases ${amount} Echoes.`)}
+  else if(token.reward==='stiff'){effects.stiff=Math.min(3,effects.stiff+1);messages.push(`Scared Stiff collected · ${effects.stiff}/3 stored.`)}
+  else{const amount=token.reward==='echo50'?50:25;run.echoes+=amount;messages.push(`The token releases ${amount} Echoes.`)}
  }
  return messages;
 }
