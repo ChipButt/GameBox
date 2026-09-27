@@ -16,6 +16,9 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax
         run: |
+          node --check unfinished-business/game.js
+          node --check unfinished-business/model.js
+          node --test unfinished-business/model.test.mjs
           node --check core-empires/game.js
           node --check lan-core.js
           node --check gamebox-v4.js

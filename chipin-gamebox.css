@@ -189,3 +189,5 @@
 @media(max-width:560px){.toyGameMaze{width:88%}}
 
 .mazeShiftHomeIcon{font-family:Fredoka,Inter,sans-serif!important;font-size:24px!important;font-weight:800!important;letter-spacing:-.06em;background:linear-gradient(145deg,#fff9df,#e6f8f2)!important;color:#164c44!important;border:2px solid rgba(255,255,255,.88);box-shadow:0 5px 14px rgba(0,0,0,.18),inset 0 0 0 3px rgba(7,155,114,.1)!important}
+
+.toyBox .toyGameGhost .gameTile{background:radial-gradient(at 50% 20%,#3d6660,#14232e 80%);border-color:#a6d4bb}.toyBox .toyGameGhost .gameTile strong{font-family:Georgia,serif;color:#f5f0df}.toyBox .toyGameGhost .gameTile small{font-size:8px;color:#acf2d0}
