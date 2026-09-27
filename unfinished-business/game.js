@@ -213,9 +213,9 @@ function updateTutorialRefill(){
 function tutorialTarget(){return tutorial.active?TUTORIAL_TARGETS[tutorial.stage]||null:null}
 function setupTutorialCourse(){
  // The memorial lawn becomes a compact sequence of real gameplay gates.
- const add=(x,y,w,h,kind='hedge',phase=99,touch=99,extra={})=>{const b={x,y,w,h,kind,phase,touch,open:false,tutorial:true,...extra};blocks.push(b);return b};
+ const add=(x,y,w,h,kind='hedge',phase=99,extra={})=>{const b={x,y,w,h,kind,phase,open:false,tutorial:true,...extra};blocks.push(b);return b};
  add(1010,1570,270,28);add(1360,1570,240,28); // watched gap at x 1280–1360
- add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'wall',1,99,{tutorialGate:'phase'});
+ add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'wall',1,{tutorialGate:'phase'});
  nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];
 }
 function tutorialBounds(){
