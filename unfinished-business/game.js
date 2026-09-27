@@ -105,7 +105,7 @@ function tutorialCard(title,body,button='Continue',action=()=>resumeTutorial(),d
  mode='tutorialPause';show(`<div class="tutorialCard"><span class="eyebrow">TUTORIAL</span><h2>${title}</h2>${demo?'<canvas class="tutorialDemo" id="tutorialDemo" width="270" height="120"></canvas>':''}<p class="tutorialHint">${body}</p><button class="primary" id="tutorialNext">${button}</button></div>`);
  if(demo)animateTutorialDemo(demo);$('tutorialNext').onclick=action;
 }
-function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateObjectiveHud();}
+function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateTaskButton();}
 function tutorialExpectedUpgrade(){return {2:'speed',4:'invisibility',7:'phase'}[tutorial.stage]||null}
 function tutorialUpgradeReady(k){
  const price=runCost(run,k);
@@ -222,7 +222,7 @@ function resetTutorialSection(){
  ghost.x=start.x;ghost.y=start.y;lastSafe={...start};seen=0;held=false;contact=null;contactTime=0;phaseExit=null;
  if(tutorial.stage===5){energy=runCapacity(run);tutorial.refillActive=false;spawnTutorialLookout();const guard=people.find(e=>e.kind==='tutorialGuard');if(guard){guard.x=1320;guard.y=1585;guard.clock=0;guard.angle=-Math.PI/2;guard.frozen=0;}}
  if(nav)nav=navigation(blocks);
- mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateObjectiveHud();
+ mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateTaskButton();
 }
 function tutorialCaught(){
  if(mode!=='play')return;
@@ -322,45 +322,45 @@ function availableTasks(){
  return (run.tasks||[]).filter(t=>t.index<limit&&!t.complete);
 }
 function taskState(task){
+ if(tutorial.active)return tutorialTaskState(task);
  if(task.complete)return 'complete';
  const done=completedTaskCount(),limit=done>=2?5:done>=1?4:3;
  return task.index<limit?'available':'locked';
 }
 function updateTaskButton(){
  const button=$('taskButton');if(!button)return;
- if(tutorial.active||!run.tasks||mode==='menu'){button.hidden=true;return}
+ if(!run.tasks||mode==='menu'){button.hidden=true;return}
  const done=completedTaskCount();
  button.hidden=false;$('taskButtonCount').textContent=`${done} / 5`;
  button.classList.toggle('complete',done===5);
 }
 function openTaskBoard(initial=false){
- if(tutorial.active||!run.tasks)return;
+ if(!run.tasks)return;
  mode='tasks';resetInput();$('taskButton').hidden=true;
  const done=completedTaskCount(),items=run.tasks.map(task=>{
-  const state=taskState(task),dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
-  const detail=state==='complete'?'Done':state==='locked'?'Not available yet':`${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;
+  const state=taskState(task);
+  const detail=tutorial.active?tutorialTaskDetail(task):(state==='complete'?'Done':state==='locked'?'Not available yet':(()=>{
+   const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
+   return `${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;
+  })());
   return `<div class="taskItem ${state}"><strong>${state==='locked'?'???':task.title}</strong><small class="${state==='available'?'taskDistance':''}">${detail}</small></div>`;
  }).join('');
  const hidden=(run.tasks||[]).filter(t=>taskState(t)==='locked').length;
- show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</span><h2>Unfinished business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5 COMPLETE · FINISH ALL FIVE TO LEAVE</div><div class="taskList">${items}</div>${hidden?`<div class="taskReveal">${hidden} MORE WILL REVEAL AS THINGS CHANGE</div>`:''}</div>`);
+ const heading=tutorial.active?'TUTORIAL · MEMORIAL LAWN':`LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}`;
+ const title=tutorial.active?'Learn the basics':'Unfinished business';
+ const progress=tutorial.active?`${done} / 5 COMPLETE · COMPLETE ALL FIVE LESSONS`:`${done} / 5 COMPLETE · FINISH ALL FIVE TO LEAVE`;
+ const reveal=hidden?(tutorial.active?`${hidden} MORE LESSON${hidden===1?'':'S'} WILL REVEAL`:`${hidden} MORE WILL REVEAL AS THINGS CHANGE`):'';
+ show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>${title}</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${progress}</div><div class="taskList">${items}</div>${reveal?`<div class="taskReveal">${reveal}</div>`:''}</div>`);
  $('taskClose').onclick=closeTaskBoard;
 }
 function closeTaskBoard(){
- mode='play';$('overlay').hidden=true;resetInput();updateTaskButton();updateTokenInventory();
+ mode='play';$('overlay').hidden=true;resetInput();updateTaskButton();updateTokenInventory();updateSkills();refreshUpgradeStates();
 }
-function currentObjective(){
- if(tutorial.active)return tutorialObjective();
- return null;
-}
+function currentObjective(){return null}
 function objectiveDirection(dx,dy){const a=Math.atan2(dy,dx),oct=Math.round(a/(Math.PI/4));return ['→','↘','↓','↙','←','↖','↑','↗'][((oct%8)+8)%8];}
 function updateObjectiveHud(){
- const box=$('objectiveHud');if(!box)return;
- if(!tutorial.active){box.hidden=true;updateTaskButton();return}
- const obj=tutorialObjective();
- if(!obj||mode!=='play'){box.hidden=true;return}
- box.hidden=false;$('objectiveCount').textContent='TUTORIAL';$('objectiveTitle').textContent=obj.title.toUpperCase();
- const dx=obj.x-ghost.x,dy=obj.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
- $('objectiveMeta').textContent=`${objectiveDirection(dx,dy)} ${dist} paces · ${obj.hint}`;
+ const box=$('objectiveHud');if(box)box.hidden=true;
+ updateTaskButton();
 }
 function sendFuneralProcession(){
  if(!nav)return;
@@ -407,7 +407,7 @@ function start(isTutorial=false){
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
  run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();else prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
- updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move. New ground earns Echoes.<br><b>Get 20. Reach the golden ghost.</b>`,'Start tutorial');
+ updateObjectiveHud();if(isTutorial)openTaskBoard(true);
  else openTaskBoard(true);
  tone(320);
 }
