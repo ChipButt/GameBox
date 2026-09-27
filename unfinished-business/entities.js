@@ -83,5 +83,23 @@ export function updateEntities(entities,nav,blocks,dt){for(const e of entities){
 }}
 export function sees(e,target,blocks,invisible=false){if(invisible||e.frozen>0)return false;const dx=target.x-e.x,dy=target.y-e.y,angle=Math.atan2(dy,dx),delta=Math.atan2(Math.sin(angle-e.angle),Math.cos(angle-e.angle));return Math.hypot(dx,dy)<e.range&&Math.abs(delta)<e.half&&!rayBlocked(e.x,e.y,target.x,target.y,blocks);}
 export function resolveSightings(entities,target,blocks,effects,invisible,alert){let danger=false,blocked=false;for(const e of entities){if(!sees(e,target,blocks,invisible))continue;if(effects.stiff>0){effects.stiff--;e.frozen=8;blocked=true;continue}if(e.kind==='cat'){if(e.cooldown<=0){e.cooldown=9;e.meow=1.5;alert({x:e.x,y:e.y},1)}continue}danger=true;}return {danger,blocked};}
-export function createTokens(nav){return [[430,2100,'speed'],[800,1770,'stiff'],[1380,2070,'refill'],[830,970,'speed'],[370,1240,'stiff'],[1220,1210,'refill'],[1840,1190,'stiff'],[1850,470,'speed'],[730,560,'refill'],[2100,2100,'stiff'],[1670,1880,'refill'],[1940,690,'speed']].map(([x,y,kind],id)=>({id,kind,...nav.nearest({x,y}),collected:false}));}
-export function collectTokens(tokens,ghost,effects,unlocked,maxEnergy){const messages=[];for(const token of tokens){if(token.collected||distance(token,ghost)>21||(token.kind==='refill'&&!unlocked))continue;token.collected=true;if(token.kind==='speed'){effects.boost=10;messages.push('Fleet Spirit · speed boosted for 10 seconds.')}if(token.kind==='refill'){effects.energy=maxEnergy;messages.push('Invisibility refilled.')}if(token.kind==='stiff'){effects.stiff++;messages.push('Scared Stiff · your next witness freezes.')} }return messages;}
+export function createTokens(nav,level=0){
+ const points=[[430,2100],[800,1770],[1380,2070],[830,970],[370,1240],[1220,1210],[1840,1190],[1850,470],[730,560],[2100,2100],[1670,1880],[1940,690],[610,1870],[1460,910],[520,430],[2050,980]];
+ const rewards=['echo25','speed','stiff','echo50','refill','echo25','speed','stiff','echo25','refill','echo50','speed','stiff','echo25','refill','echo50'];
+ return points.map(([x,y],id)=>({id,...nav.nearest({x,y}),reward:rewards[(id+level*3)%rewards.length],secret:id>=12,collected:false})).filter(t=>Number.isFinite(t.x)&&Number.isFinite(t.y));
+}
+export function collectTokens(tokens,ghost,effects,run,maxEnergy){
+ const messages=[];
+ for(const token of tokens){
+  if(token.collected||distance(token,ghost)>21)continue;
+  token.collected=true;
+  if(token.reward==='speed'){effects.boost=10;messages.push('A cold rush surges through you · speed boosted.')}
+  else if(token.reward==='refill'){
+   if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Your outline sharpens · invisibility restored.')}
+   else{run.echoes+=20;messages.push('The token dissolves into 20 Echoes.')}
+  }
+  else if(token.reward==='stiff'){effects.stiff++;messages.push('Scared Stiff · your next witness freezes.')}
+  else{const amount=token.reward==='echo50'?50:25;run.echoes+=amount;messages.push(`A hidden cache releases ${amount} Echoes.`)}
+ }
+ return messages;
+}
