@@ -5,7 +5,7 @@ const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.r
 const pixelEllipse=(c,x,y,rx,ry,color)=>{for(let row=-ry;row<=ry;row++){const half=Math.floor(rx*Math.sqrt(Math.max(0,1-row*row/(ry*ry))));rect(c,x-half,y+row,2*half+1,1,color)}};
 export function pose(e,reduced=false){const direction=direction8(e.angle),a=direction*Math.PI/4,moving=e.frozen<=0&&!['wait','search'].includes(e.state)&&!!e.path?.length;const frame=moving?Math.floor(e.walk/5)%8:0;const cycle=[0,1,2,1,0,-1,-2,-1][frame];return {direction,a,moving,frame,stride:cycle,bob:moving&&!reduced&&frame%4===2?-1:0,idle:e.frozen>0||reduced?0:Math.sin((e.animationTime||0)*2.1+e.id)*.6};}
 export function drawHuman(c,e,reduced=false){const p=pose(e,reduced),d=p.direction,front=[1,2,3].includes(d),back=[5,6,7].includes(d),side=d===0||d===4,diagonal=d%2===1,right=Math.cos(p.a)>=0?1:-1;const skin=['#d8b38d','#b88969','#edc8a2','#a97861'][e.id%4],hair=['#56443e','#393d40','#826c4d','#b19a72'][e.id%4],shirt=e.tint||'#819792',light='#cbd1b333',dark='#233b4255';
- c.save();c.translate(Math.round(e.x),Math.round(e.y));pixelEllipse(c,1,12,13,4,'#08182055');
+ c.save();c.translate(Math.round(e.x),Math.round(e.y));c.scale(1.35,1.35);pixelEllipse(c,1,12,13,4,'#08182055');
  const stride=p.stride,feetX=side?stride*2:diagonal?stride:0,feetY=side?Math.abs(stride):stride*2;
  // Far leg is drawn first. Side views overlap; front/back views stay separated.
  const legA=side?-3:-7,legB=side?1:3;
