@@ -1,4 +1,4 @@
-import {WORLD,REGIONS,FERRY} from './world.js';
+import {WORLD} from './world.js';
 // All art is decorative. World geometry and gameplay stay in world.js.
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const hash=(x,y)=>{let v=Math.imul(x|0,374761393)^Math.imul(y|0,668265263);v=Math.imul(v^(v>>>13),1274126177);return(v^(v>>>16))>>>0};
@@ -16,7 +16,7 @@ export function createScenery(world,makeCanvas=()=>document.createElement('canva
  const patterns=Object.fromEntries(['road','grass','wood','stone','concrete'].map(k=>[k,c.createPattern(texture(makeCanvas,k),'repeat')]));
  c.fillStyle=patterns.road;c.fillRect(0,0,WORLD.width,WORLD.height);
  // Wide kerbs and paving define each block without adding a collision.
- for(const r of REGIONS){rect(c,r.x-25,r.y-25,r.w+50,r.h+50,'#172b3599');c.fillStyle=patterns.stone;c.fillRect(r.x-20,r.y-20,r.w+40,r.h+40);rect(c,r.x-22,r.y-22,r.w+44,3,'#b0b7a977');rect(c,r.x+r.w+18,r.y-18,4,r.h+38,'#1a2e35aa');rect(c,r.x-18,r.y+r.h+18,r.w+40,4,'#1a2e35aa');c.fillStyle=r.kind===2?patterns.grass:r.kind===0?patterns.wood:r.kind===1?patterns.concrete:patterns.stone;c.fillRect(r.x,r.y,r.w,r.h);
+ for(const r of world.regions){rect(c,r.x-25,r.y-25,r.w+50,r.h+50,'#172b3599');c.fillStyle=patterns.stone;c.fillRect(r.x-20,r.y-20,r.w+40,r.h+40);rect(c,r.x-22,r.y-22,r.w+44,3,'#b0b7a977');rect(c,r.x+r.w+18,r.y-18,4,r.h+38,'#1a2e35aa');rect(c,r.x-18,r.y+r.h+18,r.w+40,4,'#1a2e35aa');c.fillStyle=r.kind===2?patterns.grass:r.kind===0?patterns.wood:r.kind===1?patterns.concrete:patterns.stone;c.fillRect(r.x,r.y,r.w,r.h);
   if(r.kind===2){c.save();c.beginPath();c.rect(r.x+8,r.y+8,r.w-16,r.h-16);c.clip();for(let i=0;i<85;i++){const n=hash(i,r.x+r.y),x=r.x+n%r.w,y=r.y+((n>>>10)%r.h);rect(c,x,y,3,2,['#9ba66b66','#91ab7533','#203e4233'][i%3]);if(i%7===0){rect(c,x,y-2,2,4,'#739457');rect(c,x-1,y-3,4,2,i%2?'#cfb98999':'#a695b199')}}c.restore();}
  }
  // Room-specific materials: timber bedroom, tiled kitchen, worn hallway.
@@ -34,7 +34,7 @@ export function createScenery(world,makeCanvas=()=>document.createElement('canva
  ellipse(c,1185,1880,55,30,'#172d3833');ellipse(c,1194,1890,34,14,'#152d3822');for(const x of [1125,1248]){rect(c,x,1700,3,212,'#d3ba7777');rect(c,x,1700,x===1125?28:3,3,'#d3ba7777')}
  for(let i=0;i<7;i++)rect(c,1260+i*11,1648,5,12,'#c5ab7166');
  // Pathway paving lies flush with the lawn: it never claims extra physical cover.
- for(const r of REGIONS.filter(r=>r.kind===2)){for(let y=r.y+50;y<r.y+r.h-30;y+=48){const x=r.x+r.w*.5+Math.sin(y*.017)*25;frame(c,x,y,26,22,'#8d957d','#b1b49a','#526b58')}}
+ for(const r of world.regions.filter(r=>r.kind===2)){for(let y=r.y+50;y<r.y+r.h-30;y+=48){const x=r.x+r.w*.5+Math.sin(y*.017)*25;frame(c,x,y,26,22,'#8d957d','#b1b49a','#526b58')}}
  // Ambient pools: warm rooms, cool streets, soft lamp glow.
  glow(c,420,1670,360,'#ffd08c1f');glow(c,330,1990,250,'#ffdc9f1c');glow(c,1760,1030,310,'#c5ffe019');
  for(const d of world.decor)if(d.kind==='lamp')glow(c,d.x,d.y,190,'#ffd38a37');
@@ -71,5 +71,5 @@ export function drawSceneryProp(c,b){const{x,y,w,h,kind}=b;
  const metal=b.phase>=6;frame(c,x,y,w,h,metal?'#68818a':'#947550',metal?'#b8c8c0':'#c9af7d','#344a51');if(w>h){for(let xx=x+7;xx<x+w;xx+=14)rect(c,xx,y+4,2,h-8,'#283b4e66');rect(c,x+w-20,y+h/2-2,8,4,'#edcb8a')}else{for(let yy=y+7;yy<y+h;yy+=14)rect(c,x+4,yy,w-8,2,'#283b4e66');rect(c,x+w/2-2,y+h-20,4,8,'#edcb8a')}
 }
 export function drawStreetLamp(c,d){const{x,y}=d;ellipse(c,x+7,y+29,15,5,'#0c1c2855');frame(c,x-2,y,7,30,'#485b59','#819080','#1e333c');rect(c,x-8,y-9,20,3,'#8b997d');frame(c,x-6,y-6,16,16,'#d2ba7e','#f1ddb1','#3d5052');rect(c,x-2,y-3,7,9,'#fff0b8');rect(c,x-10,y-11,24,4,'#516b66')}
-export function drawFerry(c){const x=FERRY.x,y=FERRY.y;frame(c,x-61,y-97,128,191,'#8e876a','#cbc5a0','#425957');for(let yy=y-88;yy<y+85;yy+=12)rect(c,x-56,yy,118,2,'#555e5355');for(const xx of [x-63,x+62])for(const yy of [y-86,y+72]){frame(c,xx,yy,8,15,'#a5a184','#d4d0ab');rect(c,xx+2,yy+2,4,4,'#e5dcbc')}
+export function drawFerry(c,ferry={x:2140,y:260}){const x=ferry.x,y=ferry.y;frame(c,x-61,y-97,128,191,'#8e876a','#cbc5a0','#425957');for(let yy=y-88;yy<y+85;yy+=12)rect(c,x-56,yy,118,2,'#555e5355');for(const xx of [x-63,x+62])for(const yy of [y-86,y+72]){frame(c,xx,yy,8,15,'#a5a184','#d4d0ab');rect(c,xx+2,yy+2,4,4,'#e5dcbc')}
  frame(c,x-39,y-64,86,109,'#d3d5b3','#eef0ce','#607d78');frame(c,x-30,y-51,68,45,'#477578','#adc7b0');rect(c,x-25,y-46,22,33,'#9dc8b699');rect(c,x+7,y-46,24,33,'#9dc8b699');rect(c,x-26,y+8,60,6,'#6d9483');rect(c,x-27,y+28,16,5,'#b89e64');rect(c,x+19,y+28,16,5,'#b89e64');glow(c,x,y,130,'#d4ffcf1a');}
