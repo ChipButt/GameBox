@@ -1,0 +1,16 @@
+{
+  "bingo.html": "bingo/index.html",
+  "disc-rally-gameplay-layout-editor.html": "disc-rally/editors/disc-rally-gameplay-layout-editor.html",
+  "disc-rally-host-race-layout-editor.html": "disc-rally/editors/disc-rally-host-race-layout-editor.html",
+  "disc-rally-join-race-layout-editor.html": "disc-rally/editors/disc-rally-join-race-layout-editor.html",
+  "disc-rally-layout-editor.html": "disc-rally/editors/disc-rally-layout-editor.html",
+  "disc-rally-pass-play-layout-editor.html": "disc-rally/editors/disc-rally-pass-play-layout-editor.html",
+  "disc-rally-player-section-layout-editor.html": "disc-rally/editors/disc-rally-player-section-layout-editor.html",
+  "disc-rally-track-selection-layout-editor.html": "disc-rally/editors/disc-rally-track-selection-layout-editor.html",
+  "disc-rally.html": "disc-rally/index.html",
+  "heads.html": "heads-up/index.html",
+  "index.html": "hub/index.html",
+  "maze-shift-bottom-layout-editor.html": "shift-in-maze/editors/maze-shift-bottom-layout-editor.html",
+  "maze-shift-screen-layout-editor.html": "shift-in-maze/editors/maze-shift-screen-layout-editor.html",
+  "maze-shift.html": "shift-in-maze/index.html"
+}

@@ -4,6 +4,6 @@
   if (thirty && !thirty.classList.contains('active')) thirty.click();
 
   const loader=document.createElement('script');
-  loader.src='players-loader.js?v=1';
+  loader.src='shared/players-loader.js?v=1';
   document.body.appendChild(loader);
 })();

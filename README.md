@@ -2,6 +2,33 @@
 
 A mobile-first browser games hub from **Chip In Games**.
 
+## Repository layout
+
+| Folder | Contents |
+| --- | --- |
+| `hub/` | GameBox menu, Card Deck and Coin Flip (their existing shared implementation) |
+| `heads-up/` | Heads Up scripts, styling and source page |
+| `disc-rally/` | Disc Rally, artwork and `editors/` |
+| `shift-in-maze/` | Shift In Maze, tiles, relics, artwork and `editors/` |
+| `bingo/` | Bingo source page, scripts and styling |
+| `core-empires/` | Core Empires (existing folder preserved) |
+| `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
+| `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
+| `shared/` | Player roster, networking, shared styles and menu/branding assets |
+| `tools/` | Compatibility-page generation, file-move inventory and path checks |
+
+The root HTML pages are generated **compatibility entry points**. They preserve the existing URLs without redirects or extra loading logic. Edit the corresponding source page in its game folder, then run:
+
+```sh
+python3 tools/sync-entry-points.py
+python3 tools/sync-entry-points.py --check
+python3 tools/check-paths.py
+```
+
+Source HTML pages use an explicit base URL so their relative resources and navigation behave exactly like the root entry pages. Root `index.html` remains the public hub. The Heads Up manifest stays at its existing URL with unchanged identity, scope and start URL. Do not split Card Deck and Coin Flip's combined implementation just to change folders.
+
+This organisation changes resource paths only: game logic, storage keys, multiplayer identifiers, layouts and image bytes are preserved. `tools/file-moves.json` records every relocation. The path check documents `maze_shift_ui.png` as already missing before this reorganisation; this change does not invent or replace that artwork.
+
 ## Included games
 
 ### Core Empires

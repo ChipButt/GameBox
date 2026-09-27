@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="track-ui.css?v=29">
 
   <!-- Preload both upgrade states so the first affordability change never flashes while artwork loads. -->
-  <link rel="preload" as="image" href="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png">
-  <link rel="preload" as="image" href="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png">
+  <link rel="preload" as="image" href="assets/menu/race_type/race_type_background_panel.png">
+  <link rel="preload" as="image" href="assets/menu/crew_size/crew_size_card_blank.png">
   <link rel="preload" as="image" href="assets/ui/controls/race_now.png">
   <link rel="preload" as="image" href="assets/ui/logo/gridline_racing_logo.png">
   <link rel="preload" as="image" href="assets/ui/controls/back.png">
@@ -42,31 +42,31 @@
 <div class="appShell">
   <header class="topbar">
     <a id="gameboxBack" class="backLink" href="../index.html">← GameBox</a>
-    <img class="chipLogo" src="../chip_in_logo.png?v=1" alt="Chip In">
+    <img class="chipLogo" src="../shared/assets/chip_in_logo.png?v=1" alt="Chip In">
     <span class="topbarSpacer" aria-hidden="true"></span>
   </header>
 
   <main class="mainView">
     <section id="setupHome" class="setupView menuDesignView crewSizeView">
       <div class="menuDesignCanvas">
-        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <img class="menuBackgroundAsset" src="assets/menu/race_type/race_type_background_panel.png" alt="">
         <a class="menuPlacedAsset menuBackAsset" href="../index.html" aria-label="Back to GameBox"><img src="assets/ui/controls/back.png" alt=""></a>
         <img class="menuPlacedAsset menuSettingsAsset" src="assets/ui/controls/settings.png" alt="">
         <img class="menuPlacedAsset menuLogoAsset" src="assets/ui/logo/gridline_racing_logo.png" alt="Gridline Racing">
         <strong class="menuScreenTitle">CREW SIZE</strong>
 
         <button id="chooseSingle" class="menuImageChoice crewSingleChoice" type="button" aria-label="Single Player">
-          <img src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_single_player_card.png" alt="Single Player">
+          <img src="assets/menu/crew_size/crew_size_single_player_card.png" alt="Single Player">
         </button>
         <button id="chooseMulti" class="menuImageChoice crewMultiChoice" type="button" aria-label="Multiplayer">
-          <img src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_multiplayer_card.png" alt="Multiplayer">
+          <img src="assets/menu/crew_size/crew_size_multiplayer_card.png" alt="Multiplayer">
         </button>
       </div>
     </section>
 
     <section id="raceFormatSetup" class="setupView menuDesignView raceTypeView hidden">
       <div class="menuDesignCanvas">
-        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <img class="menuBackgroundAsset" src="assets/menu/race_type/race_type_background_panel.png" alt="">
         <button class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="setupHome" type="button" aria-label="Back">
           <img src="assets/ui/controls/back.png" alt="">
         </button>
@@ -75,17 +75,17 @@
         <strong class="menuScreenTitle">RACE TYPE</strong>
 
         <button class="menuImageChoice raceQuickChoice" data-race-mode="quick" type="button" aria-label="Quick Race">
-          <img src="../Gridline_Menu_Asset_Pack/race_type/race_type_quick_race_card.png" alt="Quick Race">
+          <img src="assets/menu/race_type/race_type_quick_race_card.png" alt="Quick Race">
         </button>
         <button class="menuImageChoice raceTournamentChoice" data-race-mode="tournament" type="button" aria-label="Tournament">
-          <img src="../Gridline_Menu_Asset_Pack/race_type/race_type_tournament_card.png" alt="Tournament">
+          <img src="assets/menu/race_type/race_type_tournament_card.png" alt="Tournament">
         </button>
       </div>
     </section>
 
     <section id="carSetup" class="setupView menuDesignView carSelectionView hidden">
       <div class="menuDesignCanvas">
-        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <img class="menuBackgroundAsset" src="assets/menu/race_type/race_type_background_panel.png" alt="">
         <button class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="raceFormatSetup" type="button" aria-label="Back">
           <img src="assets/ui/controls/back.png" alt="">
         </button>
@@ -98,7 +98,7 @@
 
     <section id="trackSetup" class="setupView menuDesignView trackChoiceView hidden">
       <div class="menuDesignCanvas">
-        <img class="menuBackgroundAsset" src="../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png" alt="">
+        <img class="menuBackgroundAsset" src="assets/menu/race_type/race_type_background_panel.png" alt="">
         <button id="trackSetupBack" class="menuPlacedAsset menuBackAsset menuAssetButton" data-back="carSetup" type="button" aria-label="Back">
           <img src="assets/ui/controls/back.png" alt="">
         </button>
@@ -284,7 +284,7 @@
     </section>
   </main>
 </div>
-<script src="../lan-core.js?v=8"></script>
+<script src="../shared/lan-core.js?v=8"></script>
 <script src="app.js?v=43"></script>
 <script src="track-ui.js?v=19"></script>
 </body>

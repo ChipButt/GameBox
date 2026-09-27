@@ -82,8 +82,8 @@ function renderPlayerPicks(){
     const person=map.get(picked[i]),slot=document.createElement('div');
     slot.className='passPlayPlayerSlot '+(person?'filled':'empty');
     slot.innerHTML=person
-      ? `<span class="passPlayFilledFrame"><img class="passPlaySlotAsset" src="04_player_panel.png?v=1" alt=""><strong>${esc(person.name)}</strong></span>`
-      : '<img class="passPlaySlotAsset passPlayEmptyAsset" src="05_player_slot_empty.png?v=1" alt="">';
+      ? `<span class="passPlayFilledFrame"><img class="passPlaySlotAsset" src="disc-rally/assets/04_player_panel.png?v=1" alt=""><strong>${esc(person.name)}</strong></span>`
+      : '<img class="passPlaySlotAsset passPlayEmptyAsset" src="disc-rally/assets/05_player_slot_empty.png?v=1" alt="">';
     wrap.appendChild(slot);
   }
   const picker=$('passRosterOptions');
@@ -129,7 +129,7 @@ function renderTracks(containerId){
       const map=entry.random
         ? '<span class="trackSelectMap random">?</span>'
         : `<span class="trackSelectMap"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="${miniMapPath(entry)}"></path></svg></span>`;
-      b.innerHTML=`<img class="trackSelectCardAsset" src="${isSelected?'track_card_selected_gold.png?v=1':'track_card_blue.png?v=1'}" alt="">${map}<strong class="trackSelectTitle">${esc(entry.name)}</strong>`;
+      b.innerHTML=`<img class="trackSelectCardAsset" src="${isSelected?'disc-rally/assets/track_card_selected_gold.png?v=1':'disc-rally/assets/track_card_blue.png?v=1'}" alt="">${map}<strong class="trackSelectTitle">${esc(entry.name)}</strong>`;
       b.onclick=()=>selectTrack(entry.id,true);
       wrap.appendChild(b);
     });
@@ -1159,7 +1159,7 @@ function renderLobby(target,players){
   if(target==='hostLobby'){
     wrap.innerHTML=(players||[]).slice(0,4).map((p,i)=>`
       <div class="hostRaceLobbyRow">
-        <img src="lobby_blank_button.png?v=1" alt="">
+        <img src="disc-rally/assets/lobby_blank_button.png?v=1" alt="">
         <strong>${i+1}. ${esc(p.name)}${p.host?' · Host':''}</strong>
         <small>Ready</small>
       </div>`).join('');
@@ -1169,7 +1169,7 @@ function renderLobby(target,players){
     const slots=Array.from({length:4},(_,i)=>(players||[])[i]||null);
     wrap.innerHTML=slots.map((p,i)=>`
       <div class="joinRaceLobbyRow${p?'':' empty'}">
-        <img src="lobby_blank_button.png?v=1" alt="">
+        <img src="disc-rally/assets/lobby_blank_button.png?v=1" alt="">
         <strong>${i+1}. ${p?esc(p.name)+(p.host?' · Host':''):'Player '+(i+1)}</strong>
         <small>${p?'Ready':'Waiting'}</small>
       </div>`).join('');

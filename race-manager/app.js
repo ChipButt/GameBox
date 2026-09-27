@@ -90,12 +90,12 @@
   const menuArtworkCache=[];
   function prewarmMenuArtwork(){
     const paths=[
-      '../Gridline_Menu_Asset_Pack/race_type/race_type_background_panel.png',
-      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_single_player_card.png',
-      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_multiplayer_card.png',
-      '../Gridline_Menu_Asset_Pack/race_type/race_type_quick_race_card.png',
-      '../Gridline_Menu_Asset_Pack/race_type/race_type_tournament_card.png',
-      '../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png',
+      'assets/menu/race_type/race_type_background_panel.png',
+      'assets/menu/crew_size/crew_size_single_player_card.png',
+      'assets/menu/crew_size/crew_size_multiplayer_card.png',
+      'assets/menu/race_type/race_type_quick_race_card.png',
+      'assets/menu/race_type/race_type_tournament_card.png',
+      'assets/menu/crew_size/crew_size_card_blank.png',
       `${ASSET_ROOT}/ui/logo/gridline_racing_logo.png`,
       `${ASSET_ROOT}/ui/controls/back.png`,
       `${ASSET_ROOT}/ui/controls/settings.png`,
@@ -299,7 +299,7 @@
             :(roster().find(p=>p.id===$('joinPlayerSelect')?.value)?.name||car.racer);
       return `
         <button class="carChoice ${car.color===selectedCarColor?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-car-color="${car.color}" type="button" ${unavailable?'disabled':''} aria-label="${esc(car.label)} car, ${esc(replacementName)}">
-          <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
+          <img class="menuSelectionCardAsset" src="assets/menu/crew_size/crew_size_card_blank.png" alt="">
           <img class="carChoiceSprite" src="${ASSET_ROOT}/cars/${car.asset}" alt="">
           <span class="carDriverName">${esc(replacementName)}</span>
           <strong class="carChooseText">${unavailable?'TAKEN':car.color===selectedCarColor?'READY':'CHOOSE'}</strong>
@@ -374,7 +374,7 @@
           const slot=TRACK_MENU_SLOTS[index]||TRACK_MENU_SLOTS[0];
           return `
             <button class="trackChoice ${index===config.trackIndex?'selected':''}" style="--slot-x:${slot.x}px;--slot-y:${slot.y}px" data-track-index="${index}" type="button" aria-label="${esc(track.name)}">
-              <img class="menuSelectionCardAsset" src="../Gridline_Menu_Asset_Pack/crew_size/crew_size_card_blank.png" alt="">
+              <img class="menuSelectionCardAsset" src="assets/menu/crew_size/crew_size_card_blank.png" alt="">
               <img class="trackChoiceImage" src="${ASSET_ROOT}/tracks/${esc(track.asset)}" alt="">
               <strong class="trackChoiceName">${esc(track.name.toUpperCase())}</strong>
               <span class="trackChooseText">CHOOSE</span>

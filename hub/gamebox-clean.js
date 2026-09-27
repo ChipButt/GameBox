@@ -52,17 +52,17 @@
   compactCoinSetup();
 
   const loader=document.createElement('script');
-  loader.src='players-loader.js?v=1';
+  loader.src='shared/players-loader.js?v=1';
   loader.async=false;
   document.body.appendChild(loader);
 
   const simpleStyle=document.createElement('link');
   simpleStyle.rel='stylesheet';
-  simpleStyle.href='simple-games.css?v=1';
+  simpleStyle.href='hub/simple-games.css?v=1';
   document.head.appendChild(simpleStyle);
 
   const simpleScript=document.createElement('script');
-  simpleScript.src='simple-games.js?v=1';
+  simpleScript.src='hub/simple-games.js?v=1';
   simpleScript.async=false;
   document.body.appendChild(simpleScript);
 })();

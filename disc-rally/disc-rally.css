@@ -2119,7 +2119,7 @@ html,body{height:100%;overflow:hidden}
   border:0!important;
   border-radius:0!important;
   background:
-    url("lobby_blank_button.png?v=1") center center / 100% 300% no-repeat!important;
+    url("assets/lobby_blank_button.png?v=1") center center / 100% 300% no-repeat!important;
   box-shadow:none!important;
 }
 #hostLobby>.lobbyPlayer:nth-child(1){top:74.1455%!important}

@@ -20,22 +20,22 @@ jobs:
           node --check unfinished-business/model.js
           node --test unfinished-business/model.test.mjs
           node --check core-empires/game.js
-          node --check lan-core.js
-          node --check gamebox-v4.js
-          node --check heads-v3.js
-          node --check heads-lan-v2.js
-          node --check heads-lan-v3.js
+          node --check shared/lan-core.js
+          node --check hub/gamebox-v4.js
+          node --check heads-up/heads-v3.js
+          node --check heads-up/heads-lan-v2.js
+          node --check heads-up/heads-lan-v3.js
           node --check race-manager/app.js
           node --check race-manager/track-ui.js
       - name: Check required files
         run: |
           test -f core-empires/index.html
           test -f core-empires/style.css
-          test -f index.html
-          test -f heads.html
-          test -f chipin-gamebox.css
-          test -f chipin-heads.css
-          test -f heads-lan-v3.js
+          test -f hub/index.html
+          test -f heads-up/index.html
+          test -f hub/chipin-gamebox.css
+          test -f heads-up/chipin-heads.css
+          test -f heads-up/heads-lan-v3.js
           test -f race-manager/index.html
           test -f race-manager/styles.css
           test -f race-manager/track-ui.css
@@ -49,3 +49,7 @@ jobs:
           test -f race-manager/assets/ui/hud/lap_marker_full.png
           test -f race-manager/assets/ui/hud/lap_marker_empty.png
           test -f race-manager/assets/ui/popups/leaderboard.png
+      - name: Check compatibility entry points and asset paths
+        run: |
+          python3 tools/sync-entry-points.py --check
+          python3 tools/check-paths.py
