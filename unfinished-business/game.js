@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
 let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0};
-const names={invisibility:'Vanish',phase:'Phase',touch:'Touch'},labels={invisibility:'VANISH',phase:'PHASE',touch:'TOUCH'};
+const names={speed:'Speed',invisibility:'Vanish',phase:'Phase',touch:'Touch'},labels={invisibility:'VANISH',phase:'PHASE',touch:'TOUCH'};
 const GRAVEYARD_OBJECTIVES=[
  {title:'Find your grave',hint:'Something about the old graves feels familiar.',x:630,y:1870,complete:'That name… that is mine.'},
  {title:'Read the funeral notice',hint:'The chapel entrance has a service notice pinned outside.',x:1900,y:1515,complete:'The service is still going. The main gate will stay shut until they leave.'},
@@ -58,30 +58,56 @@ function animateStoryScene(scene){
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
 function tutorialPrompt(){
- mode='story';show(`<span class="eyebrow">BEFORE YOU LEAVE THE GRAVEYARD</span><h2>Learn how being dead works?</h2><p class="subtitle">A short guided tutorial teaches movement, Echoes and your three ghostly abilities.</p><button class="primary" id="doTutorial">Play tutorial</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
+ mode='story';show(`<span class="eyebrow">BEFORE YOU LEAVE THE GRAVEYARD</span><h2>Learn how being dead works?</h2><p class="subtitle">A short playable tutorial takes you through movement, Speed, Vanish, Phase and Touch one at a time.</p><button class="primary" id="doTutorial">Play tutorial</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
  $('doTutorial').onclick=()=>start(true);$('skipTutorial').onclick=()=>{p.tutorialSeen=true;save();start(false)};
 }
 function tutorialCard(title,body,button='Continue',action=()=>resumeTutorial(),demo=null){
  mode='tutorialPause';show(`<div class="tutorialCard"><span class="eyebrow">TUTORIAL</span><h2>${title}</h2>${demo?'<canvas class="tutorialDemo" id="tutorialDemo" width="270" height="120"></canvas>':''}<p class="tutorialHint">${body}</p><button class="primary" id="tutorialNext">${button}</button></div>`);
  if(demo)animateTutorialDemo(demo);$('tutorialNext').onclick=action;
 }
-function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();}
-function tutorialAbilityPrompt(k,nextStage){
- const price=runCost(run,k);tutorial.stage=nextStage;mode='tutorialPause';updateSkills();
- tutorialCard(`Unlock ${labels[k]}`,`You have enough Echoes. Spend <b>${price} Echoes</b> now to unlock ${names[k]}. During the tutorial the abilities open from left to right.`,`Unlock ${labels[k]} · ${price} Echoes`,()=>tutorialBuy(k),k);
+function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateObjectiveHud();}
+function tutorialExpectedUpgrade(){return {2:'speed',4:'invisibility',7:'phase',10:'touch'}[tutorial.stage]||null}
+function tutorialUpgradeReady(k){
+ const price=runCost(run,k);
+ tutorialCard(
+  k==='speed'?'Your first upgrade':`Unlock ${labels[k]}`,
+  k==='speed'
+   ?`Moving feels slow because your spirit is still weak. You have enough Echoes to strengthen it. Back in the game, the <b>SPEED +${price}</b> button will turn bright gold and sparkle. Tap that real upgrade button.`
+   :`You have <b>${price} Echoes</b>. Back in the game, the ${labels[k]} upgrade tab will turn bright gold and sparkle. Tap that real upgrade button to unlock it.`,
+  'Back to game',
+  ()=>resumeTutorial(),
+  k==='speed'?'speed':null
+ );
 }
-function tutorialBuy(k){
- const price=runCost(run,k);if(run.echoes<price)return;
- buyRun(run,k);if(k==='invisibility')energy=runCapacity(run);updateSkills();updateEchoDisplay();tone(760,.14);
- if(k==='invisibility'){tutorial.stage=3;tutorialCard('Vanish',`Tap <b>VANISH</b> to turn it on, then move normally. Tap it again to cancel. While active you disappear from living eyes. The meter shows how long you can stay invisible. Upgrading VANISH also refills it.`,'Try Vanish',()=>{tutorial.useTime=0;resumeTutorial()},'invisibility');}
- else if(k==='phase'){tutorial.stage=6;tutorialCard('Phase',`Tap <b>PHASE</b> to arm it, then move into an obstacle. Higher tiers let your spirit pass through stronger materials.`,'Keep exploring',()=>resumeTutorial(),'phase');}
- else{tutorial.stage=8;tutorialCard('Touch',`Tap <b>TOUCH</b> to arm it, then move against physical objects to disturb or open them. Making noise can attract the living.`,'Finish tutorial',completeTutorial,'touch');}
+function spawnTutorialLookout(){
+ if(people.some(e=>e.kind==='tutorialGuard'))return;
+ people.push({id:9001,kind:'tutorialGuard',task:'Watching the memorial lawn exit',speed:0,route:[{x:1320,y:1585,wait:99,face:-Math.PI/2}],x:1320,y:1585,index:0,state:'wait',wait:99,range:245,angle:-Math.PI/2,half:.9,frozen:0,path:null,search:0,cooldown:0,walk:0,clock:0,tint:'#9a856f'});
 }
-function completeTutorial(){p.tutorialSeen=true;save();tutorial={active:false,stage:0,useTime:0};tutorialCard('You remember enough.',`Echoes make you stronger, but only while this memory lasts. Now get out of the graveyard without being seen.`,'Begin Level 1',()=>start(false));}
+function afterTutorialPurchase(k){
+ tone(780,.14);updateEchoDisplay();updateSkills();refreshUpgradeStates();
+ if(k==='speed'){
+  tutorial.stage=3;
+  tutorialCard('Speed',`Every Speed tier permanently increases your movement for this attempt. You can buy more whenever its upgrade button turns gold. Now collect <b>25 Echoes</b> and reach the next sparkling token.`,'Find the Vanish token',()=>resumeTutorial(),'speed');
+ }else if(k==='invisibility'){
+  energy=runCapacity(run);tutorial.stage=5;spawnTutorialLookout();
+  tutorialCard('Vanish',`The person at the memorial-lawn exit watches <b>outward for a couple of seconds, then pivots 180° and watches inward</b>. Tap VANISH to disappear, then move through the gap. You cannot pass this lesson without using Vanish successfully.`,'Practise Vanish',()=>resumeTutorial(),'invisibility');
+ }else if(k==='phase'){
+  tutorial.stage=8;
+  tutorialCard('Phase',`Doors and barriers have different materials. Your Phase tier determines what your spirit can pass through. Tap PHASE to arm it, then move directly through the glowing <b>Phase 1 doorway</b> ahead.`,'Practise Phase',()=>resumeTutorial(),'phase');
+ }else if(k==='touch'){
+  tutorial.stage=11;
+  tutorialCard('Touch',`Touch lets you affect physical objects instead of passing through them. Tap TOUCH, then push into the wooden barrier ahead until it opens. Touching things can make noise in the real levels.`,'Practise Touch',()=>resumeTutorial(),'touch');
+ }
+}
+function completeTutorial(){
+ p.tutorialSeen=true;save();tutorial={active:false,stage:0,useTime:0};
+ tutorialCard('You remember enough.',`You now know the rhythm: <b>explore → collect → upgrade → use your powers</b>. In the real level, the story objectives are separate from your abilities. Tokens and Echoes simply give you more ways to survive.`,'Begin Level 1',()=>start(false));
+}
 function animateTutorialDemo(kind){
  const c=$('tutorialDemo');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
  const loop=now=>{if($('tutorialDemo')!==c)return;g.fillStyle='#0c1922';g.fillRect(0,0,270,120);g.fillStyle='#33473d';g.fillRect(0,92,270,28);
   const q=(now*.08)%180,x=45+q;
+  if(kind==='speed'){for(let i=0;i<4;i++){const xx=42-i*14-(now*.18)%14;g.fillStyle='#b6f7d288';g.fillRect(xx,66+i%2*8,8,2)}}
   if(kind==='phase'){g.fillStyle='#786b7f';g.fillRect(132,20,18,72);for(let y=24;y<88;y+=12){g.fillStyle='#ac96b8';g.fillRect(135,y,12,2)}}
   if(kind==='touch'){g.fillStyle='#a78255';g.fillRect(155+Math.sin(now*.004)*8,60,36,32);g.fillStyle='#d4b477';g.fillRect(159+Math.sin(now*.004)*8,64,28,3)}
   const alpha=kind==='invisibility'&&q>80&&q<145?.22:1;drawGhost(g,Math.min(218,x),72,2,2,now/1000,alpha);
