@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071326">
-<title>Maze Shift · GameBox</title>
+<title>Shift In Maze · GameBox</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1591,7 +1591,7 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
 .rotateZone .waitDock.hidden{display:none!important}
 
 /* PORTRAIT-ONLY GAME LOCK
-   Touch devices cannot interact with Maze Shift while held landscape. */
+   Touch devices cannot interact with Shift In Maze while held landscape. */
 .rotatePhoneLock{
   position:fixed;
   inset:0;
@@ -1840,6 +1840,44 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   .gameModeArt{height:76px}
   .gameBoxBackBtn{width:104px;height:42px}
 }
+
+/* ===== SHIFT IN MAZE · SOLO AI ===== */
+.mainModeSelect{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.soloModeCard{gap:1px!important}
+.soloModeArt{
+  height:82px;width:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;
+}
+.soloModeArt img{
+  width:70px;height:82px;object-fit:contain;filter:drop-shadow(0 7px 8px rgba(0,0,0,.46));
+}
+.soloModeArt img+img{margin-left:-26px;transform:scale(.88);transform-origin:center bottom}
+.soloModeCard strong{font:700 18px/1 Fredoka,sans-serif;color:#fff;margin-top:-2px}
+.soloRuleHint{
+  min-height:47px;display:flex;align-items:center;padding:0 12px;border:1px solid rgba(211,164,62,.18);
+  border-radius:10px;background:#091724;color:#91a8b9;font-size:11px;font-weight:800;
+}
+.aiSkillOptions .difficultyChoice.selected{
+  border-color:rgba(96,189,218,.78);background:linear-gradient(180deg,#1c4b63,#102e43);
+  box-shadow:inset 0 0 0 1px rgba(96,189,218,.16),0 7px 18px rgba(0,0,0,.24);
+}
+.aiSkillOptions .difficultyChoice.selected span{color:#86d7ec}
+.multiWaitOverlay.aiThinking{
+  border-color:rgba(80,178,210,.52);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(36,123,157,.34),transparent 56%),
+    linear-gradient(180deg,rgba(6,21,33,.988),rgba(3,12,20,.996));
+}
+.multiWaitOverlay.aiThinking .multiWaitCard small{color:#75d0e7}
+.aiBadge{
+  display:inline-flex;align-items:center;margin-left:6px;padding:2px 5px;border-radius:5px;
+  background:rgba(71,173,204,.13);border:1px solid rgba(71,173,204,.24);color:#78cce3;
+  font-size:7px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;
+}
+@media(max-width:650px){
+  .mainModeSelect{grid-template-columns:1fr!important}
+  .gameModeCard{min-height:110px!important}
+  .soloModeArt{height:66px}.soloModeArt img{width:58px;height:68px}
+}
 </style>
 </head>
 <body>
@@ -1852,8 +1890,8 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
 <main class="app">
   <header class="shellHeader" id="shellHeader">
     <div class="brand">
-      <div class="brandMark">MS</div>
-      <div class="brandCopy"><strong>Maze Shift</strong><span>GameBox</span></div>
+      <div class="brandMark">SIM</div>
+      <div class="brandCopy"><strong>Shift In Maze</strong><span>GameBox</span></div>
     </div>
     <button class="gameBoxBackBtn" id="homeBtn" type="button" aria-label="Back to Game Box"><img src="GameBox%20back%20button.png" alt="Game Box"></button>
   </header>
@@ -1865,11 +1903,19 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
         <img src="MazeShift_Assets/18_star.png" alt="">
         <img src="MazeShift_Assets/11_key.png" alt="">
       </div>
-      <span class="heroEyebrow">Game Box · Maze Shift</span>
-      <h1>Maze Shift</h1>
+      <span class="heroEyebrow">Game Box · Shift In Maze</span>
+      <h1>Shift In Maze</h1>
       <span class="heroTag">Shift the maze. Find your relics. Get home first.</span>
     </section>
     <div class="modeSelect mainModeSelect">
+      <button class="modeTile gameModeCard soloModeCard" id="soloMode" type="button" aria-label="Solo Play">
+        <span class="soloModeArt" aria-hidden="true">
+          <img src="01_player_token_red.png" alt="">
+          <img src="02_player_token_blue.png" alt="">
+        </span>
+        <strong>Solo Play</strong>
+        <small>Play against 1–3 built-in AI rivals</small>
+      </button>
       <button class="modeTile gameModeCard" id="passMode" type="button" aria-label="Pass & Play">
         <img class="gameModeArt" src="Pass%20%26%20Play%20button.png" alt="Pass & Play">
         <small>One phone · 2–4 players</small>
@@ -1879,6 +1925,54 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
         <small>One phone each · live board</small>
       </button>
     </div>
+  </section>
+
+  <section id="soloSetup" class="view hidden">
+    <div class="setupTop">
+      <div class="setupTitle"><span>Solo Play</span><h2>Game Setup</h2></div>
+      <button class="backBtn" data-view-target="modeView" type="button">Back</button>
+    </div>
+    <section class="setupPanel">
+      <div class="twoCols">
+        <div class="field"><label for="soloPlayer">You are</label><select id="soloPlayer"></select></div>
+        <div class="field"><label for="soloAiCount">AI opponents</label>
+          <select id="soloAiCount">
+            <option value="1" selected>1 AI player</option>
+            <option value="2">2 AI players</option>
+            <option value="3">3 AI players</option>
+          </select>
+        </div>
+      </div>
+    </section>
+    <section class="setupPanel">
+      <div class="twoCols">
+        <div class="field"><label for="soloTargetCount">Game length</label>
+          <select id="soloTargetCount">
+            <option value="3">Quick · 3 relics</option>
+            <option value="4" selected>Standard · 4 relics</option>
+            <option value="5">Long · 5 relics</option>
+          </select>
+        </div>
+        <div class="field"><label>AI opponents</label><div class="soloRuleHint">Offline · built into the game</div></div>
+      </div>
+    </section>
+    <section class="setupPanel difficultyPanel">
+      <div class="panelLabel">Your turn time <span>Same timer rules</span></div>
+      <div class="difficultyOptions" data-difficulty-group="solo">
+        <button class="difficultyChoice" type="button" data-value="easy"><strong>Easy</strong><span>3:00</span></button>
+        <button class="difficultyChoice selected" type="button" data-value="medium"><strong>Medium</strong><span>1:30</span></button>
+        <button class="difficultyChoice" type="button" data-value="hard"><strong>Hard</strong><span>0:30</span></button>
+      </div>
+    </section>
+    <section class="setupPanel difficultyPanel">
+      <div class="panelLabel">AI skill <span>Separate from your timer</span></div>
+      <div class="difficultyOptions aiSkillOptions" data-ai-skill-group="solo">
+        <button class="difficultyChoice" type="button" data-value="easy"><strong>Easy AI</strong><span>Casual</span></button>
+        <button class="difficultyChoice selected" type="button" data-value="medium"><strong>Medium AI</strong><span>Smart</span></button>
+        <button class="difficultyChoice" type="button" data-value="hard"><strong>Hard AI</strong><span>Strategic</span></button>
+      </div>
+    </section>
+    <button class="primaryBtn full" id="startSoloBtn" type="button" style="margin-top:12px">Start Solo Game</button>
   </section>
 
   <section id="passSetup" class="view hidden">
@@ -1921,7 +2015,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
         <img src="01_player_token_red.png" alt=""><div><strong>Host</strong><small>Create the lobby and choose the rules</small></div><span class="modeChevron">›</span>
       </button>
       <button class="modeTile roleModeTile" id="joinMode" type="button">
-        <img src="02_player_token_blue.png" alt=""><div><strong>Join</strong><small>Find a nearby Maze Shift game</small></div><span class="modeChevron">›</span>
+        <img src="02_player_token_blue.png" alt=""><div><strong>Join</strong><small>Find a nearby Shift In Maze game</small></div><span class="modeChevron">›</span>
       </button>
     </div>
   </section>
@@ -2057,7 +2151,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
 <div class="handoff hidden" id="handoff">
   <div class="handoffCard">
     <div class="handoffArt">
-      <div class="handoffOrb">MS</div>
+      <div class="handoffOrb">SIM</div>
       <span>Pass to</span>
       <h2 id="handoffName">Player</h2>
     </div>
@@ -2103,6 +2197,8 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
   var DIFFICULTY_SECONDS={easy:180,medium:90,hard:30};
   var DIFFICULTY_LABELS={easy:'Easy',medium:'Medium',hard:'Hard'};
+  var AI_SKILLS={easy:1,medium:2,hard:3};
+  var AI_NAMES=['Rune','Ember','Vale'];
   var RELICS=[
     {id:'compass',name:'Compass',asset:ASSET_ROOT+'01_compass.png'},
     {id:'lantern',name:'Lantern',asset:ASSET_ROOT+'02_lantern.png'},
@@ -2129,7 +2225,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   var state={
     selected:[],players:[],board:[],spare:null,current:0,phase:'shift',
     lastShift:null,targetCount:4,winnerId:null,turnReady:false,
-    difficulty:'medium',turnDurationSec:90,turnDeadline:0
+    difficulty:'medium',turnDurationSec:90,turnDeadline:0,aiSkill:'medium'
   };
   var mode='local';
   var role=null;
@@ -2147,6 +2243,8 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   var turnTimerInterval=null;
   var lastTimerCue=null;
   var timerEnding=false;
+  var aiTurnTimer=null;
+  var aiRunning=false;
 
   function $(id){return document.getElementById(id)}
   function uid(){return globalThis.crypto&&globalThis.crypto.randomUUID?globalThis.crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)}
@@ -2173,6 +2271,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     return people.map(function(p){return{id:String(p.id),name:String(p.name).trim()}});
   }
   function showView(id){
+    if(id!=='gameView'&&mode==='solo')cancelAITurn();
     document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('hidden',v.id!==id)});
     document.body.classList.toggle('playing',id==='gameView');
     $('shellHeader').classList.toggle('hidden',id==='gameView');
@@ -2200,6 +2299,11 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     var ids=new Set(roster().map(function(p){return p.id}));
     state.selected=state.selected.filter(function(id){return ids.has(id)}).slice(0,4);
   }
+  function aiSkillValue(){
+    var el=document.querySelector('[data-ai-skill-group="solo"] .difficultyChoice.selected');
+    var value=el&&el.dataset.value||'medium';
+    return AI_SKILLS[value]?value:'medium';
+  }
   function difficultyValue(group){
     var el=document.querySelector('[data-difficulty-group="'+group+'"] .difficultyChoice.selected');
     var value=el&&el.dataset.value||'medium';
@@ -2214,7 +2318,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
   }
   function authoritativeTimer(){
-    return mode==='local'||(mode==='multi'&&role==='host');
+    return mode==='local'||(mode==='multi'&&role==='host')||(mode==='solo'&&!isAITurn());
   }
   function ensureTurnTimer(){
     if(turnTimerInterval)return;
@@ -2239,6 +2343,12 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   function renderTurnTimer(){
     var timer=$('turnTimer'),value=$('timerValue'),label=$('timerDifficulty');
     if(!timer||!value||!label)return;
+    if(mode==='solo'&&isAITurn()){
+      label.textContent='AI · '+(String(state.aiSkill||'medium').replace(/^./,function(x){return x.toUpperCase()}));
+      value.textContent='Thinking';
+      timer.classList.remove('timerWarn','timerDanger','timerCue');
+      return;
+    }
     label.textContent=DIFFICULTY_LABELS[state.difficulty]||'Medium';
     if(!state.turnDeadline||!state.players.length||state.winnerId){
       value.textContent=formatTurnClock(state.turnDurationSec||90);
@@ -2333,15 +2443,31 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   function createGame(players,targetCount,difficulty){
     var built=buildBoard();
     state.players=players.map(function(p,i){
-      return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i],asset:PLAYER_ASSETS[i]||PLAYER_ASSETS[0],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
+      return{id:String(p.id),name:String(p.name).slice(0,24),isAI:!!p.isAI,aiSkill:p.aiSkill||null,color:COLORS[i],asset:PLAYER_ASSETS[i]||PLAYER_ASSETS[0],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
     });
     state.board=built.board;state.spare=built.spare;state.current=0;state.phase='shift';state.lastShift=null;
     state.targetCount=targetCount;state.winnerId=null;state.turnReady=mode!=='local';
     state.difficulty=DIFFICULTY_SECONDS[difficulty]?difficulty:'medium';
     state.turnDurationSec=DIFFICULTY_SECONDS[state.difficulty];
     state.turnDeadline=0;targetRevealed=false;timerEnding=false;lastTimerCue=null;
+    state.aiSkill=AI_SKILLS[arguments[3]]?arguments[3]:'medium';
     assignRelics(state.board,state.players,targetCount);
   }
+  function startSoloGame(){
+    resetSession(false);stopTurnTimer();cancelAITurn();
+    mode='solo';role=null;
+    var human=selectedRosterPlayer('soloPlayer');
+    localPlayerId=human.id;
+    var aiCount=Math.max(1,Math.min(3,parseInt($('soloAiCount').value,10)||1));
+    var skill=aiSkillValue(),players=[{id:human.id,name:human.name,isAI:false}];
+    for(var i=0;i<aiCount;i++){
+      players.push({id:'ai-'+(i+1),name:AI_NAMES[i],isAI:true,aiSkill:skill});
+    }
+    createGame(players,parseInt($('soloTargetCount').value,10)||4,difficultyValue('solo'),skill);
+    state.turnReady=true;targetRevealed=false;
+    showView('gameView');startTurnClock();renderAll();
+  }
+
   function startPassGame(){
     if(state.selected.length<2){setStatus('setupStatus','Choose at least 2 players.','warn');$('setupStatus').classList.remove('hidden');return}
     $('setupStatus').classList.add('hidden');resetSession(false);mode='local';role=null;localPlayerId='';
@@ -2352,9 +2478,24 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   }
 
   function currentPlayer(){return state.players[state.current]||null}
-  function ownPlayer(){if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;return currentPlayer()}
+  function isAIPlayer(p){return!!(p&&p.isAI)}
+  function isAITurn(){return mode==='solo'&&isAIPlayer(currentPlayer())}
+  function ownPlayer(){
+    if(mode==='multi'||mode==='solo')return state.players.find(function(p){return p.id===localPlayerId})||null;
+    return currentPlayer();
+  }
   function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
-  function canControlTurn(){if(moving||shiftRequestPending||!currentPlayer())return false;if(state.turnDeadline&&Date.now()>=state.turnDeadline)return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
+  function isLocalTurnOwner(){
+    var p=currentPlayer();if(!p)return false;
+    if(mode==='local')return!!state.turnReady;
+    if(mode==='solo')return!p.isAI&&p.id===localPlayerId;
+    return p.id===localPlayerId;
+  }
+  function canControlTurn(){
+    if(moving||shiftRequestPending||!currentPlayer()||aiRunning)return false;
+    if(state.turnDeadline&&Date.now()>=state.turnDeadline)return false;
+    return isLocalTurnOwner();
+  }
   function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden');renderTurnTimer()}
   function beginTurn(){state.turnReady=true;targetRevealed=false;$('handoff').classList.add('hidden');startTurnClock();buzz(12);renderAll()}
   function revealTarget(){
@@ -2515,6 +2656,143 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     keys.reverse();
     return keys.map(function(k){var parts=k.split(',');return{r:Number(parts[0]),c:Number(parts[1])}});
   }
+  function cloneForAI(v){return JSON.parse(JSON.stringify(v))}
+  function simulateShiftForAI(rot,side,index){
+    var board=cloneForAI(state.board),spare=cloneForAI(state.spare),players=cloneForAI(state.players);
+    spare.rot=((rot%4)+4)%4;
+    var r,c,i,ejected;
+    if(side==='left'){
+      r=index;ejected=board[r][6];for(i=6;i>0;i--)board[r][i]=board[r][i-1];board[r][0]=spare;spare=ejected;
+      players.forEach(function(p){if(p.pos.r===r)p.pos.c=(p.pos.c+1)%7});
+    }else if(side==='right'){
+      r=index;ejected=board[r][0];for(i=0;i<6;i++)board[r][i]=board[r][i+1];board[r][6]=spare;spare=ejected;
+      players.forEach(function(p){if(p.pos.r===r)p.pos.c=(p.pos.c+6)%7});
+    }else if(side==='top'){
+      c=index;ejected=board[6][c];for(i=6;i>0;i--)board[i][c]=board[i-1][c];board[0][c]=spare;spare=ejected;
+      players.forEach(function(p){if(p.pos.c===c)p.pos.r=(p.pos.r+1)%7});
+    }else if(side==='bottom'){
+      c=index;ejected=board[0][c];for(i=0;i<6;i++)board[i][c]=board[i+1][c];board[6][c]=spare;spare=ejected;
+      players.forEach(function(p){if(p.pos.c===c)p.pos.r=(p.pos.r+6)%7});
+    }
+    return{board:board,spare:spare,players:players};
+  }
+  function simMovementMap(board,pos){
+    var seen=new Set(),dist=new Map(),queue=[{r:pos.r,c:pos.c}],dirs=[{d:'N',dr:-1,dc:0},{d:'E',dr:0,dc:1},{d:'S',dr:1,dc:0},{d:'W',dr:0,dc:-1}];
+    var start=pos.r+','+pos.c;seen.add(start);dist.set(start,0);
+    while(queue.length){
+      var cur=queue.shift(),a=board[cur.r][cur.c],base=dist.get(cur.r+','+cur.c)||0;
+      dirs.forEach(function(x){
+        var nr=cur.r+x.dr,nc=cur.c+x.dc,key=nr+','+nc;
+        if(nr<0||nr>6||nc<0||nc>6||seen.has(key))return;
+        if(canConnect(a,board[nr][nc],x.d)){seen.add(key);dist.set(key,base+1);queue.push({r:nr,c:nc})}
+      });
+    }
+    return{seen:seen,dist:dist};
+  }
+  function findRelicOnBoard(board,relicId){
+    if(!relicId)return null;
+    for(var r=0;r<7;r++)for(var c=0;c<7;c++){
+      var rel=board[r][c].relic;if(rel&&rel.id===relicId)return{r:r,c:c};
+    }
+    return null;
+  }
+  function manhattan(a,b){return a&&b?Math.abs(a.r-b.r)+Math.abs(a.c-b.c):20}
+  function bestDestinationForAI(sim,player,skill){
+    var map=simMovementMap(sim.board,player.pos),target=currentTarget(player);
+    var goal=target?findRelicOnBoard(sim.board,target.id):player.home;
+    var nextTarget=target&&player.targets[player.targetIndex+1]||null;
+    var nextGoal=nextTarget?findRelicOnBoard(sim.board,nextTarget.id):null;
+    var best=null;
+    map.seen.forEach(function(key){
+      var parts=key.split(','),dest={r:Number(parts[0]),c:Number(parts[1])};
+      var pathDist=map.dist.get(key)||0,goalDist=goal?manhattan(dest,goal):12;
+      var score=map.seen.size*.35-goalDist*13-pathDist*.30;
+      if(goal&&dest.r===goal.r&&dest.c===goal.c){
+        score+=10000-pathDist*2;
+        if(skill==='hard'&&nextGoal)score-=manhattan(dest,nextGoal)*2.5;
+      }
+      if(skill==='hard'){
+        score+=Math.max(0,8-goalDist)*1.8;
+        // Hard AI may consider visible board control, but never reads another player's private target.
+        var oppReach=0,oppCount=0;
+        sim.players.forEach(function(op){
+          if(op.id===player.id)return;
+          oppReach+=simMovementMap(sim.board,op.pos).seen.size;oppCount++;
+        });
+        if(oppCount)score-=oppReach/oppCount*.035;
+      }else if(skill==='medium'){
+        score+=Math.random()*2.5;
+      }else{
+        score+=Math.random()*32;
+      }
+      if(!best||score>best.score)best={r:dest.r,c:dest.c,score:score};
+    });
+    return best||{r:player.pos.r,c:player.pos.c,score:-99999};
+  }
+  function chooseAIMove(player){
+    var skill=state.aiSkill||player.aiSkill||'medium';
+    var rotations=[0,1,2,3],sides=['left','right','top','bottom'],indexes=[1,3,5],candidates=[];
+    rotations.forEach(function(rot){
+      sides.forEach(function(side){
+        indexes.forEach(function(index){
+          if(isBlockedInsertion(side,index))return;
+          var sim=simulateShiftForAI(rot,side,index);
+          var simPlayer=sim.players.find(function(p){return p.id===player.id});
+          if(!simPlayer)return;
+          var dest=bestDestinationForAI(sim,simPlayer,skill);
+          var score=dest.score;
+          // Prefer keeping its target on the board rather than ejecting it as the spare tile.
+          var target=currentTarget(simPlayer);
+          if(target&&!findRelicOnBoard(sim.board,target.id))score-=260;
+          candidates.push({rot:rot,side:side,index:index,dest:{r:dest.r,c:dest.c},score:score});
+        });
+      });
+    });
+    if(!candidates.length)return null;
+    candidates.sort(function(a,b){return b.score-a.score});
+    if(skill==='easy'){
+      var pool=candidates.slice(0,Math.min(10,candidates.length));
+      // Easy normally chooses something sensible, but not necessarily the best line.
+      return pool[Math.floor(Math.random()*pool.length)];
+    }
+    if(skill==='medium'){
+      return candidates[Math.min(Math.floor(Math.random()*3),candidates.length-1)];
+    }
+    return candidates[0];
+  }
+  function cancelAITurn(){
+    if(aiTurnTimer){clearTimeout(aiTurnTimer);aiTurnTimer=null}
+    aiRunning=false;
+  }
+  function scheduleAITurn(delay){
+    cancelAITurn();
+    if(mode!=='solo'||!isAITurn()||state.winnerId)return;
+    aiTurnTimer=setTimeout(function(){aiTurnTimer=null;runAITurn()},delay==null?850:delay);
+  }
+  async function runAITurn(){
+    if(mode!=='solo'||!isAITurn()||state.winnerId||moving)return;
+    var player=currentPlayer();if(!player)return;
+    aiRunning=true;state.turnDeadline=0;targetRevealed=false;renderAll();
+    try{
+      await wait(state.aiSkill==='hard'?1050:state.aiSkill==='medium'?850:650);
+      if(mode!=='solo'||currentPlayer()!==player||state.winnerId)return;
+      var choice=chooseAIMove(player);
+      if(!choice){aiRunning=false;endTurn();return}
+      var turns=(choice.rot-state.spare.rot+4)%4;
+      for(var i=0;i<turns;i++){
+        state.spare.rot=(state.spare.rot+1)%4;renderSpare();await wait(260);
+      }
+      aiRunning=false;
+      await shiftMazeInternal(choice.side,choice.index);
+      if(state.winnerId||mode!=='solo')return;
+      await wait(520);
+      aiRunning=true;
+      await moveToInternal(choice.dest.r,choice.dest.c);
+    }finally{
+      aiRunning=false;
+    }
+  }
+
   function cellForPoint(pt){return document.querySelector('.cell[data-r="'+pt.r+'"][data-c="'+pt.c+'"]')}
   async function animatePawnPath(path,p){
     if(!path||path.length<2||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -2579,7 +2857,11 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     state.turnDeadline=0;targetRevealed=false;timerEnding=false;lastTimerCue=null;
     state.current=(state.current+1)%state.players.length;state.phase='shift';
     if(mode==='local')showHandoff();
-    else{state.turnReady=true;startTurnClock()}
+    else if(mode==='solo'){
+      state.turnReady=true;
+      if(isAITurn()){state.turnDeadline=0;renderAll();scheduleAITurn(850);return}
+      startTurnClock();
+    }else{state.turnReady=true;startTurnClock()}
     renderAll();publishState();
   }
 
@@ -2591,7 +2873,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     var html='<img class="tileRaster" src="'+esc(tileAsset(t))+'" alt="" style="--tile-rot:'+(t.rot%4)+'">';
 
     if(t.relic){
-      var glowOwner=canControlTurn()&&targetRevealed?ownPlayer():null,glowTarget=currentTarget(glowOwner),isTarget=!!(glowTarget&&glowTarget.id===t.relic.id);
+      var glowOwner=isLocalTurnOwner()&&targetRevealed?ownPlayer():null,glowTarget=currentTarget(glowOwner),isTarget=!!(glowTarget&&glowTarget.id===t.relic.id);
       if(isTarget)html+='<span class="targetRelicGlow" aria-hidden="true"></span>';
       html+='<img class="relicArt'+(isTarget?' targetRelic':'')+'" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
     }
@@ -2613,8 +2895,8 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   }
   function renderSpare(){
     if(!state.spare)return;
-    var control=canControlTurn();
-    if(mode==='multi'&&!control){
+    var control=canControlTurn(),owner=isLocalTurnOwner();
+    if((mode==='multi'||mode==='solo')&&!owner){
       $('spareTile').innerHTML='';$('rotateRight').disabled=true;return;
     }
     $('spareTile').innerHTML=tileMarkup(state.spare,false,-1,-1);
@@ -2649,7 +2931,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   }
   function renderObjective(){
     var p=ownPlayer();if(!p)return;
-    var target=currentTarget(p),icon=$('objectiveIcon'),shield=$('targetPrivacyShield'),control=canControlTurn();
+    var target=currentTarget(p),icon=$('objectiveIcon'),shield=$('targetPrivacyShield'),control=isLocalTurnOwner();
     $('objectiveLabel').textContent='Target';
     if(target&&!targetRevealed){
       icon.innerHTML='';$('objectiveName').textContent='Hidden';
@@ -2667,10 +2949,10 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     var wrap=$('menuPlayers');if(!wrap)return;
     wrap.innerHTML=state.players.map(function(p,i){
       var target=currentTarget(p),active=i===state.current,remaining=Math.max(0,state.targetCount-p.collected.length);
-      return'<div class="menuPlayer"><img class="menuPawn" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?remaining+' relic'+(remaining===1?'':'s')+' remaining':'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
+      return'<div class="menuPlayer"><img class="menuPawn" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""><div><strong>'+esc(p.name)+(p.isAI?' <span class="aiBadge">AI</span>':'')+(active?' · Turn':'')+'</strong><small>'+(target?remaining+' relic'+(remaining===1?'':'s')+' remaining':'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
     }).join('');
-    $('menuMode').textContent=mode==='multi'?'Local Multiplayer':'Pass & Play';
-    $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):'Local device';
+    $('menuMode').textContent=mode==='multi'?'Local Multiplayer':mode==='solo'?'Solo · '+(state.aiSkill||'medium').replace(/^./,function(x){return x.toUpperCase()})+' AI':'Pass & Play';
+    $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):mode==='solo'?'Offline AI':'Local device';
   }
   function renderWinner(){
     if(!state.winnerId){$('winner').classList.add('hidden');return}
@@ -2681,29 +2963,32 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     if(!state.players.length)return;
     var p=currentPlayer(),control=canControlTurn();
     $('turnName').textContent=p.name;$('turnDot').style.backgroundImage='url("'+(p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length])+'")';
-    $('turnLabel').textContent=mode==='multi'&&!control?'Waiting for':'Turn';
+    $('turnLabel').textContent=isAITurn()?'AI Turn':(mode==='multi'&&!isLocalTurnOwner()?'Waiting for':mode==='solo'?'Your Turn':'Turn');
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
     $('spareTile').classList.remove('hidden');
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
     $('waitDock').classList.add('hidden');
-    var waiting=mode==='multi'&&!control;
+    var waiting=(mode==='multi'&&!isLocalTurnOwner())||(mode==='solo'&&isAITurn());
     $('multiWaitOverlay').classList.toggle('hidden',!waiting);
+    $('multiWaitOverlay').classList.toggle('aiThinking',mode==='solo'&&isAITurn());
     if(waiting){
       $('multiWaitName').textContent=p.name;
       $('multiWaitPawn').src=p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length];
+      var waitSmall=$('multiWaitOverlay').querySelector('small');
+      if(waitSmall)waitSmall.textContent=mode==='solo'?'AI is taking its turn':'They are taking their turn';
     }
     renderObjective();renderSpare();renderBoard();renderMenuPlayers();renderWinner();renderTurnTimer();
   }
 
   function snapshot(){
-    return{players:state.players,board:state.board,spare:state.spare,current:state.current,phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId,difficulty:state.difficulty,turnDurationSec:state.turnDurationSec,turnDeadline:state.turnDeadline};
+    return{players:state.players,board:state.board,spare:state.spare,current:state.current,phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId,difficulty:state.difficulty,turnDurationSec:state.turnDurationSec,turnDeadline:state.turnDeadline,aiSkill:state.aiSkill};
   }
   function adoptSnapshot(s,doRender){
     if(!s||!Array.isArray(s.players)||!Array.isArray(s.board)||!s.spare)return false;
     var previousCurrent=state.current;
     state.players=s.players;state.board=s.board;state.spare=s.spare;state.current=Number(s.current)||0;
     state.phase=s.phase==='move'?'move':'shift';state.lastShift=s.lastShift||null;state.targetCount=Math.max(1,Number(s.targetCount)||4);
-    state.winnerId=s.winnerId||null;state.difficulty=DIFFICULTY_SECONDS[s.difficulty]?s.difficulty:'medium';
+    state.winnerId=s.winnerId||null;state.difficulty=DIFFICULTY_SECONDS[s.difficulty]?s.difficulty:'medium';state.aiSkill=AI_SKILLS[s.aiSkill]?s.aiSkill:'medium';
     state.turnDurationSec=Math.max(1,Number(s.turnDurationSec)||DIFFICULTY_SECONDS[state.difficulty]);
     state.turnDeadline=Math.max(0,Number(s.turnDeadline)||0);
     if(previousCurrent!==state.current)targetRevealed=false;
@@ -2742,7 +3027,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     if(role!=='host'||!session||!session.updateHost||!hostIdentity)return;
     var n=parseInt($('hostTargetCount').value,10)||4;
     var diff=difficultyValue('host');
-    session.updateHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,started:false,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
+    session.updateHost({hostName:hostIdentity.name+"'s Shift In Maze",player:hostIdentity,started:false,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
   }
   function broadcastLobby(){if(role==='host'&&session){var diff=difficultyValue('host');session.broadcast({type:'lobby',players:lobbyPlayers(),targetCount:parseInt($('hostTargetCount').value,10)||4,difficulty:diff})}}
   function installSession(kind){
@@ -2775,7 +3060,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     try{
       installSession('host');var p=selectedRosterPlayer('hostPlayer');hostIdentity=networkIdentity(p,'host',hostIdentity);localPlayerId=hostIdentity.id;
       setStatus('hostStatus','Starting lobby…','');var n=parseInt($('hostTargetCount').value,10)||4,diff=difficultyValue('host');
-      await session.startHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
+      await session.startHost({hostName:hostIdentity.name+"'s Shift In Maze",player:hostIdentity,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
       var players=lobbyPlayers();renderLobby('hostLobby',players);$('hostCount').textContent=players.length+' / 4';$('startHostGame').disabled=players.length<2;
       setStatus('hostStatus','Lobby live · waiting for players','good');
     }catch(err){console.error(err);setStatus('hostStatus','Discovery error · tap Refresh','warn')}
@@ -2793,9 +3078,9 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     if(session&&session.peers&&session.peers().length){wrap.innerHTML='';$('hostFoundCount').textContent='Connected';setStatus('joinStatus','Connected · waiting for host','good');return}
     var open=(hosts||[]).filter(function(h){return!h.started&&(h.raceMode||'')==='maze-shift'&&Number(h.playerCount||1)<Number(h.maxPlayers||4)});
     $('hostFoundCount').textContent=open.length?open.length+' found':'Scanning';
-    if(!open.length){wrap.innerHTML='<div class="emptyState">Searching for Maze Shift lobbies…</div>';return}
+    if(!open.length){wrap.innerHTML='<div class="emptyState">Searching for Shift In Maze lobbies…</div>';return}
     wrap.innerHTML=open.map(function(h){
-      return'<button class="hostCard" type="button" data-host="'+esc(h.peerId)+'"><div><strong>'+esc(h.hostName||'Maze Shift')+'</strong><small>'+esc(h.trackName||'Standard')+' · '+Number(h.playerCount||1)+'/4</small></div><span class="joinTag">Join</span></button>';
+      return'<button class="hostCard" type="button" data-host="'+esc(h.peerId)+'"><div><strong>'+esc(h.hostName||'Shift In Maze')+'</strong><small>'+esc(h.trackName||'Standard')+' · '+Number(h.playerCount||1)+'/4</small></div><span class="joinTag">Join</span></button>';
     }).join('');
   }
   async function joinHost(peerId){
@@ -2839,16 +3124,18 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   }
 
   function backToModes(){
-    resetSession(false);stopTurnTimer();state.players=[];state.board=[];state.spare=null;state.winnerId=null;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;mode='local';
+    resetSession(false);stopTurnTimer();cancelAITurn();state.players=[];state.board=[];state.spare=null;state.winnerId=null;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;mode='local';
     $('winner').classList.add('hidden');$('handoff').classList.add('hidden');$('gameMenu').classList.add('hidden');$('multiWaitOverlay').classList.add('hidden');showView('modeView');
   }
   function openMenu(){renderMenuPlayers();$('gameMenu').classList.remove('hidden');buzz(7)}
   function closeMenu(){$('gameMenu').classList.add('hidden')}
 
   $('homeBtn').addEventListener('click',function(){resetSession(true);location.href='index.html'});
+  $('soloMode').addEventListener('click',function(){populatePlayerSelect('soloPlayer');showView('soloSetup')});
   $('passMode').addEventListener('click',function(){mode='local';renderPlayerPicker();showView('passSetup')});
   $('multiMode').addEventListener('click',function(){showView('multiRole')});
   document.querySelectorAll('[data-view-target]').forEach(function(b){b.addEventListener('click',function(){showView(b.dataset.viewTarget)})});
+  $('startSoloBtn').addEventListener('click',startSoloGame);
   $('startBtn').addEventListener('click',startPassGame);
   $('hostMode').addEventListener('click',function(){populatePlayerSelect('hostPlayer');showView('hostSetup');startHostDiscovery()});
   $('joinMode').addEventListener('click',function(){populatePlayerSelect('joinPlayer');showView('joinSetup');startScan()});
@@ -2887,7 +3174,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   window.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu()});
   window.addEventListener('pagehide',function(){try{session&&session.close&&session.close()}catch(e){}});
 
-  renderPlayerPicker();populatePlayerSelect('hostPlayer');populatePlayerSelect('joinPlayer');
+  renderPlayerPicker();populatePlayerSelect('soloPlayer');populatePlayerSelect('hostPlayer');populatePlayerSelect('joinPlayer');
 })();
 </script>
 
