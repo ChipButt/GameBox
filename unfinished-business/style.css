@@ -41,3 +41,13 @@
 .levelTitle{font-size:10px;letter-spacing:2px;color:#b6f7d2;font-weight:950;margin-bottom:4px}
 .objectiveStrip{margin:8px 0 4px;padding:9px 10px;border:2px solid #62766e;background:#0a1720aa;color:#e8e6cf;font-size:11px;font-weight:850;letter-spacing:.4px}
 @media(max-height:650px){.storyScene{height:125px}.storyText{min-height:58px;font-size:15px}.tutorialDemo{height:92px}#controls{padding-top:14px}}
+
+/* Mission clarity + tap-to-arm abilities */
+#objectiveHud{position:absolute;z-index:3;top:calc(92px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(82%,360px);padding:8px 12px 9px;text-align:center;border:2px solid #776c51;border-radius:4px;background:linear-gradient(#2d3e3ddd,#172830e8);box-shadow:0 4px #061219,inset 0 2px #f1dda31c;pointer-events:none}
+#objectiveHud span{display:block;color:var(--gold);font-size:8px;font-weight:950;letter-spacing:1.6px}
+#objectiveHud strong{display:block;margin-top:2px;color:#f4efd9;font-size:12px;letter-spacing:.8px;text-shadow:0 2px #08151c}
+#objectiveHud small{display:block;margin-top:3px;color:var(--mint);font-size:9px;font-weight:900;letter-spacing:1px}
+.ability.active{transform:translateY(3px) scale(1.02);filter:saturate(1.2);box-shadow:0 2px #061019,inset 0 0 22px #afffd33f,0 0 0 2px var(--power),0 0 26px #afffd344}
+.ability.active strong::after{content:' · ACTIVE';font-size:7px;color:#fff0c5}
+.ability.ready:not(.active){box-shadow:0 6px 0 #061019,0 8px 0 #45605b,inset 0 3px #d9ffe335,inset 0 -4px #0005,0 0 0 2px #ffffff10}
+@media(max-height:650px){#objectiveHud{top:calc(78px + env(safe-area-inset-top));padding:6px 10px}#objectiveHud strong{font-size:11px}}
