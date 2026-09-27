@@ -58,10 +58,33 @@ export function drawSceneryProp(c,b){const{x,y,w,h,kind}=b;
  // Short contact shadows: every solid still visibly matches its collision footprint.
  rect(c,x+5,y+6,w,h,'#0716224d');rect(c,x+2,y+3,w,h,'#07162233');
  if(kind==='wall'){
-  rect(c,x,y,w,h,'#405158');for(let yy=y+2;yy<y+h;yy+=8){rect(c,x,yy,w,1,'#283c45');for(let xx=x+((yy-y)%16?12:0);xx<x+w;xx+=26)rect(c,xx,yy,1,8,'#283c45')}
-  rect(c,x,y-8,w,9,'#99a18d');rect(c,x,y-8,w,2,'#c6c5aa');rect(c,x,y,w,2,'#d1cdb144');rect(c,x,y+h-3,w,3,'#21343e');
-  // Window-like inset glints embedded in long walls, not extra obstacles.
-  if(w>170){for(let xx=x+60;xx<x+w-40;xx+=160){frame(c,xx,y+3,30,12,'#29414f','#a4aa91');rect(c,xx+4,y+6,10,6,'#77998c');rect(c,xx+17,y+6,9,6,'#d0bf8755')}}
+  const material=Math.max(2,Math.min(7,Number.isFinite(b.phase)?b.phase:4));
+  const palettes={
+   2:['#785e49','#b39069','#3f3b35'],
+   3:['#77766e','#bbb59f','#4e5452'],
+   4:['#704d43','#ad7561','#3d3132'],
+   5:['#59645f','#9fa898','#344649'],
+   6:['#526a72','#8ea6a6','#293d45'],
+   7:['#394e57','#718a90','#1d3239']
+  };
+  const [base,light,dark]=palettes[material];
+  rect(c,x,y,w,h,base);
+  if(material===2){
+   for(let yy=y+3;yy<y+h;yy+=8)rect(c,x,yy,w,2,'#4c392d88');
+   for(let xx=x+12;xx<x+w;xx+=24)rect(c,xx,y,2,h,'#d2ad7a22');
+  }else if(material===3){
+   for(let yy=y+5;yy<y+h;yy+=13)rect(c,x+4,yy,w-8,2,'#d7d0bc22');
+   for(let xx=x+20;xx<x+w;xx+=42)rect(c,xx,y+3,1,h-6,'#464a4744');
+  }else if(material===4){
+   for(let yy=y+2;yy<y+h;yy+=8){rect(c,x,yy,w,1,dark);for(let xx=x+((yy-y)%16?12:0);xx<x+w;xx+=26)rect(c,xx,yy,1,8,dark)}
+  }else if(material===5){
+   for(let yy=y+4;yy<y+h;yy+=11){rect(c,x+3,yy,w-6,2,dark+'aa');for(let xx=x+((yy-y)%22?10:0);xx<x+w;xx+=22)rect(c,xx,yy,2,10,dark+'99')}
+  }else{
+   for(let xx=x+6;xx<x+w;xx+=14){rect(c,xx,y+2,2,h-4,dark);rect(c,xx+2,y+2,1,h-4,light+'33')}
+   if(material===7)for(let xx=x+10;xx<x+w;xx+=28)rect(c,xx,y+Math.max(3,h/2-2),5,5,'#d6c58b');
+  }
+  rect(c,x,y-8,w,9,light);rect(c,x,y-8,w,2,'#e0dcc1');rect(c,x,y,w,2,'#ffffff22');rect(c,x,y+h-3,w,3,dark);
+  if(w>170&&material<6){for(let xx=x+60;xx<x+w-40;xx+=160){frame(c,xx,y+3,30,12,'#29414f','#a4aa91');rect(c,xx+4,y+6,10,6,'#77998c');rect(c,xx+17,y+6,9,6,'#d0bf8755')}}
   return;
  }
  if(kind==='tree'||kind==='hedge'){
