@@ -111,9 +111,9 @@ export function createTokens(nav,level=0){
   [520,520],[880,430],[1270,560],[1660,470],[2020,390],[1320,300]
  ];
  const rewards=['echo25','speedTier','stiff','echo50','invisibilityTier','echo25','phaseTier','stiff',
-  'touchTier','echo25','speedTier','refill','echo50','stiff','phaseTier','echo25',
-  'invisibilityTier','speedTier','echo50','touchTier','stiff','echo25','refill','speedTier',
-  'phaseTier','echo50','invisibilityTier','stiff','touchTier','echo25','speedTier','echo50'];
+  'speedTier','echo25','speedTier','refill','echo50','stiff','phaseTier','echo25',
+  'invisibilityTier','speedTier','echo50','speedTier','stiff','echo25','refill','speedTier',
+  'phaseTier','echo50','invisibilityTier','stiff','speedTier','echo25','speedTier','echo50'];
  return points.map(([x,y],id)=>{
   const n=nav.nearest({x,y});return n?{id,...n,reward:rewards[(id+level*5)%rewards.length],collected:false}:null;
  }).filter(Boolean);
@@ -124,13 +124,13 @@ export function collectTokens(tokens,ghost,effects,run,maxEnergy){
   if(token.collected||distance(token,ghost)>21)continue;
   token.collected=true;
   const upgrade=(k,label)=>{
-   if(run[k]<(k==='speed'?6:k==='touch'?5:7)){run[k]++;messages.push(`${label} strengthened to tier ${run[k]}.`);return true}
+   if(run[k]<(k==='speed'?6:7)){run[k]++;messages.push(`${label} strengthened to tier ${run[k]}.`);return true}
    run.echoes+=25;messages.push(`${label} is already at maximum · token became 25 Echoes.`);return false;
   };
   if(token.reward==='speedTier')upgrade('speed','Movement');
   else if(token.reward==='invisibilityTier'){if(upgrade('invisibility','Vanish'))effects.energy=1.4+(run.invisibility-1)*.85}
   else if(token.reward==='phaseTier')upgrade('phase','Phase');
-  else if(token.reward==='touchTier')upgrade('touch','Touch');
+  else if(token.reward==='speedTier')upgrade('touch','Touch');
   else if(token.reward==='refill'){
    if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Vanish fully restored.')}
    else{run.echoes+=20;messages.push('The token releases 20 Echoes.')}
