@@ -8,6 +8,13 @@ let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
 let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0};
 const names={invisibility:'Vanish',phase:'Phase',touch:'Touch'},labels={invisibility:'VANISH',phase:'PHASE',touch:'TOUCH'};
+const GRAVEYARD_OBJECTIVES=[
+ {title:'Find your grave',hint:'Something about the old graves feels familiar.',x:630,y:1870,complete:'That name… that is mine.'},
+ {title:'Read the funeral notice',hint:'The chapel entrance has a service notice pinned outside.',x:1900,y:1515,complete:'The service is still going. The main gate will stay shut until they leave.'},
+ {title:'Recover the keepsake',hint:'A memory is pulling you toward the memorial garden.',x:1860,y:600,complete:'You remember carrying this yesterday. Another loose end.'},
+ {title:'Listen to the end of the funeral',hint:'Return to the funeral lawn and wait close enough to hear the service end.',x:1450,y:1320,complete:'The service is ending. The mourners are heading toward the gate.'},
+ {title:'Follow the procession',hint:'Follow the funeral party toward the gatehouse path.',x:1320,y:650,complete:'The procession leaves. The cemetery gate has been left open.'}
+];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(p))}catch{saveFailed=true;}}
 function note(s,d=4){$('notice').textContent=s;noticeUntil=performance.now()+d*1000;}
@@ -15,9 +22,9 @@ function tone(f=440,d=.12){if(!p.sound)return;try{audio??=new(window.AudioContex
 function resetInput(){held=false;skillPointer=null;stickPointer=null;input={x:0,y:0};keys.clear();$('nub').style.transform='';$('stick').hidden=true;}
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
-function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
+function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Spend Echoes using the small gold controls above <b>VANISH</b>, <b>PHASE</b> and <b>TOUCH</b>. Your build resets whenever the level restarts.</p><p>The large buttons use your powers. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p>Mystery tokens can contain Echoes, temporary speed, an invisibility refill or Scared Stiff. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Spend Echoes using the small gold controls above <b>VANISH</b>, <b>PHASE</b> and <b>TOUCH</b>. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p>Mystery tokens can contain Echoes, temporary speed, an invisibility refill or Scared Stiff. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';if(k==='phase')return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';return run.touch?`Touch tier ${run.touch} → ${run.touch+1}`:'Unlock TOUCH';}
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT IN THE LIVING WORLD'}</span><h2>${win?'You made it through.':'The memory slips away.'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 function buyUpgrade(k){if(mode!=='play')return;if(tutorial.active){note('Follow the tutorial prompts to unlock abilities.',1.5);return}const before=run[k],price=runCost(run,k);if(!buyRun(run,k)){note(run[k]>=RUN_MAX[k]?`${names[k]} is fully strengthened.`:`Need ${price} Echoes for ${names[k]}.`,1.6);tone(150,.07);return}if(k==='invisibility')energy=runCapacity(run);tone(700,.1);note(before===0?`${names[k]} unlocked.`:`${names[k]} strengthened to tier ${run[k]}.`,1.8);updateSkills();updateEchoDisplay();}
@@ -66,9 +73,9 @@ function tutorialAbilityPrompt(k,nextStage){
 function tutorialBuy(k){
  const price=runCost(run,k);if(run.echoes<price)return;
  buyRun(run,k);if(k==='invisibility')energy=runCapacity(run);updateSkills();updateEchoDisplay();tone(760,.14);
- if(k==='invisibility'){tutorial.stage=3;tutorialCard('Vanish',`Hold <b>VANISH</b> while moving to disappear from living eyes. The meter shows how long you can stay invisible. Upgrading VANISH also refills it.`,'Try Vanish',()=>{tutorial.useTime=0;resumeTutorial()},'invisibility');}
- else if(k==='phase'){tutorial.stage=6;tutorialCard('Phase',`Hold <b>PHASE</b> while moving into an obstacle. Higher tiers let your spirit pass through stronger materials.`,'Keep exploring',()=>resumeTutorial(),'phase');}
- else{tutorial.stage=8;tutorialCard('Touch',`Hold <b>TOUCH</b> against physical objects to disturb or open them. Making noise can attract the living.`,'Finish tutorial',completeTutorial,'touch');}
+ if(k==='invisibility'){tutorial.stage=3;tutorialCard('Vanish',`Tap <b>VANISH</b> to turn it on, then move normally. Tap it again to cancel. While active you disappear from living eyes. The meter shows how long you can stay invisible. Upgrading VANISH also refills it.`,'Try Vanish',()=>{tutorial.useTime=0;resumeTutorial()},'invisibility');}
+ else if(k==='phase'){tutorial.stage=6;tutorialCard('Phase',`Tap <b>PHASE</b> to arm it, then move into an obstacle. Higher tiers let your spirit pass through stronger materials.`,'Keep exploring',()=>resumeTutorial(),'phase');}
+ else{tutorial.stage=8;tutorialCard('Touch',`Tap <b>TOUCH</b> to arm it, then move against physical objects to disturb or open them. Making noise can attract the living.`,'Finish tutorial',completeTutorial,'touch');}
 }
 function completeTutorial(){p.tutorialSeen=true;save();tutorial={active:false,stage:0,useTime:0};tutorialCard('You remember enough.',`Echoes make you stronger, but only while this memory lasts. Now get out of the graveyard without being seen.`,'Begin Level 1',()=>start(false));}
 function animateTutorialDemo(kind){
@@ -97,16 +104,67 @@ function buildWorldSafely(level){
  }
  return {generated,builtScenery,builtNav,builtPeople,builtTokens};
 }
+function currentObjective(){
+ if(p.level!==0||tutorial.active)return null;
+ if(run.objective>=GRAVEYARD_OBJECTIVES.length)return run.exitOpen?{title:'Leave the graveyard',hint:'The gate is open. Go through it.',x:world.ferry.x,y:world.ferry.y}:null;
+ return GRAVEYARD_OBJECTIVES[run.objective];
+}
+function objectiveDirection(dx,dy){const a=Math.atan2(dy,dx),oct=Math.round(a/(Math.PI/4));return ['→','↘','↓','↙','←','↖','↑','↗'][((oct%8)+8)%8];}
+function updateObjectiveHud(){
+ const box=$('objectiveHud');if(!box)return;
+ const obj=currentObjective();
+ if(!obj||mode!=='play'){box.hidden=true;return}
+ box.hidden=false;
+ $('objectiveCount').textContent=run.exitOpen?'5 / 5 · EXIT OPEN':`${Math.min(run.objective+1,5)} / 5`;
+ $('objectiveTitle').textContent=obj.title.toUpperCase();
+ const dx=obj.x-ghost.x,dy=obj.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
+ $('objectiveMeta').textContent=`${objectiveDirection(dx,dy)} ${dist} paces · ${obj.hint}`;
+}
+function sendFuneralProcession(){
+ if(!nav)return;
+ const destinations=[{x:1320,y:760},{x:1320,y:610}].map(p=>nav.nearest(p)).filter(Boolean);
+ for(const e of people.filter(e=>/Mourner|Funeral director|Funeral guest/.test(e.task||''))){
+  if(!destinations.length)continue;
+  e.route=destinations.map((q,i)=>({...q,wait:i?.3:.15,face:-1.57}));
+  e.index=0;e.state='routine';e.path=nav.path(e,e.route[0]);e.wait=0;
+ }
+}
+function openCemeteryGate(){
+ run.exitOpen=true;
+ const gate=blocks.find(b=>b.exit);
+ if(gate)gate.open=true;
+ if(nav)nav=navigation(blocks);
+ tone(900,.18);
+}
+function completeCurrentObjective(){
+ const obj=GRAVEYARD_OBJECTIVES[run.objective];if(!obj)return;
+ run.objective++;
+ tone(720,.12);note(`TASK COMPLETE · ${obj.complete}`,3.2);
+ if(run.objective===4)sendFuneralProcession();
+ if(run.objective===5)openCemeteryGate();
+ updateObjectiveHud();
+}
+function checkObjectives(){
+ if(p.level!==0||tutorial.active||run.objective>=GRAVEYARD_OBJECTIVES.length)return;
+ const obj=GRAVEYARD_OBJECTIVES[run.objective];
+ if(Math.hypot(ghost.x-obj.x,ghost.y-obj.y)<62)completeCurrentObjective();
+}
+function toggleAbility(k){
+ if(mode!=='play'||!run[k]){if(!run[k])note(`${names[k]} is still locked.`,1.5);return}
+ if(selected===k&&held){held=false;note(`${names[k]} cancelled.`,1.2)}
+ else{selected=k;held=true;note(`${names[k]} active.`,1.2);tone(300,.06)}
+ updateSkills();
+}
 function start(isTutorial=false){
  mode='play';
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
- if(isTutorial)tutorialCard('Move around',`Drag anywhere on the play area to move. Every new patch of ground awakens a tiny memory and gives you <b>1 Echo</b>. Earn <b>25 Echoes</b>.`,'Start moving');
- else note(p.level===0?'Objective · Escape the graveyard.':'Find what you left unfinished.',4);
+ run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
+ updateObjectiveHud();if(isTutorial)tutorialCard('Move around',`Drag anywhere on the play area to move. Every new patch of ground awakens a tiny memory and gives you <b>1 Echo</b>. Earn <b>25 Echoes</b>.`,'Start moving');
+ else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
  tone(320);
 }
-function finish(win=false){if(mode!=='play')return;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
+function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
 $('pause').onclick=pause;window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
