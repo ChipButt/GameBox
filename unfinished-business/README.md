@@ -24,11 +24,15 @@ The reference-inspired ghost is drawn pixel by pixel in code, with directional e
 
 The initial progression tuning is intentionally upgrade-driven. Physical phone testing should inform patrol timings, upgrade costs and thumb placement. This is a web game in GameBox, not a packaged app-store binary.
 
-## Neighbourhood maps
+## Story and level structure
 
-`world.js` now defines five stable seeded 2D neighbourhoods. Level 1 keeps the original Lantern Streets layout; Levels 2–5 add Canal Quarter, Market Maze, Railway Estate and Old Town. Each uses different barriers, crossings and route structure, with tighter navigation and more exposed approaches as difficulty rises. Scenery is generated against the active map and exploration rewards are stored separately per level. Completing a level unlocks the next one, while unlocked maps remain selectable from the main menu.
+The campaign now presents five pieces of unfinished business in order: **The Graveyard**, **The Workplace**, **The Supermarket**, **The High Street**, and **Homeward**. Level 1 is no longer the old neighbourhood map: it is a dedicated cemetery with grave rows, memorial lawns, a chapel, funeral area, maintenance yard, hedges, paths and an iron exit gate.
 
-Exploration bookkeeping is invisible: floor colours never depend on explored cells, no ground specks or +1 effects are drawn, and the minimap shows neither exploration history nor the exit. Exploration is attempt-local rather than saved permanently, so a failed run always has a complete progression path available again. Tests cover unique-cell discovery, run resets, campaign-save migration, stable generation, patrol clearance and temporary upgrade spending.
+The first launch runs a short animated pixel-art story sequence before asking whether the player wants the tutorial. The tutorial is optional and takes place safely inside the graveyard with witnesses disabled. It teaches movement, then awards Echoes one-by-one for new ground and walks the player through VANISH → PHASE → TOUCH in that order. Intro/tutorial completion is saved separately from temporary run progression.
+
+Echoes are shown once, in the boxed top-left HUD. There is no second currency panel and no separate PACE purchase. The base ghost speed is intentionally quicker from the start, with a small automatic increase on later levels.
+
+The minimap still shows neither exploration history nor the exit.
 
 ## Witnesses, investigations and secret pickups
 
