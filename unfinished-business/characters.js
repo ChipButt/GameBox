@@ -42,21 +42,24 @@ export function drawCat(c,e,reduced=false){const p=pose(e,reduced),dx=Math.cos(p
  c.restore();}
 
 export function drawCyclist(c,e,reduced=false){
- const p=pose(e,reduced),a=p.a,dx=Math.cos(a),dy=Math.sin(a),px=-dy,py=dx;
- const wheelSpin=reduced?0:(e.walk||0)*.18;
- c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(a);
- c.fillStyle='#08182055';c.beginPath();c.ellipse(0,14,24,5,0,0,Math.PI*2);c.fill();
- const wheel=(x,y)=>{c.strokeStyle='#1a2a34';c.lineWidth=3;c.beginPath();c.arc(x,y,10,0,Math.PI*2);c.stroke();c.strokeStyle='#93a09b88';c.lineWidth=1;for(let i=0;i<6;i++){const q=wheelSpin+i*Math.PI/3;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(q)*9,y+Math.sin(q)*9);c.stroke();}};
- wheel(-15,7);wheel(15,7);
- c.strokeStyle='#9a7b55';c.lineWidth=3;c.beginPath();c.moveTo(-15,7);c.lineTo(-2,-1);c.lineTo(8,7);c.lineTo(-15,7);c.moveTo(-2,-1);c.lineTo(15,7);c.moveTo(8,7);c.lineTo(4,-8);c.lineTo(11,-8);c.stroke();
- c.strokeStyle='#d8c78f';c.lineWidth=2;c.beginPath();c.moveTo(11,-8);c.lineTo(17,-11);c.stroke();
- const bob=p.moving&&!reduced?Math.sin((e.walk||0)*.15)*1.2:0;
- c.translate(0,bob);
- rect(c,-3,-24,12,18,e.tint||'#6f8798');
- rect(c,-5,-10,6,14,'#283d4b');rect(c,6,-10,6,14,'#354b58');
- rect(c,0,-30,6,7,'#d6ae88');
- rect(c,-5,-42,16,14,'#d6ae88');rect(c,-7,-44,20,6,'#3b4850');
- rect(c,-7,-39,4,5,'#28343b');rect(c,8,-39,4,5,'#28343b');
- rect(c,-8,-21,5,13,'#d6ae88');rect(c,9,-21,5,13,'#d6ae88');
+ const p=pose(e,reduced),spin=reduced?0:(e.walk||0)*.22;
+ c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(e.angle);
+ // Top-down bike: front/rear tyres align with travel direction, rider sits over the frame.
+ c.fillStyle='#07151d55';c.beginPath();c.ellipse(0,8,27,8,0,0,Math.PI*2);c.fill();
+ const tyre=(x)=>{c.fillStyle='#111d25';c.beginPath();c.ellipse(x,4,8,4,0,0,Math.PI*2);c.fill();c.strokeStyle='#8c999477';c.lineWidth=1;c.beginPath();c.moveTo(x-5,4);c.lineTo(x+5,4);c.moveTo(x,1);c.lineTo(x,7);c.stroke();};
+ tyre(-18);tyre(18);
+ c.strokeStyle='#b08b58';c.lineWidth=3;c.beginPath();c.moveTo(-16,4);c.lineTo(-3,0);c.lineTo(8,4);c.lineTo(-16,4);c.moveTo(-3,0);c.lineTo(16,4);c.moveTo(8,4);c.lineTo(5,-5);c.stroke();
+ // Handlebar and saddle read clearly from above.
+ c.strokeStyle='#d1bd87';c.lineWidth=2;c.beginPath();c.moveTo(14,-4);c.lineTo(20,-7);c.moveTo(14,-4);c.lineTo(20,0);c.stroke();
+ rect(c,-8,-4,5,8,'#2b3d48');
+ // Rider: shoulders across the bike, torso/head pointing along travel direction.
+ const bob=p.moving&&!reduced?Math.round(Math.sin(spin)*1):0;c.translate(0,bob);
+ pixelEllipse(c,5,-2,7,7,'#d5ad88');
+ rect(c,-8,-7,14,14,e.tint||'#6f8798');rect(c,-11,-5,5,10,'#6f8798');rect(c,6,-5,5,10,'#6f8798');
+ rect(c,-8,5,6,9,'#283d4b');rect(c,2,5,6,9,'#354b58');
+ rect(c,-2,-8,5,3,'#e2c19b');rect(c,1,-11,7,6,'#3b4850');
+ // Hands on bars and pedalling feet.
+ rect(c,11,-7,4,4,'#d5ad88');rect(c,11,1,4,4,'#d5ad88');
+ const pedal=Math.sin(spin)*4;rect(c,-6+pedal,12,5,3,'#172733');rect(c,2-pedal,12,5,3,'#172733');
  c.restore();
 }
