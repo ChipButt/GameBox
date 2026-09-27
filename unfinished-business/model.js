@@ -17,7 +17,7 @@ export const newRun=level=>({echoes:0,speed:0,invisibility:0,phase:0,touch:0,lev
 export const runSpeed=r=>78+r.level*4+r.speed*10;
 export const runCapacity=r=>r.invisibility?1.4+(r.invisibility-1)*.85:0;
 export const runCost=(r,k)=>{
- const base={speed:20,invisibility:25,phase:28,touch:26}[k]??9999;
+ const base={speed:20,invisibility:25,phase:26,touch:30}[k]??9999;
  const n=r[k]||0;
  return Math.round(base*Math.pow(1.34,n));
 };
