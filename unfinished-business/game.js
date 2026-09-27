@@ -361,9 +361,12 @@ function move(dx,dy,dt){
   }else if(blocked.phase<99)note(`${MATERIALS[blocked.phase]} · Needs PHASE ${blocked.phase}${blocked.touch<99?` or TOUCH ${blocked.touch}`:''}`,1.2);
   return;
  }
- ghost.x=nx;ghost.y=ny;
- if(tutorial.active){ghost.x=Math.max(1010,Math.min(1600,ghost.x));ghost.y=Math.max(1580,Math.min(2250,ghost.y))}
- if(!hits.length){lastSafe={x:nx,y:ny};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
+ if(tutorial.active){
+  if(tutorial.stage<5&&ny<1605){note('The watched exit can wait · follow the sparkling tutorial token first.',1.4);return}
+  if(tutorial.stage===5&&ny<1570&&!active('invisibility')){note('Too exposed · activate VANISH before crossing the lookout.',1.5);return}
+ }
+ ghost.x=nx;ghost.y=ny;tutorialBounds();
+ if(!hits.length){lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
 }
 function update(dt){t+=dt;effects.boost=Math.max(0,effects.boost-dt);if(nav)updateEntities(people,nav,blocks,dt);
 let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
@@ -371,11 +374,7 @@ let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||
 if(phaseExit&&!active('phase')){const length=Math.hypot(phaseExit.x,phaseExit.y)||1;let exit=null;for(let d=1;d<160;d++){const x=ghost.x+phaseExit.x/length*d,y=ghost.y+phaseExit.y/length*d;if(blocks.some(b=>overlap(x,y,b)&&b.phase>run.phase))break;if(!blocks.some(b=>overlap(x,y,b))){exit={x,y};break}}ghost.x=(exit||lastSafe).x;ghost.y=(exit||lastSafe).y;lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}
 const s=runSpeed(run)*(effects.boost>0?1.65:1)*dt;if(x)move(x*s,0,dt);if(y)move(0,y*s,dt);if(!active('touch')){contact=null;contactTime=0}ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
 // Every genuinely new cell is one Echo. The feedback is immediate.
-if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){runPoints++;run.explored++;run.echoes++;tone(500,.025);updateEchoDisplay();
- if(tutorial.active&&tutorial.stage===1&&run.echoes>=25)tutorialAbilityPrompt('invisibility',2);
- else if(tutorial.active&&tutorial.stage===4&&run.echoes>=runCost(run,'phase'))tutorialAbilityPrompt('phase',5);
- else if(tutorial.active&&tutorial.stage===6&&run.echoes>=runCost(run,'touch'))tutorialAbilityPrompt('touch',7);
-}
+if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){runPoints++;run.explored++;run.echoes++;tone(500,.025);updateEchoDisplay();refreshUpgradeStates();}
 
 effects.energy=energy;
 for(const message of collectTokens(tokens,ghost,effects,run,runCapacity(run))){note(message,4);tone(740,.15);updateEchoDisplay();updateSkills();updateTokenInventory()}
@@ -386,18 +385,16 @@ if(invisible){
  energy=Math.max(0,energy-dt);
  if(energy<=0){held=false;invisible=false;updateSkills();note('Vanish exhausted.',1.4)}
 }
-if(tutorial.active&&tutorial.stage===3&&invisible){
- tutorial.useTime+=dt;
- if(tutorial.useTime>.4){
-  tutorial.stage=4;
-  tutorialCard('That is Vanish.',`Your invisibility is limited, so use it when a witness is about to see you. Now keep exploring until you have enough Echoes to unlock <b>PHASE</b>.`,'Keep exploring',()=>resumeTutorial());
- }
-}
+if(tutorial.active)tutorialCheckpoint();
 const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
 if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · charge used.',3);tone(180,.22);updateTokenInventory()}
 const spotted=sight.danger;
-seen=spotted?seen+dt:Math.max(0,seen-dt*3);
-if(seen>.18){finish();return}
+if(tutorial.active&&tutorial.stage===5&&spotted&&!invisible){
+ seen=0;ghost.x=1320;ghost.y=1710;lastSafe={x:ghost.x,y:ghost.y};held=false;updateSkills();note('Spotted. Try again — activate VANISH before crossing the lookout.',2.2);tone(150,.12);
+}else{
+ seen=spotted?seen+dt:Math.max(0,seen-dt*3);
+ if(seen>.18){finish();return}
+}
 if(!tutorial.active&&(p.level!==0||run.exitOpen)&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
 cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);
 camX+=(ghost.x-240-camX)*Math.min(1,dt*8);
@@ -412,7 +409,7 @@ for(const k of ['invisibility','phase','touch']){
  $('reserve-'+k).textContent=!run[k]?'LOCKED':k==='invisibility'?`${using?'ACTIVE · ':''}${energy.toFixed(1)}s`:`${using?'ACTIVE · ':''}TIER ${run[k]}`;
  $('meter-'+k).style.width=!run[k]?'0%':k==='invisibility'?`${energy/Math.max(.01,runCapacity(run))*100}%`:'100%';
 }
-updateEchoDisplay();
+updateEchoDisplay();refreshUpgradeStates();
 }
 
 function drawToken(token){
@@ -436,12 +433,12 @@ function draw(){
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
  if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
 
- for(const token of tokens)if(!token.collected&&token.x>camX-30&&token.x<camX+510&&token.y>cam-30&&token.y<cam+viewH+30)drawToken(token);
+ for(const token of tokens)if(!token.collected&&token.x>camX-30&&token.x<camX+510&&token.y>cam-30&&token.y<cam+viewH+30)drawToken(token);const tutorialPickup=tutorialTarget();if(tutorialPickup)drawToken(tutorialPickup);
  const obj=currentObjective();if(obj){const pulse=12+(reduced?0:Math.sin(t*4)*4);ctx.strokeStyle='#f3ce87';ctx.lineWidth=3;ctx.beginPath();ctx.arc(obj.x,obj.y,pulse,0,Math.PI*2);ctx.stroke();rect(ctx,obj.x-3,obj.y-3,6,6,'#fff1ae');}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
  if(active('touch')){ctx.strokeStyle='#e9c58a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ghost.x,ghost.y-7,24,0,7);ctx.stroke()}ctx.restore();
  if(mode==='play')drawMap();
 }
-function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
+function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}const tt=tutorialTarget();if(tt){const tw=reduced?3:(Math.sin(t*6)>.1?5:3);rect(ctx,x+tt.x*sx-tw/2,y+tt.y*sy-tw/2,tw,tw,'#fff0a8')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
 function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
