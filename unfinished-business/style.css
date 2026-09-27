@@ -102,3 +102,13 @@
 .taskItem .taskDistance{color:var(--gold);font-weight:900}
 .taskReveal{margin-top:11px;text-align:center;color:#8f9b93;font-size:9px;font-weight:850;letter-spacing:.8px}
 @media(max-width:360px){#taskButton{width:52px;min-height:75px}.taskItem{padding-left:39px}}
+
+/* Mystery-token tutorial reveal */
+.tokenLesson{text-align:center}
+.tokenLessonGhost{display:block;width:120px;height:100px;margin:-2px auto -8px;image-rendering:pixelated}
+.tokenLesson h2{margin:2px 0 8px}
+.tokenReveal{display:inline-block;margin:0 auto 8px;padding:6px 12px;border:2px solid #ffe39a;background:linear-gradient(#7b6333,#47391f);box-shadow:0 0 14px #ffd96b77,inset 0 2px #fff1ae44;color:#fff0ae;font-size:13px;font-weight:950;letter-spacing:1.2px}
+.tokenLesson .tutorialHint{margin:7px auto 10px;line-height:1.35}
+.tokenRewardGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0 12px;text-align:left}
+.tokenRewardGrid span{display:flex;align-items:center;gap:7px;min-height:31px;padding:6px 8px;border:1px solid #657368;background:#122129;color:#dbe0cb;font-size:9px;font-weight:900;letter-spacing:.3px}
+.tokenRewardGrid b{width:18px;height:18px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #b99e61;background:#332d20;color:#f3ce87;font-size:11px;box-shadow:0 0 6px #f3ce8733}
