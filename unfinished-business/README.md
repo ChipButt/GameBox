@@ -20,9 +20,9 @@ The reference-inspired ghost is drawn pixel by pixel in code, with directional e
 
 The initial progression tuning is intentionally upgrade-driven. Physical phone testing should inform patrol timings, upgrade costs and thumb placement. This is a web game in GameBox, not a packaged app-store binary.
 
-## Neighbourhood map
+## Neighbourhood maps
 
-`world.js` defines a stable seeded 2D neighbourhood: four connected house rooms, a garage, gardens, shops, a park, churchyard, crossing and intersecting streets. Open loops and optional material shortcuts allow travel in all directions. Scenery is deterministically generated from the saved seed; resetting an attempt never rerolls exploration rewards. Humans and cats follow task loops with pauses and turns, using collision-aware navigation. The camera follows both axes.
+`world.js` now defines five stable seeded 2D neighbourhoods. Level 1 keeps the original Lantern Streets layout; Levels 2–5 add Canal Quarter, Market Maze, Railway Estate and Old Town. Each uses different barriers, crossings and route structure, with tighter navigation and more exposed approaches as difficulty rises. Scenery is generated against the active map and exploration rewards are stored separately per level. Completing a level unlocks the next one, while unlocked maps remain selectable from the main menu.
 
 Exploration bookkeeping is invisible: floor colours never depend on visited cells, no ground specks or +1 effects are drawn, and the minimap shows neither exploration history nor the exit. Scene rendering is culled to the camera. Exploration is device/browser local, like the existing save.
 
@@ -30,7 +30,7 @@ Tests cover unique-cell rewards, restart/reload persistence, save migration, sta
 
 ## Witnesses, investigations and secret pickups
 
-- 18 humans have individual walking speeds and looping tasks, with pauses and turns. A local state machine handles routine, investigation, search, return and frozen states; no API or backend is used.
+- Human traffic is denser and faster. NPCs use destination-based routines such as commuting, shop deliveries, park visits, street cleaning, market running and returning from work instead of simply wandering nearby. Later levels add more humans, cats and cameras and increase patrol speed/range. A local state machine still handles routine, investigation, search, return and frozen states; no API or backend is used.
 - Opening an obstacle with Touch alerts up to two nearby, reachable humans. Navigation rebuilds when a door opens. Humans walk to the disturbance, look around, then walk back to their interrupted routine. They do not teleport or pass through closed walls.
 - Six sweeping CCTV cameras watch exterior corners and the bank interior. Camera sightings can end a run.
 - Two black cats prowl. Their sightings never directly end a run; a cooldown-limited alert attracts one reachable human. Invisibility blocks all witness types.
