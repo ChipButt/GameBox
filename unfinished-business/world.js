@@ -55,10 +55,10 @@ function baseLayout(add,decor,random){
  const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>add(x,y,w,h,kind,phase,touch);
  // Cemetery perimeter. The north gate is a physical obstacle rather than a magic level trigger.
  wall(120,120,1100,28);wall(1420,120,800,28);wall(120,120,28,2140);wall(2192,120,28,2140);wall(120,2232,2100,28);
- wall(1220,120,200,28,2,2,'gate');
+ const exitGate=wall(1220,120,200,28,2,2,'gate');exitGate.exit=true;
  // Chapel and vestry.
  wall(1620,860,560,24);wall(1620,1456,560,24);wall(1620,884,24,572);wall(2156,884,24,572);
- wall(1840,1456,120,24,1,1,'door');wall(1880,960,120,85,'table');wall(1690,1020,110,170,'bench');wall(2020,1020,90,170,'bench');
+ wall(1840,1456,120,24,2,1,'door');wall(1880,960,120,85,'table');wall(1690,1020,110,170,'bench');wall(2020,1020,90,170,'bench');
  // Maintenance yard with a wooden store and tempting side-cache spaces.
  wall(1710,1620,470,24);wall(1710,2196,470,24);wall(1710,1644,24,552);wall(2156,1644,24,552);
  wall(1870,1620,120,24,2,2,'gate');wall(1800,1810,145,85,'shelf');wall(1990,1840,105,120,'cabinet');
