@@ -21,6 +21,7 @@ jobs:
           node --check unfinished-business/world.js
           node --check unfinished-business/entities.js
           node --check unfinished-business/scenery.js
+          node --check unfinished-business/characters.js
           node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
           node --check core-empires/game.js
           node --check shared/lan-core.js

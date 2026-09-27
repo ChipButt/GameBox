@@ -42,3 +42,7 @@ Run `node --test unfinished-business/model.test.mjs unfinished-business/entities
 ## Scenery renderer
 
 `scenery.js` paints a cached neighbourhood backdrop with deterministic timber, asphalt, grass, concrete and paving textures; room-specific tiles; patterned rugs; kerbs, crossings and drains; and soft ambient lighting. Detailed furniture, brickwork, foliage, vehicles, streetlamps and the ferry render on top. The background crop is drawn once per frame, rather than rebuilding its texture detail during play. All art is code-drawn; no external assets are downloaded. This renderer does not change map geometry, collisions, discovery records or entity behaviour.
+
+## Directional character animation
+
+`characters.js` draws humans and black cats in eight headings. Human silhouettes, faces, hair, clothing and limb placement change with facing; cats rotate their body, head, tail and four-paw gait. Walk cycles use distance travelled so animation speed follows movement and stops during pauses. Humans perform small note-checking, watch-checking and hand-work gestures while waiting; cats groom and flick their tails. Scared Stiff stops animation clocks. Reduced-motion mode suppresses idle motion and body bobbing. Detection continues to use the entity's actual angle; only rendering changes.
