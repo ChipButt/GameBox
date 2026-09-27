@@ -126,13 +126,13 @@ function spawnTutorialLookout(){
 function afterTutorialPurchase(k){
  tone(780,.14);updateEchoDisplay();updateSkills();refreshUpgradeStates();
  if(k==='speed'){
-  tutorial.stage=3;
+  tutorial.stage=3;syncTutorialTasks();
   tutorialCard('Speed',`Faster.<br><b>Next: find the golden ghost.</b>`,'Find the Vanish token',()=>resumeTutorial(),'speed');
  }else if(k==='invisibility'){
-  energy=runCapacity(run);tutorial.stage=5;tutorial.refillActive=false;spawnTutorialLookout();
+  energy=runCapacity(run);tutorial.stage=5;tutorial.refillActive=false;spawnTutorialLookout();syncTutorialTasks();
   tutorialCard('Vanish',`The lookout keeps turning.<br><b>VANISH. Slip past unseen.</b>`,'Practise Vanish',()=>resumeTutorial(),'invisibility');
  }else if(k==='phase'){
-  tutorial.stage=8;
+  tutorial.stage=8;syncTutorialTasks();
   tutorialCard('Phase',`<b>PHASE</b> lets you pass through doors and walls up to your tier.<br>Try the wall ahead.`,'Practise Phase',()=>resumeTutorial(),'phase');
 
  }
@@ -210,6 +210,13 @@ const TUTORIAL_SECTION_STARTS={
  8:{x:1320,y:1365}
 };
 const TUTORIAL_REFILL={id:9199,x:1160,y:1695,title:'Vanish refill'};
+const TUTORIAL_TASKS=[
+ {id:'tutorial-speed',title:'Wake up your spirit',hint:'Get 20 Echoes and reach the golden ghost.',stage:1,targetStage:3},
+ {id:'tutorial-vanish',title:'Unlock Vanish',hint:'Get 25 Echoes and reach the next golden ghost.',stage:3,targetStage:5},
+ {id:'tutorial-lookout',title:'Slip past the lookout',hint:'Use Vanish. Get through unseen.',stage:5,targetStage:6},
+ {id:'tutorial-phase',title:'Unlock Phase',hint:'Get 26 Echoes and reach the golden ghost.',stage:6,targetStage:8},
+ {id:'tutorial-wall',title:'Pass through the wall',hint:'Use Phase to cross the wall.',stage:8,targetStage:99}
+];
 function resetTutorialSection(){
  const start=TUTORIAL_SECTION_STARTS[tutorial.stage]||{x:1320,y:2130};
  ghost.x=start.x;ghost.y=start.y;lastSafe={...start};seen=0;held=false;contact=null;contactTime=0;phaseExit=null;
@@ -236,12 +243,44 @@ function updateTutorialRefill(){
  }
 }
 function tutorialTarget(){return tutorial.active?TUTORIAL_TARGETS[tutorial.stage]||null:null}
+function prepareTutorialTasks(){
+ run.tasks=TUTORIAL_TASKS.map((task,index)=>({...task,index,complete:false,tutorial:true}));
+ syncTutorialTasks();
+}
+function syncTutorialTasks(){
+ if(!tutorial.active||!run.tasks)return;
+ for(const task of run.tasks){
+  if(task.id==='tutorial-wall')task.complete=tutorial.stage>8;
+  else task.complete=tutorial.stage>=task.targetStage;
+ }
+ updateTaskButton();
+}
+function tutorialTaskState(task){
+ if(task.complete)return 'complete';
+ const stage=tutorial.stage;
+ // Show the current lesson plus the next couple of things coming, using the same board language.
+ const ordered=run.tasks||[],current=Math.max(0,ordered.findIndex(t=>!t.complete));
+ return task.index<=Math.min(ordered.length-1,current+2)?'available':'locked';
+}
+function tutorialTaskDetail(task){
+ const state=tutorialTaskState(task);
+ if(state==='complete')return 'Done';
+ if(state==='locked')return 'Not available yet';
+ const target=task.index===0?TUTORIAL_TARGETS[1]:
+  task.index===1?TUTORIAL_TARGETS[3]:
+  task.index===2?TUTORIAL_TARGETS[5]:
+  task.index===3?TUTORIAL_TARGETS[6]:
+  TUTORIAL_TARGETS[8];
+ if(!target)return task.hint;
+ const dx=target.x-ghost.x,dy=target.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
+ return `${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;
+}
 function setupTutorialCourse(){
  // The memorial lawn becomes a compact sequence of real gameplay gates.
  const add=(x,y,w,h,kind='hedge',phase=99,extra={})=>{const b={x,y,w,h,kind,phase,open:false,tutorial:true,...extra};blocks.push(b);return b};
  add(1010,1570,270,28);add(1360,1570,240,28); // watched gap at x 1280–1360
  add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'wall',1,{tutorialGate:'phase'});
- nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];
+ nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];prepareTutorialTasks();
 }
 function tutorialBounds(){
  if(!tutorial.active)return;
@@ -252,15 +291,15 @@ function tutorialCheckpoint(){
  const target=tutorialTarget();if(!target||Math.hypot(ghost.x-target.x,ghost.y-target.y)>26)return;
  const need=target.cost||0;
  if(need&&run.echoes<need){note(`Need ${need} Echoes · ${run.echoes}/${need}.`,2);return}
- if(tutorial.stage===1){tutorial.stage=2;tutorialUpgradeReady('speed');return}
- if(tutorial.stage===3){tutorial.stage=4;tutorialUpgradeReady('invisibility');return}
+ if(tutorial.stage===1){tutorial.stage=2;syncTutorialTasks();tutorialUpgradeReady('speed');return}
+ if(tutorial.stage===3){tutorial.stage=4;syncTutorialTasks();tutorialUpgradeReady('invisibility');return}
  if(tutorial.stage===5){
-  people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();
+  people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();syncTutorialTasks();
   tutorialCard('That worked.',`Unseen.<br><b>Next: 26 Echoes and the golden ghost.</b>`,'Continue',()=>resumeTutorial());
   return;
  }
- if(tutorial.stage===6){tutorial.stage=7;tutorialUpgradeReady('phase');return}
- if(tutorial.stage===8){held=false;updateSkills();completeTutorial();return}
+ if(tutorial.stage===6){tutorial.stage=7;syncTutorialTasks();tutorialUpgradeReady('phase');return}
+ if(tutorial.stage===8){held=false;tutorial.stage=9;updateSkills();syncTutorialTasks();completeTutorial();return}
 }
 function tutorialObjective(){
  const target=tutorialTarget();
