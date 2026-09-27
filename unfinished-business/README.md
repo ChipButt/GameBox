@@ -38,3 +38,7 @@ Tests cover unique-cell rewards, restart/reload persistence, save migration, sta
 - Pickups are once per attempt and reset for the next attempt. Temporary effects and collected charges are not permanent upgrades.
 
 Run `node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs` to check exploration, paths, loops, investigations, pickups and detection.
+
+## Scenery renderer
+
+`scenery.js` paints a cached neighbourhood backdrop with deterministic timber, asphalt, grass, concrete and paving textures; room-specific tiles; patterned rugs; kerbs, crossings and drains; and soft ambient lighting. Detailed furniture, brickwork, foliage, vehicles, streetlamps and the ferry render on top. The background crop is drawn once per frame, rather than rebuilding its texture detail during play. All art is code-drawn; no external assets are downloaded. This renderer does not change map geometry, collisions, discovery records or entity behaviour.
