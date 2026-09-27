@@ -194,7 +194,7 @@ const TUTORIAL_REFILL={id:9199,x:1160,y:1695,title:'Vanish refill'};
 function resetTutorialSection(){
  const start=TUTORIAL_SECTION_STARTS[tutorial.stage]||{x:1320,y:2130};
  ghost.x=start.x;ghost.y=start.y;lastSafe={...start};seen=0;held=false;contact=null;contactTime=0;phaseExit=null;
- if(tutorial.stage===5){energy=runCapacity(run);tutorial.refillActive=false;spawnTutorialLookout();}
+ if(tutorial.stage===5){energy=runCapacity(run);tutorial.refillActive=false;spawnTutorialLookout();const guard=people.find(e=>e.kind==='tutorialGuard');if(guard){guard.x=1320;guard.y=1585;guard.clock=0;guard.angle=-Math.PI/2;guard.frozen=0;}}
  const touchGate=blocks.find(b=>b.tutorialGate==='touch');if(tutorial.stage===11&&touchGate)touchGate.open=false;
  if(nav)nav=navigation(blocks);
  mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateObjectiveHud();
