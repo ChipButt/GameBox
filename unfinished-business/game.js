@@ -166,8 +166,59 @@ function applyGraveyardStoryBeat(step){
   note('TASK COMPLETE · The procession is through. The cemetery gate stays open.',3.3);
  }
 }
+const TUTORIAL_TARGETS={
+ 1:{id:9101,x:1120,y:1940,title:'Reach the Speed token',hint:'Explore the memorial lawn until you have 20 Echoes, then collect the sparkling token.',cost:20,upgrade:'speed'},
+ 3:{id:9102,x:1500,y:1740,title:'Reach the Vanish token',hint:'Collect 25 Echoes and make your way to the sparkling token.',cost:25,upgrade:'invisibility'},
+ 5:{id:9103,x:1320,y:1470,title:'Get past the lookout',hint:'Use Vanish and slip through the watched gap to the token outside the memorial lawn.'},
+ 6:{id:9104,x:1470,y:1360,title:'Reach the Phase token',hint:'Explore until you have 26 Echoes, then reach the token beside the locked doorway.',cost:26,upgrade:'phase'},
+ 8:{id:9105,x:1320,y:1120,title:'Phase through the doorway',hint:'Arm Phase and pass through the Phase 1 doorway to reach the token beyond it.'},
+ 9:{id:9106,x:1480,y:1020,title:'Reach the Touch token',hint:'Explore until you have 30 Echoes, then collect the token beside the wooden barrier.',cost:30,upgrade:'touch'},
+ 11:{id:9107,x:1320,y:780,title:'Open the way with Touch',hint:'Arm Touch and push against the wooden barrier, then collect the final token.'}
+};
+function tutorialTarget(){return tutorial.active?TUTORIAL_TARGETS[tutorial.stage]||null:null}
+function setupTutorialCourse(){
+ // The memorial lawn becomes a compact sequence of real gameplay gates.
+ const add=(x,y,w,h,kind='hedge',phase=99,touch=99,extra={})=>{const b={x,y,w,h,kind,phase,touch,open:false,tutorial:true,...extra};blocks.push(b);return b};
+ add(1010,1570,270,28);add(1360,1570,240,28); // watched gap at x 1280–1360
+ add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'door',1,99,{tutorialGate:'phase'});
+ add(1010,900,270,28);add(1360,900,240,28);add(1280,900,80,28,'door',2,1,{tutorialGate:'touch'});
+ nav=navigation(blocks);people=[];tokens=[];
+}
+function tutorialBounds(){
+ if(!tutorial.active)return;
+ ghost.x=Math.max(1015,Math.min(1595,ghost.x));
+ ghost.y=Math.max(700,Math.min(2240,ghost.y));
+}
+function tutorialCheckpoint(){
+ const target=tutorialTarget();if(!target||Math.hypot(ghost.x-target.x,ghost.y-target.y)>26)return;
+ const need=target.cost||0;
+ if(need&&run.echoes<need){note(`This token is calling to you · explore until you have ${need} Echoes (${run.echoes}/${need}).`,2);return}
+ if(tutorial.stage===1){tutorial.stage=2;tutorialUpgradeReady('speed');return}
+ if(tutorial.stage===3){tutorial.stage=4;tutorialUpgradeReady('invisibility');return}
+ if(tutorial.stage===5){
+  people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();
+  tutorialCard('That worked.',`Vanish got you through a watched route. Ahead is a locked doorway. Collect <b>26 Echoes</b> and reach the next sparkling token to learn how materials and Phase work.`,'Continue',()=>resumeTutorial());
+  return;
+ }
+ if(tutorial.stage===6){tutorial.stage=7;tutorialUpgradeReady('phase');return}
+ if(tutorial.stage===8){
+  held=false;tutorial.stage=9;updateSkills();
+  tutorialCard('You passed through it.',`Phase ignores a material when your tier is high enough. Some objects are better handled physically instead. Collect <b>30 Echoes</b> and reach the next token.`,'Continue',()=>resumeTutorial());
+  return;
+ }
+ if(tutorial.stage===9){tutorial.stage=10;tutorialUpgradeReady('touch');return}
+ if(tutorial.stage===11){completeTutorial()}
+}
+function tutorialObjective(){
+ const target=tutorialTarget();
+ if(target)return target;
+ const k=tutorialExpectedUpgrade();
+ if(k){const price=runCost(run,k);return {title:`Upgrade ${names[k]}`,hint:`The upgrade is ready. Tap the sparkling gold ${k==='speed'?'SPEED button':'upgrade tab'} now.`,x:ghost.x,y:ghost.y,cost:price}}
+ return null;
+}
 function currentObjective(){
- if(p.level!==0||tutorial.active)return null;
+ if(tutorial.active)return tutorialObjective();
+ if(p.level!==0)return null;
  if(run.objective>=GRAVEYARD_OBJECTIVES.length)return run.exitOpen?{title:'Leave the graveyard',hint:'The gate is open. Go through it.',x:world.ferry.x,y:world.ferry.y}:null;
  return GRAVEYARD_OBJECTIVES[run.objective];
 }
@@ -177,7 +228,7 @@ function updateObjectiveHud(){
  const obj=currentObjective();
  if(!obj||mode!=='play'){box.hidden=true;return}
  box.hidden=false;
- $('objectiveCount').textContent=run.exitOpen?'5 / 5 · EXIT OPEN':`${Math.min(run.objective+1,5)} / 5`;
+ $('objectiveCount').textContent=tutorial.active?'TUTORIAL':run.exitOpen?'5 / 5 · EXIT OPEN':`${Math.min(run.objective+1,5)} / 5`;
  $('objectiveTitle').textContent=obj.title.toUpperCase();
  const dx=obj.x-ghost.x,dy=obj.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
  $('objectiveMeta').textContent=`${objectiveDirection(dx,dy)} ${dist} paces · ${obj.hint}`;
@@ -219,8 +270,8 @@ function start(isTutorial=false){
  mode='play';
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
- updateObjectiveHud();if(isTutorial)tutorialCard('Move around',`Drag anywhere on the play area to move. Every new patch of ground awakens a tiny memory and gives you <b>1 Echo</b>. Earn <b>25 Echoes</b>.`,'Start moving');
+ run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};if(isTutorial)setupTutorialCourse();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
+ updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move around the memorial lawn. Every new patch of ground gives you <b>1 Echo</b>. Your first target is the sparkling token. Explore until you have <b>20 Echoes</b> and reach it. This first lesson will show you how to make your ghost faster.`,'Start tutorial');
  else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
  tone(320);
 }
