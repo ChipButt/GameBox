@@ -5,8 +5,8 @@ import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit}
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260927c';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
-let world=generateWorld(p.worldSeed,p.level),run=newRun(p.level),visited=new Set(),saveTimer=0,nav=navigation(world.blocks),effects={boost:0,stiff:0,energy:0},tokens=createTokens(nav,p.level),scenery=createScenery(world);
-let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=world.blocks,people=createEntities(nav,p.level),ghost={...world.spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...world.spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0};
+let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
+let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0};
 const names={invisibility:'Vanish',phase:'Phase',touch:'Touch'},labels={invisibility:'VANISH',phase:'PHASE',touch:'TOUCH'};
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(p))}catch{saveFailed=true;}}
@@ -81,7 +81,31 @@ function animateTutorialDemo(kind){
   if(kind==='invisibility'){g.fillStyle='#b98f77';g.fillRect(205,48,13,35);g.fillStyle='#d7b18d';g.fillRect(207,37,10,13);g.fillStyle='#efc98a22';g.beginPath();g.moveTo(205,65);g.lineTo(145,40);g.lineTo(145,90);g.fill()}
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
-function start(isTutorial=false){mode='play';world=generateWorld(p.worldSeed,p.level);blocks=world.blocks;nav=navigation(blocks);people=isTutorial?[]:createEntities(nav,p.level);run=newRun(p.level);visited=new Set();tokens=isTutorial?[]:createTokens(nav,p.level);scenery=createScenery(world);effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();if(isTutorial)tutorialCard('Move around',`Drag anywhere on the play area to move. Every new patch of ground awakens a tiny memory and gives you <b>1 Echo</b>. Earn <b>25 Echoes</b>.`,'Start moving');else note(p.level===0?'Objective · Escape the graveyard.':'Find what you left unfinished.',4);tone(320);}
+function buildWorldSafely(level){
+ const generated=generateWorld(p.worldSeed,level);
+ let builtScenery=null,builtNav=null,builtPeople=[],builtTokens=[];
+ try{builtNav=navigation(generated.blocks)}catch(err){console.error('Navigation build failed',err)}
+ try{builtScenery=createScenery(generated)}catch(err){console.error('Scenery build failed',err)}
+ if(!builtScenery){
+  const fallback=document.createElement('canvas');fallback.width=WORLD.width;fallback.height=WORLD.height;
+  const fc=fallback.getContext('2d');fc.fillStyle='#263a37';fc.fillRect(0,0,fallback.width,fallback.height);
+  builtScenery=fallback;
+ }
+ if(builtNav){
+  try{builtPeople=createEntities(builtNav,level)}catch(err){console.error('Entity build failed',err)}
+  try{builtTokens=createTokens(builtNav,level)}catch(err){console.error('Token build failed',err)}
+ }
+ return {generated,builtScenery,builtNav,builtPeople,builtTokens};
+}
+function start(isTutorial=false){
+ mode='play';
+ const built=buildWorldSafely(p.level);
+ world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
+ run=newRun(p.level);visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0};cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
+ if(isTutorial)tutorialCard('Move around',`Drag anywhere on the play area to move. Every new patch of ground awakens a tiny memory and gives you <b>1 Echo</b>. Earn <b>25 Echoes</b>.`,'Start moving');
+ else note(p.level===0?'Objective · Escape the graveyard.':'Find what you left unfinished.',4);
+ tone(320);
+}
 function finish(win=false){if(mode!=='play')return;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
 $('pause').onclick=pause;window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
@@ -165,12 +189,12 @@ function drawToken(token){const {x,y}=token;ctx.save();ctx.translate(x,y+(reduce
 function draw(){
  ctx.fillStyle='#111c27';ctx.fillRect(0,0,480,viewH);ctx.save();ctx.translate(-Math.round(camX),-Math.round(cam));
  // Static floor detail is cached once; only the visible camera crop is drawn per frame.
- ctx.drawImage(scenery,Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam),Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));
- for(const d of world.decor)if(d.kind==='lamp'&&d.x>camX-40&&d.x<camX+520&&d.y>cam-40&&d.y<cam+viewH+40)drawStreetLamp(ctx,d);
+ if(scenery)ctx.drawImage(scenery,Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam),Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));else{ctx.fillStyle='#263a37';ctx.fillRect(Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));}
+ for(const d of (world.decor||[]))if(d.kind==='lamp'&&d.x>camX-40&&d.x<camX+520&&d.y>cam-40&&d.y<cam+viewH+40)drawStreetLamp(ctx,d);
  for(const h of people){if(h.frozen>0)continue;if(h.x<camX-200||h.x>camX+680||h.y<cam-200||h.y>cam+viewH+200)continue;ctx.beginPath();ctx.moveTo(h.x,h.y);for(let a=h.angle-h.half;a<=h.angle+h.half+.01;a+=.075){let d=0;for(;d<h.range;d+=10){if(blocks.some(b=>overlap(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d,b,0)))break}ctx.lineTo(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d)}ctx.closePath();ctx.fillStyle=h.kind==='cat'?'#b6d99d10':h.kind==='camera'?'#b6cce328':seen?'#efac7955':'#f7d49a1c';ctx.fill();}
  const visible=blocks.filter(b=>b.x+b.w>camX-50&&b.x<camX+530&&b.y+b.h>cam-60&&b.y<cam+viewH+60);for(const b of visible){if(b.kind==='water'){rect(ctx,b.x,b.y,b.w,b.h,'#254655');for(let y=Math.max(b.y,Math.floor(cam/32)*32);y<Math.min(b.y+b.h,cam+viewH);y+=32)for(let x=b.x+10;x<b.x+b.w;x+=56)rect(ctx,x+Math.round(Math.sin(t+y)*3),y,26,2,'#8ebaba25');}else prop(b);}
  people.filter(h=>h.x>camX-40&&h.x<camX+520&&h.y>cam-50&&h.y<cam+viewH+50).forEach(drawEntity);
- ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of world.regions)if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
+ ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
  if(p.level===0){drawCemeteryExit(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
 
  for(const token of tokens)if(!token.collected&&Math.hypot(token.x-ghost.x,token.y-ghost.y)<115&&!rayBlocked(token.x,token.y,ghost.x,ghost.y,blocks))drawToken(token);
@@ -178,6 +202,6 @@ function draw(){
  if(active('touch')){ctx.strokeStyle='#e9c58a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ghost.x,ghost.y-7,24,0,7);ctx.stroke()}ctx.restore();
  if(mode==='play')drawMap();
 }
-function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of world.regions)rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
+function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
-function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play')update(dt);else if(mode==='menu')t+=dt;draw();$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
