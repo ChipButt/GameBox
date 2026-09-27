@@ -130,7 +130,6 @@ export function collectTokens(tokens,ghost,effects,run,maxEnergy){
   if(token.reward==='speedTier')upgrade('speed','Movement');
   else if(token.reward==='invisibilityTier'){if(upgrade('invisibility','Vanish'))effects.energy=1.4+(run.invisibility-1)*.85}
   else if(token.reward==='phaseTier')upgrade('phase','Phase');
-  else if(token.reward==='speedTier')upgrade('touch','Touch');
   else if(token.reward==='refill'){
    if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Vanish fully restored.')}
    else{run.echoes+=20;messages.push('The token releases 20 Echoes.')}
