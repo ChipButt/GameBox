@@ -127,6 +127,40 @@ if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost
  else if(tutorial.active&&tutorial.stage===6&&run.echoes>=runCost(run,'touch'))tutorialAbilityPrompt('touch',7);
 }
 
+effects.energy=energy;
+for(const message of collectTokens(tokens,ghost,effects,run,runCapacity(run))){note(message,4);tone(740,.15);updateEchoDisplay()}
+energy=effects.energy;
+const invisible=active('invisibility');
+if(invisible)energy=Math.max(0,energy-dt);
+if(tutorial.active&&tutorial.stage===3&&invisible){
+ tutorial.useTime+=dt;
+ if(tutorial.useTime>.4){
+  tutorial.stage=4;
+  tutorialCard('That is Vanish.',`Your invisibility is limited, so use it when a witness is about to see you. Now keep exploring until you have enough Echoes to unlock <b>PHASE</b>.`,'Keep exploring',()=>resumeTutorial());
+ }
+}
+const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>investigate(people,nav,source,max));
+if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · token used.',3);tone(180,.22)}
+const spotted=sight.danger;
+seen=spotted?seen+dt:Math.max(0,seen-dt*3);
+if(seen>.18){finish();return}
+if(!tutorial.active&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
+cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);
+camX+=(ghost.x-240-camX)*Math.min(1,dt*8);
+cam=Math.max(0,Math.min(WORLD.height-viewH,cam));
+camX=Math.max(0,Math.min(WORLD.width-480,camX));
+$('distance').textContent=run.echoes;
+$('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
+$('best').textContent=tutorial.active?`TUTORIAL · ${run.echoes} ECHOES`:[effects.boost>0?`BOOST ${Math.ceil(effects.boost)}s`:'',effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',p.level===0?'ESCAPE THE GRAVEYARD':`FOUND ${runPoints}`].filter(Boolean).join(' · ');
+for(const k of ['invisibility','phase','touch']){
+ const button=$('ability-'+k),using=active(k);if(!button)continue;
+ button.classList.toggle('active',using);button.setAttribute('aria-pressed',String(using));
+ $('reserve-'+k).textContent=!run[k]?'LOCKED':k==='invisibility'?`${energy.toFixed(1)}s`:`TIER ${run[k]}`;
+ $('meter-'+k).style.width=!run[k]?'0%':k==='invisibility'?`${energy/Math.max(.01,runCapacity(run))*100}%`:'100%';
+}
+updateEchoDisplay();
+}
+
 function drawToken(token){const {x,y}=token;ctx.save();ctx.translate(x,y+(reduced?0:Math.sin(t*3+token.id)*2));ctx.fillStyle='#07141f99';ctx.beginPath();ctx.ellipse(0,12,14,4,0,0,7);ctx.fill();rect(ctx,-9,-11,18,20,'#263642');rect(ctx,-7,-9,14,16,'#394d4c');ctx.strokeStyle='#f3ce87';ctx.lineWidth=2;ctx.strokeRect(-9,-11,18,20);ctx.fillStyle='#f3ce87';rect(ctx,-2,-6,4,4,'#f3ce87');rect(ctx,1,-3,3,3,'#f3ce87');rect(ctx,-1,0,3,3,'#f3ce87');rect(ctx,-1,5,3,2,'#f3ce87');ctx.fillStyle='#b6f7d255';rect(ctx,-5,-8,2,12,'#b6f7d255');ctx.restore();}
 function draw(){
  ctx.fillStyle='#111c27';ctx.fillRect(0,0,480,viewH);ctx.save();ctx.translate(-Math.round(camX),-Math.round(cam));
