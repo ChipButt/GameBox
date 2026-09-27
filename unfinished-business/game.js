@@ -22,9 +22,9 @@ function tone(f=440,d=.12){if(!p.sound)return;try{audio??=new(window.AudioContex
 function resetInput(){held=false;skillPointer=null;stickPointer=null;input={x:0,y:0};keys.clear();$('nub').style.transform='';$('stick').hidden=true;}
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
-function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
+function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Spend Echoes using the small gold controls above <b>VANISH</b>, <b>PHASE</b> and <b>TOUCH</b>. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p>Mystery tokens can contain Echoes, temporary speed, an invisibility refill or Scared Stiff. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Spend Echoes using the small gold controls above <b>VANISH</b>, <b>PHASE</b> and <b>TOUCH</b>. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p><b>Mystery tokens are worth exploring for.</b> Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / TOUCH upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Level objectives change the living world and story, but they never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';if(k==='phase')return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';return run.touch?`Touch tier ${run.touch} → ${run.touch+1}`:'Unlock TOUCH';}
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT IN THE LIVING WORLD'}</span><h2>${win?'You made it through.':'The memory slips away.'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 function buyUpgrade(k){if(mode!=='play')return;if(tutorial.active){note('Follow the tutorial prompts to unlock abilities.',1.5);return}const before=run[k],price=runCost(run,k);if(!buyRun(run,k)){note(run[k]>=RUN_MAX[k]?`${names[k]} is fully strengthened.`:`Need ${price} Echoes for ${names[k]}.`,1.6);tone(150,.07);return}if(k==='invisibility')energy=runCapacity(run);tone(700,.1);note(before===0?`${names[k]} unlocked.`:`${names[k]} strengthened to tier ${run[k]}.`,1.8);updateSkills();updateEchoDisplay();}
@@ -104,6 +104,42 @@ function buildWorldSafely(level){
  }
  return {generated,builtScenery,builtNav,builtPeople,builtTokens};
 }
+function updateTokenInventory(){
+ const inv=$('tokenInventory');if(!inv)return;
+ inv.hidden=mode!=='play';
+ $('stiffCount').textContent=`${effects.stiff||0} / 3`;
+ inv.classList.toggle('empty',!(effects.stiff>0));
+}
+function moveNamedPeople(pattern,points){
+ if(!nav)return;
+ const destinations=points.map(q=>nav.nearest(q)).filter(Boolean);if(!destinations.length)return;
+ for(const e of people.filter(e=>pattern.test(e.task||''))){
+  e.route=destinations.map((q,i)=>({...q,wait:i===destinations.length-1?.8:.15,face:-1.57}));
+  e.index=0;e.state='routine';e.path=nav.path(e,e.route[0]);e.wait=0;
+ }
+}
+function applyGraveyardStoryBeat(step){
+ if(step===1){
+  moveNamedPeople(/Groundskeeper|Grounds assistant/, [{x:1820,y:1810},{x:2050,y:1900}]);
+  note('TASK COMPLETE · The grounds staff move off toward the maintenance yard.',3.3);
+ }
+ if(step===2){
+  moveNamedPeople(/Funeral director|Funeral guest/, [{x:1180,y:1210},{x:1400,y:1200}]);
+  note('TASK COMPLETE · The funeral staff begin preparing everyone to leave.',3.3);
+ }
+ if(step===3){
+  moveNamedPeople(/Caretaker|Gardener/, [{x:1710,y:620},{x:1960,y:540}]);
+  note('TASK COMPLETE · Another memory settles. The cemetery keeps moving around you.',3.3);
+ }
+ if(step===4){
+  sendFuneralProcession();
+  note('TASK COMPLETE · The service ends and the procession starts for the gate.',3.3);
+ }
+ if(step===5){
+  openCemeteryGate();
+  note('TASK COMPLETE · The procession is through. The cemetery gate stays open.',3.3);
+ }
+}
 function currentObjective(){
  if(p.level!==0||tutorial.active)return null;
  if(run.objective>=GRAVEYARD_OBJECTIVES.length)return run.exitOpen?{title:'Leave the graveyard',hint:'The gate is open. Go through it.',x:world.ferry.x,y:world.ferry.y}:null;
@@ -139,9 +175,7 @@ function openCemeteryGate(){
 function completeCurrentObjective(){
  const obj=GRAVEYARD_OBJECTIVES[run.objective];if(!obj)return;
  run.objective++;
- tone(720,.12);note(`TASK COMPLETE · ${obj.complete}`,3.2);
- if(run.objective===4)sendFuneralProcession();
- if(run.objective===5)openCemeteryGate();
+ tone(720,.12);applyGraveyardStoryBeat(run.objective);
  updateObjectiveHud();
 }
 function checkObjectives(){
@@ -164,7 +198,7 @@ function start(isTutorial=false){
  else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
  tone(320);
 }
-function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
+function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
 $('pause').onclick=pause;window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
@@ -241,7 +275,7 @@ if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost
 }
 
 effects.energy=energy;
-for(const message of collectTokens(tokens,ghost,effects,run,runCapacity(run))){note(message,4);tone(740,.15);updateEchoDisplay()}
+for(const message of collectTokens(tokens,ghost,effects,run,runCapacity(run))){note(message,4);tone(740,.15);updateEchoDisplay();updateSkills();updateTokenInventory()}
 energy=effects.energy;
 checkObjectives();
 let invisible=active('invisibility');
@@ -257,7 +291,7 @@ if(tutorial.active&&tutorial.stage===3&&invisible){
  }
 }
 const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
-if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · token used.',3);tone(180,.22)}
+if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · charge used.',3);tone(180,.22);updateTokenInventory()}
 const spotted=sight.danger;
 seen=spotted?seen+dt:Math.max(0,seen-dt*3);
 if(seen>.18){finish();return}
@@ -278,7 +312,16 @@ for(const k of ['invisibility','phase','touch']){
 updateEchoDisplay();
 }
 
-function drawToken(token){const {x,y}=token;ctx.save();ctx.translate(x,y+(reduced?0:Math.sin(t*3+token.id)*2));ctx.fillStyle='#07141f99';ctx.beginPath();ctx.ellipse(0,12,14,4,0,0,7);ctx.fill();rect(ctx,-9,-11,18,20,'#263642');rect(ctx,-7,-9,14,16,'#394d4c');ctx.strokeStyle='#f3ce87';ctx.lineWidth=2;ctx.strokeRect(-9,-11,18,20);ctx.fillStyle='#f3ce87';rect(ctx,-2,-6,4,4,'#f3ce87');rect(ctx,1,-3,3,3,'#f3ce87');rect(ctx,-1,0,3,3,'#f3ce87');rect(ctx,-1,5,3,2,'#f3ce87');ctx.fillStyle='#b6f7d255';rect(ctx,-5,-8,2,12,'#b6f7d255');ctx.restore();}
+function drawToken(token){
+ const {x,y}=token,pulse=reduced?0:Math.sin(t*5+token.id)*3,glow=18+pulse;
+ ctx.save();ctx.translate(x,y+(reduced?0:Math.sin(t*3+token.id)*3));
+ ctx.fillStyle='#07141f88';ctx.beginPath();ctx.ellipse(0,13,16,5,0,0,Math.PI*2);ctx.fill();
+ const g=ctx.createRadialGradient(0,0,2,0,0,glow);g.addColorStop(0,'#fff4b899');g.addColorStop(.45,'#f3ce8748');g.addColorStop(1,'#f3ce8700');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
+ rect(ctx,-10,-12,20,22,'#263642');rect(ctx,-8,-10,16,18,'#435653');ctx.strokeStyle='#f3ce87';ctx.lineWidth=2;ctx.strokeRect(-10,-12,20,22);
+ rect(ctx,-2,-7,4,4,'#fff0ae');rect(ctx,1,-4,3,3,'#f3ce87');rect(ctx,-1,-1,3,3,'#f3ce87');rect(ctx,-1,5,3,2,'#fff0ae');
+ for(let i=0;i<4;i++){const a=t*2+i*Math.PI/2+token.id;rect(ctx,Math.cos(a)*(17+pulse)-1,Math.sin(a)*(13+pulse)-1,3,3,'#fff1ae')}
+ ctx.restore();
+}
 function draw(){
  ctx.fillStyle='#111c27';ctx.fillRect(0,0,480,viewH);ctx.save();ctx.translate(-Math.round(camX),-Math.round(cam));
  // Static floor detail is cached once; only the visible camera crop is drawn per frame.
@@ -290,12 +333,12 @@ function draw(){
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
  if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
 
- for(const token of tokens)if(!token.collected&&Math.hypot(token.x-ghost.x,token.y-ghost.y)<115&&!rayBlocked(token.x,token.y,ghost.x,ghost.y,blocks))drawToken(token);
+ for(const token of tokens)if(!token.collected&&token.x>camX-30&&token.x<camX+510&&token.y>cam-30&&token.y<cam+viewH+30)drawToken(token);
  const obj=currentObjective();if(obj){const pulse=12+(reduced?0:Math.sin(t*4)*4);ctx.strokeStyle='#f3ce87';ctx.lineWidth=3;ctx.beginPath();ctx.arc(obj.x,obj.y,pulse,0,Math.PI*2);ctx.stroke();rect(ctx,obj.x-3,obj.y-3,6,6,'#fff1ae');}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
  if(active('touch')){ctx.strokeStyle='#e9c58a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ghost.x,ghost.y-7,24,0,7);ctx.stroke()}ctx.restore();
  if(mode==='play')drawMap();
 }
-function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
+function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
 function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
