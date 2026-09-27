@@ -181,26 +181,21 @@ function moveNamedPeople(pattern,points){
   e.index=0;e.state='routine';e.path=nav.path(e,e.route[0]);e.wait=0;
  }
 }
-function applyGraveyardStoryBeat(step){
- if(step===1){
+function applyGraveyardStoryBeat(id){
+ if(id==='grave'){
   moveNamedPeople(/Groundskeeper|Grounds assistant/, [{x:1820,y:1810},{x:2050,y:1900}]);
-  note('TASK COMPLETE · The grounds staff move off toward the maintenance yard.',3.3);
- }
- if(step===2){
+  note('TASK COMPLETE · The grounds staff move away from the old graves.',2.7);
+ }else if(id==='notice'){
   moveNamedPeople(/Funeral director|Funeral guest/, [{x:1180,y:1210},{x:1400,y:1200}]);
-  note('TASK COMPLETE · The funeral staff begin preparing everyone to leave.',3.3);
- }
- if(step===3){
+  note('TASK COMPLETE · The funeral staff begin preparing to leave.',2.7);
+ }else if(id==='keepsake'){
   moveNamedPeople(/Caretaker|Gardener/, [{x:1710,y:620},{x:1960,y:540}]);
-  note('TASK COMPLETE · Another memory settles. The cemetery keeps moving around you.',3.3);
- }
- if(step===4){
-  sendFuneralProcession();
-  note('TASK COMPLETE · The service ends and the procession starts for the gate.',3.3);
- }
- if(step===5){
-  openCemeteryGate();
-  note('TASK COMPLETE · The procession is through. The cemetery gate stays open.',3.3);
+  note('TASK COMPLETE · Another memory falls into place.',2.7);
+ }else if(id==='hearse'){
+  moveNamedPeople(/Funeral director|Funeral guest|Mourner/, [{x:1280,y:1110},{x:1360,y:1050}]);
+  note('TASK COMPLETE · The service is winding down.',2.7);
+ }else if(id==='gatehouse'){
+  note('TASK COMPLETE · You remember the way out.',2.7);
  }
 }
 const TUTORIAL_TARGETS={
@@ -274,20 +269,57 @@ function tutorialObjective(){
  if(k){const price=runCost(run,k);return {title:`Upgrade ${names[k]}`,hint:`The upgrade is ready. Tap the sparkling gold ${k==='speed'?'SPEED button':'upgrade tab'} now.`,x:ghost.x,y:ghost.y,cost:price}}
  return null;
 }
+function prepareLevelTasks(){
+ const defs=LEVEL_TASKS[p.level]||LEVEL_TASKS[0];
+ run.tasks=defs.map((task,index)=>{
+  const q=nav?.nearest({x:task.x,y:task.y});
+  return {...task,index,x:q?.x??task.x,y:q?.y??task.y,complete:false};
+ });
+ run.exitOpen=false;
+}
+function completedTaskCount(){return (run.tasks||[]).filter(t=>t.complete).length}
+function availableTasks(){
+ const done=completedTaskCount(),limit=done>=2?5:done>=1?4:3;
+ return (run.tasks||[]).filter(t=>t.index<limit&&!t.complete);
+}
+function taskState(task){
+ if(task.complete)return 'complete';
+ const done=completedTaskCount(),limit=done>=2?5:done>=1?4:3;
+ return task.index<limit?'available':'locked';
+}
+function updateTaskButton(){
+ const button=$('taskButton');if(!button)return;
+ if(tutorial.active||!run.tasks||mode==='menu'){button.hidden=true;return}
+ const done=completedTaskCount();
+ button.hidden=false;$('taskButtonCount').textContent=`${done} / 5`;
+ button.classList.toggle('complete',done===5);
+}
+function openTaskBoard(initial=false){
+ if(tutorial.active||!run.tasks)return;
+ mode='tasks';resetInput();$('taskButton').hidden=true;
+ const done=completedTaskCount(),items=run.tasks.map(task=>{
+  const state=taskState(task),dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
+  const detail=state==='complete'?'Done':state==='locked'?'Not available yet':`${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;
+  return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="${state==='available'?'taskDistance':''}">${detail}</small></div>`;
+ }).join('');
+ const hidden=(run.tasks||[]).filter(t=>taskState(t)==='locked').length;
+ show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</span><h2>Unfinished business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5 COMPLETE · FINISH ALL FIVE TO LEAVE</div><div class="taskList">${items}</div>${hidden?`<div class="taskReveal">${hidden} MORE WILL REVEAL AS THINGS CHANGE</div>`:''}</div>`);
+ $('taskClose').onclick=closeTaskBoard;
+}
+function closeTaskBoard(){
+ mode='play';$('overlay').hidden=true;resetInput();updateTaskButton();updateTokenInventory();
+}
 function currentObjective(){
  if(tutorial.active)return tutorialObjective();
- if(p.level!==0)return null;
- if(run.objective>=GRAVEYARD_OBJECTIVES.length)return run.exitOpen?{title:'Leave the graveyard',hint:'The gate is open. Go through it.',x:world.ferry.x,y:world.ferry.y}:null;
- return GRAVEYARD_OBJECTIVES[run.objective];
+ return null;
 }
 function objectiveDirection(dx,dy){const a=Math.atan2(dy,dx),oct=Math.round(a/(Math.PI/4));return ['→','↘','↓','↙','←','↖','↑','↗'][((oct%8)+8)%8];}
 function updateObjectiveHud(){
  const box=$('objectiveHud');if(!box)return;
- const obj=currentObjective();
+ if(!tutorial.active){box.hidden=true;updateTaskButton();return}
+ const obj=tutorialObjective();
  if(!obj||mode!=='play'){box.hidden=true;return}
- box.hidden=false;
- $('objectiveCount').textContent=tutorial.active?'TUTORIAL':run.exitOpen?'5 / 5 · EXIT OPEN':`${Math.min(run.objective+1,5)} / 5`;
- $('objectiveTitle').textContent=obj.title.toUpperCase();
+ box.hidden=false;$('objectiveCount').textContent='TUTORIAL';$('objectiveTitle').textContent=obj.title.toUpperCase();
  const dx=obj.x-ghost.x,dy=obj.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
  $('objectiveMeta').textContent=`${objectiveDirection(dx,dy)} ${dist} paces · ${obj.hint}`;
 }
@@ -307,16 +339,23 @@ function openCemeteryGate(){
  if(nav)nav=navigation(blocks);
  tone(900,.18);
 }
-function completeCurrentObjective(){
- const obj=GRAVEYARD_OBJECTIVES[run.objective];if(!obj)return;
- run.objective++;
- tone(720,.12);applyGraveyardStoryBeat(run.objective);
- updateObjectiveHud();
+function completeTask(task){
+ if(!task||task.complete)return;
+ task.complete=true;tone(720,.12);
+ if(p.level===0)applyGraveyardStoryBeat(task.id);
+ const done=completedTaskCount();
+ if(done===4)note('ONE TASK LEFT.',2.2);
+ if(done===5){
+  if(p.level===0){sendFuneralProcession();openCemeteryGate()}else{run.exitOpen=true;tone(900,.18)}
+  note('ALL FIVE COMPLETE · THE WAY OUT IS OPEN.',3);
+ }
+ updateTaskButton();
 }
 function checkObjectives(){
- if(p.level!==0||tutorial.active||run.objective>=GRAVEYARD_OBJECTIVES.length)return;
- const obj=GRAVEYARD_OBJECTIVES[run.objective];
- if(Math.hypot(ghost.x-obj.x,ghost.y-obj.y)<62)completeCurrentObjective();
+ if(tutorial.active||!run.tasks)return;
+ for(const task of availableTasks()){
+  if(Math.hypot(ghost.x-task.x,ghost.y-task.y)<56){completeTask(task);break}
+ }
 }
 function toggleAbility(k){
  if(mode!=='play'||!run[k]){if(!run[k])note(`${names[k]} is still locked.`,1.5);return}
@@ -328,14 +367,14 @@ function start(isTutorial=false){
  mode='play';
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
+ run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();else prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
  updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move. New ground earns Echoes.<br><b>Get 20. Reach the golden ghost.</b>`,'Start tutorial');
- else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
+ else openTaskBoard(true);
  tone(320);
 }
 function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
-$('pause').onclick=pause;window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+$('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play')openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)}
 function prop(b){drawSceneryProp(ctx,b);if(!b.open&&b.phase<99&&Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
@@ -436,14 +475,14 @@ if(tutorial.active&&tutorial.stage===5&&spotted&&!invisible){
  seen=spotted?seen+dt:Math.max(0,seen-dt*3);
  if(seen>.18){finish();return}
 }
-if(!tutorial.active&&(p.level!==0||run.exitOpen)&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
+if(!tutorial.active&&run.exitOpen&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
 cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);
 camX+=(ghost.x-240-camX)*Math.min(1,dt*8);
 cam=Math.max(0,Math.min(WORLD.height-viewH,cam));
 camX=Math.max(0,Math.min(WORLD.width-480,camX));
 $('distance').textContent=run.echoes;
 $('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
-$('best').textContent=tutorial.active?`TUTORIAL · ${run.echoes} ECHOES`:[effects.boost>0?`BOOST ${Math.ceil(effects.boost)}s`:'',effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',p.level===0?`${Math.min(run.objective,5)}/5 TASKS`:`FOUND ${runPoints}`].filter(Boolean).join(' · ');updateObjectiveHud();
+$('best').textContent=tutorial.active?`TUTORIAL · ${run.echoes} ECHOES`:[effects.boost>0?`BOOST ${Math.ceil(effects.boost)}s`:'',effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',run.tasks?`${completedTaskCount()}/5 TASKS`:`FOUND ${runPoints}`].filter(Boolean).join(' · ');updateObjectiveHud();
 for(const k of ['invisibility','phase']){
  const button=$('ability-'+k),using=active(k);if(!button)continue;
  button.classList.toggle('active',using);button.setAttribute('aria-pressed',String(using));
