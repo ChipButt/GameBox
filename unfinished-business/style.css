@@ -51,3 +51,11 @@
 .ability.active strong::after{content:' · ACTIVE';font-size:7px;color:#fff0c5}
 .ability.ready:not(.active){box-shadow:0 6px 0 #061019,0 8px 0 #45605b,inset 0 3px #d9ffe335,inset 0 -4px #0005,0 0 0 2px #ffffff10}
 @media(max-height:650px){#objectiveHud{top:calc(78px + env(safe-area-inset-top));padding:6px 10px}#objectiveHud strong{font-size:11px}}
+
+/* Collectible inventory */
+#tokenInventory{position:absolute;z-index:3;right:18px;top:calc(82px + env(safe-area-inset-top));min-width:91px;padding:7px 9px 7px 28px;border:2px solid #725f42;border-radius:4px;background:linear-gradient(#443a32dd,#1b2b30ed);box-shadow:0 4px #061219,inset 0 2px #f5d9931c;pointer-events:none}
+#tokenInventory .tokenInvIcon{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--gold);text-shadow:0 0 8px #f3ce87}
+#tokenInventory small{display:block;font-size:6px;font-weight:950;letter-spacing:.8px;color:#d9caa7}
+#tokenInventory strong{display:block;font-size:11px;letter-spacing:1px;color:#fff0c5}
+#tokenInventory.empty{opacity:.45}
+@media(max-height:650px){#tokenInventory{top:calc(69px + env(safe-area-inset-top));right:12px}}
