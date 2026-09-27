@@ -1,5 +1,5 @@
-import {WORLD} from './world.js?v=20260927c';
-import {overlap,rayBlocked} from './model.js?v=20260927c';
+import {WORLD} from './world.js?v=20260927f';
+import {overlap,rayBlocked} from './model.js?v=20260927f';
 const STEP=24,COLS=Math.ceil(WORLD.width/STEP),ROWS=Math.ceil(WORLD.height/STEP);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const clearSegment=(a,b,blocks,r=9)=>{const n=Math.max(1,Math.ceil(distance(a,b)/6));for(let i=0;i<=n;i++)if(blocks.some(o=>overlap(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,o,r)))return false;return true;};
