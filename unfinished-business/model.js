@@ -1,4 +1,4 @@
-import {WORLD} from './world.js?v=20260927k';
+import {WORLD} from './world.js?v=20260927l';
 export const MATERIALS=['None','Fabric','Wood','Plaster','Brick','Stone','Metal','Reinforced metal'];
 export const RUN_MAX={speed:6,invisibility:7,phase:7};
 export const initial=()=>({best:0,runs:0,won:false,sound:true,worldSeed:2717,worldVersion:WORLD.version,level:0,unlockedLevel:0,introSeen:false,tutorialSeen:false});
