@@ -2786,10 +2786,11 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
       await shiftMazeInternal(choice.side,choice.index);
       if(state.winnerId||mode!=='solo')return;
       await wait(520);
-      aiRunning=true;
+      aiRunning=false;
       await moveToInternal(choice.dest.r,choice.dest.c);
     }finally{
       aiRunning=false;
+      if(mode==='solo'&&!state.winnerId&&isLocalTurnOwner())renderAll();
     }
   }
 
