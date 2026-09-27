@@ -1653,6 +1653,193 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
 }
 .thumbDock:before,
 .playScreen:before{display:none!important}
+
+/* ===== MAZE SHIFT PREMIUM MENU + TURN PRIVACY PASS ===== */
+body:not(.playing){
+  background:
+    radial-gradient(circle at 50% -8%,rgba(27,89,130,.30),transparent 32rem),
+    radial-gradient(circle at 85% 45%,rgba(207,151,34,.10),transparent 24rem),
+    linear-gradient(180deg,#07111c 0%,#081725 54%,#040a11 100%)!important;
+}
+body:not(.playing):before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:42px 42px;
+}
+body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
+.shellHeader{
+  min-height:72px!important;padding:10px 2px 12px!important;
+  border-bottom:1px solid rgba(196,151,55,.13);
+}
+.brandMark{
+  border-color:rgba(216,166,58,.46)!important;
+  background:linear-gradient(145deg,#18364d,#081828)!important;
+  color:#f2c761!important;box-shadow:0 6px 18px rgba(0,0,0,.30),inset 0 0 0 1px rgba(255,255,255,.04)!important;
+}
+.gameBoxBackBtn{
+  width:118px;height:46px;padding:0;border:0;background:transparent;display:block;
+  filter:drop-shadow(0 6px 9px rgba(0,0,0,.38));transition:transform .12s ease,filter .12s ease;
+}
+.gameBoxBackBtn img{width:100%;height:100%;object-fit:contain;display:block}
+.gameBoxBackBtn:active{transform:translateY(2px) scale(.98);filter:drop-shadow(0 3px 5px rgba(0,0,0,.36))}
+.gameHero{
+  min-height:238px!important;padding:28px 24px!important;border-radius:22px!important;
+  border:1px solid rgba(218,171,69,.40)!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),transparent 22%),
+    radial-gradient(circle at 75% 20%,rgba(41,112,159,.35),transparent 30%),
+    linear-gradient(145deg,#10283a 0%,#0a1723 57%,#07101a 100%)!important;
+  box-shadow:0 24px 54px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.035)!important;
+}
+.gameHero:before{
+  inset:auto -40px -60px auto!important;width:250px!important;height:250px!important;
+  border:1px solid rgba(216,166,58,.18)!important;border-radius:50%!important;transform:none!important;
+}
+.heroRelics{
+  position:absolute;right:18px;top:18px;display:flex;align-items:center;gap:5px;opacity:.95;pointer-events:none
+}
+.heroRelics img{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(0,0,0,.48))}
+.heroRelics img:nth-child(2){width:78px;height:78px;margin-top:20px}
+.heroEyebrow{color:#e4bb61!important}
+.gameHero h1{color:#fff;text-shadow:0 4px 12px rgba(0,0,0,.52),0 0 20px rgba(31,121,164,.16)}
+.gameHero .heroTag{max-width:390px;color:#b8c8d6!important}
+.mainModeSelect{gap:12px!important}
+.gameModeCard{
+  min-height:130px!important;padding:10px!important;
+  display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  border:1px solid rgba(216,166,58,.22)!important;border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(18,43,62,.92),rgba(7,18,29,.96))!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.05)!important;
+}
+.gameModeCard:hover{border-color:rgba(236,190,86,.58)!important;transform:translateY(-2px)!important}
+.gameModeArt{width:100%;height:88px;display:block;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.38))}
+.gameModeCard small{color:#91a8bb!important;margin:0!important;font-size:10px!important}
+.roleModeTile{
+  min-height:116px!important;display:grid!important;grid-template-columns:76px minmax(0,1fr) 24px;align-items:center;
+  padding:12px 14px!important;border-color:rgba(213,164,58,.28)!important;
+  background:linear-gradient(145deg,#10293d,#081725)!important;
+}
+.roleModeTile>img{width:68px;height:78px;object-fit:contain;filter:drop-shadow(0 7px 7px rgba(0,0,0,.48))}
+.roleModeTile strong{font-size:20px!important}
+.roleModeTile small{color:#8fa6ba!important}
+.setupTop{
+  margin:16px 0 14px!important;padding:10px 12px;border:1px solid rgba(213,164,58,.20);border-radius:15px;
+  background:linear-gradient(180deg,rgba(17,41,58,.78),rgba(7,18,29,.82));
+}
+.setupTitle span{color:#e2b75c!important}
+.setupTitle h2{font-size:28px!important}
+.backBtn{
+  min-width:76px!important;min-height:42px!important;border:1px solid rgba(218,171,69,.34)!important;
+  border-radius:11px!important;background:linear-gradient(180deg,#17334a,#0a1c2d)!important;color:#e9d19c!important;
+  box-shadow:0 4px 0 #040b12,0 8px 14px rgba(0,0,0,.24)!important;
+}
+.setupPanel{
+  border:1px solid rgba(196,151,55,.24)!important;border-radius:15px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 24%),
+    linear-gradient(145deg,rgba(16,38,55,.96),rgba(7,18,29,.97))!important;
+  box-shadow:0 14px 28px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.025)!important;
+}
+.panelLabel{color:#e8edf2!important}.panelLabel span{color:#9aafc1!important}
+.choice{
+  min-height:62px!important;display:grid;grid-template-columns:42px minmax(0,1fr) 24px;align-items:center;gap:8px;
+  padding:5px 10px!important;text-align:left;border-color:rgba(255,255,255,.10)!important;
+  background:linear-gradient(180deg,#10283b,#0a1b2a)!important;
+}
+.choice .choicePawn{width:38px;height:46px;object-fit:contain;filter:drop-shadow(0 4px 4px rgba(0,0,0,.42))}
+.choice .choiceCheck{color:#6d8192;text-align:right;font-size:18px}
+.choice.selected{
+  border-color:rgba(228,181,75,.70)!important;
+  background:linear-gradient(180deg,#17374e,#102638)!important;color:#fff!important;
+  box-shadow:inset 0 0 0 1px rgba(228,181,75,.20),0 0 22px rgba(228,181,75,.08)!important;
+}
+.choice.selected .choiceCheck{color:#f1c865}
+.field label{color:#b3c1cc!important}
+.field select{
+  border-color:rgba(211,164,62,.25)!important;background-color:#091724!important;color:#f4f6f8!important;
+}
+.field select:focus{border-color:#d8aa4b!important;box-shadow:0 0 0 3px rgba(216,170,75,.12)!important}
+.primaryBtn{
+  border:1px solid #d2a340!important;
+  background:linear-gradient(180deg,#275a79,#143850)!important;color:#fff!important;
+  box-shadow:0 5px 0 #071827,0 10px 24px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.15)!important;
+}
+.primaryBtn:active{box-shadow:0 2px 0 #071827,0 6px 12px rgba(0,0,0,.22)!important}
+.secondaryBtn{
+  border-color:rgba(211,164,62,.24)!important;background:linear-gradient(180deg,#122b3f,#091a29)!important;color:#d9e4ed!important;
+}
+.statusLine,.lobbyRow,.hostCard,.emptyState{
+  border-color:rgba(196,151,55,.18)!important;background:rgba(7,20,31,.78)!important;
+}
+.readyTag,.joinTag{background:#1d5c78!important;color:#dff6ff!important;border:1px solid rgba(218,171,69,.24)}
+.difficultyOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.difficultyChoice{
+  min-height:66px;padding:8px 4px;border:1px solid rgba(255,255,255,.10);border-radius:11px;
+  display:grid;place-items:center;align-content:center;gap:4px;background:linear-gradient(180deg,#10283a,#081826);color:#dce6ed;
+}
+.difficultyChoice strong{font:700 13px Fredoka,sans-serif}
+.difficultyChoice span{font-size:10px;font-weight:900;color:#8399ab}
+.difficultyChoice.selected{
+  border-color:rgba(229,181,75,.78);background:linear-gradient(180deg,#21445e,#102c41);
+  box-shadow:inset 0 0 0 1px rgba(229,181,75,.18),0 7px 18px rgba(0,0,0,.24);
+}
+.difficultyChoice.selected strong{color:#fff}.difficultyChoice.selected span{color:#f0c96c}
+
+/* Timer occupies the right side of the existing top HUD recess. */
+.turnTimer{
+  position:absolute!important;left:69%!important;top:2.7%!important;width:17%!important;height:6.3%!important;z-index:65!important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  border:1px solid rgba(214,169,68,.34);border-radius:10px;background:rgba(5,18,29,.78);
+  box-shadow:inset 0 1px rgba(255,255,255,.06),0 4px 12px rgba(0,0,0,.25);pointer-events:none;
+}
+.turnTimer span{font-size:1.45cqw;font-weight:900;line-height:1;text-transform:uppercase;letter-spacing:.08em;color:#8da2b3}
+.turnTimer strong{font:700 3.9cqw/1 Fredoka,sans-serif;color:#fff;font-variant-numeric:tabular-nums}
+.turnTimer.timerWarn{border-color:rgba(238,185,65,.72);background:rgba(55,38,8,.80)}
+.turnTimer.timerDanger{border-color:rgba(224,74,68,.78);background:rgba(68,16,18,.86)}
+.turnTimer.timerCue{animation:timerCue .52s ease both}
+@keyframes timerCue{0%,100%{transform:scale(1)}45%{transform:scale(1.13);filter:brightness(1.45)}}
+
+/* Relic privacy: only the controlling player may reveal their target. */
+.targetPrivacyShield{
+  position:absolute!important;left:5%!important;top:73%!important;width:44%!important;height:20%!important;z-index:155!important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  border:1px solid rgba(218,171,69,.44);border-radius:14px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(43,111,145,.28),transparent 55%),
+    linear-gradient(180deg,rgba(8,25,38,.98),rgba(4,14,23,.99));
+  color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,255,255,.035);
+  pointer-events:auto!important;
+}
+.targetPrivacyShield span{font-size:1.85cqw;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#879dad}
+.targetPrivacyShield strong{font:700 3.25cqw Fredoka,sans-serif;color:#efc96f}
+.targetPrivacyShield:active{transform:scale(.985)}
+.targetPrivacyShield.hidden{display:none!important}
+
+/* Waiting players can watch the maze, but their whole private lower HUD is covered. */
+.multiWaitOverlay{
+  position:absolute!important;left:2.5%!important;right:2.5%!important;top:69.2%!important;bottom:1.7%!important;z-index:250!important;
+  display:flex;align-items:center;justify-content:center;padding:14px;
+  border:1px solid rgba(215,169,69,.38);border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(27,88,116,.27),transparent 56%),
+    linear-gradient(180deg,rgba(6,21,33,.985),rgba(3,12,20,.995));
+  box-shadow:0 16px 35px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.035);
+  backdrop-filter:blur(8px);pointer-events:auto!important;
+}
+.multiWaitOverlay.hidden{display:none!important}
+.multiWaitCard{display:flex;align-items:center;justify-content:center;gap:16px;text-align:left}
+.multiWaitCard img{width:74px;height:88px;object-fit:contain;filter:drop-shadow(0 7px 7px rgba(0,0,0,.48))}
+.multiWaitCard span{display:block;color:#9aafbe;font-size:2.2cqw;font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+.multiWaitCard strong{display:block;margin-top:3px;font:700 5cqw/1 Fredoka,sans-serif;color:#fff}
+.multiWaitCard small{display:block;margin-top:6px;color:#e5bf68;font-size:2.2cqw;font-weight:800}
+
+@media(max-width:430px){
+  .heroRelics img{width:48px;height:48px}.heroRelics img:nth-child(2){width:62px;height:62px}
+  .gameModeArt{height:76px}
+  .gameBoxBackBtn{width:104px;height:42px}
+}
 </style>
 </head>
 <body>
@@ -1668,21 +1855,28 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
       <div class="brandMark">MS</div>
       <div class="brandCopy"><strong>Maze Shift</strong><span>GameBox</span></div>
     </div>
-    <button class="iconBtn" id="homeBtn" type="button" aria-label="Back to GameBox">←</button>
+    <button class="gameBoxBackBtn" id="homeBtn" type="button" aria-label="Back to Game Box"><img src="GameBox%20back%20button.png" alt="Game Box"></button>
   </header>
 
   <section id="modeView" class="view">
-    <section class="hero">
-      <span class="heroEyebrow">Chip In Games</span>
+    <section class="hero gameHero">
+      <div class="heroRelics" aria-hidden="true">
+        <img src="MazeShift_Assets/01_compass.png" alt="">
+        <img src="MazeShift_Assets/18_star.png" alt="">
+        <img src="MazeShift_Assets/11_key.png" alt="">
+      </div>
+      <span class="heroEyebrow">Game Box · Maze Shift</span>
       <h1>Maze Shift</h1>
       <span class="heroTag">Shift the maze. Find your relics. Get home first.</span>
     </section>
-    <div class="modeSelect">
-      <button class="modeTile" id="passMode" type="button">
-        <span class="modeSymbol">P</span><strong>Pass & Play</strong><small>One phone · 2–4 players</small><span class="modeChevron">›</span>
+    <div class="modeSelect mainModeSelect">
+      <button class="modeTile gameModeCard" id="passMode" type="button" aria-label="Pass & Play">
+        <img class="gameModeArt" src="Pass%20%26%20Play%20button.png" alt="Pass & Play">
+        <small>One phone · 2–4 players</small>
       </button>
-      <button class="modeTile alt" id="multiMode" type="button">
-        <span class="modeSymbol">M</span><strong>Local Multiplayer</strong><small>One phone each · live board</small><span class="modeChevron">›</span>
+      <button class="modeTile gameModeCard" id="multiMode" type="button" aria-label="Local Multiplayer">
+        <img class="gameModeArt" src="Local%20Multiplayer%20button.png" alt="Local Multiplayer">
+        <small>One phone each · live board</small>
       </button>
     </div>
   </section>
@@ -1705,6 +1899,14 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
         </select>
       </div>
     </section>
+    <section class="setupPanel difficultyPanel">
+      <div class="panelLabel">Turn difficulty <span>Time per player</span></div>
+      <div class="difficultyOptions" data-difficulty-group="pass">
+        <button class="difficultyChoice" type="button" data-value="easy"><strong>Easy</strong><span>3:00</span></button>
+        <button class="difficultyChoice selected" type="button" data-value="medium"><strong>Medium</strong><span>1:30</span></button>
+        <button class="difficultyChoice" type="button" data-value="hard"><strong>Hard</strong><span>0:30</span></button>
+      </div>
+    </section>
     <button class="primaryBtn full" id="startBtn" type="button" style="margin-top:12px">Start Game</button>
     <div class="statusLine warn hidden" id="setupStatus"></div>
   </section>
@@ -1715,11 +1917,11 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
       <button class="backBtn" data-view-target="modeView" type="button">Back</button>
     </div>
     <div class="modeSelect">
-      <button class="modeTile" id="hostMode" type="button">
-        <span class="modeSymbol">H</span><strong>Host</strong><small>Create the lobby</small><span class="modeChevron">›</span>
+      <button class="modeTile roleModeTile" id="hostMode" type="button">
+        <img src="01_player_token_red.png" alt=""><div><strong>Host</strong><small>Create the lobby and choose the rules</small></div><span class="modeChevron">›</span>
       </button>
-      <button class="modeTile alt" id="joinMode" type="button">
-        <span class="modeSymbol">J</span><strong>Join</strong><small>Find a nearby game</small><span class="modeChevron">›</span>
+      <button class="modeTile roleModeTile" id="joinMode" type="button">
+        <img src="02_player_token_blue.png" alt=""><div><strong>Join</strong><small>Find a nearby Maze Shift game</small></div><span class="modeChevron">›</span>
       </button>
     </div>
   </section>
@@ -1737,6 +1939,14 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
             <option value="3">Quick · 3</option><option value="4" selected>Standard · 4</option><option value="5">Long · 5</option>
           </select>
         </div>
+      </div>
+    </section>
+    <section class="setupPanel difficultyPanel">
+      <div class="panelLabel">Turn difficulty <span>Host decides</span></div>
+      <div class="difficultyOptions" data-difficulty-group="host">
+        <button class="difficultyChoice" type="button" data-value="easy"><strong>Easy</strong><span>3:00</span></button>
+        <button class="difficultyChoice selected" type="button" data-value="medium"><strong>Medium</strong><span>1:30</span></button>
+        <button class="difficultyChoice" type="button" data-value="hard"><strong>Hard</strong><span>0:30</span></button>
       </div>
     </section>
     <div class="statusLine" id="hostStatus">Starting lobby…</div>
@@ -1764,7 +1974,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
       <div class="hostList" id="availableHosts"></div>
     </section>
     <section class="setupPanel hidden" id="joinedLobbyPanel" style="margin-top:10px">
-      <div class="panelLabel">Connected <span>Waiting for host</span></div>
+      <div class="panelLabel">Connected <span id="joinGameRules">Waiting for host</span></div>
       <div class="lobbyList" id="joinLobby"></div>
     </section>
     <button class="secondaryBtn full" id="restartScan" type="button" style="margin-top:12px">Refresh Scan</button>
@@ -1777,6 +1987,9 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
         <span class="turnDot" id="turnDot"></span>
         <div class="turnText"><span id="turnLabel">Turn</span><strong id="turnName">—</strong></div>
       </div>
+      <div class="turnTimer" id="turnTimer" aria-live="polite">
+        <span id="timerDifficulty">Medium</span><strong id="timerValue">1:30</strong>
+      </div>
       <button class="iconBtn menuBtn" id="menuBtn" type="button" aria-label="Game menu">•••</button>
     </header>
 
@@ -1785,10 +1998,13 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     </section>
 
     <footer class="thumbDock">
-      <section class="targetZone" aria-label="Current target">
-        <div class="objectiveText"><span id="objectiveLabel">Target</span><strong id="objectiveName">Compass</strong></div>
+      <section class="targetZone" id="targetZone" aria-label="Current target">
+        <div class="objectiveText"><span id="objectiveLabel">Target</span><strong id="objectiveName">Hidden</strong></div>
         <div class="objectiveScore" id="score">0 / 4</div>
-        <div class="targetToken" id="objectiveIcon">CP</div>
+        <div class="targetToken" id="objectiveIcon"></div>
+        <button class="targetPrivacyShield" id="targetPrivacyShield" type="button" aria-label="Reveal your target relic">
+          <span>Target hidden</span><strong>Tap to reveal</strong>
+        </button>
       </section>
       <section class="tileZone" aria-label="Spare tile">
         <div class="zoneLabel">YOUR TILE</div>
@@ -1800,6 +2016,12 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
         <div class="waitDock hidden" id="waitDock">Waiting</div>
       </section>
     </footer>
+    <div class="multiWaitOverlay hidden" id="multiWaitOverlay" aria-live="polite">
+      <div class="multiWaitCard">
+        <img id="multiWaitPawn" src="01_player_token_red.png" alt="">
+        <div><span>Waiting for</span><strong id="multiWaitName">Player</strong><small>They are taking their turn</small></div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1879,6 +2101,8 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     T:{movable:'MazeShift_Tiles/movable_t_junction.png',fixed:'MazeShift_Tiles/immovable_t_junction.png'}
   };
   var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
+  var DIFFICULTY_SECONDS={easy:180,medium:90,hard:30};
+  var DIFFICULTY_LABELS={easy:'Easy',medium:'Medium',hard:'Hard'};
   var RELICS=[
     {id:'compass',name:'Compass',asset:ASSET_ROOT+'01_compass.png'},
     {id:'lantern',name:'Lantern',asset:ASSET_ROOT+'02_lantern.png'},
@@ -1904,7 +2128,8 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
 
   var state={
     selected:[],players:[],board:[],spare:null,current:0,phase:'shift',
-    lastShift:null,targetCount:4,winnerId:null,turnReady:false
+    lastShift:null,targetCount:4,winnerId:null,turnReady:false,
+    difficulty:'medium',turnDurationSec:90,turnDeadline:0
   };
   var mode='local';
   var role=null;
@@ -1918,6 +2143,10 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   var moving=false;
   var shiftRequestPending=false;
   var pendingSnapshot=null;
+  var targetRevealed=false;
+  var turnTimerInterval=null;
+  var lastTimerCue=null;
+  var timerEnding=false;
 
   function $(id){return document.getElementById(id)}
   function uid(){return globalThis.crypto&&globalThis.crypto.randomUUID?globalThis.crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)}
@@ -1971,13 +2200,75 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     var ids=new Set(roster().map(function(p){return p.id}));
     state.selected=state.selected.filter(function(id){return ids.has(id)}).slice(0,4);
   }
+  function difficultyValue(group){
+    var el=document.querySelector('[data-difficulty-group="'+group+'"] .difficultyChoice.selected');
+    var value=el&&el.dataset.value||'medium';
+    return DIFFICULTY_SECONDS[value]?value:'medium';
+  }
+  function difficultyTimeText(value){
+    var sec=DIFFICULTY_SECONDS[value]||90;
+    return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  }
+  function formatTurnClock(sec){
+    sec=Math.max(0,Math.ceil(Number(sec)||0));
+    return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  }
+  function authoritativeTimer(){
+    return mode==='local'||(mode==='multi'&&role==='host');
+  }
+  function ensureTurnTimer(){
+    if(turnTimerInterval)return;
+    turnTimerInterval=setInterval(renderTurnTimer,250);
+  }
+  function stopTurnTimer(){
+    if(turnTimerInterval){clearInterval(turnTimerInterval);turnTimerInterval=null}
+  }
+  function startTurnClock(){
+    state.turnDeadline=Date.now()+state.turnDurationSec*1000;
+    lastTimerCue=state.turnDurationSec;
+    timerEnding=false;
+    ensureTurnTimer();
+    renderTurnTimer();
+  }
+  function timerCueNeeded(sec){
+    if(sec<=0)return false;
+    if(sec>30)return sec%30===0;
+    if(sec>10)return sec%10===0;
+    return true;
+  }
+  function renderTurnTimer(){
+    var timer=$('turnTimer'),value=$('timerValue'),label=$('timerDifficulty');
+    if(!timer||!value||!label)return;
+    label.textContent=DIFFICULTY_LABELS[state.difficulty]||'Medium';
+    if(!state.turnDeadline||!state.players.length||state.winnerId){
+      value.textContent=formatTurnClock(state.turnDurationSec||90);
+      timer.classList.remove('timerWarn','timerDanger','timerCue');
+      return;
+    }
+    var sec=Math.max(0,Math.ceil((state.turnDeadline-Date.now())/1000));
+    value.textContent=formatTurnClock(sec);
+    timer.classList.toggle('timerWarn',sec<=30&&sec>10);
+    timer.classList.toggle('timerDanger',sec<=10);
+    if(sec!==lastTimerCue&&timerCueNeeded(sec)){
+      lastTimerCue=sec;
+      timer.classList.remove('timerCue');void timer.offsetWidth;timer.classList.add('timerCue');
+      if(sec===30||sec===20||sec===10)showToast(sec+' seconds left');
+      if(sec<=10&&canControlTurn())buzz(sec<=3?28:10);
+    }
+    if(sec<=0&&authoritativeTimer()&&!moving&&!timerEnding&&!state.winnerId){
+      timerEnding=true;state.turnDeadline=0;showToast('Time up · turn ended');buzz(55);
+      setTimeout(function(){endTurn()},120);
+    }
+  }
+
   function renderPlayerPicker(){
     clampSelection();
     var wrap=$('playerGrid');wrap.innerHTML='';
     roster().forEach(function(p){
       var b=document.createElement('button');b.type='button';
+      var idx=roster().findIndex(function(x){return x.id===p.id});
       b.className='choice'+(state.selected.indexOf(p.id)>=0?' selected':'');
-      b.textContent=p.name;
+      b.innerHTML='<img class="choicePawn" src="'+PLAYER_ASSETS[(idx<0?0:idx)%PLAYER_ASSETS.length]+'" alt=""><span>'+esc(p.name)+'</span><b class="choiceCheck">'+(state.selected.indexOf(p.id)>=0?'✓':'○')+'</b>';
       b.addEventListener('click',function(){
         var at=state.selected.indexOf(p.id);
         if(at>=0)state.selected.splice(at,1);
@@ -2039,13 +2330,16 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     var deck=shuffle(relics);
     players.forEach(function(p){p.targets=deck.splice(0,targetCount);p.collected=[];p.targetIndex=0});
   }
-  function createGame(players,targetCount){
+  function createGame(players,targetCount,difficulty){
     var built=buildBoard();
     state.players=players.map(function(p,i){
       return{id:String(p.id),name:String(p.name).slice(0,24),color:COLORS[i],asset:PLAYER_ASSETS[i]||PLAYER_ASSETS[0],home:{r:HOME_POS[i].r,c:HOME_POS[i].c},pos:{r:HOME_POS[i].r,c:HOME_POS[i].c},targets:[],collected:[],targetIndex:0};
     });
     state.board=built.board;state.spare=built.spare;state.current=0;state.phase='shift';state.lastShift=null;
     state.targetCount=targetCount;state.winnerId=null;state.turnReady=mode!=='local';
+    state.difficulty=DIFFICULTY_SECONDS[difficulty]?difficulty:'medium';
+    state.turnDurationSec=DIFFICULTY_SECONDS[state.difficulty];
+    state.turnDeadline=0;targetRevealed=false;timerEnding=false;lastTimerCue=null;
     assignRelics(state.board,state.players,targetCount);
   }
   function startPassGame(){
@@ -2053,7 +2347,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     $('setupStatus').classList.add('hidden');resetSession(false);mode='local';role=null;localPlayerId='';
     var map=new Map(roster().map(function(p){return[p.id,p]}));
     var players=state.selected.map(function(id){return map.get(id)}).filter(Boolean);
-    createGame(players,parseInt($('targetCount').value,10)||4);
+    createGame(players,parseInt($('targetCount').value,10)||4,difficultyValue('pass'));
     showView('gameView');showHandoff();renderAll();
   }
 
@@ -2061,15 +2355,22 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   function ownPlayer(){if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;return currentPlayer()}
   function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
   function canControlTurn(){if(moving||shiftRequestPending||!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
-  function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden')}
-  function beginTurn(){state.turnReady=true;$('handoff').classList.add('hidden');buzz(12);renderAll()}
+  function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden');renderTurnTimer()}
+  function beginTurn(){state.turnReady=true;targetRevealed=false;$('handoff').classList.add('hidden');startTurnClock();buzz(12);renderAll()}
+  function revealTarget(){
+    if(!canControlTurn())return;
+    var p=ownPlayer(),target=currentTarget(p);if(!target)return;
+    targetRevealed=true;buzz(8);renderObjective();renderBoard();
+  }
   function opposite(side){return{left:'right',right:'left',top:'bottom',bottom:'top'}[side]}
   function isBlockedInsertion(side,index){return!!state.lastShift&&state.lastShift.index===index&&opposite(state.lastShift.side)===side}
 
   function publishState(){if(mode==='multi'&&role==='host'&&session)session.broadcast({type:'state',state:snapshot()})}
   function rotateSpareInternal(delta){
     if(state.phase!=='shift')return;
-    state.spare.rot=(state.spare.rot+delta+4)%4;buzz(7);renderAll();publishState();
+    state.spare.rot=(state.spare.rot+delta+4)%4;buzz(7);
+    renderSpare();
+    if(mode==='multi'&&role==='host'&&session)session.broadcast({type:'rotateSync',rot:state.spare.rot});
   }
   function requestRotate(delta){
     if(!canControlTurn()||state.phase!=='shift')return;
@@ -2129,9 +2430,9 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     frame.appendChild(spare);
     var dockSpare=$('spareTile');if(dockSpare)dockSpare.style.opacity='0';
     frame.classList.add('shifting');
-    await wait(150);
+    await wait(190);
     var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var duration=reduced?180:520,easing='cubic-bezier(.22,.72,.22,1)';
+    var duration=reduced?220:700,easing='cubic-bezier(.22,.72,.22,1)';
     function center(rect){return{x:rect.left-frameRect.left+rect.width/2,y:rect.top-frameRect.top+rect.height/2}}
     var insertCenter=center(ir),exitCenter,targets=[],ejectedIndex=0;
     if(side==='left')exitCenter={x:rects[6].right-frameRect.left+sample.width/2+3,y:center(rects[6]).y};
@@ -2159,7 +2460,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
       var blink=ejected.animate([
         {opacity:1},{offset:.18,opacity:.08},{offset:.36,opacity:1},
         {offset:.54,opacity:.08},{offset:.72,opacity:1},{opacity:0}
-      ],{duration:reduced?260:480,easing:'linear',fill:'forwards'});
+      ],{duration:reduced?320:620,easing:'linear',fill:'forwards'});
       try{await blink.finished}catch(e){}
     }
     ghosts.forEach(function(g){g.remove()});spare.remove();
@@ -2234,7 +2535,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
           {left:ghost.style.left,top:ghost.style.top,transform:'translate(-50%,-70%) scale(1)'},
           {offset:.52,left:left+'px',top:top+'px',transform:'translate(-50%,-70%) scale(1.08)'},
           {left:left+'px',top:top+'px',transform:'translate(-50%,-70%) scale(1)'}
-        ],{duration:165,easing:'ease-in-out',fill:'forwards'});
+        ],{duration:240,easing:'ease-in-out',fill:'forwards'});
         try{await anim.finished}catch(e){}
         ghost.style.left=left+'px';ghost.style.top=top+'px';
       }
@@ -2266,14 +2567,17 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
       p.collected.push(target);p.targetIndex++;collected=true;showToast('Relic found · '+target.name,target.asset);buzz(35);
     }
     if(!currentTarget(p)&&p.pos.r===p.home.r&&p.pos.c===p.home.c){
-      state.winnerId=p.id;renderAll();publishState();return;
+      state.winnerId=p.id;state.turnDeadline=0;targetRevealed=false;renderAll();publishState();return;
     }
     if(collected&&currentTarget(p))setTimeout(function(){var next=currentTarget(p);showToast('Next target · '+next.name,next.asset)},700);
     endTurn();
   }
   function endTurn(){
+    if(!state.players.length||state.winnerId)return;
+    state.turnDeadline=0;targetRevealed=false;timerEnding=false;lastTimerCue=null;
     state.current=(state.current+1)%state.players.length;state.phase='shift';
-    if(mode==='local')showHandoff();else state.turnReady=true;
+    if(mode==='local')showHandoff();
+    else{state.turnReady=true;startTurnClock()}
     renderAll();publishState();
   }
 
@@ -2285,7 +2589,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     var html='<img class="tileRaster" src="'+esc(tileAsset(t))+'" alt="" style="--tile-rot:'+(t.rot%4)+'">';
 
     if(t.relic){
-      var glowOwner=canControlTurn()?ownPlayer():null,glowTarget=currentTarget(glowOwner),isTarget=!!(glowTarget&&glowTarget.id===t.relic.id);
+      var glowOwner=canControlTurn()&&targetRevealed?ownPlayer():null,glowTarget=currentTarget(glowOwner),isTarget=!!(glowTarget&&glowTarget.id===t.relic.id);
       if(isTarget)html+='<span class="targetRelicGlow" aria-hidden="true"></span>';
       html+='<img class="relicArt'+(isTarget?' targetRelic':'')+'" src="'+esc(t.relic.asset)+'" alt="" title="'+esc(t.relic.name)+'">';
     }
@@ -2307,9 +2611,12 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   }
   function renderSpare(){
     if(!state.spare)return;
+    var control=canControlTurn();
+    if(mode==='multi'&&!control){
+      $('spareTile').innerHTML='';$('rotateRight').disabled=true;return;
+    }
     $('spareTile').innerHTML=tileMarkup(state.spare,false,-1,-1);
-    var disabled=state.phase!=='shift'||!canControlTurn();
-    $('rotateRight').disabled=disabled;
+    $('rotateRight').disabled=state.phase!=='shift'||!control;
   }
   function addInsertButton(grid,side,index,row,col,symbol){
     var b=document.createElement('button');b.type='button';b.className='insertBtn side-'+side;
@@ -2340,22 +2647,25 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   }
   function renderObjective(){
     var p=ownPlayer();if(!p)return;
-    var target=currentTarget(p),icon=$('objectiveIcon');
+    var target=currentTarget(p),icon=$('objectiveIcon'),shield=$('targetPrivacyShield'),control=canControlTurn();
     $('objectiveLabel').textContent='Target';
-    if(target){
+    if(target&&!targetRevealed){
+      icon.innerHTML='';$('objectiveName').textContent='Hidden';
+      shield.classList.toggle('hidden',!control);
+    }else if(target){
       icon.innerHTML='<img class="objectiveArt" src="'+target.asset+'" alt="">';
-      $('objectiveName').textContent=target.name;
+      $('objectiveName').textContent=target.name;shield.classList.add('hidden');
     }else{
       icon.innerHTML='<img class="objectiveArt homeArt" src="'+HOME_ASSET+'" alt="">';
-      $('objectiveName').textContent='Return Home';
+      $('objectiveName').textContent='Return Home';shield.classList.add('hidden');
     }
     $('score').textContent=p.collected.length+' / '+state.targetCount;
   }
   function renderMenuPlayers(){
     var wrap=$('menuPlayers');if(!wrap)return;
     wrap.innerHTML=state.players.map(function(p,i){
-      var target=currentTarget(p),active=i===state.current;
-      return'<div class="menuPlayer"><img class="menuPawn" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?'Hunting '+esc(target.name):'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
+      var target=currentTarget(p),active=i===state.current,remaining=Math.max(0,state.targetCount-p.collected.length);
+      return'<div class="menuPlayer"><img class="menuPawn" src="'+esc(p.asset||PLAYER_ASSETS[i%PLAYER_ASSETS.length])+'" alt=""><div><strong>'+esc(p.name)+(active?' · Turn':'')+'</strong><small>'+(target?remaining+' relic'+(remaining===1?'':'s')+' remaining':'Returning home')+'</small></div><b>'+p.collected.length+'/'+state.targetCount+'</b></div>';
     }).join('');
     $('menuMode').textContent=mode==='multi'?'Local Multiplayer':'Pass & Play';
     $('menuNetwork').textContent=mode==='multi'?(role==='host'?'Hosting':'Connected'):'Local device';
@@ -2373,19 +2683,31 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     $('stayBtn').classList.toggle('hidden',state.phase!=='move'||!control);
     $('spareTile').classList.remove('hidden');
     $('rotateRight').classList.toggle('hidden',state.phase!=='shift'||!control);
-    $('waitDock').classList.toggle('hidden',control||mode!=='multi');
-    if(mode==='multi'&&!control)$('waitDock').textContent='Waiting · '+p.name;
-    renderObjective();renderSpare();renderBoard();renderMenuPlayers();renderWinner();
+    $('waitDock').classList.add('hidden');
+    var waiting=mode==='multi'&&!control;
+    $('multiWaitOverlay').classList.toggle('hidden',!waiting);
+    if(waiting){
+      $('multiWaitName').textContent=p.name;
+      $('multiWaitPawn').src=p.asset||PLAYER_ASSETS[state.current%PLAYER_ASSETS.length];
+    }
+    renderObjective();renderSpare();renderBoard();renderMenuPlayers();renderWinner();renderTurnTimer();
   }
 
   function snapshot(){
-    return{players:state.players,board:state.board,spare:state.spare,current:state.current,phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId};
+    return{players:state.players,board:state.board,spare:state.spare,current:state.current,phase:state.phase,lastShift:state.lastShift,targetCount:state.targetCount,winnerId:state.winnerId,difficulty:state.difficulty,turnDurationSec:state.turnDurationSec,turnDeadline:state.turnDeadline};
   }
   function adoptSnapshot(s,doRender){
     if(!s||!Array.isArray(s.players)||!Array.isArray(s.board)||!s.spare)return false;
+    var previousCurrent=state.current;
     state.players=s.players;state.board=s.board;state.spare=s.spare;state.current=Number(s.current)||0;
     state.phase=s.phase==='move'?'move':'shift';state.lastShift=s.lastShift||null;state.targetCount=Math.max(1,Number(s.targetCount)||4);
-    state.winnerId=s.winnerId||null;state.turnReady=true;shiftRequestPending=false;$('handoff').classList.add('hidden');showView('gameView');
+    state.winnerId=s.winnerId||null;state.difficulty=DIFFICULTY_SECONDS[s.difficulty]?s.difficulty:'medium';
+    state.turnDurationSec=Math.max(1,Number(s.turnDurationSec)||DIFFICULTY_SECONDS[state.difficulty]);
+    state.turnDeadline=Math.max(0,Number(s.turnDeadline)||0);
+    if(previousCurrent!==state.current)targetRevealed=false;
+    state.turnReady=true;shiftRequestPending=false;timerEnding=false;
+    lastTimerCue=state.turnDeadline?Math.max(0,Math.ceil((state.turnDeadline-Date.now())/1000)):null;
+    $('handoff').classList.add('hidden');showView('gameView');ensureTurnTimer();
     if(doRender!==false)renderAll();return true;
   }
   function applySnapshot(s){
@@ -2417,9 +2739,10 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   function updateHostAdvert(){
     if(role!=='host'||!session||!session.updateHost||!hostIdentity)return;
     var n=parseInt($('hostTargetCount').value,10)||4;
-    session.updateHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,started:false,raceMode:'maze-shift',trackName:n+' relics each',totalRaces:n});
+    var diff=difficultyValue('host');
+    session.updateHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,started:false,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
   }
-  function broadcastLobby(){if(role==='host'&&session)session.broadcast({type:'lobby',players:lobbyPlayers(),targetCount:parseInt($('hostTargetCount').value,10)||4})}
+  function broadcastLobby(){if(role==='host'&&session){var diff=difficultyValue('host');session.broadcast({type:'lobby',players:lobbyPlayers(),targetCount:parseInt($('hostTargetCount').value,10)||4,difficulty:diff})}}
   function installSession(kind){
     if(!window.GameBoxLAN||!window.GameBoxLAN.DiscoverySession)throw new Error('Local multiplayer discovery is unavailable.');
     if(!session){
@@ -2449,8 +2772,8 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   async function startHostDiscovery(){
     try{
       installSession('host');var p=selectedRosterPlayer('hostPlayer');hostIdentity=networkIdentity(p,'host',hostIdentity);localPlayerId=hostIdentity.id;
-      setStatus('hostStatus','Starting lobby…','');var n=parseInt($('hostTargetCount').value,10)||4;
-      await session.startHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,raceMode:'maze-shift',trackName:n+' relics each',totalRaces:n});
+      setStatus('hostStatus','Starting lobby…','');var n=parseInt($('hostTargetCount').value,10)||4,diff=difficultyValue('host');
+      await session.startHost({hostName:hostIdentity.name+"'s Maze Shift",player:hostIdentity,raceMode:'maze-shift',trackName:n+' relics · '+DIFFICULTY_LABELS[diff]+' '+difficultyTimeText(diff),totalRaces:n,difficulty:diff});
       var players=lobbyPlayers();renderLobby('hostLobby',players);$('hostCount').textContent=players.length+' / 4';$('startHostGame').disabled=players.length<2;
       setStatus('hostStatus','Lobby live · waiting for players','good');
     }catch(err){console.error(err);setStatus('hostStatus','Discovery error · tap Refresh','warn')}
@@ -2496,7 +2819,8 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
         return;
       }
     }else{
-      if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];renderLobby('joinLobby',connectedLobby);$('joinedLobbyPanel').classList.remove('hidden');return}
+      if(msg.type==='lobby'){connectedLobby=Array.isArray(msg.players)?msg.players:[];renderLobby('joinLobby',connectedLobby);$('joinedLobbyPanel').classList.remove('hidden');var ld=DIFFICULTY_SECONDS[msg.difficulty]?msg.difficulty:'medium';$('joinGameRules').textContent=(DIFFICULTY_LABELS[ld]||'Medium')+' · '+difficultyTimeText(ld)+' turns';return}
+      if(msg.type==='rotateSync'){if(state.spare){state.spare.rot=((Number(msg.rot)||0)%4+4)%4;renderSpare()}return}
       if(msg.type==='moveFx'&&Array.isArray(msg.path)){var fxPlayer=state.players.find(function(p){return p.id===msg.playerId});if(fxPlayer)animatePawnPath(msg.path,fxPlayer);return}
       if(msg.type==='shiftFx'){playRemoteShiftFx(msg);return}
       if(msg.type==='start'&&msg.state){mode='multi';state.turnReady=true;applySnapshot(msg.state);return}
@@ -2506,14 +2830,14 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   function requestStayHost(){if(role!=='host'||state.phase!=='move')return;checkCollectionAndEnd()}
   function startHostMaze(){
     var players=lobbyPlayers();if(players.length<2)return;
-    mode='multi';role='host';localPlayerId=hostIdentity.id;var n=parseInt($('hostTargetCount').value,10)||4;
-    createGame(players,n);state.turnReady=true;showView('gameView');renderAll();
+    mode='multi';role='host';localPlayerId=hostIdentity.id;var n=parseInt($('hostTargetCount').value,10)||4,diff=difficultyValue('host');
+    createGame(players,n,diff);state.turnReady=true;targetRevealed=false;startTurnClock();showView('gameView');renderAll();
     if(session&&session.updateHost)session.updateHost({started:true});if(session)session.broadcast({type:'start',state:snapshot()});
   }
 
   function backToModes(){
-    resetSession(false);state.players=[];state.board=[];state.spare=null;state.winnerId=null;state.turnReady=false;mode='local';
-    $('winner').classList.add('hidden');$('handoff').classList.add('hidden');$('gameMenu').classList.add('hidden');showView('modeView');
+    resetSession(false);stopTurnTimer();state.players=[];state.board=[];state.spare=null;state.winnerId=null;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;mode='local';
+    $('winner').classList.add('hidden');$('handoff').classList.add('hidden');$('gameMenu').classList.add('hidden');$('multiWaitOverlay').classList.add('hidden');showView('modeView');
   }
   function openMenu(){renderMenuPlayers();$('gameMenu').classList.remove('hidden');buzz(7)}
   function closeMenu(){$('gameMenu').classList.add('hidden')}
@@ -2534,6 +2858,14 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
     updateHostAdvert();renderLobby('hostLobby',lobbyPlayers());broadcastLobby();
   });
   $('hostTargetCount').addEventListener('change',function(){updateHostAdvert();broadcastLobby()});
+  document.querySelectorAll('.difficultyChoice').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var group=btn.closest('.difficultyOptions');if(!group)return;
+      group.querySelectorAll('.difficultyChoice').forEach(function(x){x.classList.toggle('selected',x===btn)});
+      buzz(6);
+      if(group.dataset.difficultyGroup==='host'){updateHostAdvert();broadcastLobby()}
+    });
+  });
   $('joinPlayer').addEventListener('change',function(){
     var p=selectedRosterPlayer('joinPlayer');joinIdentity=networkIdentity(p,'join',joinIdentity);localPlayerId=joinIdentity.id;
     if(role==='client'&&session&&session.peers&&session.peers().length)session.sendToHost({type:'hello',player:joinIdentity});
@@ -2541,6 +2873,7 @@ body.mazeLandscapeLocked .rotatePhoneLock{display:flex}
   $('availableHosts').addEventListener('click',function(e){var button=e.target.closest('[data-host]');if(button)joinHost(button.dataset.host)});
   $('startHostGame').addEventListener('click',startHostMaze);
   $('rotateRight').addEventListener('click',function(){requestRotate(1)});
+  $('targetPrivacyShield').addEventListener('click',revealTarget);
   $('stayBtn').addEventListener('click',requestStay);
   $('readyBtn').addEventListener('click',beginTurn);
   $('menuBtn').addEventListener('click',openMenu);
