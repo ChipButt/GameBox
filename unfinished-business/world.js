@@ -1,22 +1,23 @@
 // Stable, seeded neighbourhoods. Each level keeps the same canvas size but uses a distinct layout.
 export const WORLD={width:2640,height:2400,cell:24,version:2};
 export const LEVELS=[
- {name:'Lantern Streets',difficulty:1,spawn:{x:300,y:2030},ferry:{x:2140,y:260}},
- {name:'Canal Quarter',difficulty:2,spawn:{x:250,y:2140},ferry:{x:2140,y:220}},
- {name:'Market Maze',difficulty:3,spawn:{x:260,y:2160},ferry:{x:2050,y:220}},
- {name:'Railway Estate',difficulty:4,spawn:{x:280,y:2140},ferry:{x:2130,y:250}},
- {name:'Old Town',difficulty:5,spawn:{x:320,y:2110},ferry:{x:2080,y:210}}
+ {name:'The Graveyard',difficulty:1,spawn:{x:1320,y:2130},ferry:{x:1320,y:72}},
+ {name:'The Workplace',difficulty:2,spawn:{x:250,y:2140},ferry:{x:2140,y:220}},
+ {name:'The Supermarket',difficulty:3,spawn:{x:260,y:2160},ferry:{x:2050,y:220}},
+ {name:'The High Street',difficulty:4,spawn:{x:280,y:2140},ferry:{x:2130,y:250}},
+ {name:'Homeward',difficulty:5,spawn:{x:320,y:2110},ferry:{x:2080,y:210}}
 ];
 export const SPAWN=LEVELS[0].spawn,FERRY=LEVELS[0].ferry;
 export const REGIONS=[
- {x:120,y:1480,w:780,h:720,name:'Your old house',floor:'#554c4d',kind:0},
- {x:120,y:850,w:780,h:510,name:'Back gardens',floor:'#3c594c',kind:2},
- {x:1060,y:1630,w:500,h:520,name:'The garage',floor:'#465359',kind:1},
- {x:1640,y:1630,w:540,h:570,name:'Orchard lane',floor:'#3d5547',kind:2},
- {x:1160,y:760,w:800,h:560,name:'Bank & shops',floor:'#615451',kind:0},
- {x:1120,y:100,w:800,h:520,name:'Willow park',floor:'#3d5b4d',kind:2},
- {x:120,y:100,w:740,h:580,name:'The churchyard',floor:'#49524e',kind:4},
- {x:1970,y:80,w:250,h:550,name:'The crossing',floor:'#657273',kind:4}
+ {x:150,y:1620,w:760,h:610,name:'Old graves',floor:'#40564b',kind:4},
+ {x:980,y:1660,w:680,h:560,name:'Memorial lawn',floor:'#3c594c',kind:2},
+ {x:1710,y:1620,w:470,h:600,name:'Maintenance yard',floor:'#465359',kind:1},
+ {x:150,y:860,w:760,h:620,name:'Family plots',floor:'#49524e',kind:4},
+ {x:980,y:900,w:570,h:560,name:'Funeral lawn',floor:'#3d5547',kind:2},
+ {x:1620,y:860,w:560,h:620,name:'The chapel',floor:'#554c4d',kind:0},
+ {x:260,y:170,w:840,h:540,name:'North cemetery',floor:'#49524e',kind:4},
+ {x:1190,y:150,w:320,h:520,name:'Gatehouse path',floor:'#657273',kind:4},
+ {x:1600,y:170,w:580,h:520,name:'Memorial garden',floor:'#3d5b4d',kind:2}
 ];
 const VARIANT_REGIONS=[
  REGIONS,
@@ -48,19 +49,36 @@ const VARIANT_REGIONS=[
 export const contains=(r,x,y)=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h;
 export const regionsForLevel=(level=0)=>VARIANT_REGIONS[Math.max(0,Math.min(4,level|0))];
 export const levelInfo=(level=0)=>LEVELS[Math.max(0,Math.min(4,level|0))];
-export const areaAt=(x,y,level=0)=>regionsForLevel(level).find(r=>contains(r,x,y))||{name:'Lantern streets',floor:'#424958',kind:3};
+export const areaAt=(x,y,level=0)=>regionsForLevel(level).find(r=>contains(r,x,y))||{name:level===0?'Cemetery paths':'Lantern streets',floor:'#424958',kind:3};
 
 function baseLayout(add,decor,random){
- const horizontal=(x,y,w,gap,material=0,touch=99)=>{add(x,y,gap-x,22);add(gap+120,y,x+w-gap-120,22);if(material)add(gap,y,120,22,material===1?'curtain':'gate',material,touch)};
- const vertical=(x,y,h,gap,material=0,touch=99)=>{add(x,y,22,gap-y);add(x,gap+120,22,y+h-gap-120);if(material)add(x,gap,22,120,material===1?'curtain':'door',material,touch)};
- add(2230,24,386,2352,'water');
- horizontal(120,1480,780,400);horizontal(120,2178,780,690,2,2);vertical(120,1502,676,1680);vertical(878,1502,676,1670);horizontal(142,1840,736,300);vertical(510,1862,316,1980,1,1);
- add(168,1900,94,155,'bed');add(165,2090,90,45,'dresser');add(760,1910,75,125,'cabinet');add(170,1560,115,75,'sofa');add(570,1555,100,80,'table');add(740,1530,80,140,'cabinet');
- decor.push({x:320,y:1610,w:190,h:150,kind:'rug'},{x:300,y:1930,w:130,h:160,kind:'rug'});
- horizontal(1060,1630,500,1250,6,4);horizontal(1060,2128,500,1250);vertical(1060,1652,476,1820);vertical(1538,1652,476,1830,2,2);add(1140,1720,95,180,'car');add(1400,1940,90,100,'shelf');add(1390,1680,105,55,'shelf');
- horizontal(1160,760,800,1320);horizontal(1160,1298,800,1740);vertical(1160,782,516,1000);vertical(1938,782,516,1030,3,3);vertical(1530,782,516,990);add(1220,830,185,65,'shelf');add(1620,830,220,60,'cabinet');add(1650,1160,120,65,'table');
- horizontal(120,850,780,470,2,2);vertical(120,872,465,1020);vertical(878,872,465,1060);add(250,1050,110,80,'hedge');add(650,1170,150,60,'hedge');
- horizontal(1970,80,260,2030,7,5);horizontal(1970,608,260,2040,5,3);vertical(1970,102,506,330,3,5);
+ const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>add(x,y,w,h,kind,phase,touch);
+ // Cemetery perimeter. The north gate is a physical obstacle rather than a magic level trigger.
+ wall(120,120,1100,28);wall(1420,120,800,28);wall(120,120,28,2140);wall(2192,120,28,2140);wall(120,2232,2100,28);
+ wall(1220,120,200,28,2,2,'gate');
+ // Chapel and vestry.
+ wall(1620,860,560,24);wall(1620,1456,560,24);wall(1620,884,24,572);wall(2156,884,24,572);
+ wall(1840,1456,120,24,1,1,'door');wall(1880,960,120,85,'table');wall(1690,1020,110,170,'bench');wall(2020,1020,90,170,'bench');
+ // Maintenance yard with a wooden store and tempting side-cache spaces.
+ wall(1710,1620,470,24);wall(1710,2196,470,24);wall(1710,1644,24,552);wall(2156,1644,24,552);
+ wall(1870,1620,120,24,2,2,'gate');wall(1800,1810,145,85,'shelf');wall(1990,1840,105,120,'cabinet');
+ // Funeral lawn: hearse, flower table and rows of mourners have room to circulate.
+ wall(1120,1100,155,260,'car');wall(1330,1080,150,60,'table');
+ // Hedges create sight-line breaks without turning the cemetery into a maze.
+ for(const [x,y,w,h] of [[930,1600,40,610],[930,860,40,620],[1540,900,40,560],[1110,170,40,540],[1510,170,40,540]])wall(x,y,w,h,99,99,'hedge');
+ // Grave rows are substantial cover but leave clean walking lanes between them.
+ for(const zone of [[190,900,650,520],[190,1650,650,500],[300,220,720,430]]){
+  const [zx,zy,zw,zh]=zone;
+  for(let yy=zy+45;yy<zy+zh-40;yy+=105)for(let xx=zx+40;xx<zx+zw-35;xx+=115){
+   if(((xx+yy)/5|0)%4===0)continue;wall(xx,yy,52,72,99,99,'stone');
+  }
+ }
+ // Memorial garden trees and benches.
+ for(const [x,y] of [[1660,250],[1880,250],[2080,300],[1730,520],[1990,520]])wall(x,y,55,55,99,99,'tree');
+ wall(1760,420,105,38,'bench');wall(1970,610,105,38,'bench');
+ // Gatehouse / entrance details.
+ wall(1160,260,160,210);wall(1430,260,150,210);wall(1250,500,80,55,'cabinet');
+ for(const [x,y] of [[280,780],[860,760],[1180,760],[1560,760],[2110,760],[1040,1550],[1600,1550],[2240,1550]])decor.push({x,y,kind:'lamp'});
 }
 function variantLayout(level,add,decor){
  const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>add(x,y,w,h,kind,phase,touch);
