@@ -299,7 +299,7 @@ function start(isTutorial=false){
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
  run=newRun(p.level);run.objective=0;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
- updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move around the memorial lawn. Every new patch of ground gives you <b>1 Echo</b>. Your first target is the sparkling token. Explore until you have <b>20 Echoes</b> and reach it. This first lesson will show you how to make your ghost faster.`,'Start tutorial');
+ updateObjectiveHud();if(isTutorial)tutorialCard('Follow the sparkle',`Move. New ground earns Echoes.<br><b>Get 20. Reach the golden ghost.</b>`,'Start tutorial');
  else note(p.level===0?'Objective 1/5 · Find your grave.':'Find what you left unfinished.',4);
  tone(320);
 }
