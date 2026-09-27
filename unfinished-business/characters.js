@@ -40,3 +40,23 @@ export function drawCat(c,e,reduced=false){const p=pose(e,reduced),dx=Math.cos(p
  if(!back){const shift=side?Math.sign(dx)*2:0;rect(c,hx-3+shift,hy,2,2,'#d0e98e');if(!side)rect(c,hx+3+shift,hy,2,2,'#d0e98e');rect(c,hx+shift,hy+4,2,1,'#ba8d94');rect(c,hx-8,hy+4,4,1,'#6e7b8066');rect(c,hx+6,hy+4,4,1,'#6e7b8066')}else{rect(c,hx-3,hy-3,6,1,'#43505a');rect(c,hx-1,hy,2,4,'#273540')}
  if(!p.moving&&e.state==='wait'&&e.frozen<=0&&!reduced&&Math.sin(clock*1.4)>.6){rect(c,hx-4,hy+7,4,4,'#263642');rect(c,hx-2,hy+6,3,2,'#66747b')}
  c.restore();}
+
+export function drawCyclist(c,e,reduced=false){
+ const p=pose(e,reduced),a=p.a,dx=Math.cos(a),dy=Math.sin(a),px=-dy,py=dx;
+ const wheelSpin=reduced?0:(e.walk||0)*.18;
+ c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(a);
+ c.fillStyle='#08182055';c.beginPath();c.ellipse(0,14,24,5,0,0,Math.PI*2);c.fill();
+ const wheel=(x,y)=>{c.strokeStyle='#1a2a34';c.lineWidth=3;c.beginPath();c.arc(x,y,10,0,Math.PI*2);c.stroke();c.strokeStyle='#93a09b88';c.lineWidth=1;for(let i=0;i<6;i++){const q=wheelSpin+i*Math.PI/3;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(q)*9,y+Math.sin(q)*9);c.stroke();}};
+ wheel(-15,7);wheel(15,7);
+ c.strokeStyle='#9a7b55';c.lineWidth=3;c.beginPath();c.moveTo(-15,7);c.lineTo(-2,-1);c.lineTo(8,7);c.lineTo(-15,7);c.moveTo(-2,-1);c.lineTo(15,7);c.moveTo(8,7);c.lineTo(4,-8);c.lineTo(11,-8);c.stroke();
+ c.strokeStyle='#d8c78f';c.lineWidth=2;c.beginPath();c.moveTo(11,-8);c.lineTo(17,-11);c.stroke();
+ const bob=p.moving&&!reduced?Math.sin((e.walk||0)*.15)*1.2:0;
+ c.translate(0,bob);
+ rect(c,-3,-24,12,18,e.tint||'#6f8798');
+ rect(c,-5,-10,6,14,'#283d4b');rect(c,6,-10,6,14,'#354b58');
+ rect(c,0,-30,6,7,'#d6ae88');
+ rect(c,-5,-42,16,14,'#d6ae88');rect(c,-7,-44,20,6,'#3b4850');
+ rect(c,-7,-39,4,5,'#28343b');rect(c,8,-39,4,5,'#28343b');
+ rect(c,-8,-21,5,13,'#d6ae88');rect(c,9,-21,5,13,'#d6ae88');
+ c.restore();
+}
