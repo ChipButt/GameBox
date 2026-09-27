@@ -52,16 +52,16 @@ export const levelInfo=(level=0)=>LEVELS[Math.max(0,Math.min(4,level|0))];
 export const areaAt=(x,y,level=0)=>regionsForLevel(level).find(r=>contains(r,x,y))||{name:level===0?'Cemetery paths':'Lantern streets',floor:'#424958',kind:3};
 
 function baseLayout(add,decor,random){
- const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>add(x,y,w,h,kind,phase,touch);
+ const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;touch=99}return add(x,y,w,h,kind,phase,touch)};
  // Cemetery perimeter. The north gate is a physical obstacle rather than a magic level trigger.
  wall(120,120,1100,28);wall(1420,120,800,28);wall(120,120,28,2140);wall(2192,120,28,2140);wall(120,2232,2100,28);
- const exitGate=wall(1220,120,200,28,2,2,'gate');exitGate.exit=true;
+ const exitGate=wall(1220,120,200,28,2,99,'gate');exitGate.exit=true;
  // Chapel and vestry.
  wall(1620,860,560,24);wall(1620,1456,560,24);wall(1620,884,24,572);wall(2156,884,24,572);
- wall(1840,1456,120,24,2,1,'door');wall(1880,960,120,85,'table');wall(1690,1020,110,170,'bench');wall(2020,1020,90,170,'bench');
+ wall(1840,1456,120,24,2,99,'door');wall(1880,960,120,85,'table');wall(1690,1020,110,170,'bench');wall(2020,1020,90,170,'bench');
  // Maintenance yard with a wooden store and tempting side-cache spaces.
  wall(1710,1620,470,24);wall(1710,2196,470,24);wall(1710,1644,24,552);wall(2156,1644,24,552);
- wall(1870,1620,120,24,2,2,'gate');wall(1800,1810,145,85,'shelf');wall(1990,1840,105,120,'cabinet');
+ wall(1870,1620,120,24,2,99,'gate');wall(1800,1810,145,85,'shelf');wall(1990,1840,105,120,'cabinet');
  // Funeral lawn: hearse, flower table and rows of mourners have room to circulate.
  wall(1120,1100,155,260,'car');wall(1330,1080,150,60,'table');
  // Hedges create sight-line breaks without turning the cemetery into a maze.
@@ -81,7 +81,7 @@ function baseLayout(add,decor,random){
  for(const [x,y] of [[280,780],[860,760],[1180,760],[1560,760],[2110,760],[1040,1550],[1600,1550],[2240,1550]])decor.push({x,y,kind:'lamp'});
 }
 function variantLayout(level,add,decor){
- const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>add(x,y,w,h,kind,phase,touch);
+ const wall=(x,y,w,h,phase=99,touch=99,kind='wall')=>{if(typeof phase==='string'){kind=phase;phase=99;touch=99}return add(x,y,w,h,kind,phase,touch)};
  if(level===1){
   wall(830,24,250,750,99,99,'water');wall(830,910,250,610,99,99,'water');wall(830,1660,250,716,99,99,'water');
   for(const y of [760,1508]){wall(820,y,270,20);wall(935,y,45,20,2,2,'gate');}
@@ -123,6 +123,21 @@ export function generateWorld(seed=2717,level=0){
   }
  }
  if(level===0)for(const [x,y] of [[940,440],[940,1150],[940,1800],[1820,1410],[700,720],[2050,1100]])decor.push({x,y,kind:'lamp'});
+ // Phase progression: doors are always low-tier; ordinary walls carry the stronger materials.
+ for(const b of blocks){
+  b.touch=99;
+  if(b.kind==='door'||b.kind==='gate'){
+   const seeded=Number.isFinite(b.phase)&&b.phase<99?b.phase:1+((Math.floor(b.x/120)+Math.floor(b.y/120)+level)%3);
+   b.phase=Math.max(1,Math.min(3,seeded));
+  }else if(b.kind==='wall'){
+   // Keep the four absolute canvas-edge boundaries unphaseable.
+   const outer=b.x===0||b.y===0||b.x+b.w>=WORLD.width||b.y+b.h>=WORLD.height;
+   if(!outer){
+    const tier=2+((Math.floor(b.x/180)+Math.floor(b.y/180)+level*2)%Math.min(6,3+level));
+    b.phase=Math.max(2,Math.min(7,Number.isFinite(b.phase)&&b.phase<99?b.phase:tier));
+   }
+  }
+ }
  return {level,name:info.name,difficulty:info.difficulty,spawn:{...info.spawn},ferry:{...info.ferry},blocks,decor,regions};
 }
 export const cellId=(x,y)=>x<0||y<0||x>=WORLD.width||y>=WORLD.height?-1:Math.floor(y/WORLD.cell)*Math.ceil(WORLD.width/WORLD.cell)+Math.floor(x/WORLD.cell);
