@@ -2354,7 +2354,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   function currentPlayer(){return state.players[state.current]||null}
   function ownPlayer(){if(mode==='multi')return state.players.find(function(p){return p.id===localPlayerId})||null;return currentPlayer()}
   function currentTarget(p){return p&&p.targets[p.targetIndex]||null}
-  function canControlTurn(){if(moving||shiftRequestPending||!currentPlayer())return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
+  function canControlTurn(){if(moving||shiftRequestPending||!currentPlayer())return false;if(state.turnDeadline&&Date.now()>=state.turnDeadline)return false;if(mode==='local')return!!state.turnReady;return currentPlayer().id===localPlayerId}
   function showHandoff(){if(mode!=='local')return;var p=currentPlayer();if(!p)return;state.turnReady=false;state.turnDeadline=0;targetRevealed=false;$('handoffName').textContent=p.name;$('handoff').classList.remove('hidden');renderTurnTimer()}
   function beginTurn(){state.turnReady=true;targetRevealed=false;$('handoff').classList.add('hidden');startTurnClock();buzz(12);renderAll()}
   function revealTarget(){
@@ -2564,12 +2564,14 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   function checkCollectionAndEnd(){
     var p=currentPlayer(),target=currentTarget(p),cell=state.board[p.pos.r][p.pos.c],collected=false;
     if(target&&cell.relic&&cell.relic.id===target.id){
-      p.collected.push(target);p.targetIndex++;collected=true;showToast('Relic found · '+target.name,target.asset);buzz(35);
+      p.collected.push(target);p.targetIndex++;collected=true;
+      if(mode==='local'||p.id===localPlayerId)showToast('Relic found · '+target.name,target.asset);
+      else showToast(p.name+' found a relic');
+      buzz(35);
     }
     if(!currentTarget(p)&&p.pos.r===p.home.r&&p.pos.c===p.home.c){
       state.winnerId=p.id;state.turnDeadline=0;targetRevealed=false;renderAll();publishState();return;
     }
-    if(collected&&currentTarget(p))setTimeout(function(){var next=currentTarget(p);showToast('Next target · '+next.name,next.asset)},700);
     endTurn();
   }
   function endTurn(){
@@ -2812,6 +2814,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
       if(msg.type==='action'){
         var active=currentPlayer(),remoteId=source.peer&&source.peer.meta&&source.peer.meta.player&&source.peer.meta.player.id;
         if(!active||remoteId!==active.id||msg.playerId!==active.id)return;
+        if(state.turnDeadline&&Date.now()>=state.turnDeadline)return;
         if(msg.action==='rotate')rotateSpareInternal(Number(msg.delta)<0?-1:1);
         else if(msg.action==='shift'&&['left','right','top','bottom'].indexOf(msg.side)>=0)shiftMazeInternal(msg.side,Number(msg.index));
         else if(msg.action==='move')moveToInternal(Number(msg.r),Number(msg.c));
