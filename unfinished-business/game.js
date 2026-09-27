@@ -266,6 +266,10 @@ function tutorialTaskDetail(task){
  const state=tutorialTaskState(task);
  if(state==='complete')return 'Done';
  if(state==='locked')return 'Not available yet';
+ const expected=tutorialExpectedUpgrade();
+ if((task.index===0&&expected==='speed')||(task.index===1&&expected==='invisibility')||(task.index===3&&expected==='phase')){
+  return `Upgrade ready · tap the sparkling ${expected==='speed'?'SPEED button':labels[expected]+' upgrade'}.`;
+ }
  const target=task.index===0?TUTORIAL_TARGETS[1]:
   task.index===1?TUTORIAL_TARGETS[3]:
   task.index===2?TUTORIAL_TARGETS[5]:
@@ -407,8 +411,7 @@ function start(isTutorial=false){
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=isTutorial?[]:built.builtPeople;tokens=isTutorial?[]:built.builtTokens;scenery=built.builtScenery;
  run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:isTutorial,stage:isTutorial?1:0,useTime:0,refillActive:false};if(isTutorial)setupTutorialCourse();else prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();
- updateObjectiveHud();if(isTutorial)openTaskBoard(true);
- else openTaskBoard(true);
+ updateObjectiveHud();openTaskBoard(true);
  tone(320);
 }
 function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
