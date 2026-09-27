@@ -169,7 +169,11 @@ function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="
 $('pause').onclick=pause;window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)}
-function prop(b){drawSceneryProp(ctx,b);if(!b.open&&b.phase<99&&Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){ctx.font='9px sans-serif';ctx.fillStyle='#f0ead5';ctx.textAlign='center';ctx.fillText(MATERIALS[b.phase].toUpperCase(),b.x+b.w/2,b.y-13);}}
+function prop(b){drawSceneryProp(ctx,b);if(!b.open&&b.phase<99&&Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
+ const type=b.kind==='gate'?'GATE':b.kind==='door'?'DOOR':'OBSTACLE',mat=MATERIALS[b.phase].toUpperCase();
+ ctx.font='bold 8px sans-serif';ctx.fillStyle='#fff0c5';ctx.textAlign='center';
+ ctx.fillText(`${mat} ${type} · PHASE ${b.phase}${b.touch<99?` / TOUCH ${b.touch}`:''}`,b.x+b.w/2,b.y-13);
+}}
 function drawEntity(e){
  const {x,y}=e;
  if(e.kind==='camera'){ctx.save();ctx.translate(x,y);ctx.rotate(e.angle);rect(ctx,-8,-4,14,8,'#74858f');rect(ctx,1,-7,19,14,'#c9d1c8');rect(ctx,16,-5,5,10,'#273a44');rect(ctx,7,-3,3,3,e.frozen>0?'#a6f0f2':'#ed8e77');ctx.restore();}
@@ -194,11 +198,10 @@ function skillGlyph(k){
 }
 function updateEchoDisplay(){$('distance').textContent=run.echoes;}
 function updateSkills(){
- $('abilityBar').innerHTML=['invisibility','phase','touch'].map(k=>{const unlocked=run[k]>0,max=run[k]>=RUN_MAX[k],price=runCost(run,k),tutorialOrder={invisibility:2,phase:5,touch:7}[k],forced=tutorial.active&&tutorial.stage===tutorialOrder,disabled=max||(tutorial.active&&!forced);return `<div class="abilitySlot"><button class="ability ${unlocked?'':'locked'}" id="ability-${k}" aria-label="Hold ${names[k]}" aria-pressed="false" data-ability="${k}"><span class="abilityArt">${skillGlyph(k)}</span><strong>${labels[k]}</strong><small id="reserve-${k}">${!unlocked?'LOCKED':k==='invisibility'?`${energy.toFixed(1)}s`:`TIER ${run[k]}`}</small><span class="abilityMeter"><i id="meter-${k}"></i></span></button><button class="abilityUpgrade ${forced?'tutorialForced':''}" data-upgrade="${k}" ${disabled?'disabled':''} aria-label="Upgrade ${names[k]}">${max?'<b>MAX</b>':`<b>+</b><span>${price}</span>`}</button></div>`}).join('');
+ $('abilityBar').innerHTML=['invisibility','phase','touch'].map(k=>{const unlocked=run[k]>0,max=run[k]>=RUN_MAX[k],price=runCost(run,k),tutorialOrder={invisibility:2,phase:5,touch:7}[k],forced=tutorial.active&&tutorial.stage===tutorialOrder,disabled=max||(tutorial.active&&!forced);return `<div class="abilitySlot"><button class="ability ${unlocked?'ready':'locked'}" id="ability-${k}" aria-label="Hold ${names[k]}" aria-pressed="false" data-ability="${k}"><span class="abilityArt">${skillGlyph(k)}</span><strong>${labels[k]}</strong><small id="reserve-${k}">${!unlocked?'LOCKED':k==='invisibility'?`${energy.toFixed(1)}s`:`TIER ${run[k]}`}</small><span class="abilityMeter"><i id="meter-${k}"></i></span></button><button class="abilityUpgrade ${forced?'tutorialForced':''}" data-upgrade="${k}" ${disabled?'disabled':''} aria-label="Upgrade ${names[k]}">${max?'<b>MAX</b>':`<b>+</b><span>${price}</span>`}</button></div>`}).join('');
  document.querySelectorAll('[data-upgrade]').forEach(button=>button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();buyUpgrade(button.dataset.upgrade)}));
  document.querySelectorAll('[data-ability]').forEach(button=>{
-  button.onpointerdown=e=>{e.preventDefault();e.stopPropagation();const k=button.dataset.ability;if(mode!=='play')return;if(!run[k]){note(`${names[k]} is still locked.`,1.5);tone(160,.07);return}if(skillPointer!==null)return;skillPointer=e.pointerId;selected=k;held=true;button.setPointerCapture(e.pointerId);tone(260,.06)};
-  for(const ev of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(ev,e=>{if(e.pointerId===skillPointer){held=false;skillPointer=null}});
+  button.onpointerdown=e=>{e.preventDefault();e.stopPropagation();toggleAbility(button.dataset.ability)};
  });
 }
 $('game').addEventListener('pointerdown',e=>{
@@ -210,7 +213,21 @@ $('game').addEventListener('pointermove',moveStick);
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])$('game').addEventListener(ev,e=>{if(e.pointerId===stickPointer){stickPointer=null;input={x:0,y:0};$('nub').style.transform='';$('stick').hidden=true}});
 window.addEventListener('keydown',e=>{if(e.code==='Escape'){pause();return}if(mode!=='play')return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Space')held=true;const k={Digit1:'invisibility',Digit2:'phase',Digit3:'touch'}[e.code];if(k&&run[k]){held=false;selected=k;updateSkills()}});window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Space')held=false});
 function active(k){return held&&selected===k&&run[k]>0&&(k!=='invisibility'||energy>0)}
-function move(dx,dy,dt){const nx=ghost.x+dx,ny=ghost.y+dy,hits=blocks.filter(b=>overlap(nx,ny,b));const phase=active('phase');const blocked=hits.find(b=>!(phase&&run.phase>=b.phase));if(blocked){if(active('touch')&&run.touch>=blocked.touch){if(contact!==blocked){contact=blocked;contactTime=0}contactTime+=dt;if(contactTime>.45){blocked.open=true;nav=navigation(blocks);investigate(people,nav,{x:blocked.x+blocked.w/2,y:blocked.y+blocked.h/2});contact=null;tone(180)}}else if(blocked.phase<99)note(`${MATERIALS[blocked.phase]} · Phase ${blocked.phase} or Touch ${blocked.touch}`,1.2);return;}ghost.x=nx;ghost.y=ny;if(tutorial.active){ghost.x=Math.max(1010,Math.min(1600,ghost.x));ghost.y=Math.max(1580,Math.min(2250,ghost.y));}if(!hits.length){lastSafe={x:nx,y:ny};phaseExit=null;}else if(phase){phaseExit={x:dx,y:dy};}}
+function move(dx,dy,dt){
+ const nx=ghost.x+dx,ny=ghost.y+dy,hits=blocks.filter(b=>overlap(nx,ny,b)),phase=active('phase');
+ const blocked=hits.find(b=>!(phase&&run.phase>=b.phase&&!(b.exit&&!run.exitOpen)));
+ if(blocked){
+  if(blocked.exit&&!run.exitOpen){note('The cemetery gate is still shut · finish what is keeping you here.',1.8);return}
+  if(active('touch')&&run.touch>=blocked.touch){
+   if(contact!==blocked){contact=blocked;contactTime=0}contactTime+=dt;
+   if(contactTime>.18){blocked.open=true;if(nav)nav=navigation(blocks);if(nav)investigate(people,nav,{x:blocked.x+blocked.w/2,y:blocked.y+blocked.h/2});contact=null;held=false;updateSkills();note(`${MATERIALS[blocked.phase]} ${blocked.kind==='gate'?'gate':'door'} opened.`,1.7);tone(180)}
+  }else if(blocked.phase<99)note(`${MATERIALS[blocked.phase]} · Needs PHASE ${blocked.phase}${blocked.touch<99?` or TOUCH ${blocked.touch}`:''}`,1.2);
+  return;
+ }
+ ghost.x=nx;ghost.y=ny;
+ if(tutorial.active){ghost.x=Math.max(1010,Math.min(1600,ghost.x));ghost.y=Math.max(1580,Math.min(2250,ghost.y))}
+ if(!hits.length){lastSafe={x:nx,y:ny};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
+}
 function update(dt){t+=dt;effects.boost=Math.max(0,effects.boost-dt);updateEntities(people,nav,blocks,dt);
 let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
 // Finish the current crossing on release; fall back safely if another material blocks the exit.
@@ -226,8 +243,12 @@ if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost
 effects.energy=energy;
 for(const message of collectTokens(tokens,ghost,effects,run,runCapacity(run))){note(message,4);tone(740,.15);updateEchoDisplay()}
 energy=effects.energy;
-const invisible=active('invisibility');
-if(invisible)energy=Math.max(0,energy-dt);
+checkObjectives();
+let invisible=active('invisibility');
+if(invisible){
+ energy=Math.max(0,energy-dt);
+ if(energy<=0){held=false;invisible=false;updateSkills();note('Vanish exhausted.',1.4)}
+}
 if(tutorial.active&&tutorial.stage===3&&invisible){
  tutorial.useTime+=dt;
  if(tutorial.useTime>.4){
@@ -240,18 +261,18 @@ if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · token used.',3);t
 const spotted=sight.danger;
 seen=spotted?seen+dt:Math.max(0,seen-dt*3);
 if(seen>.18){finish();return}
-if(!tutorial.active&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
+if(!tutorial.active&&(p.level!==0||run.exitOpen)&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
 cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);
 camX+=(ghost.x-240-camX)*Math.min(1,dt*8);
 cam=Math.max(0,Math.min(WORLD.height-viewH,cam));
 camX=Math.max(0,Math.min(WORLD.width-480,camX));
 $('distance').textContent=run.echoes;
 $('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
-$('best').textContent=tutorial.active?`TUTORIAL · ${run.echoes} ECHOES`:[effects.boost>0?`BOOST ${Math.ceil(effects.boost)}s`:'',effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',p.level===0?'ESCAPE THE GRAVEYARD':`FOUND ${runPoints}`].filter(Boolean).join(' · ');
+$('best').textContent=tutorial.active?`TUTORIAL · ${run.echoes} ECHOES`:[effects.boost>0?`BOOST ${Math.ceil(effects.boost)}s`:'',effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',p.level===0?`${Math.min(run.objective,5)}/5 TASKS`:`FOUND ${runPoints}`].filter(Boolean).join(' · ');updateObjectiveHud();
 for(const k of ['invisibility','phase','touch']){
  const button=$('ability-'+k),using=active(k);if(!button)continue;
  button.classList.toggle('active',using);button.setAttribute('aria-pressed',String(using));
- $('reserve-'+k).textContent=!run[k]?'LOCKED':k==='invisibility'?`${energy.toFixed(1)}s`:`TIER ${run[k]}`;
+ $('reserve-'+k).textContent=!run[k]?'LOCKED':k==='invisibility'?`${using?'ACTIVE · ':''}${energy.toFixed(1)}s`:`${using?'ACTIVE · ':''}TIER ${run[k]}`;
  $('meter-'+k).style.width=!run[k]?'0%':k==='invisibility'?`${energy/Math.max(.01,runCapacity(run))*100}%`:'100%';
 }
 updateEchoDisplay();
@@ -264,12 +285,13 @@ function draw(){
  if(scenery)ctx.drawImage(scenery,Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam),Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));else{ctx.fillStyle='#263a37';ctx.fillRect(Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));}
  for(const d of (world.decor||[]))if(d.kind==='lamp'&&d.x>camX-40&&d.x<camX+520&&d.y>cam-40&&d.y<cam+viewH+40)drawStreetLamp(ctx,d);
  for(const h of people){if(h.frozen>0)continue;if(h.x<camX-200||h.x>camX+680||h.y<cam-200||h.y>cam+viewH+200)continue;ctx.beginPath();ctx.moveTo(h.x,h.y);for(let a=h.angle-h.half;a<=h.angle+h.half+.01;a+=.075){let d=0;for(;d<h.range;d+=10){if(blocks.some(b=>overlap(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d,b,0)))break}ctx.lineTo(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d)}ctx.closePath();ctx.fillStyle=h.kind==='cat'?'#b6d99d10':h.kind==='camera'?'#b6cce328':seen?'#efac7955':'#f7d49a1c';ctx.fill();}
- const visible=blocks.filter(b=>b.x+b.w>camX-50&&b.x<camX+530&&b.y+b.h>cam-60&&b.y<cam+viewH+60);for(const b of visible){if(b.kind==='water'){rect(ctx,b.x,b.y,b.w,b.h,'#254655');for(let y=Math.max(b.y,Math.floor(cam/32)*32);y<Math.min(b.y+b.h,cam+viewH);y+=32)for(let x=b.x+10;x<b.x+b.w;x+=56)rect(ctx,x+Math.round(Math.sin(t+y)*3),y,26,2,'#8ebaba25');}else prop(b);}
+ const visible=blocks.filter(b=>b.x+b.w>camX-50&&b.x<camX+530&&b.y+b.h>cam-60&&b.y<cam+viewH+60);for(const b of visible){if(b.exit)continue;if(b.kind==='water'){rect(ctx,b.x,b.y,b.w,b.h,'#254655');for(let y=Math.max(b.y,Math.floor(cam/32)*32);y<Math.min(b.y+b.h,cam+viewH);y+=32)for(let x=b.x+10;x<b.x+b.w;x+=56)rect(ctx,x+Math.round(Math.sin(t+y)*3),y,26,2,'#8ebaba25');}else prop(b);}
  people.filter(h=>h.x>camX-40&&h.x<camX+520&&h.y>cam-50&&h.y<cam+viewH+50).forEach(drawEntity);
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
- if(p.level===0){drawCemeteryExit(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
+ if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
 
  for(const token of tokens)if(!token.collected&&Math.hypot(token.x-ghost.x,token.y-ghost.y)<115&&!rayBlocked(token.x,token.y,ghost.x,ghost.y,blocks))drawToken(token);
+ const obj=currentObjective();if(obj){const pulse=12+(reduced?0:Math.sin(t*4)*4);ctx.strokeStyle='#f3ce87';ctx.lineWidth=3;ctx.beginPath();ctx.arc(obj.x,obj.y,pulse,0,Math.PI*2);ctx.stroke();rect(ctx,obj.x-3,obj.y-3,6,6,'#fff1ae');}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
  if(active('touch')){ctx.strokeStyle='#e9c58a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ghost.x,ghost.y-7,24,0,7);ctx.stroke()}ctx.restore();
  if(mode==='play')drawMap();
