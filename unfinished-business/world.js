@@ -22,28 +22,28 @@ export const REGIONS=[
 const VARIANT_REGIONS=[
  REGIONS,
  [
-  {x:90,y:1600,w:720,h:650,name:'Terrace row',floor:'#554c4d',kind:0},{x:90,y:820,w:650,h:590,name:'Canal gardens',floor:'#3c594c',kind:2},
-  {x:900,y:1550,w:570,h:650,name:'Workshop yard',floor:'#465359',kind:1},{x:1570,y:1590,w:650,h:610,name:'Warehouse lane',floor:'#615451',kind:0},
-  {x:1320,y:760,w:860,h:570,name:'Canal market',floor:'#615451',kind:0},{x:1030,y:100,w:750,h:520,name:'Bandstand park',floor:'#3d5b4d',kind:2},
-  {x:90,y:100,w:720,h:560,name:'Old cemetery',floor:'#49524e',kind:4},{x:1900,y:80,w:330,h:560,name:'Lock gates',floor:'#657273',kind:4}
+  {x:90,y:1600,w:720,h:650,name:'Staff entrance',floor:'#554c4d',kind:0},{x:90,y:820,w:650,h:590,name:'Employee car park',floor:'#3c594c',kind:2},
+  {x:900,y:1550,w:570,h:650,name:'Warehouse floor',floor:'#465359',kind:1},{x:1570,y:1590,w:650,h:610,name:'Loading bay',floor:'#615451',kind:0},
+  {x:1320,y:760,w:860,h:570,name:'Main workplace',floor:'#615451',kind:0},{x:1030,y:100,w:750,h:520,name:'Break area',floor:'#3d5b4d',kind:2},
+  {x:90,y:100,w:720,h:560,name:'Offices',floor:'#49524e',kind:4},{x:1900,y:80,w:330,h:560,name:'Clocking-out gate',floor:'#657273',kind:4}
  ],
  [
-  {x:100,y:1650,w:650,h:570,name:'Boarding house',floor:'#554c4d',kind:0},{x:100,y:900,w:650,h:560,name:'Courtyard',floor:'#3c594c',kind:2},
-  {x:900,y:1640,w:580,h:580,name:'Loading bay',floor:'#465359',kind:1},{x:1600,y:1580,w:630,h:650,name:'Arcade',floor:'#615451',kind:0},
-  {x:850,y:760,w:1380,h:650,name:'Market halls',floor:'#615451',kind:0},{x:1070,y:100,w:720,h:500,name:'Memorial square',floor:'#49524e',kind:4},
-  {x:90,y:100,w:740,h:580,name:'Kitchen gardens',floor:'#3d5b4d',kind:2},{x:1900,y:90,w:330,h:540,name:'Clock tower',floor:'#657273',kind:4}
+  {x:100,y:1650,w:650,h:570,name:'Customer entrance',floor:'#554c4d',kind:0},{x:100,y:900,w:650,h:560,name:'Car park',floor:'#3c594c',kind:2},
+  {x:900,y:1640,w:580,h:580,name:'Loading bay',floor:'#465359',kind:1},{x:1600,y:1580,w:630,h:650,name:'Checkout lanes',floor:'#615451',kind:0},
+  {x:850,y:760,w:1380,h:650,name:'Supermarket floor',floor:'#615451',kind:0},{x:1070,y:100,w:720,h:500,name:'Staff room',floor:'#49524e',kind:4},
+  {x:90,y:100,w:740,h:580,name:'Stockroom',floor:'#3d5b4d',kind:2},{x:1900,y:90,w:330,h:540,name:'Service exit',floor:'#657273',kind:4}
  ],
  [
-  {x:100,y:1640,w:740,h:590,name:'Rail cottages',floor:'#554c4d',kind:0},{x:100,y:850,w:740,h:600,name:'Allotments',floor:'#3c594c',kind:2},
-  {x:960,y:1690,w:540,h:520,name:'Engine shed',floor:'#465359',kind:1},{x:1600,y:1640,w:620,h:590,name:'Freight yard',floor:'#465359',kind:1},
-  {x:900,y:760,w:1320,h:650,name:'Station district',floor:'#615451',kind:0},{x:1100,y:100,w:700,h:500,name:'Station park',floor:'#3d5b4d',kind:2},
-  {x:100,y:100,w:750,h:560,name:'Chapel grounds',floor:'#49524e',kind:4},{x:1900,y:80,w:330,h:540,name:'Signal box',floor:'#657273',kind:4}
+  {x:100,y:1640,w:740,h:590,name:'Shops west',floor:'#554c4d',kind:0},{x:100,y:850,w:740,h:600,name:'Market square',floor:'#3c594c',kind:2},
+  {x:960,y:1690,w:540,h:520,name:'Delivery alley',floor:'#465359',kind:1},{x:1600,y:1640,w:620,h:590,name:'Service road',floor:'#465359',kind:1},
+  {x:900,y:760,w:1320,h:650,name:'High street',floor:'#615451',kind:0},{x:1100,y:100,w:700,h:500,name:'Pocket park',floor:'#3d5b4d',kind:2},
+  {x:100,y:100,w:750,h:560,name:'Pub & cafe',floor:'#49524e',kind:4},{x:1900,y:80,w:330,h:540,name:'Bus stop',floor:'#657273',kind:4}
  ],
  [
-  {x:120,y:1660,w:650,h:560,name:'Lower ward',floor:'#554c4d',kind:0},{x:120,y:940,w:650,h:520,name:'Cloister garden',floor:'#3c594c',kind:2},
-  {x:900,y:1670,w:550,h:540,name:'Smithy court',floor:'#465359',kind:1},{x:1580,y:1640,w:650,h:590,name:'Upper ward',floor:'#615451',kind:0},
-  {x:850,y:780,w:1380,h:650,name:'Old town centre',floor:'#615451',kind:0},{x:1080,y:120,w:690,h:480,name:'Castle green',floor:'#3d5b4d',kind:2},
-  {x:120,y:120,w:690,h:560,name:'Abbey ruins',floor:'#49524e',kind:4},{x:1880,y:100,w:350,h:540,name:'North gate',floor:'#657273',kind:4}
+  {x:120,y:1660,w:650,h:560,name:'Old neighbourhood',floor:'#554c4d',kind:0},{x:120,y:940,w:650,h:520,name:'Community park',floor:'#3c594c',kind:2},
+  {x:900,y:1670,w:550,h:540,name:'Corner shop',floor:'#465359',kind:1},{x:1580,y:1640,w:650,h:590,name:'Home street',floor:'#615451',kind:0},
+  {x:850,y:780,w:1380,h:650,name:'Residential roads',floor:'#615451',kind:0},{x:1080,y:120,w:690,h:480,name:'Playing field',floor:'#3d5b4d',kind:2},
+  {x:120,y:120,w:690,h:560,name:'School route',floor:'#49524e',kind:4},{x:1880,y:100,w:350,h:540,name:'Home',floor:'#657273',kind:4}
  ]
 ];
 export const contains=(r,x,y)=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h;
