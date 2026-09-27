@@ -27,7 +27,17 @@ function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINE
 function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Spend Echoes using the small gold controls above <b>VANISH</b>, <b>PHASE</b> and <b>TOUCH</b>. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly, PHASE lets you cross materials your spirit can overcome, and TOUCH lets you physically disturb the living world.</p><p><b>Mystery tokens are worth exploring for.</b> Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / TOUCH upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Level objectives change the living world and story, but they never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';if(k==='phase')return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';return run.touch?`Touch tier ${run.touch} → ${run.touch+1}`:'Unlock TOUCH';}
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT IN THE LIVING WORLD'}</span><h2>${win?'You made it through.':'The memory slips away.'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
-function buyUpgrade(k){if(mode!=='play')return;if(tutorial.active){note('Follow the tutorial prompts to unlock abilities.',1.5);return}const before=run[k],price=runCost(run,k);if(!buyRun(run,k)){note(run[k]>=RUN_MAX[k]?`${names[k]} is fully strengthened.`:`Need ${price} Echoes for ${names[k]}.`,1.6);tone(150,.07);return}if(k==='invisibility')energy=runCapacity(run);tone(700,.1);note(before===0?`${names[k]} unlocked.`:`${names[k]} strengthened to tier ${run[k]}.`,1.8);updateSkills();updateEchoDisplay();}
+function buyUpgrade(k){
+ if(mode!=='play')return;
+ const expected=tutorial.active?tutorialExpectedUpgrade():null;
+ if(tutorial.active&&expected!==k){note(`Finish this lesson first · ${names[expected]||'the highlighted upgrade'} is waiting.`,1.6);return}
+ const before=run[k],price=runCost(run,k);
+ if(!buyRun(run,k)){note(run[k]>=RUN_MAX[k]?`${names[k]} is fully strengthened.`:`Need ${price} Echoes for ${names[k]}.`,1.6);tone(150,.07);return}
+ if(k==='invisibility')energy=runCapacity(run);
+ tone(700,.1);note(before===0?`${names[k]} unlocked.`:`${names[k]} strengthened to tier ${run[k]}.`,1.8);
+ updateSkills();updateEchoDisplay();
+ if(tutorial.active)afterTutorialPurchase(k);
+}
 function beginLevel(){
  if(p.level===0&&!p.introSeen){introSequence(0);return}
  if(p.level===0&&!p.tutorialSeen){tutorialPrompt();return}
@@ -308,12 +318,28 @@ function skillGlyph(k){
  return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${shadow}${k==='phase'?wall:''}${k==='speed'?trails:''}<g ${k==='touch'?'transform="translate(-3 0)"':''}>${body}${eyes}</g>${k==='phase'?'<path d="M17 5h3v15h-3z" fill="#ab91c8" opacity=".5"/><path d="m25 10 4 4-4 4v-3h-3v-2h3z" fill="#e6ceff"/>':''}${k==='touch'?crate:''}${k==='invisibility'?shimmer:''}</svg>`;
 }
 function updateEchoDisplay(){$('distance').textContent=run.echoes;}
-function updateSkills(){
- $('abilityBar').innerHTML=['invisibility','phase','touch'].map(k=>{const unlocked=run[k]>0,max=run[k]>=RUN_MAX[k],price=runCost(run,k),tutorialOrder={invisibility:2,phase:5,touch:7}[k],forced=tutorial.active&&tutorial.stage===tutorialOrder,disabled=max||(tutorial.active&&!forced);return `<div class="abilitySlot"><button class="ability ${unlocked?'ready':'locked'}" id="ability-${k}" aria-label="Hold ${names[k]}" aria-pressed="false" data-ability="${k}"><span class="abilityArt">${skillGlyph(k)}</span><strong>${labels[k]}</strong><small id="reserve-${k}">${!unlocked?'LOCKED':k==='invisibility'?`${energy.toFixed(1)}s`:`TIER ${run[k]}`}</small><span class="abilityMeter"><i id="meter-${k}"></i></span></button><button class="abilityUpgrade ${forced?'tutorialForced':''}" data-upgrade="${k}" ${disabled?'disabled':''} aria-label="Upgrade ${names[k]}">${max?'<b>MAX</b>':`<b>+</b><span>${price}</span>`}</button></div>`}).join('');
- document.querySelectorAll('[data-upgrade]').forEach(button=>button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();buyUpgrade(button.dataset.upgrade)}));
- document.querySelectorAll('[data-ability]').forEach(button=>{
-  button.onpointerdown=e=>{e.preventDefault();e.stopPropagation();toggleAbility(button.dataset.ability)};
+function refreshUpgradeStates(){
+ const expected=tutorial.active?tutorialExpectedUpgrade():null;
+ const speed=$('speedUpgrade');
+ if(speed){
+  const price=runCost(run,'speed'),max=run.speed>=RUN_MAX.speed,allowed=!max&&run.echoes>=price&&(!tutorial.active||expected==='speed');
+  speed.hidden=mode!=='play';speed.disabled=!allowed;speed.classList.toggle('affordable',allowed);
+  speed.innerHTML=`<small>SPEED · TIER ${run.speed}</small><strong>${max?'MAX':'↑ '+price}</strong>`;
+ }
+ document.querySelectorAll('[data-upgrade]').forEach(button=>{
+  const k=button.dataset.upgrade,price=runCost(run,k),max=run[k]>=RUN_MAX[k],allowed=!max&&run.echoes>=price&&(!tutorial.active||expected===k);
+  button.disabled=!allowed;button.classList.toggle('affordable',allowed);button.classList.toggle('tutorialForced',tutorial.active&&expected===k&&allowed);
  });
+}
+function updateSkills(){
+ $('abilityBar').innerHTML=['invisibility','phase','touch'].map(k=>{
+  const unlocked=run[k]>0,max=run[k]>=RUN_MAX[k],price=runCost(run,k);
+  return `<div class="abilitySlot"><button class="ability ${unlocked?'ready':'locked'}" id="ability-${k}" aria-label="Use ${names[k]}" aria-pressed="false" data-ability="${k}"><span class="abilityArt">${skillGlyph(k)}</span><strong>${labels[k]}</strong><small id="reserve-${k}">${!unlocked?'LOCKED':k==='invisibility'?energy.toFixed(1)+'s':'TIER '+run[k]}</small><span class="abilityMeter"><i id="meter-${k}"></i></span></button><button class="abilityUpgrade" data-upgrade="${k}" aria-label="Upgrade ${names[k]}"><b>+</b><span>${max?'MAX':price}</span></button></div>`;
+ }).join('');
+ document.querySelectorAll('[data-upgrade]').forEach(button=>button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();buyUpgrade(button.dataset.upgrade)}));
+ document.querySelectorAll('[data-ability]').forEach(button=>button.onpointerdown=e=>{e.preventDefault();e.stopPropagation();toggleAbility(button.dataset.ability)});
+ const speed=$('speedUpgrade');if(speed)speed.onpointerdown=e=>{e.preventDefault();e.stopPropagation();buyUpgrade('speed')};
+ refreshUpgradeStates();
 }
 $('game').addEventListener('pointerdown',e=>{
  if(mode!=='play'||stickPointer!==null||e.target.closest('button,a,#overlay'))return;
