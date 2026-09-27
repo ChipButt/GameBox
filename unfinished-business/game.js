@@ -2,7 +2,7 @@ import {MATERIALS,MAX,initial,sanitize,speed,capacity,cost,buy,overlap,rayBlocke
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,collectTokens} from './entities.js';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry} from './scenery.js';
-import {drawHuman,drawCat} from './characters.js';
+import {drawHuman,drawCat,drawCyclist} from './characters.js';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world=generateWorld(p.worldSeed,p.level),visited=new Set(p.visitedByLevel?.[p.level]||p.visited||[]),saveTimer=0,nav=navigation(world.blocks),effects={boost:0,stiff:0,energy:0},tokens=createTokens(nav),scenery=createScenery(world);
@@ -79,6 +79,7 @@ function drawEntity(e){
  const {x,y}=e;
  if(e.kind==='camera'){ctx.save();ctx.translate(x,y);ctx.rotate(e.angle);rect(ctx,-8,-4,14,8,'#74858f');rect(ctx,1,-7,19,14,'#c9d1c8');rect(ctx,16,-5,5,10,'#273a44');rect(ctx,7,-3,3,3,e.frozen>0?'#a6f0f2':'#ed8e77');ctx.restore();}
  else if(e.kind==='cat')drawCat(ctx,e,reduced);
+ else if(e.kind==='cyclist')drawCyclist(ctx,e,reduced);
  else drawHuman(ctx,e,reduced);
  ctx.textAlign='center';ctx.font='bold 13px sans-serif';
  if(e.frozen>0){ctx.strokeStyle='#bceaf0';ctx.lineWidth=2;ctx.strokeRect(x-20,y-38,40,55);ctx.fillStyle='#c5f9ff';ctx.fillText('✧',x,y-43);}
