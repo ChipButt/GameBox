@@ -25,6 +25,19 @@ export function createScenery(world,makeCanvas=()=>document.createElement('canva
  for(let y=790;y<1295;y+=32)for(let x=1554;x<1936;x+=32){rect(c,x,y,31,31,((x-1554)/32+(y-790)/32)%2?'#667d79':'#85958a');rect(c,x+5,y+5,21,21,'#d0caaa08')}
  frame(c,1744,1250,106,43,'#3c5558','#7c9c89');for(let x=1750;x<1845;x+=7)rect(c,x,1256,2,30,'#172e3855');
  for(const d of world.decor)if(d.kind==='rug')rug(c,d.x,d.y,d.w,d.h);
+ if(world.level===0){
+  // Cemetery-specific ground dressing: gravel walks, fresh earth, flowers and funeral setup.
+  const path=(x,y,w,h)=>{rect(c,x,y,w,h,'#777b6e');for(let yy=y+4;yy<y+h;yy+=12)for(let xx=x+5;xx<x+w;xx+=17)rect(c,xx+(yy%7),yy,3,2,'#a4a58e55')};
+  path(1260,140,120,2050);path(150,740,2030,74);path(970,1480,610,65);
+  rect(c,1110,1020,470,8,'#c6c0a766');rect(c,1110,1390,470,8,'#5f675c66');
+  // Funeral canopy and chairs are visual detail, not additional collision.
+  rect(c,1210,940,300,8,'#d4cfb188');for(const xx of [1210,1502])rect(c,xx,940,8,170,'#8b8b78');
+  for(let row=0;row<3;row++)for(let col=0;col<5;col++){const x=1160+col*58,y=1180+row*52;rect(c,x,y,30,25,'#34454b');rect(c,x+4,y+3,22,4,'#718078');rect(c,x+3,y+25,4,10,'#1d3037');rect(c,x+23,y+25,4,10,'#1d3037')}
+  // Fresh grave and flower clusters.
+  rect(c,1870,1960,120,56,'#292821');for(let i=0;i<28;i++){const n=hash(i,3837);rect(c,1872+n%114,1962+(n>>>8)%50,4,3,i%2?'#514637':'#6c5940')}
+  for(const [x,y] of [[1090,1120],[1500,1140],[420,840],[770,1510],[2050,710]])for(let i=0;i<9;i++){const n=hash(i,x+y);rect(c,x+n%35,y+(n>>>6)%26,3,5,'#54734e');rect(c,x+1+n%35,y-2+(n>>>6)%26,3,3,['#c49bb0','#d9c57d','#a5b7d0'][i%3])}
+ }
+
  // Street paint, repaired asphalt and drainage details.
  for(const y of [736,1436,2276])for(let x=45;x<2200;x+=70){rect(c,x,y,34,3,'#bbb69a88');rect(c,x+4,y,5,1,'#303d4a99')}
  for(let y=40;y<2340;y+=68){rect(c,995,y,3,30,'#c6bd9588');rect(c,997,y+8,1,4,'#303d4a')}
@@ -73,3 +86,15 @@ export function drawSceneryProp(c,b){const{x,y,w,h,kind}=b;
 export function drawStreetLamp(c,d){const{x,y}=d;ellipse(c,x+7,y+29,15,5,'#0c1c2855');frame(c,x-2,y,7,30,'#485b59','#819080','#1e333c');rect(c,x-8,y-9,20,3,'#8b997d');frame(c,x-6,y-6,16,16,'#d2ba7e','#f1ddb1','#3d5052');rect(c,x-2,y-3,7,9,'#fff0b8');rect(c,x-10,y-11,24,4,'#516b66')}
 export function drawFerry(c,ferry={x:2140,y:260}){const x=ferry.x,y=ferry.y;frame(c,x-61,y-97,128,191,'#8e876a','#cbc5a0','#425957');for(let yy=y-88;yy<y+85;yy+=12)rect(c,x-56,yy,118,2,'#555e5355');for(const xx of [x-63,x+62])for(const yy of [y-86,y+72]){frame(c,xx,yy,8,15,'#a5a184','#d4d0ab');rect(c,xx+2,yy+2,4,4,'#e5dcbc')}
  frame(c,x-39,y-64,86,109,'#d3d5b3','#eef0ce','#607d78');frame(c,x-30,y-51,68,45,'#477578','#adc7b0');rect(c,x-25,y-46,22,33,'#9dc8b699');rect(c,x+7,y-46,24,33,'#9dc8b699');rect(c,x-26,y+8,60,6,'#6d9483');rect(c,x-27,y+28,16,5,'#b89e64');rect(c,x+19,y+28,16,5,'#b89e64');glow(c,x,y,130,'#d4ffcf1a');}
+
+export function drawCemeteryExit(c,goal={x:1320,y:72}){
+ const x=goal.x,y=goal.y+48;
+ // Ornate iron entrance seen from the same elevated top-down angle as the world.
+ rect(c,x-112,y-24,14,92,'#27363b');rect(c,x+98,y-24,14,92,'#27363b');
+ rect(c,x-118,y-31,26,10,'#899487');rect(c,x+92,y-31,26,10,'#899487');
+ rect(c,x-100,y-10,200,8,'#36474b');
+ for(let xx=x-94;xx<=x+94;xx+=16){rect(c,xx,y-13,4,72,'#26373d');rect(c,xx-2,y-19,8,7,'#78847d')}
+ rect(c,x-100,y+55,200,6,'#182a31');rect(c,x-24,y-12,48,70,'#10242b88');
+ // Stone posts and subtle path beyond the gate.
+ rect(c,x-128,y-5,24,70,'#69736d');rect(c,x+104,y-5,24,70,'#69736d');rect(c,x-124,y-12,16,9,'#a8aa95');rect(c,x+108,y-12,16,9,'#a8aa95');
+}
