@@ -1,4 +1,4 @@
-import {WORLD} from './world.js?v=20260927k';
+import {WORLD} from './world.js?v=20260927l';
 // All art is decorative. World geometry and gameplay stay in world.js.
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const hash=(x,y)=>{let v=Math.imul(x|0,374761393)^Math.imul(y|0,668265263);v=Math.imul(v^(v>>>13),1274126177);return(v^(v>>>16))>>>0};
