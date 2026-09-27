@@ -224,7 +224,7 @@ function setupTutorialCourse(){
  add(1010,1570,270,28);add(1360,1570,240,28); // watched gap at x 1280–1360
  add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'door',1,99,{tutorialGate:'phase'});
  add(1010,900,270,28);add(1360,900,240,28);add(1280,900,80,28,'door',2,1,{tutorialGate:'touch'});
- nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}people=[];tokens=[];
+ nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];
 }
 function tutorialBounds(){
  if(!tutorial.active)return;
