@@ -54,7 +54,7 @@ function footer(){return `<div class="footer"><a href="../index.html"><img src="
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Upgrade controls stay grey while you cannot afford them. When one becomes available it turns <b>bright gold and sparkles</b>. VANISH, PHASE and SPEED each have a slot at the bottom. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly. PHASE lets you cross doors and walls your current tier can overcome. SPEED is passive.</p><p><b>Mystery tokens are worth exploring for.</b> Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / SPEED upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Each level has five unfinished tasks. Three are available at the start; more reveal as you complete them. Open TASKS from the side at any time. Tasks change the living world and story, but never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Upgrade controls stay grey while you cannot afford them. When one becomes available it turns <b>bright gold and sparkles</b>. VANISH, PHASE and SPEED each have a slot at the bottom. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly. PHASE lets you cross doors and walls your current tier can overcome. SPEED is passive.</p><p><b>Golden ghosts are mystery tokens.</b> You only discover their reward when you collect them. Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / SPEED upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Each level has five unfinished tasks. Three are available at the start; more reveal as you complete them. Open TASKS from the side at any time. Tasks change the living world and story, but never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='speed')return `${Math.round(runSpeed(run))} → ${Math.round(runSpeed({...run,speed:run.speed+1}))} speed`;if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';}
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT'}</span><h2>${win?'You made it through.':'Someone Saw You'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 function buyUpgrade(k){
@@ -107,6 +107,21 @@ function tutorialCard(title,body,button='Continue',action=()=>resumeTutorial(),d
 }
 function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateTaskButton();}
 function tutorialExpectedUpgrade(){return {2:'speed',4:'invisibility',7:'phase'}[tutorial.stage]||null}
+function tutorialTokenLesson(){
+ run.echoes+=25;updateEchoDisplay();tone(920,.14);
+ mode='tutorialPause';
+ show(`<div class="tutorialCard tokenLesson"><span class="eyebrow">GOLDEN GHOST</span><canvas class="tokenLessonGhost" id="tokenLessonGhost" width="120" height="100"></canvas><h2>Mystery token</h2><div class="tokenReveal">+25 ECHOES</div><p class="tutorialHint">You only discover what it holds when you collect it.</p><div class="tokenRewardGrid"><span><b>✦</b> Echoes</span><span><b>»</b> Speed</span><span><b>◌</b> Vanish</span><span><b>◇</b> Phase</span><span><b>↻</b> Refill</span><span><b>!</b> Scared Stiff</span></div><button class="primary" id="tokenLessonNext">Got it</button></div>`);
+ animateTokenLesson();$('tokenLessonNext').onclick=()=>tutorialUpgradeReady('speed');
+}
+function animateTokenLesson(){
+ const c=$('tokenLessonGhost');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+ const loop=now=>{if($('tokenLessonGhost')!==c)return;g.clearRect(0,0,c.width,c.height);const bob=reduced?0:Math.round(Math.sin(now*.004)*3),scale=3,x=60,y=52+bob;
+  const glow=28+(reduced?0:Math.sin(now*.006)*5),a=g.createRadialGradient(x,y,2,x,y,glow);a.addColorStop(0,'#fff2a8aa');a.addColorStop(.5,'#f3c64f55');a.addColorStop(1,'#f3c64f00');g.fillStyle=a;g.beginPath();g.arc(x,y,glow,0,Math.PI*2);g.fill();
+  for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v!=='0')rect(g,x+(i-7)*scale,y+(j-8)*scale,scale,scale,v==='2'?'#d6a942':'#ffd970')}
+  rect(g,x-9,y-9,3,8,'#49391f');rect(g,x+3,y-9,3,8,'#49391f');
+  for(let i=0;i<4;i++){const ang=now*.0025+i*Math.PI/2;rect(g,x+Math.cos(ang)*35-2,y+Math.sin(ang)*27-2,4,4,'#fff3b5')}
+  requestAnimationFrame(loop)};requestAnimationFrame(loop);
+}
 function tutorialUpgradeReady(k){
  const price=runCost(run,k);
  tutorialCard(
@@ -211,7 +226,7 @@ const TUTORIAL_SECTION_STARTS={
 };
 const TUTORIAL_REFILL={id:9199,x:1160,y:1695,title:'Vanish refill'};
 const TUTORIAL_TASKS=[
- {id:'tutorial-speed',title:'Wake up your spirit',hint:'Get 20 Echoes and reach the golden ghost.',stage:1,targetStage:3},
+ {id:'tutorial-speed',title:'Collect a golden ghost',hint:'Get 20 Echoes · collect the golden ghost.',stage:1,targetStage:3},
  {id:'tutorial-vanish',title:'Unlock Vanish',hint:'Get 25 Echoes and reach the next golden ghost.',stage:3,targetStage:5},
  {id:'tutorial-lookout',title:'Slip past the lookout',hint:'Use Vanish. Get through unseen.',stage:5,targetStage:6},
  {id:'tutorial-phase',title:'Unlock Phase',hint:'Get 26 Echoes and reach the golden ghost.',stage:6,targetStage:8},
@@ -295,7 +310,7 @@ function tutorialCheckpoint(){
  const target=tutorialTarget();if(!target||Math.hypot(ghost.x-target.x,ghost.y-target.y)>26)return;
  const need=target.cost||0;
  if(need&&run.echoes<need){note(`Need ${need} Echoes · ${run.echoes}/${need}.`,2);return}
- if(tutorial.stage===1){tutorial.stage=2;syncTutorialTasks();tutorialUpgradeReady('speed');return}
+ if(tutorial.stage===1){tutorial.stage=2;syncTutorialTasks();tutorialTokenLesson();return}
  if(tutorial.stage===3){tutorial.stage=4;syncTutorialTasks();tutorialUpgradeReady('invisibility');return}
  if(tutorial.stage===5){
   people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();syncTutorialTasks();
