@@ -96,11 +96,9 @@ svg .lift{filter:url(#lift)}
 svg .shine{filter:url(#glow)}
 svg .furn{transition:opacity .22s ease,transform .3s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center}
 svg .upgradePulse{animation:itemPulse .42s ease}
-#pet{transform-box:fill-box;transform-origin:50% 100%;animation:dogBreathe 2.7s ease-in-out infinite}
 #pet .dogTail{transform-box:fill-box;transform-origin:0% 80%;animation:dogTailWag 1.15s ease-in-out infinite}
 #dogEyes{transform-box:fill-box;transform-origin:center;animation:dogBlink 4.6s steps(1,end) infinite}
 @keyframes itemPulse{0%{transform:scale(.88)}55%{transform:scale(1.045)}100%{transform:scale(1)}}
-@keyframes dogBreathe{0%,100%{transform:translate(805px,477px) scale(1)}50%{transform:translate(805px,475px) scale(1.006)}}
 @keyframes dogTailWag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
 @keyframes dogBlink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.12)}}
 @media (max-height:670px){
