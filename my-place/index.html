@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111a27">
+<title>My Place · GameBox</title>
+<style>
+:root{
+  --ink:#172130;--muted:#6f7b8b;--paper:#fffaf1;--cream:#f6ead6;--gold:#f4b83f;
+  --gold2:#d8911e;--teal:#2fb9a7;--blue:#456fe8;--coral:#ef715f;--navy:#111a27;
+  --shadow:0 18px 45px rgba(23,33,48,.18);--hard:0 5px 0 rgba(0,0,0,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;background:#101925;color:var(--ink);overflow:hidden}
+button{font:inherit}
+.game{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;position:relative;background:
+ radial-gradient(circle at 12% 8%,rgba(255,255,255,.08),transparent 25%),
+ linear-gradient(180deg,#172437,#0f1723)}
+.top{
+ padding:calc(10px + env(safe-area-inset-top)) 14px 8px;display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;
+ position:relative;z-index:20
+}
+.back,.menu{
+ width:46px;height:46px;border:0;border-radius:15px;background:#25354b;color:#fff;box-shadow:0 4px 0 #0b111a, inset 0 1px rgba(255,255,255,.13);
+ display:grid;place-items:center;font-size:21px;font-weight:900;text-decoration:none;cursor:pointer
+}
+.back:active,.menu:active,.upgradeBtn:active,.dockBtn:active,.resetBtn:active{transform:translateY(3px);box-shadow:none}
+.brand{min-width:0;color:#fff}
+.brand small{display:block;font-size:10px;font-weight:900;letter-spacing:.18em;color:#8f9bae}
+.brand h1{font-size:21px;line-height:1;margin:2px 0 0;letter-spacing:-.04em}
+.wallet{
+ height:46px;padding:0 14px;border-radius:15px;background:linear-gradient(#ffe27d,#f4b83f);display:flex;align-items:center;gap:8px;
+ box-shadow:0 4px 0 #a66f12, inset 0 1px rgba(255,255,255,.6);font-weight:1000;color:#4e3510
+}
+.coin{width:25px;height:25px;border-radius:50%;background:linear-gradient(135deg,#fff4ab,#e99f1d);border:3px solid #bd7910;display:grid;place-items:center;font-size:12px}
+.sceneWrap{min-height:0;position:relative;display:grid;place-items:center;padding:2px 8px 0}
+.sceneCard{
+ width:min(100%,780px);height:100%;max-height:680px;min-height:300px;position:relative;border-radius:28px;overflow:hidden;
+ background:linear-gradient(#bfe9ff 0 22%,#e8f6ff 22% 100%);box-shadow:0 24px 60px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.28)
+}
+.sceneCard::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px rgba(27,51,71,.15)}
+#room{width:100%;height:100%;display:block}
+.levelPill{
+ position:absolute;left:14px;top:14px;z-index:4;padding:8px 12px;border-radius:999px;color:white;background:rgba(18,29,43,.86);
+ backdrop-filter:blur(10px);font-size:12px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.18)
+}
+.levelPill b{color:#ffd25a}
+.toast{
+ position:absolute;left:50%;top:18%;z-index:8;transform:translate(-50%,-12px) scale(.95);opacity:0;pointer-events:none;
+ padding:11px 16px;border-radius:16px;color:#fff;background:rgba(17,26,39,.92);font-weight:900;box-shadow:var(--shadow);transition:.22s ease
+}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.spark{position:absolute;width:8px;height:8px;background:#ffe071;border-radius:50%;pointer-events:none;z-index:7;animation:pop .75s ease-out forwards}
+@keyframes pop{0%{transform:translate(0,0) scale(.2);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+.bottom{
+ position:relative;z-index:20;padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(16,25,37,0),#101925 13%);
+}
+.upgradePanel{
+ max-width:780px;margin:0 auto;background:#fffaf1;border-radius:24px;padding:11px;box-shadow:0 14px 40px rgba(0,0,0,.28);
+ border:1px solid rgba(255,255,255,.65)
+}
+.focusRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:2px 3px 10px}
+.focusText{min-width:0}
+.focusText small{font-size:10px;font-weight:1000;letter-spacing:.13em;color:#8b8173}
+.focusText strong{display:block;font-size:18px;line-height:1.05;margin-top:2px}
+.focusText span{display:block;color:#7f776c;font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upgradeBtn{
+ min-width:128px;border:0;border-radius:16px;padding:11px 13px;background:linear-gradient(#5ad6c3,#2fb9a7);color:#093b35;font-weight:1000;
+ box-shadow:0 5px 0 #1d7f73,inset 0 1px rgba(255,255,255,.6);cursor:pointer;transition:.1s
+}
+.upgradeBtn.maxed{background:linear-gradient(#e9e2d7,#cec3b3);color:#6f675d;box-shadow:0 5px 0 #a69a89}
+.upgradeBtn .price{display:block;font-size:10px;margin-top:1px}
+.dock{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.dockBtn{
+ border:0;background:#eee3d2;border-radius:15px;padding:8px 3px 7px;color:#6c6256;cursor:pointer;min-width:0;box-shadow:0 3px 0 #c8bba7;transition:.1s
+}
+.dockBtn.selected{background:linear-gradient(#fff0b1,#f5c44f);color:#563d0e;box-shadow:0 3px 0 #ba801a}
+.dockIcon{width:25px;height:25px;margin:0 auto 2px;display:block}
+.dockBtn span{display:block;font-size:9px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet{
+ position:fixed;inset:0;z-index:50;background:rgba(5,10,17,.5);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:.2s
+}
+.sheet.open{opacity:1;pointer-events:auto}
+.sheetBody{width:min(100%,560px);margin:0 auto;background:#fffaf1;border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(35px);transition:.22s}
+.sheet.open .sheetBody{transform:none}
+.sheetHandle{width:48px;height:5px;border-radius:99px;background:#d3c9bb;margin:-7px auto 14px}
+.sheet h2{margin:0;font-size:22px}
+.sheet p{margin:7px 0 16px;color:#756d63;font-size:13px;line-height:1.4}
+.resetBtn{width:100%;border:0;border-radius:16px;padding:13px;background:#27364b;color:white;font-weight:900;box-shadow:0 4px 0 #111923;cursor:pointer}
+.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.legend div{background:#eee4d5;border-radius:14px;padding:10px}
+.legend b{display:block;font-size:12px}.legend span{font-size:10px;color:#7a7167}
+svg .soft{filter:url(#soft)}
+svg .lift{filter:url(#lift)}
+svg .shine{filter:url(#glow)}
+svg .furn{transition:opacity .22s ease,transform .3s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center}
+svg .upgradePulse{animation:itemPulse .42s ease}
+@keyframes itemPulse{0%{transform:scale(.88)}55%{transform:scale(1.045)}100%{transform:scale(1)}}
+@media (max-height:670px){
+ .top{padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:4px}.back,.menu,.wallet{height:40px}.back,.menu{width:40px}.top{grid-template-columns:40px 1fr auto}
+ .brand h1{font-size:18px}.bottom{padding-top:5px}.upgradePanel{padding:8px;border-radius:20px}.focusRow{padding-bottom:7px}.dockBtn{padding:5px 2px}.dockIcon{height:21px;width:21px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ .game{grid-template-columns:1fr 330px;grid-template-rows:auto 1fr}.top{grid-column:1/3}.sceneWrap{grid-column:1;grid-row:2}.bottom{grid-column:2;grid-row:2;padding:5px 8px 8px;background:none;display:grid;align-items:center}
+ .upgradePanel{width:100%}.dock{grid-template-columns:repeat(3,1fr)}.sceneCard{max-height:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="game">
+  <header class="top">
+    <a class="back" href="../" aria-label="Back to GameBox">‹</a>
+    <div class="brand"><small>GAMEBOX PROTOTYPE</small><h1>My Place</h1></div>
+    <div class="wallet" aria-label="Unlimited coins"><span class="coin">C</span><span>∞</span></div>
+  </header>
+
+  <main class="sceneWrap">
+    <div class="sceneCard">
+      <div class="levelPill">HOME <b id="homeLevel">LV. 1</b></div>
+      <div class="toast" id="toast">Upgraded!</div>
+      <svg id="room" viewBox="0 0 1200 800" role="img" aria-label="Your upgradable studio home">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8bd4ff"/><stop offset="1" stop-color="#dff6ff"/></linearGradient>
+          <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7b0"/><stop offset="1" stop-color="#ffc84c"/></linearGradient>
+          <linearGradient id="wall0" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eee7dd"/><stop offset="1" stop-color="#d8cec0"/></linearGradient>
+          <linearGradient id="wall1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#faf5e8"/><stop offset="1" stop-color="#e8dcc4"/></linearGradient>
+          <linearGradient id="wall2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8f2ee"/><stop offset="1" stop-color="#a8d8d1"/></linearGradient>
+          <linearGradient id="wall3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9e2fa"/><stop offset="1" stop-color="#c4b8e7"/></linearGradient>
+          <linearGradient id="wall4" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#24385a"/><stop offset="1" stop-color="#14243d"/></linearGradient>
+          <linearGradient id="wood0" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#caa87e"/><stop offset="1" stop-color="#a57f55"/></linearGradient>
+          <linearGradient id="wood1" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e6b975"/><stop offset="1" stop-color="#be8242"/></linearGradient>
+          <linearGradient id="wood2" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d3a36d"/><stop offset="1" stop-color="#875430"/></linearGradient>
+          <linearGradient id="wood3" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#78634f"/><stop offset="1" stop-color="#3c3029"/></linearGradient>
+          <linearGradient id="wood4" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c7924d"/><stop offset="1" stop-color="#674126"/></linearGradient>
+          <filter id="soft" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
+          <filter id="lift" x="-40%" y="-50%" width="180%" height="220%"><feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#243143" flood-opacity=".23"/></filter>
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <pattern id="planks" width="120" height="32" patternUnits="userSpaceOnUse"><path d="M0 31.5H120M60 0v32" stroke="#50351f" stroke-opacity=".16" stroke-width="2"/></pattern>
+          <pattern id="tiles" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0V56" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="3"/></pattern>
+          <pattern id="wallLines" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M0 36 36 0M-9 9 9-9M27 45 45 27" stroke="#fff" stroke-opacity=".08" stroke-width="5"/></pattern>
+        </defs>
+
+        <g id="outside">
+          <rect width="1200" height="800" fill="url(#sky)"/>
+          <circle cx="1010" cy="105" r="56" fill="url(#sun)" opacity=".92"/>
+          <g fill="#fff" opacity=".65">
+            <ellipse cx="180" cy="108" rx="96" ry="23"/><ellipse cx="112" cy="112" rx="50" ry="31"/><ellipse cx="242" cy="104" rx="52" ry="31"/>
+            <ellipse cx="865" cy="173" rx="80" ry="18"/><ellipse cx="816" cy="174" rx="38" ry="26"/><ellipse cx="912" cy="171" rx="42" ry="25"/>
+          </g>
+        </g>
+
+        <g id="shell">
+          <ellipse cx="605" cy="690" rx="490" ry="78" fill="#213247" opacity=".18" class="soft"/>
+          <polygon id="leftWall" points="126,188 590,74 590,468 126,598" fill="url(#wall0)"/>
+          <polygon id="rightWall" points="590,74 1080,222 1080,602 590,468" fill="url(#wall0)"/>
+          <polygon id="floorBase" points="126,598 590,468 1080,602 607,752" fill="url(#wood0)"/>
+          <polygon id="floorPattern" points="126,598 590,468 1080,602 607,752" fill="url(#planks)" opacity=".65"/>
+          <path d="M126 598 590 468l490 134" fill="none" stroke="#fff" stroke-opacity=".42" stroke-width="7"/>
+          <path d="M590 75v393" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="5"/>
+        </g>
+
+        <g id="window" class="furn lift">
+          <polygon points="704,170 943,236 943,389 704,330" fill="#4b6680"/>
+          <polygon points="718,185 929,244 929,371 718,319" fill="#aee6ff"/>
+          <polygon points="718,185 929,244 929,275 718,221" fill="#dff5ff" opacity=".8"/>
+          <path d="M824 213v132M718 252l211 57" stroke="#eaf9ff" stroke-width="8"/>
+          <path d="M695 336l258 68" stroke="#f6f0e5" stroke-width="14" stroke-linecap="round"/>
+        </g>
+
+        <g id="rug" class="furn">
+          <polygon id="rugShape" points="350,565 622,500 842,567 564,644" fill="#b8aa98"/>
+          <polygon id="rugInner" points="384,565 622,510 808,568 563,632" fill="none" stroke="#f3eadd" stroke-opacity=".56" stroke-width="8"/>
+        </g>
+
+        <g id="bed" class="furn lift">
+          <ellipse cx="298" cy="586" rx="154" ry="33" fill="#213247" opacity=".14"/>
+          <polygon id="bedFrame" points="158,481 358,432 472,470 267,526" fill="#806144"/>
+          <polygon points="267,526 472,470 472,524 267,584" fill="#694d36"/>
+          <polygon points="158,481 267,526 267,584 158,536" fill="#74553c"/>
+          <polygon id="mattress" points="169,467 356,423 459,457 267,508" fill="#eee7dc"/>
+          <polygon id="duvet" points="216,462 356,430 450,459 308,499" fill="#b0b8bd"/>
+          <polygon id="pillow" points="176,461 235,447 273,459 211,475" fill="#e7e2da"/>
+          <polygon id="headboard" points="149,391 276,425 276,509 149,475" fill="#76563d"/>
+        </g>
+
+        <g id="sofa" class="furn lift">
+          <ellipse cx="716" cy="604" rx="170" ry="34" fill="#213247" opacity=".13"/>
+          <polygon id="sofaBase" points="565,505 717,465 867,508 711,552" fill="#8b837a"/>
+          <polygon id="sofaFront" points="565,505 711,552 711,613 565,560" fill="#69645f"/>
+          <polygon id="sofaSide" points="711,552 867,508 867,564 711,613" fill="#77716a"/>
+          <polygon id="sofaBack" points="584,430 722,395 850,431 717,470" fill="#8b837a"/>
+          <polygon points="584,430 717,470 717,535 584,491" fill="#746e67"/>
+          <polygon points="717,470 850,431 850,495 717,535" fill="#817a72"/>
+          <polygon id="cushion1" points="602,476 666,458 716,474 651,493" fill="#aaa198"/>
+          <polygon id="cushion2" points="720,474 786,455 836,470 769,490" fill="#aaa198"/>
+          <path id="sofaLegs" d="M592 558v25M822 555v23" stroke="#3d332c" stroke-width="10" stroke-linecap="round"/>
+        </g>
+
+        <g id="table" class="furn lift">
+          <ellipse cx="580" cy="620" rx="88" ry="24" fill="#213247" opacity=".12"/>
+          <ellipse id="tableTop" cx="575" cy="564" rx="83" ry="30" fill="#917156"/>
+          <path id="tableLeg" d="M575 574v72" stroke="#6a4c36" stroke-width="18" stroke-linecap="round"/>
+          <ellipse cx="575" cy="643" rx="48" ry="11" fill="#694b35"/>
+        </g>
+
+        <g id="plant" class="furn lift">
+          <ellipse cx="1002" cy="534" rx="58" ry="18" fill="#213247" opacity=".12"/>
+          <path d="M995 474c-16-52 14-90 22-119M997 470c20-46 57-50 75-72M995 465c-33-36-56-26-78-44" fill="none" stroke="#4d7f4c" stroke-width="12" stroke-linecap="round"/>
+          <g id="plantLeaves" fill="#6f9b66">
+            <ellipse cx="1017" cy="366" rx="18" ry="42" transform="rotate(18 1017 366)"/>
+            <ellipse cx="1063" cy="401" rx="18" ry="39" transform="rotate(52 1063 401)"/>
+            <ellipse cx="926" cy="418" rx="17" ry="38" transform="rotate(-52 926 418)"/>
+            <ellipse cx="979" cy="405" rx="17" ry="38" transform="rotate(-17 979 405)"/>
+          </g>
+          <path id="plantPot" d="M952 469h91l-13 77h-65z" fill="#9b7761"/>
+          <ellipse cx="997" cy="470" rx="46" ry="14" fill="#b78d70"/>
+        </g>
+
+        <g id="pet" class="furn lift">
+          <ellipse cx="900" cy="643" rx="72" ry="19" fill="#213247" opacity=".12"/>
+          <path id="petTail" d="M938 594q48-29 36-63" fill="none" stroke="#b27b4e" stroke-width="18" stroke-linecap="round"/>
+          <ellipse id="petBody" cx="903" cy="599" rx="55" ry="41" fill="#bd8658"/>
+          <circle id="petHead" cx="861" cy="578" r="38" fill="#c58e5f"/>
+          <path id="ear1" d="M835 551q-12-35 20-21l14 27z" fill="#986039"/>
+          <path id="ear2" d="M866 546q17-32 36-6l-23 25z" fill="#986039"/>
+          <circle cx="849" cy="576" r="5" fill="#222b34"/><circle cx="875" cy="574" r="5" fill="#222b34"/>
+          <ellipse cx="861" cy="589" rx="8" ry="6" fill="#493728"/>
+          <path id="collar" d="M836 600q25 13 50-2" fill="none" stroke="#5f6873" stroke-width="8"/>
+          <circle id="tag" cx="862" cy="607" r="6" fill="#c3c4c3"/>
+        </g>
+
+        <g id="avatar" class="furn lift">
+          <ellipse cx="454" cy="651" rx="63" ry="17" fill="#213247" opacity=".12"/>
+          <path d="M437 597v48M470 597v48" stroke="#394b63" stroke-width="19" stroke-linecap="round"/>
+          <path d="M414 522q39-28 79 0l-10 82h-61z" fill="#e7a14a"/>
+          <path d="M420 539l-32 53M485 539l31 49" stroke="#d8a17f" stroke-width="15" stroke-linecap="round"/>
+          <circle cx="454" cy="491" r="38" fill="#e0a786"/>
+          <path d="M419 487q4-53 45-45 31 6 28 45-15-23-34-23-22 0-39 23z" fill="#523d33"/>
+          <circle cx="442" cy="492" r="4" fill="#27313a"/><circle cx="467" cy="492" r="4" fill="#27313a"/>
+          <path d="M446 507q9 7 18 0" fill="none" stroke="#a45d55" stroke-width="4" stroke-linecap="round"/>
+        </g>
+
+        <g id="lamp" class="furn" opacity=".4">
+          <polygon points="914,452 968,468 948,485 898,469" fill="#d8b56f"/>
+          <path d="M932 476v88" stroke="#886640" stroke-width="8"/>
+          <ellipse cx="932" cy="570" rx="31" ry="8" fill="#7a5a3a"/>
+        </g>
+      </svg>
+    </div>
+  </main>
+
+  <footer class="bottom">
+    <div class="upgradePanel">
+      <div class="focusRow">
+        <div class="focusText"><small id="category">ROOM</small><strong id="upgradeName">Fresh Start</strong><span id="upgradeDesc">Turn the tired studio into somewhere worth coming home to.</span></div>
+        <button id="upgradeBtn" class="upgradeBtn">UPGRADE<span class="price">∞ COINS</span></button>
+      </div>
+      <nav class="dock" id="dock" aria-label="Upgrade categories"></nav>
+    </div>
+  </footer>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheetBody">
+    <div class="sheetHandle"></div>
+    <h2>Prototype controls</h2>
+    <p>This demo deliberately uses unlimited currency. Everything you see in the room is vector geometry, gradients and code-driven animation — no raster furniture or room art.</p>
+    <div class="legend"><div><b>6 upgrade paths</b><span>Each has four visual stages.</span></div><div><b>24 upgrades</b><span>Mix them in any order.</span></div></div>
+    <button class="resetBtn" id="resetBtn">Reset home to starter state</button>
+  </div>
+</div>
+
+<script>
+const paths = {
+ room:{
+  label:'Room', icon:'home',
+  stages:[
+   ['Fresh Start','Turn the tired studio into somewhere worth coming home to.'],
+   ['Warm & Bright','Fresh walls and honey-toned boards immediately lift the room.'],
+   ['Coastal Calm','Cool sage walls and pale flooring give the studio a designed feel.'],
+   ['Soft Luxe','Lavender plaster, deep wood and richer trim make it feel expensive.'],
+   ['Midnight Suite','A dramatic feature finish and premium flooring complete the shell.']
+  ]
+ },
+ sofa:{
+  label:'Lounge',icon:'sofa',
+  stages:[
+   ['Hand-Me-Down Sofa','It works. Nobody said it was beautiful.'],
+   ['Comfy Two-Seater','Warmer upholstery, proper cushions and cleaner proportions.'],
+   ['Statement Sofa','A richer silhouette with contrast cushions and softer colour.'],
+   ['Designer Lounge','Velvet tones, raised legs and accent cushions.'],
+   ['Signature Piece','A deep, tailored sofa that anchors the whole room.']
+  ]
+ },
+ bed:{
+  label:'Sleep',icon:'bed',
+  stages:[
+   ['Basic Bed','Functional, slightly sad, absolutely yours.'],
+   ['Proper Bedding','A softer duvet and a headboard make a huge difference.'],
+   ['Hotel Bed','Layered linen, wider frame and calmer colours.'],
+   ['Boutique Bed','Upholstered headboard with richer fabrics.'],
+   ['Dream Setup','Premium frame, layered pillows and statement bedding.']
+  ]
+ },
+ table:{
+  label:'Furniture',icon:'table',
+  stages:[
+   ['Old Coffee Table','A slightly battered little table.'],
+   ['Round Timber Table','Cleaner shape and a warmer timber finish.'],
+   ['Modern Table','A slimmer top and sculpted base.'],
+   ['Stone Top','A pale stone surface makes the centre of the room pop.'],
+   ['Sculptural Table','Dark glass, brass detailing and a designer profile.']
+  ]
+ },
+ plant:{
+  label:'Decor',icon:'plant',
+  stages:[
+   ['Lonely Plant','Trying its best in the corner.'],
+   ['Healthy Greenery','Fuller leaves and a nicer ceramic pot.'],
+   ['Statement Plant','Bigger leaves and a taller planter.'],
+   ['Indoor Tree','The corner becomes part of the design.'],
+   ['Living Feature','Layered foliage and a premium planter finish.']
+  ]
+ },
+ pet:{
+  label:'Pet',icon:'pet',
+  stages:[
+   ['Scruffy Friend','Your first little housemate.'],
+   ['New Collar','A bright collar and tag. Looking smart.'],
+   ['Pampered Pup','Cleaner coat, bandana and more personality.'],
+   ['Best Dressed','A premium harness and polished tag.'],
+   ['Tiny Royalty','The most over-accessorised member of the household.']
+  ]
+ }
+};
+const state = Object.fromEntries(Object.keys(paths).map(k=>[k,0]));
+let selected='room';
+
+function icon(name){
+ const common='viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
+ const d={
+  home:'<path d="M5 14 16 5l11 9v13H5z"/><path d="M12 27v-8h8v8"/>',
+  sofa:'<path d="M7 16v-3a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v3"/><path d="M5 16a3 3 0 0 1 3 3v4h16v-4a3 3 0 0 1 3-3v11H5z"/>',
+  bed:'<path d="M5 8v19M27 15v12M5 21h22"/><path d="M8 13h7a4 4 0 0 1 4 4v4H8z"/>',
+  table:'<ellipse cx="16" cy="10" rx="10" ry="4"/><path d="M16 14v12M10 27h12"/>',
+  plant:'<path d="M16 16v-7M16 14c-5 0-8-3-8-7 5 0 8 2 8 7ZM16 12c5 0 8-3 8-7-5 0-8 2-8 7Z"/><path d="M9 18h14l-2 9H11z"/>',
+  pet:'<path d="M9 10 6 5l6 2M23 10l3-5-6 2"/><path d="M9 10c-3 4-3 11 1 15 3 3 9 3 12 0 4-4 4-11 1-15"/><circle cx="12" cy="16" r="1"/><circle cx="20" cy="16" r="1"/><path d="M14 21q2 2 4 0"/>'
+ }[name];
+ return '<svg class="dockIcon" '+common+'>'+d+'</svg>';
+}
+function buildDock(){
+ const dock=document.getElementById('dock');
+ dock.innerHTML=Object.entries(paths).map(([k,v])=>'<button class="dockBtn '+(k===selected?'selected':'')+'" data-path="'+k+'">'+icon(v.icon)+'<span>'+v.label+'</span></button>').join('');
+ dock.querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.path;buildDock();syncFocus()});
+}
+function syncFocus(){
+ const p=paths[selected],lv=state[selected],stage=p.stages[lv];
+ document.getElementById('category').textContent=p.label.toUpperCase()+' · LV. '+(lv+1);
+ document.getElementById('upgradeName').textContent=stage[0];
+ document.getElementById('upgradeDesc').textContent=stage[1];
+ const btn=document.getElementById('upgradeBtn');
+ if(lv>=p.stages.length-1){btn.classList.add('maxed');btn.innerHTML='MAX LEVEL<span class="price">COMPLETE</span>'}
+ else{btn.classList.remove('maxed');btn.innerHTML='UPGRADE<span class="price">∞ COINS</span>'}
+ const total=Object.values(state).reduce((a,b)=>a+b,0);
+ document.getElementById('homeLevel').textContent='LV. '+(1+Math.floor(total/3));
+}
+function setAttrs(id,attrs){const el=document.getElementById(id);if(!el)return;Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v))}
+function applyRoom(){
+ const l=state.room;
+ setAttrs('leftWall',{fill:'url(#wall'+l+')'});setAttrs('rightWall',{fill:'url(#wall'+l+')'});
+ setAttrs('floorBase',{fill:'url(#wood'+l+')'});
+ setAttrs('floorPattern',{fill:l===2?'url(#tiles)':'url(#planks)',opacity:l===4?'.35':'.65'});
+ document.getElementById('lamp').setAttribute('opacity',l>=3?'1':l>=1?'.7':'.4');
+}
+function applySofa(){
+ const l=state.sofa;
+ const pal=[
+  ['#8b837a','#69645f','#77716a','#aaa198'],
+  ['#c68f69','#9c684d','#ad7857','#eed4b7'],
+  ['#6da89f','#477c75','#568e86','#f1ca78'],
+  ['#765f96','#55416f','#655080','#dfb5c6'],
+  ['#244e58','#183a42','#1f444d','#d9a84b']
+ ][l];
+ setAttrs('sofaBase',{fill:pal[0]});setAttrs('sofaBack',{fill:pal[0]});setAttrs('sofaFront',{fill:pal[1]});setAttrs('sofaSide',{fill:pal[2]});
+ setAttrs('cushion1',{fill:pal[3]});setAttrs('cushion2',{fill:l>=2?(l===4?'#e9e2d2':'#f5ebe0'):pal[3]});
+ setAttrs('sofaLegs',{stroke:l>=3?'#c59a53':'#3d332c', 'stroke-width':l>=3?'12':'10'});
+}
+function applyBed(){
+ const l=state.bed;
+ const p=[
+  ['#806144','#eee7dc','#b0b8bd','#e7e2da','#76563d'],
+  ['#9b754e','#fff8eb','#89a8b9','#fffaf1','#896748'],
+  ['#92795f','#fffdf6','#789a8d','#ffffff','#7d6652'],
+  ['#65546f','#fff8f1','#b38193','#f8e9e2','#66536f'],
+  ['#263f53','#fffdf6','#d5a950','#ffffff','#263f53']
+ ][l];
+ setAttrs('bedFrame',{fill:p[0]});setAttrs('mattress',{fill:p[1]});setAttrs('duvet',{fill:p[2]});setAttrs('pillow',{fill:p[3]});setAttrs('headboard',{fill:p[4]});
+}
+function applyTable(){
+ const l=state.table;
+ const tops=['#917156','#b17e4d','#6f7d80','#e7dfcf','#27313a'];
+ const legs=['#6a4c36','#755033','#596265','#b99b67','#c49a4b'];
+ setAttrs('tableTop',{fill:tops[l],rx:l>=2?'72':'83',ry:l>=2?'25':'30'});
+ setAttrs('tableLeg',{stroke:legs[l],'stroke-width':l===4?'12':'18'});
+}
+function applyPlant(){
+ const l=state.plant;
+ const leaf=['#6f9b66','#4e9a63','#438c61','#367c58','#2d7358'][l];
+ const pot=['#9b7761','#d28d67','#d9c08a','#536d75','#c89a48'][l];
+ setAttrs('plantLeaves',{fill:leaf});setAttrs('plantPot',{fill:pot});
+ document.getElementById('plant').style.transform='scale('+(1+l*.055)+') translate('+(l*-3)+'px,'+(l*-3)+'px)';
+}
+function applyPet(){
+ const l=state.pet;
+ const coats=['#bd8658','#c28a59','#d49c64','#b87c50','#a86e43'];
+ setAttrs('petBody',{fill:coats[l]});setAttrs('petHead',{fill:coats[l]});
+ setAttrs('collar',{stroke:['#5f6873','#e65f5f','#4d8bd8','#2f766e','#8c5fb1'][l],'stroke-width':l>=2?'10':'8'});
+ setAttrs('tag',{fill:l>=4?'#f4c64e':l>=2?'#e9dfc9':'#c3c4c3',r:l>=3?'8':'6'});
+ setAttrs('petTail',{stroke:coats[l]});
+}
+function applyAll(){applyRoom();applySofa();applyBed();applyTable();applyPlant();applyPet();syncFocus()}
+function celebrate(target){
+ const card=document.querySelector('.sceneCard'),r=card.getBoundingClientRect();
+ for(let i=0;i<18;i++){
+  const s=document.createElement('i');s.className='spark';
+  s.style.left=(r.width*(.4+Math.random()*.2))+'px';s.style.top=(r.height*(.45+Math.random()*.18))+'px';
+  const a=Math.random()*Math.PI*2,d=45+Math.random()*110;s.style.setProperty('--dx',(Math.cos(a)*d)+'px');s.style.setProperty('--dy',(Math.sin(a)*d)+'px');
+  card.appendChild(s);setTimeout(()=>s.remove(),800);
+ }
+ const el=document.getElementById(target);el.classList.remove('upgradePulse');void el.getBBox();el.classList.add('upgradePulse');
+ const t=document.getElementById('toast');t.textContent=paths[selected].stages[state[selected]][0]+' unlocked';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1150);
+ if(navigator.vibrate)navigator.vibrate(25);
+}
+document.getElementById('upgradeBtn').onclick=()=>{
+ const max=paths[selected].stages.length-1;if(state[selected]>=max)return;
+ state[selected]++;applyAll();celebrate(selected==='room'?'shell':selected);
+};
+document.querySelector('.brand').onclick=()=>document.getElementById('sheet').classList.add('open');
+document.querySelector('.wallet').onclick=()=>document.getElementById('sheet').classList.add('open');
+document.getElementById('sheet').onclick=e=>{if(e.target.id==='sheet')e.currentTarget.classList.remove('open')};
+document.getElementById('resetBtn').onclick=()=>{
+ Object.keys(state).forEach(k=>state[k]=0);applyAll();buildDock();document.getElementById('sheet').classList.remove('open');
+};
+buildDock();applyAll();
+</script>
+</body>
+</html>
