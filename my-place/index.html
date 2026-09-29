@@ -218,64 +218,198 @@ button{font:inherit}
           <rect x="267" y="380" width="8" height="4" fill="#9f5d62"/>
         </g>
 
-        <!-- DOG: same limited palette / pixel language -->
+
+        <!-- high-detail pixel pass: contact shadows, material highlights, seams and lived-in clutter -->
+        <g id="worldDetail" class="pixel" pointer-events="none">
+          <!-- room depth -->
+          <rect x="34" y="366" width="892" height="12" fill="#6f678f" opacity=".5"/>
+          <rect x="34" y="396" width="892" height="8" fill="#f0d9b2" opacity=".24"/>
+          <g fill="#fffced" opacity=".18">
+            <rect x="52" y="58" width="246" height="8"/><rect x="330" y="58" width="216" height="8"/>
+            <rect x="72" y="410" width="158" height="5"/><rect x="280" y="454" width="122" height="5"/>
+            <rect x="708" y="510" width="164" height="5"/>
+          </g>
+
+          <!-- bed stitching, folds and highlights -->
+          <rect x="112" y="326" width="54" height="6" fill="#ffffff" opacity=".6"/>
+          <rect x="178" y="322" width="134" height="6" fill="#f4f0e6" opacity=".32"/>
+          <rect x="178" y="346" width="92" height="6" fill="#8179aa" opacity=".28"/>
+          <rect x="286" y="346" width="28" height="6" fill="#8179aa" opacity=".4"/>
+          <rect x="94" y="378" width="230" height="8" fill="#3e3040" opacity=".4"/>
+          <rect x="82" y="238" width="10" height="78" fill="#c0a0bb" opacity=".55"/>
+
+          <!-- bedside-table bevel and lamp glow -->
+          <rect x="358" y="324" width="46" height="5" fill="#e2bd96" opacity=".4"/>
+          <rect x="358" y="386" width="46" height="5" fill="#503a33" opacity=".5"/>
+          <rect x="354" y="204" width="54" height="8" fill="#efc24e" opacity=".16"/>
+          <rect x="344" y="194" width="74" height="6" fill="#efc24e" opacity=".08"/>
+
+          <!-- sofa tailoring -->
+          <rect x="562" y="282" width="224" height="7" fill="#eee8dd" opacity=".2"/>
+          <rect x="562" y="338" width="224" height="7" fill="#171a3d" opacity=".18"/>
+          <rect x="668" y="278" width="7" height="58" fill="#171a3d" opacity=".24"/>
+          <rect x="586" y="299" width="50" height="5" fill="#fffced" opacity=".24"/>
+          <rect x="712" y="299" width="50" height="5" fill="#fffced" opacity=".3"/>
+          <rect x="536" y="318" width="8" height="56" fill="#f5efdf" opacity=".12"/>
+          <rect x="802" y="318" width="8" height="56" fill="#f5efdf" opacity=".12"/>
+
+          <!-- rug weave -->
+          <g fill="#fffced" opacity=".22">
+            <rect x="406" y="474" width="10" height="10"/><rect x="436" y="474" width="10" height="10"/>
+            <rect x="466" y="474" width="10" height="10"/><rect x="496" y="474" width="10" height="10"/>
+            <rect x="526" y="474" width="10" height="10"/><rect x="556" y="474" width="10" height="10"/>
+            <rect x="586" y="474" width="10" height="10"/><rect x="616" y="474" width="10" height="10"/>
+            <rect x="646" y="474" width="10" height="10"/>
+          </g>
+          <g fill="#171a3d" opacity=".14">
+            <rect x="418" y="540" width="16" height="5"/><rect x="452" y="540" width="16" height="5"/>
+            <rect x="486" y="540" width="16" height="5"/><rect x="520" y="540" width="16" height="5"/>
+            <rect x="554" y="540" width="16" height="5"/><rect x="588" y="540" width="16" height="5"/>
+            <rect x="622" y="540" width="16" height="5"/>
+          </g>
+
+          <!-- coffee-table shine / objects -->
+          <rect x="488" y="484" width="54" height="5" fill="#f6e0c7" opacity=".35"/>
+          <rect x="514" y="462" width="30" height="14" fill="#171a3d"/>
+          <rect x="520" y="456" width="18" height="12" fill="#8ed0df"/>
+          <rect x="548" y="464" width="20" height="12" fill="#171a3d"/>
+          <rect x="552" y="458" width="12" height="10" fill="#d86d7f"/>
+
+          <!-- plant leaf highlights -->
+          <rect x="840" y="210" width="10" height="16" fill="#9bc5aa" opacity=".5"/>
+          <rect x="884" y="228" width="10" height="12" fill="#9bc5aa" opacity=".45"/>
+          <rect x="836" y="250" width="12" height="8" fill="#9bc5aa" opacity=".5"/>
+          <rect x="860" y="334" width="16" height="5" fill="#efd0ad" opacity=".35"/>
+
+          <!-- window depth / curtains -->
+          <rect x="638" y="68" width="16" height="190" fill="#8179aa"/>
+          <rect x="864" y="68" width="16" height="190" fill="#8179aa"/>
+          <rect x="638" y="68" width="10" height="190" fill="#b6afd1"/>
+          <rect x="870" y="68" width="10" height="190" fill="#625b82"/>
+          <rect x="670" y="92" width="72" height="6" fill="#ffffff" opacity=".35"/>
+
+          <!-- floor contact shadows -->
+          <rect x="82" y="406" width="246" height="9" fill="#171a3d" opacity=".28"/>
+          <rect x="530" y="402" width="292" height="9" fill="#171a3d" opacity=".3"/>
+          <rect x="842" y="390" width="54" height="8" fill="#171a3d" opacity=".26"/>
+
+          <!-- small lived-in objects -->
+          <rect x="190" y="412" width="30" height="22" fill="#171a3d"/>
+          <rect x="196" y="416" width="18" height="14" fill="#6f91c5"/>
+          <rect x="312" y="414" width="26" height="20" fill="#171a3d"/>
+          <rect x="318" y="418" width="14" height="12" fill="#efc24e"/>
+        </g>
+
+        <!-- DOG: detailed code-only side-profile quadruped -->
         <g id="dogMover" transform="translate(338 430)">
-          <g id="dog" class="pixel" transform="scale(.72)">
-            <ellipse cx="94" cy="168" rx="78" ry="14" fill="#171a3d" opacity=".35"/>
-            <g id="dogTail">
-              <path d="M126 103h16V91h16V75h12v-8h10v33h-8v18h-16v12h-22z" fill="#171a3d"/>
-              <path d="M132 104h12V94h16V80h10v20h-8v12h-15v9h-13z" fill="#f2f4df"/>
-              <path d="M146 111h16v-11h9V87h9v13h-8v18h-16v9h-16v-9h6z" fill="#aaa3c8"/>
-            </g>
-            <path d="M48 91h18V80h58v8h16v14h12v31h-9v19h-18v10h-24v-12H73v12H47v-9H34v-20H24v-31h12V91z" fill="#171a3d"/>
-            <path d="M49 96h20V86h51v8h16v13h10v24h-9v16h-18v9h-15v-13H70v13H50v-9H40v-18H31v-22h11V96z" fill="#f2f4df"/>
-            <path d="M40 118h16v13h11v12h14v13H50v-9H40zM103 132h12v13h18v-9h10v11h-18v9h-21z" fill="#aaa3c8"/>
+          <g id="dogFacing" transform="scale(.74)">
+            <g id="dog" class="pixel">
+              <!-- contact shadow -->
+              <rect x="18" y="150" width="166" height="14" fill="#171a3d" opacity=".34"/>
+              <rect x="34" y="164" width="132" height="5" fill="#171a3d" opacity=".18"/>
 
-            <g id="dogLegs">
-              <path d="M42 135h28v25h-7v8H40v-7h-6v-18h8zM103 135h29v9h7v17h-7v7h-24v-8h-5z" fill="#171a3d"/>
-              <path d="M47 139h18v20h-6v5H44v-6h-5v-12h8zM108 139h19v8h7v10h-6v6h-16v-7h-4z" fill="#f3f5df"/>
-            </g>
+              <!-- tail -->
+              <g id="dogTail">
+                <path d="M139 87h20V75h12V62h16V48h13v31h-9v19h-17v11h-22V99h-13z" fill="#171a3d"/>
+                <path d="M145 89h17V80h12V67h11V57h7v19h-8v15h-15v10h-19V96h-5z" fill="#f2f4df"/>
+                <path d="M159 83h13V72h12V61h8v15h-8v15h-15v9h-12z" fill="#aaa3c8"/>
+                <rect x="181" y="58" width="7" height="10" fill="#fffced" opacity=".72"/>
+              </g>
 
-            <path d="M47 18h15V9h18V4h31v7h17v10h13v11h11v48h-11v15h-16v11H70V99H54V88H43V74H34V39h8V27h5z" fill="#171a3d"/>
-            <path d="M42 31H25v9H17v44h9v13h16v7h12V84H48V54h6V33zM141 35h18v9h8v38h-8v15h-17v7h-12V84h7V53h-5V36z" fill="#171a3d"/>
-            <path d="M39 38H28v8h-5v32h7v13h17V79h-5V53h7V39zM145 41h11v8h5v28h-6v14h-17V79h5V55h-6V42z" fill="#f2f4df"/>
-            <path d="M28 69h10v17h10v10H34v-8h-7zM143 64h11v22h-10v9h-7V80h6z" fill="#aaa3c8"/>
-            <path d="M52 24h15v-8h12v-5h27v6h17v10h12v12h10v37h-10v14h-15v10H74v-7H59V83H49V70h-8V43h7V31h4z" fill="#f2f4df"/>
-            <path d="M78 17v-8h10V2h18v9h14v10h-13v7H91v-6H78z" fill="#171a3d"/>
-            <path d="M84 17v-6h8V7h10v9h10v6h-10v5H92v-5h-8z" fill="#f2f4df"/>
-            <path d="M45 56h12v24h8v13h15v8h-8v-5H58V86H48V75h-7V58zM119 28h14v10h10v38h-9v13h-13v9h-11V88h9V72h8V48h-8z" fill="#aaa3c8"/>
-            <path d="M73 64h45v8h10v19h-9v10H73V96H62V77h11z" fill="#fffced"/>
-            <g id="dogEyes">
-              <path d="M65 50h15v7h5v22h-6v7H64v-7h-5V58h6zM107 48h15v7h5v23h-6v7h-15v-7h-5V56h6z" fill="#171a3d"/>
-              <rect x="69" y="55" width="6" height="10" fill="#fff"/>
-              <rect x="111" y="53" width="6" height="10" fill="#fff"/>
-            </g>
-            <path d="M87 82h19v5h5v7h-5v5H88v-5h-6v-7h5z" fill="#171a3d"/>
-            <path d="M95 98v8h-7v5H77v-6h8v-5zM96 106h7v5h12v-7h7v8h-7v6h-12v-5h-7z" fill="#171a3d"/>
-            <path d="M72 103h44v10h9v14h-10v12h-13v-7H91v10H77v-12H66v-17h6z" fill="#171a3d"/>
-            <path d="M77 107h34v10h9v7h-10v10h-10v-8H91v10H81v-11H72v-9h5z" fill="#f2f4df"/>
+              <!-- rear body outline -->
+              <path d="M55 69h88v8h18v13h12v38h-11v17h-24v8H58v-8H40v-15H28V96h10V82h17z" fill="#171a3d"/>
+              <path id="petBody" d="M59 76h80v7h18v12h9v29h-10v14h-23v8H63v-8H46v-13H35V100h10V88h14z" fill="#f2f4df"/>
+              <path d="M53 114h36v18h34v14H63v-8H47v-13H38v-18h15z" fill="#aaa3c8"/>
+              <rect x="78" y="80" width="48" height="7" fill="#ffffff" opacity=".8"/>
+              <rect x="128" y="92" width="22" height="8" fill="#d7d2e3" opacity=".7"/>
 
-            <g id="petCollar" opacity="0">
-              <rect x="68" y="105" width="54" height="11" fill="#171a3d"/>
-              <rect id="collar" x="73" y="108" width="44" height="5" fill="#d86d7f"/>
-              <rect id="tag" x="94" y="115" width="8" height="8" fill="#efc24e"/>
-            </g>
-            <g id="petBandana" opacity="0">
-              <path d="M76 114h42v8h-8l-8 18-9-18H76z" fill="#171a3d"/>
-              <path d="M82 117h30v4h-6l-5 12-6-12H82z" fill="#6f91c5"/>
-            </g>
-            <g id="petHarness" opacity="0">
-              <rect x="58" y="113" width="11" height="34" fill="#171a3d"/>
-              <rect x="116" y="111" width="11" height="36" fill="#171a3d"/>
-              <rect x="62" y="129" width="60" height="10" fill="#171a3d"/>
-              <rect x="65" y="132" width="54" height="4" fill="#5fa18f"/>
-            </g>
-            <g id="petCrown" opacity="0">
-              <path d="M78 7h8l7-9 8 10 9-9 8 10h9l-4 19H80z" fill="#171a3d"/>
-              <path d="M84 9h4l5-6 7 10 9-9 6 9h5l-3 10H86z" fill="#efc24e"/>
+              <!-- four legs, each independently transformable -->
+              <g id="legBackFar">
+                <path d="M124 126h24v35h-7v13h-27v-12h6v-36z" fill="#171a3d"/>
+                <path d="M128 130h14v29h-6v9h-16v-7h5v-31z" fill="#b7b1d2"/>
+              </g>
+              <g id="legBackNear">
+                <path d="M139 124h27v38h8v12h-35v-10h-7v-30h7z" fill="#171a3d"/>
+                <path d="M145 130h15v29h7v8h-22v-7h-6v-25h6z" fill="#f2f4df"/>
+                <rect x="151" y="162" width="14" height="5" fill="#fffced"/>
+              </g>
+              <g id="legFrontFar">
+                <path d="M57 124h24v37h7v13H56v-11h-6v-32h7z" fill="#171a3d"/>
+                <path d="M62 130h13v29h6v8H62v-7h-6v-25h6z" fill="#b7b1d2"/>
+              </g>
+              <g id="legFrontNear">
+                <path d="M40 119h28v42h7v13H39v-11h-7v-34h8z" fill="#171a3d"/>
+                <path d="M46 126h16v33h6v8H46v-8h-7v-27h7z" fill="#f2f4df"/>
+                <rect x="48" y="161" width="15" height="6" fill="#fffced"/>
+              </g>
+
+              <!-- neck -->
+              <path d="M44 77h36v55H59v11H38v-18H28V96h10V84h6z" fill="#171a3d"/>
+              <path d="M49 84h25v43H56v10H44v-17H35V101h9V89h5z" fill="#f2f4df"/>
+              <path d="M42 106h19v25H48v-8h-9z" fill="#aaa3c8"/>
+
+              <!-- side-profile head outline -->
+              <path d="M10 30h16V17h19V8h42v8h19v12h13v12h14v34h-12v15h-18v11H52v-8H29V82H14V70H3V42h7z" fill="#171a3d"/>
+              <!-- floppy ear -->
+              <path d="M75 18h31v10h14v17h12v34h-10v17H95V84H84V53h-9z" fill="#171a3d"/>
+              <path id="petEar" d="M84 25h18v9h12v16h10v25h-8v14H101V79H91V50h-7z" fill="#aaa3c8"/>
+              <rect x="91" y="31" width="10" height="14" fill="#d4cfe2"/>
+
+              <!-- head fill -->
+              <path id="petHead" d="M16 36h15V24h18v-8h33v7h18v11h13v12h13v23h-11v14H97v10H55v-8H34V76H20V65H10V46h6z" fill="#f2f4df"/>
+              <path d="M16 55h18v21h19v17H34V84H20V75H10V61h6z" fill="#aaa3c8"/>
+              <path d="M80 24h17v10h13v13h10v23h-11V57h-11V42H80z" fill="#c5c0da"/>
+              <!-- forehead tuft -->
+              <path d="M47 22V9h12V2h23v8h15v12H83v8H65v-7H47z" fill="#171a3d"/>
+              <path d="M54 21v-8h10V8h13v8h12v6H78v6H66v-7z" fill="#f2f4df"/>
+
+              <!-- side muzzle -->
+              <path d="M5 57h31v-6h33v9h12v22H69v11H30V87H12V77H3V63h2z" fill="#171a3d"/>
+              <path d="M10 62h30v-6h25v9h10v12H64v10H32v-6H17v-8H9z" fill="#fffced"/>
+              <path d="M8 62h16v8H8z" fill="#e4e1d5"/>
+
+              <!-- eye -->
+              <g id="dogEyes">
+                <path d="M64 43h18v7h5v19h-6v7H64v-7h-5V50h5z" fill="#171a3d"/>
+                <rect x="68" y="48" width="7" height="9" fill="#fff"/>
+                <rect x="76" y="62" width="5" height="6" fill="#8179aa"/>
+              </g>
+
+              <!-- nose / mouth -->
+              <path d="M3 59h15v5h6v12h-7v6H4v-5H0V64h3z" fill="#171a3d"/>
+              <rect x="5" y="61" width="8" height="5" fill="#353961"/>
+              <path d="M23 78h22v6h19v5H43v6H29v-5H20v-7h3z" fill="#171a3d"/>
+              <rect x="32" y="80" width="14" height="4" fill="#c37879"/>
+
+              <!-- chest fluff -->
+              <path d="M43 88h39v11h11v15h-9v14H70v-8H60v13H46v-11H35v-17h8z" fill="#171a3d"/>
+              <path d="M49 94h28v10h9v8h-8v10h-9v-8H61v12H51v-10H42v-8h7z" fill="#fffced"/>
+              <path d="M43 106h10v12h9v8H50v-8h-8z" fill="#c5c0da"/>
+
+              <!-- accessory upgrades -->
+              <g id="petCollar" opacity="0">
+                <rect x="47" y="88" width="43" height="12" fill="#171a3d"/>
+                <rect id="collar" x="52" y="91" width="33" height="6" fill="#d86d7f"/>
+                <rect id="tag" x="62" y="99" width="9" height="9" fill="#efc24e"/>
+              </g>
+              <g id="petBandana" opacity="0">
+                <path d="M54 99h35v8h-7l-8 18-8-18H54z" fill="#171a3d"/>
+                <path d="M59 102h25v4h-5l-5 12-5-12H59z" fill="#6f91c5"/>
+              </g>
+              <g id="petHarness" opacity="0">
+                <rect x="82" y="83" width="11" height="48" fill="#171a3d"/>
+                <rect x="91" y="109" width="54" height="11" fill="#171a3d"/>
+                <rect x="86" y="87" width="5" height="40" fill="#5fa18f"/>
+                <rect x="94" y="112" width="47" height="5" fill="#5fa18f"/>
+              </g>
+              <g id="petCrown" opacity="0">
+                <path d="M49 12h8l7-9 8 10 9-9 8 10h9l-4 18H51z" fill="#171a3d"/>
+                <path d="M55 14h4l5-6 7 10 9-9 6 9h5l-3 9H57z" fill="#efc24e"/>
+              </g>
             </g>
           </g>
         </g>
+
       </svg>
     </div>
   </main>
@@ -442,50 +576,93 @@ document.getElementById('upgradeBtn').onclick=function(){
  if(navigator.vibrate)navigator.vibrate(20);
 };
 
-/* dog wandering: true positional movement, pauses, turning and walk bob */
+/* dog wandering: side-profile quadruped gait with planted diagonal pairs */
 const mover=document.getElementById('dogMover');
-const legs=document.getElementById('dogLegs');
-const dog=document.getElementById('dog');
+const facing=document.getElementById('dogFacing');
+const frontNear=document.getElementById('legFrontNear');
+const frontFar=document.getElementById('legFrontFar');
+const backNear=document.getElementById('legBackNear');
+const backFar=document.getElementById('legBackFar');
+const dogTail=document.getElementById('dogTail');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const spots=[
- {x:330,y:424},{x:430,y:442},{x:545,y:430},{x:665,y:447},{x:730,y:424},{x:590,y:456},{x:450,y:458}
-];
-let pos={x:338,y:430},from={x:338,y:430},to=spots[2],start=performance.now(),duration=2600,restUntil=0,walking=true,lastStep=0,step=false;
 
+const spots=[
+ {x:330,y:430},{x:410,y:438},{x:500,y:428},{x:585,y:442},
+ {x:675,y:430},{x:720,y:446},{x:610,y:458},{x:470,y:454},{x:365,y:458}
+];
+let pos={x:338,y:430},from={x:338,y:430},to={x:500,y:428};
+let moveStart=performance.now(),duration=2500,restUntil=0,walking=true;
+let direction=1,lastBubble=0;
+
+function setFacing(dir){
+ direction=dir;
+ facing.setAttribute('transform',dir<0?'translate(150 0) scale(-.74 .74)':'scale(.74)');
+}
 function chooseNext(now){
- let choices=spots.filter(function(s){return Math.abs(s.x-pos.x)+Math.abs(s.y-pos.y)>90});
+ const choices=spots.filter(function(s){return Math.abs(s.x-pos.x)+Math.abs(s.y-pos.y)>85});
  to=choices[Math.floor(Math.random()*choices.length)];
- from={x:pos.x,y:pos.y};start=now;
+ from={x:pos.x,y:pos.y};
+ moveStart=now;
  const dist=Math.hypot(to.x-from.x,to.y-from.y);
- duration=1500+dist*4.8;
+ duration=1700+dist*5.2;
  walking=true;
- const flip=to.x<from.x?-1:1;
- dog.setAttribute('transform','scale('+(.72*flip)+' .72) translate('+(flip<0?-190:0)+' 0)');
+ setFacing(to.x<from.x?-1:1);
+}
+function gait(phase){
+ /* diagonal pairs alternate: front-near + rear-far, then front-far + rear-near */
+ const a=Math.sin(phase*Math.PI*2);
+ const b=-a;
+ const liftA=Math.max(0,a)*5, liftB=Math.max(0,b)*5;
+ const strideA=a*4, strideB=b*4;
+ frontNear.setAttribute('transform','translate('+strideA+' '+(-liftA)+')');
+ backFar.setAttribute('transform','translate('+strideA+' '+(-liftA)+')');
+ frontFar.setAttribute('transform','translate('+strideB+' '+(-liftB)+')');
+ backNear.setAttribute('transform','translate('+strideB+' '+(-liftB)+')');
+}
+function stand(){
+ frontNear.removeAttribute('transform');frontFar.removeAttribute('transform');
+ backNear.removeAttribute('transform');backFar.removeAttribute('transform');
+}
+function maybeBubble(now){
+ if(now-lastBubble<5000||Math.random()>.24)return;
+ lastBubble=now;
+ const b=document.getElementById('bubble');
+ const lines=['sniff sniff','woof!','comfy.','hmm...'];
+ b.textContent=lines[Math.floor(Math.random()*lines.length)];
+ b.classList.add('show');setTimeout(function(){b.classList.remove('show')},700);
 }
 function tick(now){
- if(reduced){mover.setAttribute('transform','translate(510 438)');requestAnimationFrame(tick);return}
+ if(reduced){
+   mover.setAttribute('transform','translate(510 438)');
+   setFacing(1);stand();requestAnimationFrame(tick);return;
+ }
  if(!walking){
+   stand();
+   /* subtle four-legged idle: body stays planted; only tiny head-level breathing impression */
+   mover.setAttribute('transform','translate('+pos.x+' '+(pos.y+Math.sin(now/420)*.6)+')');
+   maybeBubble(now);
    if(now>=restUntil)chooseNext(now);
  }else{
-   let t=Math.min(1,(now-start)/duration);
-   let e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-   pos.x=from.x+(to.x-from.x)*e;pos.y=from.y+(to.y-from.y)*e;
-   const bob=Math.sin(t*Math.PI*10)*2;
-   mover.setAttribute('transform','translate('+pos.x+' '+(pos.y+bob)+')');
-   if(now-lastStep>135){step=!step;lastStep=now;legs.setAttribute('transform',step?'translate(0 2)':'translate(0 0)')}
+   const t=Math.min(1,(now-moveStart)/duration);
+   const eased=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+   pos.x=from.x+(to.x-from.x)*eased;
+   pos.y=from.y+(to.y-from.y)*eased;
+   const cycles=Math.max(2,Math.hypot(to.x-from.x,to.y-from.y)/62);
+   const phase=t*cycles;
+   gait(phase);
+   /* almost no vertical body bounce: dogs move through the legs, not like hopping bipeds */
+   const bodyRise=Math.abs(Math.sin(phase*Math.PI*2))*.7;
+   mover.setAttribute('transform','translate('+pos.x+' '+(pos.y-bodyRise)+')');
    if(t>=1){
-     walking=false;restUntil=now+900+Math.random()*2300;
-     legs.setAttribute('transform','translate(0 0)');
-     if(Math.random()<.35){
-       const b=document.getElementById('bubble');
-       const lines=['sniff sniff','...','woof!','comfy.'];
-       b.textContent=lines[Math.floor(Math.random()*lines.length)];
-       b.classList.add('show');setTimeout(function(){b.classList.remove('show')},700);
-     }
+     pos={x:to.x,y:to.y};
+     walking=false;
+     restUntil=now+1100+Math.random()*2300;
+     stand();
    }
  }
  requestAnimationFrame(tick);
 }
+setFacing(1);
 requestAnimationFrame(tick);
 
 buildDock();applyAll();
