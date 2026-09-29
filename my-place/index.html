@@ -3,113 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111a27">
+<meta name="theme-color" content="#171a3d">
 <title>My Place · GameBox</title>
 <style>
 :root{
-  --ink:#172130;--muted:#6f7b8b;--paper:#fffaf1;--cream:#f6ead6;--gold:#f4b83f;
-  --gold2:#d8911e;--teal:#2fb9a7;--blue:#456fe8;--coral:#ef715f;--navy:#111a27;
-  --shadow:0 18px 45px rgba(23,33,48,.18);--hard:0 5px 0 rgba(0,0,0,.18);
+  --ink:#171a3d;--ink2:#30345f;--cream:#f3f4df;--paper:#fffced;
+  --lav:#aaa3c8;--lav2:#8179aa;--gold:#efc24e;--mint:#5fa18f;--rose:#d86d7f;
+  --ui:#11152d;--panel:#f7f1dd;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;background:#101925;color:var(--ink);overflow:hidden}
+html,body{margin:0;height:100%;overflow:hidden;background:#0c1024;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;color:var(--ink)}
 button{font:inherit}
-.game{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;position:relative;background:
- radial-gradient(circle at 12% 8%,rgba(255,255,255,.08),transparent 25%),
- linear-gradient(180deg,#172437,#0f1723)}
-.top{
- padding:calc(10px + env(safe-area-inset-top)) 14px 8px;display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;
- position:relative;z-index:20
+.game{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:#0c1024}
+.top{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:calc(8px + env(safe-area-inset-top)) 12px 7px;background:#11152d;z-index:10}
+.back{width:44px;height:44px;display:grid;place-items:center;text-decoration:none;color:#f7f1dd;background:#25294e;border:4px solid #080b1a;box-shadow:0 4px 0 #080b1a;font-size:24px;font-weight:1000}
+.brand{color:#fff;min-width:0}
+.brand small{display:block;font-size:9px;font-weight:1000;letter-spacing:.18em;color:#aaa3c8}
+.brand h1{font-size:20px;margin:1px 0 0;line-height:1}
+.wallet{height:44px;padding:0 12px;display:flex;gap:7px;align-items:center;background:#efc24e;border:4px solid #080b1a;box-shadow:0 4px 0 #080b1a;font-weight:1000;color:#3f3150}
+.coin{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#fff4a1;border:3px solid #a46b24;font-size:10px}
+.stageWrap{min-height:0;padding:5px 8px 0;display:grid;place-items:center}
+.stage{position:relative;width:min(100%,840px);height:100%;max-height:680px;min-height:300px;overflow:hidden;background:#171a3d;border:5px solid #080b1a;box-shadow:0 12px 0 #080b1a}
+#world{width:100%;height:100%;display:block;image-rendering:pixelated}
+.hudPill{position:absolute;left:10px;top:10px;padding:6px 9px;background:#11152d;color:#f7f1dd;border:3px solid #080b1a;box-shadow:0 3px 0 #080b1a;font-size:10px;font-weight:1000;z-index:3}
+.hudPill b{color:#efc24e}
+.dogBubble{position:absolute;z-index:4;left:50%;top:14%;transform:translate(-50%,-8px);opacity:0;pointer-events:none;background:#fffced;border:4px solid #171a3d;box-shadow:0 5px 0 #171a3d;padding:7px 10px;font-size:11px;font-weight:1000;transition:.18s}
+.dogBubble.show{opacity:1;transform:translate(-50%,0)}
+.bottom{padding:7px 8px calc(8px + env(safe-area-inset-bottom));background:#11152d;z-index:10}
+.panel{max-width:840px;margin:0 auto;background:#f7f1dd;border:4px solid #080b1a;box-shadow:0 5px 0 #080b1a;padding:8px}
+.focus{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:0 2px 8px}
+.focus small{display:block;font-size:9px;font-weight:1000;letter-spacing:.12em;color:#8179aa}
+.focus strong{display:block;font-size:17px;line-height:1.05;margin-top:2px}
+.focus span{display:block;font-size:10px;color:#6c6880;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upgrade{min-width:118px;border:4px solid #171a3d;background:#72b8a5;color:#112d2a;padding:8px 9px;box-shadow:0 4px 0 #171a3d;font-weight:1000;cursor:pointer}
+.upgrade:active,.dock button:active,.back:active{transform:translateY(3px);box-shadow:none}
+.upgrade.maxed{background:#c8c2b5;color:#666274}
+.upgrade em{font-style:normal;display:block;font-size:9px;margin-top:1px}
+.dock{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.dock button{border:3px solid #171a3d;background:#e4dcc9;color:#655f76;padding:6px 2px 5px;box-shadow:0 3px 0 #171a3d;cursor:pointer;min-width:0}
+.dock button.selected{background:#efc24e;color:#433650}
+.dock svg{width:22px;height:22px;display:block;margin:0 auto 2px}
+.dock span{display:block;font-size:8px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pixel{shape-rendering:crispEdges}
+.item{transition:opacity .16s linear}
+.flash{animation:flash .38s steps(2,end)}
+@keyframes flash{0%{filter:brightness(1)}45%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+#dogTail{transform-box:fill-box;transform-origin:0 75%;animation:tailWag .8s steps(2,end) infinite}
+#dogEyes{transform-box:fill-box;transform-origin:center;animation:blink 4.2s steps(1,end) infinite}
+@keyframes tailWag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
+@keyframes blink{0%,44%,47%,100%{transform:scaleY(1)}45%,46%{transform:scaleY(.08)}}
+@media(max-height:660px){
+ .top{padding-top:calc(5px + env(safe-area-inset-top));padding-bottom:4px}
+ .top,.bottom{font-size:12px}.back,.wallet{height:38px}.back{width:38px}.top{grid-template-columns:38px 1fr auto}
+ .brand h1{font-size:17px}.panel{padding:6px}.focus{padding-bottom:5px}.dock button{padding:4px 1px}.dock svg{width:18px;height:18px}
 }
-.back,.menu{
- width:46px;height:46px;border:0;border-radius:15px;background:#25354b;color:#fff;box-shadow:0 4px 0 #0b111a, inset 0 1px rgba(255,255,255,.13);
- display:grid;place-items:center;font-size:21px;font-weight:900;text-decoration:none;cursor:pointer
+@media(orientation:landscape) and (max-height:520px){
+ .game{grid-template-columns:1fr 310px;grid-template-rows:auto 1fr}.top{grid-column:1/3}.stageWrap{grid-column:1;grid-row:2}.bottom{grid-column:2;grid-row:2;display:grid;align-items:center;padding:5px}.dock{grid-template-columns:repeat(3,1fr)}.stage{max-height:none}
 }
-.back:active,.menu:active,.upgradeBtn:active,.dockBtn:active,.resetBtn:active{transform:translateY(3px);box-shadow:none}
-.brand{min-width:0;color:#fff}
-.brand small{display:block;font-size:10px;font-weight:900;letter-spacing:.18em;color:#8f9bae}
-.brand h1{font-size:21px;line-height:1;margin:2px 0 0;letter-spacing:-.04em}
-.wallet{
- height:46px;padding:0 14px;border-radius:15px;background:linear-gradient(#ffe27d,#f4b83f);display:flex;align-items:center;gap:8px;
- box-shadow:0 4px 0 #a66f12, inset 0 1px rgba(255,255,255,.6);font-weight:1000;color:#4e3510
-}
-.coin{width:25px;height:25px;border-radius:50%;background:linear-gradient(135deg,#fff4ab,#e99f1d);border:3px solid #bd7910;display:grid;place-items:center;font-size:12px}
-.sceneWrap{min-height:0;position:relative;display:grid;place-items:center;padding:2px 8px 0}
-.sceneCard{
- width:min(100%,780px);height:100%;max-height:680px;min-height:300px;position:relative;border-radius:28px;overflow:hidden;
- background:linear-gradient(#bfe9ff 0 22%,#e8f6ff 22% 100%);box-shadow:0 24px 60px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.28)
-}
-.sceneCard::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px rgba(27,51,71,.15)}
-#room{width:100%;height:100%;display:block}
-.levelPill{
- position:absolute;left:14px;top:14px;z-index:4;padding:8px 12px;border-radius:999px;color:white;background:rgba(18,29,43,.86);
- backdrop-filter:blur(10px);font-size:12px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.18)
-}
-.levelPill b{color:#ffd25a}
-.toast{
- position:absolute;left:50%;top:18%;z-index:8;transform:translate(-50%,-12px) scale(.95);opacity:0;pointer-events:none;
- padding:11px 16px;border-radius:16px;color:#fff;background:rgba(17,26,39,.92);font-weight:900;box-shadow:var(--shadow);transition:.22s ease
-}
-.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
-.spark{position:absolute;width:8px;height:8px;background:#ffe071;border-radius:50%;pointer-events:none;z-index:7;animation:pop .75s ease-out forwards}
-@keyframes pop{0%{transform:translate(0,0) scale(.2);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
-.bottom{
- position:relative;z-index:20;padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(16,25,37,0),#101925 13%);
-}
-.upgradePanel{
- max-width:780px;margin:0 auto;background:#fffaf1;border-radius:24px;padding:11px;box-shadow:0 14px 40px rgba(0,0,0,.28);
- border:1px solid rgba(255,255,255,.65)
-}
-.focusRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:2px 3px 10px}
-.focusText{min-width:0}
-.focusText small{font-size:10px;font-weight:1000;letter-spacing:.13em;color:#8b8173}
-.focusText strong{display:block;font-size:18px;line-height:1.05;margin-top:2px}
-.focusText span{display:block;color:#7f776c;font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.upgradeBtn{
- min-width:128px;border:0;border-radius:16px;padding:11px 13px;background:linear-gradient(#5ad6c3,#2fb9a7);color:#093b35;font-weight:1000;
- box-shadow:0 5px 0 #1d7f73,inset 0 1px rgba(255,255,255,.6);cursor:pointer;transition:.1s
-}
-.upgradeBtn.maxed{background:linear-gradient(#e9e2d7,#cec3b3);color:#6f675d;box-shadow:0 5px 0 #a69a89}
-.upgradeBtn .price{display:block;font-size:10px;margin-top:1px}
-.dock{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.dockBtn{
- border:0;background:#eee3d2;border-radius:15px;padding:8px 3px 7px;color:#6c6256;cursor:pointer;min-width:0;box-shadow:0 3px 0 #c8bba7;transition:.1s
-}
-.dockBtn.selected{background:linear-gradient(#fff0b1,#f5c44f);color:#563d0e;box-shadow:0 3px 0 #ba801a}
-.dockIcon{width:25px;height:25px;margin:0 auto 2px;display:block}
-.dockBtn span{display:block;font-size:9px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sheet{
- position:fixed;inset:0;z-index:50;background:rgba(5,10,17,.5);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:.2s
-}
-.sheet.open{opacity:1;pointer-events:auto}
-.sheetBody{width:min(100%,560px);margin:0 auto;background:#fffaf1;border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(35px);transition:.22s}
-.sheet.open .sheetBody{transform:none}
-.sheetHandle{width:48px;height:5px;border-radius:99px;background:#d3c9bb;margin:-7px auto 14px}
-.sheet h2{margin:0;font-size:22px}
-.sheet p{margin:7px 0 16px;color:#756d63;font-size:13px;line-height:1.4}
-.resetBtn{width:100%;border:0;border-radius:16px;padding:13px;background:#27364b;color:white;font-weight:900;box-shadow:0 4px 0 #111923;cursor:pointer}
-.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
-.legend div{background:#eee4d5;border-radius:14px;padding:10px}
-.legend b{display:block;font-size:12px}.legend span{font-size:10px;color:#7a7167}
-svg .soft{filter:url(#soft)}
-svg .lift{filter:url(#lift)}
-svg .shine{filter:url(#glow)}
-svg .furn{transition:opacity .22s ease,transform .3s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center}
-svg .upgradePulse{animation:itemPulse .42s ease}
-#pet .dogTail{transform-box:fill-box;transform-origin:0% 80%;animation:dogTailWag 1.15s ease-in-out infinite}
-#dogEyes{transform-box:fill-box;transform-origin:center;animation:dogBlink 4.6s steps(1,end) infinite}
-@keyframes itemPulse{0%{transform:scale(.88)}55%{transform:scale(1.045)}100%{transform:scale(1)}}
-@keyframes dogTailWag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
-@keyframes dogBlink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.12)}}
-@media (max-height:670px){
- .top{padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:4px}.back,.menu,.wallet{height:40px}.back,.menu{width:40px}.top{grid-template-columns:40px 1fr auto}
- .brand h1{font-size:18px}.bottom{padding-top:5px}.upgradePanel{padding:8px;border-radius:20px}.focusRow{padding-bottom:7px}.dockBtn{padding:5px 2px}.dockIcon{height:21px;width:21px}
-}
-@media (orientation:landscape) and (max-height:540px){
- .game{grid-template-columns:1fr 330px;grid-template-rows:auto 1fr}.top{grid-column:1/3}.sceneWrap{grid-column:1;grid-row:2}.bottom{grid-column:2;grid-row:2;padding:5px 8px 8px;background:none;display:grid;align-items:center}
- .upgradePanel{width:100%}.dock{grid-template-columns:repeat(3,1fr)}.sceneCard{max-height:none}
-}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+@media(prefers-reduced-motion:reduce){#dogTail,#dogEyes{animation:none}}
 </style>
 </head>
 <body>
@@ -117,425 +68,426 @@ svg .upgradePulse{animation:itemPulse .42s ease}
   <header class="top">
     <a class="back" href="../" aria-label="Back to GameBox">‹</a>
     <div class="brand"><small>GAMEBOX PROTOTYPE</small><h1>My Place</h1></div>
-    <div class="wallet" aria-label="Unlimited coins"><span class="coin">C</span><span>∞</span></div>
+    <div class="wallet"><span class="coin">C</span><span>∞</span></div>
   </header>
 
-  <main class="sceneWrap">
-    <div class="sceneCard">
-      <div class="levelPill">HOME <b id="homeLevel">LV. 1</b></div>
-      <div class="toast" id="toast">Upgraded!</div>
-      <svg id="room" viewBox="0 0 1200 800" role="img" aria-label="Your upgradable studio home">
-        <defs>
-          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8bd4ff"/><stop offset="1" stop-color="#dff6ff"/></linearGradient>
-          <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7b0"/><stop offset="1" stop-color="#ffc84c"/></linearGradient>
-          <linearGradient id="wall0" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eee7dd"/><stop offset="1" stop-color="#d8cec0"/></linearGradient>
-          <linearGradient id="wall1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#faf5e8"/><stop offset="1" stop-color="#e8dcc4"/></linearGradient>
-          <linearGradient id="wall2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8f2ee"/><stop offset="1" stop-color="#a8d8d1"/></linearGradient>
-          <linearGradient id="wall3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9e2fa"/><stop offset="1" stop-color="#c4b8e7"/></linearGradient>
-          <linearGradient id="wall4" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#24385a"/><stop offset="1" stop-color="#14243d"/></linearGradient>
-          <linearGradient id="wood0" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#caa87e"/><stop offset="1" stop-color="#a57f55"/></linearGradient>
-          <linearGradient id="wood1" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e6b975"/><stop offset="1" stop-color="#be8242"/></linearGradient>
-          <linearGradient id="wood2" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d3a36d"/><stop offset="1" stop-color="#875430"/></linearGradient>
-          <linearGradient id="wood3" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#78634f"/><stop offset="1" stop-color="#3c3029"/></linearGradient>
-          <linearGradient id="wood4" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c7924d"/><stop offset="1" stop-color="#674126"/></linearGradient>
-          <filter id="soft" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
-          <filter id="lift" x="-40%" y="-50%" width="180%" height="220%"><feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#243143" flood-opacity=".23"/></filter>
-          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <pattern id="planks" width="120" height="32" patternUnits="userSpaceOnUse"><path d="M0 31.5H120M60 0v32" stroke="#50351f" stroke-opacity=".16" stroke-width="2"/></pattern>
-          <pattern id="tiles" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0V56" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="3"/></pattern>
-          <pattern id="wallLines" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M0 36 36 0M-9 9 9-9M27 45 45 27" stroke="#fff" stroke-opacity=".08" stroke-width="5"/></pattern>
-        </defs>
+  <main class="stageWrap">
+    <div class="stage">
+      <div class="hudPill">HOME <b id="homeLevel">LV. 1</b></div>
+      <div class="dogBubble" id="bubble">woof!</div>
 
-        <g id="outside">
-          <rect width="1200" height="800" fill="url(#sky)"/>
-          <circle cx="1010" cy="105" r="56" fill="url(#sun)" opacity=".92"/>
-          <g fill="#fff" opacity=".65">
-            <ellipse cx="180" cy="108" rx="96" ry="23"/><ellipse cx="112" cy="112" rx="50" ry="31"/><ellipse cx="242" cy="104" rx="52" ry="31"/>
-            <ellipse cx="865" cy="173" rx="80" ry="18"/><ellipse cx="816" cy="174" rx="38" ry="26"/><ellipse cx="912" cy="171" rx="42" ry="25"/>
+      <svg id="world" viewBox="0 0 960 640" aria-label="Pixel-art home" shape-rendering="crispEdges">
+        <!-- outside / shell -->
+        <rect width="960" height="640" fill="#25294e"/>
+        <rect x="18" y="18" width="924" height="604" fill="#171a3d"/>
+        <rect id="wall" x="34" y="34" width="892" height="362" fill="#cfc7dc"/>
+        <rect x="34" y="34" width="892" height="18" fill="#f4f0e6"/>
+        <rect x="34" y="378" width="892" height="18" fill="#837aa8"/>
+        <rect id="floor" x="34" y="396" width="892" height="210" fill="#9d775a"/>
+        <g id="floorLines" stroke="#6f4e3e" stroke-width="5" opacity=".55">
+          <path d="M34 438h892M34 482h892M34 526h892M34 570h892"/>
+          <path d="M140 396v42M330 438v44M545 396v42M740 438v44M205 482v44M445 526v44M680 482v44M850 526v44"/>
+        </g>
+
+        <!-- wall pixel texture -->
+        <g opacity=".22" fill="#8179aa">
+          <rect x="74" y="84" width="18" height="18"/><rect x="108" y="108" width="12" height="12"/>
+          <rect x="523" y="88" width="16" height="16"/><rect x="551" y="112" width="10" height="10"/>
+          <rect x="842" y="72" width="14" height="14"/><rect x="795" y="340" width="17" height="17"/>
+        </g>
+
+        <!-- window -->
+        <g id="window" class="item pixel">
+          <rect x="650" y="72" width="218" height="180" fill="#171a3d"/>
+          <rect x="660" y="82" width="198" height="160" fill="#8ed0df"/>
+          <rect x="660" y="82" width="198" height="48" fill="#bdeaf0"/>
+          <rect x="700" y="174" width="34" height="68" fill="#6d80a2"/>
+          <rect x="748" y="150" width="42" height="92" fill="#526888"/>
+          <rect x="804" y="190" width="36" height="52" fill="#7186a1"/>
+          <rect x="754" y="160" width="8" height="8" fill="#efc24e"/>
+          <rect x="775" y="177" width="8" height="8" fill="#efc24e"/>
+          <rect x="813" y="204" width="8" height="8" fill="#efc24e"/>
+          <rect x="754" y="82" width="10" height="160" fill="#171a3d"/>
+          <rect x="660" y="156" width="198" height="10" fill="#171a3d"/>
+          <rect x="638" y="242" width="242" height="18" fill="#171a3d"/>
+          <rect x="650" y="244" width="218" height="8" fill="#f4f0e6"/>
+        </g>
+
+        <!-- framed wall art -->
+        <g id="wallArt">
+          <rect x="424" y="82" width="136" height="112" fill="#171a3d"/>
+          <rect x="434" y="92" width="116" height="92" fill="#f1e6c8"/>
+          <rect x="450" y="146" width="84" height="16" fill="#8179aa"/>
+          <rect x="466" y="120" width="20" height="26" fill="#5fa18f"/>
+          <rect x="492" y="106" width="28" height="40" fill="#d86d7f"/>
+          <rect x="526" y="130" width="12" height="16" fill="#efc24e"/>
+        </g>
+
+        <!-- bed -->
+        <g id="bed" class="item pixel">
+          <rect x="72" y="286" width="246" height="28" fill="#171a3d"/>
+          <rect id="bedHead" x="72" y="222" width="34" height="118" fill="#6d5572"/>
+          <rect x="80" y="230" width="18" height="102" fill="#8e7594"/>
+          <rect id="bedFrame" x="88" y="306" width="248" height="88" fill="#684c4d"/>
+          <rect x="98" y="316" width="228" height="62" fill="#f2eedc"/>
+          <rect id="duvet" x="164" y="316" width="162" height="62" fill="#aaa3c8"/>
+          <rect id="pillow" x="106" y="322" width="74" height="34" fill="#fffced"/>
+          <rect x="106" y="356" width="74" height="10" fill="#d8d2c2"/>
+          <rect x="106" y="390" width="22" height="28" fill="#171a3d"/>
+          <rect x="296" y="390" width="22" height="28" fill="#171a3d"/>
+        </g>
+
+        <!-- side table and lamp -->
+        <g id="lamp" class="item pixel">
+          <rect x="342" y="304" width="78" height="16" fill="#171a3d"/>
+          <rect x="352" y="320" width="58" height="74" fill="#8a644e"/>
+          <rect x="362" y="330" width="38" height="12" fill="#b1876e"/>
+          <rect x="376" y="244" width="10" height="60" fill="#171a3d"/>
+          <rect x="358" y="224" width="46" height="16" fill="#171a3d"/>
+          <rect x="366" y="212" width="30" height="12" fill="#efc24e"/>
+          <rect x="368" y="240" width="26" height="10" fill="#f1d878"/>
+        </g>
+
+        <!-- sofa -->
+        <g id="sofa" class="item pixel">
+          <rect x="532" y="318" width="284" height="82" fill="#171a3d"/>
+          <rect id="sofaBack" x="552" y="274" width="244" height="70" fill="#756e92"/>
+          <rect id="sofaSeat" x="550" y="330" width="248" height="52" fill="#8f87ac"/>
+          <rect id="sofaArmL" x="526" y="310" width="38" height="76" fill="#67607f"/>
+          <rect id="sofaArmR" x="786" y="310" width="38" height="76" fill="#67607f"/>
+          <rect id="cushion1" x="574" y="292" width="74" height="44" fill="#d8a2aa"/>
+          <rect id="cushion2" x="700" y="292" width="74" height="44" fill="#f0d479"/>
+          <rect x="552" y="386" width="28" height="26" fill="#171a3d"/>
+          <rect x="770" y="386" width="28" height="26" fill="#171a3d"/>
+        </g>
+
+        <!-- rug -->
+        <g id="rug" class="item pixel">
+          <rect x="382" y="454" width="300" height="116" fill="#171a3d"/>
+          <rect id="rugFill" x="394" y="466" width="276" height="92" fill="#b7accf"/>
+          <rect x="410" y="482" width="244" height="60" fill="#d8d0e4"/>
+          <rect x="430" y="500" width="204" height="24" fill="#8a82aa"/>
+        </g>
+
+        <!-- coffee table -->
+        <g id="table" class="item pixel">
+          <rect id="tableTop" x="470" y="476" width="126" height="28" fill="#171a3d"/>
+          <rect x="480" y="482" width="106" height="14" fill="#9f7658"/>
+          <rect id="tableLegL" x="488" y="502" width="16" height="54" fill="#171a3d"/>
+          <rect id="tableLegR" x="562" y="502" width="16" height="54" fill="#171a3d"/>
+        </g>
+
+        <!-- plant -->
+        <g id="plant" class="item pixel">
+          <rect x="844" y="316" width="48" height="76" fill="#171a3d"/>
+          <rect id="plantPot" x="852" y="326" width="32" height="58" fill="#aa735d"/>
+          <rect x="866" y="240" width="10" height="86" fill="#171a3d"/>
+          <g id="plantLeaves" fill="#5fa18f" stroke="#171a3d" stroke-width="7">
+            <rect x="826" y="246" width="42" height="24"/>
+            <rect x="872" y="222" width="42" height="24"/>
+            <rect x="832" y="204" width="34" height="30"/>
+            <rect x="878" y="270" width="36" height="26"/>
+            <rect x="846" y="276" width="30" height="34"/>
           </g>
         </g>
 
-        <g id="shell">
-          <ellipse cx="605" cy="690" rx="490" ry="78" fill="#213247" opacity=".18" class="soft"/>
-          <polygon id="leftWall" points="126,188 590,74 590,468 126,598" fill="url(#wall0)"/>
-          <polygon id="rightWall" points="590,74 1080,222 1080,602 590,468" fill="url(#wall0)"/>
-          <polygon id="floorBase" points="126,598 590,468 1080,602 607,752" fill="url(#wood0)"/>
-          <polygon id="floorPattern" points="126,598 590,468 1080,602 607,752" fill="url(#planks)" opacity=".65"/>
-          <path d="M126 598 590 468l490 134" fill="none" stroke="#fff" stroke-opacity=".42" stroke-width="7"/>
-          <path d="M590 75v393" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="5"/>
+        <!-- tiny decor shelf -->
+        <g id="decor">
+          <rect x="374" y="214" width="176" height="12" fill="#171a3d"/>
+          <rect x="386" y="198" width="24" height="16" fill="#d86d7f"/>
+          <rect x="420" y="190" width="18" height="24" fill="#efc24e"/>
+          <rect x="464" y="184" width="12" height="30" fill="#5fa18f"/>
+          <rect x="486" y="192" width="28" height="22" fill="#8ed0df"/>
         </g>
 
-        <g id="window" class="furn lift">
-          <polygon points="704,170 943,236 943,389 704,330" fill="#4b6680"/>
-          <polygon points="718,185 929,244 929,371 718,319" fill="#aee6ff"/>
-          <polygon points="718,185 929,244 929,275 718,221" fill="#dff5ff" opacity=".8"/>
-          <path d="M824 213v132M718 252l211 57" stroke="#eaf9ff" stroke-width="8"/>
-          <path d="M695 336l258 68" stroke="#f6f0e5" stroke-width="14" stroke-linecap="round"/>
+        <!-- avatar -->
+        <g id="avatar" class="item pixel">
+          <rect x="240" y="428" width="62" height="16" fill="#171a3d"/>
+          <rect x="247" y="352" width="48" height="42" fill="#171a3d"/>
+          <rect x="254" y="358" width="34" height="30" fill="#d4a07e"/>
+          <rect x="248" y="342" width="46" height="18" fill="#171a3d"/>
+          <rect x="258" y="336" width="30" height="12" fill="#5b433e"/>
+          <rect x="253" y="395" width="38" height="52" fill="#171a3d"/>
+          <rect id="avatarTop" x="259" y="398" width="26" height="38" fill="#d89654"/>
+          <rect x="250" y="436" width="16" height="52" fill="#171a3d"/>
+          <rect x="280" y="436" width="16" height="52" fill="#171a3d"/>
+          <rect x="254" y="440" width="8" height="40" fill="#54607c"/>
+          <rect x="284" y="440" width="8" height="40" fill="#54607c"/>
+          <rect x="260" y="370" width="5" height="5" fill="#171a3d"/>
+          <rect x="277" y="370" width="5" height="5" fill="#171a3d"/>
+          <rect x="267" y="380" width="8" height="4" fill="#9f5d62"/>
         </g>
 
-        <g id="rug" class="furn">
-          <polygon id="rugShape" points="350,565 622,500 842,567 564,644" fill="#b8aa98"/>
-          <polygon id="rugInner" points="384,565 622,510 808,568 563,632" fill="none" stroke="#f3eadd" stroke-opacity=".56" stroke-width="8"/>
-        </g>
+        <!-- DOG: same limited palette / pixel language -->
+        <g id="dogMover" transform="translate(338 430)">
+          <g id="dog" class="pixel" transform="scale(.72)">
+            <ellipse cx="94" cy="168" rx="78" ry="14" fill="#171a3d" opacity=".35"/>
+            <g id="dogTail">
+              <path d="M126 103h16V91h16V75h12v-8h10v33h-8v18h-16v12h-22z" fill="#171a3d"/>
+              <path d="M132 104h12V94h16V80h10v20h-8v12h-15v9h-13z" fill="#f2f4df"/>
+              <path d="M146 111h16v-11h9V87h9v13h-8v18h-16v9h-16v-9h6z" fill="#aaa3c8"/>
+            </g>
+            <path d="M48 91h18V80h58v8h16v14h12v31h-9v19h-18v10h-24v-12H73v12H47v-9H34v-20H24v-31h12V91z" fill="#171a3d"/>
+            <path d="M49 96h20V86h51v8h16v13h10v24h-9v16h-18v9h-15v-13H70v13H50v-9H40v-18H31v-22h11V96z" fill="#f2f4df"/>
+            <path d="M40 118h16v13h11v12h14v13H50v-9H40zM103 132h12v13h18v-9h10v11h-18v9h-21z" fill="#aaa3c8"/>
 
-        <g id="bed" class="furn lift">
-          <ellipse cx="298" cy="586" rx="154" ry="33" fill="#213247" opacity=".14"/>
-          <polygon id="bedFrame" points="158,481 358,432 472,470 267,526" fill="#806144"/>
-          <polygon points="267,526 472,470 472,524 267,584" fill="#694d36"/>
-          <polygon points="158,481 267,526 267,584 158,536" fill="#74553c"/>
-          <polygon id="mattress" points="169,467 356,423 459,457 267,508" fill="#eee7dc"/>
-          <polygon id="duvet" points="216,462 356,430 450,459 308,499" fill="#b0b8bd"/>
-          <polygon id="pillow" points="176,461 235,447 273,459 211,475" fill="#e7e2da"/>
-          <polygon id="headboard" points="149,391 276,425 276,509 149,475" fill="#76563d"/>
-        </g>
+            <g id="dogLegs">
+              <path d="M42 135h28v25h-7v8H40v-7h-6v-18h8zM103 135h29v9h7v17h-7v7h-24v-8h-5z" fill="#171a3d"/>
+              <path d="M47 139h18v20h-6v5H44v-6h-5v-12h8zM108 139h19v8h7v10h-6v6h-16v-7h-4z" fill="#f3f5df"/>
+            </g>
 
-        <g id="sofa" class="furn lift">
-          <ellipse cx="716" cy="604" rx="170" ry="34" fill="#213247" opacity=".13"/>
-          <polygon id="sofaBase" points="565,505 717,465 867,508 711,552" fill="#8b837a"/>
-          <polygon id="sofaFront" points="565,505 711,552 711,613 565,560" fill="#69645f"/>
-          <polygon id="sofaSide" points="711,552 867,508 867,564 711,613" fill="#77716a"/>
-          <polygon id="sofaBack" points="584,430 722,395 850,431 717,470" fill="#8b837a"/>
-          <polygon points="584,430 717,470 717,535 584,491" fill="#746e67"/>
-          <polygon points="717,470 850,431 850,495 717,535" fill="#817a72"/>
-          <polygon id="cushion1" points="602,476 666,458 716,474 651,493" fill="#aaa198"/>
-          <polygon id="cushion2" points="720,474 786,455 836,470 769,490" fill="#aaa198"/>
-          <path id="sofaLegs" d="M592 558v25M822 555v23" stroke="#3d332c" stroke-width="10" stroke-linecap="round"/>
-        </g>
+            <path d="M47 18h15V9h18V4h31v7h17v10h13v11h11v48h-11v15h-16v11H70V99H54V88H43V74H34V39h8V27h5z" fill="#171a3d"/>
+            <path d="M42 31H25v9H17v44h9v13h16v7h12V84H48V54h6V33zM141 35h18v9h8v38h-8v15h-17v7h-12V84h7V53h-5V36z" fill="#171a3d"/>
+            <path d="M39 38H28v8h-5v32h7v13h17V79h-5V53h7V39zM145 41h11v8h5v28h-6v14h-17V79h5V55h-6V42z" fill="#f2f4df"/>
+            <path d="M28 69h10v17h10v10H34v-8h-7zM143 64h11v22h-10v9h-7V80h6z" fill="#aaa3c8"/>
+            <path d="M52 24h15v-8h12v-5h27v6h17v10h12v12h10v37h-10v14h-15v10H74v-7H59V83H49V70h-8V43h7V31h4z" fill="#f2f4df"/>
+            <path d="M78 17v-8h10V2h18v9h14v10h-13v7H91v-6H78z" fill="#171a3d"/>
+            <path d="M84 17v-6h8V7h10v9h10v6h-10v5H92v-5h-8z" fill="#f2f4df"/>
+            <path d="M45 56h12v24h8v13h15v8h-8v-5H58V86H48V75h-7V58zM119 28h14v10h10v38h-9v13h-13v9h-11V88h9V72h8V48h-8z" fill="#aaa3c8"/>
+            <path d="M73 64h45v8h10v19h-9v10H73V96H62V77h11z" fill="#fffced"/>
+            <g id="dogEyes">
+              <path d="M65 50h15v7h5v22h-6v7H64v-7h-5V58h6zM107 48h15v7h5v23h-6v7h-15v-7h-5V56h6z" fill="#171a3d"/>
+              <rect x="69" y="55" width="6" height="10" fill="#fff"/>
+              <rect x="111" y="53" width="6" height="10" fill="#fff"/>
+            </g>
+            <path d="M87 82h19v5h5v7h-5v5H88v-5h-6v-7h5z" fill="#171a3d"/>
+            <path d="M95 98v8h-7v5H77v-6h8v-5zM96 106h7v5h12v-7h7v8h-7v6h-12v-5h-7z" fill="#171a3d"/>
+            <path d="M72 103h44v10h9v14h-10v12h-13v-7H91v10H77v-12H66v-17h6z" fill="#171a3d"/>
+            <path d="M77 107h34v10h9v7h-10v10h-10v-8H91v10H81v-11H72v-9h5z" fill="#f2f4df"/>
 
-        <g id="table" class="furn lift">
-          <ellipse cx="580" cy="620" rx="88" ry="24" fill="#213247" opacity=".12"/>
-          <ellipse id="tableTop" cx="575" cy="564" rx="83" ry="30" fill="#917156"/>
-          <path id="tableLeg" d="M575 574v72" stroke="#6a4c36" stroke-width="18" stroke-linecap="round"/>
-          <ellipse cx="575" cy="643" rx="48" ry="11" fill="#694b35"/>
-        </g>
-
-        <g id="plant" class="furn lift">
-          <ellipse cx="1002" cy="534" rx="58" ry="18" fill="#213247" opacity=".12"/>
-          <path d="M995 474c-16-52 14-90 22-119M997 470c20-46 57-50 75-72M995 465c-33-36-56-26-78-44" fill="none" stroke="#4d7f4c" stroke-width="12" stroke-linecap="round"/>
-          <g id="plantLeaves" fill="#6f9b66">
-            <ellipse cx="1017" cy="366" rx="18" ry="42" transform="rotate(18 1017 366)"/>
-            <ellipse cx="1063" cy="401" rx="18" ry="39" transform="rotate(52 1063 401)"/>
-            <ellipse cx="926" cy="418" rx="17" ry="38" transform="rotate(-52 926 418)"/>
-            <ellipse cx="979" cy="405" rx="17" ry="38" transform="rotate(-17 979 405)"/>
+            <g id="petCollar" opacity="0">
+              <rect x="68" y="105" width="54" height="11" fill="#171a3d"/>
+              <rect id="collar" x="73" y="108" width="44" height="5" fill="#d86d7f"/>
+              <rect id="tag" x="94" y="115" width="8" height="8" fill="#efc24e"/>
+            </g>
+            <g id="petBandana" opacity="0">
+              <path d="M76 114h42v8h-8l-8 18-9-18H76z" fill="#171a3d"/>
+              <path d="M82 117h30v4h-6l-5 12-6-12H82z" fill="#6f91c5"/>
+            </g>
+            <g id="petHarness" opacity="0">
+              <rect x="58" y="113" width="11" height="34" fill="#171a3d"/>
+              <rect x="116" y="111" width="11" height="36" fill="#171a3d"/>
+              <rect x="62" y="129" width="60" height="10" fill="#171a3d"/>
+              <rect x="65" y="132" width="54" height="4" fill="#5fa18f"/>
+            </g>
+            <g id="petCrown" opacity="0">
+              <path d="M78 7h8l7-9 8 10 9-9 8 10h9l-4 19H80z" fill="#171a3d"/>
+              <path d="M84 9h4l5-6 7 10 9-9 6 9h5l-3 10H86z" fill="#efc24e"/>
+            </g>
           </g>
-          <path id="plantPot" d="M952 469h91l-13 77h-65z" fill="#9b7761"/>
-          <ellipse cx="997" cy="470" rx="46" ry="14" fill="#b78d70"/>
-        </g>
-
-        <g id="pet" class="furn lift" shape-rendering="crispEdges" transform="translate(805 477)">
-          <ellipse cx="94" cy="166" rx="78" ry="18" fill="#213247" opacity=".13"/>
-
-          <!-- tail: block-built, animated independently -->
-          <g id="petTail" class="dogTail">
-            <path d="M126 103h16V91h16V75h12v-8h10v33h-8v18h-16v12h-22z" fill="#171a3d"/>
-            <path d="M132 104h12V94h16V80h10v20h-8v12h-15v9h-13z" fill="#f2f5df"/>
-            <path d="M146 111h16v-11h9V87h9v13h-8v18h-16v9h-16v-9h6z" fill="#a8a0c6"/>
-            <rect x="164" y="79" width="8" height="10" fill="#ffffff" opacity=".72"/>
-          </g>
-
-          <!-- back body outline -->
-          <path d="M48 91h18V80h58v8h16v14h12v31h-9v19h-18v10h-24v-12H73v12H47v-9H34v-20H24v-31h12V91z" fill="#171a3d"/>
-          <path id="petBody" d="M49 96h20V86h51v8h16v13h10v24h-9v16h-18v9h-15v-13H70v13H50v-9H40v-18H31v-22h11V96z" fill="#f1f4dd"/>
-
-          <!-- body lavender modelling -->
-          <path d="M40 118h16v13h11v12h14v13H50v-9H40zM103 132h12v13h18v-9h10v11h-18v9h-21z" fill="#a9a2c7"/>
-          <path d="M34 106h12v18H34zM124 96h12v16h10v20h-11v-14h-11z" fill="#c8c3dc"/>
-          <path d="M66 87h46v8H66z" fill="#ffffff" opacity=".85"/>
-          <rect x="55" y="145" width="10" height="9" fill="#ffffff"/>
-          <rect x="111" y="145" width="10" height="9" fill="#ffffff"/>
-
-          <!-- rear legs / paws -->
-          <path d="M42 135h28v25h-7v8H40v-7h-6v-18h8zM103 135h29v9h7v17h-7v7h-24v-8h-5z" fill="#171a3d"/>
-          <path d="M47 139h18v20h-6v5H44v-6h-5v-12h8zM108 139h19v8h7v10h-6v6h-16v-7h-4z" fill="#f3f5df"/>
-          <path d="M43 153h8v9h-8zM55 154h7v8h-7zM114 153h7v9h-7zM126 152h7v9h-7z" fill="#d8d4e6"/>
-
-          <!-- head outer silhouette -->
-          <path d="M47 18h15V9h18V4h31v7h17v10h13v11h11v48h-11v15h-16v11H70V99H54V88H43V74H34V39h8V27h5z" fill="#171a3d"/>
-          <!-- ears -->
-          <path d="M42 31H25v9H17v44h9v13h16v7h12V84H48V54h6V33zM141 35h18v9h8v38h-8v15h-17v7h-12V84h7V53h-5V36z" fill="#171a3d"/>
-          <path id="petEarLeft" d="M39 38H28v8h-5v32h7v13h17V79h-5V53h7V39z" fill="#f1f4dd"/>
-          <path id="petEarRight" d="M145 41h11v8h5v28h-6v14h-17V79h5V55h-6V42z" fill="#f1f4dd"/>
-          <path d="M28 69h10v17h10v10H34v-8h-7zM143 64h11v22h-10v9h-7V80h6z" fill="#a39bc4"/>
-          <path d="M29 46h10v13h-8zM148 48h8v14h-8z" fill="#ffffff" opacity=".78"/>
-
-          <!-- head fill -->
-          <path id="petHead" d="M52 24h15v-8h12v-5h27v6h17v10h12v12h10v37h-10v14h-15v10H74v-7H59V83H49V70h-8V43h7V31h4z" fill="#f1f4dd"/>
-          <!-- fur tuft -->
-          <path d="M78 17v-8h10V2h18v9h14v10h-13v7H91v-6H78z" fill="#171a3d"/>
-          <path d="M84 17v-6h8V7h10v9h10v6h-10v5H92v-5h-8z" fill="#f4f6e3"/>
-
-          <!-- head shading -->
-          <path d="M45 56h12v24h8v13h15v8h-8v-5H58V86H48V75h-7V58zM119 28h14v10h10v38h-9v13h-13v9h-11V88h9V72h8V48h-8z" fill="#b1aacd"/>
-          <path d="M126 41h9v24h-8v14h-8V59h7z" fill="#8f88b5"/>
-          <path d="M57 34h9v14H56zM72 26h22v10H72z" fill="#ffffff" opacity=".9"/>
-
-          <!-- muzzle -->
-          <path d="M73 64h45v8h10v19h-9v10H73V96H62V77h11z" fill="#f8f8e9"/>
-          <path d="M82 76h28v8h7v8h-8v9H84v-7h-8V83h6z" fill="#ecebdc"/>
-
-          <!-- eyes -->
-          <g id="dogEyes">
-            <path d="M65 50h15v7h5v22h-6v7H64v-7h-5V58h6z" fill="#171a3d"/>
-            <path d="M107 48h15v7h5v23h-6v7h-15v-7h-5V56h6z" fill="#171a3d"/>
-            <rect x="69" y="55" width="6" height="10" fill="#fff"/>
-            <rect x="111" y="53" width="6" height="10" fill="#fff"/>
-            <rect x="76" y="70" width="4" height="6" fill="#7e78a9"/>
-            <rect x="118" y="69" width="4" height="6" fill="#7e78a9"/>
-          </g>
-
-          <!-- nose + mouth -->
-          <path d="M87 82h19v5h5v7h-5v5H88v-5h-6v-7h5z" fill="#171a3d"/>
-          <rect x="91" y="84" width="8" height="4" fill="#343863"/>
-          <path d="M95 98v8h-7v5H77v-6h8v-5zM96 106h7v5h12v-7h7v8h-7v6h-12v-5h-7z" fill="#171a3d"/>
-
-          <!-- chest fluff -->
-          <path d="M72 103h44v10h9v14h-10v12h-13v-7H91v10H77v-12H66v-17h6z" fill="#171a3d"/>
-          <path d="M77 107h34v10h9v7h-10v10h-10v-8H91v10H81v-11H72v-9h5z" fill="#f5f6e5"/>
-          <path d="M74 119h10v12h9v8H80v-8H72zM105 117h12v9h-8v10h-10v-9h6z" fill="#c0bad6"/>
-
-          <!-- collar base -->
-          <g id="petCollar" opacity="0">
-            <path d="M68 105h54v9H68z" fill="#171a3d"/>
-            <rect id="collar" x="73" y="107" width="44" height="6" fill="#e45f6f"/>
-            <path d="M92 113h12v7H92z" fill="#171a3d"/>
-            <rect id="tag" x="95" y="116" width="6" height="7" fill="#f0c75a"/>
-          </g>
-
-          <!-- level 2 bandana -->
-          <g id="petBandana" opacity="0">
-            <path d="M76 113h42v8h-8l-8 18-9-18H76z" fill="#171a3d"/>
-            <path d="M81 116h32v4h-7l-5 12-6-12H81z" fill="#4c8bd5"/>
-          </g>
-
-          <!-- level 3 harness -->
-          <g id="petHarness" opacity="0">
-            <path d="M58 112h11v34H58zM116 110h11v36h-11zM62 128h60v10H62z" fill="#171a3d"/>
-            <path d="M61 115h5v28h-5zM119 114h5v29h-5zM65 131h54v4H65z" fill="#3b9c8e"/>
-            <rect x="88" y="129" width="12" height="9" fill="#d9b75f"/>
-          </g>
-
-          <!-- level 4 tiny crown -->
-          <g id="petCrown" opacity="0">
-            <path d="M78 7h8l7-9 8 10 9-9 8 10h9l-4 19H80z" fill="#171a3d"/>
-            <path d="M84 9h4l5-6 7 10 9-9 6 9h5l-3 10H86z" fill="#f2c44d"/>
-            <rect x="96" y="15" width="7" height="5" fill="#fff1a6"/>
-          </g>
-        </g>
-
-        <g id="avatar" class="furn lift">
-          <ellipse cx="454" cy="651" rx="63" ry="17" fill="#213247" opacity=".12"/>
-          <path d="M437 597v48M470 597v48" stroke="#394b63" stroke-width="19" stroke-linecap="round"/>
-          <path d="M414 522q39-28 79 0l-10 82h-61z" fill="#e7a14a"/>
-          <path d="M420 539l-32 53M485 539l31 49" stroke="#d8a17f" stroke-width="15" stroke-linecap="round"/>
-          <circle cx="454" cy="491" r="38" fill="#e0a786"/>
-          <path d="M419 487q4-53 45-45 31 6 28 45-15-23-34-23-22 0-39 23z" fill="#523d33"/>
-          <circle cx="442" cy="492" r="4" fill="#27313a"/><circle cx="467" cy="492" r="4" fill="#27313a"/>
-          <path d="M446 507q9 7 18 0" fill="none" stroke="#a45d55" stroke-width="4" stroke-linecap="round"/>
-        </g>
-
-        <g id="lamp" class="furn" opacity=".4">
-          <polygon points="914,452 968,468 948,485 898,469" fill="#d8b56f"/>
-          <path d="M932 476v88" stroke="#886640" stroke-width="8"/>
-          <ellipse cx="932" cy="570" rx="31" ry="8" fill="#7a5a3a"/>
         </g>
       </svg>
     </div>
   </main>
 
   <footer class="bottom">
-    <div class="upgradePanel">
-      <div class="focusRow">
-        <div class="focusText"><small id="category">ROOM</small><strong id="upgradeName">Fresh Start</strong><span id="upgradeDesc">Turn the tired studio into somewhere worth coming home to.</span></div>
-        <button id="upgradeBtn" class="upgradeBtn">UPGRADE<span class="price">∞ COINS</span></button>
+    <div class="panel">
+      <div class="focus">
+        <div>
+          <small id="category">ROOM · LV. 1</small>
+          <strong id="upgradeName">Starter Room</strong>
+          <span id="upgradeDesc">A tiny place with plenty of potential.</span>
+        </div>
+        <button class="upgrade" id="upgradeBtn">UPGRADE<em>∞ COINS</em></button>
       </div>
-      <nav class="dock" id="dock" aria-label="Upgrade categories"></nav>
+      <nav class="dock" id="dock"></nav>
     </div>
   </footer>
 </div>
 
-<div class="sheet" id="sheet">
-  <div class="sheetBody">
-    <div class="sheetHandle"></div>
-    <h2>Prototype controls</h2>
-    <p>This demo deliberately uses unlimited currency. Everything you see in the room is vector geometry, gradients and code-driven animation — no raster furniture or room art.</p>
-    <div class="legend"><div><b>6 upgrade paths</b><span>Each has four visual stages.</span></div><div><b>24 upgrades</b><span>Mix them in any order.</span></div></div>
-    <button class="resetBtn" id="resetBtn">Reset home to starter state</button>
-  </div>
-</div>
-
 <script>
-const paths = {
- room:{
-  label:'Room', icon:'home',
-  stages:[
-   ['Fresh Start','Turn the tired studio into somewhere worth coming home to.'],
-   ['Warm & Bright','Fresh walls and honey-toned boards immediately lift the room.'],
-   ['Coastal Calm','Cool sage walls and pale flooring give the studio a designed feel.'],
-   ['Soft Luxe','Lavender plaster, deep wood and richer trim make it feel expensive.'],
-   ['Midnight Suite','A dramatic feature finish and premium flooring complete the shell.']
-  ]
- },
- sofa:{
-  label:'Lounge',icon:'sofa',
-  stages:[
-   ['Hand-Me-Down Sofa','It works. Nobody said it was beautiful.'],
-   ['Comfy Two-Seater','Warmer upholstery, proper cushions and cleaner proportions.'],
-   ['Statement Sofa','A richer silhouette with contrast cushions and softer colour.'],
-   ['Designer Lounge','Velvet tones, raised legs and accent cushions.'],
-   ['Signature Piece','A deep, tailored sofa that anchors the whole room.']
-  ]
- },
- bed:{
-  label:'Sleep',icon:'bed',
-  stages:[
-   ['Basic Bed','Functional, slightly sad, absolutely yours.'],
-   ['Proper Bedding','A softer duvet and a headboard make a huge difference.'],
-   ['Hotel Bed','Layered linen, wider frame and calmer colours.'],
-   ['Boutique Bed','Upholstered headboard with richer fabrics.'],
-   ['Dream Setup','Premium frame, layered pillows and statement bedding.']
-  ]
- },
- table:{
-  label:'Furniture',icon:'table',
-  stages:[
-   ['Old Coffee Table','A slightly battered little table.'],
-   ['Round Timber Table','Cleaner shape and a warmer timber finish.'],
-   ['Modern Table','A slimmer top and sculpted base.'],
-   ['Stone Top','A pale stone surface makes the centre of the room pop.'],
-   ['Sculptural Table','Dark glass, brass detailing and a designer profile.']
-  ]
- },
- plant:{
-  label:'Decor',icon:'plant',
-  stages:[
-   ['Lonely Plant','Trying its best in the corner.'],
-   ['Healthy Greenery','Fuller leaves and a nicer ceramic pot.'],
-   ['Statement Plant','Bigger leaves and a taller planter.'],
-   ['Indoor Tree','The corner becomes part of the design.'],
-   ['Living Feature','Layered foliage and a premium planter finish.']
-  ]
- },
- pet:{
-  label:'Pet',icon:'pet',
-  stages:[
-   ['Scruffy Friend','Your first little housemate.'],
-   ['New Collar','A bright collar and tag. Looking smart.'],
-   ['Pampered Pup','Cleaner coat, bandana and more personality.'],
-   ['Best Dressed','A premium harness and polished tag.'],
-   ['Tiny Royalty','The most over-accessorised member of the household.']
-  ]
- }
+const paths={
+ room:{label:'Room',icon:'home',stages:[
+  ['Starter Room','A tiny place with plenty of potential.'],
+  ['Fresh Paint','Warmer walls and cleaner flooring.'],
+  ['Sage Studio','A calmer palette and smarter floor finish.'],
+  ['Soft Luxe','Lavender walls and darker timber.'],
+  ['Midnight Suite','A dramatic premium finish.']
+ ]},
+ sofa:{label:'Lounge',icon:'sofa',stages:[
+  ['Second-Hand Sofa','It has seen some things.'],
+  ['Comfy Sofa','Softer fabric and brighter cushions.'],
+  ['Statement Sofa','A bolder colour combination.'],
+  ['Designer Sofa','Deep upholstery and gold accents.'],
+  ['Signature Sofa','The centrepiece of the room.']
+ ]},
+ bed:{label:'Sleep',icon:'bed',stages:[
+  ['Basic Bed','Simple frame, simple bedding.'],
+  ['Fresh Bedding','Brighter linen and a better frame.'],
+  ['Hotel Bed','Soft sage with clean white pillows.'],
+  ['Boutique Bed','Rich lavender with a padded headboard.'],
+  ['Dream Bed','Dark frame and gold bedding.']
+ ]},
+ table:{label:'Furniture',icon:'table',stages:[
+  ['Old Table','A basic little coffee table.'],
+  ['Warm Timber','A tidier wood finish.'],
+  ['Modern Table','A lighter top and slimmer legs.'],
+  ['Stone Table','Pale stone with dark supports.'],
+  ['Designer Table','Dark top with gold legs.']
+ ]},
+ plant:{label:'Decor',icon:'plant',stages:[
+  ['Small Plant','A little green in the corner.'],
+  ['Healthier Plant','Brighter foliage and a nicer pot.'],
+  ['Big Plant','More leaves, more presence.'],
+  ['Statement Plant','Deep green with a cool planter.'],
+  ['Living Feature','Premium planter and lush foliage.']
+ ]},
+ pet:{label:'Pet',icon:'pet',stages:[
+  ['Little Friend','He has already made himself at home.'],
+  ['New Collar','A bright collar and tag.'],
+  ['Bandana','Now he knows he looks good.'],
+  ['Harness','Ready for important adventures.'],
+  ['Tiny Royalty','Completely spoiled. As intended.']
+ ]}
 };
-const state = Object.fromEntries(Object.keys(paths).map(k=>[k,0]));
+const state={room:0,sofa:0,bed:0,table:0,plant:0,pet:0};
 let selected='room';
 
 function icon(name){
- const common='viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
  const d={
   home:'<path d="M5 14 16 5l11 9v13H5z"/><path d="M12 27v-8h8v8"/>',
   sofa:'<path d="M7 16v-3a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v3"/><path d="M5 16a3 3 0 0 1 3 3v4h16v-4a3 3 0 0 1 3-3v11H5z"/>',
   bed:'<path d="M5 8v19M27 15v12M5 21h22"/><path d="M8 13h7a4 4 0 0 1 4 4v4H8z"/>',
-  table:'<ellipse cx="16" cy="10" rx="10" ry="4"/><path d="M16 14v12M10 27h12"/>',
-  plant:'<path d="M16 16v-7M16 14c-5 0-8-3-8-7 5 0 8 2 8 7ZM16 12c5 0 8-3 8-7-5 0-8 2-8 7Z"/><path d="M9 18h14l-2 9H11z"/>',
-  pet:'<path d="M9 10 6 5l6 2M23 10l3-5-6 2"/><path d="M9 10c-3 4-3 11 1 15 3 3 9 3 12 0 4-4 4-11 1-15"/><circle cx="12" cy="16" r="1"/><circle cx="20" cy="16" r="1"/><path d="M14 21q2 2 4 0"/>'
+  table:'<rect x="6" y="8" width="20" height="7"/><path d="M10 15v12M22 15v12"/>',
+  plant:'<path d="M16 18v-9M16 14c-5 0-8-3-8-7 5 0 8 2 8 7M16 12c5 0 8-3 8-7-5 0-8 2-8 7"/><path d="M9 19h14l-2 8H11z"/>',
+  pet:'<path d="M8 10 5 5l7 2M24 10l3-5-7 2"/><path d="M9 10c-3 4-3 11 1 15 3 3 9 3 12 0 4-4 4-11 1-15"/><circle cx="12" cy="16" r="1"/><circle cx="20" cy="16" r="1"/>'
  }[name];
- return '<svg class="dockIcon" '+common+'>'+d+'</svg>';
+ return '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">'+d+'</svg>';
 }
 function buildDock(){
  const dock=document.getElementById('dock');
- dock.innerHTML=Object.entries(paths).map(([k,v])=>'<button class="dockBtn '+(k===selected?'selected':'')+'" data-path="'+k+'">'+icon(v.icon)+'<span>'+v.label+'</span></button>').join('');
- dock.querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.path;buildDock();syncFocus()});
+ dock.innerHTML=Object.keys(paths).map(function(k){
+  return '<button data-k="'+k+'" class="'+(k===selected?'selected':'')+'">'+icon(paths[k].icon)+'<span>'+paths[k].label+'</span></button>';
+ }).join('');
+ dock.querySelectorAll('button').forEach(function(b){
+  b.onclick=function(){selected=b.dataset.k;buildDock();syncFocus()};
+ });
 }
 function syncFocus(){
- const p=paths[selected],lv=state[selected],stage=p.stages[lv];
- document.getElementById('category').textContent=p.label.toUpperCase()+' · LV. '+(lv+1);
- document.getElementById('upgradeName').textContent=stage[0];
- document.getElementById('upgradeDesc').textContent=stage[1];
+ const p=paths[selected],l=state[selected];
+ document.getElementById('category').textContent=p.label.toUpperCase()+' · LV. '+(l+1);
+ document.getElementById('upgradeName').textContent=p.stages[l][0];
+ document.getElementById('upgradeDesc').textContent=p.stages[l][1];
  const btn=document.getElementById('upgradeBtn');
- if(lv>=p.stages.length-1){btn.classList.add('maxed');btn.innerHTML='MAX LEVEL<span class="price">COMPLETE</span>'}
- else{btn.classList.remove('maxed');btn.innerHTML='UPGRADE<span class="price">∞ COINS</span>'}
- const total=Object.values(state).reduce((a,b)=>a+b,0);
+ if(l>=4){btn.classList.add('maxed');btn.innerHTML='MAX LEVEL<em>COMPLETE</em>'}
+ else{btn.classList.remove('maxed');btn.innerHTML='UPGRADE<em>∞ COINS</em>'}
+ const total=Object.values(state).reduce(function(a,b){return a+b},0);
  document.getElementById('homeLevel').textContent='LV. '+(1+Math.floor(total/3));
 }
-function setAttrs(id,attrs){const el=document.getElementById(id);if(!el)return;Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v))}
+function fill(id,v){const e=document.getElementById(id);if(e)e.setAttribute('fill',v)}
 function applyRoom(){
  const l=state.room;
- setAttrs('leftWall',{fill:'url(#wall'+l+')'});setAttrs('rightWall',{fill:'url(#wall'+l+')'});
- setAttrs('floorBase',{fill:'url(#wood'+l+')'});
- setAttrs('floorPattern',{fill:l===2?'url(#tiles)':'url(#planks)',opacity:l===4?'.35':'.65'});
- document.getElementById('lamp').setAttribute('opacity',l>=3?'1':l>=1?'.7':'.4');
+ const walls=['#cfc7dc','#eadfc8','#c8d9cf','#c8bddb','#31385c'];
+ const floors=['#9d775a','#bd875b','#b49376','#71584d','#4c3b45'];
+ fill('wall',walls[l]);fill('floor',floors[l]);
+ document.getElementById('floorLines').setAttribute('stroke',l===4?'#2f2837':'#6f4e3e');
 }
 function applySofa(){
  const l=state.sofa;
  const pal=[
-  ['#8b837a','#69645f','#77716a','#aaa198'],
-  ['#c68f69','#9c684d','#ad7857','#eed4b7'],
-  ['#6da89f','#477c75','#568e86','#f1ca78'],
-  ['#765f96','#55416f','#655080','#dfb5c6'],
-  ['#244e58','#183a42','#1f444d','#d9a84b']
+  ['#756e92','#8f87ac','#67607f','#d8a2aa','#f0d479'],
+  ['#9b796c','#bd9682','#866557','#f1d7b4','#d88975'],
+  ['#5f8c87','#78a69f','#4a716e','#efd172','#f3efe0'],
+  ['#65557e','#816d9d','#514364','#d99aae','#efc24e'],
+  ['#314e59','#426773','#233943','#e7ded0','#efc24e']
  ][l];
- setAttrs('sofaBase',{fill:pal[0]});setAttrs('sofaBack',{fill:pal[0]});setAttrs('sofaFront',{fill:pal[1]});setAttrs('sofaSide',{fill:pal[2]});
- setAttrs('cushion1',{fill:pal[3]});setAttrs('cushion2',{fill:l>=2?(l===4?'#e9e2d2':'#f5ebe0'):pal[3]});
- setAttrs('sofaLegs',{stroke:l>=3?'#c59a53':'#3d332c', 'stroke-width':l>=3?'12':'10'});
+ fill('sofaBack',pal[0]);fill('sofaSeat',pal[1]);fill('sofaArmL',pal[2]);fill('sofaArmR',pal[2]);fill('cushion1',pal[3]);fill('cushion2',pal[4]);
 }
 function applyBed(){
  const l=state.bed;
  const p=[
-  ['#806144','#eee7dc','#b0b8bd','#e7e2da','#76563d'],
-  ['#9b754e','#fff8eb','#89a8b9','#fffaf1','#896748'],
-  ['#92795f','#fffdf6','#789a8d','#ffffff','#7d6652'],
-  ['#65546f','#fff8f1','#b38193','#f8e9e2','#66536f'],
-  ['#263f53','#fffdf6','#d5a950','#ffffff','#263f53']
+  ['#6d5572','#684c4d','#aaa3c8','#fffced'],
+  ['#8c694f','#805a45','#86a2b0','#fffced'],
+  ['#697a70','#6a5d50','#7d9d8d','#ffffff'],
+  ['#6c587a','#57465e','#a77b96','#f6e7e5'],
+  ['#28394e','#26313f','#d4aa4f','#ffffff']
  ][l];
- setAttrs('bedFrame',{fill:p[0]});setAttrs('mattress',{fill:p[1]});setAttrs('duvet',{fill:p[2]});setAttrs('pillow',{fill:p[3]});setAttrs('headboard',{fill:p[4]});
+ fill('bedHead',p[0]);fill('bedFrame',p[1]);fill('duvet',p[2]);fill('pillow',p[3]);
 }
 function applyTable(){
  const l=state.table;
- const tops=['#917156','#b17e4d','#6f7d80','#e7dfcf','#27313a'];
- const legs=['#6a4c36','#755033','#596265','#b99b67','#c49a4b'];
- setAttrs('tableTop',{fill:tops[l],rx:l>=2?'72':'83',ry:l>=2?'25':'30'});
- setAttrs('tableLeg',{stroke:legs[l],'stroke-width':l===4?'12':'18'});
+ const tops=['#9f7658','#b98458','#869093','#d7d0c0','#303744'];
+ const legs=['#171a3d','#171a3d','#4f5962','#303744','#b78b43'];
+ document.querySelector('#tableTop+rect').setAttribute('fill',tops[l]);
+ fill('tableLegL',legs[l]);fill('tableLegR',legs[l]);
 }
 function applyPlant(){
  const l=state.plant;
- const leaf=['#6f9b66','#4e9a63','#438c61','#367c58','#2d7358'][l];
- const pot=['#9b7761','#d28d67','#d9c08a','#536d75','#c89a48'][l];
- setAttrs('plantLeaves',{fill:leaf});setAttrs('plantPot',{fill:pot});
- document.getElementById('plant').style.transform='scale('+(1+l*.055)+') translate('+(l*-3)+'px,'+(l*-3)+'px)';
+ const leaves=['#5fa18f','#559b72','#4d8e68','#39755c','#2c6e58'];
+ const pots=['#aa735d','#c48662','#c5ab77','#657a85','#c59047'];
+ document.getElementById('plantLeaves').setAttribute('fill',leaves[l]);fill('plantPot',pots[l]);
+ const scale=1+l*.025;document.getElementById('plant').setAttribute('transform','translate('+(864*(1-scale))+','+(388*(1-scale))+') scale('+scale+')');
 }
 function applyPet(){
  const l=state.pet;
- const collarColours=['#e45f6f','#e45f6f','#4c8bd5','#3b9c8e','#8c5fb1'];
- setAttrs('collar',{fill:collarColours[l]});
- setAttrs('tag',{fill:l>=4?'#fff0a1':l>=2?'#f2d06b':'#f0c75a'});
  document.getElementById('petCollar').setAttribute('opacity',l>=1?'1':'0');
  document.getElementById('petBandana').setAttribute('opacity',l>=2?'1':'0');
  document.getElementById('petHarness').setAttribute('opacity',l>=3?'1':'0');
  document.getElementById('petCrown').setAttribute('opacity',l>=4?'1':'0');
+ fill('collar',l>=4?'#8d65b0':l>=3?'#5fa18f':l>=2?'#6f91c5':'#d86d7f');
+ fill('tag',l>=4?'#fff1a6':'#efc24e');
 }
 function applyAll(){applyRoom();applySofa();applyBed();applyTable();applyPlant();applyPet();syncFocus()}
-function celebrate(target){
- const card=document.querySelector('.sceneCard'),r=card.getBoundingClientRect();
- for(let i=0;i<18;i++){
-  const s=document.createElement('i');s.className='spark';
-  s.style.left=(r.width*(.4+Math.random()*.2))+'px';s.style.top=(r.height*(.45+Math.random()*.18))+'px';
-  const a=Math.random()*Math.PI*2,d=45+Math.random()*110;s.style.setProperty('--dx',(Math.cos(a)*d)+'px');s.style.setProperty('--dy',(Math.sin(a)*d)+'px');
-  card.appendChild(s);setTimeout(()=>s.remove(),800);
- }
- const el=document.getElementById(target);el.classList.remove('upgradePulse');void el.getBBox();el.classList.add('upgradePulse');
- const t=document.getElementById('toast');t.textContent=paths[selected].stages[state[selected]][0]+' unlocked';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1150);
- if(navigator.vibrate)navigator.vibrate(25);
+function flash(id){
+ const e=document.getElementById(id);if(!e)return;e.classList.remove('flash');void e.getBBox();e.classList.add('flash')
 }
-document.getElementById('upgradeBtn').onclick=()=>{
- const max=paths[selected].stages.length-1;if(state[selected]>=max)return;
- state[selected]++;applyAll();celebrate(selected==='room'?'shell':selected);
+document.getElementById('upgradeBtn').onclick=function(){
+ if(state[selected]>=4)return;
+ state[selected]++;
+ applyAll();
+ flash(selected==='room'?'world':selected);
+ const b=document.getElementById('bubble');
+ b.textContent=selected==='pet'?'Looking fancy!':'Nice upgrade!';
+ b.classList.add('show');setTimeout(function(){b.classList.remove('show')},850);
+ if(navigator.vibrate)navigator.vibrate(20);
 };
-document.querySelector('.brand').onclick=()=>document.getElementById('sheet').classList.add('open');
-document.querySelector('.wallet').onclick=()=>document.getElementById('sheet').classList.add('open');
-document.getElementById('sheet').onclick=e=>{if(e.target.id==='sheet')e.currentTarget.classList.remove('open')};
-document.getElementById('resetBtn').onclick=()=>{
- Object.keys(state).forEach(k=>state[k]=0);applyAll();buildDock();document.getElementById('sheet').classList.remove('open');
-};
+
+/* dog wandering: true positional movement, pauses, turning and walk bob */
+const mover=document.getElementById('dogMover');
+const legs=document.getElementById('dogLegs');
+const dog=document.getElementById('dog');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const spots=[
+ {x:330,y:424},{x:430,y:442},{x:545,y:430},{x:665,y:447},{x:730,y:424},{x:590,y:456},{x:450,y:458}
+];
+let pos={x:338,y:430},from={x:338,y:430},to=spots[2],start=performance.now(),duration=2600,restUntil=0,walking=true,lastStep=0,step=false;
+
+function chooseNext(now){
+ let choices=spots.filter(function(s){return Math.abs(s.x-pos.x)+Math.abs(s.y-pos.y)>90});
+ to=choices[Math.floor(Math.random()*choices.length)];
+ from={x:pos.x,y:pos.y};start=now;
+ const dist=Math.hypot(to.x-from.x,to.y-from.y);
+ duration=1500+dist*4.8;
+ walking=true;
+ const flip=to.x<from.x?-1:1;
+ dog.setAttribute('transform','scale('+(.72*flip)+' .72) translate('+(flip<0?-190:0)+' 0)');
+}
+function tick(now){
+ if(reduced){mover.setAttribute('transform','translate(510 438)');requestAnimationFrame(tick);return}
+ if(!walking){
+   if(now>=restUntil)chooseNext(now);
+ }else{
+   let t=Math.min(1,(now-start)/duration);
+   let e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+   pos.x=from.x+(to.x-from.x)*e;pos.y=from.y+(to.y-from.y)*e;
+   const bob=Math.sin(t*Math.PI*10)*2;
+   mover.setAttribute('transform','translate('+pos.x+' '+(pos.y+bob)+')');
+   if(now-lastStep>135){step=!step;lastStep=now;legs.setAttribute('transform',step?'translate(0 2)':'translate(0 0)')}
+   if(t>=1){
+     walking=false;restUntil=now+900+Math.random()*2300;
+     legs.setAttribute('transform','translate(0 0)');
+     if(Math.random()<.35){
+       const b=document.getElementById('bubble');
+       const lines=['sniff sniff','...','woof!','comfy.'];
+       b.textContent=lines[Math.floor(Math.random()*lines.length)];
+       b.classList.add('show');setTimeout(function(){b.classList.remove('show')},700);
+     }
+   }
+ }
+ requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
 buildDock();applyAll();
 </script>
 </body>
