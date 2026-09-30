@@ -146,12 +146,16 @@ export function updateTokenRespawns(tokens,now=0){
   }
  }
 }
-export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0){
+export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0,phaseCap=7){
  const events=[];
  for(const token of tokens){
   if(token.collected||distance(token,ghost)>24)continue;
   if(token.reward==='stiff'&&effects.stiff>=3){
    if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'stiffFull',title:'Scared Stiff full',detail:'3 / 3 stored',token});}
+   continue;
+  }
+  if(token.reward==='phaseTier'&&(run.phase||0)>=phaseCap){
+   if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'phaseLocked',title:'Phase locked',detail:'Finish the current Unfinished Business first',token});}
    continue;
   }
   token.collected=true;
