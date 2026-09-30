@@ -150,7 +150,7 @@ export function generateWorld(seed=2717,level=0){
  level=Math.max(0,Math.min(4,level|0));let state=(seed+level*982451653)>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
  const blocks=[],decor=[],regions=regionsForLevel(level),info=levelInfo(level);
  const add=(x,y,w,h,kind='wall',phase=99)=>{const b={x,y,w,h,kind,phase,open:false};blocks.push(b);return b};
- add(0,0,WORLD.width,24);add(0,0,24,WORLD.height);add(0,WORLD.height-24,WORLD.width,24);add(WORLD.width-24,0,24,WORLD.height);
+ add(0,0,WORLD.width,24,'hedge',99);add(0,0,24,WORLD.height,'hedge',99);add(0,WORLD.height-24,WORLD.width,24,'hedge',99);add(WORLD.width-24,0,24,WORLD.height,'hedge',99);
  if(level===0)baseLayout(add,decor,random);else variantLayout(level,add,decor);
  addEntrances(level,add);
  for(const r of regions.filter(r=>r.kind===2||r.kind===4)){
@@ -167,7 +167,7 @@ export function generateWorld(seed=2717,level=0){
    const seeded=Number.isFinite(b.phase)&&b.phase<99?b.phase:1+((Math.floor(b.x/120)+Math.floor(b.y/120)+level)%3);
    b.phase=Math.max(1,Math.min(3,seeded));
   }else if(b.kind==='wall'){
-   // Keep the four absolute canvas-edge boundaries unphaseable.
+   // The four absolute canvas-edge hedges are unphaseable.
    const outer=b.x===0||b.y===0||b.x+b.w>=WORLD.width||b.y+b.h>=WORLD.height;
    if(!outer){
     const tier=2+((Math.floor(b.x/180)+Math.floor(b.y/180)+level*2)%Math.min(6,3+level));
