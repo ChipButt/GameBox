@@ -91,7 +91,7 @@ function animateStoryScene(scene){
   if(scene===1||scene===2){g.fillStyle='#efcf8c';g.font='bold 9px monospace';g.textAlign='center';g.fillText(scene===1?'? ? ?':'TO DO  TO DO  TO DO',155,30)}
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
-const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v1';
+const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v2';
 function mausoleumSeen(){try{return localStorage.getItem(MAUSOLEUM_KEY)==='1'}catch{return !!p.tutorialSeen}}
 function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}p.tutorialSeen=true;save();}
 function startMausoleum(){
@@ -651,7 +651,7 @@ function drawFullMapCanvas(){
  for(const block of blocks){
   if(block.exit)continue;
   const bx=pad+block.x*sx,by=pad+block.y*sy,bw=Math.max(1,block.w*sx),bh=Math.max(1,block.h*sy);
-  const col=block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?(block.phase<99?'#63c982':'#8b9188'):'#555b59';
+  const col=block.phase<99?'#63c982':block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?'#8b9188':'#555b59';
   rr(bx,by,bw,bh,col);
  }
  for(const token of tokens)if(!token.collected){
@@ -704,12 +704,13 @@ function drawMap(){
  for(const b of blocks){
   if(b.exit)continue;
   const bx=Math.floor(x+b.x*sx),by=Math.floor(y+b.y*sy),bw=Math.max(1,Math.ceil(b.w*sx)),bh=Math.max(1,Math.ceil(b.h*sy));
-  if(b.kind==='water'){
+  if(b.phase<99)rect(ctx,bx,by,bw,bh,'#63c982');
+  else if(b.kind==='water'){
    rect(ctx,bx,by,bw,bh,'#244c5d');
    for(let yy=by+2;yy<by+bh;yy+=5)rect(ctx,bx+1+(yy%3),yy,Math.max(1,bw-3),1,'#4c788322');
   }else if(b.kind==='tree'||b.kind==='hedge') rect(ctx,bx,by,bw,bh,b.kind==='tree'?'#294435':'#304b39');
   else if(b.kind==='wall'||b.kind==='stone') rect(ctx,bx,by,bw,bh,'#78817a');
-  else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,b.phase<99?'#63c982':'#8b9188');
+  else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,'#8b9188');
   else rect(ctx,bx,by,bw,bh,'#555b59');
  }
  // Sealed Unfinished Business rooms.
