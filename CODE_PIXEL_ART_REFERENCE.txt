@@ -1,5 +1,6 @@
 GAMEBOX CODE-ONLY PIXEL ART REFERENCE
-Version: 1.0
+Version: 1.1 CANDIDATE
+STATUS: NOT YET USER-APPROVED. Do not treat this as the locked visual reference until the My Place rebuild is explicitly accepted.
 Primary working example: my-place/index.html
 Shared renderer: shared/gamebox-pixel-art.js
 
@@ -47,13 +48,13 @@ Grid supports:
 MY PLACE REFERENCE IMPLEMENTATION
 File: my-place/index.html
 
-The rebuilt My Place demonstrates the intended approach:
+The current My Place candidate demonstrates the intended approach, but remains subject to visual acceptance:
 - 352x220 code-rendered game world.
 - Integer physical-pixel scaling through PixelStage.
 - Entire room background generated in code, including textured plaster, timber floor, rug, framed picture and shelf clutter.
 - Code-generated window scene with sky/skyline and ambient motion.
 - Individually generated bed, sofa, coffee table and plant sprites with multiple upgrade variants.
-- Code-generated human sprite.
+- Clearly visible code-generated human character with four directional views and animated walking frames.
 - Code-generated dog with four movement directions, four gait frames, four visible legs, planted-paw gait changes and upgrade accessories.
 - Cached sprite canvases rather than expensive regeneration every frame.
 - Y-sorted actors/objects for convincing scene depth.
