@@ -118,7 +118,7 @@ function tutorialPage(index){
  mode='story';show(`<div class="tutorialCard pickupTutorial"><span class="eyebrow">${index+1} / ${TUTORIAL_PAGES.length} · ${page.tag}</span>${icon}<h2>${page.title}</h2><p class="tutorialHint">${page.body}</p><button class="primary" id="tutorialNext">${last?'Start the level':'Continue'} →</button></div>`);
  $('tutorialNext').onclick=()=>{if(last){markPickupTutorialSeen();start(false)}else tutorialPage(index+1)};
 }
-function buildWorldSafelyfunction buildWorldSafely(level){
+function buildWorldSafely(level){
  const generated=generateWorld(p.worldSeed,level);
  let builtScenery=null,builtNav=null,builtPeople=[],builtTokens=[];
  try{builtNav=navigation(generated.blocks)}catch(err){console.error('Navigation build failed',err)}
@@ -165,7 +165,7 @@ function applyGraveyardStoryBeat(id){
   note('TASK COMPLETE · You remember the way out.',2.7);
  }
 }
-function prepareLevelTasksfunction prepareLevelTasks(){
+function prepareLevelTasks(){
  const defs=LEVEL_TASKS[p.level]||LEVEL_TASKS[0];
  run.tasks=defs.map((task,index)=>{
   const q=nav?.nearest({x:task.x,y:task.y});
