@@ -12,6 +12,7 @@ A mobile-first browser games hub from **Chip In Games**.
 | `shift-in-maze/` | Shift In Maze, tiles, relics, artwork and `editors/` |
 | `bingo/` | Bingo source page, scripts and styling |
 | `core-empires/` | Core Empires (existing folder preserved) |
+| `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
 | `shared/` | Player roster, networking, shared styles and menu/branding assets |
@@ -30,6 +31,15 @@ Source HTML pages use an explicit base URL so their relative resources and navig
 This organisation changes resource paths only: game logic, storage keys, multiplayer identifiers, layouts and image bytes are preserved. `tools/file-moves.json` records every relocation. The path check documents `maze_shift_ui.png` as already missing before this reorganisation; this change does not invent or replace that artwork.
 
 ## Included games
+
+### Sweet Truck Fever
+- Mobile-first colour-sorting and parking puzzle game
+- Tap clear trucks to send them into loading spaces
+- Match delivery trucks to the moving stream of coloured sweets
+- Later levels add denser traffic, more colours and hidden trucks
+- Progress is stored locally in the browser
+- Play at `sweet-truck-fever/`
+
 
 ### Relic
 - Mobile-first real-world treasure hunting adventure prototype for Bidford-on-Avon
