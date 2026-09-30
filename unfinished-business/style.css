@@ -112,3 +112,36 @@
 .tokenRewardGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0 12px;text-align:left}
 .tokenRewardGrid span{display:flex;align-items:center;gap:7px;min-height:31px;padding:6px 8px;border:1px solid #657368;background:#122129;color:#dbe0cb;font-size:9px;font-weight:900;letter-spacing:.3px}
 .tokenRewardGrid b{width:18px;height:18px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #b99e61;background:#332d20;color:#f3ce87;font-size:11px;box-shadow:0 0 6px #f3ce8733}
+
+
+/* 2026-09-30 collectible progression */
+#tokenInventory{left:12px;right:auto;top:calc(26% + env(safe-area-inset-top));min-width:112px;padding:8px 10px 8px 42px}
+#tokenInventory .tokenInvIcon{left:7px;width:29px;height:29px;display:grid;place-items:center;font-size:0}
+#tokenInventory .tokenInvIcon svg{width:29px;height:29px;display:block;image-rendering:pixelated}
+#tokenInventory.empty{opacity:.52}
+.pickupAnnouncement{position:absolute;z-index:8;left:50%;top:45%;width:190px;min-height:150px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:3px solid #84968c;border-radius:7px;background:linear-gradient(#263a3bee,#101f29f2);box-shadow:0 7px #061219,0 0 28px #b6f7d233,inset 0 2px #ffffff24;opacity:0;transform:translate(-50%,-50%) scale(.62);transition:left .55s ease,top .55s ease,transform .55s ease,opacity .45s ease;pointer-events:none;text-align:center}
+.pickupAnnouncement.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.pickupAnnouncement.fade{opacity:0;transform:translate(-50%,-55%) scale(.78)}
+.pickupAnnouncement.toInventory{left:25px;top:calc(26% + 17px + env(safe-area-inset-top));opacity:.18;transform:translate(0,-50%) scale(.28)}
+.pickupAnnouncement.stiff{border-color:#e0a246;box-shadow:0 7px #4f2c18,0 0 34px #f0a43c66,inset 0 2px #fff0b22e}
+.pickupAnnouncement.speed{border-color:#9debcf}
+.pickupAnnouncement.phase{border-color:#e2eaff}
+.pickupAnnouncement.invisibility{border-color:#87c9ec}
+.pickupIcon{width:78px;height:72px;display:grid;place-items:center;filter:drop-shadow(0 4px 3px #06121988)}
+.pickupIcon svg{width:78px;height:72px;display:block;image-rendering:pixelated}
+.pickupAnnouncement strong{color:#fff4da;font-size:14px;letter-spacing:.9px;text-transform:uppercase}
+.pickupAnnouncement small{color:#bfd1c6;font-size:9px;font-weight:950;letter-spacing:1px}
+.phasePulse{animation:phasePickupPulse 1.05s ease-in-out infinite}
+@keyframes phasePickupPulse{0%,100%{opacity:1}50%{opacity:.24}}
+.tutorialPickupIcon{width:92px;height:82px;margin:2px auto 4px;display:grid;place-items:center;border:2px solid #6f8178;border-radius:5px;background:#0b1821aa;box-shadow:0 4px #07131a,inset 0 0 20px #ffffff0b}
+.tutorialPickupIcon svg{width:82px;height:72px;image-rendering:pixelated}
+.tutorialPickupIcon.stiff{border-color:#c88c3c;background:#332416}
+.pickupTutorial .tutorialHint{max-width:325px;font-size:12px;line-height:1.6}
+.speedAbility.passive{pointer-events:none!important}
+.speedAbility.passive .speedCost{border-color:#537369;background:#152a2d;color:#b6f7d2}
+@media(max-height:650px){
+ #tokenInventory{top:calc(24% + env(safe-area-inset-top))}
+ .pickupAnnouncement.toInventory{top:calc(24% + 17px + env(safe-area-inset-top))}
+ .pickupAnnouncement{min-height:130px}
+ .pickupIcon{height:62px}
+}
