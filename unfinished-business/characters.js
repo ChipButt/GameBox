@@ -103,24 +103,45 @@ export function drawCat(c,e,reduced=false){const p=pose(e,reduced),dx=Math.cos(p
  c.restore();}
 
 export function drawCyclist(c,e,reduced=false){
- const p=pose(e,reduced),spin=reduced?0:(e.walk||0)*.22;
+ const p=pose(e,reduced),spin=reduced?0:(e.walk||0)*.115,pedal=Math.sin(spin)*4;
  c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(e.angle);c.scale(1.42,1.42);
- // Top-down bike: front/rear tyres align with travel direction, rider sits over the frame.
- c.fillStyle='#07151d55';c.beginPath();c.ellipse(0,8,27,8,0,0,Math.PI*2);c.fill();
- const tyre=(x)=>{c.fillStyle='#111d25';c.beginPath();c.ellipse(x,4,8,4,0,0,Math.PI*2);c.fill();c.strokeStyle='#8c999477';c.lineWidth=1;c.beginPath();c.moveTo(x-5,4);c.lineTo(x+5,4);c.moveTo(x,1);c.lineTo(x,7);c.stroke();};
- tyre(-18);tyre(18);
- c.strokeStyle='#b08b58';c.lineWidth=3;c.beginPath();c.moveTo(-16,4);c.lineTo(-3,0);c.lineTo(8,4);c.lineTo(-16,4);c.moveTo(-3,0);c.lineTo(16,4);c.moveTo(8,4);c.lineTo(5,-5);c.stroke();
- // Handlebar and saddle read clearly from above.
- c.strokeStyle='#d1bd87';c.lineWidth=2;c.beginPath();c.moveTo(14,-4);c.lineTo(20,-7);c.moveTo(14,-4);c.lineTo(20,0);c.stroke();
- rect(c,-8,-4,5,8,'#2b3d48');
- // Rider: shoulders across the bike, torso/head pointing along travel direction.
- const bob=p.moving&&!reduced?Math.round(Math.sin(spin)*1):0;c.translate(0,bob);
- pixelEllipse(c,5,-2,7,7,'#d5ad88');
- rect(c,-8,-7,14,14,e.tint||'#6f8798');rect(c,-11,-5,5,10,'#6f8798');rect(c,6,-5,5,10,'#6f8798');
- rect(c,-8,5,6,9,'#283d4b');rect(c,2,5,6,9,'#354b58');
- rect(c,-2,-8,5,3,'#e2c19b');rect(c,1,-11,7,6,'#3b4850');
- // Hands on bars and pedalling feet.
- rect(c,11,-7,4,4,'#d5ad88');rect(c,11,1,4,4,'#d5ad88');
- const pedal=Math.sin(spin)*4;rect(c,-6+pedal,12,5,3,'#172733');rect(c,2-pedal,12,5,3,'#172733');
+
+ // Bike travels along local X. Both wheels and the frame stay centred beneath the rider.
+ c.fillStyle='#07151d55';c.beginPath();c.ellipse(0,9,29,8,0,0,Math.PI*2);c.fill();
+ const tyre=x=>{
+  c.fillStyle='#111d25';c.beginPath();c.ellipse(x,3,8,4,0,0,Math.PI*2);c.fill();
+  c.strokeStyle='#8c999477';c.lineWidth=1;c.beginPath();c.moveTo(x-5,3);c.lineTo(x+5,3);c.moveTo(x,0);c.lineTo(x,6);c.stroke();
+ };
+ tyre(-19);tyre(19);
+
+ // Rear leg is on the far side of the bike.
+ const skin='#d5ad88',trouserFar='#283d4b',trouserNear='#354b58',shoe='#172733';
+ const farHip={x:-4,y:-2},farKnee={x:-1+pedal*.35,y:-8},farFoot={x:2+pedal,y:-9};
+ pixelLimb(c,farHip.x,farHip.y,farKnee.x,farKnee.y,5,trouserFar);
+ pixelLimb(c,farKnee.x,farKnee.y,farFoot.x,farFoot.y,4,trouserFar);
+ rect(c,farFoot.x-2,farFoot.y-1,5,3,shoe);
+
+ // Frame, saddle and bars sit between the two legs.
+ c.strokeStyle='#b08b58';c.lineWidth=3;c.beginPath();
+ c.moveTo(-16,3);c.lineTo(-4,-1);c.lineTo(8,3);c.lineTo(-16,3);
+ c.moveTo(-4,-1);c.lineTo(17,3);c.moveTo(8,3);c.lineTo(5,-5);c.stroke();
+ rect(c,-8,-5,6,4,'#2b3d48');
+ c.strokeStyle='#d1bd87';c.lineWidth=2;c.beginPath();c.moveTo(14,-3);c.lineTo(19,-7);c.moveTo(14,-3);c.lineTo(19,1);c.stroke();
+
+ // Near leg stays on the opposite side, attached to the opposite pedal.
+ const nearHip={x:-4,y:3},nearKnee={x:-1-pedal*.35,y:9},nearFoot={x:2-pedal,y:10};
+ pixelLimb(c,nearHip.x,nearHip.y,nearKnee.x,nearKnee.y,5,trouserNear);
+ pixelLimb(c,nearKnee.x,nearKnee.y,nearFoot.x,nearFoot.y,4,trouserNear);
+ rect(c,nearFoot.x-2,nearFoot.y-1,5,3,shoe);
+
+ // Rider is centred over the frame and faces the direction of travel.
+ const bob=p.moving&&!reduced?Math.round(Math.sin(spin*2))*.5:0;c.translate(0,bob);
+ rect(c,-8,-6,14,13,e.tint||'#6f8798');
+ rect(c,-8,-6,14,2,'#91a5ad55');
+ pixelEllipse(c,7,-1,7,7,skin);
+ rect(c,5,-7,7,5,'#3b4850');
+ // Arms reach forward to opposite ends of the handlebar.
+ pixelLimb(c,3,-4,14,-6,4,e.tint||'#6f8798');pixelLimb(c,3,4,14,1,4,e.tint||'#6f8798');
+ rect(c,13,-7,4,4,skin);rect(c,13,0,4,4,skin);
  c.restore();
 }
