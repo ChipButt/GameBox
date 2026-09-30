@@ -49,7 +49,7 @@ button,a{-webkit-tap-highlight-color:transparent}
  box-shadow:inset 0 0 0 3px #a76c2d;font-size:8px
 }
 .stageWrap{min-height:0;display:grid;place-items:center;padding:7px;background:#111020;overflow:hidden}
-.stage{position:relative;width:100%;height:100%;min-height:0;display:grid;place-items:center;overflow:hidden}
+.stage{position:relative;width:100%;height:100%;min-height:0;display:grid;place-items:end center;overflow:hidden;padding-bottom:8px}
 #world{
  display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#242039;
  max-width:100%;max-height:100%;
@@ -259,7 +259,7 @@ function roomCanvas(level){return cached('room',String(level),()=>{
  return g;
 })}
 
-function windowCanvas(level){
+function windowCanvas(level){return cached('room','window|'+level,()=>{
  const g=new Grid(94,59);const night=level>=4;
  g.rect(0,0,94,59,INK);g.rect(3,3,88,52,night?'#243052':'#71b5c9');
  // sky gradient bands
@@ -269,8 +269,9 @@ function windowCanvas(level){
  else{g.ellipse(74,13,6,6,PAL.yellow);g.rect(14,15,17,2,PAL.paper);g.rect(18,13,10,2,PAL.paper)}
  // distant skyline
  const seed=12+level;for(let x=4;x<90;){const w=6+Math.floor(hash2(x,2,seed)*8),h=10+Math.floor(hash2(x,7,seed)*17);const col=night?'#303653':'#52617a';g.rect(x,52-h,w,h,col);for(let yy=55-h;yy<50;yy+=5)for(let xx=x+2;xx<x+w-1;xx+=4)if(hash2(xx,yy,seed)>.58)g.set(xx,yy,night?PAL.gold:'#ead8b6');x+=w+1}
- g.rect(45,3,3,52,INK);g.rect(3,29,88,3,INK);g.rect(0,55,94,4,INK);g.hline(4,89,54,PAL.paper);return g;
-}
+ g.rect(45,3,3,52,INK);g.rect(3,29,88,3,INK);g.rect(0,55,94,4,INK);g.hline(4,89,54,PAL.paper);
+ return g;
+})}
 
 function sofaCanvas(level){return cached('sofa',String(level),()=>{
  const g=new Grid(100,62);const ps=[
