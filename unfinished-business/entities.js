@@ -100,8 +100,8 @@ export function updateEntities(entities,nav,blocks,dt){for(const e of entities){
  if(e.state==='investigate'){e.timeout-=dt;if(e.timeout<=0){e.state='return';e.path=nav.path(e,e.route[e.index]);continue}}
  if(follow(e,dt,blocks)){if(e.state==='investigate'){e.state='search';e.wait=3.5}else{e.state='wait';e.wait=e.route[e.index].wait;e.angle=e.route[e.index].face}}
 }}
-export function sees(e,target,blocks,invisible=false){if(invisible||e.frozen>0)return false;const dx=target.x-e.x,dy=target.y-e.y,angle=Math.atan2(dy,dx),delta=Math.atan2(Math.sin(angle-e.angle),Math.cos(angle-e.angle));return Math.hypot(dx,dy)<e.range&&Math.abs(delta)<e.half&&!rayBlocked(e.x,e.y,target.x,target.y,blocks);}
-export function resolveSightings(entities,target,blocks,effects,invisible,alert){let danger=false,blocked=false;for(const e of entities){if(!sees(e,target,blocks,invisible))continue;if(effects.stiff>0){effects.stiff--;e.frozen=8;blocked=true;continue}if(e.kind==='cat'){if(e.cooldown<=0){e.cooldown=9;e.meow=1.5;alert({x:e.x,y:e.y},1)}continue}danger=true;}return {danger,blocked};}
+export function sees(e,target,blocks){if(e.frozen>0)return false;const dx=target.x-e.x,dy=target.y-e.y,angle=Math.atan2(dy,dx),delta=Math.atan2(Math.sin(angle-e.angle),Math.cos(angle-e.angle));return Math.hypot(dx,dy)<e.range&&Math.abs(delta)<e.half&&!rayBlocked(e.x,e.y,target.x,target.y,blocks);}
+export function resolveSightings(entities,target,blocks,effects,alert){let danger=false,blocked=false;for(const e of entities){if(!sees(e,target,blocks))continue;if(effects.stiff>0){effects.stiff--;e.frozen=8;blocked=true;continue}if(e.kind==='cat'){if(e.cooldown<=0){e.cooldown=9;e.meow=1.5;alert({x:e.x,y:e.y},1)}continue}danger=true;}return {danger,blocked};}
 export function createTokens(nav,level=0){
  const safeLevel=Math.max(0,Math.min(LEVELS.length-1,level|0)),spawn=LEVELS[safeLevel].spawn;
  const preferred=[
