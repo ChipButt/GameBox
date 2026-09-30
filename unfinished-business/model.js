@@ -13,7 +13,13 @@ export function sanitize(raw){
  p.introSeen=raw?.introSeen===true;p.tutorialSeen=raw?.tutorialSeen===true;
  return p;
 }
-export const newRun=level=>({speed:0,phase:0,level});
+export const newRun=level=>({echoes:0,speed:0,phase:0,level,explored:0,awardedBands:0});
+export const phaseCost=r=>Math.round(28*Math.pow(1.34,r.phase||0));
+export function buyPhase(r){
+ if((r.phase||0)>=RUN_MAX.phase)return false;
+ const price=phaseCost(r);if((r.echoes||0)<price)return false;
+ r.echoes-=price;r.phase=(r.phase||0)+1;return true;
+}
 export const runSpeed=r=>78+r.level*4+r.speed*10;
 export const overlap=(x,y,b,r=10)=>!b.open&&x+r>b.x&&x-r<b.x+b.w&&y+r>b.y&&y-r<b.y+b.h;
 export function rayBlocked(ax,ay,bx,by,blocks){const n=Math.ceil(Math.hypot(bx-ax,by-ay)/6);for(let i=1;i<n;i++){const x=ax+(bx-ax)*i/n,y=ay+(by-ay)*i/n;if(blocks.some(b=>overlap(x,y,b,0)))return true;}return false;}
