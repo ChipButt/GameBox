@@ -31,6 +31,17 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+### Relic
+- Mobile-first real-world treasure hunting adventure prototype for Bidford-on-Avon
+- Ten distinct illustrated relics across one riverside adventure, with GPS search zones and a full from-anywhere Preview mode
+- First-use cinematic onboarding plus contextual guidance for Explore, Adventures, Collection and Home
+- Search Mode deliberately removes precise navigation so the player hunts for the physical mark, then NFC/URL-style scans unlock animated rewards
+- Persistent XP, gold, field-folio collection, dog companion, gear unlocks and adventure completion stored locally
+- NFC-ready deep links use unique relic IDs such as `relic-trail/?relic=BID-01`; prototype scanning is available on-screen before hardware is installed
+- Installable PWA shell, MapLibre/OpenFreeMap mapping, haptics/vibration where supported, procedural vector relic art and responsive mobile presentation
+- The ten current coordinates are prototype search-zone locations only and do not imply permission to mount physical markers
+- Play at `relic-trail/`
+
 ### Core Empires
 - Single-player mining and army evolution prototype
 - Worker assignments, transport bottlenecks, cart upgrades, and tap mining
