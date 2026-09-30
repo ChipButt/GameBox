@@ -146,23 +146,19 @@ export function updateTokenRespawns(tokens,now=0){
   }
  }
 }
-export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0,phaseCap=7){
+export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0){
  const events=[];
  for(const token of tokens){
   if(token.collected||distance(token,ghost)>24)continue;
   if(token.reward==='stiff'&&effects.stiff>=3){
-   if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'stiffFull',title:'Scared Stiff full',detail:'3 / 3 stored',token});}
-   continue;
-  }
-  if(token.reward==='phaseTier'&&(run.phase||0)>=phaseCap){
-   if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'phaseLocked',title:'Phase locked',detail:'Finish the current Unfinished Business first',token});}
+   if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'stiffFull',title:'Scared Stiff',detail:'3 / 3',token});}
    continue;
   }
   token.collected=true;
   const upgrade=(k,label)=>{
    const max=k==='speed'?6:7;
-   if((run[k]||0)<max){run[k]=(run[k]||0)+1;events.push({kind:k,title:`${label} upgraded`,detail:`TIER ${run[k]} / ${max}`,token});return true}
-   events.push({kind:k,title:`${label} already maxed`,detail:`TIER ${max} / ${max}`,token});return false;
+   if((run[k]||0)<max){run[k]=(run[k]||0)+1;events.push({kind:k,title:label,detail:`TIER ${run[k]}`,token});return true}
+   events.push({kind:k,title:label,detail:'MAX',token});return false;
   };
   if(token.reward==='speedTier')upgrade('speed','Speed');
   else if(token.reward==='invisibilityTier'){
@@ -171,7 +167,7 @@ export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0,phaseCap=
   else if(token.reward==='phaseTier')upgrade('phase','Phase');
   else if(token.reward==='stiff'){
    effects.stiff=Math.min(3,effects.stiff+1);token.respawnAt=now+(token.respawnSeconds||35);
-   events.push({kind:'stiff',title:'Scared Stiff',detail:`${effects.stiff} / 3 STORED · RESPAWNS`,token});
+   events.push({kind:'stiff',title:'Scared Stiff',detail:`${effects.stiff} / 3`,token});
   }
  }
  return events;
