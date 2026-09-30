@@ -49,7 +49,7 @@ button,a{-webkit-tap-highlight-color:transparent}
  box-shadow:inset 0 0 0 3px #a76c2d;font-size:8px
 }
 .stageWrap{min-height:0;display:grid;place-items:center;padding:7px;background:#111020;overflow:hidden}
-.stage{position:relative;width:100%;height:100%;min-height:0;display:grid;place-items:end center;overflow:hidden;padding-bottom:8px}
+.stage{position:relative;width:100%;height:100%;min-height:0;display:grid;place-items:end center;overflow:hidden;padding-bottom:10px}
 #world{
  display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#242039;
  max-width:100%;max-height:100%;
@@ -122,7 +122,7 @@ button,a{-webkit-tap-highlight-color:transparent}
 
   <main class="stageWrap" id="stageWrap">
     <div class="stage">
-      <canvas id="world" width="352" height="220" aria-label="Animated code-generated pixel-art home with a walking person and dog"></canvas>
+      <canvas id="world" width="384" height="304" aria-label="Animated code-generated pixel-art home with a walking person and dog"></canvas>
       <div class="hud">HOME <b id="homeLevel">LV. 1</b></div>
     </div>
   </main>
@@ -137,13 +137,13 @@ button,a{-webkit-tap-highlight-color:transparent}
     </div>
   </footer>
 </div>
-<script src="../shared/gamebox-pixel-art.js?v=2"></script>
+<script src="../shared/gamebox-pixel-art.js?v=3"></script>
 <script>
 'use strict';
 const {Grid,PixelStage,PAL,mix,alpha,hash2,bayer,ramp,clamp}=window.GBPixel;
 const INK=PAL.ink;
 const canvas=document.getElementById('world');
-const stage=new PixelStage(canvas,352,220,document.getElementById('stageWrap'));
+const stage=new PixelStage(canvas,384,304,document.getElementById('stageWrap'));
 const ctx=stage.ctx;
 ctx.imageSmoothingEnabled=false;
 
@@ -209,7 +209,7 @@ function syncFocus(){
 }
 
 /* ---------- pixel asset factory: every image is generated from code ---------- */
-const caches={room:new Map(),sofa:new Map(),bed:new Map(),table:new Map(),plant:new Map(),avatar:new Map(),dog:new Map()};
+const caches={room:new Map(),prop:new Map(),sofa:new Map(),bed:new Map(),table:new Map(),plant:new Map(),avatar:new Map(),dog:new Map()};
 function cached(group,key,fn){const c=caches[group];if(!c.has(key))c.set(key,fn().toCanvas());return c.get(key)}
 
 const ROOM_PALS=[
@@ -219,106 +219,209 @@ const ROOM_PALS=[
  {wall:['#75677f','#9381a0','#b19eb8','#d8c6d0'],floor:['#45343a','#68494c','#886259','#ad7e68'],trim:'#f2e3d2',accent:'#d26a86'},
  {wall:['#20243a','#303653','#46536c','#65728b'],floor:['#2b252f','#40313a','#59413e','#775747'],trim:'#d8c69a',accent:'#f2bd4f'}
 ];
-function roomCanvas(level){return cached('room',String(level),()=>{
- const g=new Grid(352,220),p=ROOM_PALS[level];
- g.rect(0,0,352,220,PAL.deepest);
- // rear wall with deterministic plaster flecks and a soft top-left light bias
- for(let y=0;y<88;y++)for(let x=0;x<352;x++){
-   let t=.62 + (1-y/88)*.11 + (hash2(x>>2,y>>2,19)-.5)*.11;
-   if(((x+y*3)%29)===0)t-=.14;
-   g.set(x,y,ramp(p.wall,t,x,y,.45));
+function roomCanvas(level){return cached('room','base|'+level,()=>{
+ const g=new Grid(384,304),p=ROOM_PALS[level];
+ g.rect(0,0,384,304,PAL.deepest);
+
+ // BACK WALL — restrained plaster texture, picture rail and real edge lighting.
+ for(let y=0;y<82;y++)for(let x=0;x<384;x++){
+   let t=.57 + (1-y/82)*.13 + (hash2(x>>3,y>>3,19)-.5)*.055;
+   if(hash2(x,y,37)>.994)t-=.14;
+   g.set(x,y,ramp(p.wall,t,x,y,.28));
  }
- g.hline(0,351,0,p.wall[3]);g.hline(0,351,1,p.wall[2]);
- // picture rail and baseboard
- g.rect(0,76,352,3,mix(p.trim,INK,.28));g.hline(0,351,76,p.trim);
- g.rect(0,84,352,5,INK);g.hline(0,351,84,mix(p.trim,INK,.12));g.hline(0,351,85,p.trim);
- // timber floor, rows offset like real boards
- for(let y=89;y<220;y++){
-   const row=Math.floor((y-89)/12),ly=(y-89)%12,off=(row%2)*29;
-   for(let x=0;x<352;x++){
-     const lx=(x+off)%58;let t=.53 + (hash2(x>>1,row,41)-.5)*.14 + (ly<2?.16:0) - (ly>9?.15:0);
-     if(lx===0||lx===1)t-=.25;
-     if((x*7+y*3)%67===0)t-=.1;
-     g.set(x,y,ramp(p.floor,t,x,y,.38));
+ g.hline(0,383,0,p.wall[3]);g.hline(0,383,1,p.wall[2]);
+ g.hline(0,383,54,mix(p.trim,INK,.18));
+ g.hline(0,383,55,p.trim);
+ g.rect(0,76,384,6,INK);
+ g.hline(0,383,76,mix(p.trim,INK,.08));g.hline(0,383,77,p.trim);
+ g.hline(0,383,81,mix(p.trim,INK,.35));
+
+ // TIMBER FLOOR — coherent boards rather than random static.
+ for(let y=82;y<304;y++){
+   const row=Math.floor((y-82)/11),ly=(y-82)%11,off=(row%2)*34;
+   for(let x=0;x<384;x++){
+     const lx=(x+off)%68;
+     let t=.56;
+     if(ly===0)t=.34;
+     else if(ly===1)t=.72;
+     else if(ly===10)t=.40;
+     else t += (hash2(Math.floor((x+off)/4),row,51)-.5)*.055;
+     if(lx===0||lx===1)t-=.20;
+     if((lx===20||lx===49) && ly>2 && ly<9 && hash2(row,lx,12)>.62)t-=.08;
+     g.set(x,y,ramp(p.floor,t,x,y,.18));
    }
  }
- // room corners / vignette edge pixels
- g.rect(0,0,3,220,INK);g.rect(349,0,3,220,INK);g.rect(0,217,352,3,INK);
- // rug underlay and shadow, woven at world level so it can sit below dog/table
- const rugCols=level>=4?['#312d45','#55466e','#8a6e82','#d6b86b']:level>=3?['#5d4767','#826884','#b498a7','#e8d5c6']:['#655c79','#83799a','#a99ab8','#d9cdd5'];
- g.rect(111,143,132,57,alpha(INK,.6));g.rect(114,140,126,56,(x,y)=>{
-   const border=x<118||x>235||y<144||y>191; if(border)return rugCols[0];
-   const band=((x+y)%8<4); return band?rugCols[2]:rugCols[1];
- });
- for(let x=118;x<236;x+=8){g.rect(x,145,3,2,rugCols[3]);g.rect(x+3,187,3,2,rugCols[0])}
- // wall shelf and tiny lived-in objects
- g.rect(118,30,85,3,INK);g.rect(120,28,81,2,mix(PAL.wood,PAL.cream,.25));
- g.rect(128,19,8,9,PAL.rust);g.rect(139,16,7,12,PAL.gold);g.rect(151,20,10,8,PAL.sky);g.rect(165,13,4,15,PAL.green);g.rect(171,18,13,10,PAL.lavender);g.rect(187,15,6,13,PAL.paper);
- // framed art, with actual tiny scene
- g.rect(70,15,39,34,INK);g.rect(73,18,33,28,PAL.sand);g.rect(75,20,29,24,'#86c0c9');g.rect(75,33,29,11,'#5f9564');g.poly([[75,34],[86,24],[96,34]],'#52617a');g.poly([[89,34],[99,27],[104,34]],'#303653');g.rect(82,38,4,5,PAL.rust);g.rect(97,37,3,6,PAL.gold);
+ // sparse wood grain / knots
+ for(let row=0;row<19;row++){
+   const yy=88+row*11;
+   for(let n=0;n<3;n++){
+     const xx=8+Math.floor(hash2(row,n,88)*360);
+     const len=7+Math.floor(hash2(n,row,91)*15);
+     g.hline(xx,Math.min(380,xx+len),yy+3+((n+row)%5),mix(p.floor[1],INK,.1));
+     if((row+n)%4===0){g.set(xx+2,yy+4,p.floor[0]);g.set(xx+3,yy+4,p.floor[0]);g.set(xx+2,yy+5,p.floor[1])}
+   }
+ }
+
+ // CENTRAL RUG — bordered woven motif, deliberately authored.
+ const rc=level>=4?['#28233b','#4a3f62','#7c6682','#d4ac55','#ead8b6']:
+          level>=3?['#503c5e','#735579','#a17691','#d8a6b4','#ead8b6']:
+          level>=2?['#315b58','#4c7770','#79a093','#d6c782','#ead8b6']:
+                   ['#544c69','#746b8a','#9c91aa','#d2c2cf','#ead8b6'];
+ g.rect(115,166,154,91,alpha(INK,.48));
+ g.rect(119,162,146,88,rc[0]);
+ g.rect(123,166,138,80,rc[3]);
+ g.rect(127,170,130,72,rc[1]);
+ g.rect(132,175,120,62,rc[2]);
+ g.rect(137,180,110,52,rc[1]);
+ // central diamond / corner motifs
+ g.poly([[192,184],[217,206],[192,228],[167,206]],rc[3]);
+ g.poly([[192,190],[209,206],[192,222],[175,206]],rc[0]);
+ g.poly([[192,195],[204,206],[192,217],[180,206]],rc[4]);
+ for(const [cx,cy] of [[143,185],[241,185],[143,227],[241,227]]){
+   g.poly([[cx,cy-5],[cx+6,cy],[cx,cy+5],[cx-6,cy]],rc[4]);
+   g.poly([[cx,cy-2],[cx+3,cy],[cx,cy+2],[cx-3,cy]],rc[0]);
+ }
+ for(let x=126;x<259;x+=6){g.set(x,168,rc[4]);g.set(x+2,244,rc[0])}
+
+ // wall art: three-layer scene with frame highlights.
+ g.rect(54,13,48,38,INK);g.rect(57,16,42,32,PAL.woodDark);g.rect(60,19,36,26,'#7eb4bf');
+ g.rect(60,34,36,11,'#4f805d');g.poly([[60,35],[72,24],[83,35]],'#52617a');g.poly([[76,35],[88,27],[96,35]],'#303653');
+ g.rect(67,38,5,7,PAL.rust);g.rect(89,37,4,8,PAL.gold);g.hline(61,94,19,mix('#7eb4bf',PAL.white,.25));
+
+ // shelf and deliberately irregular books/plants.
+ g.rect(125,31,91,4,INK);g.hline(128,213,30,mix(PAL.wood,PAL.cream,.35));
+ const books=[[135,20,8,PAL.rust],[145,16,7,PAL.gold],[154,22,10,PAL.sky],[166,18,9,PAL.lavender],[177,12,5,PAL.green],[184,20,11,PAL.paper],[197,15,6,PAL.rose]];
+ books.forEach(([x,y,w,c],i)=>{g.rect(x,y,w,30-y,c);g.hline(x,x+w-1,y,mix(c,PAL.white,.25));if(i%2===0)g.vline(x+w-2,y+2,28,mix(c,INK,.15))});
+ // tiny hanging plant from shelf
+ g.vline(210,35,47,PAL.woodDark);g.ellipse(210,49,7,4,INK);g.ellipse(210,48,5,3,PAL.green);g.line(207,49,204,55,PAL.forest);g.line(213,49,216,55,PAL.forest);
+
+ // floor threshold / vignette frame.
+ g.rect(0,0,3,304,INK);g.rect(381,0,3,304,INK);g.rect(0,301,384,3,INK);
+ g.hline(4,379,299,mix(p.floor[0],INK,.25));
+
+ // sunlight / lamp-light pixels already baked into environment so they stay stable.
+ if(level<4){
+   for(let y=92;y<208;y+=3){
+     const x0=260-Math.floor((y-92)*.22),x1=360-Math.floor((y-92)*.05);
+     for(let x=x0;x<x1;x+=4)if(bayer(x,y)>.35)g.set(x,y,mix(g.get(x,y)||p.floor[2],PAL.cream,.12));
+   }
+ }else{
+   for(let y=96;y<210;y+=4)for(let x=270;x<367;x+=5)if(hash2(x,y,77)>.55)g.set(x,y,mix(g.get(x,y)||p.floor[1],PAL.gold,.08));
+ }
  return g;
 })}
 
 function windowCanvas(level){return cached('room','window|'+level,()=>{
- const g=new Grid(94,59);const night=level>=4;
- g.rect(0,0,94,59,INK);g.rect(3,3,88,52,night?'#243052':'#71b5c9');
- // sky gradient bands
- for(let y=4;y<34;y++)g.hline(4,89,y,night?mix('#26385b','#563c67',y/34):mix('#9ddbe0','#63a9c2',y/34));
- // moon/sun and clouds
- if(night){g.ellipse(75,14,7,7,PAL.cream);g.ellipse(78,12,6,6,'#26385b');for(const p of [[18,11],[39,7],[55,17],[83,28]])g.set(p[0],p[1],PAL.yellow)}
- else{g.ellipse(74,13,6,6,PAL.yellow);g.rect(14,15,17,2,PAL.paper);g.rect(18,13,10,2,PAL.paper)}
- // distant skyline
- const seed=12+level;for(let x=4;x<90;){const w=6+Math.floor(hash2(x,2,seed)*8),h=10+Math.floor(hash2(x,7,seed)*17);const col=night?'#303653':'#52617a';g.rect(x,52-h,w,h,col);for(let yy=55-h;yy<50;yy+=5)for(let xx=x+2;xx<x+w-1;xx+=4)if(hash2(xx,yy,seed)>.58)g.set(xx,yy,night?PAL.gold:'#ead8b6');x+=w+1}
- g.rect(45,3,3,52,INK);g.rect(3,29,88,3,INK);g.rect(0,55,94,4,INK);g.hline(4,89,54,PAL.paper);
+ const g=new Grid(108,72);const night=level>=4;
+ const curtain=level>=3?'#6f446f':level>=2?'#3e847e':'#8e6e83';
+ const curtainHi=mix(curtain,PAL.white,.22),curtainSh=mix(curtain,INK,.34);
+ // curtains behind frame
+ g.poly([[0,3],[18,3],[15,62],[3,68]],INK);g.poly([[3,5],[15,5],[12,60],[5,65]],curtain);
+ g.hline(5,13,7,curtainHi);for(let y=12;y<59;y+=9)g.vline(7+(y%3),y,Math.min(61,y+5),curtainSh);
+ g.poly([[90,3],[108,3],[105,68],[93,62]],INK);g.poly([[93,5],[105,5],[103,65],[96,60]],curtain);
+ g.hline(95,103,7,curtainHi);
+ // frame and outside scene
+ g.rect(14,0,80,67,INK);g.rect(18,4,72,58,night?'#26385b':'#71b5c9');
+ for(let y=5;y<35;y++)g.hline(19,88,y,night?mix('#29385b','#5a436a',y/35):mix('#a9dde1','#65a7bd',y/35));
+ if(night){
+   g.ellipse(77,15,7,7,PAL.cream);g.ellipse(80,13,6,6,'#29385b');
+   for(const p of [[27,12],[42,8],[58,19],[84,27],[34,26]])g.set(p[0],p[1],PAL.yellow);
+ }else{
+   g.ellipse(77,14,6,6,PAL.yellow);g.rect(28,16,17,2,PAL.paper);g.rect(33,14,10,2,PAL.paper);
+ }
+ // distant roofs / trees rather than abstract blocks
+ for(let x=19;x<89;){
+   const w=8+Math.floor(hash2(x,2,12+level)*8),h=9+Math.floor(hash2(x,7,12+level)*14),yy=61-h;
+   const wall=night?'#303653':PAL.sand,roof=night?'#171426':PAL.rust;
+   g.rect(x,yy+4,w,h-4,wall);g.poly([[x-1,yy+4],[x+w/2,yy],[x+w+1,yy+4]],roof);
+   if(w>10){g.set(x+3,yy+8,night?PAL.gold:PAL.sky);g.set(x+w-4,yy+8,night?PAL.gold:PAL.sky)}
+   x+=w+2;
+ }
+ // muntins and sill
+ g.rect(52,4,3,58,INK);g.rect(18,31,72,3,INK);
+ g.rect(11,62,86,6,INK);g.hline(15,93,62,PAL.paper);g.hline(15,93,63,PAL.cream);
  return g;
 })}
 
 function sofaCanvas(level){return cached('sofa',String(level),()=>{
- const g=new Grid(100,62);const ps=[
-  ['#514b66','#736b89','#9085a3','#d26a86','#d7b15b'],['#664d46','#89685b','#b18470','#ead0ad','#c96d66'],['#315c5b','#477b77','#66a099','#f2c85c','#f7f2df'],['#493b5b','#655276','#8a6d95','#dc8096','#f2bd4f'],['#213c46','#315764','#467887','#e9dfc9','#f2bd4f']][level];
- // shadow
- g.ellipse(50,55,44,6,alpha(INK,.45));
- // back silhouette and tailored face
- g.rect(9,13,82,30,INK);g.rect(13,10,74,30,INK);g.rect(16,13,68,24,ps[1]);g.hline(17,83,14,mix(ps[2],PAL.white,.35));g.hline(17,83,36,mix(ps[0],INK,.2));
- // vertical tailoring
- if(level>=2){for(const x of [38,61]){g.vline(x,16,35,ps[0]);g.set(x-1,22,mix(ps[2],PAL.white,.3))}}
+ const g=new Grid(112,72);const ps=[
+  ['#4f4964','#6b6480','#8d84a1','#d26a86','#d7b15b'],
+  ['#644c45','#85665a','#b08772','#ead0ad','#c96d66'],
+  ['#315b59','#477a75','#69a19a','#f2c85c','#f7f2df'],
+  ['#473958','#635071','#8a6b92','#dc8096','#f2bd4f'],
+  ['#1f3943','#2d5360','#477a88','#e9dfc9','#f2bd4f']
+ ][level];
+ g.ellipse(56,65,48,6,alpha(INK,.43));
+ // stepped silhouette / rear cushion mass
+ g.poly([[13,14],[99,14],[104,24],[104,50],[96,58],[16,58],[8,50],[8,24]],INK);
+ g.poly([[17,16],[95,16],[99,24],[99,46],[93,52],[19,52],[13,46],[13,24]],ps[0]);
+ // upholstered back with three panels and top-left light
+ g.rect(20,12,72,28,INK);g.rect(23,15,66,22,ps[1]);g.hline(25,87,15,mix(ps[2],PAL.white,.32));
+ for(const x of [44,67]){g.vline(x,17,36,mix(ps[0],INK,.12));g.set(x-1,24,mix(ps[2],PAL.white,.22))}
  // seat
- g.rect(8,34,84,19,INK);g.rect(13,36,74,13,ps[2]);g.hline(14,86,36,mix(ps[2],PAL.white,.35));g.hline(14,86,48,ps[0]);
+ g.poly([[17,39],[95,39],[99,51],[92,58],[20,58],[13,51]],INK);
+ g.poly([[20,41],[92,41],[95,50],[89,54],[23,54],[17,50]],ps[2]);
+ g.hline(22,90,41,mix(ps[2],PAL.white,.34));g.hline(25,87,53,mix(ps[0],INK,.22));
  // arms
- g.rect(4,29,14,25,INK);g.rect(82,29,14,25,INK);g.rect(7,31,9,19,ps[0]);g.rect(84,31,9,19,ps[0]);g.hline(8,15,31,mix(ps[1],PAL.white,.25));g.hline(85,92,31,mix(ps[1],PAL.white,.25));
- // cushions + piping
- g.rect(22,24,23,15,INK);g.rect(24,25,19,12,ps[3]);g.rect(55,24,23,15,INK);g.rect(57,25,19,12,ps[4]);g.hline(25,41,26,mix(ps[3],PAL.white,.35));g.hline(58,74,26,mix(ps[4],PAL.white,.25));
- if(level===0){g.rect(29,29,5,4,PAL.cream);g.rect(12,41,5,5,mix(ps[0],PAL.cream,.35))}
- if(level>=3){g.hline(18,81,40,mix(ps[2],PAL.white,.15));g.set(49,42,ps[4])}
- // feet
- const foot=level>=4?PAL.gold:PAL.woodDark;g.rect(16,52,8,5,INK);g.rect(76,52,8,5,INK);g.rect(18,52,4,4,foot);g.rect(78,52,4,4,foot);
+ g.rect(6,33,16,24,INK);g.rect(90,33,16,24,INK);g.rect(10,35,9,18,ps[0]);g.rect(93,35,9,18,ps[0]);
+ g.hline(11,18,35,mix(ps[1],PAL.white,.2));g.hline(94,101,35,mix(ps[1],PAL.white,.2));
+ // cushions with piping and asymmetry
+ g.rect(25,24,24,16,INK);g.rect(27,25,20,13,ps[3]);g.hline(29,45,26,mix(ps[3],PAL.white,.32));
+ g.rect(63,23,25,17,INK);g.rect(65,25,21,13,ps[4]);g.hline(67,84,26,mix(ps[4],PAL.white,.28));
+ if(level===0){g.rect(35,31,6,4,PAL.cream);g.rect(15,46,5,4,mix(ps[0],PAL.cream,.3))}
+ if(level>=1){g.set(34,32,mix(ps[3],INK,.22));g.set(76,31,mix(ps[4],INK,.22))}
+ if(level>=2){g.poly([[48,43],[61,43],[61,56],[54,58],[48,54]],level>=4?PAL.gold:PAL.cream);g.line(50,45,59,53,mix(level>=4?PAL.gold:PAL.cream,INK,.18))}
+ if(level>=3){for(const x of [32,56,80])g.set(x,46,ps[4])}
+ const foot=level>=4?PAL.gold:PAL.woodDark;
+ g.rect(18,57,9,6,INK);g.rect(85,57,9,6,INK);g.rect(20,58,5,4,foot);g.rect(87,58,5,4,foot);
  return g;
 })}
 
 function bedCanvas(level){return cached('bed',String(level),()=>{
- const g=new Grid(108,70);const p=[
-  ['#574352','#76585b','#9a86b8','#f7f2df'],['#704d3b','#986a48','#71a0ad','#fffdf2'],['#53685d','#756f61','#75a18b','#fffdf2'],['#554060','#71506f','#a46f91','#f6e2df'],['#233141','#344354','#d1a64c','#fffdf2']][level];
- g.ellipse(55,64,48,5,alpha(INK,.42));
- // headboard
- g.rect(4,7,17,56,INK);g.rect(7,10,11,49,p[0]);g.hline(8,17,11,mix(p[0],PAL.white,.22));if(level>=3){for(let y=16;y<55;y+=10){g.hline(8,17,y,mix(p[0],INK,.25));g.set(12,y,p[3])}}
- // frame + mattress perspective
- g.poly([[18,20],[100,27],[100,61],[18,57]],INK);g.poly([[22,24],[96,30],[96,57],[22,53]],PAL.paper);
- // duvet
- g.poly([[43,25],[96,30],[96,55],[43,51]],p[2]);g.line(45,29,94,33,mix(p[2],PAL.white,.32));g.line(45,45,94,49,mix(p[2],INK,.18));
- // pillows
- g.poly([[24,25],[46,27],[45,38],[23,36]],INK);g.poly([[26,26],[44,28],[43,36],[25,34]],p[3]);if(level>=2){g.poly([[45,27],[63,29],[62,39],[44,37]],INK);g.poly([[47,28],[61,30],[60,37],[46,35]],p[3])}
- // bed rails / feet
- g.rect(20,56,7,8,INK);g.rect(91,59,7,7,INK);g.rect(22,57,3,5,p[1]);g.rect(93,60,3,4,p[1]);
- if(level>=4){g.rect(63,44,29,5,PAL.gold);g.hline(64,90,44,PAL.yellow)}
+ const g=new Grid(122,88);const p=[
+  ['#574352','#76585b','#9a86b8','#f7f2df'],
+  ['#704d3b','#986a48','#71a0ad','#fffdf2'],
+  ['#53685d','#756f61','#75a18b','#fffdf2'],
+  ['#554060','#71506f','#a46f91','#f6e2df'],
+  ['#233141','#344354','#d1a64c','#fffdf2']
+ ][level];
+ g.ellipse(62,80,54,6,alpha(INK,.42));
+ // headboard, feet-first 3/4 view
+ g.rect(5,8,21,67,INK);g.rect(9,12,13,59,p[0]);g.hline(10,21,13,mix(p[0],PAL.white,.25));
+ if(level>=3)for(let y=20;y<66;y+=11){g.hline(10,21,y,mix(p[0],INK,.22));g.set(15,y,p[3])}
+ // frame / mattress
+ g.poly([[22,24],[110,32],[113,73],[21,66]],INK);
+ g.poly([[26,28],[106,35],[108,68],[25,62]],PAL.paper);
+ g.line(27,29,105,36,mix(PAL.paper,PAL.white,.5));
+ // duvet with side shadow + fold bands
+ g.poly([[49,30],[107,35],[108,66],[48,61]],p[2]);
+ g.line(51,34,105,39,mix(p[2],PAL.white,.35));
+ g.line(51,49,106,53,mix(p[2],INK,.18));g.line(52,56,106,60,mix(p[2],INK,.12));
+ if(level>=2){for(let x=57;x<101;x+=10)g.set(x,47+((x/10)%2),mix(p[2],PAL.white,.18))}
+ // stacked pillows
+ g.poly([[27,30],[51,32],[50,45],[26,42]],INK);g.poly([[29,31],[49,33],[48,42],[28,40]],p[3]);
+ if(level>=1){g.line(31,33,46,35,mix(p[3],PAL.white,.45));g.set(37,38,mix(p[3],INK,.1))}
+ if(level>=2){g.poly([[45,31],[67,33],[66,45],[44,43]],INK);g.poly([[47,32],[65,34],[64,42],[46,41]],p[3])}
+ // throw blanket, improves silhouette at higher levels
+ if(level>=3){const throw=level>=4?PAL.gold:PAL.rose;g.poly([[73,52],[107,55],[108,67],[73,64]],throw);g.line(76,55,104,58,mix(throw,PAL.white,.25));g.vline(83,55,64,mix(throw,INK,.18))}
+ // rails / legs
+ g.rect(23,64,8,12,INK);g.rect(103,69,8,10,INK);g.rect(25,66,4,8,p[1]);g.rect(105,70,4,7,p[1]);
  return g;
 })}
 
 function tableCanvas(level){return cached('table',String(level),()=>{
- const g=new Grid(62,43);const top=['#8e674d','#aa754e','#8c999a','#d8cfbd','#34394a'][level],edge=['#573e38','#634239','#4c565e','#55505a','#171426'][level],leg=level>=4?PAL.gold:level>=2?PAL.slate:PAL.woodDark;
- g.ellipse(31,38,26,4,alpha(INK,.4));g.poly([[5,8],[49,4],[58,14],[14,20]],INK);g.poly([[8,9],[48,6],[55,13],[15,17]],top);g.line(12,10,46,8,mix(top,PAL.white,.35));g.line(15,17,55,13,edge);
- for(const x of [15,47]){g.rect(x,17,6,19,INK);g.rect(x+2,19,2,15,leg)}
- if(level>=1){for(let x=18;x<49;x+=8)g.set(x,12,mix(top,INK,.22))}
- if(level>=4){g.rect(25,4,11,5,INK);g.rect(27,3,7,4,PAL.sky);g.rect(38,5,8,4,INK);g.rect(40,4,4,3,PAL.rose)}
+ const g=new Grid(76,52);const top=['#8e674d','#aa754e','#8c999a','#d8cfbd','#34394a'][level],edge=['#573e38','#634239','#4c565e','#55505a','#171426'][level],leg=level>=4?PAL.gold:level>=2?PAL.slate:PAL.woodDark;
+ g.ellipse(38,47,31,4,alpha(INK,.42));
+ g.poly([[6,11],[57,6],[70,17],[18,24]],INK);g.poly([[10,12],[56,8],[66,16],[19,21]],top);
+ g.line(15,12,54,9,mix(top,PAL.white,.38));g.line(19,21,66,16,edge);
+ // wood / stone surface detail
+ if(level<3){for(let x=19;x<57;x+=10)g.line(x,12,x+5,17,mix(top,INK,.14))}
+ else{g.line(28,10,34,20,mix(top,PAL.white,.12));g.line(47,9,54,18,mix(top,INK,.10))}
+ for(const x of [19,55]){g.rect(x,21,7,23,INK);g.rect(x+2,23,3,19,leg)}
+ // everyday clutter makes the table feel lived in
+ g.rect(31,7,13,5,INK);g.rect(33,6,9,5,level>=4?PAL.sky:PAL.paper);
+ g.rect(49,8,9,6,INK);g.rect(51,7,5,5,level>=2?PAL.rose:PAL.gold);g.set(54,9,PAL.paper);
+ if(level>=1){g.rect(16,15,9,4,INK);g.rect(18,14,5,4,PAL.green)}
  return g;
 })}
 
@@ -333,46 +436,78 @@ function plantCanvas(level){return cached('plant',String(level),()=>{
  return g;
 })}
 
+function propCanvas(kind,level){const key=kind+'|'+level;return cached('prop',key,()=>{
+ if(kind==='bookcase'){
+   const g=new Grid(68,67),wood=level>=4?'#3f3544':level>=2?'#70513f':PAL.wood,hi=mix(wood,PAL.cream,.3),sh=mix(wood,INK,.35);
+   g.ellipse(34,63,29,4,alpha(INK,.38));g.rect(5,4,58,59,INK);g.rect(9,7,50,52,wood);g.hline(10,58,8,hi);g.vline(10,9,57,hi);g.vline(57,9,57,sh);
+   for(const yy of [24,42]){g.rect(10,yy,48,4,INK);g.hline(12,56,yy,hi)}
+   const cols=[PAL.rust,PAL.gold,PAL.sky,PAL.lavender,PAL.green,PAL.paper,PAL.rose];
+   let i=0;for(const base of [23,41,58]){let x=13;while(x<54){const w=3+(i%4),h=7+((i*3)%10);const c=cols[i%cols.length];g.rect(x,base-h,w,h,c);g.hline(x,x+w-1,base-h,mix(c,PAL.white,.28));x+=w+2;i++;}}
+   if(level>=2){g.ellipse(49,16,7,4,INK);g.ellipse(49,15,5,3,PAL.green);g.vline(49,18,23,PAL.forest)}
+   return g;
+ }
+ if(kind==='cabinet'){
+   const g=new Grid(78,49),wood=level>=4?'#303653':level>=2?'#76604f':PAL.wood,hi=mix(wood,PAL.cream,.28),sh=mix(wood,INK,.35);
+   g.ellipse(39,45,33,4,alpha(INK,.4));g.poly([[5,10],[68,7],[75,16],[13,20]],INK);g.poly([[8,11],[67,9],[71,15],[14,18]],hi);
+   g.rect(11,18,59,24,INK);g.rect(14,20,53,19,wood);g.vline(40,21,38,sh);g.hline(15,66,22,hi);
+   g.set(36,29,PAL.gold);g.set(45,29,PAL.gold);g.rect(17,39,8,5,INK);g.rect(57,39,8,5,INK);
+   // small record player / plant at higher levels
+   if(level>=1){g.rect(20,5,19,8,INK);g.rect(22,6,15,6,PAL.slate);g.ellipse(29,9,5,3,PAL.ink);g.set(33,8,PAL.gold)}
+   if(level>=3){g.rect(50,3,11,10,INK);g.rect(52,5,7,6,PAL.paper);g.ellipse(55,2,5,3,PAL.green)}
+   return g;
+ }
+ if(kind==='lamp'){
+   const g=new Grid(32,70);g.ellipse(16,66,13,3,alpha(INK,.38));g.rect(14,19,5,45,INK);g.rect(16,21,2,42,level>=4?PAL.gold:PAL.slate);
+   const shade=level>=3?PAL.rose:PAL.gold;g.poly([[8,8],[24,8],[29,22],[3,22]],INK);g.poly([[10,10],[22,10],[25,19],[7,19]],shade);g.hline(11,21,10,mix(shade,PAL.white,.35));g.rect(9,62,15,5,INK);g.rect(12,62,9,3,level>=4?PAL.gold:PAL.woodDark);return g;
+ }
+ const g=new Grid(8,8);g.rect(1,1,6,6,PAL.rose);return g;
+})}
+
 function avatarCanvas(dir='down',frame=0){const key=dir+'|'+frame;return cached('avatar',key,()=>{
- const g=new Grid(30,43),walk=frame%4,phase=walk<2?0:1;
- const skin=PAL.skin,skinHi=mix(PAL.skin,PAL.white,.22),skinShade=PAL.skinShade;
- const hair=PAL.hair,hairHi=mix(PAL.hair,PAL.sand,.18),jacket='#3e6f76',jacketHi='#57919a',shirt=PAL.cream,trouser='#404b67',boot='#211d2d';
- g.ellipse(15,40,9,2,alpha(INK,.36));
- const leftShift=phase?1:0,rightShift=phase?0:1;
- // legs and grounded feet
- g.rect(8+leftShift,29,6,10,INK);g.rect(9+leftShift,30,4,8,trouser);
- g.rect(16-rightShift,29,6,10,INK);g.rect(17-rightShift,30,4,8,mix(trouser,INK,.08));
- g.rect(7+leftShift,37,8,4,INK);g.rect(16-rightShift,37,8,4,INK);g.hline(9+leftShift,13+leftShift,37,mix(boot,PAL.slate,.25));g.hline(18-rightShift,22-rightShift,37,mix(boot,PAL.slate,.2));
- // torso silhouette, shirt and jacket
- g.poly([[7,16],[23,16],[25,30],[5,30]],INK);g.poly([[9,18],[21,18],[22,28],[8,28]],jacket);
- g.rect(13,18,4,9,shirt);g.vline(12,19,27,mix(jacket,INK,.18));g.vline(18,19,27,mix(jacket,INK,.26));g.hline(10,20,12,jacketHi);
- g.rect(12,27,6,3,INK);g.hline(13,17,27,PAL.gold);
- // arms swing opposite the legs
- const armA=phase?1:-1,armB=-armA;
- g.rect(4+armA,18,5,11,INK);g.rect(5+armA,19,3,8,jacket);g.rect(5+armA,27,3,3,skin);
- g.rect(21+armB,18,5,11,INK);g.rect(22+armB,19,3,8,mix(jacket,INK,.12));g.rect(22+armB,27,3,3,skinShade);
+ const g=new Grid(34,50),f=((frame%4)+4)%4,stride=[-2,0,2,0][f],bob=[0,1,0,1][f];
+ const skin=PAL.skin,skinHi=mix(PAL.skin,PAL.white,.28),skinShade=PAL.skinShade;
+ const hair=PAL.hair,hairHi=mix(PAL.hair,PAL.sand,.22),hairSh=mix(PAL.hair,INK,.28);
+ const jacket='#3e6f76',jacketHi='#63a0a7',jacketSh='#2d5058',shirt=PAL.cream,trouser='#414c68',boot='#201d2b';
+ g.ellipse(17,47,10,2,alpha(INK,.38));
+ // legs: four-step stance, proper planted feet
+ const ls=Math.max(0,stride),rs=Math.max(0,-stride);
+ g.rect(9+ls,34-bob,7,11,INK);g.rect(10+ls,35-bob,4,8,trouser);
+ g.rect(18-rs,34-bob,7,11,INK);g.rect(19-rs,35-bob,4,8,mix(trouser,INK,.08));
+ g.rect(8+ls,43-bob,9,4,INK);g.rect(18-rs,43-bob,9,4,INK);
+ g.hline(10+ls,15+ls,43-bob,mix(boot,PAL.slate,.25));g.hline(20-rs,25-rs,43-bob,mix(boot,PAL.slate,.18));
+
+ // torso, layered jacket + shirt + collar
+ g.poly([[8,19-bob],[26,19-bob],[28,35-bob],[6,35-bob]],INK);
+ g.poly([[10,21-bob],[24,21-bob],[25,33-bob],[9,33-bob]],jacket);
+ g.rect(14,21-bob,6,11,shirt);g.poly([[14,21-bob],[17,25-bob],[20,21-bob]],PAL.paper);
+ g.vline(13,22-bob,32-bob,jacketSh);g.vline(21,22-bob,32-bob,jacketSh);g.hline(11,13,22-bob,jacketHi);
+ g.rect(13,32-bob,8,3,INK);g.hline(14,20,32-bob,PAL.gold);
+
+ // arms swing with the gait
+ const arm=Math.sign(stride)||((f===1)?1:-1);
+ g.rect(5+arm,21-bob,6,13,INK);g.rect(7+arm,22-bob,3,10,jacket);g.rect(7+arm,31-bob,3,4,skin);
+ g.rect(23-arm,21-bob,6,13,INK);g.rect(24-arm,22-bob,3,10,jacketSh);g.rect(24-arm,31-bob,3,4,skinShade);
+
  // neck
- g.rect(12,13,6,5,INK);g.rect(13,13,4,4,skinShade);
+ g.rect(13,16-bob,8,6,INK);g.rect(15,16-bob,4,5,skinShade);
+
  if(dir==='up'){
-   // back of head / hair mass
-   g.rect(7,3,16,13,INK);g.rect(9,5,12,10,hair);g.rect(8,4,14,5,hair);g.hline(10,19,5,hairHi);g.rect(9,13,12,4,hair);
-   // backpack/jacket collar detail gives direction readability
-   g.hline(11,19,18,jacketHi);g.rect(12,20,6,5,mix(jacket,INK,.18));
+   g.rect(8,4-bob,18,14,INK);g.rect(10,6-bob,14,11,hair);g.rect(9,4-bob,16,6,hair);
+   g.hline(12,22,6-bob,hairHi);g.rect(10,14-bob,14,5,hairSh);
+   g.hline(12,22,21-bob,jacketHi);g.rect(13,24-bob,8,7,jacketSh);
  }else if(dir==='left'||dir==='right'){
-   const q=new Grid(30,43);
-   q.blit(g,0,0);
-   // clear/overwrite head with side profile authored to the right
-   for(let y=1;y<17;y++)for(let x=5;x<25;x++)q.set(x,y,null);
-   q.rect(7,3,15,13,INK);q.rect(9,5,11,10,skin);q.rect(8,2,14,7,INK);q.rect(10,3,11,5,hair);q.hline(11,19,4,hairHi);
-   q.rect(19,7,5,7,INK);q.rect(19,8,4,5,skinHi);q.set(21,9,INK);q.set(23,12,skinShade);
-   q.poly([[8,6],[12,4],[12,13],[8,13]],hair);q.set(18,13,skinShade);
-   if(dir==='left'){const f=new Grid(30,43);return f.blit(q,0,0,true)}
-   return q;
+   const q=new Grid(34,50);q.blit(g,0,0);
+   for(let y=2;y<20;y++)for(let x=6;x<29;x++)q.set(x,y,null);
+   q.rect(8,5-bob,17,14,INK);q.rect(10,7-bob,12,10,skin);
+   q.rect(8,3-bob,17,7,INK);q.rect(10,4-bob,14,5,hair);q.hline(12,22,5-bob,hairHi);
+   q.poly([[8,7-bob],[13,4-bob],[13,16-bob],[8,16-bob]],hairSh);
+   q.rect(21,9-bob,6,8,INK);q.rect(21,10-bob,5,6,skinHi);
+   q.set(23,11-bob,INK);q.set(26,14-bob,skinShade);q.set(21,16-bob,PAL.rose);
+   if(dir==='left'){const m=new Grid(34,50);return m.blit(q,0,0,true)}return q;
  }else{
-   // front-facing head
-   g.rect(7,3,16,13,INK);g.rect(9,5,12,10,skin);g.rect(8,2,14,7,INK);g.rect(10,3,11,5,hair);
-   g.rect(7,5,4,7,hair);g.hline(11,20,4,hairHi);g.set(12,10,INK);g.set(18,10,INK);g.set(13,9,skinHi);g.hline(13,17,14,skinShade);
-   g.set(15,13,PAL.rose);
+   g.rect(8,5-bob,18,14,INK);g.rect(10,7-bob,14,10,skin);
+   g.rect(9,3-bob,16,7,INK);g.rect(11,4-bob,13,5,hair);g.rect(8,6-bob,4,8,hairSh);g.hline(12,22,5-bob,hairHi);
+   g.set(13,12-bob,INK);g.set(21,12-bob,INK);g.set(14,11-bob,skinHi);g.hline(15,19,16-bob,skinShade);g.set(18,16-bob,PAL.rose);
  }
  return g;
 })}
@@ -419,10 +554,10 @@ function dogCanvas(dir,frame,level){const key=dir+'|'+frame+'|'+level;return cac
 function drawImage(img,x,y,flip=false){ctx.save();ctx.imageSmoothingEnabled=false;if(flip){ctx.translate(Math.round(x)+img.width,Math.round(y));ctx.scale(-1,1);ctx.drawImage(img,0,0)}else ctx.drawImage(img,Math.round(x),Math.round(y));ctx.restore()}
 
 /* ---------- animated room ---------- */
-const person={x:54,y:181,tx:118,ty:178,dir:'right',moving:true,restUntil:0,speed:13,lastPick:0};
-const personSpots=[[53,181],[82,166],[118,183],[148,168],[194,185],[226,164],[269,185],[304,163],[323,188]];
+const person={x:86,y:246,tx:155,ty:235,dir:'right',moving:true,restUntil:0,speed:15,lastPick:0};
+const personSpots=[[73,242],[111,205],[151,246],[191,218],[230,248],[269,210],[312,244],[342,214],[203,188]];
 function choosePersonTarget(now){
- const choices=personSpots.filter(([x,y])=>Math.hypot(x-person.x,y-person.y)>45);
+ const choices=personSpots.filter(([x,y])=>Math.hypot(x-person.x,y-person.y)>48);
  const p=choices[Math.floor(Math.random()*choices.length)];person.tx=p[0];person.ty=p[1];
  const dx=person.tx-person.x,dy=person.ty-person.y;
  if(Math.abs(dx)>Math.abs(dy))person.dir=dx<0?'left':'right';else person.dir=dy<0?'up':'down';
@@ -431,47 +566,57 @@ function choosePersonTarget(now){
 function updatePerson(dt,now){
  if(!person.moving){if(now>=person.restUntil)choosePersonTarget(now);return}
  const dx=person.tx-person.x,dy=person.ty-person.y,d=Math.hypot(dx,dy);
- if(d<1){person.x=person.tx;person.y=person.ty;person.moving=false;person.restUntil=now+1300+Math.random()*2500;return}
+ if(d<1){person.x=person.tx;person.y=person.ty;person.moving=false;person.restUntil=now+1300+Math.random()*2400;return}
  const step=Math.min(d,person.speed*dt);person.x+=dx/d*step;person.y+=dy/d*step;
 }
 
-const dog={x:185,y:177,tx:230,ty:174,dir:'right',moving:true,restUntil:0,speed:19,lastPick:0};
-const dogSpots=[[72,178],[105,161],[146,188],[190,178],[229,187],[272,170],[302,190],[245,153],[152,158]];
+const dog={x:213,y:247,tx:266,ty:235,dir:'right',moving:true,restUntil:0,speed:21,lastPick:0};
+const dogSpots=[[91,247],[126,220],[165,265],[210,246],[251,269],[292,232],[338,264],[284,202],[182,207]];
 let bubble={text:'',until:0};
 let particles=[];
 let last=performance.now();
-function chooseDogTarget(now){const choices=dogSpots.filter(([x,y])=>Math.hypot(x-dog.x,y-dog.y)>38);const p=choices[Math.floor(Math.random()*choices.length)];dog.tx=p[0];dog.ty=p[1];const dx=dog.tx-dog.x,dy=dog.ty-dog.y;if(Math.abs(dx)>Math.abs(dy))dog.dir=dx<0?'left':'right';else dog.dir=dy<0?'up':'down';dog.moving=true;dog.lastPick=now}
+function chooseDogTarget(now){const choices=dogSpots.filter(([x,y])=>Math.hypot(x-dog.x,y-dog.y)>42);const p=choices[Math.floor(Math.random()*choices.length)];dog.tx=p[0];dog.ty=p[1];const dx=dog.tx-dog.x,dy=dog.ty-dog.y;if(Math.abs(dx)>Math.abs(dy))dog.dir=dx<0?'left':'right';else dog.dir=dy<0?'up':'down';dog.moving=true;dog.lastPick=now}
 function updateDog(dt,now){if(!dog.moving){if(now>=dog.restUntil)chooseDogTarget(now);return}const dx=dog.tx-dog.x,dy=dog.ty-dog.y,d=Math.hypot(dx,dy);if(d<1){dog.x=dog.tx;dog.y=dog.ty;dog.moving=false;dog.restUntil=now+900+Math.random()*1900;if(Math.random()<.3){bubble.text=['woof!','sniff sniff','comfy.','hmm...'][Math.floor(Math.random()*4)];bubble.until=now+950}return}const step=Math.min(d,dog.speed*dt);dog.x+=dx/d*step;dog.y+=dy/d*step}
 
-const anchors={room:[176,108],sofa:[287,118],bed:[62,117],table:[176,165],plant:[323,121],pet:[dog.x,dog.y]};
+const anchors={room:[192,150],sofa:[313,164],bed:[72,174],table:[200,232],plant:[351,160],pet:[dog.x,dog.y]};
 function sparkleAt(kind){const a=kind==='pet'?[dog.x,dog.y]:anchors[kind];for(let i=0;i<20;i++){const ang=Math.PI*2*i/20+Math.random()*.4,spd=14+Math.random()*24;particles.push({x:a[0],y:a[1]-12,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-8,life:.8+Math.random()*.45,c:i%3===0?PAL.gold:i%3===1?PAL.white:PAL.cyan})}}
 function updateParticles(dt){particles.forEach(p=>{p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=24*dt});particles=particles.filter(p=>p.life>0)}
 function drawParticles(){for(const p of particles){ctx.fillStyle=p.c;const s=p.life>.55?2:1;ctx.fillRect(Math.round(p.x),Math.round(p.y),s,s);if(p.life>.8){ctx.fillRect(Math.round(p.x)-1,Math.round(p.y)+1,s+2,1);ctx.fillRect(Math.round(p.x)+1,Math.round(p.y)-1,1,s+2)}}}
 
-function drawWindow(now){const img=windowCanvas(state.room);drawImage(img,245,15); // animated cloud reflection / light streak
- ctx.fillStyle=state.room>=4?alpha(PAL.gold,.38):alpha(PAL.white,.36);const x=252+Math.floor((now/180)%68);ctx.fillRect(x,27,8,1);if(x<308)ctx.fillRect(x+4,28,10,1)
-}
-function drawLamp(now){const x=116,y=82;ctx.fillStyle=alpha(PAL.gold,.13+.035*Math.sin(now/240));ctx.fillRect(x-8,y-10,25,24);ctx.fillStyle=INK;ctx.fillRect(x,y,3,27);ctx.fillRect(x-6,y-2,15,4);ctx.fillStyle=PAL.gold;ctx.fillRect(x-4,y-1,11,2);ctx.fillStyle=PAL.cream;ctx.fillRect(x+1,y+3,1,20)}
-function drawPerson(now){const frame=person.moving?Math.floor(now/145)%4:0;drawImage(avatarCanvas(person.dir,frame),person.x-15,person.y-41)}
-function drawDog(now){const frame=dog.moving?Math.floor(now/135)%4:0;drawImage(dogCanvas(dog.dir,frame,state.pet),dog.x-19,dog.y-27)}
+function drawWindow(now){const img=windowCanvas(state.room);drawImage(img,268,5);ctx.fillStyle=state.room>=4?alpha(PAL.gold,.34):alpha(PAL.white,.32);const x=290+Math.floor((now/190)%54);ctx.fillRect(x,22,7,1);if(x<340)ctx.fillRect(x+4,23,10,1)}
+function drawLampGlow(now){ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=alpha(PAL.gold,.055+.018*Math.sin(now/260));ctx.fillRect(228,94,74,92);ctx.fillStyle=alpha(PAL.cream,.035);ctx.fillRect(245,108,43,64);ctx.restore()}
+function drawPerson(now){const frame=person.moving?Math.floor(now/135)%4:0;drawImage(avatarCanvas(person.dir,frame),person.x-17,person.y-48)}
+function drawDog(now){const frame=dog.moving?Math.floor(now/125)%4:0;drawImage(dogCanvas(dog.dir,frame,state.pet),dog.x-19,dog.y-27)}
 function drawRoom(now){
- drawImage(roomCanvas(state.room),0,0);drawWindow(now);drawLamp(now);
- // Y-sort feet/anchors so characters can pass naturally behind and in front of furniture.
+ drawImage(roomCanvas(state.room),0,0);
+ drawWindow(now);
+
+ // Dense room dressing. Every prop is code-generated and cached.
  const actors=[
-  {y:130,draw:()=>drawImage(plantCanvas(state.plant),298,state.plant>=4?61:72)},
-  {y:138,draw:()=>drawImage(bedCanvas(state.bed),8,76)},
-  {y:143,draw:()=>drawImage(sofaCanvas(state.sofa),244,81)},
+  {y:142,draw:()=>drawImage(propCanvas('bookcase',state.room),122,75)},
+  {y:154,draw:()=>drawImage(propCanvas('lamp',state.room),232,85)},
+  {y:168,draw:()=>drawImage(plantCanvas(state.plant),326,state.plant>=4?92:103)},
+  {y:174,draw:()=>drawImage(bedCanvas(state.bed),7,91)},
+  {y:176,draw:()=>drawImage(sofaCanvas(state.sofa),267,104)},
   {y:person.y,draw:()=>drawPerson(now)},
-  {y:188,draw:()=>drawImage(tableCanvas(state.table),145,145)},
+  {y:242,draw:()=>drawImage(tableCanvas(state.table),158,202)},
+  {y:276,draw:()=>drawImage(propCanvas('cabinet',state.room),20,230)},
   {y:dog.y,draw:()=>drawDog(now)}
  ];
  actors.sort((a,b)=>a.y-b.y).forEach(o=>o.draw());
- // little foreground objects: slippers and dog bowl
- ctx.fillStyle=INK;ctx.fillRect(92,187,8,4);ctx.fillRect(103,188,8,4);ctx.fillStyle=PAL.rose;ctx.fillRect(94,188,5,2);ctx.fillRect(105,189,5,2);
- ctx.fillStyle=INK;ctx.fillRect(286,196,18,5);ctx.fillStyle=PAL.sky;ctx.fillRect(289,195,12,4);ctx.fillStyle=PAL.cyan;ctx.fillRect(291,195,8,1);
+
+ // small floor storytelling: slippers, dog bowl, book, plant clipping and cable.
+ ctx.fillStyle=INK;ctx.fillRect(102,272,9,4);ctx.fillRect(114,273,9,4);ctx.fillStyle=PAL.rose;ctx.fillRect(104,273,6,2);ctx.fillRect(116,274,6,2);
+ ctx.fillStyle=INK;ctx.fillRect(324,279,20,6);ctx.fillStyle=PAL.sky;ctx.fillRect(327,278,14,5);ctx.fillStyle=PAL.cyan;ctx.fillRect(330,278,8,1);
+ ctx.fillStyle=INK;ctx.fillRect(278,261,14,7);ctx.fillStyle=PAL.paper;ctx.fillRect(280,260,10,6);ctx.fillStyle=PAL.rust;ctx.fillRect(281,261,4,4);
+ ctx.fillStyle=mix(PAL.slate,INK,.35);ctx.fillRect(45,281,30,1);ctx.fillRect(45,277,1,5);
+
+ // foreground edge gives the room a finished diorama frame.
+ ctx.fillStyle=alpha(INK,.34);ctx.fillRect(3,293,378,6);
+ drawLampGlow(now);
 }
-function drawBubble(now){if(now>bubble.until||!bubble.text)return;const x=Math.round(dog.x),y=Math.round(dog.y-39),w=Math.max(34,bubble.text.length*5+10);ctx.fillStyle=INK;ctx.fillRect(x-w/2-2,y-10,w+4,13);ctx.fillStyle=PAL.paper;ctx.fillRect(x-w/2,y-8,w,9);ctx.fillStyle=INK;ctx.font='6px monospace';ctx.textBaseline='top';ctx.fillText(bubble.text,x-w/2+4,y-7);ctx.fillRect(x-2,y+1,4,3);ctx.fillStyle=PAL.paper;ctx.fillRect(x-1,y+1,2,2)}
-function render(now){ctx.clearRect(0,0,352,220);drawRoom(now);drawParticles();drawBubble(now)}
+function drawBubble(now){if(now>bubble.until||!bubble.text)return;const x=Math.round(dog.x),y=Math.round(dog.y-42),w=Math.max(34,bubble.text.length*5+10);ctx.fillStyle=INK;ctx.fillRect(x-w/2-2,y-10,w+4,13);ctx.fillStyle=PAL.paper;ctx.fillRect(x-w/2,y-8,w,9);ctx.fillStyle=INK;ctx.font='6px monospace';ctx.textBaseline='top';ctx.fillText(bubble.text,x-w/2+4,y-7);ctx.fillRect(x-2,y+1,4,3);ctx.fillStyle=PAL.paper;ctx.fillRect(x-1,y+1,2,2)}
+function render(now){ctx.clearRect(0,0,384,304);drawRoom(now);drawParticles();drawBubble(now)}
 function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;updatePerson(dt,now);updateDog(dt,now);updateParticles(dt);render(now);requestAnimationFrame(tick)}
 
 function invalidateAsset(group){caches[group]?.clear()}
