@@ -72,7 +72,7 @@ export function drawSceneryProp(c,b){const{x,y,w,h,kind}=b;
  // Short contact shadows: every solid still visibly matches its collision footprint.
  rect(c,x+5,y+6,w,h,'#0716224d');rect(c,x+2,y+3,w,h,'#07162233');
  if(kind==='wall'){
-  const material=Math.max(2,Math.min(7,Number.isFinite(b.phase)?b.phase:4));
+  const material=Math.max(2,Math.min(7,Number.isFinite(b.materialPhase)?b.materialPhase:(Number.isFinite(b.phase)?b.phase:4)));
   const palettes={
    2:['#785e49','#b39069','#3f3b35'],
    3:['#77766e','#bbb59f','#4e5452'],
