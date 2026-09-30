@@ -182,6 +182,8 @@ function completedTaskCount(){return (run.tasks||[]).filter(t=>t.complete).lengt
 function availableTasks(){return (run.tasks||[]).filter(t=>!t.complete);}
 function taskState(task){
  if(task.complete)return 'complete';
+ const previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
+ if(!previousDone)return 'locked';
  return (task.requiredPhase||0)<=run.phase?'available':'locked';
 }
 function updateTaskButton(){
@@ -195,14 +197,15 @@ function openTaskBoard(initial=false){
  if(!run.tasks)return;
  mode='tasks';resetInput();$('taskButton').hidden=true;
  const done=completedTaskCount(),items=run.tasks.map(task=>{
-  const state=taskState(task),req=task.requiredPhase||0;
-  const detail=state==='complete'?'Done':state==='locked'
-   ?`PHASE ${req} REQUIRED · ${task.hint}`
+  const state=taskState(task),req=task.requiredPhase||0,previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
+  const detail=state==='complete'?'Done':!previousDone
+   ?'COMPLETE THE PREVIOUS UNFINISHED BUSINESS FIRST'
+   :state==='locked'?`FIND ANOTHER PHASE PICKUP · PHASE ${req} REQUIRED`
    :(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} paces · ${req?`PHASE ${req} room · `:''}${task.hint}`;})();
   return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="${state==='available'?'taskDistance':''}">${detail}</small></div>`;
  }).join('');
  const heading=`LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}`;
- show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>Unfinished business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5 COMPLETE · TASK 1 IS OPEN · TASKS 2–5 NEED PHASE 1–4</div><div class="taskList">${items}</div></div>`);
+ show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>Unfinished business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5 COMPLETE · EACH TASK UNLOCKS THE NEXT PHASE HUNT</div><div class="taskList">${items}</div></div>`);
  $('taskClose').onclick=closeTaskBoard;
 }
 function closeTaskBoard(){
@@ -245,7 +248,8 @@ function completeTask(task){
 function checkObjectives(){
  if(!run.tasks)return;
  for(const task of availableTasks()){
-  if((task.requiredPhase||0)>run.phase)continue;
+  const previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
+  if(!previousDone||(task.requiredPhase||0)>run.phase)continue;
   if(Math.hypot(ghost.x-task.x,ghost.y-task.y)<46){completeTask(task);break}
  }
 }
@@ -338,8 +342,10 @@ function move(dx,dy,dt){
   const next=nx>r.x&&nx<r.x+r.w&&ny>r.y&&ny<r.y+r.h;
   return was!==next;
  });
- if(sealed&&!(phase&&run.phase>=sealed.requiredPhase)){
-  note(`SEALED MEMORY ROOM · NEED PHASE ${sealed.requiredPhase}`,1.5);return;
+ if(sealed){
+  const previousDone=(run.tasks||[]).filter(t=>t.index<sealed.index).every(t=>t.complete);
+  if(!previousDone){note('FINISH THE PREVIOUS UNFINISHED BUSINESS FIRST',1.5);return}
+  if(!(phase&&run.phase>=sealed.requiredPhase)){note(`SEALED MEMORY ROOM · NEED PHASE ${sealed.requiredPhase}`,1.5);return}
  }
  const hits=blocks.filter(b=>overlap(nx,ny,b));
  const blocked=hits.find(b=>!(phase&&run.phase>=b.phase&&!(b.exit&&!run.exitOpen)));
@@ -361,8 +367,10 @@ function update(dt){
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
  if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){runPoints++;run.explored++;run.echoes++;tone(500,.025);updateEchoDisplay();}
  effects.energy=energy;
- for(const event of collectTokens(tokens,ghost,effects,run,runCapacity(run),t)){
+ const phaseCap=completedTaskCount()>=5?RUN_MAX.phase:completedTaskCount();
+ for(const event of collectTokens(tokens,ghost,effects,run,runCapacity(run),t,phaseCap)){
   if(event.kind==='stiffFull'){note('SCARED STIFF FULL · 3 / 3 STORED',1.5);continue}
+  if(event.kind==='phaseLocked'){note('FINISH THE CURRENT UNFINISHED BUSINESS · THEN PHASE CAN UPGRADE',1.8);continue}
   announcePickup(event);note(`${event.title.toUpperCase()} · ${event.detail}`,2.4);tone(event.kind==='stiff'?860:740,.15);updateEchoDisplay();updateSkills();updateTokenInventory();
  }
  energy=effects.energy;checkObjectives();
