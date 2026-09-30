@@ -1,507 +1,433 @@
-
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'gamebox-relic-v1';
-  const INTRO_KEY = 'gamebox-relic-intro-v1';
+  const STORAGE_KEY = 'gamebox_relic_v1';
+  const BIDFORD_CENTRE = { lat: 52.1635, lng: -1.8587 };
+  const PREVIEW_START = { lat: 52.16302, lng: -1.85755 };
+  const SEARCH_RADIUS = 58;
 
-  const RELICS = [
-    {id:'BIDFORD-01',name:"Bridgekeeper's Seal",short:'Bridge Seal',glyph:'bridge',coords:[-1.85666,52.16402],clue:'Follow the riverside path towards the old bridge.',search:'Search near the riverside approach to the bridge.',hint:'Look lower than eye level, close to the path edge.',xp:120,coins:42,gear:'Riverwalker Bandana'},
-    {id:'BIDFORD-02',name:"Meadow Mark",short:'Meadow Mark',glyph:'meadow',coords:[-1.85698,52.16299],clue:'Head into Big Meadow and keep the river nearby.',search:'The mark is hiding around the meadow edge.',hint:'Think about places a small trail marker could sit without blocking anyone.',xp:90,coins:31},
-    {id:'BIDFORD-03',name:"Willow Sigil",short:'Willow Sigil',glyph:'willow',coords:[-1.85805,52.16328],clue:'Continue west with the Avon on your right.',search:'Search the edge where meadow meets riverside trees.',hint:'Look for the willow-shaped symbol rather than a brightly coloured sign.',xp:100,coins:34},
-    {id:'BIDFORD-04',name:"Ferryman's Token",short:'Ferryman',glyph:'ferry',coords:[-1.85916,52.16364],clue:'Stay on the riverside route and follow the bend.',search:'A ferryman once needed a way across. Search the riverward side.',hint:'You should not need to leave the established route.',xp:125,coins:45,gear:'Avon Trail Tag'},
-    {id:'BIDFORD-05',name:"Field Compass",short:'Field Compass',glyph:'compass',coords:[-1.86002,52.16296],clue:'Turn away from the river and cross the open meadow route.',search:'Find the compass mark around the open-space path.',hint:'The four-point mark is easier to recognise than the object carrying it.',xp:105,coins:36},
-    {id:'BIDFORD-06',name:"Hound Moon",short:'Hound Moon',glyph:'moon',coords:[-1.85931,52.16198],clue:'Follow the quieter southern edge of the meadow.',search:'The moon-hound mark is somewhere around this section of trail.',hint:'At night, use your torch — never leave the path just for a relic.',xp:145,coins:52,gear:'Moonwalker Collar'},
-    {id:'BIDFORD-07',name:"Wayfarer's Coin",short:'Wayfarer',glyph:'wayfarer',coords:[-1.85798,52.16171],clue:'Curve back east along the lower meadow route.',search:'Search for the travelling mark near the path.',hint:'Look for a tiny walking-line symbol inside a round seal.',xp:110,coins:39},
-    {id:'BIDFORD-08',name:"Avon Crest",short:'Avon Crest',glyph:'avon',coords:[-1.85670,52.16178],clue:'Keep heading east until the route begins to return north.',search:'The Avon crest waits close to the meadow path.',hint:'Water lines are engraved across this relic.',xp:115,coins:41},
-    {id:'BIDFORD-09',name:"Millstone Fragment",short:'Millstone',glyph:'mill',coords:[-1.85588,52.16255],clue:'Follow the route back towards the village side of the meadow.',search:'Search around the path junction for the broken-ring symbol.',hint:'Look for a circle that appears deliberately incomplete.',xp:130,coins:47,gear:'Explorer Harness'},
-    {id:'BIDFORD-10',name:"The Bidford Relic",short:'Bidford Relic',glyph:'crown',coords:[-1.85625,52.16348],clue:'Return towards the bridge. The final mark is waiting.',search:'Your final relic is hidden near the end of the riverside loop.',hint:'You have seen its shape in the app since the moment you arrived.',xp:220,coins:85,gear:'Relic Keeper Bandana'}
+  const relics = [
+    { id:'BID-01', name:"Bridgekeeper's Seal", short:'Bridgekeeper', lat:52.16362, lng:-1.85695, clue:'Follow the river towards the old stone bridge.', search:'Search near the meadow-side approach.', hint:'Look lower than eye level, close to the path edge.', xp:120, coins:42, material:'brass', sigil:'bridge' },
+    { id:'BID-02', name:'Riverstone Mark', short:'Riverstone', lat:52.16296, lng:-1.85773, clue:'Stay with the Avon and follow the water west.', search:'Search where the river path opens into meadow.', hint:'The mark would rather face water than road.', xp:105, coins:38, material:'slate', sigil:'wave', gear:'Riverwalker Bandana' },
+    { id:'BID-03', name:'Willow Sigil', short:'Willow', lat:52.16252, lng:-1.85882, clue:'Cross the open meadow towards the older trees.', search:'Search around the tree-line, not deep in it.', hint:'Think bark, shade and somewhere a dog might sniff.', xp:110, coins:39, material:'moss', sigil:'leaf' },
+    { id:'BID-04', name:'Meadow Compass', short:'Compass', lat:52.16192, lng:-1.85976, clue:'Head deeper into Big Meadow.', search:'Search where paths and open ground meet.', hint:'A wayfinder belongs where choices split.', xp:115, coins:41, material:'iron', sigil:'compass' },
+    { id:'BID-05', name:"Wayfarer's Coin", short:'Wayfarer', lat:52.16162, lng:-1.86082, clue:'Keep west across the meadow edge.', search:'Search for the old-trail mark near the boundary.', hint:'Check sturdy things that already guide a route.', xp:125, coins:45, material:'copper', sigil:'path', gear:'Field Scout Collar' },
+    { id:'BID-06', name:'Avon Crest', short:'Avon Crest', lat:52.16218, lng:-1.86135, clue:'Turn back towards the river and follow its curve.', search:'Search close to the riverside path.', hint:'The crest sits where the Avon is easiest to hear.', xp:130, coins:47, material:'blue', sigil:'crest' },
+    { id:'BID-07', name:'Old Mill Fragment', short:'Mill Fragment', lat:52.16301, lng:-1.86044, clue:'Head north-east across the upper meadow.', search:'Search around the edge of the recreation ground.', hint:'Look for something solid, not something living.', xp:135, coins:49, material:'stone', sigil:'mill' },
+    { id:'BID-08', name:'Moon Hound Mark', short:'Moon Hound', lat:52.16355, lng:-1.85935, clue:'Follow the path back towards the village lights.', search:'Search near the route back towards the bridge.', hint:'A night mark hides best below the obvious sightline.', xp:150, coins:56, material:'night', sigil:'hound', gear:'Moon Hound Tag' },
+    { id:'BID-09', name:'Saxon Way Seal', short:'Saxon Way', lat:52.16420, lng:-1.85772, clue:'Cross towards the village side of the Avon.', search:'Search near the old route into the village.', hint:'Stay on the public route and inspect only the clue area.', xp:155, coins:59, material:'gold', sigil:'knot' },
+    { id:'BID-10', name:'Bidford Heart Relic', short:'Bidford Heart', lat:52.16461, lng:-1.85634, clue:'One final mark waits close to the heart of Bidford.', search:'Search the final area near the village centre.', hint:'The last relic carries the river and bridge together.', xp:220, coins:85, material:'final', sigil:'heart', gear:'Bidford Explorer Harness' }
   ];
 
-  const ROUTE = [
-    [-1.85666,52.16402],[-1.85692,52.16361],[-1.85698,52.16299],[-1.85805,52.16328],
-    [-1.85916,52.16364],[-1.86002,52.16296],[-1.85931,52.16198],[-1.85798,52.16171],
-    [-1.85670,52.16178],[-1.85588,52.16255],[-1.85625,52.16348],[-1.85666,52.16402]
-  ];
-  const CENTER = [-1.85775,52.16285];
-
-  const gear = [
-    {name:'Plain Trail Collar',icon:'◇'},
-    {name:'Riverwalker Bandana',icon:'⌁'},
-    {name:'Avon Trail Tag',icon:'◆'},
-    {name:'Moonwalker Collar',icon:'◐'},
-    {name:'Explorer Harness',icon:'△'},
-    {name:'Relic Keeper Bandana',icon:'✦'}
+  const routeCoords = [
+    [PREVIEW_START.lng,PREVIEW_START.lat],
+    ...relics.map(r => [r.lng,r.lat])
   ];
 
-  const defaultState = () => ({
-    found: [],
-    xp: 0,
-    coins: 0,
-    dogName: 'Scout',
-    equipped: 'Plain Trail Collar',
-    current: 0,
-    started: false,
-    completed: false,
-    adventuresCompleted: 0,
-    preview: false,
-    earnedGear: ['Plain Trail Collar'],
-    runXp: 0,
-    runCoins: 0
-  });
+  const initialState = {
+    seenIntro:false,
+    seenTour:false,
+    previewMode:false,
+    adventureActive:false,
+    currentIndex:0,
+    discovered:[],
+    xp:0,
+    coins:0,
+    dogName:'Scout',
+    unlockedGear:['Plain Trail Collar'],
+    equippedGear:'Plain Trail Collar',
+    completedAdventures:0,
+    completed:false
+  };
 
   let state = loadState();
-  let exploreMap = null;
-  let adventureMap = null;
+  let exploreMap = null, adventureMap = null;
+  let exploreMarkers = [], adventureMarkers = [];
   let playerMarker = null;
   let watchId = null;
-  let lastPosition = null;
+  let currentPosition = null;
+  let previewPosition = PREVIEW_START;
+  let previewArrived = false;
   let introIndex = 0;
   let tourIndex = 0;
-  let toastTimer = null;
+  let pendingScan = new URLSearchParams(location.search).get('relic');
 
-  const $ = id => document.getElementById(id);
-  const $$ = sel => [...document.querySelectorAll(sel)];
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
 
   function loadState(){
-    try { return {...defaultState(), ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')}; }
-    catch { return defaultState(); }
+    try { return { ...initialState, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }; }
+    catch { return { ...initialState }; }
   }
-  function saveState(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    renderAll();
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function levelFromXp(xp){ return Math.max(1, Math.floor(xp / 500) + 1); }
+  function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
+  function haptic(pattern=35){ if(navigator.vibrate) navigator.vibrate(pattern); }
+  function tone(freq=420,duration=.08,type='sine',gain=.035){
+    try{
+      const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+      const ctx = new C(); const osc=ctx.createOscillator(); const g=ctx.createGain();
+      osc.type=type; osc.frequency.value=freq; g.gain.value=gain; osc.connect(g); g.connect(ctx.destination); osc.start();
+      g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+duration); osc.stop(ctx.currentTime+duration+.02);
+    }catch{}
   }
-  function levelForXp(xp){ return Math.max(1, Math.floor(xp / 500) + 1); }
-  function vibrate(pattern){ try { if(navigator.vibrate) navigator.vibrate(pattern); } catch {} }
-  function showToast(msg){
-    const el = $('toast'); if(!el) return;
-    el.textContent = msg; el.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove('show'),1800);
+  function rewardSound(){ tone(220,.09,'triangle',.05); setTimeout(()=>tone(440,.11,'triangle',.04),90); setTimeout(()=>tone(660,.16,'sine',.035),190); }
+  function tapSound(){ tone(155,.06,'triangle',.04); }
+  function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),1700); }
+  function meters(a,b){
+    if(!a||!b) return Infinity;
+    const R=6371000,toRad=x=>x*Math.PI/180,dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng),la1=toRad(a.lat),la2=toRad(b.lat);
+    const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
   }
-  function setHidden(id, hidden){ const el=$(id); if(el) el.classList.toggle('hidden',hidden); }
+  function formatDistance(m){ if(!isFinite(m)) return 'LOCATE'; if(m<1000) return `${Math.max(0,Math.round(m/5)*5)} m`; return `${(m/1609.34).toFixed(1)} mi`; }
 
-  function medallionSVG(type, found=true, large=false){
-    const motifs = {
-      bridge:'<path d="M25 69h50M31 66V49c13-14 25-14 38 0v17M37 58h26" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      meadow:'<path d="M23 66c12-20 20-20 28 0 8-20 16-20 26 0M28 42c8 5 14 5 22 0 8-5 15-5 23 0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      willow:'<path d="M50 25v48M50 33c-18 4-24 14-25 29M50 39c17 1 24 11 27 25M37 37l-10 14M63 41l11 13" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      ferry:'<path d="M25 61h50l-9 12H34zM31 55h38M38 31v24M38 31l23 11-23 4" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>',
-      compass:'<path d="M50 23l9 18 18 9-18 9-9 18-9-18-18-9 18-9z" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="50" r="5" fill="currentColor"/>',
-      moon:'<path d="M63 26c-21 4-28 34-5 46-22 5-37-7-37-25 0-18 18-31 42-21z" fill="none" stroke="currentColor" stroke-width="5"/><path d="M61 55l8-8 9 8" fill="none" stroke="currentColor" stroke-width="4"/>',
-      wayfarer:'<path d="M30 68c17-4 13-22 27-28 7-3 13-7 14-16M57 40l-3-13M57 40l12 2M38 70l-9-9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      avon:'<path d="M22 39c13-10 21 10 34 0s21 10 32 0M22 55c13-10 21 10 34 0s21 10 32 0M31 69h38" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      mill:'<path d="M27 49a23 23 0 1 1 12 20M50 27v12M73 50H61M50 73V61M27 50h12" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>',
-      crown:'<path d="M24 39l13 12 13-22 13 22 13-12-7 35H31z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M31 63h38" stroke="currentColor" stroke-width="5"/>'
+  function materialFor(name){
+    return {
+      brass:['#d7b66a','#765323','#f3db92'], slate:['#59656a','#242d31','#a5b0b3'], moss:['#748060','#2d3c31','#b0b98c'], iron:['#6e7771','#29312e','#b8bdb7'], copper:['#b26e4a','#5f3529','#e0a079'], blue:['#477d82','#1d4145','#9bc2bf'], stone:['#aaa18d','#595449','#d9d1be'], night:['#26324a','#101725','#8a9cc6'], gold:['#c99a45','#62471f','#f0cd7b'], final:['#d7a54d','#5c4320','#ffe1a0']
+    }[name] || ['#aaa18d','#595449','#d9d1be'];
+  }
+
+  function sigilMarkup(type, light){
+    const s = light;
+    const common=`fill="none" stroke="${s}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"`;
+    const map={
+      bridge:`<path ${common} d="M42 91h116M51 90c3-35 18-51 34-51s31 16 34 51M119 90c3-29 15-42 28-42s25 13 28 42M61 105h98"/><path ${common} d="M50 107c22 12 36-9 55 0s32 11 50 0"/>`,
+      wave:`<path ${common} d="M38 73c19-17 37-17 56 0s37 17 56 0 37-17 52 0M38 99c19-17 37-17 56 0s37 17 56 0 37-17 52 0M64 49c12 4 23-1 34-13"/>`,
+      leaf:`<path ${common} d="M102 133c-10-43 7-77 53-92 3 45-13 75-53 92ZM104 130c8-35 23-55 47-77M101 132c-13-26-31-39-54-42 2 27 17 45 46 50"/>`,
+      compass:`<circle ${common} cx="100" cy="90" r="52"/><path ${common} d="M100 28v124M38 90h124M100 45l16 45-16 45-16-45Z"/>`,
+      path:`<path ${common} d="M50 134c31-14 33-38 18-53s-5-44 32-54M92 136c36-16 44-39 26-55s-10-39 31-52"/><circle cx="49" cy="134" r="7" fill="${s}"/><circle cx="149" cy="29" r="7" fill="${s}"/>`,
+      crest:`<path ${common} d="M100 30 151 49v41c0 31-20 50-51 66-31-16-51-35-51-66V49Z"/><path ${common} d="M65 86c16-16 31-16 46 0s29 16 44 0M70 108c13-12 25-12 38 0s25 12 39 0"/>`,
+      mill:`<circle ${common} cx="100" cy="90" r="22"/><path ${common} d="M100 68V28M122 90h40M100 112v40M78 90H38M84 74 59 48M116 74l25-26M116 106l25 26M84 106l-25 26"/>`,
+      hound:`<path ${common} d="M70 119c-19-13-22-36-12-58l19 14c13-12 34-12 47 0l19-14c10 22 7 45-12 58-18 13-43 13-61 0Z"/><path ${common} d="M80 99c12 8 28 8 40 0M86 88h1M113 88h1"/><path ${common} d="M50 45c18-17 45-24 70-16-25 3-41 18-48 38"/>`,
+      knot:`<path ${common} d="M100 32c29 0 50 18 50 42 0 21-16 33-31 44l-19 15-19-15c-15-11-31-23-31-44 0-24 21-42 50-42Z"/><path ${common} d="M72 65c18 1 38 18 56 51M128 65c-18 1-38 18-56 51M63 92h74"/>`,
+      heart:`<path ${common} d="M100 143c-31-24-58-44-58-76 0-22 17-36 36-36 12 0 21 6 28 17 7-11 16-17 28-17 19 0 36 14 36 36 0 32-27 52-70 76Z"/><path ${common} d="M66 82c14-11 28-11 42 0s28 11 42 0M100 52v63"/>`
     };
-    const mark = motifs[type] || motifs.crown;
-    const id = 'g'+Math.random().toString(36).slice(2,8);
-    const dull = found ? '' : ' opacity=".62"';
-    return '<svg viewBox="0 0 100 100" aria-hidden="true"'+dull+'><defs><radialGradient id="'+id+'" cx="34%" cy="25%"><stop stop-color="'+(found?'#efd082':'#9a927e')+'"/><stop offset=".55" stop-color="'+(found?'#bd8a3f':'#77776d')+'"/><stop offset="1" stop-color="'+(found?'#5b3d1d':'#4e554f')+'"/></radialGradient></defs><circle cx="50" cy="50" r="46" fill="#17231d" stroke="#0d1511" stroke-width="4"/><circle cx="50" cy="50" r="40" fill="url(#'+id+')" stroke="'+(found?'#e7c370':'#aaa38e')+'" stroke-width="2"/><circle cx="50" cy="50" r="33" fill="none" stroke="rgba(71,48,25,.55)" stroke-width="2" stroke-dasharray="2 5"/><g color="'+(found?'#513718':'#555a52')+'">'+mark+'</g></svg>';
+    return map[type] || map.compass;
   }
 
-  function dogSVG(){
-    return '<svg viewBox="0 0 210 230" aria-hidden="true">'+
-      '<ellipse cx="108" cy="207" rx="68" ry="12" fill="rgba(16,27,21,.28)"/>'+
-      '<g class="tail"><path d="M145 143c36-1 44-28 25-40 30 1 34 43-11 60" fill="none" stroke="#9a6e42" stroke-width="18" stroke-linecap="round"/><path d="M166 108c13 8 8 21 1 28" fill="none" stroke="#d1a168" stroke-width="6" stroke-linecap="round"/></g>'+
-      '<path d="M75 119c-22 21-27 71-16 84h101c10-36-1-76-24-87z" fill="#9b6d42" stroke="#3e2f24" stroke-width="4"/>'+
-      '<path d="M75 166c-12 8-17 24-16 39h31l-1-43zm61-2 2 41h29c0-19-7-33-19-41z" fill="#d2a46d" stroke="#3e2f24" stroke-width="4"/>'+
-      '<path d="M64 66c5-36 28-51 56-44 28 7 39 32 33 65-5 32-28 52-55 47-31-5-39-35-34-68z" fill="#ad7a49" stroke="#3e2f24" stroke-width="4"/>'+
-      '<path class="earL" d="M75 60C47 44 46 26 61 21c18-6 31 15 33 31z" fill="#7f5838" stroke="#3e2f24" stroke-width="4"/>'+
-      '<path d="M137 63c27-13 29-31 15-38-17-8-32 13-34 31z" fill="#7f5838" stroke="#3e2f24" stroke-width="4"/>'+
-      '<path d="M86 83c3-7 10-7 14 0m23 0c3-7 10-7 14 0" fill="none" stroke="#28231e" stroke-width="4" stroke-linecap="round"/>'+
-      '<path d="M104 94c8-5 16-4 21 1-2 8-7 12-13 12-6-1-9-5-8-13z" fill="#2a241f"/>'+
-      '<path d="M112 108v9m0 0c-9 7-17 4-20-1m20 1c8 7 16 4 20-2" fill="none" stroke="#3e2f24" stroke-width="3" stroke-linecap="round"/>'+
-      '<path d="M72 131c21 15 48 16 74 1" fill="none" stroke="#356b70" stroke-width="10" stroke-linecap="round"/>'+
-      '<circle cx="110" cy="139" r="8" fill="#c6964b" stroke="#50391f" stroke-width="3"/>'+
-      '<path d="M91 65c-4-13 2-24 14-29" fill="none" stroke="#c9955e" stroke-width="7" stroke-linecap="round" opacity=".45"/>'+
-    '</svg>';
+  function relicSVG(relic, opts={}){
+    const [base,dark,light]=materialFor(relic.material), discovered=opts.discovered!==false;
+    const dull = discovered ? '' : 'opacity=".58"';
+    return `<svg viewBox="0 0 200 180" role="img" aria-label="${relic.name}" ${dull}>
+      <defs><radialGradient id="g${relic.id}" cx="35%" cy="25%"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></radialGradient><filter id="n${relic.id}"><feTurbulence baseFrequency=".9" numOctaves="2" seed="4" type="fractalNoise" result="n"/><feBlend in="SourceGraphic" in2="n" mode="soft-light"/></filter></defs>
+      <ellipse cx="100" cy="159" rx="63" ry="10" fill="rgba(0,0,0,.16)"/>
+      <circle cx="100" cy="90" r="75" fill="${dark}" stroke="#241d15" stroke-width="4"/>
+      <circle cx="100" cy="90" r="68" fill="url(#g${relic.id})" stroke="${light}" stroke-opacity=".65" stroke-width="2" filter="url(#n${relic.id})"/>
+      <circle cx="100" cy="90" r="58" fill="none" stroke="${dark}" stroke-opacity=".55" stroke-width="3" stroke-dasharray="2 8"/>
+      ${sigilMarkup(relic.sigil, dark)}
+      <path d="M48 136c26 12 81 12 104 0" fill="none" stroke="${light}" stroke-opacity=".32" stroke-width="2"/>
+    </svg>`;
   }
 
-  function renderRelics(){
-    const grid = $('relicGrid'); if(!grid) return;
-    grid.innerHTML = RELICS.map((r,i)=>{
-      const found = state.found.includes(r.id);
-      return '<div class="relicSlot '+(found?'':'locked')+'"><div class="slotMedallion">'+medallionSVG(r.glyph,found)+'</div><strong>'+(found?r.short:'Unknown Relic')+'</strong><small>'+(found?'Recovered':'Undiscovered')+'</small></div>';
-    }).join('');
+  function dogSVG(compact=false){
+    return `<svg viewBox="0 0 210 230" aria-label="Trail companion dog">
+      <defs><linearGradient id="dogCoat" x1="0" x2="1"><stop stop-color="#9a6541"/><stop offset=".5" stop-color="#b67b52"/><stop offset="1" stop-color="#815336"/></linearGradient><linearGradient id="dogChest" y2="1"><stop stop-color="#ead8bd"/><stop offset="1" stop-color="#d0b999"/></linearGradient></defs>
+      <ellipse cx="106" cy="213" rx="68" ry="12" fill="rgba(0,0,0,.18)"/>
+      <g class="tail"><path d="M144 145c27-4 40-23 35-40 16 19 5 54-29 62" fill="url(#dogCoat)" stroke="#503724" stroke-width="4" stroke-linecap="round"/></g>
+      <path d="M62 126c4-31 25-48 47-48 26 0 45 20 47 53l4 63H55Z" fill="url(#dogCoat)" stroke="#503724" stroke-width="4"/>
+      <path d="M76 142c11 22 17 40 12 64H61c-4-26 1-46 15-64ZM139 143c-11 22-14 40-9 63h27c4-25-2-45-18-63Z" fill="#8d5c3d" stroke="#503724" stroke-width="4"/>
+      <path d="M88 128c5 13 10 26 19 34 9-8 15-21 19-34-10 6-28 6-38 0Z" fill="url(#dogChest)"/>
+      <ellipse cx="107" cy="76" rx="49" ry="47" fill="url(#dogCoat)" stroke="#503724" stroke-width="4"/>
+      <g class="earL"><path d="M72 47C57 43 45 52 44 76c0 19 10 31 22 26 9-4 11-19 11-31" fill="#6d472f" stroke="#503724" stroke-width="4"/></g>
+      <path d="M141 48c15-4 27 6 27 29 0 19-10 30-22 25-9-4-11-19-10-31" fill="#6d472f" stroke="#503724" stroke-width="4"/>
+      <ellippse cx="107" cy="92" rx="29" ry="25" fill="#d9c0a0"/>
+      <circle cx="88" cy="70" r="5" fill="#171b18"/><circle cx="127" cy="70" r="5" fill="#171b18"/><circle cx="89" cy="68" r="1.6" fill="#fff"/><circle cx="128" cy="68" r="1.6" fill="#fff"/>
+      <path d="M100 88c4-5 11-5 15 0-1 7-13 7-15 0Z" fill="#25201c"/><path d="M107 94c0 8-6 11-13 12M107 94c0 8 6 11 13 12" fill="none" stroke="#5e4636" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M75 119c18 10 46 11 65 0" fill="none" stroke="#263a31" stroke-width="9"/><circle cx="108" cy="123" r="10" fill="#b98a43" stroke="#4c351a" stroke-width="3"/><path d="M104 121h8M108 117v8" stroke="#5d411d" stroke-width="2"/>
+      <path d="M84 198c-11 1-17 7-16 13h26c1-6-2-11-10-13ZM143 198c11 1 17 7 16 13h-26c-1-6 2-11 10-13Z" fill="#5a3d2a"/>
+    </svg>`;
   }
 
-  function renderDog(){
-    ['dogStage','introDog'].forEach(id=>{const el=$(id); if(el) el.innerHTML=dogSVG();});
-    if($('dogName')) $('dogName').textContent=state.dogName;
+  function routeFeature(){ return { type:'Feature', geometry:{type:'LineString',coordinates:routeCoords} }; }
+  function searchAreaFeature(relic){ return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:[relic.lng,relic.lat]}}; }
+
+  function initMap(container, adventure=falsi{
+    if(!window.maplibregl){ $(container).style.background='linear-gradient(145deg,#aeb9a4,#c9bea5)'; return null; }
+    const map = new maplibregl.Map({ container:container.replace('#',''), style:'https://tiles.openfreemap.org/styles/liberty', center:[-1.8591,52.1630], zoom:15.2, attributionControl:true, dragRotate:false, pitchWithRotate:false });
+    map.on('load',()=>{
+      map.addSource('route',{type:'geojson',data:routeFeature()});
+      map.addLayer({id:'route-shadow',type:'line',source:'route',paint:{'line-color':'#17231d','line-width':7,'line-opacity':.24}});
+      map.addLayer({id:'route',type:'line',source:'route',paint:{'line-color':'#b98a43','line-width':4,'line-opacity':.95,'line-dasharray':[1.1,.7]}});
+      if(adventure){ updateAdventureMap(); }
+      else addExploreMarkers(map);
+    });
+    return map;
+  }
+
+  function addExploreMarkers(map){
+    exploreMarkers.forEach(m=>m.remove()); exploreMarkers=[];
+    [0,3,6,9].forEach((idx,i)=>{
+      const r=relics[idx], el=document.createElement('div'); el.className='mysteryMarker'; el.textContent=i===0?'◇':'?';
+      const m=new maplibregl.Marker({element:el}).setLngLat([r.lng,r.lat]).addTo(map); exploreMarkers.push(m);
+    });
+  }
+
+  function ensurePlayerMarker(map,pos){
+    if(!map||!pos||!window.maplibregl) return;
+    if(!playerMarker){ const el=document.createElement('div'); el.className='playerMarker'; playerMarker=new maplibregl.Marker({element:el}).setLngLat([pos.lng,pos.lat]).addTo(map); }
+    else { playerMarker.setLngLat([pos.lng,pos.lat]); }
+  }
+
+  function circleGeoJSON(center,radiusM){
+    const pts=64, coords=[]; const latRad=center.lat*Math.PI/180;
+    for(let i=0;i<=pts;i++){
+      const a=2*Math.PI*i/pts, dx=Math.cos(a)*radiusM, dy=Math.sin(a)*radiusM;
+      coords.push([center.lng+dx/(111320*Math.cos(latRad)),center.lat+dy/110540]);
+    }
+    return {type:'Feature',geometry:{type:'Polygon',coordinates:[coords]}};
+  }
+
+  function updateAdventureMap(){
+    if(!adventureMap||!adventureMap.loaded()) return;
+    const r=relics[state.currentIndex] || relics[relics.length-1];
+    const data=circleGeoJSON(r,SEARCH_RADIUS);
+    if(adventureMap.getSource('search-zone')) adventureMap.getSource('search-zone').setData(data);
+    else {
+      adventureMap.addSource('search-zone',{type:'geojson',data});
+      adventureMap.addLayer({id:'search-zone-fill',type:'fill',source:'search-zone',paint:{'fill-color':'#356b70','fill-opacity':.16}});
+      adventureMap.addLayer({id:'search-zone-line',type:'line',source:'search-zone',paint:{'line-color':'#356b70','line-width':2,'line-dasharray':[2,2]}});
+    }
+    adventureMarkers.forEach(m=>m.remove()); adventureMarkers=[];
+    if(window.maplibregl){ const el=document.createElement('div');el.className='mysteryMarker current';el.textContent='◇'; adventureMarkers.push(new maplibregl.Marker({element:el}).setLngLat([r.lng,r.lat]).addTo(adventureMap)); }
+    const pos = state.previewMode ? previewPosition : currentPosition;
+    ensurePlayerMarker(adventureMap,pos);
+  }
+
+  function fitWholeRoute(map){ if(!map||!window.maplibregl)return; const b=new maplibregl.LngLatBounds();routeCoords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:{top:60,bottom:100,left:35,right:35},duration:700}); }
+
+  function showScreen(name){
+    $$('.screen').forEach(s=>s.classList.toggle('active',s.dataset.screen===name));
+    $$('.navButton').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
+    if(name==='explore'&&exploreMap) setTimeout(()=>exploreMap.resize(),50);
+    renderAll();
   }
 
   function renderAll(){
-    const level = levelForXp(state.xp);
-    if($('levelLabel')) $('levelLabel').textContent='LV '+level;
-    if($('coinLabel')) $('coinLabel').textContent=state.coins;
-    if($('collectionFound')) $('collectionFound').textContent=state.found.length;
-    if($('homeLevel')) $('homeLevel').textContent=level;
-    if($('homeRelics')) $('homeRelics').textContent=state.found.length;
-    if($('homeAdventures')) $('homeAdventures').textContent=state.adventuresCompleted;
-    if($('dogName')) $('dogName').textContent=state.dogName;
-    if($('equippedName')) $('equippedName').textContent=state.equipped;
-    const eq=gear.find(g=>g.name===state.equipped)||gear[0];
-    if($('equippedIcon')) $('equippedIcon').textContent=eq.icon;
-    if($('previewToggle')) $('previewToggle').checked=!!state.preview;
-    renderRelics();
-    renderAdventurePanel();
-    updateHud();
+    const level=levelFromXp(state.xp);
+    $('#levelLabel').textContent=`LV ${level}`; $('#coinLabel').textContent=state.coins;
+    $('#homeLevel').textContent=level; $('#homeRelics').textContent=state.discovered.length; $('#homeAdventures').textContent=state.completedAdventures;
+    $('#collectionFound').textContent=state.discovered.length; $('#dogName').textContent=state.dogName; $('#equippedName').textContent=state.equippedGear;
+    $('#collectionBadge').textContent=state.discovered.length; $('#collectionBadge').classList.toggle('hidden',state.discovered.length===0);
+    $('#dogStage').innerHTML=dogSVG();
+    renderCollection(); renderAdventures();
+    $('#previewToggle').checked=state.previewMode;
   }
 
-  function renderAdventurePanel(){
-    const box=$('activeAdventurePanel'); if(!box) return;
-    const found=state.found.length;
+  function renderCollection(){
+    const grid=$('#relicGrid'); if(!grid)return; grid.innerHTML='';
+    relics.forEach((r,i)=>{
+      const found=state.discovered.includes(r.id), d=document.createElement('div'); d.className=`relicSlot ${found?'':'locked'}`;
+      d.innerHTML=`<div class="slotMedallion">${relicSVG(r,{discovered:found})}</div><strong>${found?r.short:'Unknown mark'}</strong><small>${found?`Relic ${String(i+1).padStart(2,'0')}`:'undiscovered'}</small>`;
+      grid.appendChild(d);
+    });
+  }
+
+  function renderAdventures(){
+    const p=$('#activeAdventurePanel');
+    const found=state.discovered.length, pct=state.completed?100:(found/relics.length*100);
     if(state.completed){
-      box.innerHTML='<div class="journeyCard"><span class="eyebrow">COMPLETED</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:100%"></i></div><b>10 / 10</b></div><button class="primaryButton" id="journeyCollection">VIEW COLLECTION <span>→</span></button></div>';
-      setTimeout(()=>{const b=$('journeyCollection'); if(b)b.onclick=()=>switchScreen('collection');},0);
-    } else if(state.started){
-      box.innerHTML='<div class="journeyCard"><span class="eyebrow">ACTIVE ADVENTURE</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:'+(found*10)+'%"></i></div><b>'+found+' / 10</b></div><button class="primaryButton" id="journeyContinue">CONTINUE ADVENTURE <span>→</span></button></div>';
-      setTimeout(()=>{const b=$('journeyContinue'); if(b)b.onclick=()=>openAdventureMode();},0);
+      $('#adventuresLead').textContent='Your first Bidford folio is complete.';
+      p.innerHTML=`<article class="journeyCard"><span class="eyebrow">COMPLETED</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:100%"></i></div><b>10 / 10</b></div><button class="primaryButton" data-open-collection>OPEN FIELD FOLIO <span>→</span></button></article>`;
+    } else if(state.adventureActive || found>0){
+      $('#adventuresLead').textContent='Your Bidford trail is in progress.';
+      p.innerHTML=`<article class="journeyCard"><span class="eyebrow">ACTIVE · BIDFORD</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:${pct}%"></i></div><b>${found} / 10</b></div><button class="primaryButton" data-continue-adventure>CONTINUE ADVENTURE <span>→</span></button></article>`;
     } else {
-      box.innerHTML='<div class="journeyCard"><span class="eyebrow">READY TO BEGIN</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:0%"></i></div><b>0 / 10</b></div><button class="primaryButton" id="journeyStart">BEGIN ADVENTURE <span>→</span></button></div>';
-      setTimeout(()=>{const b=$('journeyStart'); if(b)b.onclick=()=>openSheet('adventureSheet');},0);
+      $('#adventuresLead').textContent='One trail is waiting by the Avon.';
+      p.innerHTML=`<article class="journeyCard"><span class="eyebrow">READY TO BEGIN</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:0%"></i></div><b>0 / 10</b></div><button class="primaryButton" data-open-adventure>VIEW ADVENTURE <span>→</span></button></article>`;
     }
-    if($('adventuresLead')) $('adventuresLead').textContent=state.completed?'Your first Bidford folio is complete.':state.started?'Your trail is waiting by the Avon.':'One trail is waiting by the Avon.';
+    $$('[data-open-collection]',p).forEach(b=>b.onclick=()=>showScreen('collection'));
+    $$('[data-continue-adventure]',p).forEach(b=>b.onclick=()=>enterAdventureMode());
+    $$('[data-open-adventure]',p).forEach(b=>b.onclick=()=>openOverlay('adventureSheet'));
   }
 
-  function switchScreen(name){
-    $$('.screen').forEach(s=>s.classList.toggle('active',s.dataset.screen===name));
-    $$('.navButton').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
-    if(name==='explore' && exploreMap) setTimeout(()=>exploreMap.resize(),50);
+  function openOverlay(id){ $('#'+id).classList.remove('hidden'); }
+  function closeOverlay(id){ $('#'+id).classList.add('hidden'); }
+
+  function openAdventureSheet(){
+    $('#sheetRelic').innerHTML=relicSVG(relics[9]);
+    openOverlay('adventureSheet');
   }
 
-  function openSheet(id){ setHidden(id,false); }
-  function closeSheet(id){ setHidden(id,true); }
-
-  function mapStyle(){
-    return 'https://tiles.openfreemap.org/styles/liberty';
+  function startRequested(forcePreview=false){
+    if(forcePreview){ state.previewMode=true; saveState(); beginAdventure(); return; }
+    if(state.previewMode){ beginAdventure(); return; }
+    if(!navigator.geolocation){ state.previewMode=true;saveState();beginAdventure();return; }
+    navigator.geolocation.getCurrentPosition(pos=>{
+      currentPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      if(meters(currentPosition,BIDFORD_CENTRE)>10000) openOverlay('confirmOverlay'); else beginAdventure();
+    },()=>openOverlay('confirmOverlay'),{enableHighAccuracy:true,timeout:6000});
   }
 
-  function initMap(container, isAdventure=false){
-    if(!window.maplibregl || !$(container)) return null;
-    try{
-      const map=new maplibregl.Map({
-        container,
-        style:mapStyle(),
-        center:CENTER,
-        zoom:isAdventure?15.5:14.6,
-        attributionControl:true,
-        pitch:isAdventure?18:0
-      });
-      map.on('load',()=>{
-        map.addSource('trail-route',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:ROUTE}}});
-        map.addLayer({id:'trail-glow',type:'line',source:'trail-route',paint:{'line-color':'#efe7d7','line-width':8,'line-opacity':.68}});
-        map.addLayer({id:'trail-line',type:'line',source:'trail-route',paint:{'line-color':'#b98a43','line-width':3.5,'line-opacity':.98,'line-dasharray':[1.5,1]}});
-        RELICS.forEach((r,i)=>{
-          const el=document.createElement('div');
-          el.className='mysteryMarker '+(i===state.current&&state.started?'current':'');
-          el.textContent=state.found.includes(r.id)?'◇':'?';
-          new maplibregl.Marker({element:el}).setLngLat(r.coords).addTo(map);
-        });
-      });
-      return map;
-    }catch(err){
-      console.warn('Map unavailable',err);
-      return null;
-    }
+  function beginAdventure(){
+    closeOverlay('adventureSheet');closeOverlay('confirmOverlay');
+    if(!state.adventureActive&&!state.completed){ state.adventureActive=true; if(state.discovered.length===0)istate.currentIndex=0; }
+    if(state.completed){ state.adventureActive=true; state.completed=false; state.currentIndex=0; state.discovered=[]; }
+    previewPosition=PREVIEW_START; previewArrived=false; saveState(); renderAll(); enterAdventureMode();
   }
 
-  function initMaps(){
-    exploreMap=initMap('exploreMap',false);
+  function enterAdventureMode(){
+    $('#adventureMode').classList.remove('hidden');
+    if(!adventureMap) iadventureMap=initMap('#adventureMap',true); else setTimeout(()=>adventureMap.resize(),40);
+   updateAdventureHUD(); startTracking();
+    setTimeout(()=>{ if(adventureMap){adventureMap.resize(); fitWholeRoute(adventureMap);} },350);
   }
 
-  function ensureAdventureMap(){
-    if(!adventureMap){
-      adventureMap=initMap('adventureMap',true);
-      if(adventureMap) setTimeout(()=>adventureMap.resize(),100);
-    }
-  }
+  function leaveAdventureMode(){ $('#adventureMode').classList.add('hidden'); stopTracking(); showScreen('adventures'); }
 
-  function distanceMeters(a,b){
-    if(!a||!b)return Infinity;
-    const R=6371000, lat1=a[1]*Math.PI/180, lat2=b[1]*Math.PI/180;
-    const dlat=(b[1]-a[1])*Math.PI/180, dlon=(b[0]-a[0])*Math.PI/180;
-    const h=Math.sin(dlat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;
-    return 2*R*Math.asin(Math.sqrt(h));
-  }
-
-  function startLocationWatch(){
-    if(!navigator.geolocation || watchId!==null) return;
+  function startTracking(){
+    stopTracking();
+    if(state.previewMode){ currentPosition=null; updateDistance(); return; }
+    if(!navigator.geolocation){ toast('Location unavailable'); return; }
     watchId=navigator.geolocation.watchPosition(pos=>{
-      lastPosition=[pos.coords.longitude,pos.coords.latitude];
-      updatePositionUI();
-      updatePlayerMarker();
-    },()=>{ if(!state.preview) showToast('Location unavailable · preview mode still works'); },
-    {enableHighAccuracy:true,maximumAge:5000,timeout:12000});
+      currentPosition={lat:pos.coords.latitude,lng:pos.coords.longitude}; updateDistance(); updateAdventureMap();
+    },()=>toast('Location access is needed for live play.'),{enableHighAccuracy:true,maximumAge:3000,timeout:12000});
+  }
+  function stopTracking(){ if(watchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(watchId);watchId=null;} }
+
+  function updateAdventureHUD(){
+    const r=relics[state.currentIndex]; if(!r){showCompletion();return;}
+    $('#hudProgressLabel').textContent=`RELIC ${state.currentIndex+1} OF ${relics.length}`;
+    $('#hudProgressBar').style.width=`${((state.currentIndex)/relics.length)*100}%`;
+    $('#objectiveTitle').textContent=r.name; $('#objectiveClue').textContent=r.clue; $('#objectiveEyebrow').textContent=state.currentIndex===relics.length-1?'FINAL MARK':'NEXT MARK';
+    $('#testAdvance').classList.toggle('hidden',!state.previewMode);
+    previewArrived=false; updateDistance(); updateAdventureMap();
   }
 
-  function updatePlayerMarker(){
-    const map=adventureMap||exploreMap;
-    if(!map||!lastPosition||!window.maplibregl)return;
-    if(!playerMarker){
-      const el=document.createElement('div'); el.className='playerMarker';
-      playerMarker=new maplibregl.Marker({element:el}).setLngLat(lastPosition).addTo(map);
-    } else playerMarker.setLngLat(lastPosition);
+  function updateDistance(){
+    const r=relics[state.currentIndex]; if(!r)return;
+    const pos=state.previewMode?previewPosition:currentPosition, d=meters(pos,r);
+    $('#distanceLabel').textContent=formatDistance(d);
+    const inside=d<=SEARCH_RADIUS || previewArrived;
+    $('#enterSearch').disabled=!inside;
+    $('#enterSearch').innerHTML=inside?'BEGIN SEARCH <span>◇</span>':'SEARCH AREA <span>◇</span>';
+    if(adventureMap&&pos){ ensurePlayerMarker(adventureMap,pos); }
   }
 
-  function updatePositionUI(){
-    if(!state.started || state.completed) return;
-    const r=RELICS[state.current]; if(!r) return;
-    const d=state.preview?0:distanceMeters(lastPosition,r.coords);
-    if($('distanceLabel')) $('distanceLabel').textContent=d===Infinity?'GPS':d<1000?Math.round(d)+' m':(d/1000).toFixed(1)+' km';
-    if($('enterSearch')) $('enterSearch').disabled=!(state.preview||d<=35);
-    if(d<=35 && !state.preview) vibrate(35);
+  function previewArrive(){
+    const r=relics[state.currentIndex]; previewPosition={lat:r.lat+0.00008,lng:r.lng-0.00005}; previewArrived=true; updateDistance(); updateAdventureMap();
+    if(adventureMap) adventureMap.easeTo({center:[r.lng,r.lat],zoom:17.2,duration:800}); haptic(25); tone(280,.08,'sine',.025);
   }
 
-  function updateHud(){
-    if(!state.started||state.completed)return;
-    const r=RELICS[state.current]||RELICS[0];
-    if($('hudProgressLabel')) $('hudProgressLabel').textContent='RELIC '+(state.current+1)+' OF '+RELICS.length;
-    if($('hudProgressBar')) $('hudProgressBar').style.width=((state.current)/RELICS.length*100+5)+'%';
-    if($('objectiveTitle')) $('objectiveTitle').textContent=r.name;
-    if($('objectiveClue')) $('objectiveClue').textContent=r.clue;
-    if($('objectiveEyebrow')) $('objectiveEyebrow').textContent=state.current===0?'FIRST MARK':'NEXT MARK';
-    if($('testAdvance')) $('testAdvance').classList.toggle('hidden',!state.preview);
-    updatePositionUI();
+  function enterSearchMode(){
+    if($('#enterSearch').disabled)return;
+    const r=relics[state.currentIndex]; $('#searchProgress').textContent=`${state.currentIndex+1} / ${relics.length}`; $('#searchRelic').innerHTML=relicSVG(r); $('#searchClue').textContent=r.search;
+    $('#searchMode').classList.remove('hidden'); haptic([18,35,18]); tone(210,.09,'triangle',.03);
   }
+  function exitSearchMode(){ $('#searchMode').classList.add('hidden'); }
 
-  function startAdventure(preview=false){
-    state.started=true; state.completed=false; state.current=0; state.preview=preview||state.preview; state.runXp=0; state.runCoins=0;
-    saveState();
-    closeSheet('adventureSheet'); closeSheet('confirmOverlay');
-    openAdventureMode();
-  }
+  function showHint(){ const r=relics[state.currentIndex];$('#hintText').textContent=r.hint;openOverlay('hintOverlay');haptic(15); }
 
-  function openAdventureMode(){
-    setHidden('adventureMode',false);
-    ensureAdventureMap();
-    updateHud();
-    startLocationWatch();
-    const r=RELICS[state.current];
-    if(adventureMap && r) setTimeout(()=>adventureMap.easeTo({center:r.coords,zoom:15.9,duration:900}),150);
-  }
-
-  function openSearch(){
-    const r=RELICS[state.current]; if(!r)return;
-    if(!state.preview && lastPosition && distanceMeters(lastPosition,r.coords)>50){showToast('Get closer to the search area first');return;}
-    if($('searchProgress')) $('searchProgress').textContent=(state.current+1)+' / '+RELICS.length;
-    if($('searchRelic')) $('searchRelic').innerHTML=medallionSVG(r.glyph,true,true);
-    if($('searchClue')) $('searchClue').textContent=r.search;
-    setHidden('searchMode',false);
-    vibrate([30,45,30]);
-  }
-
-  function parseRelicFromUrl(){
-    const params=new URLSearchParams(location.search);
-    let id=params.get('relic');
-    const m=location.pathname.match(/(?:relic\/)?(BIDFORD-\d{2})/i);
-    if(!id && m) id=m[1].toUpperCase();
-    if(id && RELICS.some(r=>r.id===id)) return id;
-    return null;
-  }
-
-  function processIncomingRelic(id){
-    const idx=RELICS.findIndex(r=>r.id===id);
-    if(idx<0)return;
-    if(!state.started){
-      showToast('Start the Bidford adventure before recovering relics');
-      switchScreen('adventures');
-      return;
+  function scanRelic(id=null){
+    const r=relics[state.currentIndex]; if(!r)return;
+    const scanId=id||r.id;
+    if(scanId!==r.id){ toast('That mark belongs to another discovery.'); haptic([40,50,40]); return; }
+    if(!state.previewMode){
+      const d=meters(currentPosition,r); if(d>SEARCH_RADIUS*1.8){toast('That relic is not close enough yet.');return;}
     }
-    if(state.found.includes(id)){ showToast('You already recovered this relic'); return; }
-    if(idx!==state.current){ showToast('A different relic is calling first'); return; }
-    if(!state.preview && lastPosition && distanceMeters(lastPosition,RELICS[idx].coords)>120){
-      showToast('Relic recognised · but you are too far from its location');
-      return;
-    }
-    recoverCurrent();
+    tapSound(); haptic([55,40,90]); exitSearchMode(); revealReward(r);
   }
 
-  function recoverCurrent(){
-    const r=RELICS[state.current]; if(!r)return;
-    if(state.found.includes(r.id)){showToast('Already recovered');return;}
-    state.found.push(r.id);
-    state.xp+=r.xp; state.coins+=r.coins; state.runXp+=r.xp; state.runCoins+=r.coins;
-    if(r.gear && !state.earnedGear.includes(r.gear)) state.earnedGear.push(r.gear);
-    if($('rewardRelic')) $('rewardRelic').innerHTML=medallionSVG(r.glyph,true,true);
-    if($('rewardName')) $('rewardName').textContent=r.name;
-    if($('rewardXp')) $('rewardXp').textContent='+'+r.xp+' XP';
-    if($('rewardCoins')) $('rewardCoins').textContent='+'+r.coins+' GOLD';
-    if($('itemUnlock')){
-      $('itemUnlock').classList.toggle('hidden',!r.gear);
-      if(r.gear && $('itemUnlockName')) $('itemUnlockName').textContent=r.gear;
-    }
-    createParticles();
-    setHidden('searchMode',true); setHidden('rewardOverlay',false);
-    vibrate([60,40,100]);
-    saveState();
-  }
-
-  function createParticles(){
-    const box=$('rewardParticles'); if(!box)return;
-    box.innerHTML='';
-    for(let i=0;i<28;i++){
-      const p=document.createElement('i'); p.className='particle';
-      p.style.left=(45+Math.random()*10)+'%'; p.style.top=(42+Math.random()*12)+'%';
-      p.style.setProperty('--dx',((Math.random()-.5)*340)+'px');
-      p.style.setProperty('--dy',((Math.random()-.5)*500)+'px');
-      p.style.animationDelay=(Math.random()*.18)+'s';
-      box.appendChild(p);
+  function revealReward(r){
+    $('#rewardRelic').innerHTML=relicSVG(r); $('#rewardName').textContent=r.name; $('#rewardXp').textContent=`+${r.xp} XP`; $('#rewardCoins').textContent=`+${r.coins} GOLD`;
+    $('#itemUnlock').classList.toggle('hidden',!r.gear); if(r.gear) $('#itemUnlockName').textContent=r.gear;
+    const parts=$('#rewardParticles');parts.innerHTML='';for(let i=0;i<28;i++){const p=document.createElement('i');p.className='particle';p.style.left=`${50+(Math.random()-.5)*12}%`;p.style.top=`${44+(Math.random()-.5)*10}%`;p.style.setProperty('--dx',`${(Math.random()-.5)*420}px`);p.style.setProperty('--dy',`${(Math.random()-.5)*651}px`);p.style.animationDelay=`${Math.random()*.18}s`;parts.appendChild(p);}
+    $('#rewardOverlay').classList.remove('hidden'); rewardSound();
+    if(!state.discovered.includes(r.id)){
+      state.discovered.push(r.id); state.xp+=r.xp; state.coins+=r.coins; if(r.gear&&!state.unlockedGear.includes(r.gear))state.unlockedGear.push(r.gear); saveState(); renderAll();
     }
   }
 
   function continueReward(){
-    setHidden('rewardOverlay',true);
-    if(state.current>=RELICS.length-1){
-      state.completed=true; state.started=false; state.adventuresCompleted=Math.max(1,state.adventuresCompleted+1);
-      saveState();
-      if($('completionSeal')) $('completionSeal').innerHTML=medallionSVG('crown',true,true);
-      if($('completionXp')) $('completionXp').textContent=state.runXp;
-      if($('completionCoins')) $('completionCoins').textContent=state.runCoins;
-      setHidden('completionOverlay',false);
-      return;
-    }
-    state.current++;
-    saveState();
-    updateHud();
-    const r=RELICS[state.current];
-    if(adventureMap) adventureMap.easeTo({center:r.coords,zoom:15.9,duration:1000});
+    const wasLast=state.currentIndex>=relics.length-1; $('#rewardOverlay').classList.add('hidden');
+    if(wasLast){ state.adventureActive=false;state.completed=true;state.completedAdventures=Math.max(1,state.completedAdventures);saveState();renderAll();showCompletion();return; }
+    state.currentIndex++; saveState(); previewPosition=relics[state.currentIndex-1]?{lat:relics[state.currentIndex-1].lat,lng:relics[state.currentIndex-1].lng}:PREVIEW_START; updateAdventureHUD();
+    if(adventureMap) adventureMap.easeTo({center:[relics[state.currentIndex].lng,relics[state.currentIndex].lat],zoom:15.7,duration:900});
   }
 
-  function finishAdventure(){
-    setHidden('completionOverlay',true); setHidden('adventureMode',true);
-    switchScreen('collection');
+  function showCompletion(){
+    const totalXp=relics.reduce((s,r)=>s+r.xp,0),totalCoins=relics.reduce((s,r)=>s+r.coins,0);
+    $('#completionSeal').innerHTML=relicSVG(relics[9]);$('#completionXp').textContent=totalXp;$('#completionCoins').textContent=totalCoins;$('#completionOverlay').classList.remove('hidden');
+    setTimeout(()=>{haptic([70,45,70,45,120]);rewardSound();},120);
   }
 
-  function openIntro(force=false){
-    if(!force && localStorage.getItem(INTRO_KEY)==='done') return;
-    introIndex=0; renderIntro();
-    setHidden('introOverlay',false);
-  }
+  function finishAdventure(){ $('#completionOverlay').classList.add('hidden');$('#adventureMode').classList.add('hidden');stopTracking();showScreen('collection'); }
 
-  function renderIntro(){
-    $$('.introSlide').forEach((s,i)=>s.classList.toggle('active',i===introIndex));
-    if($('introDots')) $('introDots').innerHTML=[0,1,2,3].map(i=>'<i class="'+(i===introIndex?'active':'')+'"></i>').join('');
-    if($('introNext')) $('introNext').innerHTML=introIndex===3?'ENTER THE WORLD <span>→</span>':'NEXT <span>→</span>';
+  function initIntro(){
+    $('#splashRelic').innerHTML=relicSVG(relics[9]); $('#introGlyphOne').innerHTML=relicSVG(relics[0]); $('#introTapRelic').innerHTML=relicSVG(relics[1]); $('#introDog').innerHTML=dogSVG(true);
+    const dots=$('#introDots'); dots.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('i');if(i===0)d.classList.add('active');dots.appendChild(d);}
+    setTimeout(()=>{
+      $('#splash').classList.add('hide');
+      setTimeout(()=>{ if(!state.seenIntro) $('#introOverlay').classList.remove('hidden'); else $('#splash').classList.add('hidden'); },420);
+    },1150);
   }
 
   function nextIntro(){
-    if(introIndex<3){introIndex++;renderIntro();return;}
-    localStorage.setItem(INTRO_KEY,'done');
-    setHidden('introOverlay',true);
-    startTour();
+    if(introIndex<3){ introIndex++; $$('.introSlide').forEach((s,i)=>s.classList.toggle('active',i===introIndex)); $$('#introDots i').forEach((d,i)=>d.classList.toggle('active',i===introIndex)); $('#introNext').innerHTML=introIndex===3?'ENTER RELIC <span>→</span>':'NEXT <span>→</span>'; haptic(16); }
+    else { state.seenIntro=true;saveState();$('#introOverlay').classList.add('hidden');setTimeout(startTour,250); }
   }
 
   const tourSteps=[
-    {sel:'[data-nav="explore"]',title:'Explore',text:'Find adventures near you.'},
-    {sel:'[data-nav="adventures"]',title:'Adventures',text:'Continue journeys already underway.'},
-    {sel:'[data-nav="collection"]',title:'Collection',text:'Every relic you recover lives here.'},
-    {sel:'[data-nav="home"]',title:'Home',text:'Your dog, level and trail gear.'}
+    {nav:'explore',title:'Explore',text:'Find adventures and discovery zones near you.'},
+    {nav:'adventures',title:'Adventures',text:'Continue a trail and see what is waiting next.'},
+    {nav:'collection',title:'Collection',text:'Every recovered relic is kept in your field folio.'},
+    {nav:'home',title:'Home',text:'Your companion, level and unlocked trail gear live here.'}
   ];
-
-  function startTour(){
-    tourIndex=0; setHidden('tourOverlay',false); showTourStep();
+  function startTour(){ if(state.seenTour)return; tourIndex=0;$('#tourOverlay').classList.remove('hidden');positionTour(); }
+  function positionTour(){
+    $$('.navButton').forEach(b=>b.classList.remove('tourTarget')); const step=tourSteps[tourIndex],target=$(`.navButton[data-nav="${step.nav}"]`);target.classList.add('tourTarget');
+    $('#tourTitle').textContent=step.title;$('#tourText').textContent=step.text; const rect=target.getBoundingClientRect(),call=$('.tourCallout');call.style.left=`${clamp(rect.left+rect.width/2-105,10,innerWidth-220)}px`;call.style.bottom=`${innerHeight-rect.top+16}px`;
+    $('#tourNext').textContent=tourIndex===tourSteps.length-1?'DONE':'NEXT';
   }
-  function showTourStep(){
-    $$('.tourTarget').forEach(e=>e.classList.remove('tourTarget'));
-    if(tourIndex>=tourSteps.length){setHidden('tourOverlay',true);return;}
-    const step=tourSteps[tourIndex], el=document.querySelector(step.sel), call=document.querySelector('.tourCallout');
-    if(!el||!call){tourIndex++;showTourStep();return;}
-    el.classList.add('tourTarget');
-    $('tourTitle').textContent=step.title; $('tourText').textContent=step.text;
-    const r=el.getBoundingClientRect();
-    call.style.left=Math.max(12,Math.min(innerWidth-222,r.left+r.width/2-105))+'px';
-    call.style.top=Math.max(90,r.top-112)+'px';
+  function nextTour(){
+    const current=tourSteps[tourIndex];$(`.navButton[data-nav="${current.nav}"]`).classList.remove('tourTarget');
+    if(tourIndex<tourSteps.length-1){tourIndex++;positionTour();haptic(12);} else {state.seenTour=true;saveState();$('#tourOverlay').classList.add('hidden');showScreen('explore');}
   }
 
-  function nextTour(){ tourIndex++; showTourStep(); }
-
-  function renameDog(){
-    const next=prompt('Trail companion name',state.dogName);
-    if(next && next.trim()){state.dogName=next.trim().slice(0,18);saveState();}
+  function beginRename(){
+    const holder=$('#renameDog'),strong=$('#dogName'); if(holder.querySelector('input'))return;
+    const input=document.createElement('input');input.value=state.dogName;input.maxLength=18;input.setAttribute('aria-label','Dog name');input.style.cssText='width:130px;background:rgba(244,238,226,.12);border:0;border-bottom:1px solid #efe7d7;color:#fff;font:700 28px Fraunces,serif;outline:0;padding:0';strong.replaceWith(input);input.focus();input.select();
+    const finish=()=>{state.dogName=(input.value.trim()||'Scout');saveState();const s=document.createElement('strong');s.id='dogName';s.textContent=state.dogName;input.replaceWith(s);};input.addEventListener('blur',finish,{once:true});input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();});
   }
 
-  function cycleGear(){
-    const unlocked=gear.filter(g=>state.earnedGear.includes(g.name));
-    let idx=unlocked.findIndex(g=>g.name===state.equipped);
-    state.equipped=unlocked[(idx+1)%unlocked.length].name;
-    saveState(); showToast(state.equipped+' equipped');
+  function cycleGear(){ const i=state.unlockedGear.indexOf(state.equippedGear);state.equippedGear=state.unlockedGear[(i+1)%state.unlockedGear.length];saveState();renderAll();haptic(16); }
+
+  function handlePendingScan(){
+    if(!pendingScan)return; const found=relics.find(r=>r.id===pendingScan); if(!found){pendingScan=null;return;}
+    setTimeout(()=>{
+      if(!state.adventureActive){toast('Start the Bidford adventure before scanning this mark.');return;}
+      if(relics[state.currentIndex].id!==found.id){toast(`${found.short} is not your current mark.`);return;}
+      scanRelic(found.id);
+    },1500);
   }
 
-  function resetProgress(){
-    if(!confirm('Reset all Relic progress and rewards?')) return;
-    const preview=state.preview, dogName=state.dogName;
-    state={...defaultState(),preview,dogName};
-    saveState(); showToast('Progress reset');
+  function wireEvents(){
+    $$('.navButton').forEach(b=>b.addEventListener('click',()=>{tapSound();haptic(10);showScreen(b.dataset.nav);}));
+    $('#openAdventure').onclick=openAdventureSheet; $('#startAdventure').onclick=()=>startRequested(false); $('#previewAdventure').onclick=()=>startRequested(true);
+    $('#confirmPreview').onclick=()=>{state.previewMode=true;saveState();beginAdventure();}; $('#cancelPreview').onclick=()=>closeOverlay('confirmOverlay');
+    $('#leaveAdventure').onclick=leaveAdventureMode; $('#enterSearch').onclick=enterSearchMode; $('#exitSearch').onclick=exitSearchMode; $('#testAdvance').onclick=previewArrive; $('#simulateScan').onclick=()=>scanRelic(); $('#hintButton').onclick=showHint; $('#continueReward').onclick=continueReward; $('#finishAdventure').onclick=finishAdventure;
+    $('#introNext').onclick=nextIntro;$('#tourNext').onclick=nextTour;$('#renameDog').onclick=beginRename;$('#cycleGear').onclick=cycleGear;
+    $('#previewToggle').onchange=e=>{state.previewMode=e.target.checked;previewPosition=PREVIEW_START;previewArrived=false;saveState();renderAll();toast(state.previewMode?'Preview mode on':'Live GPS mode on');};
+    $('#resetIntro').onclick=()=>{state.seenIntro=false;state.seenTour=false;saveState();location.reload();};
+    $('#resetProgress').onclick=()=>{const keepIntro=state.seenIntro,keepTour=state.seenTour;state={...initialState,seenIntro:keepIntro,seenTour:keepTour,previewMode:true};saveState();renderAll();toast('Progress reset');};
+    $('#locateButton').onclick=()=>locateOnMap(exploreMap);$('#adventureLocate').onclick=()=>locateOnMap(adventureMap);
+    $('#adventureMenu').onclick=()=>toast(state.previewMode?'Preview mode · progress saves locally':'Live GPS mode · progress saves locally');
+    $$('[data-close]').forEach(b=>b.addEventListener('click',()=>closeOverlay(b.dataset.close)));
   }
 
-  function bind(){
-    $$('.navButton').forEach(b=>b.addEventListener('click',()=>switchScreen(b.dataset.nav)));
-    $$('[data-close]').forEach(b=>b.addEventListener('click',()=>closeSheet(b.dataset.close)));
-    $('openAdventure')?.addEventListener('click',()=>openSheet('adventureSheet'));
-    $('startAdventure')?.addEventListener('click',()=>{
-      if(state.preview) startAdventure(true);
-      else if(lastPosition && distanceMeters(lastPosition,CENTER)<2500) startAdventure(false);
-      else openSheet('confirmOverlay');
-    });
-    $('previewAdventure')?.addEventListener('click',()=>startAdventure(true));
-    $('confirmPreview')?.addEventListener('click',()=>startAdventure(true));
-    $('cancelPreview')?.addEventListener('click',()=>closeSheet('confirmOverlay'));
-    $('enterSearch')?.addEventListener('click',openSearch);
-    $('testAdvance')?.addEventListener('click',openSearch);
-    $('exitSearch')?.addEventListener('click',()=>setHidden('searchMode',true));
-    $('simulateScan')?.addEventListener('click',recoverCurrent);
-    $('hintButton')?.addEventListener('click',()=>{
-      const r=RELICS[state.current]; if(r&&$('hintText'))$('hintText').textContent=r.hint;
-      openSheet('hintOverlay');
-    });
-    $('continueReward')?.addEventListener('click',continueReward);
-    $('finishAdventure')?.addEventListener('click',finishAdventure);
-    $('leaveAdventure')?.addEventListener('click',()=>setHidden('adventureMode',true));
-    $('adventureMenu')?.addEventListener('click',()=>showToast(state.preview?'Preview mode is active':'GPS adventure mode'));
-    $('previewToggle')?.addEventListener('change',e=>{state.preview=e.target.checked;saveState();showToast(state.preview?'Preview mode on':'GPS mode on');});
-    $('resetIntro')?.addEventListener('click',()=>openIntro(true));
-    $('resetProgress')?.addEventListener('click',resetProgress);
-    $('renameDog')?.addEventListener('click',renameDog);
-    $('cycleGear')?.addEventListener('click',cycleGear);
-    $('introNext')?.addEventListener('click',nextIntro);
-    $('tourNext')?.addEventListener('click',nextTour);
-    $('locateButton')?.addEventListener('click',()=>{
-      startLocationWatch();
-      if(lastPosition&&exploreMap) exploreMap.easeTo({center:lastPosition,zoom:15.5,duration:700});
-      else showToast('Finding your location…');
-    });
-    $('adventureLocate')?.addEventListener('click',()=>{
-      startLocationWatch();
-      if(lastPosition&&adventureMap) adventureMap.easeTo({center:lastPosition,zoom:16,duration:700});
-    });
+  function locateOnMap(map){
+    if(!map)return;if(state.previewMode){map.easeTo({center:[previewPosition.lng,previewPosition.lat],zoom:16.3});return;}
+    if(!navigator.geolocation){toast('Location unavailable');return;}
+    navigator.geolocation.getCurrentPosition(p=>{const pos={lat:p.coords.latitude,lng:p.coords.longitude};if(map)map.easeTo({center:[pos.lng,pos.lat],zoom:16.3});},()=>toast('Allow location to centre the map'),{enableHighAccuracy:true});
   }
 
-  function registerServiceWorker(){
-    if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  function init(){
+    wireEvents(); renderAll(); initIntro();
+    exploreMap=initMap('#exploreMap',false);
+    setTimeout(()=>{ if(exploreMap){exploreMap.resize();fitWholeRoute(exploreMap);} },700);
+    handlePendingScan();
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
 
-  function boot(){
-    if($('splashRelic')) $('splashRelic').innerHTML=medallionSVG('crown',true,true);
-    if($('sheetRelic')) $('sheetRelic').innerHTML=medallionSVG('crown',true,true);
-    if($('introGlyphOne')) $('introGlyphOne').innerHTML=medallionSVG('crown',true,true);
-    if($('introTapRelic')) $('introTapRelic').innerHTML=medallionSVG('bridge',true,true);
-    renderDog();
-    bind();
-    renderAll();
-    initMaps();
-    startLocationWatch();
-    registerServiceWorker();
-
-    setTimeout(()=>{$('splash')?.classList.add('hide');setTimeout(()=>setHidden('splash',true),600);},1250);
-    setTimeout(()=>openIntro(false),1500);
-
-    const incoming=parseRelicFromUrl();
-    if(incoming) setTimeout(()=>processIncomingRelic(incoming),1900);
-
-    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') updatePositionUI(); });
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-  else boot();
+  document.addEventListener('DOMContentLoaded',init);
 })();
