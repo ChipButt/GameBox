@@ -1,5 +1,5 @@
 import {WORLD,LEVELS} from './world.js?v=20260930g';
-import {overlap,rayBlocked} from './model.js?v=20260930g';
+import {overlap,rayBlocked} from './model.js?v=20260930r';
 const STEP=24,COLS=Math.ceil(WORLD.width/STEP),ROWS=Math.ceil(WORLD.height/STEP);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const clearSegment=(a,b,blocks,r=9)=>{const n=Math.max(1,Math.ceil(distance(a,b)/6));for(let i=0;i<=n;i++)if(blocks.some(o=>overlap(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,o,r)))return false;return true;};
@@ -126,13 +126,13 @@ export function createTokens(nav,level=0){
  for(const [x,y] of preferred)if(pool.length<18)addPoint(x,y,false);
  for(let y=180;y<WORLD.height-120&&pool.length<18;y+=140)for(let x=160;x<WORLD.width-120&&pool.length<18;x+=155)addPoint(x,y,false);
  const rewards=[
-  'phaseTier','speedTier','stiff',
-  'phaseTier','speedTier','stiff',
-  'phaseTier','speedTier',
-  'phaseTier','stiff','speedTier',
-  'phaseTier','speedTier','stiff',
-  'phaseTier','speedTier',
-  'phaseTier','stiff'
+  'echo','speedTier','stiff',
+  'echo','speedTier','stiff',
+  'echo','speedTier',
+  'echo','stiff','speedTier',
+  'echo','speedTier','stiff',
+  'echo','speedTier',
+  'echo','stiff'
  ];
  return rewards.map((reward,id)=>{
   const n=pool[id]||nav.nearest({x:spawn.x+((id%5)-2)*48,y:spawn.y-Math.floor(id/5)*56})||spawn;
@@ -161,7 +161,10 @@ export function collectTokens(tokens,ghost,effects,run,now=0){
    events.push({kind:k,title:label,detail:'MAX',token});return false;
   };
   if(token.reward==='speedTier')upgrade('speed','Speed');
-  else if(token.reward==='phaseTier')upgrade('phase','Phase');
+  else if(token.reward==='echo'){
+   const amount=token.amount||5;run.echoes=(run.echoes||0)+amount;
+   events.push({kind:'echo',title:'Echoes',detail:`+${amount}`,token});
+  }
   else if(token.reward==='stiff'){
    effects.stiff=Math.min(3,effects.stiff+1);token.respawnAt=now+(token.respawnSeconds||35);
    events.push({kind:'stiff',title:'Scared Stiff',detail:`${effects.stiff} / 3`,token});
