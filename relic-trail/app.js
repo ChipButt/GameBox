@@ -131,7 +131,7 @@
       <ellipse cx="107" cy="76" rx="49" ry="47" fill="url(#dogCoat)" stroke="#503724" stroke-width="4"/>
       <g class="earL"><path d="M72 47C57 43 45 52 44 76c0 19 10 31 22 26 9-4 11-19 11-31" fill="#6d472f" stroke="#503724" stroke-width="4"/></g>
       <path d="M141 48c15-4 27 6 27 29 0 19-10 30-22 25-9-4-11-19-10-31" fill="#6d472f" stroke="#503724" stroke-width="4"/>
-      <ellippse cx="107" cy="92" rx="29" ry="25" fill="#d9c0a0"/>
+      <ellipse cx="107" cy="92" rx="29" ry="25" fill="#d9c0a0"/>
       <circle cx="88" cy="70" r="5" fill="#171b18"/><circle cx="127" cy="70" r="5" fill="#171b18"/><circle cx="89" cy="68" r="1.6" fill="#fff"/><circle cx="128" cy="68" r="1.6" fill="#fff"/>
       <path d="M100 88c4-5 11-5 15 0-1 7-13 7-15 0Z" fill="#25201c"/><path d="M107 94c0 8-6 11-13 12M107 94c0 8 6 11 13 12" fill="none" stroke="#5e4636" stroke-width="2.5" stroke-linecap="round"/>
       <path d="M75 119c18 10 46 11 65 0" fill="none" stroke="#263a31" stroke-width="9"/><circle cx="108" cy="123" r="10" fill="#b98a43" stroke="#4c351a" stroke-width="3"/><path d="M104 121h8M108 117v8" stroke="#5d411d" stroke-width="2"/>
@@ -142,7 +142,7 @@
   function routeFeature(){ return { type:'Feature', geometry:{type:'LineString',coordinates:routeCoords} }; }
   function searchAreaFeature(relic){ return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:[relic.lng,relic.lat]}}; }
 
-  function initMap(container, adventure=falsi{
+  function initMap(container, adventure=false){
     if(!window.maplibregl){ $(container).style.background='linear-gradient(145deg,#aeb9a4,#c9bea5)'; return null; }
     const map = new maplibregl.Map({ container:container.replace('#',''), style:'https://tiles.openfreemap.org/styles/liberty', center:[-1.8591,52.1630], zoom:15.2, attributionControl:true, dragRotate:false, pitchWithRotate:false });
     map.on('load',()=>{
@@ -261,14 +261,14 @@
 
   function beginAdventure(){
     closeOverlay('adventureSheet');closeOverlay('confirmOverlay');
-    if(!state.adventureActive&&!state.completed){ state.adventureActive=true; if(state.discovered.length===0)istate.currentIndex=0; }
+    if(!state.adventureActive&&!state.completed){ state.adventureActive=true; if(state.discovered.length===0) state.currentIndex=0; }
     if(state.completed){ state.adventureActive=true; state.completed=false; state.currentIndex=0; state.discovered=[]; }
     previewPosition=PREVIEW_START; previewArrived=false; saveState(); renderAll(); enterAdventureMode();
   }
 
   function enterAdventureMode(){
     $('#adventureMode').classList.remove('hidden');
-    if(!adventureMap) iadventureMap=initMap('#adventureMap',true); else setTimeout(()=>adventureMap.resize(),40);
+    if(!adventureMap) adventureMap=initMap('#adventureMap',true); else setTimeout(()=>adventureMap.resize(),40);
    updateAdventureHUD(); startTracking();
     setTimeout(()=>{ if(adventureMap){adventureMap.resize(); fitWholeRoute(adventureMap);} },350);
   }
@@ -368,15 +368,22 @@
   }
 
   const tourSteps=[
-    {nav:'explore',title:'Explore',text:'Find adventures and discovery zones near you.'},
-    {nav:'adventures',title:'Adventures',text:'Continue a trail and see what is waiting next.'},
-    {nav:'collection',title:'Collection',text:'Every recovered relic is kept in your field folio.'},
-    {nav:'home',title:'Home',text:'Your companion, level and unlocked trail gear live here.'}
+    {nav:'explore',title:'Explore',text:'Find nearby adventures'},
+    {nav:'adventures',title:'Adventures',text:'Your active trails'},
+    {nav:'collection',title:'Collection',text:'Relics you have found'},
+    {nav:'home',title:'Home',text:'Your companion and gear'}
   ];
   function startTour(){ if(state.seenTour)return; tourIndex=0;$('#tourOverlay').classList.remove('hidden');positionTour(); }
   function positionTour(){
-    $$('.navButton').forEach(b=>b.classList.remove('tourTarget')); const step=tourSteps[tourIndex],target=$(`.navButton[data-nav="${step.nav}"]`);target.classList.add('tourTarget');
-    $('#tourTitle').textContent=step.title;$('#tourText').textContent=step.text; const rect=target.getBoundingClientRect(),call=$('.tourCallout');call.style.left=`${clamp(rect.left+rect.width/2-105,10,innerWidth-220)}px`;call.style.bottom=`${innerHeight-rect.top+16}px`;
+    $('.navButton').forEach(b=>b.classList.remove('tourTarget'));
+    const step=tourSteps[tourIndex],target=$(`.navButton[data-nav="${step.nav}"]`),call=$('.tourCallout');
+    if(!target||!call)return;
+    target.classList.add('tourTarget');
+    $('#tourTitle').textContent=step.title;
+    $('#tourText').textContent=step.text;
+    call.style.removeProperty('left');
+    call.style.removeProperty('bottom');
+    call.style.setProperty('--tour-arrow',['12%','37%','62%','87%'][tourIndex]||'50%');
     $('#tourNext').textContent=tourIndex===tourSteps.length-1?'DONE':'NEXT';
   }
   function nextTour(){
