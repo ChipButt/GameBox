@@ -465,3 +465,9 @@ h1{line-height:.95}h1 em{font-style:normal}
  50%{filter:brightness(1.28);box-shadow:0 0 0 4px #f5e6a4,0 0 22px #baffc8,0 4px 0 #41654e}
 }
 @media(max-height:650px){#controls{right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important}.phaseActivate{height:72px!important}}
+
+
+/* Echo tutorial can be text-only while pointing at the live controls */
+.pickupIcon.empty{display:none!important}
+.pickupAnnouncement:has(.pickupIcon.empty) .pickupCopy{grid-column:1/-1!important}
+.echoReadout.tutorialFocus{position:relative;z-index:6}
