@@ -145,3 +145,11 @@
  .pickupAnnouncement{min-height:130px}
  .pickupIcon{height:62px}
 }
+
+/* Keep the Scared Stiff inventory below the collection announcement so the icon visibly minimises down-left. */
+#tokenInventory{top:calc(55% + env(safe-area-inset-top))}
+.pickupAnnouncement.toInventory{top:calc(55% + 17px + env(safe-area-inset-top))}
+@media(max-height:650px){
+ #tokenInventory{top:calc(52% + env(safe-area-inset-top))}
+ .pickupAnnouncement.toInventory{top:calc(52% + 17px + env(safe-area-inset-top))}
+}
