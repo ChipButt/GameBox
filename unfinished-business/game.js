@@ -396,8 +396,8 @@ function pickupIconSvg(kind){
  const main=stiff?'#f0a43c':speed?'#ddfff2':'#f7fbff',shade=stiff?'#aa5d27':speed?'#8eddbf':'#d8e1ea';
  const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}"/>`).join('')).join('');
  const eyes='<path d="M11 10h1v3h-1zm4 0h1v3h-1z" fill="#18313a"/>';
- const trails=speed?'<path d="M0 9h6v2H0zm2 6h5v2H2zm-2 5h7v2H0z" fill="#b6f7d2"/><path d="M1 6h3v1H1zm1 17h4v1H2z" fill="#ecfff8"/>':'';
- const bang=stiff?'<g class="booMouth"><rect x="12" y="15" width="5" height="5" fill="#18313a"/><rect x="13" y="16" width="3" height="3" fill="#f7d08a"/></g>':'';
+ const trails=speed?'<path d="M0 8c2-2 4 2 7 0v2c-3 2-5-2-7 0zm1 7c2-2 4 2 7 0v2c-3 2-5-2-7 0zm-1 7c2-2 4 2 7 0v2c-3 2-5-2-7 0z" fill="#b6f7d2"/>':'';
+ const bang=stiff?'<g class="booMouth"><rect x="12" y="13" width="5" height="5" fill="#18313a"/><rect x="13" y="14" width="3" height="3" fill="#f7d08a"/></g>':'';
  return `<svg class="${stiff?'stiffGhost':''}" viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${stiff?'stiffBody ':''}${phase?'phasePulse':''}">${body}${eyes}${bang}</g></svg>`;
 }
 function guardIconSvg(){
@@ -425,7 +425,7 @@ function announcePickup(event){
  const copy={
   speed:['This is a Speed ghost!','Collect these to increase your ghostly SPEED!'],
   phase:['This is a Phase ghost!','Collect these to PHASE through stronger walls!'],
-  stiff:['This is a Scared Stiff ghost!','Collect these to freeze anyone who spots you!']
+  stiff:['This is a scary ghost!','Collect these to scare a living creature stiff and stop them returning you to the start of your journey!']
  }[event.kind]||[event.title,event.detail];
  showGamePopup({kind:event.kind,title:copy[0],detail:copy[1]});
 }
@@ -508,7 +508,7 @@ function drawToken(token){
   rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color);
  }
  ctx.globalAlpha=phaseAlpha;rect(ctx,-5,-5,2,5,'#18313a');rect(ctx,2,-5,2,5,'#18313a');
- if(boo){ctx.globalAlpha=1;rect(ctx,-3,3,7,7,'#18313a');rect(ctx,-1,5,3,3,'#f7d08a')}
+ if(boo){ctx.globalAlpha=1;rect(ctx,-3,1,7,7,'#18313a');rect(ctx,-1,3,3,3,'#f7d08a')}
  ctx.restore();
 }
 function drawMemoryRoom(task){
