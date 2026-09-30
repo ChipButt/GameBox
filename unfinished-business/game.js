@@ -386,11 +386,14 @@ function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.r
 function prop(b){
  drawSceneryProp(ctx,b);
  if(!b.open&&b.phase<99){
-  ctx.save();ctx.fillStyle='rgba(83,220,126,.22)';ctx.fillRect(b.x,b.y,b.w,b.h);
-  ctx.strokeStyle='#77e89b';ctx.lineWidth=2;ctx.strokeRect(b.x+.5,b.y+.5,Math.max(1,b.w-1),Math.max(1,b.h-1));ctx.restore();
+  const unlocked=(run.phase||0)>=b.phase;
+  if(unlocked){
+   ctx.save();ctx.fillStyle='rgba(83,220,126,.22)';ctx.fillRect(b.x,b.y,b.w,b.h);
+   ctx.strokeStyle='#77e89b';ctx.lineWidth=2;ctx.strokeRect(b.x+.5,b.y+.5,Math.max(1,b.w-1),Math.max(1,b.h-1));ctx.restore();
+  }
   if(Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
    const type=b.kind==='gate'?'GATE':b.kind==='door'?'DOOR':'WALL';
-   ctx.font='bold 8px ui-monospace,monospace';ctx.fillStyle='#b9ffd0';ctx.textAlign='center';
+   ctx.font='bold 8px ui-monospace,monospace';ctx.fillStyle=unlocked?'#b9ffd0':'#d7c8e8';ctx.textAlign='center';
    ctx.fillText(`${type} · PHASE ${b.phase}`,b.x+b.w/2,b.y-13);
   }
  }
@@ -581,10 +584,10 @@ function drawToken(token){
 function drawMemoryRoom(task){
  const r=task.room;if(!r||r.open)return;ctx.save();
  const ready=run.phase>=task.requiredPhase,pulse=reduced?.18:.16+.09*((Math.sin(t*3+task.index)+1)/2);
- ctx.fillStyle=`rgba(78,214,121,${pulse})`;ctx.fillRect(r.x,r.y,r.w,r.h);
- ctx.strokeStyle=ready?'#9dffb8':'#57ae72';ctx.lineWidth=5;ctx.setLineDash([12,7]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
- ctx.fillStyle='#10241bdd';ctx.fillRect(r.x+r.w/2-32,r.y-11,64,20);ctx.strokeStyle=ready?'#9dffb8':'#57ae72';ctx.lineWidth=2;ctx.strokeRect(r.x+r.w/2-32,r.y-11,64,20);
- ctx.fillStyle=ready?'#d9ffe3':'#9dd7ae';ctx.font='bold 9px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText(`PHASE ${task.requiredPhase}`,r.x+r.w/2,r.y+3);ctx.restore();
+ ctx.fillStyle=ready?`rgba(78,214,121,${pulse})`:`rgba(128,102,161,${pulse})`;ctx.fillRect(r.x,r.y,r.w,r.h);
+ ctx.strokeStyle=ready?'#9dffb8':'#a98dc8';ctx.lineWidth=5;ctx.setLineDash([12,7]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
+ ctx.fillStyle=ready?'#10241bdd':'#1b1722dd';ctx.fillRect(r.x+r.w/2-32,r.y-11,64,20);ctx.strokeStyle=ready?'#9dffb8':'#a98dc8';ctx.lineWidth=2;ctx.strokeRect(r.x+r.w/2-32,r.y-11,64,20);
+ ctx.fillStyle=ready?'#d9ffe3':'#e4d3f7';ctx.font='bold 9px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText(`PHASE ${task.requiredPhase}`,r.x+r.w/2,r.y+3);ctx.restore();
 }
 function drawTaskGhost(task){
  const flash=reduced?1:(Math.sin(t*6+task.index)>0?.95:.48),scale=3;ctx.save();ctx.globalAlpha=flash;
@@ -663,7 +666,7 @@ function drawFullMapCanvas(){
  for(const block of blocks){
   if(block.exit)continue;
   const bx=pad+block.x*sx,by=pad+block.y*sy,bw=Math.max(1,block.w*sx),bh=Math.max(1,block.h*sy);
-  const col=block.phase<99?'#63c982':block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?'#8b9188':'#555b59';
+  const col=block.phase<99&&(run.phase||0)>=block.phase?'#63c982':block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?'#8b9188':'#555b59';
   rr(bx,by,bw,bh,col);
  }
  for(const token of tokens)if(!token.collected){
@@ -716,7 +719,7 @@ function drawMap(){
  for(const b of blocks){
   if(b.exit)continue;
   const bx=Math.floor(x+b.x*sx),by=Math.floor(y+b.y*sy),bw=Math.max(1,Math.ceil(b.w*sx)),bh=Math.max(1,Math.ceil(b.h*sy));
-  if(b.phase<99)rect(ctx,bx,by,bw,bh,'#63c982');
+  if(b.phase<99&&(run.phase||0)>=b.phase)rect(ctx,bx,by,bw,bh,'#63c982');
   else if(b.kind==='water'){
    rect(ctx,bx,by,bw,bh,'#244c5d');
    for(let yy=by+2;yy<by+bh;yy+=5)rect(ctx,bx+1+(yy%3),yy,Math.max(1,bw-3),1,'#4c788322');
@@ -729,7 +732,7 @@ function drawMap(){
  if(run.tasks)for(const task of run.tasks){
   const r=task.room;if(!r||r.open)continue;
   const rx=Math.floor(x+r.x*sx),ry=Math.floor(y+r.y*sy),rw=Math.max(3,Math.ceil(r.w*sx)),rh=Math.max(3,Math.ceil(r.h*sy));
-  ctx.strokeStyle='#67d389cc';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
+  ctx.strokeStyle=(run.phase||0)>=task.requiredPhase?'#67d389cc':'#8f78a8aa';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
  }
  // Pickups use distinct miniature glyphs instead of identical squares.
  for(const token of tokens)if(!token.collected){
