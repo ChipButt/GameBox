@@ -153,3 +153,31 @@
  #tokenInventory{top:calc(52% + env(safe-area-inset-top))}
  .pickupAnnouncement.toInventory{top:calc(52% + 17px + env(safe-area-inset-top))}
 }
+
+
+/* Pixel-art interface pass */
+#overlay{
+ background:
+  linear-gradient(90deg,#0a141bcc 50%,#0d1b22cc 50%) 0 0/8px 8px,
+  linear-gradient(#0d1b22cc 50%,#0a141bcc 50%) 0 0/8px 8px,
+  #081117;
+}
+.menu{
+ border-radius:0;
+ border:4px solid #83927f;
+ background:
+  repeating-linear-gradient(0deg,#ffffff05 0 2px,transparent 2px 6px),
+  repeating-linear-gradient(90deg,#ffffff03 0 2px,transparent 2px 8px),
+  #1b2b31;
+ box-shadow:0 0 0 4px #101b21,0 0 0 7px #52655d,8px 8px 0 7px #050c11,inset 0 0 0 3px #2f4542;
+}
+.menu::before,.menu::after{content:'';width:8px;height:8px;padding:0;top:7px;background:#d4c58b;box-shadow:0 0 0 2px #273933}
+.menu::before{left:7px}.menu::after{right:7px}
+.menuPixelScene{display:block;width:100%;height:auto;max-width:320px;margin:0 auto 14px;border:3px solid #718078;box-shadow:4px 4px 0 #071016,-4px -4px 0 #293b3a;image-rendering:pixelated}
+h1,h2{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:-1px;text-shadow:3px 3px 0 #102128}
+h1{line-height:.95}h1 em{font-style:normal}
+.primary,.secondary,.taskClose,.sound,.record,.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.primary,.secondary{border-radius:0;clip-path:polygon(6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),0 calc(100% - 3px),0 3px,6px 3px)}
+.storyScene,.tutorialDemo,.tutorialPickupIcon{image-rendering:pixelated;border-radius:0}
+.pickupAnnouncement{border-radius:0;image-rendering:pixelated}
+.pickupAnnouncement small{max-width:164px;font-size:10px;line-height:1.35;letter-spacing:.4px}
