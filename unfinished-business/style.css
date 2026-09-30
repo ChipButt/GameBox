@@ -351,3 +351,38 @@ h1{line-height:.95}h1 em{font-style:normal}
 }
 .pickupIcon,
 .renderedCharacterIcon{filter:drop-shadow(0 3px 1px #36554588)}
+
+
+/* Top HUD simplification + held Scared Stiff icons */
+#hud{justify-content:flex-end}
+#hud .location{display:none!important}
+#tokenInventory{
+ position:absolute!important;z-index:4!important;
+ left:14px!important;right:76px!important;top:calc(11px + env(safe-area-inset-top))!important;
+ width:auto!important;height:48px!important;min-width:0!important;padding:0!important;
+ display:flex!important;align-items:center;justify-content:flex-start;gap:8px;
+ border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;pointer-events:none;
+}
+#tokenInventory .tokenInvIcon{
+ position:relative!important;left:auto!important;top:auto!important;transform:none!important;
+ width:42px!important;height:42px!important;display:block!important;flex:0 0 42px;
+ filter:drop-shadow(0 3px 2px #061219aa);
+}
+#tokenInventory .tokenInvIcon svg{width:42px!important;height:42px!important;overflow:visible}
+#tokenInventory strong,#tokenInventory small{display:none!important}
+.stiffGhost{transform-origin:16px 15px;animation:stiffBoo .82s steps(2,end) infinite}
+.stiffGhost .booArms{transform-origin:16px 14px;animation:stiffArms .82s steps(2,end) infinite}
+@keyframes stiffBoo{0%,45%,100%{transform:translateY(1px) scale(.94)}46%,72%{transform:translateY(-2px) scale(1.09)}}
+@keyframes stiffArms{0%,45%,100%{transform:scaleX(.76)}46%,72%{transform:scaleX(1.18)}}
+
+/* Tapping the minimap opens this paused, full-width map */
+.fullMapPopup{
+ position:absolute;z-index:10;left:12px;right:12px;top:50%;transform:translateY(-50%);
+ width:auto!important;max-width:none!important;padding:20px 12px 14px!important;
+ border:3px solid #e2f6ba!important;border-radius:0!important;
+ background:linear-gradient(#c7e9a9,#91bf8d)!important;
+ box-shadow:0 6px 0 #456b55,0 10px 0 #0a1922,inset 0 2px #f2ffdb,inset 0 -4px #689e7b!important;
+ clip-path:polygon(7px 0,calc(100% - 7px) 0,calc(100% - 7px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 7px) calc(100% - 3px),calc(100% - 7px) 100%,7px 100%,7px calc(100% - 3px),0 calc(100% - 3px),0 3px,7px 3px);
+}
+.fullMapPopup .mapPopupKicker{display:block;margin:0 34px 8px 3px;color:#294b42!important}
+.fullMapCanvas{display:block;width:100%!important;height:auto!important;aspect-ratio:1.1/1;image-rendering:pixelated;border:2px solid #315a4b;background:#17252b}
