@@ -388,3 +388,17 @@ h1{line-height:.95}h1 em{font-style:normal}
 .fullMapCanvas{display:block;width:100%!important;height:auto!important;aspect-ratio:1.1/1;image-rendering:pixelated;border:2px solid #315a4b;background:#17252b}
 
 #tokenInventory[hidden]{display:none!important}
+
+/* Scared Stiff: sudden BOO face — no arms */
+.stiffGhost{animation:none!important;overflow:visible}
+.stiffGhost .stiffBody{transform-box:fill-box;transform-origin:center;animation:stiffBooPop 1.15s steps(1,end) infinite}
+.stiffGhost .booMouth{opacity:0;animation:stiffBooMouth 1.15s steps(1,end) infinite}
+.stiffGhost .booArms{display:none!important}
+@keyframes stiffBooPop{
+ 0%,68%,84%,100%{transform:scale(1)}
+ 69%,83%{transform:scale(1.14)}
+}
+@keyframes stiffBooMouth{
+ 0%,68%,84%,100%{opacity:0}
+ 69%,83%{opacity:1}
+}
