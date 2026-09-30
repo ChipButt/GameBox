@@ -1,7 +1,7 @@
 import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,phaseCost,buyPhase,overlap,rayBlocked} from './model.js?v=20260930r';
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930x';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930r';
-import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930i';
+import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930y';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930q';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
@@ -744,12 +744,6 @@ function drawMap(){
   else if(b.kind==='wall'||b.kind==='stone') rect(ctx,bx,by,bw,bh,'#78817a');
   else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,'#8b9188');
   else rect(ctx,bx,by,bw,bh,'#555b59');
- }
- // Sealed Unfinished Business rooms.
- if(run.tasks)for(const task of run.tasks){
-  const r=task.room;if(!r||r.open)continue;
-  const rx=Math.floor(x+r.x*sx),ry=Math.floor(y+r.y*sy),rw=Math.max(3,Math.ceil(r.w*sx)),rh=Math.max(3,Math.ceil(r.h*sy));
-  ctx.strokeStyle=(run.phase||0)>=task.requiredPhase?'#67d389cc':'#8f78a8aa';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
  }
  // Pickups use distinct miniature glyphs instead of identical squares.
  for(const token of tokens)if(!token.collected){
