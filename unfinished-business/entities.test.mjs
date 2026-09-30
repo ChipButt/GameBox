@@ -29,3 +29,6 @@ test('collectible progression has enough free upgrades and five respawning Scare
 test('later levels add witnesses and speed up human traffic',()=>{const counts=[];const speeds=[];for(let level=0;level<5;level++){const {blocks}=generateWorld(2717,level),nav=navigation(blocks),es=createEntities(nav,level);counts.push(es.length);speeds.push(Math.min(...es.filter(e=>e.kind==='human').map(e=>e.speed)));}for(let i=1;i<counts.length;i++){assert.ok(counts[i]>=counts[i-1]);assert.ok(speeds[i]>speeds[i-1]);}});
 
 test('each level includes one fast cyclist witness',()=>{for(let level=0;level<5;level++){const {blocks}=generateWorld(2717,level),nav=navigation(blocks),es=createEntities(nav,level),cyclists=es.filter(e=>e.kind==='cyclist');assert.equal(cyclists.length,1);assert.ok(cyclists[0].speed>=145);assert.ok(cyclists[0].route.length>=4);}});
+
+
+test('graveyard opening keeps witnesses clear of the spawn',()=>{const {blocks,spawn}=generateWorld(2717,0),nav=navigation(blocks),es=createEntities(nav,0);for(let i=0;i<30;i++){assert.equal(es.some(e=>sees(e,spawn,blocks,false)),false);updateEntities(es,nav,blocks,.1);}});
