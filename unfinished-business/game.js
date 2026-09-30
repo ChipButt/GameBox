@@ -106,7 +106,7 @@ function startMausoleum(){
   add(206,342,68,110,'stone')
  ];
  mausoleumExit=blocks[5];nav=navigation(blocks);scenery=null;
- mausoleumGuard={id:900,kind:'human',task:'Door guard',x:240,y:138,speed:38,angle:-Math.PI/2,half:.62,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',patrolDir:1,scanTime:0,path:[{x:320,y:138}]};
+ mausoleumGuard={id:900,kind:'human',task:'Door guard',x:150,y:138,speed:42,angle:0,half:1.12,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',patrolDir:1,scanTime:0,path:[{x:330,y:138}]};
  people=[mausoleumGuard];
  tokens=[
   {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
@@ -131,12 +131,15 @@ function updateMausoleum(dt){
   if(mausoleumGuard.frozen>0){
    mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);
   }else{
-   const left=142,right=338,dir=mausoleumGuard.patrolDir||1,step=mausoleumGuard.speed*dt*dir;
-   mausoleumGuard.x+=step;mausoleumGuard.walk+=Math.abs(step);
-   if(mausoleumGuard.x>=right){mausoleumGuard.x=right;mausoleumGuard.patrolDir=-1}
-   else if(mausoleumGuard.x<=left){mausoleumGuard.x=left;mausoleumGuard.patrolDir=1}
-   const doorX=240,doorY=88;
-   mausoleumGuard.angle=Math.atan2(doorY-mausoleumGuard.y,doorX-mausoleumGuard.x);
+   const left=150,right=330,dir=mausoleumGuard.patrolDir||1,target=dir>0?right:left;
+   const distance=target-mausoleumGuard.x,step=Math.sign(distance)*Math.min(Math.abs(distance),mausoleumGuard.speed*dt);
+   mausoleumGuard.x+=step;
+   mausoleumGuard.walk+=Math.abs(step)*.58;
+   if(Math.abs(target-mausoleumGuard.x)<.01){
+    mausoleumGuard.x=target;
+    mausoleumGuard.patrolDir=dir>0?-1:1;
+   }
+   mausoleumGuard.angle=mausoleumGuard.patrolDir>0?0:Math.PI;
    mausoleumGuard.path=[{x:mausoleumGuard.patrolDir>0?right:left,y:mausoleumGuard.y}];
   }
  }
@@ -394,12 +397,12 @@ function pickupIconSvg(kind){
  const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}"/>`).join('')).join('');
  const eyes='<path d="M11 10h1v3h-1zm4 0h1v3h-1z" fill="#18313a"/>';
  const trails=speed?'<path d="M0 9h6v2H0zm2 6h5v2H2zm-2 5h7v2H0z" fill="#b6f7d2"/><path d="M1 6h3v1H1zm1 17h4v1H2z" fill="#ecfff8"/>':'';
- const bang=stiff?'<g class="booArms"><path d="M7 13H3v-3H1v7h6zm14 0h4v-3h2v7h-6z" fill="#f0a43c"/><path d="M3 9H1V7h2zm22 0h2V7h-2z" fill="#fff1b0"/></g>':'';
- return `<svg class="${stiff?'stiffGhost':''}" viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
+ const bang=stiff?'<g class="booMouth"><rect x="12" y="15" width="5" height="5" fill="#18313a"/><rect x="13" y="16" width="3" height="3" fill="#f7d08a"/></g>':'';
+ return `<svg class="${stiff?'stiffGhost':''}" viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${stiff?'stiffBody ':''}${phase?'phasePulse':''}">${body}${eyes}${bang}</g></svg>`;
 }
 function guardIconSvg(){
  const c=document.createElement('canvas');c.width=92;c.height=92;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
- const source=mausoleumGuard||{id:900,kind:'human',task:'Door guard',speed:38,angle:-Math.PI/2,half:.62,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',path:[{x:1,y:1}],animationTime:0};
+ const source=mausoleumGuard||{id:900,kind:'human',task:'Door guard',speed:42,angle:0,half:1.12,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',path:[{x:1,y:1}],animationTime:0};
  const sample={...source,x:46,y:57,walk:0,animationTime:0,path:[{x:47,y:57}]};
  drawHuman(q,sample,true);
  return `<img class="renderedCharacterIcon" src="${c.toDataURL('image/png')}" alt="">`;
@@ -497,13 +500,15 @@ function drawToken(token){
  const glowColor=kind==='stiff'?'240,164,60':kind==='speed'?'130,236,195':'235,242,255';
  a.addColorStop(0,`rgba(${glowColor},.45)`);a.addColorStop(1,`rgba(${glowColor},0)`);ctx.fillStyle=a;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
  const phaseAlpha=kind==='phase'?(reduced?.65:.28+.72*((Math.sin(t*4+token.id)+1)/2)):1;
+ const booCycle=(t*1.7+token.id*.23)%1,boo=kind==='stiff'&&!reduced&&booCycle>.72&&booCycle<.86;
+ if(boo)ctx.scale(1.12,1.12);
  for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v==='0')continue;
   ctx.globalAlpha=phaseAlpha;
   const color=kind==='stiff'?(v==='2'?'#aa5d27':'#f0a43c'):kind==='speed'?(v==='2'?'#8eddbf':'#ddfff2'):(v==='2'?'#d8e1ea':'#f7fbff');
   rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color);
  }
  ctx.globalAlpha=phaseAlpha;rect(ctx,-5,-5,2,5,'#18313a');rect(ctx,2,-5,2,5,'#18313a');
- if(kind==='stiff'){ctx.globalAlpha=1;const scare=reduced?1:(Math.sin(t*8+token.id)+1)/2,reach=16+Math.round(scare*7);rect(ctx,-reach,-5,reach-8,3,'#f0a43c');rect(ctx,8,-5,reach-8,3,'#f0a43c');rect(ctx,-reach,-10,3,8,'#fff1b0');rect(ctx,reach-3,-10,3,8,'#fff1b0')}
+ if(boo){ctx.globalAlpha=1;rect(ctx,-3,3,7,7,'#18313a');rect(ctx,-1,5,3,3,'#f7d08a')}
  ctx.restore();
 }
 function drawMemoryRoom(task){
