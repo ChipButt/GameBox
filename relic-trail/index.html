@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <div id="app" class="appShell">
@@ -36,13 +36,13 @@
           <div class="mapTexture"></div>
           <div class="mapTitle"><span>NEAR YOU</span><strong>Bidford-on-Avon</strong></div>
           <button class="locateButton" id="locateButton" aria-label="Centre on my location">◎</button>
-          <div class="mapLegend"><span><i class="legendRoute"></i> Adventure route</span><span><i class="legendMystery"></i> Discovery area</span></div>
+          
         </div>
         <article class="adventureFeature" id="adventureFeature">
           <div class="featureEtching" aria-hidden="true"><span>◇</span><span>⌁</span><span>◈</span></div>
-          <div class="featureTopline"><span class="eyebrow">BIDFORD · FEATURED ADVENTURE</span><span class="availability"><i></i>24/7</span></div>
+          <div class="featureTopline"><span class="eyebrow">BIDFORD-ON-AVON</span><span class="availability"><i></i>24/7</span></div>
           <h1>The Lost Relics<br>of Bidford</h1>
-          <p>Ten marks. One riverside trail.</p>
+          
           <div class="featureStats"><span><b>2.1</b> miles</span><span><b>~60</b> min</span><span><b>10</b> relics</span><span><b>Easy</b> terrain</span></div>
           <button class="primaryButton" id="openAdventure">BEGIN ADVENTURE <span>→</span></button>
         </article>
@@ -52,14 +52,10 @@
         <div class="sectionHero compactHero">
           <span class="eyebrow">YOUR JOURNEYS</span>
           <h1>Adventures</h1>
-          <p class="sectionLead" id="adventuresLead">One trail is waiting by the Avon.</p>
+          
         </div>
         <div id="activeAdventurePanel" class="activeAdventurePanel"></div>
-        <div class="futureAdventures">
-          <div class="futureCard"><div class="futureGlyph">⌁</div><span>COMING LATER</span><strong>River After Dark</strong><small>Night collection · Bidford</small></div>
-          <div class="futureCard"><div class="futureGlyph">△</div><span>COMING LATER</span><strong>The Hill Marks</strong><small>Longer trail · countryside</small></div>
-        </div>
-      </section>
+        </section>
 
       <section class="screen" data-screen="collection" aria-label="Collection">
         <div class="collectionHeader"><div><span class="eyebrow">FIELD FOLIO</span><h1>Bidford</h1></div><div class="collectionCount"><b id="collectionFound">0</b><span>/ 10</span></div></div>
@@ -77,8 +73,8 @@
           <div class="campSky"><span class="sun"></span><span class="ridge ridgeA"></span><span class="ridge ridgeB"></span></div>
           <div class="campContour"></div>
           <div class="dogStage" id="dogStage"></div>
-          <div class="dogIdentity"><span>YOUR TRAIL COMPANION</span><button id="renameDog" aria-label="Rename dog"><strong id="dogName">Scout</strong><i>✎</i></button></div>
-          <div class="campGear"><span class="gearTent">⌂</span><span class="gearPack">▣</span><span class="gearBowl">◡</span></div>
+          <div class="dogIdentity"><button id="renameDog" aria-label="Rename dog"><strong id="dogName">Scout</strong><i>✎</i></button></div>
+          
         </div>
         <div class="homeStats">
           <div><span>LEVEL</span><strong id="homeLevel">1</strong></div><div><span>RELICS</span><strong id="homeRelics">0</strong></div><div><span>ADVENTURES</span><strong id="homeAdventures">0</strong></div>
@@ -108,9 +104,9 @@
         <div class="sheetArt"><div class="sheetRiver"></div><div class="sheetRelic" id="sheetRelic"></div><span class="sheetBird">⌁</span></div>
         <span class="eyebrow">BIDFORD-ON-AVON</span>
         <h2>The Lost Relics<br>of Bidford</h2>
-        <p class="adventureHook">Ten forgotten trail marks are waiting along the Avon.</p>
+        
         <div class="detailStats"><span><b>2.1 mi</b><small>Distance</small></span><span><b>45–70m</b><small>Time</small></span><span><b>10</b><small>Relics</small></span></div>
-        <div class="conditionStrip"><span>Dog friendly</span><span>Circular</span><span>24/7</span></div>
+        <div class="conditionStrip"><span>DOG FRIENDLY</span><span>LOOP</span><span>24/7</span></div>
         <button class="primaryButton" id="startAdventure">START ADVENTURE <span>→</span></button>
         <button class="textButton" id="previewAdventure">Preview from anywhere</button>
       </div>
@@ -148,7 +144,7 @@
       </div>
       <div class="searchActions">
         <button class="hintButton" id="hintButton">HINT</button>
-        <button class="scanButton" id="simulateScan"><span>⌁</span><strong>TAP RELIC</strong><small id="scanHelper">NFC / preview scan</small></button>
+        <button class="scanButton" id="simulateScan"><span>⌁</span><strong>TAP RELIC</strong><small id="scanHelper">NFC</small></button>
       </div>
     </div>
 
@@ -171,7 +167,7 @@
         <h2>The Lost Relics<br>of Bidford</h2>
         <div class="completionSeal" id="completionSeal"></div>
         <div class="completionStats"><span><b>10/10</b><small>Relics</small></span><span><b id="completionXp">0</b><small>XP earned</small></span><span><b id="completionCoins">0</b><small>Gold</small></span></div>
-        <p>Bidford is complete. The folio is yours.</p>
+        
         <button class="primaryButton" id="finishAdventure">VIEW COLLECTION <span>→</span></button>
       </div>
     </div>
@@ -179,23 +175,23 @@
     <div id="introOverlay" class="introOverlay hidden" role="dialog" aria-modal="true">
       <div class="introContours"></div>
       <div class="introSlides" id="introSlides">
-        <section class="introSlide active" data-intro="0"><div class="introGlyph" id="introGlyphOne"></div><span class="eyebrow">WELCOME TO RELIC</span><h2>Turn the real world<br>into a game.</h2><p>Walk. Hunt. Tap. Collect.</p></section>
-        <section class="introSlide" data-intro="1"><div class="introSequence"><span>⌖</span><i></i><span>◇</span><i></i><span>✦</span></div><span class="eyebrow">HOW IT WORKS</span><h2>Get close.<br>Then start hunting.</h2><p>The map gets you near it. Your eyes do the rest.</p></section>
-        <section class="introSlide" data-intro="2"><div class="introTapDemo"><div class="tapDisc" id="introTapRelic"></div><div class="tapPhone"><span>◇</span></div><i></i></div><span class="eyebrow">PHYSICAL DISCOVERY</span><h2>Find the mark.<br>Tap to recover it.</h2><p>NFC marks unlock the digital relic instantly.</p></section>
-        <section class="introSlide" data-intro="3"><div class="introDog" id="introDog"></div><span class="eyebrow">KEEP WHAT YOU FIND</span><h2>Build your folio.<br>Grow your trail companion.</h2><p>Relics, XP and gear stay with you.</p></section>
+        <section class="introSlide active" data-intro="0"><div class="introGlyph" id="introGlyphOne"></div><span class="eyebrow">RELIC</span><h2>The world<br>is the game.</h2></section>
+        <section class="introSlide" data-intro="1"><div class="introSequence"><span>⌖</span><i></i><span>◇</span><i></i><span>✦</span></div><span class="eyebrow">MOVE · SEARCH · FIND</span><h2>Get close.<br>Then hunt.</h2></section>
+        <section class="introSlide" data-intro="2"><div class="introTapDemo"><div class="tapDisc" id="introTapRelic"></div><div class="tapPhone"><span>◇</span></div><i></i></div><span class="eyebrow">TAP THE MARK</span><h2>Bring relics<br>into the game.</h2></section>
+        <section class="introSlide" data-intro="3"><div class="introDog" id="introDog"></div><span class="eyebrow">KEEP WHAT YOU FIND</span><h2>Collect.<br>Level up.</h2></section>
       </div>
       <div class="introFooter"><div class="introDots" id="introDots"></div><button class="introNext" id="introNext">NEXT <span>→</span></button></div>
     </div>
 
-    <div id="tourOverlay" class="tourOverlay hidden" aria-hidden="true"><div class="tourShade"></div><div class="tourCallout"><strong id="tourTitle">Explore</strong><span id="tourText">Find adventures near you.</span><button id="tourNext">NEXT</button></div></div>
+    <div id="tourOverlay" class="tourOverlay hidden" aria-hidden="true"><div class="tourCallout"><strong id="tourTitle">Explore</strong><span id="tourText">Find nearby adventures</span><button id="tourNext">NEXT</button></div></div>
 
-    <div id="confirmOverlay" class="overlay hidden" role="dialog" aria-modal="true"><div class="sheet confirmSheet"><span class="eyebrow">YOU'RE NOT IN BIDFORD</span><h2>Preview the adventure?</h2><p>You can test the complete trail flow from anywhere. GPS mode remains ready for Bidford.</p><button class="primaryButton" id="confirmPreview">PREVIEW ADVENTURE <span>→</span></button><button class="textButton" id="cancelPreview">Not now</button></div></div>
+    <div id="confirmOverlay" class="overlay hidden" role="dialog" aria-modal="true"><div class="sheet confirmSheet"><span class="eyebrow">PREVIEW MODE</span><h2>Try it from here?</h2><button class="primaryButton" id="confirmPreview">START PREVIEW <span>→</span></button><button class="textButton" id="cancelPreview">Cancel</button></div></div>
 
     <div id="hintOverlay" class="overlay hidden" role="dialog" aria-modal="true"><div class="sheet hintSheet"><button class="closeButton" data-close="hintOverlay">×</button><span class="eyebrow">FIELD HINT</span><div class="hintGlyph">⌁</div><h2 id="hintText">Look lower than eye level.</h2><button class="primaryButton" data-close="hintOverlay">BACK TO SEARCH</button></div></div>
 
     <div id="toast" class="toast" role="status"></div>
   </div>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
