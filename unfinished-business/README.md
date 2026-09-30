@@ -1,62 +1,66 @@
 # Unfinished Business
 
-A self-contained, portrait-first Canvas 2D ghost game. Open `unfinished-business/` through a static server; no build, external fonts, APIs or art downloads are required. GameBox links to it from the home menu.
+A portrait-first Canvas 2D ghost game inside GameBox. The current gameplay experiment uses **physical map pickups** for progression rather than tap-to-buy upgrades.
 
-## Play
-- Drag anywhere on the play area / WASD / arrows to move.
-- Every attempt starts with a fresh ghost build. There is no persistent upgrade bank.
-- Explore genuinely new ground during that attempt to build **Echoes**. Exploration pays in small chunks rather than a distracting +1 on every tile.
-- Spend Echoes immediately from the live HUD. The separate gold `+` controls upgrade PACE, VANISH, PHASE and TOUCH without opening a shop or interrupting movement.
-- The large ability buttons only use powers; the small gold controls only buy upgrades. This keeps activation and purchasing physically distinct on touch screens.
-- VANISH, PHASE and TOUCH can all be unlocked from tier zero during a run. PACE is passive. Upgrade prices are deliberately low and ramp quickly enough that the first purchase should arrive early in a normal attempt.
-- Hidden mystery tokens all use the same visual design. Their reward is unknown until collected: Echo bundles, temporary speed, an invisibility refill, or a Scared Stiff charge.
-- More valuable caches are placed around interior and risky routes, giving stronger PHASE/TOUCH builds reasons to investigate doors, rooms and side paths.
-- Getting caught or beginning another level resets Echoes, ability tiers, temporary effects and explored-ground rewards. Campaign level unlocks and basic records remain saved.
-- Each higher campaign level begins with a slightly faster base movement pace so a full reset never feels artificially sluggish.
-- Pause freezes the active run in memory. Leaving/reloading the page does not turn temporary run upgrades into permanent progression.
+## Current gameplay loop
+
+- Drag anywhere on the play area / use WASD or arrow keys to move.
+- **There are no upgrade purchase buttons.** Speed, Vanish and Phase are upgraded by finding their icons in the level. Every pickup is free and lasts for the current run.
+- Each level contains exactly enough permanent upgrade pickups to reach the current run maximum: **6 Speed**, **7 Vanish** and **7 Phase** pickups.
+- **Speed pickups** are pale ghosts with rushing lines behind them. They immediately raise movement speed.
+- **Phase pickups** are white ghosts that pulse between solid and translucent. They raise the Phase tier, but the next Phase tier cannot be collected until the preceding Unfinished Business task is complete.
+- **Vanish pickups** are cool-blue shimmering ghosts. They unlock Vanish and increase its duration.
+- **Golden ghosts are Scared Stiff only.** There are five per level (within the requested 4–6 range). They respawn after 35 seconds. The player can store at most three charges.
+- When a witness would catch the player and a Scared Stiff charge is available, one charge is automatically consumed and that witness is frozen briefly.
+- A Scared Stiff pickup is announced with its icon in the centre of the screen, then visually minimises into the persistent Scared Stiff inventory on the left side.
+- Exploration still earns Echoes as a run score, but Echoes are no longer spent on upgrades.
+
+## Five Unfinished Business tasks
+
+Each level contains five task targets. They are rendered as **full-sized flashing multicoloured ghosts** rather than small markers.
+
+1. Task 1 is reachable with no upgrades.
+2. Task 2 is inside a sealed memory room requiring **Phase 1**.
+3. Task 3 requires **Phase 2**.
+4. Task 4 requires **Phase 3**.
+5. Task 5 requires **Phase 4**.
+
+Tasks are sequential. Completing the current task unlocks the next Phase hunt, so the player cannot stockpile later Phase tiers in advance. The intended rhythm is:
+
+**finish task → find the newly available Phase pickup → enter the next room → finish the next task**
+
+All five tasks must be completed before the level exit opens.
+
+## Tutorial
+
+The old Echo-purchase tutorial has been replaced. The new tutorial explains:
+
+- upgrades are physical pickups rather than purchases;
+- the Speed, Phase and Vanish icon treatments;
+- Golden Ghost = Scared Stiff only;
+- five Scared Stiff pickups per level, 35-second respawn and three-charge carrying limit;
+- the five flashing multicoloured task ghosts;
+- the Phase 1 → 4 room progression.
+
+The new tutorial uses a separate one-time flag so existing players see the changed rules without losing campaign progress. The **How to Play** screen contains the same core rules for later reference.
+
+## Run persistence
+
+Getting caught or beginning another level resets the current run's Echoes, upgrade tiers, temporary effects, explored-ground rewards and Scared Stiff charges. Campaign level unlocks and basic records remain saved. The pre-change version is preserved on the branch:
+
+`backup/unfinished-business-before-map-upgrades-2026-09-30`
 
 ## Art and implementation
-The reference-inspired ghost is drawn pixel by pixel in code, with directional eyes, scalloped hem, floating motion and separate shadow. Environment, characters, lighting and effects are procedural Canvas art; overlays and ability buttons use carved, stepped frames, inset surfaces and the same midnight/mint/aged-gold palette. Reduced motion disables bobbing. Audio is synthesized locally after interaction.
+
+The game remains self-contained and code-drawn. The player ghost, upgrade ghosts, task ghosts, witnesses, scenery, effects and UI are all produced with Canvas/CSS/SVG code; no external art downloads or APIs are required.
+
+The task rooms are spectral memory seals layered into the existing maps. Their centres are selected from navigable ground reachable from the level spawn before the spectral Phase seal is applied.
 
 ## Checks
-`node --test unfinished-business/model.test.mjs`
-`node --check unfinished-business/game.js`
 
-The initial progression tuning is intentionally upgrade-driven. Physical phone testing should inform patrol timings, upgrade costs and thumb placement. This is a web game in GameBox, not a packaged app-store binary.
+```
+node --check unfinished-business/game.js
+node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs unfinished-business/world.test.mjs
+```
 
-## Story and level structure
-
-The campaign now presents five pieces of unfinished business in order: **The Graveyard**, **The Workplace**, **The Supermarket**, **The High Street**, and **Homeward**. Level 1 is no longer the old neighbourhood map: it is a dedicated cemetery with grave rows, memorial lawns, a chapel, funeral area, maintenance yard, hedges, paths and an iron exit gate.
-
-The first launch runs a short animated pixel-art story sequence before asking whether the player wants the tutorial. The tutorial is optional and takes place safely inside the graveyard with witnesses disabled. It teaches movement, then awards Echoes one-by-one for new ground and walks the player through VANISH → PHASE → TOUCH in that order. Intro/tutorial completion is saved separately from temporary run progression.
-
-Echoes are shown once, in the boxed top-left HUD. There is no second currency panel and no separate PACE purchase. The base ghost speed is intentionally quicker from the start, with a small automatic increase on later levels.
-
-The minimap still shows neither exploration history nor the exit.
-
-## Witnesses, investigations and secret pickups
-
-- Human traffic is denser and faster. NPCs use destination-based routines such as commuting, shop deliveries, park visits, street cleaning, market running and returning from work instead of simply wandering nearby. Later levels add more humans, cats and cameras and increase patrol speed/range. A local state machine still handles routine, investigation, search, return and frozen states; no API or backend is used.
-- Opening an obstacle with Touch alerts up to two nearby, reachable humans. Navigation rebuilds when a door opens. Humans walk to the disturbance, look around, then walk back to their interrupted routine. They do not teleport or pass through closed walls.
-- Six sweeping CCTV cameras watch exterior corners and the bank interior. Camera sightings can end a run.
-- Two black cats prowl. Their sightings never directly end a run; a cooldown-limited alert attracts one reachable human. Invisibility blocks all witness types.
-- Sixteen mystery tokens are revealed only nearby with clear line of sight and never appear on the minimap. They all share one detailed pixel-art token design, so the player cannot identify the reward in advance.
-- Token rewards cycle through 25/50 Echo caches, a 10-second speed surge, an invisibility refill and Scared Stiff. If a refill is found before VANISH is unlocked, it converts into Echoes rather than becoming a dead reward.
-- Tokens are once per attempt and reset with the rest of the run. Temporary effects, Echoes and purchased tiers never become permanent upgrades.
-
-Run `node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs` to check exploration, paths, loops, investigations, pickups and detection.
-
-## Scenery renderer
-
-`scenery.js` paints a cached neighbourhood backdrop with deterministic timber, asphalt, grass, concrete and paving textures; room-specific tiles; patterned rugs; kerbs, crossings and drains; and soft ambient lighting. Detailed furniture, brickwork, foliage, vehicles, streetlamps and the ferry render on top. The background crop is drawn once per frame, rather than rebuilding its texture detail during play. All art is code-drawn; no external assets are downloaded. This renderer does not change map geometry, collisions, discovery records or entity behaviour.
-
-## Directional character animation
-
-`characters.js` draws humans and black cats in eight headings. Human silhouettes, faces, hair, clothing and limb placement change with facing; cats rotate their body, head, tail and four-paw gait. Walk cycles use distance travelled so animation speed follows movement and stops during pauses. Humans perform small note-checking, watch-checking and hand-work gestures while waiting; cats groom and flick their tails. Scared Stiff stops animation clocks. Reduced-motion mode suppresses idle motion and body bobbing. Detection continues to use the entity's actual angle; only rendering changes.
-
-
-### Map access checks
-
-Public doorways are actual gaps in collision geometry, with visible thresholds and jambs. Every level has a zero-Phase walking route from its spawn to public interiors and task locations. Phase doors remain optional shortcuts; the cemetery exit still opens through task completion. Door and gate apertures cut the underlying wall instead of being drawn over a solid block.
-
-Run `node --test unfinished-business/world.test.mjs` to check all five maps across four seeds, including spawn clearance, doorway clearance, task access, patrol loops and exit access.
+The entities tests now cover the collectible counts, sequential Phase cap, maximum Speed/Vanish progression, Scared Stiff storage behaviour and 35-second respawn.
