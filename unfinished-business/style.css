@@ -181,3 +181,28 @@ h1{line-height:.95}h1 em{font-style:normal}
 .storyScene,.tutorialDemo,.tutorialPickupIcon{image-rendering:pixelated;border-radius:0}
 .pickupAnnouncement{border-radius:0;image-rendering:pixelated}
 .pickupAnnouncement small{max-width:164px;font-size:10px;line-height:1.35;letter-spacing:.4px}
+
+
+/* In-map information cards */
+.mapPopup{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.pickupAnnouncement{
+ z-index:9;top:46%;width:min(280px,78vw);min-height:205px;padding:20px 18px 18px;
+ border-radius:0;background:#14242bee;box-shadow:7px 7px 0 #050d12,0 0 0 3px #273a3c,0 0 0 6px #71857a;
+ opacity:1;transform:translate(-50%,-50%);transition:none;pointer-events:auto;
+}
+.pickupAnnouncement.show{opacity:1;transform:translate(-50%,-50%)}
+.pickupAnnouncement.fade,.pickupAnnouncement.toInventory{opacity:1;left:50%;top:46%;transform:translate(-50%,-50%)}
+.pickupAnnouncement strong{font-size:16px;line-height:1.25;text-transform:none;color:#fff1c7}
+.pickupAnnouncement small{display:block;max-width:225px;font-size:12px;line-height:1.45;letter-spacing:0;color:#d5dfd2}
+.pickupIcon{width:90px;height:84px}.pickupIcon svg{width:90px;height:84px}
+.pickupAnnouncement.warning{border-color:#d0a75b;box-shadow:7px 7px 0 #050d12,0 0 0 3px #42351f,0 0 0 6px #d0a75b}
+.mapPopupClose{position:absolute;right:8px;top:8px;width:28px;height:28px;padding:0;border:2px solid #8fa093;background:#0a151b;color:#f5efda;font:900 19px/22px ui-monospace,monospace;box-shadow:2px 2px 0 #050b0f;z-index:2}
+.taskPopup{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,88vw);max-height:72vh;overflow:auto;padding:20px 16px 16px;border:4px solid #82947f;background:#13232aee;box-shadow:8px 8px 0 #050c11,0 0 0 4px #263b38;color:#eee8d1}
+.mapPopupKicker{display:block;padding-right:34px;color:#b6f7d2;font-size:9px;font-weight:950;letter-spacing:1.5px}
+.mapPopupTitle{display:block;margin:5px 0 12px;color:#f3ce87;font-size:20px}
+.taskPopup .taskList{display:grid;gap:7px}
+.taskPopup .taskItem{padding:9px 10px;text-align:left;border:2px solid #52665d;background:#0c1a21cc;box-shadow:3px 3px 0 #071116}
+.taskPopup .taskItem strong{display:block;color:#f3ecd5;font-size:12px}
+.taskPopup .taskItem small{display:block;margin-top:4px;color:#aebfb2;font-size:9px;line-height:1.35}
+.taskPopup .taskItem.complete{opacity:.55}
+.taskPopup .taskItem.complete strong{text-decoration:line-through}
