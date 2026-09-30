@@ -435,12 +435,79 @@ function draw(){
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
  ctx.restore();if(mode==='play')drawMap();
 }
+function drawMiniMarker(px,py,kind,id=0){
+ const pulse=reduced?1:(Math.sin(t*5+id)*.5+.5);
+ if(kind==='speed'){
+  rect(ctx,px-4,py-2,4,1,'#72bca6');rect(ctx,px-5,py,5,1,'#9df0cf');rect(ctx,px-3,py+2,3,1,'#72bca6');
+  rect(ctx,px+1,py-1,3,3,'#e8fff6');
+ }else if(kind==='phase'){
+  ctx.globalAlpha=.5+pulse*.5;rect(ctx,px-2,py-2,5,5,'#f4f7ff');rect(ctx,px-1,py-1,3,3,'#263743');rect(ctx,px,py,1,1,'#f4f7ff');ctx.globalAlpha=1;
+ }else if(kind==='invisibility'){
+  ctx.globalAlpha=.7+pulse*.3;rect(ctx,px,py-3,1,1,'#dff8ff');rect(ctx,px-1,py-2,3,1,'#8fd4f4');rect(ctx,px-2,py-1,5,3,'#64afd7');rect(ctx,px-1,py+2,3,1,'#8fd4f4');rect(ctx,px,py+3,1,1,'#dff8ff');ctx.globalAlpha=1;
+ }else{
+  rect(ctx,px-2,py-3,5,5,'#f0a43c');rect(ctx,px-3,py-1,1,3,'#b76526');rect(ctx,px+3,py-1,1,3,'#b76526');rect(ctx,px-2,py+2,1,2,'#f0a43c');rect(ctx,px+2,py+2,1,2,'#f0a43c');rect(ctx,px,py-1,1,3,'#fff1b8');
+ }
+}
 function drawMap(){
- const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);
- for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');
- for(const token of tokens)if(!token.collected){const kind=token.reward==='stiff'?'#f0a43c':token.reward==='speedTier'?'#9df0cf':token.reward==='phaseTier'?'#f3f7ff':'#8fd4f4';const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,kind)}
- if(run.tasks)for(const task of availableTasks()){const hue=(t*110+task.index*65)%360;rect(ctx,x+task.x*sx-2,y+task.y*sy-2,5,5,`hsl(${hue} 85% 68%)`)}
- rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);
+ const x=346,y=99,w=116,h=106,sx=w/WORLD.width,sy=h/WORLD.height;
+ // Shadowed carved frame.
+ rect(ctx,x-7,y-7,w+14,h+14,'#050c12aa');
+ rect(ctx,x-5,y-5,w+10,h+10,'#283b3c');
+ rect(ctx,x-4,y-4,w+8,h+8,'#8da58d');
+ rect(ctx,x-3,y-3,w+6,h+6,'#18292f');
+ rect(ctx,x-1,y-1,w+2,h+2,'#08141b');
+ rect(ctx,x,y,w,h,'#17252b');
+ // Pixel corner studs.
+ for(const [cx,cy] of [[x-4,y-4],[x+w+2,y-4],[x-4,y+h+2],[x+w+2,y+h+2]])rect(ctx,cx,cy,2,2,'#d4c58b');
+ ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+ // Distinct terrain/area fills.
+ const regionPalette=['#4b4042','#3d4a4c','#355142','#46504d','#414946'];
+ for(const [i,r] of (world.regions||[]).entries()){
+  const rx=Math.floor(x+r.x*sx),ry=Math.floor(y+r.y*sy),rw=Math.max(1,Math.ceil(r.w*sx)),rh=Math.max(1,Math.ceil(r.h*sy));
+  rect(ctx,rx,ry,rw,rh,regionPalette[r.kind]||'#414946');
+  ctx.globalAlpha=.18;
+  for(let yy=ry+2+(i%3);yy<ry+rh;yy+=6)for(let xx=rx+2+((yy+i)%5);xx<rx+rw;xx+=8)rect(ctx,xx,yy,1,1,'#d7e3cb');
+  ctx.globalAlpha=1;
+ }
+ // Physical map structure.
+ for(const b of blocks){
+  if(b.exit)continue;
+  const bx=Math.floor(x+b.x*sx),by=Math.floor(y+b.y*sy),bw=Math.max(1,Math.ceil(b.w*sx)),bh=Math.max(1,Math.ceil(b.h*sy));
+  if(b.kind==='water'){
+   rect(ctx,bx,by,bw,bh,'#244c5d');
+   for(let yy=by+2;yy<by+bh;yy+=5)rect(ctx,bx+1+(yy%3),yy,Math.max(1,bw-3),1,'#4c788322');
+  }else if(b.kind==='tree'||b.kind==='hedge') rect(ctx,bx,by,bw,bh,b.kind==='tree'?'#294435':'#304b39');
+  else if(b.kind==='wall'||b.kind==='stone') rect(ctx,bx,by,bw,bh,'#78817a');
+  else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,b.phase<99?'#b7a7d8':'#8b9188');
+  else rect(ctx,bx,by,bw,bh,'#555b59');
+ }
+ // Sealed Unfinished Business rooms.
+ if(run.tasks)for(const task of run.tasks){
+  const r=task.room;if(!r||r.open)continue;
+  const rx=Math.floor(x+r.x*sx),ry=Math.floor(y+r.y*sy),rw=Math.max(3,Math.ceil(r.w*sx)),rh=Math.max(3,Math.ceil(r.h*sy));
+  ctx.strokeStyle='#b7a7d8aa';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
+ }
+ // Pickups use distinct miniature glyphs instead of identical squares.
+ for(const token of tokens)if(!token.collected){
+  const px=Math.round(x+token.x*sx),py=Math.round(y+token.y*sy);
+  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='phaseTier'?'phase':'invisibility';
+  drawMiniMarker(px,py,kind,token.id);
+ }
+ // Unfinished Business targets: bright animated multicolour beacons.
+ if(run.tasks)for(const task of availableTasks()){
+  const px=Math.round(x+task.x*sx),py=Math.round(y+task.y*sy),hue=(t*110+task.index*65)%360;
+  ctx.fillStyle=`hsl(${hue} 90% 68%)`;ctx.fillRect(px-3,py-1,7,3);ctx.fillRect(px-1,py-3,3,7);
+  rect(ctx,px-1,py-1,3,3,'#fff8dc');rect(ctx,px,py,1,1,'#25343b');
+ }
+ // Player: readable mini ghost plus current facing.
+ const px=Math.round(x+ghost.x*sx),py=Math.round(y+ghost.y*sy);
+ ctx.fillStyle='#071117aa';ctx.fillRect(px-4,py-3,9,9);
+ rect(ctx,px-2,py-3,5,5,'#f7fff6');rect(ctx,px-3,py-1,7,3,'#f7fff6');rect(ctx,px-2,py+2,2,2,'#f7fff6');rect(ctx,px+2,py+2,2,2,'#f7fff6');
+ rect(ctx,px-1,py-1,1,1,'#31434a');rect(ctx,px+2,py-1,1,1,'#31434a');
+ const dir=[[ -5,0],[0,5],[5,0],[0,-5]][ghost.face]||[0,5];rect(ctx,px+dir[0],py+dir[1],2,2,'#f3ce87');
+ ctx.restore();
+ // Compact title plate built into the frame.
+ rect(ctx,x+5,y-7,37,6,'#18292f');ctx.fillStyle='#d7e3cb';ctx.font='bold 6px ui-monospace,monospace';ctx.textAlign='left';ctx.fillText(`MAP · ${p.level+1}`,x+8,y-2);
 }
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
 function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
