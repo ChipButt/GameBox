@@ -403,7 +403,7 @@ function bedCanvas(level){return cached('bed',String(level),()=>{
  if(level>=1){g.line(31,33,46,35,mix(p[3],PAL.white,.45));g.set(37,38,mix(p[3],INK,.1))}
  if(level>=2){g.poly([[45,31],[67,33],[66,45],[44,43]],INK);g.poly([[47,32],[65,34],[64,42],[46,41]],p[3])}
  // throw blanket, improves silhouette at higher levels
- if(level>=3){const throw=level>=4?PAL.gold:PAL.rose;g.poly([[73,52],[107,55],[108,67],[73,64]],throw);g.line(76,55,104,58,mix(throw,PAL.white,.25));g.vline(83,55,64,mix(throw,INK,.18))}
+ if(level>=3){const throwCol=level>=4?PAL.gold:PAL.rose;g.poly([[73,52],[107,55],[108,67],[73,64]],throwCol);g.line(76,55,104,58,mix(throwCol,PAL.white,.25));g.vline(83,55,64,mix(throwCol,INK,.18))}
  // rails / legs
  g.rect(23,64,8,12,INK);g.rect(103,69,8,10,INK);g.rect(25,66,4,8,p[1]);g.rect(105,70,4,7,p[1]);
  return g;
