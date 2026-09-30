@@ -1,13 +1,12 @@
-import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,runCapacity,overlap,rayBlocked} from './model.js?v=20260927m';
+import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './model.js?v=20260927m';
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930a';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930b';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930a';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260928a';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
-let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
-let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,spawnSafe=true,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0,refillActive:false};
-const names={speed:'Speed',invisibility:'Vanish',phase:'Phase'},labels={invisibility:'VANISH',phase:'PHASE',speed:'SPEED'};
+let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
+let mode='menu',stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},seen=0,spawnSafe=true,phaseVisual=0,mausoleumActive=false,mausoleumExit=null,audio=null,saveFailed=false;
 let pickupTimers=[];
 const LEVEL_TASKS=[
  [
@@ -50,18 +49,22 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(p))}catch{saveFailed=true;}}
 function note(s,d=4){$('notice').textContent=s;noticeUntil=performance.now()+d*1000;}
 function tone(f=440,d=.12){if(!p.sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.setValueAtTime(f,audio.currentTime);o.frequency.exponentialRampToValueAtTime(f*.6,audio.currentTime+d);g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch{}}
-function resetInput(){held=false;skillPointer=null;stickPointer=null;input={x:0,y:0};keys.clear();$('nub').style.transform='';$('stick').hidden=true;}
+function resetInput(){stickPointer=null;input={x:0,y:0};keys.clear();$('nub').style.transform='';$('stick').hidden=true;}
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
-function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
+function home(){
+ mode='menu';mausoleumActive=false;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
+ show(`<canvas class="menuPixelScene" id="menuScene" width="320" height="132"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);
+ drawMenuScene();$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;
+}
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE LEVEL</span><h2>Unfinished Business</h2><p class="subtitle">Each level starts fresh.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">HOW TO PLAY</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging on the play area.</p><p><b>Speed, Vanish and Phase</b> improve when you collect their ghost icons.</p><p><b>Phase</b> opens sealed task rooms. The four sealed rooms require PHASE 1, 2, 3 and 4.</p><p><b>Scared Stiff</b> gold ghosts protect you from being seen. Carry up to 3.</p><p>Complete all <b>5 flashing multicolour ghosts</b> to open the exit.</p></div><button class="primary" id="back">Play</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">HOW TO PLAY</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging on the play area.</p><p><b>Speed</b> tokens make you faster.</p><p><b>Phase</b> tokens let you pass through stronger walls automatically.</p><p><b>Scared Stiff</b> protects you when someone spots you. Carry up to 3.</p><p>Complete all <b>5 flashing multicolour ghosts</b> to open the exit.</p></div><button class="primary" id="back">Play</button>`);$('back').onclick=home;}
 
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'UNFINISHED BUSINESS COMPLETE':'CAUGHT'}</span><h2>${win?'The way is open.':'Someone saw you.'}</h2><button class="primary" data-start>${win&&p.level<4?'Next level':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 
 function beginLevel(){
  if(p.level===0&&!p.introSeen){introSequence(0);return}
- if(!pickupTutorialSeen()){tutorialPrompt();return}
+ if(p.level===0&&!mausoleumSeen()){startMausoleum();return}
  start(false);
 }
 function introSequence(index=0){
@@ -76,7 +79,7 @@ function introSequence(index=0){
  const [tag,text]=lines[index];
  show(`<span class="eyebrow">${tag||' '}</span><canvas class="storyScene" id="storyScene" width="310" height="170"></canvas><div class="storyText">${text}</div><button class="primary" id="storyNext">${index===lines.length-1?'Wake up':'Continue'} →</button>`);
  animateStoryScene(index);
- $('storyNext').onclick=()=>{if(index<lines.length-1)introSequence(index+1);else{p.introSeen=true;save();tutorialPrompt()}};
+ $('storyNext').onclick=()=>{if(index<lines.length-1)introSequence(index+1);else{p.introSeen=true;save();startMausoleum()}};
 }
 function animateStoryScene(scene){
  const c=$('storyScene');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
@@ -88,23 +91,49 @@ function animateStoryScene(scene){
   if(scene===1||scene===2){g.fillStyle='#efcf8c';g.font='bold 9px monospace';g.textAlign='center';g.fillText(scene===1?'? ? ?':'TO DO  TO DO  TO DO',155,30)}
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
-const PICKUP_TUTORIAL_KEY='gamebox.unfinished-business.pickup-tutorial.v1';
-function pickupTutorialSeen(){try{return localStorage.getItem(PICKUP_TUTORIAL_KEY)==='1'}catch{return !!p.tutorialSeen}}
-function markPickupTutorialSeen(){try{localStorage.setItem(PICKUP_TUTORIAL_KEY,'1')}catch{}p.tutorialSeen=true;save();}
-const TUTORIAL_PAGES=[
- {tag:'MOVE',title:'Move',icon:null,body:'Drag anywhere on the play area.'},
- {tag:'SPEED',title:'Speed',icon:'speed',body:'Collect rushing ghosts to move faster.'},
- {tag:'PHASE',title:'Phase',icon:'phase',body:'Collect fading ghosts to raise PHASE. Sealed task rooms require PHASE 1–4.'},
- {tag:'VANISH',title:'Vanish',icon:'invisibility',body:'Collect blue ghosts to extend VANISH. Tap VANISH to hide from witnesses.'},
- {tag:'SCARED STIFF',title:'Scared Stiff',icon:'stiff',body:'Gold ghosts protect you when spotted. Carry up to 3. They respawn.'},
- {tag:'UNFINISHED BUSINESS',title:'Unfinished Business',icon:'task',body:'Touch all 5 flashing multicolour ghosts. Complete all 5 to open the exit.'}
-];
-function tutorialPrompt(){tutorialPage(0);}
-function tutorialPage(index){
- const page=TUTORIAL_PAGES[index],last=index===TUTORIAL_PAGES.length-1;
- const icon=page.icon?`<div class="tutorialPickupIcon ${page.icon}">${pickupIconSvg(page.icon)}</div>`:'';
- mode='story';show(`<div class="tutorialCard pickupTutorial"><span class="eyebrow">${index+1} / ${TUTORIAL_PAGES.length} · ${page.tag}</span>${icon}<h2>${page.title}</h2><p class="tutorialHint">${page.body}</p><button class="primary" id="tutorialNext">${last?'Start the level':'Continue'} →</button></div>`);
- $('tutorialNext').onclick=()=>{if(last){markPickupTutorialSeen();start(false)}else tutorialPage(index+1)};
+const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v1';
+function mausoleumSeen(){try{return localStorage.getItem(MAUSOLEUM_KEY)==='1'}catch{return !!p.tutorialSeen}}
+function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}p.tutorialSeen=true;save();}
+function startMausoleum(){
+ mode='play';mausoleumActive=true;
+ const add=(x,y,w,h,kind='wall',phase=99,open=false)=>({x,y,w,h,kind,phase,open});
+ world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:54},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4}]};
+ blocks=[
+  add(70,70,140,24),add(270,70,140,24),add(70,546,340,24),add(70,70,24,500),add(386,70,24,500),
+  add(210,70,60,24,'door',99,false),
+  add(96,178,288,18,'wall',1,false),
+  add(116,288,72,34,'stone'),add(292,288,72,34,'stone'),
+  add(206,342,68,110,'stone')
+ ];
+ mausoleumExit=blocks[5];nav=navigation(blocks);people=[];scenery=null;
+ tokens=[
+  {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
+  {id:1,x:335,y:420,reward:'phaseTier',collected:false,fullNoticeAt:0},
+  {id:2,x:145,y:355,reward:'stiff',collected:false,fullNoticeAt:0,respawnSeconds:0}
+ ];
+ run=newRun(0);run.tasks=null;run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
+ $('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=true;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;
+ $('chapter').textContent='THE MAUSOLEUM';$('status').textContent='FIND THE 3 TOKENS';
+ note('FIND THE 3 TOKENS',1.8);tone(320);
+}
+function announceMausoleum(kind,text){
+ announcePickup({kind,title:kind==='speed'?'SPEED':kind==='phase'?'PHASE':'SCARED STIFF',detail:text});
+}
+function updateMausoleum(dt){
+ t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);
+ let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
+ const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
+ for(const token of tokens){
+  if(token.collected||Math.hypot(token.x-ghost.x,token.y-ghost.y)>25)continue;
+  token.collected=true;
+  if(token.reward==='speedTier'){run.speed=1;announceMausoleum('speed','Collect Speed tokens to move faster!');tone(760,.1)}
+  else if(token.reward==='phaseTier'){run.phase=1;announceMausoleum('phase','Collect Phase tokens to pass through stronger walls!');tone(820,.1)}
+  else {effects.stiff=1;announceMausoleum('stiff','Collect Scared Stiff tokens to freeze anyone who spots you!');tone(880,.12)}
+ }
+ const found=tokens.filter(q=>q.collected).length;
+ $('status').textContent=`${found} / 3 TOKENS`;
+ if(found===3&&!mausoleumExit.open){mausoleumExit.open=true;note('THE DOOR OPENS',1.5);tone(920,.18)}
+ if(found===3&&ghost.y<74){markMausoleumSeen();start(false);return}
 }
 function buildWorldSafely(level){
  const generated=generateWorld(p.worldSeed,level);
@@ -252,19 +281,13 @@ function checkObjectives(){
   if(Math.hypot(ghost.x-task.x,ghost.y-task.y)<46){completeTask(task);break}
  }
 }
-function toggleAbility(k){
- if(mode!=='play'||!run[k]){if(!run[k])note(`${names[k]} is still locked.`,1.5);return}
- if(selected===k&&held){held=false;note(`${names[k]} cancelled.`,1.2)}
- else{selected=k;held=true;note(`${names[k]} active.`,1.2);tone(300,.06)}
- updateSkills();
-}
+
 function start(isTutorial=false){
- mode='play';
+ mode='play';mausoleumActive=false;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;t=0;seen=0;spawnSafe=true;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:false,stage:0,useTime:0,refillActive:false};prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateTokenInventory();
- updateObjectiveHud();openTaskBoard(true);
- tone(320);
+ run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
+ updateObjectiveHud();openTaskBoard(true);tone(320);
 }
 function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
@@ -317,13 +340,7 @@ function announcePickup(event){
 }
 
 
-function updateSkills(){
- $('abilityBar').innerHTML=['invisibility','phase'].map(k=>{
-  const unlocked=run[k]>0;
-  return `<div class="abilitySlot"><button class="ability ${unlocked?'ready':'locked'}" id="ability-${k}" aria-label="Use ${names[k]}" aria-pressed="false" data-ability="${k}"><span class="abilityArt">${skillGlyph(k)}</span><strong>${labels[k]}</strong><small id="reserve-${k}">${!unlocked?'FIND PICKUP':k==='invisibility'?energy.toFixed(1)+'s':'TIER '+run[k]}</small><span class="abilityMeter"><i id="meter-${k}"></i></span></button></div>`;
- }).join('')+`<div class="abilitySlot speedSlot"><div class="ability speedAbility passive" id="ability-speed" aria-label="Speed tier"><span class="abilityArt">${skillGlyph('speed')}</span><strong>SPEED</strong><small>TIER ${run.speed} / ${RUN_MAX.speed}</small><span class="speedCost">FIND PICKUPS</span></div></div>`;
- document.querySelectorAll('[data-ability]').forEach(button=>button.onpointerdown=e=>{e.preventDefault();e.stopPropagation();toggleAbility(button.dataset.ability)});
-}
+function updateSkills(){$('abilityBar').innerHTML='';$('controls').hidden=true;}
 $('game').addEventListener('pointerdown',e=>{
  if(mode!=='play'||stickPointer!==null||e.target.closest('button,a,#overlay'))return;
  e.preventDefault();stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};const r=$('game').getBoundingClientRect();$('stick').style.left=`${e.clientX-r.left}px`;$('stick').style.top=`${e.clientY-r.top}px`;$('stick').hidden=false;$('game').setPointerCapture(e.pointerId);moveStick(e);
@@ -331,80 +348,73 @@ $('game').addEventListener('pointerdown',e=>{
 function moveStick(e){if(e.pointerId!==stickPointer)return;const dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y,len=Math.hypot(dx,dy),s=Math.min(1,len/42);input={x:len?dx/len*s:0,y:len?dy/len*s:0};$('nub').style.transform=`translate(${input.x*30}px,${input.y*30}px)`;}
 $('game').addEventListener('pointermove',moveStick);
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])$('game').addEventListener(ev,e=>{if(e.pointerId===stickPointer){stickPointer=null;input={x:0,y:0};$('nub').style.transform='';$('stick').hidden=true}});
-window.addEventListener('keydown',e=>{if(e.code==='Escape'){pause();return}if(mode!=='play')return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Space')held=true;const k={Digit1:'invisibility',Digit2:'phase'}[e.code];if(k&&run[k]){held=false;selected=k;updateSkills()}});window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Space')held=false});
-function active(k){return held&&selected===k&&run[k]>0&&(k!=='invisibility'||energy>0)}
+window.addEventListener('keydown',e=>{if(e.code==='Escape'){pause();return}if(mode!=='play')return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code)});window.addEventListener('keyup',e=>keys.delete(e.code));
+
 function move(dx,dy,dt){
- const nx=ghost.x+dx,ny=ghost.y+dy,phase=active('phase');
+ const nx=ghost.x+dx,ny=ghost.y+dy;
  const sealed=(run.tasks||[]).find(task=>{
   const r=task.room;if(!r||r.open)return false;
   const was=ghost.x>r.x&&ghost.x<r.x+r.w&&ghost.y>r.y&&ghost.y<r.y+r.h;
   const next=nx>r.x&&nx<r.x+r.w&&ny>r.y&&ny<r.y+r.h;
   return was!==next;
  });
- if(sealed&&!(phase&&run.phase>=sealed.requiredPhase)){
-  note(`NEED PHASE ${sealed.requiredPhase}`,1.1);return;
+ if(sealed){
+  if(run.phase<sealed.requiredPhase){note(`NEED PHASE ${sealed.requiredPhase}`,1.1);return}
+  phaseVisual=.22;
  }
  const hits=blocks.filter(b=>overlap(nx,ny,b));
- const blocked=hits.find(b=>!(phase&&run.phase>=b.phase&&!(b.exit&&!run.exitOpen)));
+ const blocked=hits.find(b=>{
+  if(b.exit&&!run.exitOpen)return true;
+  return !(b.phase<99&&run.phase>=b.phase);
+ });
  if(blocked){
-  if(blocked.exit&&!run.exitOpen){note('FINISH ALL FIVE TASKS',1.2);return}
-  if(blocked.phase<99){
-   const kind=blocked.kind==='door'?'DOOR':blocked.kind==='gate'?'GATE':'WALL';
-   note(run.phase>=blocked.phase?`${kind} · ACTIVATE PHASE`:`NEED PHASE ${blocked.phase}`,1.1);
-  }
+  if(blocked.exit&&!run.exitOpen){if(!mausoleumActive)note('FINISH ALL FIVE TASKS',1.2);return}
+  if(blocked.phase<99)note(`NEED PHASE ${blocked.phase}`,1.1);
   return;
  }
+ if(hits.some(b=>b.phase<99&&run.phase>=b.phase))phaseVisual=.22;
  ghost.x=nx;ghost.y=ny;
- if(!hits.length){lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}else if(phase){phaseExit={x:dx,y:dy}}
+ if(!hits.length)lastSafe={x:ghost.x,y:ghost.y};
 }
 function update(dt){
- t+=dt;effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
+ if(mausoleumActive){updateMausoleum(dt);return}
+ t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
- if(phaseExit&&!active('phase')){const length=Math.hypot(phaseExit.x,phaseExit.y)||1;let exit=null;for(let d=1;d<160;d++){const xx=ghost.x+phaseExit.x/length*d,yy=ghost.y+phaseExit.y/length*d;if(blocks.some(b=>overlap(xx,yy,b)&&b.phase>run.phase))break;if(!blocks.some(b=>overlap(xx,yy,b))){exit={x:xx,y:yy};break}}ghost.x=(exit||lastSafe).x;ghost.y=(exit||lastSafe).y;lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
- effects.energy=energy;
- for(const event of collectTokens(tokens,ghost,effects,run,runCapacity(run),t)){
+ for(const event of collectTokens(tokens,ghost,effects,run,t)){
   if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
   if(event.kind==='stiff'){announcePickup(event);tone(860,.15)}
   else{note(`${event.title.toUpperCase()} · ${event.detail}`,1.2);tone(740,.1)}
-  updateSkills();updateTokenInventory();
+  updateTokenInventory();
  }
- energy=effects.energy;checkObjectives();
- let invisible=active('invisibility');
- if(invisible){energy=Math.max(0,energy-dt);if(energy<=0){held=false;invisible=false;updateSkills();note('VANISH EMPTY',1)}}
+ checkObjectives();
  if(spawnSafe&&Math.hypot(ghost.x-world.spawn.x,ghost.y-world.spawn.y)>120)spawnSafe=false;
- const sight=spawnSafe?{danger:false,blocked:false}:resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
+ const sight=spawnSafe?{danger:false,blocked:false}:resolveSightings(people,ghost,blocks,effects,false,(source,max)=>nav?investigate(people,nav,source,max):0);
  if(sight.blocked){seen=0;note('SCARED STIFF!',1.3);tone(180,.22);updateTokenInventory()}
  const spotted=sight.danger;seen=spotted?seen+dt:Math.max(0,seen-dt*3);if(seen>.18){finish();return}
  if(run.exitOpen&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
  cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);camX+=(ghost.x-240-camX)*Math.min(1,dt*8);cam=Math.max(0,Math.min(WORLD.height-viewH,cam));camX=Math.max(0,Math.min(WORLD.width-480,camX));
  $('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
- $('status').textContent=[effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',run.tasks?`${completedTaskCount()}/5 TASKS`:'' ].filter(Boolean).join(' · ');updateObjectiveHud();
- for(const k of ['invisibility','phase']){
-  const button=$('ability-'+k),using=active(k);if(!button)continue;
-  button.classList.toggle('active',using);button.setAttribute('aria-pressed',String(using));
-  $('reserve-'+k).textContent=!run[k]?'FIND PICKUP':k==='invisibility'?`${using?'ACTIVE · ':''}${energy.toFixed(1)}s`:`${using?'ACTIVE · ':''}TIER ${run[k]}`;
-  $('meter-'+k).style.width=!run[k]?'0%':k==='invisibility'?`${energy/Math.max(.01,runCapacity(run))*100}%`:'100%';
- }
+ $('status').textContent=[effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',`SPEED ${run.speed}`,`PHASE ${run.phase}`,run.tasks?`${completedTaskCount()}/5 TASKS`:'' ].filter(Boolean).join(' · ');updateObjectiveHud();
 }
 
 function drawToken(token){
- const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='phaseTier'?'phase':'invisibility';
+ const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
  const x=token.x,y=token.y,bob=reduced?0:Math.round(Math.sin(t*4+token.id)*3),scale=1.65;ctx.save();ctx.translate(x,y+bob);
  if(kind==='speed'){
   const drift=(t*28+token.id*9)%12;for(let i=0;i<4;i++){rect(ctx,-34-drift-i*5,-14+i*8,18+i*2,2,i%2?'#e6fff5':'#9df0cf')}
  }
  const glow=22+(reduced?0:Math.sin(t*5+token.id)*4),a=ctx.createRadialGradient(0,0,3,0,0,glow);
- const glowColor=kind==='stiff'?'240,164,60':kind==='invisibility'?'120,200,242':kind==='speed'?'130,236,195':'235,242,255';
+ const glowColor=kind==='stiff'?'240,164,60':kind==='speed'?'130,236,195':'235,242,255';
  a.addColorStop(0,`rgba(${glowColor},.45)`);a.addColorStop(1,`rgba(${glowColor},0)`);ctx.fillStyle=a;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
  const phaseAlpha=kind==='phase'?(reduced?.65:.28+.72*((Math.sin(t*4+token.id)+1)/2)):1;
  for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v==='0')continue;
-  ctx.globalAlpha=kind==='invisibility'?(i<5?.28:i<9?.58:1):phaseAlpha;
-  const color=kind==='stiff'?(v==='2'?'#aa5d27':'#f0a43c'):kind==='invisibility'?(v==='2'?'#6faecf':'#b9e5ff'):kind==='speed'?(v==='2'?'#8eddbf':'#ddfff2'):(v==='2'?'#d8e1ea':'#f7fbff');
+  ctx.globalAlpha=phaseAlpha;
+  const color=kind==='stiff'?(v==='2'?'#aa5d27':'#f0a43c'):kind==='speed'?(v==='2'?'#8eddbf':'#ddfff2'):(v==='2'?'#d8e1ea':'#f7fbff');
   rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color);
  }
  ctx.globalAlpha=phaseAlpha;rect(ctx,-5,-5,2,5,'#18313a');rect(ctx,2,-5,2,5,'#18313a');
- if(kind==='stiff'){ctx.globalAlpha=1;ctx.fillStyle='#fff1b0';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('!',18,-15)}
+ if(kind==='stiff'){ctx.globalAlpha=1;ctx.fillStyle='#fff1b0';ctx.font='bold 13px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('!',18,-15)}
  ctx.restore();
 }
 function drawMemoryRoom(task){
@@ -421,9 +431,35 @@ function drawTaskGhost(task){
  for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){if(GHOST_PIXELS[j][i]==='0')continue;const hue=(t*120+i*24+j*13+task.index*55)%360;rect(ctx,task.x+(i-7)*scale,task.y-16+(j-8)*scale,scale,scale,`hsl(${hue} 88% 66%)`)}
  rect(ctx,task.x-9,task.y-25,3,9,'#13232b');rect(ctx,task.x+3,task.y-25,3,9,'#13232b');ctx.restore();
 }
+function drawMenuScene(){
+ const c=$('menuScene');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+ g.fillStyle='#101923';g.fillRect(0,0,320,132);
+ g.fillStyle='#1d2d35';for(let y=0;y<132;y+=8)for(let x=(y/8%2)*4;x<320;x+=12)if(((x+y)/4)%3)g.fillRect(x,y,4,4);
+ g.fillStyle='#d8d3a3';g.fillRect(252,15,28,28);g.fillStyle='#101923';g.fillRect(244,27,18,18);
+ g.fillStyle='#273b38';g.fillRect(0,102,320,30);
+ for(const x of [12,42,285]){g.fillStyle='#53615b';g.fillRect(x,83,14,22);g.fillRect(x-3,80,20,4);g.fillStyle='#303d3b';g.fillRect(x+3,87,8,18)}
+ g.fillStyle='#69736b';g.fillRect(104,46,112,62);g.fillRect(96,42,128,8);g.fillRect(112,36,96,6);
+ g.fillStyle='#303d3b';g.fillRect(118,54,22,54);g.fillRect(180,54,22,54);
+ g.fillStyle='#1a252a';g.fillRect(145,60,30,48);g.fillStyle='#8b927d';g.fillRect(148,63,24,3);g.fillRect(148,70,24,2);
+ g.fillStyle='#b79654';g.fillRect(159,78,3,8);g.fillRect(157,81,7,3);
+ drawGhost(g,62,84+Math.sin(t*2)*2,3,2,t,1);
+}
+function drawMausoleumFloor(){
+ ctx.fillStyle='#11191f';ctx.fillRect(0,0,480,620);
+ ctx.fillStyle='#2f393b';ctx.fillRect(70,70,340,500);
+ for(let y=94;y<546;y+=24)for(let x=94;x<386;x+=32){
+  const alt=((x/32+y/24)|0)%2;rect(ctx,x,y,30,22,alt?'#3f4948':'#384241');rect(ctx,x,y+20,30,2,'#222c2e');
+ }
+ ctx.fillStyle='#151f24';ctx.fillRect(82,82,316,18);ctx.fillRect(82,526,316,12);
+ for(const x of [108,350]){ctx.fillStyle='#59615b';ctx.fillRect(x,118,18,120);ctx.fillStyle='#7d8174';ctx.fillRect(x-5,110,28,10);ctx.fillRect(x-4,238,26,8)}
+ for(const [x,y] of [[122,260],[338,260],[122,500],[358,500]]){ctx.fillStyle='#e4c77e';ctx.fillRect(x,y,3,8);ctx.fillStyle='#8b6336';ctx.fillRect(x+1,y+8,2,5);ctx.fillStyle='#f4e5a7';ctx.fillRect(x-1,y-2,5,3)}
+ ctx.fillStyle='#222b2d';ctx.fillRect(204,340,72,114);ctx.fillStyle='#6e746a';ctx.fillRect(210,346,60,102);ctx.fillStyle='#505951';ctx.fillRect(216,354,48,88);
+ ctx.fillStyle='#262f31';ctx.fillRect(96,176,288,22);for(let x=102;x<380;x+=16)rect(ctx,x,180,10,14,'#68706a');
+ ctx.fillStyle='#c8b37e';ctx.font='bold 8px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('PHASE I',240,193);
+}
 function draw(){
  ctx.fillStyle='#111c27';ctx.fillRect(0,0,480,viewH);ctx.save();ctx.translate(-Math.round(camX),-Math.round(cam));
- if(scenery)ctx.drawImage(scenery,Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam),Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));else{ctx.fillStyle='#263a37';ctx.fillRect(Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));}
+ if(mausoleumActive)drawMausoleumFloor();else if(scenery)ctx.drawImage(scenery,Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam),Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));else{ctx.fillStyle='#263a37';ctx.fillRect(Math.round(camX),Math.round(cam),480,Math.min(viewH,WORLD.height-cam));}
  for(const d of (world.decor||[]))if(d.kind==='lamp'&&d.x>camX-40&&d.x<camX+520&&d.y>cam-40&&d.y<cam+viewH+40)drawStreetLamp(ctx,d);
  for(const h of people){if(h.frozen>0)continue;if(h.x<camX-200||h.x>camX+680||h.y<cam-200||h.y>cam+viewH+200)continue;ctx.beginPath();ctx.moveTo(h.x,h.y);for(let a=h.angle-h.half;a<=h.angle+h.half+.01;a+=.075){let d=0;for(;d<h.range;d+=10){if(blocks.some(b=>overlap(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d,b,0)))break}ctx.lineTo(h.x+Math.cos(a)*d,h.y+Math.sin(a)*d)}ctx.closePath();ctx.fillStyle=h.kind==='cat'?'#b6d99d10':h.kind==='camera'?'#b6cce328':seen?'#efac7955':'#f7d49a1c';ctx.fill();}
  const visible=blocks.filter(b=>b.x+b.w>camX-50&&b.x<camX+530&&b.y+b.h>cam-60&&b.y<cam+viewH+60);for(const b of visible){if(b.exit)continue;if(b.kind==='water'){rect(ctx,b.x,b.y,b.w,b.h,'#254655');for(let yy=Math.max(b.y,Math.floor(cam/32)*32);yy<Math.min(b.y+b.h,cam+viewH);yy+=32)for(let xx=b.x+10;xx<b.x+b.w;xx+=56)rect(ctx,xx+Math.round(Math.sin(t+yy)*3),yy,26,2,'#8ebaba25');}else prop(b);}
@@ -432,18 +468,16 @@ function draw(){
  if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
  for(const token of tokens)if(!token.collected&&token.x>camX-45&&token.x<camX+525&&token.y>cam-45&&token.y<cam+viewH+45)drawToken(token);
  if(run.tasks)for(const task of availableTasks()){drawMemoryRoom(task);drawTaskGhost(task)}
- drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,active('invisibility')?.25:active('phase')?.6:1);
- ctx.restore();if(mode==='play')drawMap();
+ if(phaseVisual>0){drawGhost(ctx,ghost.x-5,ghost.y-16,3,ghost.face,t,.14);drawGhost(ctx,ghost.x+5,ghost.y-16,3,ghost.face,t,.14)}
+ drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,phaseVisual>0?.48:1);
+ ctx.restore();if(mode==='play'&&!mausoleumActive)drawMap();
 }
 function drawMiniMarker(px,py,kind,id=0){
  const pulse=reduced?1:(Math.sin(t*5+id)*.5+.5);
  if(kind==='speed'){
-  rect(ctx,px-4,py-2,4,1,'#72bca6');rect(ctx,px-5,py,5,1,'#9df0cf');rect(ctx,px-3,py+2,3,1,'#72bca6');
-  rect(ctx,px+1,py-1,3,3,'#e8fff6');
+  rect(ctx,px-4,py-2,4,1,'#72bca6');rect(ctx,px-5,py,5,1,'#9df0cf');rect(ctx,px-3,py+2,3,1,'#72bca6');rect(ctx,px+1,py-1,3,3,'#e8fff6');
  }else if(kind==='phase'){
   ctx.globalAlpha=.5+pulse*.5;rect(ctx,px-2,py-2,5,5,'#f4f7ff');rect(ctx,px-1,py-1,3,3,'#263743');rect(ctx,px,py,1,1,'#f4f7ff');ctx.globalAlpha=1;
- }else if(kind==='invisibility'){
-  ctx.globalAlpha=.7+pulse*.3;rect(ctx,px,py-3,1,1,'#dff8ff');rect(ctx,px-1,py-2,3,1,'#8fd4f4');rect(ctx,px-2,py-1,5,3,'#64afd7');rect(ctx,px-1,py+2,3,1,'#8fd4f4');rect(ctx,px,py+3,1,1,'#dff8ff');ctx.globalAlpha=1;
  }else{
   rect(ctx,px-2,py-3,5,5,'#f0a43c');rect(ctx,px-3,py-1,1,3,'#b76526');rect(ctx,px+3,py-1,1,3,'#b76526');rect(ctx,px-2,py+2,1,2,'#f0a43c');rect(ctx,px+2,py+2,1,2,'#f0a43c');rect(ctx,px,py-1,1,3,'#fff1b8');
  }
@@ -490,7 +524,7 @@ function drawMap(){
  // Pickups use distinct miniature glyphs instead of identical squares.
  for(const token of tokens)if(!token.collected){
   const px=Math.round(x+token.x*sx),py=Math.round(y+token.y*sy);
-  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='phaseTier'?'phase':'invisibility';
+  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
   drawMiniMarker(px,py,kind,token.id);
  }
  // Unfinished Business targets: bright animated multicolour beacons.
