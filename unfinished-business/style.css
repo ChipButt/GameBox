@@ -471,3 +471,13 @@ h1{line-height:.95}h1 em{font-style:normal}
 .pickupIcon.empty{display:none!important}
 .pickupAnnouncement:has(.pickupIcon.empty) .pickupCopy{grid-column:1/-1!important}
 .echoReadout.tutorialFocus{position:relative;z-index:6}
+
+.pickupAnnouncement:has(#pickupIcon.empty){
+  grid-template-columns:1fr!important;
+}
+.pickupAnnouncement:has(#pickupIcon.empty) #pickupTitle,
+.pickupAnnouncement:has(#pickupIcon.empty) #pickupDetail{
+  grid-column:1!important;
+  margin-left:0!important;
+  padding-left:0!important;
+}
