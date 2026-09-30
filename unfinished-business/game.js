@@ -1,12 +1,12 @@
 import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,runCapacity,overlap,rayBlocked} from './model.js?v=20260927m';
-import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930a';
+import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930a';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930b';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930a';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260928a';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
-let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
-let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,runPoints=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0,refillActive:false};
+let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0,energy:0},tokens=[],scenery=null;
+let mode='menu',selected='invisibility',held=false,skillPointer=null,stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},energy=0,t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},phaseExit=null,seen=0,audio=null,saveFailed=false,tutorial={active:false,stage:0,useTime:0,refillActive:false};
 const names={speed:'Speed',invisibility:'Vanish',phase:'Phase'},labels={invisibility:'VANISH',phase:'PHASE',speed:'SPEED'};
 let pickupTimers=[];
 const LEVEL_TASKS=[
@@ -54,10 +54,10 @@ function resetInput(){held=false;skillPointer=null;stickPointer=null;input={x:0,
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
-function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Upgrades are found, not bought.</b> There are no tap-to-upgrade controls. Walk into the different ghost icons hidden around each map and the upgrade applies instantly for that run.</p><p><b>Speed</b> pickups are pale ghosts with rushing lines behind them. Every one is free and permanently raises your movement speed for the current run.</p><p><b>Phase</b> pickups are ghosts that fade between solid white and translucent. Each one raises your PHASE tier. Activate PHASE from the bottom button to cross a sealed room whose number is at or below your tier.</p><p><b>Vanish</b> pickups have a cool-blue fading shimmer. They unlock VANISH and increase how long you can stay unseen. Tap VANISH to use it.</p><p><b>Golden ghosts now mean one thing only: Scared Stiff.</b> There are five around each map. They respawn after a short time and you can store a maximum of three. When a witness would catch you, one charge is automatically spent to freeze them for a few seconds.</p><p>Each level has <b>five Unfinished Business tasks</b>, shown in the world as full-sized flashing multicoloured ghosts. Task 1 is reachable immediately. Tasks 2–5 sit inside sealed memory rooms requiring PHASE 1, 2, 3 and 4 respectively, so you must keep finding Phase pickups to progress.</p><p>Collect all five task ghosts to open the way out. Echoes from exploration remain a run score; they are no longer spent on upgrades.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
-function description(k){if(k==='speed')return `${Math.round(runSpeed(run))} → ${Math.round(runSpeed({...run,speed:run.speed+1}))} speed`;if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';}
-function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT'}</span><h2>${win?'You made it through.':'Someone Saw You'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
+function chooseLevel(){show(`<span class="eyebrow">CHOOSE LEVEL</span><h2>Unfinished Business</h2><p class="subtitle">Each level starts fresh.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
+function help(){show(`<span class="eyebrow">HOW TO PLAY</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging on the play area.</p><p><b>Speed, Vanish and Phase</b> improve when you collect their ghost icons.</p><p><b>Phase</b> opens sealed task rooms. The four sealed rooms require PHASE 1, 2, 3 and 4.</p><p><b>Scared Stiff</b> gold ghosts protect you from being seen. Carry up to 3.</p><p>Complete all <b>5 flashing multicolour ghosts</b> to open the exit.</p></div><button class="primary" id="back">Play</button>`);$('back').onclick=home;}
+
+function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'UNFINISHED BUSINESS COMPLETE':'CAUGHT'}</span><h2>${win?'The way is open.':'Someone saw you.'}</h2><button class="primary" data-start>${win&&p.level<4?'Next level':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 
 function beginLevel(){
  if(p.level===0&&!p.introSeen){introSequence(0);return}
@@ -92,17 +92,14 @@ const PICKUP_TUTORIAL_KEY='gamebox.unfinished-business.pickup-tutorial.v1';
 function pickupTutorialSeen(){try{return localStorage.getItem(PICKUP_TUTORIAL_KEY)==='1'}catch{return !!p.tutorialSeen}}
 function markPickupTutorialSeen(){try{localStorage.setItem(PICKUP_TUTORIAL_KEY,'1')}catch{}p.tutorialSeen=true;save();}
 const TUTORIAL_PAGES=[
- {tag:'UPGRADES',title:'Find them. Do not buy them.',icon:'speed',body:'The old tap-to-upgrade system is gone. Upgrade ghosts are physical pickups in the level. Walk into one and it applies instantly, for free, for the rest of that run.'},
- {tag:'SPEED',title:'Follow the rushing lines.',icon:'speed',body:'Speed pickups have motion lines streaming behind the ghost. Each pickup permanently raises your speed tier for this run. Every level contains enough Speed pickups to reach the maximum.'},
- {tag:'PHASE',title:'Watch the ghost fade.',icon:'phase',body:'Phase pickups pulse between solid white and translucent. Each raises your PHASE tier. The four sealed task rooms require PHASE 1, 2, 3 and 4, so finding the next Phase pickup is part of the route through every level.'},
- {tag:'VANISH',title:'Build your time unseen.',icon:'invisibility',body:'Blue shimmering Vanish pickups unlock and strengthen VANISH. The bottom VANISH button still activates the power; pickups simply replace all of the old upgrade purchases.'},
- {tag:'SCARED STIFF',title:'Gold means Scared Stiff.',icon:'stiff',body:'Golden ghosts are no longer mystery rewards. There are five on each map and they respawn after 35 seconds. You can hold three charges. If a witness catches sight of you, one charge is automatically spent and that witness freezes briefly.'},
- {tag:'UNFINISHED BUSINESS',title:'Five ghosts. Four sealed rooms.',icon:'task',body:'Your five tasks are full-sized flashing multicoloured ghosts. The first is freely accessible. The next four are inside increasingly strong PHASE rooms. Complete all five and the way out opens.'}
+ {tag:'MOVE',title:'Move',icon:null,body:'Drag anywhere on the play area.'},
+ {tag:'SPEED',title:'Speed',icon:'speed',body:'Collect rushing ghosts to move faster.'},
+ {tag:'PHASE',title:'Phase',icon:'phase',body:'Collect fading ghosts to raise PHASE. Sealed task rooms require PHASE 1–4.'},
+ {tag:'VANISH',title:'Vanish',icon:'invisibility',body:'Collect blue ghosts to extend VANISH. Tap VANISH to hide from witnesses.'},
+ {tag:'SCARED STIFF',title:'Scared Stiff',icon:'stiff',body:'Gold ghosts protect you when spotted. Carry up to 3. They respawn.'},
+ {tag:'UNFINISHED BUSINESS',title:'Unfinished Business',icon:'task',body:'Touch all 5 flashing multicolour ghosts. Complete all 5 to open the exit.'}
 ];
-function tutorialPrompt(){
- mode='story';show(`<span class="eyebrow">THE RULES HAVE CHANGED</span><h2>Try the new pickup system?</h2><p class="subtitle">Upgrades now live inside the map. The short tutorial explains every new icon and the Phase-gated task route.</p><button class="primary" id="doTutorial">Show me</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
- $('doTutorial').onclick=()=>tutorialPage(0);$('skipTutorial').onclick=()=>{markPickupTutorialSeen();start(false)};
-}
+function tutorialPrompt(){tutorialPage(0);}
 function tutorialPage(index){
  const page=TUTORIAL_PAGES[index],last=index===TUTORIAL_PAGES.length-1;
  const icon=page.icon?`<div class="tutorialPickupIcon ${page.icon}">${pickupIconSvg(page.icon)}</div>`:'';
@@ -188,8 +185,6 @@ function completedTaskCount(){return (run.tasks||[]).filter(t=>t.complete).lengt
 function availableTasks(){return (run.tasks||[]).filter(t=>!t.complete);}
 function taskState(task){
  if(task.complete)return 'complete';
- const previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
- if(!previousDone)return 'locked';
  return (task.requiredPhase||0)<=run.phase?'available':'locked';
 }
 function updateTaskButton(){
@@ -203,15 +198,14 @@ function openTaskBoard(initial=false){
  if(!run.tasks)return;
  mode='tasks';resetInput();$('taskButton').hidden=true;
  const done=completedTaskCount(),items=run.tasks.map(task=>{
-  const state=taskState(task),req=task.requiredPhase||0,previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
-  const detail=state==='complete'?'Done':!previousDone
-   ?'COMPLETE THE PREVIOUS UNFINISHED BUSINESS FIRST'
-   :state==='locked'?`FIND ANOTHER PHASE PICKUP · PHASE ${req} REQUIRED`
-   :(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} paces · ${req?`PHASE ${req} room · `:''}${task.hint}`;})();
+  const state=taskState(task),req=task.requiredPhase||0;
+  const detail=state==='complete'?'Done':state==='locked'
+   ?`PHASE ${req} REQUIRED`
+   :(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;})();
   return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="${state==='available'?'taskDistance':''}">${detail}</small></div>`;
  }).join('');
  const heading=`LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}`;
- show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>Unfinished business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5 COMPLETE · EACH TASK UNLOCKS THE NEXT PHASE HUNT</div><div class="taskList">${items}</div></div>`);
+ show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>Unfinished Business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5</div><div class="taskList">${items}</div></div>`);
  $('taskClose').onclick=closeTaskBoard;
 }
 function closeTaskBoard(){
@@ -254,8 +248,7 @@ function completeTask(task){
 function checkObjectives(){
  if(!run.tasks)return;
  for(const task of availableTasks()){
-  const previousDone=(run.tasks||[]).filter(t=>t.index<task.index).every(t=>t.complete);
-  if(!previousDone||(task.requiredPhase||0)>run.phase)continue;
+  if((task.requiredPhase||0)>run.phase)continue;
   if(Math.hypot(ghost.x-task.x,ghost.y-task.y)<46){completeTask(task);break}
  }
 }
@@ -269,11 +262,11 @@ function start(isTutorial=false){
  mode='play';
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;runPoints=0;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:false,stage:0,useTime:0,refillActive:false};prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateEchoDisplay();updateTokenInventory();
+ run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0,energy:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseExit=null;t=0;seen=0;contact=null;contactTime=0;energy=0;selected='invisibility';tutorial={active:false,stage:0,useTime:0,refillActive:false};prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateTokenInventory();
  updateObjectiveHud();openTaskBoard(true);
  tone(320);
 }
-function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.best=Math.max(p.best,runPoints);p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
+function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
 $('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play')openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
@@ -322,8 +315,8 @@ function announcePickup(event){
  pickupTimers.push(setTimeout(()=>box.classList.add(event.kind==='stiff'?'toInventory':'fade'),720));
  pickupTimers.push(setTimeout(()=>{box.hidden=true;box.className='pickupAnnouncement'},1400));
 }
-function updateEchoDisplay(){$('distance').textContent=run.echoes;}
-function refreshUpgradeStates(){}
+
+
 function updateSkills(){
  $('abilityBar').innerHTML=['invisibility','phase'].map(k=>{
   const unlocked=run[k]>0;
@@ -348,18 +341,16 @@ function move(dx,dy,dt){
   const next=nx>r.x&&nx<r.x+r.w&&ny>r.y&&ny<r.y+r.h;
   return was!==next;
  });
- if(sealed){
-  const previousDone=(run.tasks||[]).filter(t=>t.index<sealed.index).every(t=>t.complete);
-  if(!previousDone){note('FINISH THE PREVIOUS UNFINISHED BUSINESS FIRST',1.5);return}
-  if(!(phase&&run.phase>=sealed.requiredPhase)){note(`SEALED MEMORY ROOM · NEED PHASE ${sealed.requiredPhase}`,1.5);return}
+ if(sealed&&!(phase&&run.phase>=sealed.requiredPhase)){
+  note(`NEED PHASE ${sealed.requiredPhase}`,1.1);return;
  }
  const hits=blocks.filter(b=>overlap(nx,ny,b));
  const blocked=hits.find(b=>!(phase&&run.phase>=b.phase&&!(b.exit&&!run.exitOpen)));
  if(blocked){
-  if(blocked.exit&&!run.exitOpen){note('The cemetery gate is still shut · finish what is keeping you here.',1.8);return}
+  if(blocked.exit&&!run.exitOpen){note('FINISH ALL FIVE TASKS',1.2);return}
   if(blocked.phase<99){
    const kind=blocked.kind==='door'?'DOOR':blocked.kind==='gate'?'GATE':'WALL';
-   note(run.phase>=blocked.phase?kind+' · PHASE '+blocked.phase+' · activate PHASE':MATERIALS[blocked.phase]+' '+kind+' · needs PHASE '+blocked.phase,1.2);
+   note(run.phase>=blocked.phase?`${kind} · ACTIVATE PHASE`:`NEED PHASE ${blocked.phase}`,1.1);
   }
   return;
  }
@@ -371,31 +362,29 @@ function update(dt){
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  if(phaseExit&&!active('phase')){const length=Math.hypot(phaseExit.x,phaseExit.y)||1;let exit=null;for(let d=1;d<160;d++){const xx=ghost.x+phaseExit.x/length*d,yy=ghost.y+phaseExit.y/length*d;if(blocks.some(b=>overlap(xx,yy,b)&&b.phase>run.phase))break;if(!blocks.some(b=>overlap(xx,yy,b))){exit={x:xx,y:yy};break}}ghost.x=(exit||lastSafe).x;ghost.y=(exit||lastSafe).y;lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
- if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){runPoints++;run.explored++;run.echoes++;tone(500,.025);updateEchoDisplay();}
  effects.energy=energy;
- const phaseCap=completedTaskCount()>=5?RUN_MAX.phase:completedTaskCount();
- for(const event of collectTokens(tokens,ghost,effects,run,runCapacity(run),t,phaseCap)){
-  if(event.kind==='stiffFull'){note('SCARED STIFF FULL · 3 / 3 STORED',1.5);continue}
-  if(event.kind==='phaseLocked'){note('FINISH THE CURRENT UNFINISHED BUSINESS · THEN PHASE CAN UPGRADE',1.8);continue}
-  announcePickup(event);note(`${event.title.toUpperCase()} · ${event.detail}`,2.4);tone(event.kind==='stiff'?860:740,.15);updateEchoDisplay();updateSkills();updateTokenInventory();
+ for(const event of collectTokens(tokens,ghost,effects,run,runCapacity(run),t)){
+  if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
+  if(event.kind==='stiff'){announcePickup(event);tone(860,.15)}
+  else{note(`${event.title.toUpperCase()} · ${event.detail}`,1.2);tone(740,.1)}
+  updateSkills();updateTokenInventory();
  }
  energy=effects.energy;checkObjectives();
  let invisible=active('invisibility');
- if(invisible){energy=Math.max(0,energy-dt);if(energy<=0){held=false;invisible=false;updateSkills();note('Vanish exhausted.',1.4)}}
+ if(invisible){energy=Math.max(0,energy-dt);if(energy<=0){held=false;invisible=false;updateSkills();note('VANISH EMPTY',1)}}
  const sight=resolveSightings(people,ghost,blocks,effects,invisible,(source,max)=>nav?investigate(people,nav,source,max):0);
- if(sight.blocked){seen=0;note('Scared Stiff! Witness frozen · charge used.',3);tone(180,.22);updateTokenInventory()}
+ if(sight.blocked){seen=0;note('SCARED STIFF!',1.3);tone(180,.22);updateTokenInventory()}
  const spotted=sight.danger;seen=spotted?seen+dt:Math.max(0,seen-dt*3);if(seen>.18){finish();return}
  if(run.exitOpen&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
  cam+=(ghost.y-viewH*.55-cam)*Math.min(1,dt*8);camX+=(ghost.x-240-camX)*Math.min(1,dt*8);cam=Math.max(0,Math.min(WORLD.height-viewH,cam));camX=Math.max(0,Math.min(WORLD.width-480,camX));
- $('distance').textContent=run.echoes;$('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
- $('best').textContent=[effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',run.tasks?`${completedTaskCount()}/5 TASKS`:`FOUND ${runPoints}`].filter(Boolean).join(' · ');updateObjectiveHud();
+ $('chapter').textContent=areaAt(ghost.x,ghost.y,p.level).name.toUpperCase();
+ $('status').textContent=[effects.stiff?`SCARED STIFF ×${effects.stiff}`:'',run.tasks?`${completedTaskCount()}/5 TASKS`:'' ].filter(Boolean).join(' · ');updateObjectiveHud();
  for(const k of ['invisibility','phase']){
   const button=$('ability-'+k),using=active(k);if(!button)continue;
   button.classList.toggle('active',using);button.setAttribute('aria-pressed',String(using));
   $('reserve-'+k).textContent=!run[k]?'FIND PICKUP':k==='invisibility'?`${using?'ACTIVE · ':''}${energy.toFixed(1)}s`:`${using?'ACTIVE · ':''}TIER ${run[k]}`;
   $('meter-'+k).style.width=!run[k]?'0%':k==='invisibility'?`${energy/Math.max(.01,runCapacity(run))*100}%`:'100%';
  }
- updateEchoDisplay();
 }
 
 function drawToken(token){
