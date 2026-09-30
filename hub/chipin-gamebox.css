@@ -191,3 +191,25 @@
 .mazeShiftHomeIcon{font-family:Fredoka,Inter,sans-serif!important;font-size:24px!important;font-weight:800!important;letter-spacing:-.06em;background:linear-gradient(145deg,#fff9df,#e6f8f2)!important;color:#164c44!important;border:2px solid rgba(255,255,255,.88);box-shadow:0 5px 14px rgba(0,0,0,.18),inset 0 0 0 3px rgba(7,155,114,.1)!important}
 
 .toyBox .toyGameGhost .gameTile{background:radial-gradient(at 50% 20%,#3d6660,#14232e 80%);border-color:#a6d4bb}.toyBox .toyGameGhost .gameTile strong{font-family:Georgia,serif;color:#f5f0df}.toyBox .toyGameGhost .gameTile small{font-size:8px;color:#acf2d0}
+
+
+/* Relic · real-world adventure game home box */
+.toyGameRelic{grid-column:1/-1;width:76%;justify-self:center;transform:rotate(.9deg)!important}
+.toyGameRelic .gameTile{
+  background:
+    radial-gradient(circle at 50% 16%,rgba(216,177,107,.28),transparent 33%),
+    repeating-radial-gradient(ellipse at 20% 120%,transparent 0 18px,rgba(239,231,215,.05) 19px 20px),
+    linear-gradient(145deg,#42594c,#17231d 72%);
+  border-color:#d8b16b;
+}
+.relicHomeTile{justify-content:center}
+.relicHomeIcon{
+  display:block;width:70px;height:70px;object-fit:contain;position:relative;z-index:1;
+  border-radius:15px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.32));
+}
+.toyGameRelic .gameTile strong{
+  font-family:Georgia,"Times New Roman",serif;
+  letter-spacing:.13em;text-transform:uppercase;color:#efe7d7
+}
+.toyGameRelic .gameTile small{color:#d8b16b;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+@media(max-width:560px){.toyGameRelic{width:88%}.relicHomeIcon{width:62px;height:62px}}
