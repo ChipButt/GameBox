@@ -53,7 +53,7 @@ function resetInput(){stickPointer=null;input={x:0,y:0};keys.clear();$('nub').st
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){
- mode='menu';mausoleumActive=false;uiPopupOpen=false;$('pickupAnnouncement').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
+ mode='menu';mausoleumActive=false;uiPopupOpen=false;settingsOpen=false;$('pickupAnnouncement').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
  show(`<canvas class="menuPixelScene" id="menuScene" width="320" height="132"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);
  drawMenuScene();$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;
 }
@@ -95,7 +95,7 @@ const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v1';
 function mausoleumSeen(){try{return localStorage.getItem(MAUSOLEUM_KEY)==='1'}catch{return !!p.tutorialSeen}}
 function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}p.tutorialSeen=true;save();}
 function startMausoleum(){
- mode='play';mausoleumActive=true;uiPopupOpen=false;
+ mode='play';mausoleumActive=true;uiPopupOpen=false;settingsOpen=false;
  const add=(x,y,w,h,kind='wall',phase=99,open=false)=>({x,y,w,h,kind,phase,open});
  world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:54},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4}]};
  blocks=[
@@ -125,7 +125,7 @@ function announceMausoleum(kind,text){
 function updateMausoleum(dt){
  t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);
  if(uiPopupOpen)return;
- if(mausoleumGuard){mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;if(mausoleumGuard.frozen>0)mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);else mausoleumGuard.angle=Math.sin(mausoleumGuard.scanTime*1.45)*.9;mausoleumGuard.animationTime=t;}
+ if(mausoleumGuard){mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;if(mausoleumGuard.frozen>0)mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);else mausoleumGuard.angle=Math.PI/2+Math.sin(mausoleumGuard.scanTime*1.25)*1.35;mausoleumGuard.animationTime=t;}
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
  for(const token of tokens){
@@ -308,7 +308,7 @@ function showNextFeatureIntro(){
  showGamePopup({...item,onClose:showNextFeatureIntro});
 }
 function start(){
- mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;
+ mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;settingsOpen=false;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
  run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
@@ -349,7 +349,7 @@ function closeSettings(){
  $('settingsPopup').hidden=true;settingsOpen=false;uiPopupOpen=false;resetInput();
 }
 function pause(){
- if(mode!=='play'||settingsOpen)return;save();renderSettings();
+ if(mode!=='play'||settingsOpen||uiPopupOpen)return;save();renderSettings();
 }
 $('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play'&&!uiPopupOpen)openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
