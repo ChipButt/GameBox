@@ -116,7 +116,7 @@ function startMausoleum(){
  run=newRun(0);run.tasks=null;run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
  $('overlay').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=false;$('controls').hidden=true;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;
  $('chapter').textContent='THE MAUSOLEUM';$('status').textContent='FIND THE 3 TOKENS';
- requestAnimationFrame(()=>requestAnimationFrame(()=>showGamePopup({kind:'warning',title:'Watch the guard!',detail:'People can see ghosts! Stay out of their sight.',icon:guardIconSvg()})));
+ requestAnimationFrame(()=>requestAnimationFrame(()=>showGamePopup({kind:'warning',title:'Watch out for the guard! Or any living creature for that matter!',detail:'Being seen by a person makes ghosts vanish and sends them back to the start of their journey!',icon:guardIconSvg()})));
  tone(320);
 }
 function announceMausoleum(kind,text){
