@@ -13,18 +13,8 @@ export function sanitize(raw){
  p.introSeen=raw?.introSeen===true;p.tutorialSeen=raw?.tutorialSeen===true;
  return p;
 }
-export const newRun=level=>({echoes:0,speed:0,invisibility:0,phase:0,level,explored:0});
+export const newRun=level=>({speed:0,invisibility:0,phase:0,level});
 export const runSpeed=r=>78+r.level*4+r.speed*10;
 export const runCapacity=r=>r.invisibility?1.4+(r.invisibility-1)*.85:0;
-export const runCost=(r,k)=>{
- const base={speed:20,invisibility:25,phase:26}[k]??9999;
- const n=r[k]||0;
- return Math.round(base*Math.pow(1.34,n));
-};
-export function buyRun(r,k){
- if(!(k in RUN_MAX)||r[k]>=RUN_MAX[k])return false;
- const price=runCost(r,k);if(r.echoes<price)return false;
- r.echoes-=price;r[k]++;return true;
-}
 export const overlap=(x,y,b,r=10)=>!b.open&&x+r>b.x&&x-r<b.x+b.w&&y+r>b.y&&y-r<b.y+b.h;
 export function rayBlocked(ax,ay,bx,by,blocks){const n=Math.ceil(Math.hypot(bx-ax,by-ay)/6);for(let i=1;i<n;i++){const x=ax+(bx-ax)*i/n,y=ay+(by-ay)*i/n;if(blocks.some(b=>overlap(x,y,b,0)))return true;}return false;}
