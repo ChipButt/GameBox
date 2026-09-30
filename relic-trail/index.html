@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <div id="app" class="appShell">
@@ -39,7 +39,7 @@
           
         </div>
         <article class="adventureFeature" id="adventureFeature">
-          <div class="featureEtching" aria-hidden="true"><span>◇</span><span>⌁</span><span>◈</span></div>
+          
           <div class="featureTopline"><span class="eyebrow">BIDFORD-ON-AVON</span><span class="availability"><i></i>24/7</span></div>
           <h1>The Lost Relics<br>of Bidford</h1>
           
@@ -92,16 +92,16 @@
     </main>
 
     <nav class="bottomNav" aria-label="Main navigation">
-      <button class="navButton active" data-nav="explore"><span class="navIcon">⌖</span><small>Explore</small></button>
-      <button class="navButton" data-nav="adventures"><span class="navIcon">↟</span><small>Adventures</small></button>
-      <button class="navButton" data-nav="collection"><span class="navIcon">◇</span><small>Collection</small><i id="collectionBadge" class="navBadge hidden">0</i></button>
-      <button class="navButton" data-nav="home"><span class="navIcon">⌂</span><small>Home</small></button>
+      <button class="navButton active" data-nav="explore"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8z"/></svg></span><small>Explore</small></button>
+      <button class="navButton" data-nav="adventures"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c6 0 4-8 10-8"/><path d="m13 8 3 3-3 3"/><circle cx="6" cy="19" r="2"/></svg></span><small>Adventures</small></button>
+      <button class="navButton" data-nav="collection"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 9-7 9-7-9z"/><path d="m8 12 4-5 4 5-4 5z"/></svg></span><small>Collection</small><i id="collectionBadge" class="navBadge hidden">0</i></button>
+      <button class="navButton" data-nav="home"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-6v-6h-4v6H4z"/></svg></span><small>Home</small></button>
     </nav>
 
     <div id="adventureSheet" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Adventure details">
       <div class="sheet adventureSheet">
         <button class="closeButton" data-close="adventureSheet" aria-label="Close">×</button>
-        <div class="sheetArt"><div class="sheetRiver"></div><div class="sheetRelic" id="sheetRelic"></div><span class="sheetBird">⌁</span></div>
+        <div class="sheetArt"><div class="sheetRiver"></div><div class="sheetRelic" id="sheetRelic"></div></div>
         <span class="eyebrow">BIDFORD-ON-AVON</span>
         <h2>The Lost Relics<br>of Bidford</h2>
         
@@ -144,7 +144,7 @@
       </div>
       <div class="searchActions">
         <button class="hintButton" id="hintButton">HINT</button>
-        <button class="scanButton" id="simulateScan"><span>⌁</span><strong>TAP RELIC</strong><small id="scanHelper">NFC</small></button>
+        <button class="scanButton" id="simulateScan"><span><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M7 9c5 2 7 5 7 10M11 6c7 3 10 7 10 14M4 13c3 1 4 3 4 6"/><circle cx="5" cy="20" r="2"/></svg></span><strong>TAP RELIC</strong><small id="scanHelper">NFC</small></button>
       </div>
     </div>
 
@@ -192,6 +192,6 @@
     <div id="toast" class="toast" role="status"></div>
   </div>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
