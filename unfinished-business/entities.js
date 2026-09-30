@@ -126,13 +126,12 @@ export function createTokens(nav,level=0){
  for(const [x,y] of preferred)if(pool.length<18)addPoint(x,y,false);
  for(let y=180;y<WORLD.height-120&&pool.length<18;y+=140)for(let x=160;x<WORLD.width-120&&pool.length<18;x+=155)addPoint(x,y,false);
  const rewards=[
-  'echo','speedTier','stiff',
-  'echo','speedTier','stiff',
-  'echo','speedTier',
-  'echo','stiff','speedTier',
-  'echo','speedTier','stiff',
-  'echo','speedTier',
-  'echo','stiff'
+  'speedTier','stiff',
+  'speedTier','stiff',
+  'speedTier',
+  'speedTier','stiff',
+  'speedTier','stiff',
+  'speedTier','stiff'
  ];
  return rewards.map((reward,id)=>{
   const n=pool[id]||nav.nearest({x:spawn.x+((id%5)-2)*48,y:spawn.y-Math.floor(id/5)*56})||spawn;
@@ -161,10 +160,6 @@ export function collectTokens(tokens,ghost,effects,run,now=0){
    events.push({kind:k,title:label,detail:'MAX',token});return false;
   };
   if(token.reward==='speedTier')upgrade('speed','Speed');
-  else if(token.reward==='echo'){
-   const amount=token.amount||5;run.echoes=(run.echoes||0)+amount;
-   events.push({kind:'echo',title:'Echoes',detail:`+${amount}`,token});
-  }
   else if(token.reward==='stiff'){
    effects.stiff=Math.min(3,effects.stiff+1);token.respawnAt=now+(token.respawnSeconds||35);
    events.push({kind:'stiff',title:'Scared Stiff',detail:`${effects.stiff} / 3`,token});
