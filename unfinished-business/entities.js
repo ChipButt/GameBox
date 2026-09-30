@@ -132,7 +132,7 @@ export function createTokens(nav,level=0){
   'phaseTier','stiff','speedTier',
   'phaseTier','speedTier','stiff',
   'phaseTier','speedTier',
-  'phaseTier','stiff','speedTier'
+  'phaseTier','stiff'
  ];
  return rewards.map((reward,id)=>{
   const n=pool[id]||nav.nearest({x:spawn.x+((id%5)-2)*48,y:spawn.y-Math.floor(id/5)*56})||spawn;
