@@ -19,3 +19,306 @@
 @media(max-width:390px){.appTopbar{grid-template-columns:58px 1fr auto;padding-left:9px;padding-right:9px}.gameboxBack,.gameboxBack img{width:52px}.wallet>span{padding:0 6px}.miniBrand strong{font-size:15px}.adventureFeature{padding-left:16px;padding-right:16px}.adventureFeature h1{font-size:34px}.mapStage{height:55%}.futureAdventures{grid-template-columns:1fr}.introSlide h2{font-size:35px}.searchRelic{width:150px;height:150px}.rewardRelic{width:170px;height:170px}}
 @media(max-height:700px){.mapStage{height:51%}.adventureFeature{min-height:49%;padding-top:13px}.adventureFeature h1{font-size:31px}.adventureFeature p{margin:4px 0 9px}.featureStats{margin-bottom:10px}.campScene{height:285px}.searchRelic{width:140px;height:140px;margin-top:7px}.searchCore{transform:translateY(-58%)}.introSlide{padding-top:48px}.introGlyph{width:135px;height:135px;margin:10px auto 18px}.introSequence{height:140px}.introTapDemo{height:150px;transform:scale(.82);transform-origin:center}.introDog{width:155px;height:170px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition-duration:.01ms!important}}
+
+/* ===== Relic visual system v2: one coherent game language ===== */
+:root{
+  --bg:#101814;
+  --bg2:#16211b;
+  --panel:#1a2821;
+  --panel2:#203129;
+  --paper:#101814;
+  --parchment:#f0e7d5;
+  --cream:#cfc2a8;
+  --gold:#b88b49;
+  --gold2:#e0bd79;
+  --river:#5b8d8c;
+  --moss:#6f816d;
+  --ink:#f0e7d5;
+  --rust:#c79a60;
+  --line:rgba(240,231,213,.12);
+}
+html,body{background:#0b120f;color:var(--parchment)}
+.appShell{
+  background:
+    radial-gradient(circle at 82% 8%,rgba(91,141,140,.08),transparent 32%),
+    radial-gradient(circle at 20% 90%,rgba(184,139,73,.06),transparent 30%),
+    var(--bg);
+}
+.appTopbar{
+  background:rgba(14,22,18,.96);
+  border-bottom:1px solid rgba(240,231,213,.08);
+  backdrop-filter:blur(16px);
+}
+.miniBrand{color:var(--parchment)}
+.wallet>span{
+  background:#17251e;border-color:#304038;box-shadow:none;color:var(--parchment);
+  border-radius:3px;
+}
+.walletCoin i,.miniGlyph{color:var(--gold2)}
+.mainStage{background:var(--bg)}
+.screen{
+  background:
+    radial-gradient(circle at 85% 5%,rgba(91,141,140,.05),transparent 30%),
+    linear-gradient(180deg,#111a16,#0f1713);
+}
+.bottomNav{
+  background:#0d1511;
+  border-top:1px solid rgba(240,231,213,.09);
+  box-shadow:0 -14px 34px rgba(0,0,0,.28);
+}
+.navButton{color:#738078}
+.navButton small{font-size:8px;letter-spacing:.13em}
+.navButton .navIcon{width:24px;height:24px;display:grid;place-items:center}
+.navButton .navIcon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.navButton.active{color:var(--parchment)}
+.navButton.active .navIcon{color:var(--gold2);transform:translateY(-1px)}
+.navBadge{background:var(--gold2);color:#101814;border-color:#0d1511}
+
+.mapStage{
+  height:61%;
+  min-height:360px;
+  background:#24352c;
+  border-bottom:1px solid rgba(240,231,213,.08);
+}
+.map:after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,17,13,.06),transparent 42%,rgba(10,17,13,.16));
+  z-index:1;
+}
+.map canvas{filter:saturate(.55) sepia(.12) contrast(1.02) brightness(.72)}
+.mapTexture{
+  background:
+    repeating-radial-gradient(ellipse at 70% 28%,transparent 0 31px,rgba(240,231,213,.025) 32px 33px),
+    linear-gradient(180deg,transparent,rgba(12,20,16,.15));
+  mix-blend-mode:screen;opacity:.8;
+}
+.mapTitle{top:16px;color:var(--parchment);text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.mapTitle span{color:#9aa79e;font-size:7px}
+.mapTitle strong{font-size:23px;color:var(--parchment)}
+.locateButton{
+  width:42px;height:42px;bottom:15px;background:#15221b;color:var(--parchment);
+  border:1px solid #425348;border-radius:3px;box-shadow:0 8px 20px rgba(0,0,0,.3);
+}
+
+.adventureFeature{
+  min-height:39%;
+  padding:18px 18px 24px;
+  background:
+    linear-gradient(90deg,rgba(184,139,73,.07),transparent 38%),
+    #121d17;
+  border-top:0;
+}
+.featureTopline{margin-bottom:8px}
+.eyebrow{color:#b99b6e;font-size:7px;letter-spacing:.24em}
+.availability{color:#8daa91}
+.adventureFeature h1,.sectionHero h1,.collectionHeader h1{
+  color:var(--parchment);
+  text-shadow:0 2px 16px rgba(0,0,0,.2);
+}
+.adventureFeature h1{font-size:clamp(36px,9.5vw,54px);margin:4px 0 16px;letter-spacing:-.02em}
+.featureStats{gap:0;margin:0 0 17px;border-top:1px solid rgba(240,231,213,.09);border-bottom:1px solid rgba(240,231,213,.09)}
+.featureStats span{
+  flex:1;border:0;border-right:1px solid rgba(240,231,213,.08);padding:9px 7px;
+  color:#89968d;font-size:7px;text-transform:uppercase;letter-spacing:.08em
+}
+.featureStats span:last-child{border-right:0}
+.featureStats b{color:var(--parchment);font-size:13px;text-transform:none;letter-spacing:0}
+.primaryButton{
+  min-height:52px;
+  background:linear-gradient(180deg,#c39958,#9e7136);
+  color:#111914;
+  border:1px solid #e0bd79;
+  border-radius:3px;
+  box-shadow:0 4px 0 #5e4326,0 10px 22px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.22);
+}
+.primaryButton span{color:#111914}
+.primaryButton:active{box-shadow:0 1px 0 #5e4326;transform:translateY(3px)}
+
+.sectionHero{padding:27px 18px 12px}
+.compactHero h1{font-size:44px}
+.activeAdventurePanel{padding:8px 16px 20px}
+.journeyCard{
+  background:
+    repeating-radial-gradient(ellipse at 110% -10%,transparent 0 26px,rgba(224,189,121,.04) 27px 28px),
+    #17251e;
+  border:1px solid rgba(224,189,121,.18);
+  border-radius:4px;box-shadow:0 16px 38px rgba(0,0,0,.22);
+}
+.journeyCard h2{color:var(--parchment)}
+.journeyProgress>div{background:#26362e}.journeyProgress i{background:var(--gold2)}
+
+.collectionHeader{padding:26px 18px 12px}
+.collectionHeader h1{font-size:44px}.collectionCount{color:var(--parchment)}
+.collectionCount span{color:#7f8a83}
+.folio{
+  margin:0 12px 24px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(184,139,73,.06),transparent 42%),
+    #15221b;
+  border:1px solid rgba(224,189,121,.2);
+  box-shadow:0 18px 40px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.02);
+}
+.folio:after{
+  background:
+    repeating-radial-gradient(ellipse at 60% 60%,transparent 0 36px,rgba(240,231,213,.025) 37px 38px);
+  opacity:1;
+}
+.folioMap{opacity:.10}
+.folioMap path{stroke:#73a09b}
+.folioMap path.fine{stroke:#b88b49}
+.folioStamp{
+  border-color:rgba(224,189,121,.45);
+  color:rgba(224,189,121,.72);
+}
+.relicSlot strong{color:var(--parchment);font-size:10px}
+.relicSlot small{color:#8b978e}
+.relicSlot.locked strong{color:#6d7870}
+.relicSlot.locked .slotMedallion{opacity:.18;filter:grayscale(1)}
+
+.campScene{
+  height:365px;
+  background:
+    radial-gradient(circle at 72% 18%,rgba(224,189,121,.12),transparent 15%),
+    linear-gradient(180deg,#22372f 0 47%,#16251f 47% 100%);
+  border-bottom:1px solid rgba(240,231,213,.08)
+}
+.campSky{background:transparent}
+.sun{background:#d3b36f;opacity:.75;box-shadow:0 0 45px rgba(211,179,111,.15)}
+.ridgeA{background:#1b2f27}.ridgeB{background:#13221c}
+.campContour{background:repeating-radial-gradient(ellipse at 55% 105%,transparent 0 30px,rgba(224,189,121,.055) 31px 32px)}
+.dogStage{filter:drop-shadow(0 18px 18px rgba(0,0,0,.38))}
+.dogIdentity strong{color:var(--parchment)}
+.homeStats{background:#111b16;border-color:rgba(240,231,213,.08)}
+.homeStats div{border-color:rgba(240,231,213,.08)}
+.homeStats span{color:#748279}.homeStats strong{color:var(--parchment)}
+.equippedBar{
+  background:#16241d;border:1px solid rgba(224,189,121,.16);border-radius:3px;color:var(--parchment)
+}
+.equippedIcon{background:#0f1713;color:var(--gold2);border:1px solid rgba(224,189,121,.25)}
+.equippedBar strong{color:var(--parchment)}
+.equippedBar span{color:#7f8d84}
+.equippedBar button{color:var(--gold2)}
+.prototypeTools{border-color:rgba(240,231,213,.08)}
+.prototypeTools summary{color:#69766e}
+.toggleRow,.secondaryButton{background:#15221b;border-color:#314239;color:var(--parchment);border-radius:3px}
+.toggleRow span strong{color:var(--parchment)}.toggleRow span small{color:#78867d}
+
+.overlay{background:rgba(5,10,8,.74);backdrop-filter:blur(8px)}
+.sheet{
+  background:#131f19;color:var(--parchment);border-radius:8px 8px 0 0;
+  border-top:1px solid rgba(224,189,121,.24);box-shadow:0 -24px 60px rgba(0,0,0,.45)
+}
+.closeButton{background:#1d2c24;color:var(--parchment);border:1px solid #35483d;border-radius:3px}
+.sheetArt{
+  height:165px;background:linear-gradient(#274039,#294038 48%,#14241d 48%);
+  border-radius:8px 8px 0 0
+}
+.sheetRiver{background:#416f70;box-shadow:0 -5px 0 rgba(224,189,121,.16)}
+.adventureSheet h2,.confirmSheet h2,.hintSheet h2{color:var(--parchment)}
+.detailStats{border-color:rgba(240,231,213,.1)}
+.detailStats span{border-color:rgba(240,231,213,.1)}
+.detailStats small{color:#7d8981}
+.conditionStrip span{background:#17251e;border-color:#34473c;color:#97a399;border-radius:2px}
+.textButton{color:#9ca89f}
+
+.adventureMode{background:#101814}
+.adventureHud{background:#0c1410;border-bottom:1px solid rgba(240,231,213,.08)}
+.adventureMapWrap{background:#223229}
+.objectivePanel{
+  background:
+    repeating-radial-gradient(ellipse at 105% 110%,transparent 0 33px,rgba(224,189,121,.035) 34px 35px),
+    #121e18;
+  border-top:1px solid rgba(240,231,213,.09);
+}
+.objectivePanel h2{color:var(--parchment)}
+.objectivePanel p{color:#9aa59e;line-height:1.45;max-width:30rem}
+.distanceChip{background:rgba(16,24,20,.94);border-color:#384b40;color:var(--parchment);border-radius:3px}
+.distanceChip span{color:var(--parchment)}
+.distanceChip small{color:#7e8a82}
+.testAdvance{border-color:#876b45;color:#d4b77e;background:rgba(184,139,73,.06)}
+
+.searchMode{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(66,99,83,.42),transparent 28%),
+    #0d1712;
+}
+.searchContours,.completionContours,.introContours{
+  background:repeating-radial-gradient(ellipse at 50% 50%,transparent 0 33px,rgba(224,189,121,.055) 34px 35px)
+}
+.searchCore h2{font-size:34px}
+.searchCore p{color:#94a198;max-width:290px;margin-left:auto;margin-right:auto}
+.signalMeter i{height:2px;background:#26382f}.signalMeter i:nth-child(-n+3){background:#d4b16d}
+.hintButton{background:#15241d;border-color:#405348;border-radius:3px}
+.scanButton{
+  background:linear-gradient(180deg,#c79a57,#a87838);
+  border-color:#e2c17f;border-radius:3px;color:#101814
+}
+.scanButton>span{display:grid;place-items:center}
+.scanButton>span svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.rewardOverlay,.completionOverlay,.introOverlay{background:#0c1511}
+.rewardValues span{background:#14221b;border-color:#33483c;border-radius:3px}
+.itemUnlock{border-color:rgba(224,189,121,.24)}
+.rewardCard .primaryButton,.completionContent .primaryButton{background:linear-gradient(#c79a57,#a87838);border-color:#e2c17f}
+
+.introSlide{padding-top:58px}
+.introSlide h2{font-size:43px;letter-spacing:-.02em}
+.introSlide p{display:none}
+.introSequence span{background:#17251e;border-color:#3b5044;color:var(--gold2);border-radius:4px}
+.tapPhone{background:#101a15;border-color:#9f9481;border-radius:12px}
+.introFooter{z-index:5}
+
+/* Tour is always fully reachable on every phone height. */
+.tourOverlay{z-index:190;pointer-events:none}
+.tourCallout{
+  position:absolute!important;
+  left:14px!important;right:14px!important;top:auto!important;
+  bottom:calc(88px + var(--safeBottom))!important;
+  width:auto!important;
+  min-height:92px;
+  background:#17251e;color:var(--parchment);
+  border:1px solid rgba(224,189,121,.32);
+  border-radius:4px;
+  box-shadow:0 18px 44px rgba(0,0,0,.42);
+  pointer-events:auto;
+  display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;
+  align-items:center;column-gap:12px
+}
+.tourCallout:after{
+  bottom:-8px;left:var(--tour-arrow,12%);
+  border-top-color:#17251e
+}
+.tourCallout strong{grid-column:1;font-size:22px;color:var(--parchment)}
+.tourCallout span{grid-column:1;font-size:9px;letter-spacing:.04em;color:#96a299;margin:2px 0 0}
+.tourCallout button{
+  grid-column:2;grid-row:1/3;
+  min-width:72px;height:40px;padding:0 12px;
+  background:var(--gold);color:#101814;border-radius:3px;
+  font-size:8px;font-weight:900;letter-spacing:.12em
+}
+.tourTarget{
+  z-index:191!important;
+  box-shadow:0 0 0 3px var(--gold2),0 0 0 9999px rgba(5,10,8,.79)!important;
+  pointer-events:none
+}
+
+.toast{background:#17251e;border:1px solid #34483c;border-radius:3px}
+.splash{background:#0c1511}
+.splashWordmark small{color:var(--gold2)}
+
+/* remove decorative pieces that read like unrelated clip-art */
+.featureEtching,.sheetBird,.mapLegend,.futureAdventures{display:none!important}
+
+/* compact mobile-first layout */
+@media(max-width:390px){
+  .mapStage{height:59%;min-height:330px}
+  .adventureFeature{min-height:41%;padding:15px 14px 20px}
+  .adventureFeature h1{font-size:35px;margin-bottom:12px}
+  .featureStats span{padding:8px 5px}
+  .introSlide h2{font-size:37px}
+}
+@media(max-height:700px){
+  .mapStage{height:54%;min-height:280px}
+  .adventureFeature{min-height:46%}
+  .tourCallout{bottom:calc(82px + var(--safeBottom))!important}
+  .introSlide{padding-top:38px}
+}
