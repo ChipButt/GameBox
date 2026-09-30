@@ -2,7 +2,7 @@ import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './m
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930i';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930i';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930i';
-import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930i';
+import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930m';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
@@ -53,7 +53,7 @@ function resetInput(){stickPointer=null;input={x:0,y:0};keys.clear();$('nub').st
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){
- mode='menu';mausoleumActive=false;uiPopupOpen=false;settingsOpen=false;$('pickupAnnouncement').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
+ mode='menu';mausoleumActive=false;uiPopupOpen=false;settingsOpen=false;$('fullMapPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
  show(`<canvas class="menuPixelScene" id="menuScene" width="320" height="132"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);
  drawMenuScene();$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;
 }
@@ -95,7 +95,7 @@ const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v1';
 function mausoleumSeen(){try{return localStorage.getItem(MAUSOLEUM_KEY)==='1'}catch{return !!p.tutorialSeen}}
 function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}p.tutorialSeen=true;save();}
 function startMausoleum(){
- mode='play';mausoleumActive=true;uiPopupOpen=false;settingsOpen=false;
+ mode='play';mausoleumActive=true;uiPopupOpen=false;settingsOpen=false;$('fullMapPopup').hidden=true;
  const add=(x,y,w,h,kind='wall',phase=99,open=false)=>({x,y,w,h,kind,phase,open});
  world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:12},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4},{x:210,y:0,w:60,h:70,name:'Exit Tunnel',floor:'#252f31',kind:4}]};
  blocks=[
@@ -147,7 +147,7 @@ function updateMausoleum(dt){
   token.collected=true;
   if(token.reward==='speedTier'){run.speed=1;announcePickup({kind:'speed'});tone(760,.1)}
   else if(token.reward==='phaseTier'){run.phase=1;announcePickup({kind:'phase'});tone(820,.1)}
-  else {effects.stiff=1;announcePickup({kind:'stiff'});tone(880,.12)}
+  else {effects.stiff=1;updateTokenInventory();announcePickup({kind:'stiff'});tone(880,.12)}
   break;
  }
  const found=tokens.filter(q=>q.collected).length;
@@ -184,11 +184,11 @@ function buildWorldSafely(level){
 }
 function updateTokenInventory(){
  const inv=$('tokenInventory');if(!inv)return;
- inv.hidden=mode!=='play';
- const icon=$('stiffIcon');if(icon&&!icon.innerHTML)icon.innerHTML=pickupIconSvg('stiff');
- $('stiffCount').textContent=`${effects.stiff||0} / 3`;
- inv.classList.toggle('empty',!(effects.stiff>0));
+ const count=Math.max(0,Math.min(3,effects.stiff||0));
+ inv.hidden=mode!=='play'||count===0;
+ inv.innerHTML=Array.from({length:count},(_,i)=>`<span class="tokenInvIcon" aria-label="Scared Stiff ${i+1}">${pickupIconSvg('stiff')}</span>`).join('');
 }
+
 function moveNamedPeople(pattern,points){
  if(!nav)return;
  const destinations=points.map(q=>nav.nearest(q)).filter(Boolean);if(!destinations.length)return;
@@ -316,7 +316,7 @@ function featureIconCanvas(kind){
 }
 function queueLevelIntro(){
  featureIntroQueue=[];
- if(p.level===0)featureIntroQueue.push({kind:'warning',title:'Watch out for cats!',detail:'Cats can spot ghosts too — and alert nearby people!',icon:featureIconCanvas('cat')});
+ if(p.level===0)featureIntroQueue.push({kind:'warning',title:'Watch out for cats!',detail:'Cats won’t send you back — if one spots you, it alerts nearby people to that area!',icon:featureIconCanvas('cat')});
  if(p.level===1)featureIntroQueue.push({kind:'warning',title:'CCTV!',detail:'Cameras can spot ghosts from a distance. Watch their view!',icon:'<span class="featureGlyph">◉</span>'});
 }
 function showNextFeatureIntro(){
@@ -324,7 +324,7 @@ function showNextFeatureIntro(){
  showGamePopup({...item,onClose:showNextFeatureIntro});
 }
 function start(){
- mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;settingsOpen=false;
+ mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;settingsOpen=false;$('fullMapPopup').hidden=true;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
  run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
@@ -394,8 +394,8 @@ function pickupIconSvg(kind){
  const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}"/>`).join('')).join('');
  const eyes='<path d="M11 10h1v3h-1zm4 0h1v3h-1z" fill="#18313a"/>';
  const trails=speed?'<path d="M0 9h6v2H0zm2 6h5v2H2zm-2 5h7v2H0z" fill="#b6f7d2"/><path d="M1 6h3v1H1zm1 17h4v1H2z" fill="#ecfff8"/>':'';
- const bang=stiff?'<path d="M25 3h2v6h-2zm0 8h2v2h-2z" fill="#fff1b0"/>':'';
- return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
+ const bang=stiff?'<g class="booArms"><path d="M7 13H3v-3H1v7h6zm14 0h4v-3h2v7h-6z" fill="#f0a43c"/><path d="M3 9H1V7h2zm22 0h2V7h-2z" fill="#fff1b0"/></g>':'';
+ return `<svg class="${stiff?'stiffGhost':''}" viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
 }
 function guardIconSvg(){
  const c=document.createElement('canvas');c.width=92;c.height=92;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
@@ -431,6 +431,8 @@ function announcePickup(event){
 function updateSkills(){$('abilityBar').innerHTML='';$('controls').hidden=true;}
 $('game').addEventListener('pointerdown',e=>{
  if(mode!=='play'||uiPopupOpen||stickPointer!==null||e.target.closest('button,a,#overlay,.mapPopup'))return;
+ const mapRect=$('world').getBoundingClientRect(),gx=(e.clientX-mapRect.left)*480/mapRect.width,gy=(e.clientY-mapRect.top)*viewH/mapRect.height;
+ if(!mausoleumActive&&gx>=339&&gx<=469&&gy>=92&&gy<=212){e.preventDefault();openFullMap();return}
  e.preventDefault();stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};const r=$('game').getBoundingClientRect();$('stick').style.left=`${e.clientX-r.left}px`;$('stick').style.top=`${e.clientY-r.top}px`;$('stick').hidden=false;$('game').setPointerCapture(e.pointerId);moveStick(e);
 });
 function moveStick(e){if(e.pointerId!==stickPointer)return;const dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y,len=Math.hypot(dx,dy),s=Math.min(1,len/42);input={x:len?dx/len*s:0,y:len?dy/len*s:0};$('nub').style.transform=`translate(${input.x*30}px,${input.y*30}px)`;}
@@ -501,7 +503,7 @@ function drawToken(token){
   rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color);
  }
  ctx.globalAlpha=phaseAlpha;rect(ctx,-5,-5,2,5,'#18313a');rect(ctx,2,-5,2,5,'#18313a');
- if(kind==='stiff'){ctx.globalAlpha=1;ctx.fillStyle='#fff1b0';ctx.font='bold 13px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('!',18,-15)}
+ if(kind==='stiff'){ctx.globalAlpha=1;const scare=reduced?1:(Math.sin(t*8+token.id)+1)/2,reach=16+Math.round(scare*7);rect(ctx,-reach,-5,reach-8,3,'#f0a43c');rect(ctx,8,-5,reach-8,3,'#f0a43c');rect(ctx,-reach,-10,3,8,'#fff1b0');rect(ctx,reach-3,-10,3,8,'#fff1b0')}
  ctx.restore();
 }
 function drawMemoryRoom(task){
@@ -571,9 +573,50 @@ function drawMiniMarker(px,py,kind,id=0){
  }else if(kind==='phase'){
   ctx.globalAlpha=.5+pulse*.5;rect(ctx,px-2,py-2,5,5,'#f4f7ff');rect(ctx,px-1,py-1,3,3,'#263743');rect(ctx,px,py,1,1,'#f4f7ff');ctx.globalAlpha=1;
  }else{
-  rect(ctx,px-2,py-3,5,5,'#f0a43c');rect(ctx,px-3,py-1,1,3,'#b76526');rect(ctx,px+3,py-1,1,3,'#b76526');rect(ctx,px-2,py+2,1,2,'#f0a43c');rect(ctx,px+2,py+2,1,2,'#f0a43c');rect(ctx,px,py-1,1,3,'#fff1b8');
+  rect(ctx,px-2,py-3,5,5,'#f0a43c');rect(ctx,px-5,py-1,3,1,'#f0a43c');rect(ctx,px+3,py-1,3,1,'#f0a43c');rect(ctx,px-5,py-3,1,2,'#fff1b8');rect(ctx,px+5,py-3,1,2,'#fff1b8');rect(ctx,px-1,py-1,1,1,'#47311f');rect(ctx,px+2,py-1,1,1,'#47311f');
  }
 }
+function drawFullMapCanvas(){
+ const canvas=$('fullMapCanvas');if(!canvas)return;
+ const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
+ const pad=14,w=canvas.width-pad*2,h=canvas.height-pad*2,sx=w/WORLD.width,sy=h/WORLD.height;
+ const rr=(x,y,rw,rh,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(rw)),Math.max(1,Math.round(rh)))};
+ c.fillStyle='#0a141b';c.fillRect(0,0,canvas.width,canvas.height);
+ rr(pad-5,pad-5,w+10,h+10,'#456b55');rr(pad-2,pad-2,w+4,h+4,'#e2f6ba');rr(pad,pad,w,h,'#17252b');
+ c.save();c.beginPath();c.rect(pad,pad,w,h);c.clip();
+ const regionPalette=['#4b4042','#3d4a4c','#355142','#46504d','#414946'];
+ for(const r of (world.regions||[]))rr(pad+r.x*sx,pad+r.y*sy,r.w*sx,r.h*sy,regionPalette[r.kind]||'#414946');
+ for(const block of blocks){
+  if(block.exit)continue;
+  const bx=pad+block.x*sx,by=pad+block.y*sy,bw=Math.max(1,block.w*sx),bh=Math.max(1,block.h*sy);
+  const col=block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?(block.phase<99?'#b7a7d8':'#8b9188'):'#555b59';
+  rr(bx,by,bw,bh,col);
+ }
+ for(const token of tokens)if(!token.collected){
+  const px=Math.round(pad+token.x*sx),py=Math.round(pad+token.y*sy),kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
+  if(kind==='speed'){rr(px-5,py-2,5,2,'#9df0cf');rr(px+1,py-2,4,4,'#e8fff6')}
+  else if(kind==='phase'){rr(px-3,py-3,7,7,'#f4f7ff');rr(px-1,py-1,3,3,'#263743')}
+  else{rr(px-3,py-3,7,6,'#f0a43c');rr(px-8,py-1,5,2,'#f0a43c');rr(px+4,py-1,5,2,'#f0a43c')}
+ }
+ if(run.tasks)for(const task of availableTasks()){
+  const px=Math.round(pad+task.x*sx),py=Math.round(pad+task.y*sy),hue=(t*110+task.index*65)%360;
+  c.fillStyle=`hsl(${hue} 90% 68%)`;c.fillRect(px-5,py-2,11,4);c.fillRect(px-2,py-5,4,11);
+ }
+ const px=Math.round(pad+ghost.x*sx),py=Math.round(pad+ghost.y*sy);
+ rr(px-4,py-4,9,9,'#f7fff6');rr(px-1,py-1,2,2,'#31434a');
+ c.restore();
+}
+function openFullMap(){
+ if(mode!=='play'||mausoleumActive||uiPopupOpen)return;
+ resetInput();uiPopupOpen=true;
+ $('fullMapPopup').hidden=false;
+ requestAnimationFrame(drawFullMapCanvas);
+}
+function closeFullMap(){
+ $('fullMapPopup').hidden=true;uiPopupOpen=false;resetInput();
+}
+$('fullMapClose').onclick=closeFullMap;
+
 function drawMap(){
  const x=346,y=99,w=116,h=106,sx=w/WORLD.width,sy=h/WORLD.height;
  // Shadowed carved frame.
