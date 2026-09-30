@@ -1,6 +1,6 @@
-import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,runCapacity,runCost,buyRun,overlap,rayBlocked} from './model.js?v=20260927m';
+import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,runCapacity,overlap,rayBlocked} from './model.js?v=20260927m';
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930a';
-import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,collectTokens} from './entities.js?v=20260927m';
+import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930b';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930a';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260928a';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
@@ -54,7 +54,7 @@ function footer(){return `<div class="footer"><a href="../index.html"><img src="
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){mode='menu';$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;show(`<canvas class="brandGhost" id="portrait" width="96" height="110"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);const c=$('portrait').getContext('2d');drawGhost(c,48,66,5,1,0);$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;}
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE YOUR UNFINISHED BUSINESS</span><h2>Five places still remember you.</h2><p class="subtitle">Every level starts a fresh run. Echoes and upgrades belong only to that attempt.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Echoes</b> are fragments of remembered life. Every genuinely new patch of ground you cross gives one Echo.</p><p>Upgrade controls stay grey while you cannot afford them. When one becomes available it turns <b>bright gold and sparkles</b>. VANISH, PHASE and SPEED each have a slot at the bottom. Your build resets whenever the level restarts.</p><p><b>Tap</b> a large ability button to arm that power, then move normally. Tap it again to cancel. VANISH hides you briefly. PHASE lets you cross doors and walls your current tier can overcome. SPEED is passive.</p><p><b>Golden ghosts are mystery tokens.</b> You only discover their reward when you collect them. Every uncollected token appears on the minimap and sparkles when it is on-screen. A token can contain Echoes, a speed tier, an automatic VANISH / PHASE / SPEED upgrade, a refill, or a Scared Stiff charge. You can carry up to three Scared Stiff charges.</p><p>Each level has five unfinished tasks. Three are available at the start; more reveal as you complete them. Open TASKS from the side at any time. Tasks change the living world and story, but never unlock your powers. Cats can attract people and the fast cyclist can catch you.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">THE RULES OF BEING DEAD</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging anywhere on the play area. Keyboard: WASD or arrows.</p><p><b>Upgrades are found, not bought.</b> There are no tap-to-upgrade controls. Walk into the different ghost icons hidden around each map and the upgrade applies instantly for that run.</p><p><b>Speed</b> pickups are pale ghosts with rushing lines behind them. Every one is free and permanently raises your movement speed for the current run.</p><p><b>Phase</b> pickups are ghosts that fade between solid white and translucent. Each one raises your PHASE tier. Activate PHASE from the bottom button to cross a sealed room whose number is at or below your tier.</p><p><b>Vanish</b> pickups have a cool-blue fading shimmer. They unlock VANISH and increase how long you can stay unseen. Tap VANISH to use it.</p><p><b>Golden ghosts now mean one thing only: Scared Stiff.</b> There are five around each map. They respawn after a short time and you can store a maximum of three. When a witness would catch you, one charge is automatically spent to freeze them for a few seconds.</p><p>Each level has <b>five Unfinished Business tasks</b>, shown in the world as full-sized flashing multicoloured ghosts. Task 1 is reachable immediately. Tasks 2–5 sit inside sealed memory rooms requiring PHASE 1, 2, 3 and 4 respectively, so you must keep finding Phase pickups to progress.</p><p>Collect all five task ghosts to open the way out. Echoes from exploration remain a run score; they are no longer spent on upgrades.</p></div><button class="primary" id="back">Got it</button>`);$('back').onclick=home;}
 function description(k){if(k==='speed')return `${Math.round(runSpeed(run))} → ${Math.round(runSpeed({...run,speed:run.speed+1}))} speed`;if(k==='invisibility')return run.invisibility?`${runCapacity(run).toFixed(1)} → ${runCapacity({...run,invisibility:run.invisibility+1}).toFixed(1)} sec`:'Unlock VANISH';return run.phase?`${MATERIALS[run.phase]} → ${MATERIALS[Math.min(7,run.phase+1)]}`:'Unlock PHASE';}
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'ONE LESS THING LEFT UNDONE':'CAUGHT'}</span><h2>${win?'You made it through.':'Someone Saw You'}</h2><div class="stats"><div><strong>${runPoints}</strong><small>GROUND FOUND</small></div><div><strong>${run.echoes}</strong><small>ECHOES LEFT</small></div><div><strong>${p.runs}</strong><small>ATTEMPTS</small></div></div><p class="subtitle">Echoes and upgrades fade with the attempt. The next run begins fresh.</p><button class="primary" data-start>${win&&p.level<4?'Enter the next memory':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 function buyUpgrade(k){
@@ -70,7 +70,7 @@ function buyUpgrade(k){
 }
 function beginLevel(){
  if(p.level===0&&!p.introSeen){introSequence(0);return}
- if(p.level===0&&!p.tutorialSeen){tutorialPrompt();return}
+ if(p.level===0&&!pickupTutorialSeen()){tutorialPrompt();return}
  start(false);
 }
 function introSequence(index=0){
@@ -97,76 +97,28 @@ function animateStoryScene(scene){
   if(scene===1||scene===2){g.fillStyle='#efcf8c';g.font='bold 9px monospace';g.textAlign='center';g.fillText(scene===1?'? ? ?':'TO DO  TO DO  TO DO',155,30)}
   requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
+const PICKUP_TUTORIAL_KEY='gamebox.unfinished-business.pickup-tutorial.v1';
+function pickupTutorialSeen(){try{return localStorage.getItem(PICKUP_TUTORIAL_KEY)==='1'}catch{return !!p.tutorialSeen}}
+function markPickupTutorialSeen(){try{localStorage.setItem(PICKUP_TUTORIAL_KEY,'1')}catch{}p.tutorialSeen=true;save();}
+const TUTORIAL_PAGES=[
+ {tag:'UPGRADES',title:'Find them. Do not buy them.',icon:'speed',body:'The old tap-to-upgrade system is gone. Upgrade ghosts are physical pickups in the level. Walk into one and it applies instantly, for free, for the rest of that run.'},
+ {tag:'SPEED',title:'Follow the rushing lines.',icon:'speed',body:'Speed pickups have motion lines streaming behind the ghost. Each pickup permanently raises your speed tier for this run. Every level contains enough Speed pickups to reach the maximum.'},
+ {tag:'PHASE',title:'Watch the ghost fade.',icon:'phase',body:'Phase pickups pulse between solid white and translucent. Each raises your PHASE tier. The four sealed task rooms require PHASE 1, 2, 3 and 4, so finding the next Phase pickup is part of the route through every level.'},
+ {tag:'VANISH',title:'Build your time unseen.',icon:'invisibility',body:'Blue shimmering Vanish pickups unlock and strengthen VANISH. The bottom VANISH button still activates the power; pickups simply replace all of the old upgrade purchases.'},
+ {tag:'SCARED STIFF',title:'Gold means Scared Stiff.',icon:'stiff',body:'Golden ghosts are no longer mystery rewards. There are five on each map and they respawn after 35 seconds. You can hold three charges. If a witness catches sight of you, one charge is automatically spent and that witness freezes briefly.'},
+ {tag:'UNFINISHED BUSINESS',title:'Five ghosts. Four sealed rooms.',icon:'task',body:'Your five tasks are full-sized flashing multicoloured ghosts. The first is freely accessible. The next four are inside increasingly strong PHASE rooms. Complete all five and the way out opens.'}
+];
 function tutorialPrompt(){
- mode='story';show(`<span class="eyebrow">BEFORE YOU LEAVE THE GRAVEYARD</span><h2>Learn how being dead works?</h2><p class="subtitle">Learn movement, Speed, Vanish and Phase.</p><button class="primary" id="doTutorial">Play tutorial</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
- $('doTutorial').onclick=()=>start(true);$('skipTutorial').onclick=()=>{p.tutorialSeen=true;save();start(false)};
+ mode='story';show(`<span class="eyebrow">THE RULES HAVE CHANGED</span><h2>Try the new pickup system?</h2><p class="subtitle">Upgrades now live inside the map. The short tutorial explains every new icon and the Phase-gated task route.</p><button class="primary" id="doTutorial">Show me</button><button class="secondary" id="skipTutorial">Skip tutorial</button>${footer()}`);
+ $('doTutorial').onclick=()=>tutorialPage(0);$('skipTutorial').onclick=()=>{markPickupTutorialSeen();start(false)};
 }
-function tutorialCard(title,body,button='Continue',action=()=>resumeTutorial(),demo=null){
- mode='tutorialPause';show(`<div class="tutorialCard"><span class="eyebrow">TUTORIAL</span><h2>${title}</h2>${demo?'<canvas class="tutorialDemo" id="tutorialDemo" width="270" height="120"></canvas>':''}<p class="tutorialHint">${body}</p><button class="primary" id="tutorialNext">${button}</button></div>`);
- if(demo)animateTutorialDemo(demo);$('tutorialNext').onclick=action;
+function tutorialPage(index){
+ const page=TUTORIAL_PAGES[index],last=index===TUTORIAL_PAGES.length-1;
+ const icon=page.icon?`<div class="tutorialPickupIcon ${page.icon}">${pickupIconSvg(page.icon)}</div>`:'';
+ mode='story';show(`<div class="tutorialCard pickupTutorial"><span class="eyebrow">${index+1} / ${TUTORIAL_PAGES.length} · ${page.tag}</span>${icon}<h2>${page.title}</h2><p class="tutorialHint">${page.body}</p><button class="primary" id="tutorialNext">${last?'Start the level':'Continue'} →</button></div>`);
+ $('tutorialNext').onclick=()=>{if(last){markPickupTutorialSeen();start(false)}else tutorialPage(index+1)};
 }
-function resumeTutorial(){mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateTaskButton();}
-function tutorialExpectedUpgrade(){return {2:'speed',4:'invisibility',7:'phase'}[tutorial.stage]||null}
-function tutorialTokenLesson(){
- run.echoes+=25;updateEchoDisplay();tone(920,.14);
- mode='tutorialPause';
- show(`<div class="tutorialCard tokenLesson"><span class="eyebrow">GOLDEN GHOST</span><canvas class="tokenLessonGhost" id="tokenLessonGhost" width="120" height="100"></canvas><h2>Mystery token</h2><div class="tokenReveal">+25 ECHOES</div><p class="tutorialHint">You only discover what it holds when you collect it.</p><div class="tokenRewardGrid"><span><b>✦</b> Echoes</span><span><b>»</b> Speed</span><span><b>◌</b> Vanish</span><span><b>◇</b> Phase</span><span><b>↻</b> Refill</span><span><b>!</b> Scared Stiff</span></div><button class="primary" id="tokenLessonNext">Got it</button></div>`);
- animateTokenLesson();$('tokenLessonNext').onclick=()=>tutorialUpgradeReady('speed');
-}
-function animateTokenLesson(){
- const c=$('tokenLessonGhost');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
- const loop=now=>{if($('tokenLessonGhost')!==c)return;g.clearRect(0,0,c.width,c.height);const bob=reduced?0:Math.round(Math.sin(now*.004)*3),scale=3,x=60,y=52+bob;
-  const glow=28+(reduced?0:Math.sin(now*.006)*5),a=g.createRadialGradient(x,y,2,x,y,glow);a.addColorStop(0,'#fff2a8aa');a.addColorStop(.5,'#f3c64f55');a.addColorStop(1,'#f3c64f00');g.fillStyle=a;g.beginPath();g.arc(x,y,glow,0,Math.PI*2);g.fill();
-  for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v!=='0')rect(g,x+(i-7)*scale,y+(j-8)*scale,scale,scale,v==='2'?'#d6a942':'#ffd970')}
-  rect(g,x-9,y-9,3,8,'#49391f');rect(g,x+3,y-9,3,8,'#49391f');
-  for(let i=0;i<4;i++){const ang=now*.0025+i*Math.PI/2;rect(g,x+Math.cos(ang)*35-2,y+Math.sin(ang)*27-2,4,4,'#fff3b5')}
-  requestAnimationFrame(loop)};requestAnimationFrame(loop);
-}
-function tutorialUpgradeReady(k){
- const price=runCost(run,k);
- tutorialCard(
-  k==='speed'?'Your first upgrade':`Unlock ${labels[k]}`,
-  k==='speed'
-   ?`<b>SPEED is ready.</b><br>Tap the sparkling gold upgrade.`
-   :`<b>${labels[k]} is ready.</b><br>Tap the sparkling gold upgrade.`,
-  'Back to game',
-  ()=>resumeTutorial(),
-  k==='speed'?'speed':null
- );
-}
-function spawnTutorialLookout(){
- if(people.some(e=>e.kind==='tutorialGuard'))return;
- people.push({id:9001,kind:'tutorialGuard',task:'Watching the memorial lawn exit',speed:0,route:[{x:1320,y:1585,wait:99,face:-Math.PI/2}],x:1320,y:1585,index:0,state:'wait',wait:99,range:245,angle:-Math.PI/2,half:.9,frozen:0,path:null,search:0,cooldown:0,walk:0,clock:0,tint:'#9a856f'});
-}
-function afterTutorialPurchase(k){
- tone(780,.14);updateEchoDisplay();updateSkills();refreshUpgradeStates();
- if(k==='speed'){
-  tutorial.stage=3;syncTutorialTasks();
-  tutorialCard('Speed',`Faster.<br><b>Next: find the golden ghost.</b>`,'Find the Vanish token',()=>resumeTutorial(),'speed');
- }else if(k==='invisibility'){
-  energy=runCapacity(run);tutorial.stage=5;tutorial.refillActive=false;spawnTutorialLookout();syncTutorialTasks();
-  tutorialCard('Vanish',`The lookout keeps turning.<br><b>VANISH. Slip past unseen.</b>`,'Practise Vanish',()=>resumeTutorial(),'invisibility');
- }else if(k==='phase'){
-  tutorial.stage=8;syncTutorialTasks();
-  tutorialCard('Phase',`<b>PHASE</b> lets you pass through doors and walls up to your tier.<br>Try the wall ahead.`,'Practise Phase',()=>resumeTutorial(),'phase');
-
- }
-}
-function completeTutorial(){
- p.tutorialSeen=true;save();tutorial={active:false,stage:0,useTime:0,refillActive:false};
- tutorialCard('You remember enough.',`Explore. Collect. Upgrade. Survive.`,'Begin Level 1',()=>start(false));
-}
-function animateTutorialDemo(kind){
- const c=$('tutorialDemo');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
- const loop=now=>{if($('tutorialDemo')!==c)return;g.fillStyle='#0c1922';g.fillRect(0,0,270,120);g.fillStyle='#33473d';g.fillRect(0,92,270,28);
-  const q=(now*.08)%180,x=45+q;
-  if(kind==='speed'){for(let i=0;i<4;i++){const xx=42-i*14-(now*.18)%14;g.fillStyle='#b6f7d288';g.fillRect(xx,66+i%2*8,8,2)}}
-  if(kind==='phase'){g.fillStyle='#786b7f';g.fillRect(132,20,18,72);for(let y=24;y<88;y+=12){g.fillStyle='#ac96b8';g.fillRect(135,y,12,2)}}
-  const alpha=kind==='invisibility'&&q>80&&q<145?.22:1;drawGhost(g,Math.min(218,x),72,2,2,now/1000,alpha);
-  if(kind==='invisibility'){g.fillStyle='#b98f77';g.fillRect(205,48,13,35);g.fillStyle='#d7b18d';g.fillRect(207,37,10,13);g.fillStyle='#efc98a22';g.beginPath();g.moveTo(205,65);g.lineTo(145,40);g.lineTo(145,90);g.fill()}
-  requestAnimationFrame(loop)};requestAnimationFrame(loop);
-}
-function buildWorldSafely(level){
+function buildWorldSafelyfunction buildWorldSafely(level){
  const generated=generateWorld(p.worldSeed,level);
  let builtScenery=null,builtNav=null,builtPeople=[],builtTokens=[];
  try{builtNav=navigation(generated.blocks)}catch(err){console.error('Navigation build failed',err)}
@@ -213,121 +165,7 @@ function applyGraveyardStoryBeat(id){
   note('TASK COMPLETE · You remember the way out.',2.7);
  }
 }
-const TUTORIAL_TARGETS={
- 1:{id:9101,x:1120,y:1940,title:'Reach the Speed token',hint:'20 Echoes · reach the golden ghost.',cost:20,upgrade:'speed'},
- 3:{id:9102,x:1500,y:1740,title:'Reach the Vanish token',hint:'25 Echoes · reach the golden ghost.',cost:25,upgrade:'invisibility'},
- 5:{id:9103,x:1320,y:1505,title:'Get past the lookout',hint:'Vanish past the lookout.'},
- 6:{id:9104,x:1470,y:1360,title:'Reach the Phase token',hint:'26 Echoes · reach the golden ghost.',cost:26,upgrade:'phase'},
- 8:{id:9105,x:1320,y:1120,title:'Phase through the wall',hint:'Phase through the wall to finish.'}
-};
-const TUTORIAL_SECTION_STARTS={
- 5:{x:1320,y:1710},
- 8:{x:1320,y:1365}
-};
-const TUTORIAL_REFILL={id:9199,x:1160,y:1695,title:'Vanish refill'};
-const TUTORIAL_TASKS=[
- {id:'tutorial-speed',title:'Collect a golden ghost',hint:'Get 20 Echoes · collect the golden ghost.',stage:1,targetStage:3},
- {id:'tutorial-vanish',title:'Unlock Vanish',hint:'Get 25 Echoes and reach the next golden ghost.',stage:3,targetStage:5},
- {id:'tutorial-lookout',title:'Slip past the lookout',hint:'Use Vanish. Get through unseen.',stage:5,targetStage:6},
- {id:'tutorial-phase',title:'Unlock Phase',hint:'Get 26 Echoes and reach the golden ghost.',stage:6,targetStage:8},
- {id:'tutorial-wall',title:'Pass through the wall',hint:'Use Phase to cross the wall.',stage:8,targetStage:99}
-];
-function resetTutorialSection(){
- const start=TUTORIAL_SECTION_STARTS[tutorial.stage]||{x:1320,y:2130};
- ghost.x=start.x;ghost.y=start.y;lastSafe={...start};seen=0;held=false;contact=null;contactTime=0;phaseExit=null;
- if(tutorial.stage===5){energy=runCapacity(run);tutorial.refillActive=false;spawnTutorialLookout();const guard=people.find(e=>e.kind==='tutorialGuard');if(guard){guard.x=1320;guard.y=1585;guard.clock=0;guard.angle=-Math.PI/2;guard.frozen=0;}}
- if(nav)nav=navigation(blocks);
- mode='play';$('overlay').hidden=true;resetInput();updateSkills();refreshUpgradeStates();updateTaskButton();
-}
-function tutorialCaught(){
- if(mode!=='play')return;
- mode='tutorialCaught';resetInput();tone(150,.2);
- show(`<span class="eyebrow">CAUGHT</span><h2>Someone Saw You</h2><p class="subtitle">Try that bit again.</p><button class="primary" id="tutorialRetry">Retry</button><button class="secondary" id="tutorialMenu">Main Menu</button>`);
- $('tutorialRetry').onclick=resetTutorialSection;
- $('tutorialMenu').onclick=home;
-}
-function tutorialRefillToken(){
- if(!tutorial.active||tutorial.stage!==5||!tutorial.refillActive)return null;
- return TUTORIAL_REFILL;
-}
-function updateTutorialRefill(){
- if(!tutorial.active||tutorial.stage!==5)return;
- if(energy<=0&&!tutorial.refillActive){tutorial.refillActive=true;held=false;note('VANISH EMPTY · REFILL APPEARED',1.8);updateSkills();}
- if(tutorial.refillActive&&Math.hypot(ghost.x-TUTORIAL_REFILL.x,ghost.y-TUTORIAL_REFILL.y)<24){
-  energy=runCapacity(run);tutorial.refillActive=false;held=false;tone(820,.12);note('VANISH REFILLED',1.3);updateSkills();
- }
-}
-function tutorialTarget(){return tutorial.active?TUTORIAL_TARGETS[tutorial.stage]||null:null}
-function prepareTutorialTasks(){
- run.tasks=TUTORIAL_TASKS.map((task,index)=>({...task,index,complete:false,tutorial:true}));
- syncTutorialTasks();
-}
-function syncTutorialTasks(){
- if(!tutorial.active||!run.tasks)return;
- for(const task of run.tasks){
-  if(task.id==='tutorial-wall')task.complete=tutorial.stage>8;
-  else task.complete=tutorial.stage>=task.targetStage;
- }
- updateTaskButton();
-}
-function tutorialTaskState(task){
- if(task.complete)return 'complete';
- const stage=tutorial.stage;
- // Show the current lesson plus the next couple of things coming, using the same board language.
- const ordered=run.tasks||[],current=Math.max(0,ordered.findIndex(t=>!t.complete));
- return task.index<=Math.min(ordered.length-1,current+2)?'available':'locked';
-}
-function tutorialTaskDetail(task){
- const state=tutorialTaskState(task);
- if(state==='complete')return 'Done';
- if(state==='locked')return 'Not available yet';
- const expected=tutorialExpectedUpgrade();
- if((task.index===0&&expected==='speed')||(task.index===1&&expected==='invisibility')||(task.index===3&&expected==='phase')){
-  return `Upgrade ready · tap the sparkling ${expected==='speed'?'SPEED button':labels[expected]+' upgrade'}.`;
- }
- const target=task.index===0?TUTORIAL_TARGETS[1]:
-  task.index===1?TUTORIAL_TARGETS[3]:
-  task.index===2?TUTORIAL_TARGETS[5]:
-  task.index===3?TUTORIAL_TARGETS[6]:
-  TUTORIAL_TARGETS[8];
- if(!target)return task.hint;
- const dx=target.x-ghost.x,dy=target.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;
- return `${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;
-}
-function setupTutorialCourse(){
- // The memorial lawn becomes a compact sequence of real gameplay gates.
- const add=(x,y,w,h,kind='hedge',phase=99,extra={})=>{const b={x,y,w,h,kind,phase,open:false,tutorial:true,...extra};blocks.push(b);return b};
- add(1010,1570,190,28);add(1440,1570,160,28); // broad watched gap at x 1200–1440
- add(1010,1250,270,28);add(1360,1250,240,28);add(1280,1250,80,28,'wall',1,{tutorialGate:'phase'});
- nav=navigation(blocks);for(const target of Object.values(TUTORIAL_TARGETS)){const q=nav.nearest(target);if(q){target.x=q.x;target.y=q.y}}const refillSpot=nav.nearest(TUTORIAL_REFILL);if(refillSpot){TUTORIAL_REFILL.x=refillSpot.x;TUTORIAL_REFILL.y=refillSpot.y}people=[];tokens=[];prepareTutorialTasks();
-}
-function tutorialBounds(){
- if(!tutorial.active)return;
- ghost.x=Math.max(1015,Math.min(1595,ghost.x));
- ghost.y=Math.max(700,Math.min(2240,ghost.y));
-}
-function tutorialCheckpoint(){
- const target=tutorialTarget();if(!target||Math.hypot(ghost.x-target.x,ghost.y-target.y)>26)return;
- const need=target.cost||0;
- if(need&&run.echoes<need){note(`Need ${need} Echoes · ${run.echoes}/${need}.`,2);return}
- if(tutorial.stage===1){tutorial.stage=2;syncTutorialTasks();tutorialTokenLesson();return}
- if(tutorial.stage===3){tutorial.stage=4;syncTutorialTasks();tutorialUpgradeReady('invisibility');return}
- if(tutorial.stage===5){
-  people=people.filter(e=>e.kind!=='tutorialGuard');tutorial.stage=6;held=false;updateSkills();syncTutorialTasks();
-  tutorialCard('That worked.',`Unseen.<br><b>Next: 26 Echoes and the golden ghost.</b>`,'Continue',()=>resumeTutorial());
-  return;
- }
- if(tutorial.stage===6){tutorial.stage=7;syncTutorialTasks();tutorialUpgradeReady('phase');return}
- if(tutorial.stage===8){held=false;tutorial.stage=9;updateSkills();syncTutorialTasks();completeTutorial();return}
-}
-function tutorialObjective(){
- const target=tutorialTarget();
- if(target)return target;
- const k=tutorialExpectedUpgrade();
- if(k){const price=runCost(run,k);return {title:`Upgrade ${names[k]}`,hint:`The upgrade is ready. Tap the sparkling gold ${k==='speed'?'SPEED button':'upgrade tab'} now.`,x:ghost.x,y:ghost.y,cost:price}}
- return null;
-}
-function prepareLevelTasks(){
+function prepareLevelTasksfunction prepareLevelTasks(){
  const defs=LEVEL_TASKS[p.level]||LEVEL_TASKS[0];
  run.tasks=defs.map((task,index)=>{
   const q=nav?.nearest({x:task.x,y:task.y});
