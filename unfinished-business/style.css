@@ -249,3 +249,17 @@ h1{line-height:.95}h1 em{font-style:normal}
 }
 #tokenInventory.empty{opacity:.38}
 @media(max-height:650px){#tokenInventory{top:calc(62px + env(safe-area-inset-top));right:12px}}
+
+
+/* Cog pause/settings */
+#pause{font-size:24px;line-height:1;padding:0}
+.settingsPopup{position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);width:min(350px,86vw);padding:22px 16px 16px;border:4px solid #82947f;background:#13232af5;box-shadow:8px 8px 0 #050c11,0 0 0 4px #263b38;color:#eee8d1}
+.settingsChoice{display:block;width:100%;margin-top:9px;padding:13px 10px;border:2px solid #63776d;background:#1b3034;color:#edf0dc;font:950 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.6px;box-shadow:3px 3px 0 #071116}
+.settingsChoice.danger{border-color:#8a685b;color:#e9c6b8}
+.howBack{border:0;background:none;color:#b6f7d2;padding:4px 0 10px;font:900 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:1px}
+.howPower{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:10px;margin:9px 0;padding:8px;border:2px solid #52665d;background:#0c1a21cc;text-align:left}
+.howPower>span{width:68px;height:58px;display:grid;place-items:center}.howPower svg{width:64px;height:58px}
+.howPower b,.howRule b{display:block;color:#fff1c7;font-size:11px}.howPower small,.howRule small{display:block;margin-top:4px;color:#c6d3c7;font-size:9px;line-height:1.35}
+.howRule{margin-top:9px;padding:9px 10px;border-left:3px solid #d0a75b;background:#0c1a21cc;text-align:left}
+.renderedCharacterIcon{display:block;width:92px;height:92px;object-fit:contain;image-rendering:pixelated}
+.featureGlyph{display:grid;width:78px;height:72px;place-items:center;font-size:52px;color:#c7d6dc;text-shadow:3px 3px 0 #18252b}
