@@ -9,21 +9,18 @@ test('cat sighting alerts once per cooldown and never ends a run; invisibility b
 test('collectible progression has enough free upgrades and five respawning Scared Stiff ghosts',()=>{
  const nav={nearest:p=>({...p}),path:()=>[{x:0,y:0}]},tokens=createTokens(nav,0);
  assert.equal(tokens.filter(t=>t.reward==='speedTier').length,6);
- assert.equal(tokens.filter(t=>t.reward==='invisibilityTier').length,7);
  assert.equal(tokens.filter(t=>t.reward==='phaseTier').length,7);
  assert.equal(tokens.filter(t=>t.reward==='stiff').length,5);
- const effects={boost:0,stiff:0,energy:0},run={speed:0,invisibility:0,phase:0};
- for(const token of tokens.filter(t=>t.reward==='phaseTier'))collectTokens(tokens,token,effects,run,0,1);
+ const effects={boost:0,stiff:0},run={speed:0,phase:0};
+ for(const token of tokens.filter(t=>t.reward==='phaseTier'))collectTokens(tokens,token,effects,run,1);
  assert.equal(run.phase,7);
- for(const token of tokens.filter(t=>t.reward==='speedTier'))collectTokens(tokens,token,effects,run,0,2);
+ for(const token of tokens.filter(t=>t.reward==='speedTier'))collectTokens(tokens,token,effects,run,2);
  assert.equal(run.speed,6);
- for(const token of tokens.filter(t=>t.reward==='invisibilityTier'))collectTokens(tokens,token,effects,run,20,3);
- assert.equal(run.invisibility,7);assert.ok(effects.energy>0);
- const stiff=tokens.find(t=>t.reward==='stiff');collectTokens(tokens,stiff,effects,run,20,10);
+ const stiff=tokens.find(t=>t.reward==='stiff');collectTokens(tokens,stiff,effects,run,10);
  assert.equal(effects.stiff,1);assert.equal(stiff.collected,true);assert.equal(stiff.respawnAt,45);
  updateTokenRespawns(tokens,44.9);assert.equal(stiff.collected,true);
  updateTokenRespawns(tokens,45);assert.equal(stiff.collected,false);
- effects.stiff=3;const events=collectTokens(tokens,stiff,effects,run,20,46);assert.equal(events[0].kind,'stiffFull');assert.equal(stiff.collected,false);
+ effects.stiff=3;const events=collectTokens(tokens,stiff,effects,run,46);assert.equal(events[0].kind,'stiffFull');assert.equal(stiff.collected,false);
 });
 
 test('later levels add witnesses and speed up human traffic',()=>{const counts=[];const speeds=[];for(let level=0;level<5;level++){const {blocks}=generateWorld(2717,level),nav=navigation(blocks),es=createEntities(nav,level);counts.push(es.length);speeds.push(Math.min(...es.filter(e=>e.kind==='human').map(e=>e.speed)));}for(let i=1;i<counts.length;i++){assert.ok(counts[i]>=counts[i-1]);assert.ok(speeds[i]>speeds[i-1]);}});
