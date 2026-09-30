@@ -1,5 +1,5 @@
 import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,phaseCost,buyPhase,overlap,rayBlocked} from './model.js?v=20260930r';
-import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930i';
+import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930x';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930r';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930i';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930q';
@@ -251,9 +251,38 @@ function prepareLevelTasks(){
  const defs=LEVEL_TASKS[p.level]||LEVEL_TASKS[0];
  run.tasks=defs.map((task,index)=>{
   const q=findTaskSpot(task,index),requiredPhase=index;
-  const room=index?{x:q.x-64,y:q.y-64,w:128,h:128,phase:requiredPhase,open:false}:null;
-  return {...task,index,requiredPhase,x:q.x,y:q.y,room,complete:false};
+  if(index===0)return {...task,index,requiredPhase,x:q.x,y:q.y,room:null,door:null,complete:false};
+
+  const size=144,half=size/2,thick=18,doorSpan=52;
+  const room={x:q.x-half,y:q.y-half,w:size,h:size};
+  const dx=world.spawn.x-q.x,dy=world.spawn.y-q.y;
+  const side=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'top':'bottom');
+  const addWall=(x,y,w,h)=>{const b={x,y,w,h,kind:'wall',phase:99,materialPhase:4,open:false,taskRoom:true,taskIndex:index};blocks.push(b);return b};
+  const addDoor=(x,y,w,h)=>{const b={x,y,w,h,kind:'door',phase:requiredPhase,open:false,taskDoor:true,taskIndex:index};blocks.push(b);return b};
+  let door=null;
+
+  if(side==='top'){
+   const leftW=q.x-doorSpan/2-room.x,rightX=q.x+doorSpan/2;
+   addWall(room.x,room.y,leftW,thick);door=addDoor(q.x-doorSpan/2,room.y,doorSpan,thick);addWall(rightX,room.y,room.x+room.w-rightX,thick);
+   addWall(room.x,room.y+room.h-thick,room.w,thick);addWall(room.x,room.y,thick,room.h);addWall(room.x+room.w-thick,room.y,thick,room.h);
+  }else if(side==='bottom'){
+   addWall(room.x,room.y,room.w,thick);
+   const leftW=q.x-doorSpan/2-room.x,rightX=q.x+doorSpan/2;
+   addWall(room.x,room.y+room.h-thick,leftW,thick);door=addDoor(q.x-doorSpan/2,room.y+room.h-thick,doorSpan,thick);addWall(rightX,room.y+room.h-thick,room.x+room.w-rightX,thick);
+   addWall(room.x,room.y,thick,room.h);addWall(room.x+room.w-thick,room.y,thick,room.h);
+  }else if(side==='left'){
+   const topH=q.y-doorSpan/2-room.y,bottomY=q.y+doorSpan/2;
+   addWall(room.x,room.y,thick,topH);door=addDoor(room.x,q.y-doorSpan/2,thick,doorSpan);addWall(room.x,bottomY,thick,room.y+room.h-bottomY);
+   addWall(room.x+room.w-thick,room.y,thick,room.h);addWall(room.x,room.y,room.w,thick);addWall(room.x,room.y+room.h-thick,room.w,thick);
+  }else{
+   const topH=q.y-doorSpan/2-room.y,bottomY=q.y+doorSpan/2;
+   addWall(room.x+room.w-thick,room.y,thick,topH);door=addDoor(room.x+room.w-thick,q.y-doorSpan/2,thick,doorSpan);addWall(room.x+room.w-thick,bottomY,thick,room.y+room.h-bottomY);
+   addWall(room.x,room.y,thick,room.h);addWall(room.x,room.y,room.w,thick);addWall(room.x,room.y+room.h-thick,room.w,thick);
+  }
+
+  return {...task,index,requiredPhase,x:q.x,y:q.y,room,door,complete:false};
  });
+ nav=navigation(blocks);
  run.exitOpen=false;
 }
 function completedTaskCount(){return (run.tasks||[]).filter(t=>t.complete).length}
@@ -301,7 +330,7 @@ function openCemeteryGate(){
 }
 function completeTask(task){
  if(!task||task.complete)return;
- task.complete=true;if(task.room)task.room.open=true;tone(720,.12);
+ task.complete=true;tone(720,.12);
  if(p.level===0)applyGraveyardStoryBeat(task.id);
  const done=completedTaskCount();
  if(done===4)note('ONE TASK LEFT.',2.2);
@@ -338,7 +367,10 @@ function start(){
  mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;settingsOpen=false;$('fullMapPopup').hidden=true;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseActive=false;phaseExit=null;tutorialHighlight='';mausoleumTask=null;t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateTokenInventory();
+ run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseActive=false;phaseExit=null;tutorialHighlight='';mausoleumTask=null;t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();
+ try{people=createEntities(nav,p.level)}catch(err){console.error('Entity rebuild after task rooms failed',err);people=[]}
+ try{tokens=createTokens(nav,p.level)}catch(err){console.error('Pickup rebuild after task rooms failed',err);tokens=[]}
+ cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateTokenInventory();
  updateObjectiveHud();tone(320);queueLevelIntro();
  requestAnimationFrame(()=>requestAnimationFrame(showNextFeatureIntro));
 }
@@ -504,16 +536,6 @@ window.addEventListener('keydown',e=>{if(e.code==='Escape'){pause();return}if(mo
 
 function move(dx,dy,dt){
  const nx=ghost.x+dx,ny=ghost.y+dy,phase=phaseActive&&run.phase>0;
- const sealed=(run.tasks||[]).find(task=>{
-  const r=task.room;if(!r||r.open)return false;
-  const was=ghost.x>r.x&&ghost.x<r.x+r.w&&ghost.y>r.y&&ghost.y<r.y+r.h;
-  const next=nx>r.x&&nx<r.x+r.w&&ny>r.y&&ny<r.y+r.h;
-  return was!==next;
- });
- if(sealed&&(!(phase)||run.phase<sealed.requiredPhase)){
-  note(run.phase>=sealed.requiredPhase?`ACTIVATE PHASE ${sealed.requiredPhase}`:`NEED PHASE ${sealed.requiredPhase}`,1.1);
-  return;
- }
  const hits=blocks.filter(b=>overlap(nx,ny,b));
  const blocked=hits.find(b=>{
   if(b.exit&&!run.exitOpen)return true;
@@ -583,14 +605,7 @@ function drawToken(token){
  if(boo){ctx.globalAlpha=1;rect(ctx,-3,1,7,7,'#18313a');rect(ctx,-1,3,3,3,'#f7d08a')}
  ctx.restore();
 }
-function drawMemoryRoom(task){
- const r=task.room;if(!r||r.open)return;ctx.save();
- const ready=run.phase>=task.requiredPhase,pulse=reduced?.18:.16+.09*((Math.sin(t*3+task.index)+1)/2);
- ctx.fillStyle=ready?`rgba(78,214,121,${pulse})`:`rgba(128,102,161,${pulse})`;ctx.fillRect(r.x,r.y,r.w,r.h);
- ctx.strokeStyle=ready?'#9dffb8':'#a98dc8';ctx.lineWidth=5;ctx.setLineDash([12,7]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
- ctx.fillStyle=ready?'#10241bdd':'#1b1722dd';ctx.fillRect(r.x+r.w/2-32,r.y-11,64,20);ctx.strokeStyle=ready?'#9dffb8':'#a98dc8';ctx.lineWidth=2;ctx.strokeRect(r.x+r.w/2-32,r.y-11,64,20);
- ctx.fillStyle=ready?'#d9ffe3':'#e4d3f7';ctx.font='bold 9px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText(`PHASE ${task.requiredPhase}`,r.x+r.w/2,r.y+3);ctx.restore();
-}
+function drawMemoryRoom(task){}
 function drawTaskGhost(task){
  const flash=reduced?1:(Math.sin(t*6+task.index)>0?.95:.48),scale=3;ctx.save();ctx.globalAlpha=flash;
  const glow=30+(reduced?0:Math.sin(t*4+task.index)*6),a=ctx.createRadialGradient(task.x,task.y-10,4,task.x,task.y-10,glow);a.addColorStop(0,'rgba(255,255,255,.32)');a.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=a;ctx.beginPath();ctx.arc(task.x,task.y-10,glow,0,Math.PI*2);ctx.fill();
@@ -639,7 +654,7 @@ function draw(){
  if(!mausoleumActive){if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}}
  for(const token of tokens)if(!token.collected&&token.x>camX-45&&token.x<camX+525&&token.y>cam-45&&token.y<cam+viewH+45)drawToken(token);
  if(mausoleumActive&&mausoleumTask&&!mausoleumTask.complete)drawTaskGhost(mausoleumTask);
- if(run.tasks)for(const task of availableTasks()){drawMemoryRoom(task);drawTaskGhost(task)}
+ if(run.tasks)for(const task of availableTasks())drawTaskGhost(task)
  if(phaseVisual>0){drawGhost(ctx,ghost.x-5,ghost.y-16,3,ghost.face,t,.14);drawGhost(ctx,ghost.x+5,ghost.y-16,3,ghost.face,t,.14)}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,phaseVisual>0?.48:1);
  ctx.restore();if(mode==='play'&&!mausoleumActive)drawMap();
