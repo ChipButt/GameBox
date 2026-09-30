@@ -1,12 +1,33 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {generateWorld} from './world.js';import {overlap} from './model.js';
-import {navigation,createEntities,updateEntities,investigate,sees,resolveSightings,createTokens,collectTokens} from './entities.js';
+import {navigation,createEntities,updateEntities,investigate,sees,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js';
 test('all task loops and secret pickups are on navigable ground; entities have varied speeds',()=>{const {blocks}=generateWorld(),nav=navigation(blocks),es=createEntities(nav);assert.ok(es.length>=20);assert.ok(new Set(es.filter(e=>e.kind==='human').map(e=>e.speed)).size>8);for(const e of es.filter(e=>e.route))for(let i=0;i<e.route.length;i++){assert.ok(nav.path(e.route[i],e.route[(i+1)%e.route.length]),e.task+' disconnected');assert.ok(!blocks.some(b=>overlap(e.route[i].x,e.route[i].y,b,9)),e.task)}for(const token of createTokens(nav))assert.ok(!blocks.some(b=>overlap(token.x,token.y,b,9)))});
 test('routines pause, turn, move through collision-free paths, and loop',()=>{const {blocks}=generateWorld(),nav=navigation(blocks),es=createEntities(nav);const h=es[0],x=h.x,y=h.y,angle=h.angle;updateEntities(es,nav,blocks,.5);assert.equal(h.x,x);assert.equal(h.y,y);assert.notEqual(h.angle,angle);const indices=new Set();for(let i=0;i<3000;i++){updateEntities(es,nav,blocks,.1);indices.add(h.index);for(const e of es.filter(e=>e.kind!=='camera'))assert.ok(!blocks.some(b=>overlap(e.x,e.y,b,8)),e.task+' crossed a solid');}assert.equal(indices.size,4)});
 test('a door opening permits an off-route investigation and a return to the task',()=>{const blocks=[{x:240,y:0,w:24,h:2400,open:false}],nav=navigation(blocks);assert.equal(nav.path({x:180,y:120},{x:300,y:120}),null);blocks[0].open=true;const openNav=navigation(blocks),h={id:0,kind:'human',task:'Test',x:180,y:120,speed:60,route:[{x:180,y:120,wait:1,face:0},{x:180,y:240,wait:1,face:0}],index:0,state:'wait',wait:1,angle:0,frozen:0,cooldown:0,walk:0};assert.equal(investigate([h],openNav,{x:300,y:120}),1);let search=false,returned=false;for(let i=0;i<250;i++){updateEntities([h],openNav,blocks,.1);if(h.state==='search')search=true;if(search&&h.state==='wait')returned=true;}assert.ok(search&&returned)});
 test('Scared Stiff consumes one charge, cancels that sighting and freezes humans and CCTV',()=>{for(const kind of ['human','camera']){const e={kind,x:100,y:100,angle:0,range:200,half:.7,frozen:0},effects={stiff:1},target={x:150,y:100};const r=resolveSightings([e],target,[],effects,false,()=>{});assert.equal(r.danger,false);assert.ok(r.blocked);assert.equal(effects.stiff,0);assert.equal(e.frozen,8);assert.equal(sees(e,target,[]),false);e.frozen=0;assert.equal(resolveSightings([e],target,[],effects,false,()=>{}).danger,true)}});
 test('cat sighting alerts once per cooldown and never ends a run; invisibility blocks all witnesses',()=>{const cat={kind:'cat',x:100,y:100,angle:0,range:150,half:1,frozen:0,cooldown:0};let alerts=0;const target={x:140,y:100},effects={stiff:0};assert.equal(resolveSightings([cat],target,[],effects,false,()=>alerts++).danger,false);resolveSightings([cat],target,[],effects,false,()=>alerts++);assert.equal(alerts,1);cat.cooldown=0;resolveSightings([cat],target,[],effects,true,()=>alerts++);assert.equal(alerts,1)});
-test('mystery tokens reveal only on collection and can grant temporary effects or Echo bundles',()=>{const nav=navigation([]),tokens=createTokens(nav),effects={boost:0,stiff:0,energy:.1},run={echoes:0,invisibility:1};for(const reward of ['speed','refill','stiff','echo25','echo50']){const token=tokens.find(t=>t.reward===reward);assert.ok(token);assert.equal(collectTokens(tokens,token,effects,run,3).length,1);assert.equal(collectTokens(tokens,token,effects,run,3).length,0)}assert.equal(effects.boost,10);assert.equal(effects.energy,3);assert.equal(effects.stiff,1);assert.ok(run.echoes>=75);assert.ok(createTokens(nav).every(t=>!t.collected))});
+test('collectible progression has enough free upgrades, five respawning Scared Stiff ghosts, and sequential Phase caps',()=>{
+ const nav={nearest:p=>({...p}),path:()=>[{x:0,y:0}]},tokens=createTokens(nav,0);
+ assert.equal(tokens.filter(t=>t.reward==='speedTier').length,6);
+ assert.equal(tokens.filter(t=>t.reward==='invisibilityTier').length,7);
+ assert.equal(tokens.filter(t=>t.reward==='phaseTier').length,7);
+ assert.equal(tokens.filter(t=>t.reward==='stiff').length,5);
+ const effects={boost:0,stiff:0,energy:0},run={echoes:0,speed:0,invisibility:0,phase:0};
+ const phase=tokens.find(t=>t.reward==='phaseTier');
+ let events=collectTokens(tokens,phase,effects,run,0,1,0);
+ assert.equal(events[0].kind,'phaseLocked');assert.equal(run.phase,0);assert.equal(phase.collected,false);
+ events=collectTokens(tokens,phase,effects,run,0,2,1);
+ assert.equal(events[0].kind,'phase');assert.equal(run.phase,1);assert.equal(phase.collected,true);
+ for(const token of tokens.filter(t=>t.reward==='speedTier'))collectTokens(tokens,token,effects,run,0,3,7);
+ assert.equal(run.speed,6);
+ for(const token of tokens.filter(t=>t.reward==='invisibilityTier'))collectTokens(tokens,token,effects,run,20,4,7);
+ assert.equal(run.invisibility,7);assert.ok(effects.energy>0);
+ const stiff=tokens.find(t=>t.reward==='stiff');collectTokens(tokens,stiff,effects,run,20,10,7);
+ assert.equal(effects.stiff,1);assert.equal(stiff.collected,true);assert.equal(stiff.respawnAt,45);
+ updateTokenRespawns(tokens,44.9);assert.equal(stiff.collected,true);
+ updateTokenRespawns(tokens,45);assert.equal(stiff.collected,false);
+ effects.stiff=3;events=collectTokens(tokens,stiff,effects,run,20,46,7);assert.equal(events[0].kind,'stiffFull');assert.equal(stiff.collected,false);
+});
 
 test('later levels add witnesses and speed up human traffic',()=>{const counts=[];const speeds=[];for(let level=0;level<5;level++){const {blocks}=generateWorld(2717,level),nav=navigation(blocks),es=createEntities(nav,level);counts.push(es.length);speeds.push(Math.min(...es.filter(e=>e.kind==='human').map(e=>e.speed)));}for(let i=1;i<counts.length;i++){assert.ok(counts[i]>=counts[i-1]);assert.ok(speeds[i]>speeds[i-1]);}});
 
