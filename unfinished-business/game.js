@@ -110,8 +110,7 @@ function startMausoleum(){
  people=[mausoleumGuard];
  tokens=[
   {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
-  {id:1,x:335,y:420,reward:'echo',amount:28,collected:false,fullNoticeAt:0},
-  {id:2,x:145,y:355,reward:'stiff',collected:false,fullNoticeAt:0,respawnSeconds:0}
+  {id:1,x:145,y:355,reward:'stiff',collected:false,fullNoticeAt:0,respawnSeconds:0}
  ];
  mausoleumTask={id:'tutorial-business',index:0,x:300,y:190,title:'Unfinished Business',hint:'Finish what is keeping you here.',complete:false};
  run=newRun(0);run.tasks=null;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};phaseActive=false;phaseExit=null;tutorialHighlight='';t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
@@ -140,14 +139,24 @@ function updateMausoleum(dt){
  }
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
+ if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){
+  run.explored=(run.explored||0)+1;
+  const bands=Math.floor(run.explored/6),previous=run.awardedBands||0;
+  if(bands>previous){
+   const gained=(bands-previous)*5;run.awardedBands=bands;run.echoes=(run.echoes||0)+gained;tone(520,.035);
+   const price=phaseCost(run),justAffordable=run.echoes>=price&&run.echoes-gained<price;
+   if(run.echoes===5&&run.phase===0){
+    showGamePopup({kind:'echo',title:'These are Echoes!',detail:'You earn Echoes by exploring new ground. Keep moving around to build enough to unlock Phase.',icon:pickupIconSvg('echo'),onClose:()=>updateSkills()});
+   }
+   if(justAffordable&&run.phase===0)tutorialHighlight='upgrade';
+   updateSkills();
+  }
+ }
  for(const token of tokens){
   if(token.collected||Math.hypot(token.x-ghost.x,token.y-ghost.y)>25)continue;
   token.collected=true;
   if(token.reward==='speedTier'){run.speed=1;announcePickup({kind:'speed'});tone(760,.1)}
-  else if(token.reward==='echo'){
-   run.echoes+=(token.amount||28);tutorialHighlight='upgrade';updateSkills();tone(640,.12);
-   showGamePopup({kind:'echo',title:'This is an Echo!',detail:'Echoes unlock stronger Phase levels. When you have enough, the upgrade button appears above PHASE.',icon:pickupIconSvg('echo'),onClose:()=>{tutorialHighlight='upgrade';updateSkills()}});
-  }else{effects.stiff=1;updateTokenInventory();announcePickup({kind:'stiff'});tone(880,.12)}
+  else{effects.stiff=1;updateTokenInventory();announcePickup({kind:'stiff'});tone(880,.12)}
   break;
  }
  if(uiPopupOpen)return;
@@ -166,8 +175,11 @@ function updateMausoleum(dt){
   showGamePopup({kind:'warning',title:'Spotted!',detail:'Being seen sends you back to the start of your journey!',icon:guardIconSvg()});
  }
  if(ghost.y<22){
-  if(found===3&&mausoleumTask?.complete){markMausoleumSeen();phaseActive=false;closeGamePopup();start();return}
-  ghost.y=34;note(mausoleumTask?.complete?'FIND THE THREE GHOSTLY PICKUPS':'FINISH YOUR UNFINISHED BUSINESS FIRST',1.2);
+  if(found===2&&mausoleumTask?.complete&&run.phase>=1){markMausoleumSeen();phaseActive=false;closeGamePopup();start();return}
+  ghost.y=34;
+  if(!mausoleumTask?.complete)note('FINISH YOUR UNFINISHED BUSINESS FIRST',1.2);
+  else if(run.phase<1)note('EXPLORE TO EARN ECHOES AND UNLOCK PHASE',1.4);
+  else note('FIND THE TWO GHOSTLY PICKUPS',1.2);
  }
 }
 function buildWorldSafely(level){
@@ -524,7 +536,7 @@ function update(dt){
  }
  for(const event of collectTokens(tokens,ghost,effects,run,t)){
   if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
-  if(event.kind==='stiff')tone(860,.15);else if(event.kind==='echo')tone(620,.08);else tone(740,.1);
+  if(event.kind==='stiff')tone(860,.15);else tone(740,.1);
   updateSkills();updateTokenInventory();
  }
  checkObjectives();
@@ -539,7 +551,7 @@ function update(dt){
 }
 
 function drawToken(token){
- const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
+ const kind=token.reward==='stiff'?'stiff':'speed';
  const x=token.x,y=token.y,bob=reduced?0:Math.round(Math.sin(t*4+token.id)*3);ctx.save();ctx.translate(x,y+bob);
  if(kind==='echo'){
   const pulse=reduced?0:Math.round(Math.sin(t*4+token.id)*2);
@@ -655,7 +667,7 @@ function drawFullMapCanvas(){
   rr(bx,by,bw,bh,col);
  }
  for(const token of tokens)if(!token.collected){
-  const px=Math.round(pad+token.x*sx),py=Math.round(pad+token.y*sy),kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
+  const px=Math.round(pad+token.x*sx),py=Math.round(pad+token.y*sy),kind=token.reward==='stiff'?'stiff':'speed';
   if(kind==='speed'){rr(px-5,py-2,5,2,'#9df0cf');rr(px+1,py-2,4,4,'#e8fff6')}
   else if(kind==='phase'){rr(px-3,py-3,7,7,'#f4f7ff');rr(px-1,py-1,3,3,'#263743')}
   else{rr(px-3,py-3,7,6,'#f0a43c');rr(px-8,py-1,5,2,'#f0a43c');rr(px+4,py-1,5,2,'#f0a43c')}
@@ -722,7 +734,7 @@ function drawMap(){
  // Pickups use distinct miniature glyphs instead of identical squares.
  for(const token of tokens)if(!token.collected){
   const px=Math.round(x+token.x*sx),py=Math.round(y+token.y*sy);
-  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
+  const kind=token.reward==='stiff'?'stiff':'speed';
   drawMiniMarker(px,py,kind,token.id);
  }
  // Unfinished Business targets: bright animated multicolour beacons.
