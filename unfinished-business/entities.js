@@ -121,18 +121,18 @@ export function createTokens(nav,level=0){
  };
  // Fill reachable public ground first so the player can always begin progression.
  for(const [x,y] of preferred)addPoint(x+(safeLevel%2)*18,y-(safeLevel%3)*14,true);
- for(let y=210;y<WORLD.height-150&&pool.length<25;y+=170)for(let x=180;x<WORLD.width-150&&pool.length<25;x+=190)addPoint(x+((y/170|0)%2)*55,y,true);
+ for(let y=210;y<WORLD.height-150&&pool.length<18;y+=170)for(let x=180;x<WORLD.width-150&&pool.length<18;x+=190)addPoint(x+((y/170|0)%2)*55,y,true);
  // Then fill any remaining slots; later Phase tiers can reach these if the map isolates them.
- for(const [x,y] of preferred)if(pool.length<25)addPoint(x,y,false);
- for(let y=180;y<WORLD.height-120&&pool.length<25;y+=140)for(let x=160;x<WORLD.width-120&&pool.length<25;x+=155)addPoint(x,y,false);
+ for(const [x,y] of preferred)if(pool.length<18)addPoint(x,y,false);
+ for(let y=180;y<WORLD.height-120&&pool.length<18;y+=140)for(let x=160;x<WORLD.width-120&&pool.length<18;x+=155)addPoint(x,y,false);
  const rewards=[
-  'phaseTier','speedTier','invisibilityTier','stiff',
-  'phaseTier','speedTier','invisibilityTier',
-  'phaseTier','stiff','speedTier','invisibilityTier',
-  'phaseTier','speedTier','invisibilityTier','stiff',
-  'phaseTier','invisibilityTier','speedTier',
-  'phaseTier','stiff','invisibilityTier',
-  'phaseTier','speedTier','invisibilityTier','stiff'
+  'phaseTier','speedTier','stiff',
+  'phaseTier','speedTier','stiff',
+  'phaseTier','speedTier',
+  'phaseTier','stiff','speedTier',
+  'phaseTier','speedTier','stiff',
+  'phaseTier','speedTier',
+  'phaseTier','stiff','speedTier'
  ];
  return rewards.map((reward,id)=>{
   const n=pool[id]||nav.nearest({x:spawn.x+((id%5)-2)*48,y:spawn.y-Math.floor(id/5)*56})||spawn;
@@ -146,7 +146,7 @@ export function updateTokenRespawns(tokens,now=0){
   }
  }
 }
-export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0){
+export function collectTokens(tokens,ghost,effects,run,now=0){
  const events=[];
  for(const token of tokens){
   if(token.collected||distance(token,ghost)>24)continue;
@@ -161,9 +161,6 @@ export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0){
    events.push({kind:k,title:label,detail:'MAX',token});return false;
   };
   if(token.reward==='speedTier')upgrade('speed','Speed');
-  else if(token.reward==='invisibilityTier'){
-   if(upgrade('invisibility','Vanish'))effects.energy=maxEnergy>0?Math.max(maxEnergy,1.4+(run.invisibility-1)*.85):1.4+(run.invisibility-1)*.85;
-  }
   else if(token.reward==='phaseTier')upgrade('phase','Phase');
   else if(token.reward==='stiff'){
    effects.stiff=Math.min(3,effects.stiff+1);token.respawnAt=now+(token.respawnSeconds||35);
