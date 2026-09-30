@@ -1,12 +1,12 @@
-import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './model.js?v=20260930f';
-import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930f';
-import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930f';
-import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930f';
-import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930f';
+import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './model.js?v=20260930g';
+import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930g';
+import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930g';
+import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930g';
+import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930g';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
-let mode='menu',stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},seen=0,spawnSafe=true,phaseVisual=0,mausoleumActive=false,mausoleumExit=null,audio=null,saveFailed=false;
+let mode='menu',stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},seen=0,spawnSafe=true,phaseVisual=0,mausoleumActive=false,mausoleumExit=null,mausoleumGuard=null,uiPopupOpen=false,popupCloseAction=null,audio=null,saveFailed=false;
 let pickupTimers=[];
 const LEVEL_TASKS=[
  [
@@ -53,7 +53,7 @@ function resetInput(){stickPointer=null;input={x:0,y:0};keys.clear();$('nub').st
 function footer(){return `<div class="footer"><a href="../index.html"><img src="../shared/assets/GameBox%20back%20button.png" alt="Game Box"></a><button class="sound" id="sound">SOUND ${p.sound?'ON':'OFF'}</button></div>`}
 function show(html){resetInput();$('overlay').hidden=false;$('overlay').innerHTML=`<div class="menu">${html}</div>`;document.querySelectorAll('[data-start]').forEach(b=>b.onclick=beginLevel);$('sound')?.addEventListener('click',()=>{p.sound=!p.sound;save();$('sound').textContent=`SOUND ${p.sound?'ON':'OFF'}`});}
 function home(){
- mode='menu';mausoleumActive=false;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
+ mode='menu';mausoleumActive=false;uiPopupOpen=false;$('pickupAnnouncement').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;
  show(`<canvas class="menuPixelScene" id="menuScene" width="320" height="132"></canvas><span class="eyebrow">A LITTLE GHOST. A LONG WAY HOME.</span><h1>Unfinished<br><em>Business</em></h1><p class="subtitle">Every place remembers something you left unfinished.</p><div class="record">LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}</div><button class="primary" data-start>${p.runs?'Start this level':'Begin your escape'} →</button>${p.unlockedLevel>0?'<button class="secondary" id="levels">Choose level</button>':''}<button class="secondary" id="help">How to play</button>${footer()}`);
  drawMenuScene();$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;
 }
@@ -95,7 +95,7 @@ const MAUSOLEUM_KEY='gamebox.unfinished-business.mausoleum-intro.v1';
 function mausoleumSeen(){try{return localStorage.getItem(MAUSOLEUM_KEY)==='1'}catch{return !!p.tutorialSeen}}
 function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}p.tutorialSeen=true;save();}
 function startMausoleum(){
- mode='play';mausoleumActive=true;
+ mode='play';mausoleumActive=true;uiPopupOpen=false;
  const add=(x,y,w,h,kind='wall',phase=99,open=false)=>({x,y,w,h,kind,phase,open});
  world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:54},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4}]};
  blocks=[
@@ -105,35 +105,50 @@ function startMausoleum(){
   add(116,288,72,34,'stone'),add(292,288,72,34,'stone'),
   add(206,342,68,110,'stone')
  ];
- mausoleumExit=blocks[5];nav=navigation(blocks);people=[];scenery=null;
+ mausoleumExit=blocks[5];nav=navigation(blocks);scenery=null;
+ mausoleumGuard={id:900,kind:'human',task:'Door guard',x:240,y:128,speed:0,angle:Math.PI/2,half:.58,range:178,frozen:0,state:'wait',wait:999,cooldown:0,walk:0,tint:'#657884'};
+ people=[mausoleumGuard];
  tokens=[
   {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
   {id:1,x:335,y:420,reward:'phaseTier',collected:false,fullNoticeAt:0},
   {id:2,x:145,y:355,reward:'stiff',collected:false,fullNoticeAt:0,respawnSeconds:0}
  ];
  run=newRun(0);run.tasks=null;run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
- $('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=true;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;
+ $('overlay').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=false;$('controls').hidden=true;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;
  $('chapter').textContent='THE MAUSOLEUM';$('status').textContent='FIND THE 3 TOKENS';
- note('FIND THE 3 TOKENS',1.8);tone(320);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>showGamePopup({kind:'warning',title:'Watch the guard!',detail:'People can see ghosts! Stay out of their sight.',icon:guardIconSvg()})));
+ tone(320);
 }
 function announceMausoleum(kind,text){
  announcePickup({kind,title:kind==='speed'?'SPEED':kind==='phase'?'PHASE':'SCARED STIFF',detail:text});
 }
 function updateMausoleum(dt){
  t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);
+ if(uiPopupOpen)return;
+ if(mausoleumGuard?.frozen>0)mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
  for(const token of tokens){
   if(token.collected||Math.hypot(token.x-ghost.x,token.y-ghost.y)>25)continue;
   token.collected=true;
-  if(token.reward==='speedTier'){run.speed=1;announceMausoleum('speed','Collect Speed tokens to move faster!');tone(760,.1)}
-  else if(token.reward==='phaseTier'){run.phase=1;announceMausoleum('phase','Collect Phase tokens to pass through stronger walls!');tone(820,.1)}
-  else {effects.stiff=1;announceMausoleum('stiff','Collect Scared Stiff tokens to freeze anyone who spots you!');tone(880,.12)}
+  if(token.reward==='speedTier'){run.speed=1;announcePickup({kind:'speed'});tone(760,.1)}
+  else if(token.reward==='phaseTier'){run.phase=1;announcePickup({kind:'phase'});tone(820,.1)}
+  else {effects.stiff=1;announcePickup({kind:'stiff'});tone(880,.12)}
+  break;
  }
  const found=tokens.filter(q=>q.collected).length;
  $('status').textContent=`${found} / 3 TOKENS`;
- if(found===3&&!mausoleumExit.open){mausoleumExit.open=true;note('THE DOOR OPENS',1.5);tone(920,.18)}
- if(found===3&&ghost.y<74){markMausoleumSeen();start(false);return}
+ if(found===3&&!mausoleumExit.open){mausoleumExit.open=true}
+ if(uiPopupOpen)return;
+ const sight=resolveSightings(people,ghost,blocks,effects,()=>0);
+ if(sight.blocked){
+  seen=0;updateTokenInventory();tone(180,.22);
+  showGamePopup({kind:'stiff',title:'Scared Stiff saved you!',detail:'It freezes the person who spotted you. Move while they are frozen!'});
+ }else if(sight.danger){
+  ghost.x=240;ghost.y=248;lastSafe={...ghost};seen=0;resetInput();
+  showGamePopup({kind:'warning',title:'Spotted!',detail:'People can catch ghosts. Keep out of their sight!',icon:guardIconSvg()});
+ }
+ if(found===3&&ghost.y<74){markMausoleumSeen();closeGamePopup();start();return}
 }
 function buildWorldSafely(level){
  const generated=generateWorld(p.worldSeed,level);
@@ -212,10 +227,7 @@ function prepareLevelTasks(){
 }
 function completedTaskCount(){return (run.tasks||[]).filter(t=>t.complete).length}
 function availableTasks(){return (run.tasks||[]).filter(t=>!t.complete);}
-function taskState(task){
- if(task.complete)return 'complete';
- return (task.requiredPhase||0)<=run.phase?'available':'locked';
-}
+function taskState(task){return task.complete?'complete':'available';}
 function updateTaskButton(){
  const button=$('taskButton');if(!button)return;
  if(!run.tasks||mode==='menu'){button.hidden=true;return}
@@ -225,20 +237,18 @@ function updateTaskButton(){
 }
 function openTaskBoard(initial=false){
  if(!run.tasks)return;
- mode='tasks';resetInput();$('taskButton').hidden=true;
+ resetInput();uiPopupOpen=true;$('taskButton').hidden=true;
  const done=completedTaskCount(),items=run.tasks.map(task=>{
-  const state=taskState(task),req=task.requiredPhase||0;
-  const detail=state==='complete'?'Done':state==='locked'
-   ?`PHASE ${req} REQUIRED`
-   :(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} paces · ${task.hint}`;})();
-  return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="${state==='available'?'taskDistance':''}">${detail}</small></div>`;
+  const state=task.complete?'complete':'available';
+  const detail=state==='complete'?'DONE':(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} PACES · ${task.hint}`;})();
+  return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="taskDistance">${detail}</small></div>`;
  }).join('');
- const heading=`LEVEL ${p.level+1} · ${LEVELS[p.level].name.toUpperCase()}`;
- show(`<div class="taskBoard"><div class="taskBoardHead"><div><span class="eyebrow">${heading}</span><h2>Unfinished Business</h2></div><button class="taskClose" id="taskClose" aria-label="Close tasks">×</button></div><div class="taskProgress">${done} / 5</div><div class="taskList">${items}</div></div>`);
- $('taskClose').onclick=closeTaskBoard;
+ const panel=$('taskPopup');panel.hidden=false;
+ panel.innerHTML=`<button class="mapPopupClose" id="taskPopupClose" aria-label="Close tasks">×</button><span class="mapPopupKicker">YOUR UNFINISHED BUSINESS</span><strong class="mapPopupTitle">${done} / 5 COMPLETE</strong><div class="taskList">${items}</div>`;
+ $('taskPopupClose').onclick=closeTaskBoard;
 }
 function closeTaskBoard(){
- mode='play';$('overlay').hidden=true;resetInput();updateTaskButton();updateTokenInventory();updateSkills();
+ $('taskPopup').hidden=true;uiPopupOpen=false;resetInput();updateTaskButton();updateTokenInventory();
 }
 function currentObjective(){return null}
 function objectiveDirection(dx,dy){const a=Math.atan2(dy,dx),oct=Math.round(a/(Math.PI/4));return ['→','↘','↓','↙','←','↖','↑','↗'][((oct%8)+8)%8];}
@@ -283,15 +293,16 @@ function checkObjectives(){
 }
 
 function start(){
- mode='play';mausoleumActive=false;
+ mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
- updateObjectiveHud();openTaskBoard(true);tone(320);
+ run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
+ updateObjectiveHud();tone(320);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>openTaskBoard(true)));
 }
 function finish(win=false){if(mode!=='play')return;$('objectiveHud').hidden=true;$('tokenInventory').hidden=true;$('taskButton').hidden=true;p.runs++;if(win){if(p.level<4){p.unlockedLevel=Math.max(p.unlockedLevel,p.level+1);p.level++;}else p.won=true;}save();tone(win?880:160,.3);shop(true,win);}
 function pause(){if(mode!=='play')return;save();mode='pause';show(`<span class="eyebrow">TAKE A BREATHER</span><h2>Time stands still.</h2><button class="primary" id="resume">Keep going</button><button class="secondary" id="end">Return home</button>${footer()}`);$('resume').onclick=()=>{mode='play';$('overlay').hidden=true;resetInput()};$('end').onclick=()=>{mode='play';finish()};}
-$('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play')openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+$('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play'&&!uiPopupOpen)openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)}
 function prop(b){drawSceneryProp(ctx,b);if(!b.open&&b.phase<99&&Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
@@ -321,19 +332,36 @@ function pickupIconSvg(kind){
  const bang=stiff?'<path d="M25 3h2v6h-2zm0 8h2v2h-2z" fill="#fff1b0"/>':'';
  return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
 }
-function announcePickup(event){
+function guardIconSvg(){
+ return '<svg viewBox="0 0 32 32" shape-rendering="crispEdges" aria-hidden="true"><rect x="11" y="3" width="10" height="5" fill="#53606b"/><rect x="9" y="7" width="14" height="9" fill="#d5b18e"/><rect x="11" y="10" width="2" height="2" fill="#18242b"/><rect x="19" y="10" width="2" height="2" fill="#18242b"/><rect x="8" y="16" width="16" height="11" fill="#657884"/><rect x="5" y="18" width="4" height="8" fill="#657884"/><rect x="23" y="18" width="4" height="8" fill="#657884"/><rect x="10" y="27" width="5" height="5" fill="#27353d"/><rect x="18" y="27" width="5" height="5" fill="#27353d"/><rect x="14" y="18" width="4" height="4" fill="#e2ca79"/></svg>';
+}
+function showGamePopup({kind='info',title='',detail='',icon='',onClose=null}){
  const box=$('pickupAnnouncement');if(!box)return;
- for(const timer of pickupTimers)clearTimeout(timer);pickupTimers=[];
- box.hidden=false;box.className=`pickupAnnouncement ${event.kind}`;$('pickupIcon').innerHTML=pickupIconSvg(event.kind);$('pickupTitle').textContent=event.title;$('pickupDetail').textContent=event.detail;
- requestAnimationFrame(()=>box.classList.add('show'));
- pickupTimers.push(setTimeout(()=>box.classList.add(event.kind==='stiff'&&!mausoleumActive?'toInventory':'fade'),720));
- pickupTimers.push(setTimeout(()=>{box.hidden=true;box.className='pickupAnnouncement'},1400));
+ resetInput();uiPopupOpen=true;popupCloseAction=onClose;
+ box.hidden=false;box.className=`pickupAnnouncement mapPopup ${kind} show`;
+ $('pickupIcon').innerHTML=icon||pickupIconSvg(kind);
+ $('pickupTitle').textContent=title;
+ $('pickupDetail').textContent=detail;
+}
+function closeGamePopup(){
+ const box=$('pickupAnnouncement');box.hidden=true;box.className='pickupAnnouncement mapPopup';
+ uiPopupOpen=false;resetInput();
+ const fn=popupCloseAction;popupCloseAction=null;if(fn)fn();
+}
+$('pickupClose').onclick=closeGamePopup;
+function announcePickup(event){
+ const copy={
+  speed:['This is a Speed ghost!','Collect these to increase your ghostly SPEED!'],
+  phase:['This is a Phase ghost!','Collect these to PHASE through stronger walls!'],
+  stiff:['This is a Scared Stiff ghost!','Collect these to freeze anyone who spots you!']
+ }[event.kind]||[event.title,event.detail];
+ showGamePopup({kind:event.kind,title:copy[0],detail:copy[1]});
 }
 
 
 function updateSkills(){$('abilityBar').innerHTML='';$('controls').hidden=true;}
 $('game').addEventListener('pointerdown',e=>{
- if(mode!=='play'||stickPointer!==null||e.target.closest('button,a,#overlay'))return;
+ if(mode!=='play'||uiPopupOpen||stickPointer!==null||e.target.closest('button,a,#overlay,.mapPopup'))return;
  e.preventDefault();stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};const r=$('game').getBoundingClientRect();$('stick').style.left=`${e.clientX-r.left}px`;$('stick').style.top=`${e.clientY-r.top}px`;$('stick').hidden=false;$('game').setPointerCapture(e.pointerId);moveStick(e);
 });
 function moveStick(e){if(e.pointerId!==stickPointer)return;const dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y,len=Math.hypot(dx,dy),s=Math.min(1,len/42);input={x:len?dx/len*s:0,y:len?dy/len*s:0};$('nub').style.transform=`translate(${input.x*30}px,${input.y*30}px)`;}
@@ -369,13 +397,13 @@ function move(dx,dy,dt){
 }
 function update(dt){
  if(mausoleumActive){updateMausoleum(dt);return}
- t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
+ t+=dt;if(uiPopupOpen)return;phaseVisual=Math.max(0,phaseVisual-dt);effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
  for(const event of collectTokens(tokens,ghost,effects,run,t)){
   if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
   if(event.kind==='stiff'){announcePickup(event);tone(860,.15)}
-  else{note(`${event.title.toUpperCase()} · ${event.detail}`,1.2);tone(740,.1)}
+  else{announcePickup(event);tone(740,.1)}
   updateTokenInventory();
  }
  checkObjectives();
