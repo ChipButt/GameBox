@@ -206,3 +206,46 @@ h1{line-height:.95}h1 em{font-style:normal}
 .taskPopup .taskItem small{display:block;margin-top:4px;color:#aebfb2;font-size:9px;line-height:1.35}
 .taskPopup .taskItem.complete{opacity:.55}
 .taskPopup .taskItem.complete strong{text-decoration:line-through}
+
+
+/* Minimal in-game HUD */
+#hud #status{display:none!important}
+#tokenInventory{
+  right:16px;
+  top:calc(74px + env(safe-area-inset-top));
+  min-width:0;
+  width:46px;
+  height:48px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  overflow:visible;
+}
+#tokenInventory .tokenInvIcon{
+  position:absolute;
+  left:0;
+  top:0;
+  width:38px;
+  height:38px;
+  transform:none;
+  filter:drop-shadow(0 3px 2px #061219aa);
+}
+#tokenInventory .tokenInvIcon svg{width:38px;height:38px}
+#tokenInventory small{display:none}
+#tokenInventory strong{
+  position:absolute;
+  right:-1px;
+  bottom:0;
+  min-width:20px;
+  padding:1px 3px;
+  text-align:center;
+  font:950 10px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:#fff0c5;
+  background:#101a20e8;
+  border:1px solid #9a7a45;
+  box-shadow:2px 2px 0 #061219;
+}
+#tokenInventory.empty{opacity:.38}
+@media(max-height:650px){#tokenInventory{top:calc(62px + env(safe-area-inset-top));right:12px}}
