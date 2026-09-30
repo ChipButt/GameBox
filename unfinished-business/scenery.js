@@ -54,6 +54,20 @@ export function createScenery(world,makeCanvas=()=>document.createElement('canva
  return floor;
 }
 export function drawSceneryProp(c,b){const{x,y,w,h,kind}=b;
+ if(b.open&&b.entrance){
+  // Recessed threshold and jambs frame a genuinely clear walking opening.
+  rect(c,x,y,w,h,'#b8bea52b');
+  if(w>=h){
+   rect(c,x,y,5,h,'#c8b38b');rect(c,x+w-5,y,5,h,'#c8b38b');
+   rect(c,x+7,y+h-4,w-14,3,'#d5c6a366');
+   rect(c,x+6,y+3,4,h-8,'#805f43');
+  }else{
+   rect(c,x,y,w,5,'#c8b38b');rect(c,x,y+h-5,w,5,'#c8b38b');
+   rect(c,x+w-4,y+7,3,h-14,'#d5c6a366');
+   rect(c,x+3,y+6,w-8,4,'#805f43');
+  }
+  return;
+ }
  if(b.open){rect(c,x,y,w,h,'#b8bea512');rect(c,x,y,w,2,'#b1bca355');return}
  // Short contact shadows: every solid still visibly matches its collision footprint.
  rect(c,x+5,y+6,w,h,'#0716224d');rect(c,x+2,y+3,w,h,'#07162233');
@@ -154,3 +168,4 @@ export function drawCemeteryExit(c,goal={x:1320,y:72},open=false){
   rect(c,x-100,y+55,200,6,'#182a31');
  }
 }
+

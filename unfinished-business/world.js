@@ -110,14 +110,52 @@ function variantLayout(level,add,decor){
  }
  for(const [x,y] of [[940,440],[940,1150],[940,1800],[1820,1410],[700,720],[2050,1100],[1450,500],[1750,2200]])decor.push({x,y,kind:'lamp'});
 }
+// Public entrances remain walkable with no powers. Closed gates are optional
+// shortcuts (apart from the cemetery story gate), never a wall painted as a door.
+function addEntrances(level,add){
+ const entrances=[
+  [[1840,1456,120,24],[1870,1620,120,24]],
+  [[360,2228,120,22],[360,1600,120,22],[1640,1308,120,22],
+   [1320,980,22,120],[1660,2178,120,22],[1570,1850,22,120],[1810,1940,18,120],[2020,1940,18,120],[1810,1410,18,120]],
+  [[910,928,120,22],[1315,928,120,22],[1720,928,120,22],
+   [910,1298,120,22],[1315,1298,120,22],[1720,1298,120,22]],
+  // Public crossings alongside the optional gated shortcuts.
+  [[1080,1450,120,100],[800,690,120,120],[890,1080,22,120],[1510,1080,22,120],[2150,1080,22,120]],
+  // Each courtyard has a pedestrian entrance as well as phase shortcuts.
+  [[800,1986,120,24],[1000,1786,120,24],[1200,1586,120,24]]
+ ];
+ for(const [x,y,w,h] of entrances[level]){
+  const doorway=add(x,y,w,h,'door',2);doorway.open=true;doorway.entrance=true;
+ }
+}
+function cutDoorways(blocks){
+ const doors=blocks.filter(b=>b.kind==='door'||b.kind==='gate');
+ let result=blocks;
+ for(const d of doors){
+  result=result.flatMap(b=>{
+   if(b===d||!(b.kind==='wall'||b.kind==='water'||(d.entrance&&!b.entrance&&(b.kind==='door'||b.kind==='gate'))))return [b];
+   const x=Math.max(b.x,d.x),y=Math.max(b.y,d.y),right=Math.min(b.x+b.w,d.x+d.w),bottom=Math.min(b.y+b.h,d.y+d.h);
+   if(x>=right||y>=bottom)return [b];
+   // Non-overlapping pieces preserve the original wall's material tier.
+   return [[b.x,b.y,b.w,y-b.y],[b.x,bottom,b.w,b.y+b.h-bottom],
+    [b.x,y,x-b.x,bottom-y],[right,y,b.x+b.w-right,bottom-y]]
+    .filter(([, ,w,h])=>w>0&&h>0).map(([x,y,w,h])=>({...b,x,y,w,h}));
+  });
+ }
+ // An explicitly open public entrance wins over a pre-existing closed gate.
+ return result.filter(b=>!doors.some(d=>d.entrance&&b!==d&&
+  (b.kind==='door'||b.kind==='gate')&&b.x>=d.x&&b.y>=d.y&&b.x+b.w<=d.x+d.w&&b.y+b.h<=d.y+d.h));
+}
 export function generateWorld(seed=2717,level=0){
  level=Math.max(0,Math.min(4,level|0));let state=(seed+level*982451653)>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
  const blocks=[],decor=[],regions=regionsForLevel(level),info=levelInfo(level);
  const add=(x,y,w,h,kind='wall',phase=99)=>{const b={x,y,w,h,kind,phase,open:false};blocks.push(b);return b};
  add(0,0,WORLD.width,24);add(0,0,24,WORLD.height);add(0,WORLD.height-24,WORLD.width,24);add(WORLD.width-24,0,24,WORLD.height);
  if(level===0)baseLayout(add,decor,random);else variantLayout(level,add,decor);
+ addEntrances(level,add);
  for(const r of regions.filter(r=>r.kind===2||r.kind===4)){
   for(let i=0;i<8+level*2;i++){const x=r.x+45+Math.floor(random()*Math.max(60,r.w-140)),y=r.y+45+Math.floor(random()*Math.max(60,r.h-140));
+   if(Math.hypot(x+25-info.spawn.x,y+25-info.spawn.y)<100||Math.hypot(x+25-info.ferry.x,y+25-info.ferry.y)<100)continue;
    if(blocks.some(b=>x<b.x+b.w+36&&x+50>b.x-36&&y<b.y+b.h+36&&y+50>b.y-36))continue;
    add(x,y,40+Math.floor(random()*20),40+Math.floor(random()*20),r.kind===2?'tree':'stone');
   }
@@ -137,7 +175,8 @@ export function generateWorld(seed=2717,level=0){
    }
   }
  }
- return {level,name:info.name,difficulty:info.difficulty,spawn:{...info.spawn},ferry:{...info.ferry},blocks,decor,regions};
+ return {level,name:info.name,difficulty:info.difficulty,spawn:{...info.spawn},ferry:{...info.ferry},blocks:cutDoorways(blocks),decor,regions};
 }
 export const cellId=(x,y)=>x<0||y<0||x>=WORLD.width||y>=WORLD.height?-1:Math.floor(y/WORLD.cell)*Math.ceil(WORLD.width/WORLD.cell)+Math.floor(x/WORLD.cell);
 export function discover(visited,x,y){const id=cellId(x,y);if(id<0||visited.has(id))return false;visited.add(id);return true;}
+

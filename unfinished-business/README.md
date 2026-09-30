@@ -53,3 +53,10 @@ Run `node --test unfinished-business/model.test.mjs unfinished-business/entities
 ## Directional character animation
 
 `characters.js` draws humans and black cats in eight headings. Human silhouettes, faces, hair, clothing and limb placement change with facing; cats rotate their body, head, tail and four-paw gait. Walk cycles use distance travelled so animation speed follows movement and stops during pauses. Humans perform small note-checking, watch-checking and hand-work gestures while waiting; cats groom and flick their tails. Scared Stiff stops animation clocks. Reduced-motion mode suppresses idle motion and body bobbing. Detection continues to use the entity's actual angle; only rendering changes.
+
+
+### Map access checks
+
+Public doorways are actual gaps in collision geometry, with visible thresholds and jambs. Every level has a zero-Phase walking route from its spawn to public interiors and task locations. Phase doors remain optional shortcuts; the cemetery exit still opens through task completion. Door and gate apertures cut the underlying wall instead of being drawn over a solid block.
+
+Run `node --test unfinished-business/world.test.mjs` to check all five maps across four seeds, including spawn clearance, doorway clearance, task access, patrol loops and exit access.

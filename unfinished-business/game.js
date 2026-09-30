@@ -1,7 +1,7 @@
 import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,runCapacity,runCost,buyRun,overlap,rayBlocked} from './model.js?v=20260927m';
-import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260927m';
+import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930a';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,collectTokens} from './entities.js?v=20260927m';
-import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260927m';
+import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930a';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260928a';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
@@ -586,3 +586,4 @@ function draw(){
 function drawMap(){const x=366,y=102,w=98,h=90,sx=w/WORLD.width,sy=h/WORLD.height;rect(ctx,x-4,y-4,w+8,h+8,'#0d1c27dd');ctx.strokeStyle='#8caa8370';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,w+8,h+8);for(const r of (world.regions||[]))rect(ctx,x+r.x*sx,y+r.y*sy,r.w*sx,r.h*sy,'#55716a44');for(const token of tokens)if(!token.collected){const tw=reduced?2:(Math.sin(t*5+token.id)>.15?3:2);rect(ctx,x+token.x*sx-tw/2,y+token.y*sy-tw/2,tw,tw,'#f3ce87')}const tt=tutorialTarget();if(tt){const tw=reduced?3:(Math.sin(t*6)>.1?5:3);rect(ctx,x+tt.x*sx-tw/2,y+tt.y*sy-tw/2,tw,tw,'#fff0a8')}const rf=tutorialRefillToken();if(rf){const tw=4;rect(ctx,x+rf.x*sx-2,y+rf.y*sy-2,tw,tw,'#fff0a8')}if(!tutorial.active&&run.tasks)for(const task of availableTasks()){rect(ctx,x+task.x*sx-2,y+task.y*sy-2,4,4,'#b6f7d2')}rect(ctx,x+ghost.x*sx-2,y+ghost.y*sy-2,4,4,'#ffffff');ctx.fillStyle='#c0d1be';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText(`LEVEL ${p.level+1}`,x+w,y+h+14);}
 function resize(){const r=canvas.getBoundingClientRect();viewH=480*r.height/r.width;canvas.width=480;canvas.height=Math.round(viewH);ctx.imageSmoothingEnabled=false;if(mode!=='play'){cam=Math.max(0,Math.min(WORLD.height-viewH,world.spawn.y-viewH*.55));camX=Math.max(0,world.spawn.x-240)}}window.addEventListener('resize',resize);resize();home();
 function frame(now){const dt=Math.min(.035,(now-last)/1000||0);last=now;if(mode==='play'){update(dt);draw()}else if(mode==='menu')t+=dt;$('notice').style.opacity=mode==='play'&&now<noticeUntil?'1':'0';requestAnimationFrame(frame)}requestAnimationFrame(frame);
+
