@@ -2,7 +2,7 @@ import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './m
 import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930i';
 import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930i';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930i';
-import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930m';
+import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930q';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
 let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
@@ -257,13 +257,9 @@ function updateTaskButton(){
 function openTaskBoard(initial=false){
  if(!run.tasks)return;
  resetInput();uiPopupOpen=true;$('taskButton').hidden=true;
- const done=completedTaskCount(),items=run.tasks.map(task=>{
-  const state=task.complete?'complete':'available';
-  const detail=state==='complete'?'DONE':(()=>{const dx=task.x-ghost.x,dy=task.y-ghost.y,dist=Math.round(Math.hypot(dx,dy)/10)*10;return `${objectiveDirection(dx,dy)} ${dist} PACES · ${task.hint}`;})();
-  return `<div class="taskItem ${state}"><strong>${task.title}</strong><small class="taskDistance">${detail}</small></div>`;
- }).join('');
+ const items=availableTasks().map(task=>`<div class="taskItem available"><strong>${task.title}</strong><small>${task.hint}</small></div>`).join('');
  const panel=$('taskPopup');panel.hidden=false;
- panel.innerHTML=`<button class="mapPopupClose" id="taskPopupClose" aria-label="Close tasks">×</button><span class="mapPopupKicker">YOUR UNFINISHED BUSINESS</span><strong class="mapPopupTitle">${done} / 5 COMPLETE</strong><div class="taskList">${items}</div>`;
+ panel.innerHTML=`<button class="mapPopupClose" id="taskPopupClose" aria-label="Close tasks">×</button><span class="mapPopupKicker">YOUR UNFINISHED BUSINESS</span><div class="taskList">${items}</div>`;
  $('taskPopupClose').onclick=closeTaskBoard;
 }
 function closeTaskBoard(){
