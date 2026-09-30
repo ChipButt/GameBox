@@ -2,37 +2,36 @@
 
 Portrait-first Canvas 2D ghost game inside GameBox.
 
-## Gameplay
+## Current gameplay
 
 - Drag anywhere on the play area, or use WASD / arrow keys, to move.
-- Speed, Vanish and Phase are upgraded by collecting their ghost icons.
-- Upgrade pickups are always collectible when found.
-- Each level contains 6 Speed, 7 Vanish and 7 Phase pickups.
-- Speed pickups have rushing lines.
-- Phase pickups fade between solid and translucent.
-- Vanish pickups use a cool-blue shimmer.
-- Five gold Scared Stiff ghosts appear per level. They respawn after 35 seconds and the player can carry up to 3 charges.
-- Scared Stiff automatically freezes a witness that would otherwise catch the player.
-- Scared Stiff collection is announced in the centre, then minimises into the left-side inventory.
-- There are no Echoes or exploration currency.
+- There are no ability or upgrade buttons.
+- Speed and Phase are passive upgrades collected in the world.
+- **Speed** tokens immediately increase movement speed.
+- **Phase** tokens increase the player's Phase tier. If the tier is high enough for a wall, door, gate or sealed task room, walking into it automatically triggers the Phase visual and passes through it.
+- **Vanish is not part of the current game.**
+- Gold **Scared Stiff** ghosts protect the player from a witness who would otherwise catch them. Five appear per level, respawn after 35 seconds and up to three charges can be carried.
+- Main levels contain **6 Speed**, **7 Phase** and **5 Scared Stiff** pickups.
+- Each level contains five flashing multicolour Unfinished Business ghosts. The first needs no Phase upgrade; the next four require Phase 1, 2, 3 and 4.
+- Completing all five tasks opens the exit.
 
-## Unfinished Business
+## Mausoleum introduction
 
-Each level has five flashing multicolour task ghosts.
+The old tutorial screens are removed.
 
-- Task 1 requires no Phase upgrade.
-- Task 2 requires Phase 1.
-- Task 3 requires Phase 2.
-- Task 4 requires Phase 3.
-- Task 5 requires Phase 4.
+The first time the player begins Level 1, they enter a small playable mausoleum before the Graveyard. It contains one example of each current pickup:
 
-The Phase requirement is enforced by the sealed task room itself. Players may collect any upgrades they find at any time.
+- Speed — “Collect Speed tokens to move faster!”
+- Phase — “Collect Phase tokens to pass through stronger walls!”
+- Scared Stiff — “Collect Scared Stiff tokens to freeze anyone who spots you!”
 
-Completing all five tasks opens the exit.
+A Phase-I stone seal lets the player experience automatic Phase traversal directly. Once all three tokens are collected, the mausoleum door opens and the Graveyard begins with a fresh run.
 
-## Tutorial
+## Visual direction
 
-The first-run tutorial is visual and concise: movement, Speed, Phase, Vanish, Scared Stiff and the five Unfinished Business targets.
+The menu and mausoleum use code-drawn pixel artwork. The menu includes a pixel cemetery/mausoleum scene and hard pixel-style frames/buttons rather than smooth rounded UI.
+
+The minimap uses terrain/material fills, physical structures, Phase seals, distinct pickup glyphs, animated task markers and a directional ghost marker. The level exit is intentionally not shown on the minimap.
 
 ## Checks
 
@@ -43,4 +42,4 @@ node --test unfinished-business/world.test.mjs
 node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
 ```
 
-The pre-change pickup build is preserved on `backup/unfinished-business-before-echo-removal-2026-09-30`.
+The previous build is preserved on `backup/unfinished-business-before-mausoleum-intro-2026-09-30`.
