@@ -159,14 +159,20 @@ function applyGraveyardStoryBeat(id){
 }
 function findTaskSpot(task,index){
  const base=nav?.nearest({x:task.x,y:task.y})||{x:task.x,y:task.y};if(index===0)return base;
- const offsets=[[0,0],[120,0],[-120,0],[0,120],[0,-120],[170,120],[-170,120],[170,-120],[-170,-120],[240,0],[-240,0],[0,240],[0,-240],[240,180],[-240,180],[240,-180],[-240,-180]];
- for(const [ox,oy] of offsets){
-  const q=nav?.nearest({x:task.x+ox,y:task.y+oy});if(!q||!nav?.path(world.spawn,q))continue;
+ const clearRoom=q=>{
+  if(!q||!nav?.path(world.spawn,q))return false;
   const half=64,r={x:q.x-half,y:q.y-half,w:half*2,h:half*2};
-  if(r.x<40||r.y<40||r.x+r.w>WORLD.width-40||r.y+r.h>WORLD.height-40)continue;
-  const blocked=blocks.some(b=>!b.open&&r.x<b.x+b.w+8&&r.x+r.w>b.x-8&&r.y<b.y+b.h+8&&r.y+r.h>b.y-8);
-  if(!blocked)return q;
+  if(r.x<40||r.y<40||r.x+r.w>WORLD.width-40||r.y+r.h>WORLD.height-40)return false;
+  return !blocks.some(b=>!b.open&&r.x<b.x+b.w+8&&r.x+r.w>b.x-8&&r.y<b.y+b.h+8&&r.y+r.h>b.y-8);
+ };
+ const offsets=[[0,0],[120,0],[-120,0],[0,120],[0,-120],[170,120],[-170,120],[170,-120],[-170,-120],[240,0],[-240,0],[0,240],[0,-240],[240,180],[-240,180],[240,-180],[-240,-180]];
+ for(const [ox,oy] of offsets){const q=nav?.nearest({x:task.x+ox,y:task.y+oy});if(clearRoom(q))return q}
+ let best=null,bestD=Infinity;
+ for(let y=180;y<WORLD.height-180;y+=150)for(let x=180;x<WORLD.width-180;x+=150){
+  const q=nav?.nearest({x,y});if(!clearRoom(q))continue;
+  const d=(q.x-task.x)**2+(q.y-task.y)**2;if(d<bestD){bestD=d;best=q}
  }
+ if(best)return best;
  return nav?.path(world.spawn,base)?base:(nav?.nearest(world.spawn)||base);
 }
 function prepareLevelTasks(){
