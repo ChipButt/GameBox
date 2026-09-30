@@ -97,16 +97,16 @@ function markMausoleumSeen(){try{localStorage.setItem(MAUSOLEUM_KEY,'1')}catch{}
 function startMausoleum(){
  mode='play';mausoleumActive=true;uiPopupOpen=false;settingsOpen=false;
  const add=(x,y,w,h,kind='wall',phase=99,open=false)=>({x,y,w,h,kind,phase,open});
- world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:54},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4}]};
+ world={level:0,name:'The Mausoleum',difficulty:0,spawn:{x:240,y:510},ferry:{x:240,y:12},decor:[],regions:[{x:70,y:70,w:340,h:500,name:'The Mausoleum',floor:'#373f42',kind:4},{x:210,y:0,w:60,h:70,name:'Exit Tunnel',floor:'#252f31',kind:4}]};
  blocks=[
   add(70,70,140,24),add(270,70,140,24),add(70,546,340,24),add(70,70,24,500),add(386,70,24,500),
-  add(210,70,60,24,'door',99,false),
-  add(96,178,288,18,'wall',1,false),
+  add(210,70,60,24,'door',1,false),
+  add(190,0,20,94,'wall',99,false),add(270,0,20,94,'wall',99,false),
   add(116,288,72,34,'stone'),add(292,288,72,34,'stone'),
   add(206,342,68,110,'stone')
  ];
  mausoleumExit=blocks[5];nav=navigation(blocks);scenery=null;
- mausoleumGuard={id:900,kind:'human',task:'Door guard',x:240,y:128,speed:0,angle:0,half:.58,range:178,frozen:0,state:'search',wait:999,cooldown:0,walk:0,tint:'#657884',scanTime:0};
+ mausoleumGuard={id:900,kind:'human',task:'Door guard',x:240,y:138,speed:38,angle:-Math.PI/2,half:.62,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',patrolDir:1,scanTime:0,path:[{x:320,y:138}]};
  people=[mausoleumGuard];
  tokens=[
   {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
@@ -125,7 +125,21 @@ function announceMausoleum(kind,text){
 function updateMausoleum(dt){
  t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);
  if(uiPopupOpen)return;
- if(mausoleumGuard){mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;if(mausoleumGuard.frozen>0)mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);else mausoleumGuard.angle=Math.PI/2+Math.sin(mausoleumGuard.scanTime*1.25)*1.35;mausoleumGuard.animationTime=t;}
+ if(mausoleumGuard){
+  mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;
+  mausoleumGuard.animationTime=t;
+  if(mausoleumGuard.frozen>0){
+   mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);
+  }else{
+   const left=142,right=338,dir=mausoleumGuard.patrolDir||1,step=mausoleumGuard.speed*dt*dir;
+   mausoleumGuard.x+=step;mausoleumGuard.walk+=Math.abs(step);
+   if(mausoleumGuard.x>=right){mausoleumGuard.x=right;mausoleumGuard.patrolDir=-1}
+   else if(mausoleumGuard.x<=left){mausoleumGuard.x=left;mausoleumGuard.patrolDir=1}
+   const doorX=240,doorY=88;
+   mausoleumGuard.angle=Math.atan2(doorY-mausoleumGuard.y,doorX-mausoleumGuard.x);
+   mausoleumGuard.path=[{x:mausoleumGuard.patrolDir>0?right:left,y:mausoleumGuard.y}];
+  }
+ }
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
  for(const token of tokens){
@@ -138,17 +152,19 @@ function updateMausoleum(dt){
  }
  const found=tokens.filter(q=>q.collected).length;
  $('status').textContent=`${found} / 3 TOKENS`;
- if(found===3&&!mausoleumExit.open){mausoleumExit.open=true}
  if(uiPopupOpen)return;
  const sight=resolveSightings(people,ghost,blocks,effects,()=>0);
  if(sight.blocked){
   seen=0;updateTokenInventory();tone(180,.22);
   showGamePopup({kind:'stiff',title:'Scared Stiff saved you!',detail:'It freezes the person who spotted you. Move while they are frozen!'});
  }else if(sight.danger){
-  ghost.x=240;ghost.y=248;lastSafe={...ghost};seen=0;resetInput();
-  showGamePopup({kind:'warning',title:'Spotted!',detail:'People can catch ghosts. Keep out of their sight!',icon:guardIconSvg()});
+  ghost.x=240;ghost.y=510;lastSafe={...ghost};seen=0;resetInput();
+  showGamePopup({kind:'warning',title:'Spotted!',detail:'Being seen sends you back to the start of your journey!',icon:guardIconSvg()});
  }
- if(found===3&&ghost.y<74){markMausoleumSeen();closeGamePopup();start();return}
+ if(ghost.y<22){
+  if(found===3){markMausoleumSeen();closeGamePopup();start();return}
+  ghost.y=34;note('FIND ALL 3 GHOSTS FIRST',1.2);
+ }
 }
 function buildWorldSafely(level){
  const generated=generateWorld(p.worldSeed,level);
@@ -382,9 +398,10 @@ function pickupIconSvg(kind){
  return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
 }
 function guardIconSvg(){
- const c=document.createElement('canvas');c.width=92;c.height=92;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
- const sample={id:900,kind:'human',task:'Door guard',x:46,y:54,speed:0,angle:0,half:.58,range:178,frozen:0,state:'search',wait:999,cooldown:0,walk:0,tint:'#657884',animationTime:0};
- drawHuman(g,sample,true);
+ const c=document.createElement('canvas');c.width=92;c.height=92;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
+ const source=mausoleumGuard||{id:900,kind:'human',task:'Door guard',speed:38,angle:-Math.PI/2,half:.62,range:205,frozen:0,state:'patrol',wait:0,cooldown:0,walk:0,tint:'#657884',path:[{x:1,y:1}],animationTime:0};
+ const sample={...source,x:46,y:57,walk:0,animationTime:0,path:[{x:47,y:57}]};
+ drawHuman(q,sample,true);
  return `<img class="renderedCharacterIcon" src="${c.toDataURL('image/png')}" alt="">`;
 }
 function showGamePopup({kind='info',title='',detail='',icon='',onClose=null}){
@@ -516,16 +533,21 @@ function drawMenuScene(){
 }
 function drawMausoleumFloor(){
  ctx.fillStyle='#11191f';ctx.fillRect(0,0,480,620);
+ // Short stone tunnel beyond the mausoleum door.
+ ctx.fillStyle='#242e30';ctx.fillRect(210,0,60,72);
+ for(let y=0;y<72;y+=18){rect(ctx,212,y,56,16,((y/18)|0)%2?'#343e3e':'#2e3839');rect(ctx,212,y+14,56,2,'#182226')}
+ ctx.fillStyle='#0c1419';ctx.fillRect(202,0,8,72);ctx.fillRect(270,0,8,72);
+ rect(ctx,216,5,48,4,'#798078');rect(ctx,222,12,36,2,'#454f4d');
+
  ctx.fillStyle='#2f393b';ctx.fillRect(70,70,340,500);
  for(let y=94;y<546;y+=24)for(let x=94;x<386;x+=32){
   const alt=((x/32+y/24)|0)%2;rect(ctx,x,y,30,22,alt?'#3f4948':'#384241');rect(ctx,x,y+20,30,2,'#222c2e');
  }
- ctx.fillStyle='#151f24';ctx.fillRect(82,82,316,18);ctx.fillRect(82,526,316,12);
+ ctx.fillStyle='#151f24';ctx.fillRect(82,82,128,18);ctx.fillRect(270,82,128,18);ctx.fillRect(82,526,316,12);
  for(const x of [108,350]){ctx.fillStyle='#59615b';ctx.fillRect(x,118,18,120);ctx.fillStyle='#7d8174';ctx.fillRect(x-5,110,28,10);ctx.fillRect(x-4,238,26,8)}
  for(const [x,y] of [[122,260],[338,260],[122,500],[358,500]]){ctx.fillStyle='#e4c77e';ctx.fillRect(x,y,3,8);ctx.fillStyle='#8b6336';ctx.fillRect(x+1,y+8,2,5);ctx.fillStyle='#f4e5a7';ctx.fillRect(x-1,y-2,5,3)}
  ctx.fillStyle='#222b2d';ctx.fillRect(204,340,72,114);ctx.fillStyle='#6e746a';ctx.fillRect(210,346,60,102);ctx.fillStyle='#505951';ctx.fillRect(216,354,48,88);
- ctx.fillStyle='#262f31';ctx.fillRect(96,176,288,22);for(let x=102;x<380;x+=16)rect(ctx,x,180,10,14,'#68706a');
- ctx.fillStyle='#c8b37e';ctx.font='bold 8px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('PHASE I',240,193);
+ ctx.fillStyle='#c8b37e';ctx.font='bold 8px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('EXIT',240,61);
 }
 function draw(){
  ctx.fillStyle='#111c27';ctx.fillRect(0,0,480,viewH);ctx.save();ctx.translate(-Math.round(camX),-Math.round(cam));
