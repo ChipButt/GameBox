@@ -380,7 +380,7 @@ function update(dt){
  }
  checkObjectives();
  if(spawnSafe&&Math.hypot(ghost.x-world.spawn.x,ghost.y-world.spawn.y)>120)spawnSafe=false;
- const sight=spawnSafe?{danger:false,blocked:false}:resolveSightings(people,ghost,blocks,effects,false,(source,max)=>nav?investigate(people,nav,source,max):0);
+ const sight=spawnSafe?{danger:false,blocked:false}:resolveSightings(people,ghost,blocks,effects,(source,max)=>nav?investigate(people,nav,source,max):0);
  if(sight.blocked){seen=0;note('SCARED STIFF!',1.3);tone(180,.22);updateTokenInventory()}
  const spotted=sight.danger;seen=spotted?seen+dt:Math.max(0,seen-dt*3);if(seen>.18){finish();return}
  if(run.exitOpen&&Math.hypot(ghost.x-world.ferry.x,ghost.y-world.ferry.y)<48){finish(true);return}
