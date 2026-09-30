@@ -1,12 +1,12 @@
-import {MATERIALS,initial,sanitize,newRun,runSpeed,overlap,rayBlocked} from './model.js?v=20260930i';
-import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld} from './world.js?v=20260930i';
-import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930i';
+import {MATERIALS,RUN_MAX,initial,sanitize,newRun,runSpeed,phaseCost,buyPhase,overlap,rayBlocked} from './model.js?v=20260930r';
+import {WORLD,LEVELS,SPAWN,FERRY,REGIONS,areaAt,generateWorld,discover} from './world.js?v=20260930i';
+import {navigation,createEntities,updateEntities,investigate,resolveSightings,createTokens,updateTokenRespawns,collectTokens} from './entities.js?v=20260930r';
 import {createScenery,drawSceneryProp,drawStreetLamp,drawFerry,drawCemeteryExit} from './scenery.js?v=20260930i';
 import {drawHuman,drawCat,drawCyclist} from './characters.js?v=20260930q';
 const $=id=>document.getElementById(id), canvas=$('world'),ctx=canvas.getContext('2d'),KEY='gamebox.unfinished-business.v1';
 let p;try{p=sanitize(JSON.parse(localStorage.getItem(KEY)))}catch{p=initial()}
-let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
-let mode='menu',stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},seen=0,spawnSafe=true,phaseVisual=0,mausoleumActive=false,mausoleumExit=null,mausoleumGuard=null,uiPopupOpen=false,popupCloseAction=null,settingsOpen=false,featureIntroQueue=[],audio=null,saveFailed=false;
+let world={...generateWorld(p.worldSeed,p.level),blocks:[],decor:[],regions:[]},run=newRun(p.level),visited=new Set(),saveTimer=0,nav=null,effects={boost:0,stiff:0},tokens=[],scenery=null;
+let mode='menu',stickPointer=null,stickOrigin={x:0,y:0},keys=new Set(),input={x:0,y:0},blocks=[],people=[],ghost={...LEVELS[p.level].spawn,face:1},t=0,cam=0,camX=0,viewH=800,last=0,noticeUntil=0,contact=null,contactTime=0,lastSafe={...LEVELS[p.level].spawn},seen=0,spawnSafe=true,phaseVisual=0,phaseActive=false,phaseExit=null,mausoleumActive=false,mausoleumExit=null,mausoleumGuard=null,mausoleumTask=null,tutorialHighlight='',uiPopupOpen=false,popupCloseAction=null,settingsOpen=false,featureIntroQueue=[],audio=null,saveFailed=false;
 let pickupTimers=[];
 const LEVEL_TASKS=[
  [
@@ -58,7 +58,7 @@ function home(){
  drawMenuScene();$('levels')?.addEventListener('click',chooseLevel);$('help').onclick=help;
 }
 function chooseLevel(){show(`<span class="eyebrow">CHOOSE LEVEL</span><h2>Unfinished Business</h2><p class="subtitle">Each level starts fresh.</p>${LEVELS.map((l,i)=>`<button class="secondary" data-level="${i}" ${i>p.unlockedLevel?'disabled':''}>${i+1}. ${l.name}${i>p.unlockedLevel?' · LOCKED':''}</button>`).join('')}<button class="secondary" id="menu">Back</button>${footer()}`);document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{p.level=Number(b.dataset.level);save();home()});$('menu').onclick=home;}
-function help(){show(`<span class="eyebrow">HOW TO PLAY</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging on the play area.</p><p><b>Speed</b> tokens make you faster.</p><p><b>Phase</b> tokens let you pass through stronger walls automatically.</p><p><b>Scared Stiff</b> protects you when someone spots you. Carry up to 3.</p><p>Complete all <b>5 flashing multicolour ghosts</b> to open the exit.</p></div><button class="primary" id="back">Play</button>`);$('back').onclick=home;}
+function help(){show(`<span class="eyebrow">HOW TO PLAY</span><h2>Finish what you left behind.</h2><div class="help"><p><b>Move</b> by dragging on the play area.</p><p><b>Speed</b> tokens make you faster.</p><p><b>Echoes</b> are found by exploring and as pickups. When you have enough, a Phase upgrade button appears.</p><p><b>Phase</b> must be activated with its button. While active, you can pass through green-tinted walls and doors up to your Phase level.</p><p><b>Scared Stiff</b> protects you when someone spots you. Carry up to 3.</p><p>Complete all <b>5 flashing multicolour ghosts</b> to open the exit.</p></div><button class="primary" id="back">Play</button>`);$('back').onclick=home;}
 
 function shop(result=false,win=false){mode='shop';$('controls').hidden=true;show(`<span class="eyebrow">${win?'UNFINISHED BUSINESS COMPLETE':'CAUGHT'}</span><h2>${win?'The way is open.':'Someone saw you.'}</h2><button class="primary" data-start>${win&&p.level<4?'Next level':'Try again'} →</button><button class="secondary" id="menu">Main menu</button>${footer()}`);$('menu').onclick=home;}
 
@@ -110,11 +110,12 @@ function startMausoleum(){
  people=[mausoleumGuard];
  tokens=[
   {id:0,x:145,y:470,reward:'speedTier',collected:false,fullNoticeAt:0},
-  {id:1,x:335,y:420,reward:'phaseTier',collected:false,fullNoticeAt:0},
+  {id:1,x:335,y:420,reward:'echo',amount:28,collected:false,fullNoticeAt:0},
   {id:2,x:145,y:355,reward:'stiff',collected:false,fullNoticeAt:0,respawnSeconds:0}
  ];
- run=newRun(0);run.tasks=null;run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
- $('overlay').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=false;$('controls').hidden=true;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;
+ mausoleumTask={id:'tutorial-business',index:0,x:300,y:190,title:'Unfinished Business',hint:'Finish what is keeping you here.',complete:false};
+ run=newRun(0);run.tasks=null;run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0};ghost={...world.spawn,face:3};lastSafe={...ghost};phaseActive=false;phaseExit=null;tutorialHighlight='';t=0;seen=0;spawnSafe=true;phaseVisual=0;cam=0;camX=0;resetInput();
+ $('overlay').hidden=true;$('taskPopup').hidden=true;$('hud').hidden=false;$('controls').hidden=false;$('objectiveHud').hidden=true;$('taskButton').hidden=true;$('tokenInventory').hidden=true;updateSkills();
  $('chapter').textContent='THE MAUSOLEUM';$('status').textContent='FIND THE 3 TOKENS';
  requestAnimationFrame(()=>requestAnimationFrame(()=>showGamePopup({kind:'warning',title:'Watch out for the guard! Or any living creature for that matter!',detail:'Being seen by a person makes ghosts vanish and sends them back to the start of their journey!',icon:guardIconSvg()})));
  tone(320);
@@ -123,22 +124,16 @@ function announceMausoleum(kind,text){
  announcePickup({kind,title:kind==='speed'?'SPEED':kind==='phase'?'PHASE':'SCARED STIFF',detail:text});
 }
 function updateMausoleum(dt){
- t+=dt;phaseVisual=Math.max(0,phaseVisual-dt);
+ t+=dt;phaseVisual=phaseActive?.18:Math.max(0,phaseVisual-dt);
  if(uiPopupOpen)return;
  if(mausoleumGuard){
-  mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;
-  mausoleumGuard.animationTime=t;
-  if(mausoleumGuard.frozen>0){
-   mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);
-  }else{
+  mausoleumGuard.scanTime=(mausoleumGuard.scanTime||0)+dt;mausoleumGuard.animationTime=t;
+  if(mausoleumGuard.frozen>0)mausoleumGuard.frozen=Math.max(0,mausoleumGuard.frozen-dt);
+  else{
    const left=150,right=330,dir=mausoleumGuard.patrolDir||1,target=dir>0?right:left;
    const distance=target-mausoleumGuard.x,step=Math.sign(distance)*Math.min(Math.abs(distance),mausoleumGuard.speed*dt);
-   mausoleumGuard.x+=step;
-   mausoleumGuard.walk+=Math.abs(step)*.58;
-   if(Math.abs(target-mausoleumGuard.x)<.01){
-    mausoleumGuard.x=target;
-    mausoleumGuard.patrolDir=dir>0?-1:1;
-   }
+   mausoleumGuard.x+=step;mausoleumGuard.walk+=Math.abs(step)*.58;
+   if(Math.abs(target-mausoleumGuard.x)<.01){mausoleumGuard.x=target;mausoleumGuard.patrolDir=dir>0?-1:1}
    mausoleumGuard.angle=mausoleumGuard.patrolDir>0?0:Math.PI;
    mausoleumGuard.path=[{x:mausoleumGuard.patrolDir>0?right:left,y:mausoleumGuard.y}];
   }
@@ -149,24 +144,30 @@ function updateMausoleum(dt){
   if(token.collected||Math.hypot(token.x-ghost.x,token.y-ghost.y)>25)continue;
   token.collected=true;
   if(token.reward==='speedTier'){run.speed=1;announcePickup({kind:'speed'});tone(760,.1)}
-  else if(token.reward==='phaseTier'){run.phase=1;announcePickup({kind:'phase'});tone(820,.1)}
-  else {effects.stiff=1;updateTokenInventory();announcePickup({kind:'stiff'});tone(880,.12)}
+  else if(token.reward==='echo'){
+   run.echoes+=(token.amount||28);tutorialHighlight='upgrade';updateSkills();tone(640,.12);
+   showGamePopup({kind:'echo',title:'This is an Echo!',detail:'Echoes unlock stronger Phase levels. When you have enough, the upgrade button appears above PHASE.',icon:pickupIconSvg('echo'),onClose:()=>{tutorialHighlight='upgrade';updateSkills()}});
+  }else{effects.stiff=1;updateTokenInventory();announcePickup({kind:'stiff'});tone(880,.12)}
   break;
  }
- const found=tokens.filter(q=>q.collected).length;
- $('status').textContent=`${found} / 3 TOKENS`;
  if(uiPopupOpen)return;
+ if(mausoleumTask&&!mausoleumTask.complete&&Math.hypot(mausoleumTask.x-ghost.x,mausoleumTask.y-ghost.y)<46){
+  mausoleumTask.complete=true;tone(720,.12);
+  showGamePopup({kind:'task',title:'This is Unfinished Business!',detail:'Find these flashing ghosts in every level. Finish all five to open the way out.',icon:pickupIconSvg('task')});
+  return;
+ }
+ const found=tokens.filter(q=>q.collected).length;
  const sight=resolveSightings(people,ghost,blocks,effects,()=>0);
  if(sight.blocked){
   seen=0;updateTokenInventory();tone(180,.22);
   showGamePopup({kind:'stiff',title:'Scared Stiff saved you!',detail:'It freezes the person who spotted you. Move while they are frozen!'});
  }else if(sight.danger){
-  ghost.x=240;ghost.y=510;lastSafe={...ghost};seen=0;resetInput();
+  ghost.x=240;ghost.y=510;lastSafe={...ghost};seen=0;phaseActive=false;phaseExit=null;updateSkills();resetInput();
   showGamePopup({kind:'warning',title:'Spotted!',detail:'Being seen sends you back to the start of your journey!',icon:guardIconSvg()});
  }
  if(ghost.y<22){
-  if(found===3){markMausoleumSeen();closeGamePopup();start();return}
-  ghost.y=34;note('FIND ALL 3 GHOSTS FIRST',1.2);
+  if(found===3&&mausoleumTask?.complete){markMausoleumSeen();phaseActive=false;closeGamePopup();start();return}
+  ghost.y=34;note(mausoleumTask?.complete?'FIND THE THREE GHOSTLY PICKUPS':'FINISH YOUR UNFINISHED BUSINESS FIRST',1.2);
  }
 }
 function buildWorldSafely(level){
@@ -326,7 +327,7 @@ function start(){
  mode='play';mausoleumActive=false;mausoleumGuard=null;uiPopupOpen=false;settingsOpen=false;$('fullMapPopup').hidden=true;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
- run=newRun(p.level);run.exitOpen=false;effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=true;updateTokenInventory();
+ run=newRun(p.level);run.exitOpen=false;visited=new Set();effects={boost:0,stiff:0};ghost={...world.spawn,face:1};lastSafe={...ghost};phaseActive=false;phaseExit=null;tutorialHighlight='';mausoleumTask=null;t=0;seen=0;spawnSafe=true;phaseVisual=0;contact=null;contactTime=0;prepareLevelTasks();cam=world.spawn.y-viewH*.55;camX=world.spawn.x-240;resetInput();$('overlay').hidden=true;$('taskPopup').hidden=true;$('pickupAnnouncement').hidden=true;$('hud').hidden=false;$('controls').hidden=false;updateSkills();updateTokenInventory();
  updateObjectiveHud();tone(320);queueLevelIntro();
  requestAnimationFrame(()=>requestAnimationFrame(showNextFeatureIntro));
 }
@@ -354,8 +355,9 @@ function renderHowToPlay(){
   <span class="mapPopupKicker">HOW TO PLAY</span>
   <strong class="mapPopupTitle">Ghostly powers</strong>
   <div class="howPower"><span>${pickupIconSvg('speed')}</span><div><b>Speed ghost</b><small>Collect these to increase your ghostly SPEED!</small></div></div>
-  <div class="howPower"><span>${pickupIconSvg('phase')}</span><div><b>Phase ghost</b><small>Collect these to PHASE through stronger walls!</small></div></div>
-  <div class="howPower"><span>${pickupIconSvg('stiff')}</span><div><b>Scared Stiff ghost</b><small>Collect these to freeze anyone who spots you!</small></div></div>
+  <div class="howPower"><span>${pickupIconSvg('echo')}</span><div><b>Echoes</b><small>Explore and collect Echoes. When you have enough, the Phase upgrade appears.</small></div></div>
+  <div class="howRule"><b>PHASE</b><small>Spend Echoes to unlock stronger Phase levels. Tap PHASE to activate it, then move through green-tinted walls and doors.</small></div>
+  <div class="howPower"><span>${pickupIconSvg('stiff')}</span><div><b>Scary ghost</b><small>Collect these to scare a living creature stiff and stop them returning you to the start.</small></div></div>
   <div class="howRule"><b>DON'T GET SEEN!</b><small>People can catch ghosts. Stay out of their sight.</small></div>
   <div class="howRule"><b>FINISH YOUR BUSINESS!</b><small>Find all 5 flashing ghosts to open the way out.</small></div>`;
  $('settingsClose').onclick=closeSettings;$('howBack').onclick=renderSettings;
@@ -369,11 +371,18 @@ function pause(){
 $('pause').onclick=pause;$('taskButton').onclick=()=>{if(mode==='play'&&!uiPopupOpen)openTaskBoard(false)};window.addEventListener('blur',pause);window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 const GHOST_PIXELS=['00001111110000','00111111111100','01111111111110','01111111111110','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','11111111111111','01121122112110','00111011011100','00010000001000'];
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h)}
-function prop(b){drawSceneryProp(ctx,b);if(!b.open&&b.phase<99&&Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
- const type=b.kind==='gate'?'GATE':b.kind==='door'?'DOOR':'OBSTACLE',mat=MATERIALS[b.phase].toUpperCase();
- ctx.font='bold 8px sans-serif';ctx.fillStyle='#fff0c5';ctx.textAlign='center';
- ctx.fillText(`${mat} ${type} · PHASE ${b.phase}`,b.x+b.w/2,b.y-13);
-}}
+function prop(b){
+ drawSceneryProp(ctx,b);
+ if(!b.open&&b.phase<99){
+  ctx.save();ctx.fillStyle='rgba(83,220,126,.22)';ctx.fillRect(b.x,b.y,b.w,b.h);
+  ctx.strokeStyle='#77e89b';ctx.lineWidth=2;ctx.strokeRect(b.x+.5,b.y+.5,Math.max(1,b.w-1),Math.max(1,b.h-1));ctx.restore();
+  if(Math.hypot(b.x+b.w/2-ghost.x,b.y+b.h/2-ghost.y)<180){
+   const type=b.kind==='gate'?'GATE':b.kind==='door'?'DOOR':'WALL';
+   ctx.font='bold 8px ui-monospace,monospace';ctx.fillStyle='#b9ffd0';ctx.textAlign='center';
+   ctx.fillText(`${type} · PHASE ${b.phase}`,b.x+b.w/2,b.y-13);
+  }
+ }
+}
 function drawEntity(e){
  const {x,y}=e;
  if(e.kind==='camera'){ctx.save();ctx.translate(x,y);ctx.rotate(e.angle);rect(ctx,-8,-4,14,8,'#74858f');rect(ctx,1,-7,19,14,'#c9d1c8');rect(ctx,16,-5,5,10,'#273a44');rect(ctx,7,-3,3,3,e.frozen>0?'#a6f0f2':'#ed8e77');ctx.restore();}
@@ -388,6 +397,7 @@ function drawEntity(e){
 function drawGhost(c,x,y,scale,face,time,alpha=1){c.save();c.globalAlpha=alpha;const bob=reduced?0:Math.round(Math.sin(time*3)*2);c.fillStyle='#09121c66';c.beginPath();c.ellipse(x,y+14*scale,5*scale,1.5*scale,0,0,Math.PI*2);c.fill();const rows=GHOST_PIXELS;for(let j=0;j<rows.length;j++)for(let i=0;i<14;i++){const v=rows[j][i];if(v!=='0')rect(c,x+(i-7)*scale,y+(j-8)*scale+bob,scale,scale,v==='2'?'#c4cccb':'#eeeFec')};if(face!==3){const ex=face===0?-5:face===2?2:-3;for(const ox of [ex,ex+4])rect(c,x+ox*scale,y-3*scale+bob,scale,3*scale,'#142029')}c.restore();}
 
 function pickupIconSvg(kind){
+ if(kind==='echo')return '<svg class="echoGhostIcon" viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true"><path d="M16 4l7 6-7 6-7-6zm0 3-4 3 4 3 4-3z" fill="#e8d28d"/><path d="M16 1l11 9-11 9L5 10zm0 2L8 10l8 7 8-7z" fill="#a9e7c7" opacity=".72"/><path d="M16 20l5 4-5 4-5-4z" fill="#f5e8ad"/><rect x="15" y="9" width="2" height="2" fill="#18313a"/></svg>';
  const phase=kind==='phase',speed=kind==='speed',stiff=kind==='stiff',task=kind==='task';
  const main=stiff?'#f0a43c':speed?'#ddfff2':'#f7fbff',shade=stiff?'#aa5d27':speed?'#8eddbf':'#d8e1ea';
  const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}"/>`).join('')).join('');
@@ -420,14 +430,52 @@ $('pickupClose').onclick=closeGamePopup;
 function announcePickup(event){
  const copy={
   speed:['This is a Speed ghost!','Collect these to increase your ghostly SPEED!'],
-  phase:['This is a Phase ghost!','Collect these to PHASE through stronger walls!'],
+  echo:['This is an Echo!','Echoes unlock stronger Phase levels. When you have enough, the upgrade button appears above PHASE.'],
   stiff:['This is a scary ghost!','Collect these to scare a living creature stiff and stop them returning you to the start of your journey!']
  }[event.kind]||[event.title,event.detail];
  showGamePopup({kind:event.kind,title:copy[0],detail:copy[1]});
 }
 
 
-function updateSkills(){$('abilityBar').innerHTML='';$('controls').hidden=true;}
+function updateSkills(){
+ const bar=$('abilityBar'),controls=$('controls');if(!bar||!controls)return;
+ controls.hidden=mode!=='play';
+ const price=phaseCost(run),canUpgrade=(run.phase||0)<RUN_MAX.phase&&(run.echoes||0)>=price;
+ const upgradeClass=tutorialHighlight==='upgrade'?' tutorialFocus':'';
+ const activateClass=tutorialHighlight==='activate'?' tutorialFocus':'';
+ bar.innerHTML=`<div class="phaseControl">
+   <div class="echoReadout"><span>ECHOES</span><strong>${run.echoes||0}</strong></div>
+   ${canUpgrade?`<button id="phaseUpgrade" class="phaseUpgrade${upgradeClass}" aria-label="Upgrade Phase"><strong>UPGRADE PHASE</strong><small>TIER ${run.phase+1} · ${price} ECHOES</small></button>`:''}
+   <button id="ability-phase" class="ability phaseActivate ${run.phase>0?'ready':'locked'}${phaseActive?' active':''}${activateClass}" aria-label="${phaseActive?'Deactivate':'Activate'} Phase" aria-pressed="${phaseActive}">
+    <span class="abilityArt">${pickupIconSvg('phase')}</span><strong>PHASE</strong><small>${run.phase>0?`TIER ${run.phase} · ${phaseActive?'ACTIVE':'TAP TO ACTIVATE'}`:'LOCKED'}</small>
+   </button>
+  </div>`;
+ $('phaseUpgrade')?.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();buyPhaseUpgrade()});
+ $('ability-phase')?.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();togglePhase()});
+}
+function buyPhaseUpgrade(){
+ if(mode!=='play')return;
+ const before=run.phase||0,price=phaseCost(run);
+ if(!buyPhase(run)){note(`NEED ${price} ECHOES`,1.2);tone(160,.07);return}
+ phaseActive=false;phaseExit=null;tone(720,.1);
+ tutorialHighlight=mausoleumActive&&before===0?'activate':'';
+ updateSkills();
+ if(mausoleumActive&&before===0){
+  showGamePopup({kind:'phase',title:'Phase I unlocked!',detail:'Tap PHASE to activate it. While active, move through green-tinted walls and doors.',icon:pickupIconSvg('phase'),onClose:()=>{tutorialHighlight='activate';updateSkills()}});
+ }else note(`PHASE ${run.phase} UNLOCKED`,1.5);
+}
+function settlePhase(){
+ if(blocks.some(b=>overlap(ghost.x,ghost.y,b))){ghost.x=lastSafe.x;ghost.y=lastSafe.y}
+ phaseExit=null;
+}
+function togglePhase(){
+ if(mode!=='play')return;
+ if(!run.phase){note('PHASE IS LOCKED · FIND ECHOES',1.4);tone(160,.07);return}
+ phaseActive=!phaseActive;
+ if(!phaseActive)settlePhase();
+ else{phaseVisual=.2;tone(330,.06);if(mausoleumActive&&tutorialHighlight==='activate')tutorialHighlight=''}
+ updateSkills();
+}
 $('game').addEventListener('pointerdown',e=>{
  if(mode!=='play'||uiPopupOpen||stickPointer!==null||e.target.closest('button,a,#overlay,.mapPopup'))return;
  const mapRect=$('world').getBoundingClientRect(),gx=(e.clientX-mapRect.left)*480/mapRect.width,gy=(e.clientY-mapRect.top)*viewH/mapRect.height;
@@ -440,40 +488,44 @@ for(const ev of ['pointerup','pointercancel','lostpointercapture'])$('game').add
 window.addEventListener('keydown',e=>{if(e.code==='Escape'){pause();return}if(mode!=='play')return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code)});window.addEventListener('keyup',e=>keys.delete(e.code));
 
 function move(dx,dy,dt){
- const nx=ghost.x+dx,ny=ghost.y+dy;
+ const nx=ghost.x+dx,ny=ghost.y+dy,phase=phaseActive&&run.phase>0;
  const sealed=(run.tasks||[]).find(task=>{
   const r=task.room;if(!r||r.open)return false;
   const was=ghost.x>r.x&&ghost.x<r.x+r.w&&ghost.y>r.y&&ghost.y<r.y+r.h;
   const next=nx>r.x&&nx<r.x+r.w&&ny>r.y&&ny<r.y+r.h;
   return was!==next;
  });
- if(sealed){
-  if(run.phase<sealed.requiredPhase){note(`NEED PHASE ${sealed.requiredPhase}`,1.1);return}
-  phaseVisual=.22;
+ if(sealed&&(!(phase)||run.phase<sealed.requiredPhase)){
+  note(run.phase>=sealed.requiredPhase?`ACTIVATE PHASE ${sealed.requiredPhase}`:`NEED PHASE ${sealed.requiredPhase}`,1.1);
+  return;
  }
  const hits=blocks.filter(b=>overlap(nx,ny,b));
  const blocked=hits.find(b=>{
   if(b.exit&&!run.exitOpen)return true;
-  return !(b.phase<99&&run.phase>=b.phase);
+  return !(phase&&b.phase<99&&run.phase>=b.phase);
  });
  if(blocked){
   if(blocked.exit&&!run.exitOpen){if(!mausoleumActive)note('FINISH ALL FIVE TASKS',1.2);return}
-  if(blocked.phase<99)note(`NEED PHASE ${blocked.phase}`,1.1);
+  if(blocked.phase<99)note(run.phase>=blocked.phase?`ACTIVATE PHASE ${blocked.phase}`:`NEED PHASE ${blocked.phase}`,1.1);
   return;
  }
- if(hits.some(b=>b.phase<99&&run.phase>=b.phase))phaseVisual=.22;
+ if(hits.some(b=>b.phase<99&&phase&&run.phase>=b.phase)){phaseVisual=.22;phaseExit={x:dx,y:dy}}
  ghost.x=nx;ghost.y=ny;
- if(!hits.length)lastSafe={x:ghost.x,y:ghost.y};
+ if(!hits.length){lastSafe={x:ghost.x,y:ghost.y};phaseExit=null}
 }
 function update(dt){
  if(mausoleumActive){updateMausoleum(dt);return}
- t+=dt;if(uiPopupOpen)return;phaseVisual=Math.max(0,phaseVisual-dt);effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
+ t+=dt;if(uiPopupOpen)return;phaseVisual=phaseActive?.18:Math.max(0,phaseVisual-dt);effects.boost=Math.max(0,effects.boost-dt);updateTokenRespawns(tokens,t);if(nav)updateEntities(people,nav,blocks,dt);
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
+ if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){
+  run.explored=(run.explored||0)+1;const bands=Math.floor(run.explored/6);
+  if(bands>(run.awardedBands||0)){const gained=(bands-(run.awardedBands||0))*5;run.awardedBands=bands;run.echoes=(run.echoes||0)+gained;tone(520,.035);updateSkills()}
+ }
  for(const event of collectTokens(tokens,ghost,effects,run,t)){
   if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
-  if(event.kind==='stiff')tone(860,.15);else tone(740,.1);
-  updateTokenInventory();
+  if(event.kind==='stiff')tone(860,.15);else if(event.kind==='echo')tone(620,.08);else tone(740,.1);
+  updateSkills();updateTokenInventory();
  }
  checkObjectives();
  if(spawnSafe&&Math.hypot(ghost.x-world.spawn.x,ghost.y-world.spawn.y)>120)spawnSafe=false;
@@ -487,33 +539,40 @@ function update(dt){
 }
 
 function drawToken(token){
- const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
- const x=token.x,y=token.y,bob=reduced?0:Math.round(Math.sin(t*4+token.id)*3),scale=1.65;ctx.save();ctx.translate(x,y+bob);
+ const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
+ const x=token.x,y=token.y,bob=reduced?0:Math.round(Math.sin(t*4+token.id)*3);ctx.save();ctx.translate(x,y+bob);
+ if(kind==='echo'){
+  const pulse=reduced?0:Math.round(Math.sin(t*4+token.id)*2);
+  ctx.fillStyle='#0a151c88';ctx.beginPath();ctx.ellipse(0,13,14,4,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#a9e7c7';ctx.lineWidth=3;for(const s of [8,14,20]){ctx.beginPath();ctx.moveTo(0,-s/2+pulse);ctx.lineTo(s/2,0);ctx.lineTo(0,s/2-pulse);ctx.lineTo(-s/2,0);ctx.closePath();ctx.stroke()}
+  rect(ctx,-2,-2,5,5,'#f5e8ad');ctx.restore();return;
+ }
+ const scale=1.65;
  if(kind==='speed'){
-  const drift=(t*28+token.id*9)%12;for(let i=0;i<4;i++){rect(ctx,-34-drift-i*5,-14+i*8,18+i*2,2,i%2?'#e6fff5':'#9df0cf')}
+  const drift=(t*18+token.id*7)%8;
+  for(let line=0;line<3;line++){
+   const yy=-10+line*9;for(let q=0;q<4;q++)rect(ctx,-34-drift+q*6,yy+(q%2?1:-1),6,2,line===1?'#e6fff5':'#9df0cf');
+  }
  }
  const glow=22+(reduced?0:Math.sin(t*5+token.id)*4),a=ctx.createRadialGradient(0,0,3,0,0,glow);
  const glowColor=kind==='stiff'?'240,164,60':kind==='speed'?'130,236,195':'235,242,255';
  a.addColorStop(0,`rgba(${glowColor},.45)`);a.addColorStop(1,`rgba(${glowColor},0)`);ctx.fillStyle=a;ctx.beginPath();ctx.arc(0,0,glow,0,Math.PI*2);ctx.fill();
  const phaseAlpha=kind==='phase'?(reduced?.65:.28+.72*((Math.sin(t*4+token.id)+1)/2)):1;
- const booCycle=(t*1.7+token.id*.23)%1,boo=kind==='stiff'&&!reduced&&booCycle>.72&&booCycle<.86;
- if(boo)ctx.scale(1.12,1.12);
- for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v==='0')continue;
-  ctx.globalAlpha=phaseAlpha;
+ const booCycle=(t*1.7+token.id*.23)%1,boo=kind==='stiff'&&!reduced&&booCycle>.72&&booCycle<.86;if(boo)ctx.scale(1.12,1.12);
+ for(let j=0;j<GHOST_PIXELS.length;j++)for(let i=0;i<14;i++){const v=GHOST_PIXELS[j][i];if(v==='0')continue;ctx.globalAlpha=phaseAlpha;
   const color=kind==='stiff'?(v==='2'?'#aa5d27':'#f0a43c'):kind==='speed'?(v==='2'?'#8eddbf':'#ddfff2'):(v==='2'?'#d8e1ea':'#f7fbff');
-  rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color);
- }
+  rect(ctx,(i-7)*scale,(j-8)*scale,scale,scale,color)}
  ctx.globalAlpha=phaseAlpha;rect(ctx,-5,-5,2,5,'#18313a');rect(ctx,2,-5,2,5,'#18313a');
  if(boo){ctx.globalAlpha=1;rect(ctx,-3,1,7,7,'#18313a');rect(ctx,-1,3,3,3,'#f7d08a')}
  ctx.restore();
 }
 function drawMemoryRoom(task){
  const r=task.room;if(!r||r.open)return;ctx.save();
- const ready=run.phase>=task.requiredPhase,pulse=reduced?.35:.22+.12*((Math.sin(t*3+task.index)+1)/2);
- ctx.fillStyle=ready?`rgba(190,220,255,${pulse})`:`rgba(128,102,161,${pulse})`;ctx.fillRect(r.x,r.y,r.w,r.h);
- ctx.strokeStyle=ready?'#dff5ff':'#a98dc8';ctx.lineWidth=5;ctx.setLineDash([12,7]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
- ctx.fillStyle='#111c27dd';ctx.fillRect(r.x+r.w/2-32,r.y-11,64,20);ctx.strokeStyle=ready?'#dff5ff':'#a98dc8';ctx.lineWidth=2;ctx.strokeRect(r.x+r.w/2-32,r.y-11,64,20);
- ctx.fillStyle=ready?'#effcff':'#e4d3f7';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(`PHASE ${task.requiredPhase}`,r.x+r.w/2,r.y+3);ctx.restore();
+ const ready=run.phase>=task.requiredPhase,pulse=reduced?.18:.16+.09*((Math.sin(t*3+task.index)+1)/2);
+ ctx.fillStyle=`rgba(78,214,121,${pulse})`;ctx.fillRect(r.x,r.y,r.w,r.h);
+ ctx.strokeStyle=ready?'#9dffb8':'#57ae72';ctx.lineWidth=5;ctx.setLineDash([12,7]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
+ ctx.fillStyle='#10241bdd';ctx.fillRect(r.x+r.w/2-32,r.y-11,64,20);ctx.strokeStyle=ready?'#9dffb8':'#57ae72';ctx.lineWidth=2;ctx.strokeRect(r.x+r.w/2-32,r.y-11,64,20);
+ ctx.fillStyle=ready?'#d9ffe3':'#9dd7ae';ctx.font='bold 9px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText(`PHASE ${task.requiredPhase}`,r.x+r.w/2,r.y+3);ctx.restore();
 }
 function drawTaskGhost(task){
  const flash=reduced?1:(Math.sin(t*6+task.index)>0?.95:.48),scale=3;ctx.save();ctx.globalAlpha=flash;
@@ -562,6 +621,7 @@ function draw(){
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
  if(!mausoleumActive){if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}}
  for(const token of tokens)if(!token.collected&&token.x>camX-45&&token.x<camX+525&&token.y>cam-45&&token.y<cam+viewH+45)drawToken(token);
+ if(mausoleumActive&&mausoleumTask&&!mausoleumTask.complete)drawTaskGhost(mausoleumTask);
  if(run.tasks)for(const task of availableTasks()){drawMemoryRoom(task);drawTaskGhost(task)}
  if(phaseVisual>0){drawGhost(ctx,ghost.x-5,ghost.y-16,3,ghost.face,t,.14);drawGhost(ctx,ghost.x+5,ghost.y-16,3,ghost.face,t,.14)}
  drawGhost(ctx,ghost.x,ghost.y-16,3,ghost.face,t,phaseVisual>0?.48:1);
@@ -571,7 +631,8 @@ function drawMiniMarker(px,py,kind,id=0){
  const pulse=reduced?1:(Math.sin(t*5+id)*.5+.5);
  if(kind==='speed'){
   rect(ctx,px-4,py-2,4,1,'#72bca6');rect(ctx,px-5,py,5,1,'#9df0cf');rect(ctx,px-3,py+2,3,1,'#72bca6');rect(ctx,px+1,py-1,3,3,'#e8fff6');
- }else if(kind==='phase'){
+ }else if(kind==='echo'){rect(ctx,px-3,py,7,1,'#a9e7c7');rect(ctx,px,py-3,1,7,'#f5e8ad');rect(ctx,px-1,py-1,3,3,'#e8d28d')}
+ else if(kind==='phase'){
   ctx.globalAlpha=.5+pulse*.5;rect(ctx,px-2,py-2,5,5,'#f4f7ff');rect(ctx,px-1,py-1,3,3,'#263743');rect(ctx,px,py,1,1,'#f4f7ff');ctx.globalAlpha=1;
  }else{
   rect(ctx,px-2,py-3,5,5,'#f0a43c');rect(ctx,px-5,py-1,3,1,'#f0a43c');rect(ctx,px+3,py-1,3,1,'#f0a43c');rect(ctx,px-5,py-3,1,2,'#fff1b8');rect(ctx,px+5,py-3,1,2,'#fff1b8');rect(ctx,px-1,py-1,1,1,'#47311f');rect(ctx,px+2,py-1,1,1,'#47311f');
@@ -590,11 +651,11 @@ function drawFullMapCanvas(){
  for(const block of blocks){
   if(block.exit)continue;
   const bx=pad+block.x*sx,by=pad+block.y*sy,bw=Math.max(1,block.w*sx),bh=Math.max(1,block.h*sy);
-  const col=block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?(block.phase<99?'#b7a7d8':'#8b9188'):'#555b59';
+  const col=block.kind==='water'?'#244c5d':block.kind==='tree'||block.kind==='hedge'?'#304b39':block.kind==='wall'||block.kind==='stone'?'#78817a':block.kind==='door'||block.kind==='gate'?(block.phase<99?'#63c982':'#8b9188'):'#555b59';
   rr(bx,by,bw,bh,col);
  }
  for(const token of tokens)if(!token.collected){
-  const px=Math.round(pad+token.x*sx),py=Math.round(pad+token.y*sy),kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
+  const px=Math.round(pad+token.x*sx),py=Math.round(pad+token.y*sy),kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
   if(kind==='speed'){rr(px-5,py-2,5,2,'#9df0cf');rr(px+1,py-2,4,4,'#e8fff6')}
   else if(kind==='phase'){rr(px-3,py-3,7,7,'#f4f7ff');rr(px-1,py-1,3,3,'#263743')}
   else{rr(px-3,py-3,7,6,'#f0a43c');rr(px-8,py-1,5,2,'#f0a43c');rr(px+4,py-1,5,2,'#f0a43c')}
@@ -648,19 +709,19 @@ function drawMap(){
    for(let yy=by+2;yy<by+bh;yy+=5)rect(ctx,bx+1+(yy%3),yy,Math.max(1,bw-3),1,'#4c788322');
   }else if(b.kind==='tree'||b.kind==='hedge') rect(ctx,bx,by,bw,bh,b.kind==='tree'?'#294435':'#304b39');
   else if(b.kind==='wall'||b.kind==='stone') rect(ctx,bx,by,bw,bh,'#78817a');
-  else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,b.phase<99?'#b7a7d8':'#8b9188');
+  else if(b.kind==='door'||b.kind==='gate') rect(ctx,bx,by,bw,bh,b.phase<99?'#63c982':'#8b9188');
   else rect(ctx,bx,by,bw,bh,'#555b59');
  }
  // Sealed Unfinished Business rooms.
  if(run.tasks)for(const task of run.tasks){
   const r=task.room;if(!r||r.open)continue;
   const rx=Math.floor(x+r.x*sx),ry=Math.floor(y+r.y*sy),rw=Math.max(3,Math.ceil(r.w*sx)),rh=Math.max(3,Math.ceil(r.h*sy));
-  ctx.strokeStyle='#b7a7d8aa';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
+  ctx.strokeStyle='#67d389cc';ctx.lineWidth=1;ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);
  }
  // Pickups use distinct miniature glyphs instead of identical squares.
  for(const token of tokens)if(!token.collected){
   const px=Math.round(x+token.x*sx),py=Math.round(y+token.y*sy);
-  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':'phase';
+  const kind=token.reward==='stiff'?'stiff':token.reward==='speedTier'?'speed':token.reward==='echo'?'echo':'phase';
   drawMiniMarker(px,py,kind,token.id);
  }
  // Unfinished Business targets: bright animated multicolour beacons.
