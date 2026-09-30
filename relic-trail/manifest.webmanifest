@@ -1,0 +1,11 @@
+{
+  "name": "Relic · The Lost Relics of Bidford",
+  "short_name": "Relic",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#17231d",
+  "theme_color": "#17231d",
+  "description": "A real-world relic hunting adventure around Bidford-on-Avon.",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
