@@ -104,7 +104,7 @@ export function drawCat(c,e,reduced=false){const p=pose(e,reduced),dx=Math.cos(p
 
 export function drawCyclist(c,e,reduced=false){
  const p=pose(e,reduced),spin=reduced?0:(e.walk||0)*.22;
- c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(e.angle);
+ c.save();c.translate(Math.round(e.x),Math.round(e.y));c.rotate(e.angle);c.scale(1.42,1.42);
  // Top-down bike: front/rear tyres align with travel direction, rider sits over the frame.
  c.fillStyle='#07151d55';c.beginPath();c.ellipse(0,8,27,8,0,0,Math.PI*2);c.fill();
  const tyre=(x)=>{c.fillStyle='#111d25';c.beginPath();c.ellipse(x,4,8,4,0,0,Math.PI*2);c.fill();c.strokeStyle='#8c999477';c.lineWidth=1;c.beginPath();c.moveTo(x-5,4);c.lineTo(x+5,4);c.moveTo(x,1);c.lineTo(x,7);c.stroke();};
