@@ -1,0 +1,103 @@
+GAMEBOX CODE-ONLY PIXEL ART REFERENCE
+Version: 1.0
+Primary working example: my-place/index.html
+Shared renderer: shared/gamebox-pixel-art.js
+
+PURPOSE
+This is the visual-system reference for future GameBox games that need rich pixel-art graphics without raster artwork files. Before creating or restyling a code-only pixel game, inspect this file, shared/gamebox-pixel-art.js and my-place/index.html.
+
+The reference was developed after inspecting the open-source Aetherfall project (MIT licensed) and reproducing the useful rendering principles in an original GameBox implementation. Do not treat the goal as “draw simple shapes in CSS/SVG.” Treat code as an art-authoring pipeline.
+
+CORE PRINCIPLES
+1. Render the game world at a deliberately low internal resolution and scale it to the display by an integer number of physical pixels. Never use browser smoothing for the game canvas.
+2. Use one restricted master palette plus a small number of game-specific colour ramps. Objects should share shadow, outline, material and highlight logic so the scene reads as one piece of artwork.
+3. Generate sprites once into small off-screen canvases and cache them. During gameplay, draw cached sprite frames; do not reconstruct complicated art every animation frame.
+4. Build sprites on a true pixel grid. Use a tiny raster buffer with set/rect/line/ellipse/poly/stamp/blit/outline/rim operations instead of oversized DOM rectangles masquerading as pixel art.
+5. Author silhouettes first, then internal shading, highlights, material detail, seams and small asymmetries. A sprite should still read clearly when viewed at native game resolution.
+6. Use dark selective outlines and internal edge separation. Different parts of an object should not merge into one flat blob.
+7. Use colour ramps dark -> mid -> light, top-left-biased lighting and restrained ordered dithering/noise. Large areas must have material texture rather than a single flat fill.
+8. Use deterministic texture/noise. Random-looking detail must be stable between frames so surfaces do not shimmer.
+9. Characters and animals need authored directional animation. Minimum target for moving actors: four directions and multiple frames. Left-facing art may be mirrored from right where appropriate, but up/down need their own silhouettes.
+10. Animate from the whole body and contact points, not by rotating crude limbs. Feet/paws should look planted during the stance phase. Movement must read as the real creature/object being animated, not a bipedal puppet made of rectangles.
+11. Sort world objects by their ground/feet anchor when appropriate so characters can pass naturally behind and in front of furniture, props and scenery.
+12. Add secondary polish in code: contact shadows, glints, window/environment motion, particles, little material highlights, impact flashes and ambient motion. These details are part of the art direction, not optional decoration.
+
+GAMEBOX TOOLKIT CONTRACT
+File: shared/gamebox-pixel-art.js
+Global: window.GBPixel
+
+Key exports:
+- Grid: pixel-buffer authoring surface.
+- PixelStage: fixed low-resolution canvas with integer physical-pixel scaling.
+- PAL: shared GameBox palette.
+- mix/alpha: palette utility functions.
+- hash2/bayer/ramp: deterministic texture, dithering and stepped shading helpers.
+- clamp: small utility.
+
+Grid supports:
+- set/get/has
+- rect/hline/vline/line
+- ellipse/poly
+- stamp for text-encoded pixel maps
+- blit for compositing generated sprite parts
+- map for post-processing
+- outline and rim for silhouette treatment
+- toCanvas for caching the completed result
+
+MY PLACE REFERENCE IMPLEMENTATION
+File: my-place/index.html
+
+The rebuilt My Place demonstrates the intended approach:
+- 352x220 code-rendered game world.
+- Integer physical-pixel scaling through PixelStage.
+- Entire room background generated in code, including textured plaster, timber floor, rug, framed picture and shelf clutter.
+- Code-generated window scene with sky/skyline and ambient motion.
+- Individually generated bed, sofa, coffee table and plant sprites with multiple upgrade variants.
+- Code-generated human sprite.
+- Code-generated dog with four movement directions, four gait frames, four visible legs, planted-paw gait changes and upgrade accessories.
+- Cached sprite canvases rather than expensive regeneration every frame.
+- Y-sorted actors/objects for convincing scene depth.
+- Code-generated sparkle rewards and speech bubble feedback.
+- Persistent upgrade state in localStorage.
+- No PNG/JPG/SVG game-world artwork is required for the room itself.
+
+QUALITY BAR FOR FUTURE GAMEBOX PIXEL GAMES
+Do not accept a new code-only pixel scene if most of the following are not true:
+- At native resolution, the main character has a readable silhouette and facial/body detail.
+- The environment contains material texture and small prop detail rather than flat blocks.
+- Shadows and highlights consistently communicate one light direction.
+- The palette is intentionally restricted and coherent.
+- Moving creatures have proper directional frames and believable contact with the ground.
+- Important objects have more than one tone plus outline/edge separation.
+- Animation is frame-authored or rig-authored at pixel scale, not achieved by merely swinging two rectangles.
+- World objects can layer correctly by ground anchor where depth requires it.
+- Pixel edges remain crisp on phones and desktop displays.
+- The result looks like deliberate pixel art at a glance, not UI geometry that happens to be blocky.
+
+WHEN STARTING A NEW GAME
+Recommended order:
+1. Choose internal world resolution and PixelStage scaling.
+2. Define the game-specific subset/ramps from GBPixel.PAL.
+3. Build a sprite preview/test scene before implementing full gameplay.
+4. Create one hero/creature with all required directions and animation frames.
+5. Create representative environment tiles/props with texture and lighting.
+6. Confirm visual quality at native resolution and on a phone-sized viewport.
+7. Only then expand the asset generators to the full game.
+8. Keep gameplay state separate from sprite-generation code so art can be iterated without breaking mechanics.
+
+REFERENCE SOURCE OBSERVATIONS
+Aetherfall techniques inspected before creating the GameBox implementation included:
+- low internal-resolution Canvas 2D rendering with integer scaling;
+- code-generated sprites and tiles cached after first creation;
+- pixel buffers capable of geometric drawing and ASCII/text pixel maps;
+- a restricted master palette and reusable colour ramps;
+- outline/rim post-processing;
+- deterministic texture, Bayer dithering and simple lighting helpers;
+- directional actor frames and explicit animation metadata;
+- dedicated procedural environment generators rather than generic coloured rectangles.
+
+Aetherfall repository: caseyrmorrison/aetherfall
+License observed at time of reference: MIT.
+
+IMPORTANT
+Use the principles, not a superficial imitation of one screenshot. GameBox games can have their own palette, setting and visual identity while retaining this rendering discipline.
