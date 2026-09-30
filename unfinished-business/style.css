@@ -402,3 +402,30 @@ h1{line-height:.95}h1 em{font-style:normal}
  0%,68%,84%,100%{opacity:0}
  69%,83%{opacity:1}
 }
+
+
+/* Simplified remaining-tasks panel */
+.taskPopup .mapPopupTitle{display:none!important}
+.taskPopup .taskList{display:grid;gap:10px;margin-top:14px}
+.taskPopup .taskItem{
+ position:relative!important;
+ padding:13px 14px 12px!important;
+ min-height:0!important;
+ text-align:left;
+}
+.taskPopup .taskItem::before{display:none!important;content:none!important}
+.taskPopup .taskItem strong{
+ display:block!important;
+ margin:0!important;
+ padding:0!important;
+ font-size:13px!important;
+ line-height:1.25!important;
+}
+.taskPopup .taskItem small{
+ display:block!important;
+ margin:6px 0 0!important;
+ padding:0!important;
+ font-size:10px!important;
+ line-height:1.4!important;
+}
+.taskPopup .taskDistance{color:inherit!important;font-weight:inherit!important}
