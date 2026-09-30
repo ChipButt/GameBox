@@ -6,14 +6,15 @@ test('routines pause, turn, move through collision-free paths, and loop',()=>{co
 test('a door opening permits an off-route investigation and a return to the task',()=>{const blocks=[{x:240,y:0,w:24,h:2400,open:false}],nav=navigation(blocks);assert.equal(nav.path({x:180,y:120},{x:300,y:120}),null);blocks[0].open=true;const openNav=navigation(blocks),h={id:0,kind:'human',task:'Test',x:180,y:120,speed:60,route:[{x:180,y:120,wait:1,face:0},{x:180,y:240,wait:1,face:0}],index:0,state:'wait',wait:1,angle:0,frozen:0,cooldown:0,walk:0};assert.equal(investigate([h],openNav,{x:300,y:120}),1);let search=false,returned=false;for(let i=0;i<250;i++){updateEntities([h],openNav,blocks,.1);if(h.state==='search')search=true;if(search&&h.state==='wait')returned=true;}assert.ok(search&&returned)});
 test('Scared Stiff consumes one charge, cancels that sighting and freezes humans and CCTV',()=>{for(const kind of ['human','camera']){const e={kind,x:100,y:100,angle:0,range:200,half:.7,frozen:0},effects={stiff:1},target={x:150,y:100};const r=resolveSightings([e],target,[],effects,()=>{});assert.equal(r.danger,false);assert.ok(r.blocked);assert.equal(effects.stiff,0);assert.equal(e.frozen,8);assert.equal(sees(e,target,[]),false);e.frozen=0;assert.equal(resolveSightings([e],target,[],effects,()=>{}).danger,true)}});
 test('cat sighting alerts once per cooldown and never ends a run',()=>{const cat={kind:'cat',x:100,y:100,angle:0,range:150,half:1,frozen:0,cooldown:0};let alerts=0;const target={x:140,y:100},effects={stiff:0};assert.equal(resolveSightings([cat],target,[],effects,()=>alerts++).danger,false);resolveSightings([cat],target,[],effects,()=>alerts++);assert.equal(alerts,1)});
-test('collectible progression has enough free upgrades and five respawning Scared Stiff ghosts',()=>{
+test('collectible progression gives Speed, Echoes and five respawning Scared Stiff ghosts',()=>{
  const nav={nearest:p=>({...p}),path:()=>[{x:0,y:0}]},tokens=createTokens(nav,0);
  assert.equal(tokens.filter(t=>t.reward==='speedTier').length,6);
- assert.equal(tokens.filter(t=>t.reward==='phaseTier').length,7);
+ assert.equal(tokens.filter(t=>t.reward==='echo').length,7);
+ assert.equal(tokens.filter(t=>t.reward==='phaseTier').length,0);
  assert.equal(tokens.filter(t=>t.reward==='stiff').length,5);
- const effects={boost:0,stiff:0},run={speed:0,phase:0};
- for(const token of tokens.filter(t=>t.reward==='phaseTier'))collectTokens(tokens,token,effects,run,1);
- assert.equal(run.phase,7);
+ const effects={boost:0,stiff:0},run={speed:0,phase:0,echoes:0};
+ for(const token of tokens.filter(t=>t.reward==='echo'))collectTokens(tokens,token,effects,run,1);
+ assert.equal(run.echoes,35);assert.equal(run.phase,0);
  for(const token of tokens.filter(t=>t.reward==='speedTier'))collectTokens(tokens,token,effects,run,2);
  assert.equal(run.speed,6);
  const stiff=tokens.find(t=>t.reward==='stiff');collectTokens(tokens,stiff,effects,run,10);
