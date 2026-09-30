@@ -282,7 +282,7 @@ function checkObjectives(){
  }
 }
 
-function start(isTutorial=false){
+function start(){
  mode='play';mausoleumActive=false;
  const built=buildWorldSafely(p.level);
  world=built.generated;blocks=world.blocks;nav=built.builtNav;people=built.builtPeople;tokens=built.builtTokens;scenery=built.builtScenery;
@@ -311,31 +311,22 @@ function drawEntity(e){
  else if(e.meow>0){ctx.fillStyle='#c8e888';ctx.fillText('!',x,y-29)}
 }
 function drawGhost(c,x,y,scale,face,time,alpha=1){c.save();c.globalAlpha=alpha;const bob=reduced?0:Math.round(Math.sin(time*3)*2);c.fillStyle='#09121c66';c.beginPath();c.ellipse(x,y+14*scale,5*scale,1.5*scale,0,0,Math.PI*2);c.fill();const rows=GHOST_PIXELS;for(let j=0;j<rows.length;j++)for(let i=0;i<14;i++){const v=rows[j][i];if(v!=='0')rect(c,x+(i-7)*scale,y+(j-8)*scale+bob,scale,scale,v==='2'?'#c4cccb':'#eeeFec')};if(face!==3){const ex=face===0?-5:face===2?2:-3;for(const ox of [ex,ex+4])rect(c,x+ox*scale,y-3*scale+bob,scale,3*scale,'#142029')}c.restore();}
-function skillGlyph(k){
- const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${v==='2'?'#bdcec6':'#f0f2e9'}" ${k==='invisibility'?`opacity="${x<5?.22:x<9?.52:.9}"`:''}/>`).join('')).join('');
- const eyes='<path d="M11 10h1v3h-1zm4 0h1v3h-1z" fill="#18313a"/>';
- const shadow='<path d="M9 24h10v1H9zm-2 1h14v2H7zm2 2h10v1H9z" fill="#07151b" opacity=".65"/>';
- const wall='<path d="M15 2h9v23h-9z" fill="#887aa4"/><path d="M16 3h7v1h-7zm0 6h7v1h-7zm0 6h7v1h-7zm0 6h7v1h-7zM19 4h1v5h-1zm-2 6h1v5h-1zm3 6h1v5h-1z" fill="#c0acd5"/>';
- const trails='<path d="M0 9h5v2H0zm2 6h3v2H2zm-2 5h5v2H0z" fill="#b6f7d2"/>';
- const shimmer='<path d="M3 3h1v1H3zm-1 1h3v1H2zm1 1h1v1H3zm21 13h1v1h-1zm-1 1h3v1h-3zm1 1h1v1h-1z" fill="#b6f7d2"/>';
- return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${shadow}${k==='phase'?wall:''}${k==='speed'?trails:''}<g>${body}${eyes}</g>${k==='phase'?'<path d="M17 5h3v15h-3z" fill="#ab91c8" opacity=".5"/><path d="m25 10 4 4-4 4v-3h-3v-2h3z" fill="#e6ceff"/>':''}${k==='invisibility'?shimmer:''}</svg>`;
-}
+
 function pickupIconSvg(kind){
- const phase=kind==='phase',speed=kind==='speed',vanish=kind==='invisibility',stiff=kind==='stiff',task=kind==='task';
- const main=stiff?'#f0a43c':vanish?'#b9e5ff':speed?'#ddfff2':'#f7fbff',shade=stiff?'#aa5d27':vanish?'#6faecf':speed?'#8eddbf':'#d8e1ea';
- const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}" ${vanish?`opacity="${x<6?.3:x<10?.65:1}"`:''}/>`).join('')).join('');
+ const phase=kind==='phase',speed=kind==='speed',stiff=kind==='stiff',task=kind==='task';
+ const main=stiff?'#f0a43c':speed?'#ddfff2':'#f7fbff',shade=stiff?'#aa5d27':speed?'#8eddbf':'#d8e1ea';
+ const body=GHOST_PIXELS.map((row,y)=>[...row].map((v,x)=>v==='0'?'':`<rect x="${x+7}" y="${y+5}" width="1" height="1" fill="${task?`hsl(${(x*29+y*17)%360} 85% 68%)`:v==='2'?shade:main}"/>`).join('')).join('');
  const eyes='<path d="M11 10h1v3h-1zm4 0h1v3h-1z" fill="#18313a"/>';
  const trails=speed?'<path d="M0 9h6v2H0zm2 6h5v2H2zm-2 5h7v2H0z" fill="#b6f7d2"/><path d="M1 6h3v1H1zm1 17h4v1H2z" fill="#ecfff8"/>':'';
- const shimmer=vanish?'<path d="M3 4h2v2H3zm20 4h2v2h-2zm-2 13h2v2h-2z" fill="#dff7ff"/>':'';
  const bang=stiff?'<path d="M25 3h2v6h-2zm0 8h2v2h-2z" fill="#fff1b0"/>':'';
- return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${shimmer}${bang}</svg>`;
+ return `<svg viewBox="0 0 32 30" shape-rendering="crispEdges" aria-hidden="true">${trails}<g class="${phase?'phasePulse':''}">${body}${eyes}</g>${bang}</svg>`;
 }
 function announcePickup(event){
  const box=$('pickupAnnouncement');if(!box)return;
  for(const timer of pickupTimers)clearTimeout(timer);pickupTimers=[];
  box.hidden=false;box.className=`pickupAnnouncement ${event.kind}`;$('pickupIcon').innerHTML=pickupIconSvg(event.kind);$('pickupTitle').textContent=event.title;$('pickupDetail').textContent=event.detail;
  requestAnimationFrame(()=>box.classList.add('show'));
- pickupTimers.push(setTimeout(()=>box.classList.add(event.kind==='stiff'?'toInventory':'fade'),720));
+ pickupTimers.push(setTimeout(()=>box.classList.add(event.kind==='stiff'&&!mausoleumActive?'toInventory':'fade'),720));
  pickupTimers.push(setTimeout(()=>{box.hidden=true;box.className='pickupAnnouncement'},1400));
 }
 
@@ -465,7 +456,7 @@ function draw(){
  const visible=blocks.filter(b=>b.x+b.w>camX-50&&b.x<camX+530&&b.y+b.h>cam-60&&b.y<cam+viewH+60);for(const b of visible){if(b.exit)continue;if(b.kind==='water'){rect(ctx,b.x,b.y,b.w,b.h,'#254655');for(let yy=Math.max(b.y,Math.floor(cam/32)*32);yy<Math.min(b.y+b.h,cam+viewH);yy+=32)for(let xx=b.x+10;xx<b.x+b.w;xx+=56)rect(ctx,xx+Math.round(Math.sin(t+yy)*3),yy,26,2,'#8ebaba25');}else prop(b);}
  people.filter(h=>h.x>camX-40&&h.x<camX+520&&h.y>cam-50&&h.y<cam+viewH+50).forEach(drawEntity);
  ctx.textAlign='center';ctx.font='11px sans-serif';ctx.fillStyle='#e0dcc470';for(const r of (world.regions||[]))if(r.x+r.w>camX&&r.x<camX+480&&r.y>cam-30&&r.y<cam+viewH)ctx.fillText(r.name.toUpperCase(),r.x+r.w/2,r.y+40);
- if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}
+ if(!mausoleumActive){if(p.level===0){drawCemeteryExit(ctx,world.ferry,!!run.exitOpen);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('CEMETERY GATE',world.ferry.x,world.ferry.y+22);}else{drawFerry(ctx,world.ferry);ctx.fillStyle='#dce6bf';ctx.font='bold 12px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('THE WAY FORWARD',world.ferry.x,world.ferry.y-110);}}
  for(const token of tokens)if(!token.collected&&token.x>camX-45&&token.x<camX+525&&token.y>cam-45&&token.y<cam+viewH+45)drawToken(token);
  if(run.tasks)for(const task of availableTasks()){drawMemoryRoom(task);drawTaskGhost(task)}
  if(phaseVisual>0){drawGhost(ctx,ghost.x-5,ghost.y-16,3,ghost.face,t,.14);drawGhost(ctx,ghost.x+5,ghost.y-16,3,ghost.face,t,.14)}
