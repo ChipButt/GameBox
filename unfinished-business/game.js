@@ -141,13 +141,12 @@ function updateMausoleum(dt){
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);
  if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){
   run.explored=(run.explored||0)+1;
-  const bands=Math.floor(run.explored/6),previous=run.awardedBands||0;
-  if(bands>previous){
-   const gained=(bands-previous)*5;run.awardedBands=bands;run.echoes=(run.echoes||0)+gained;tone(520,.035);
-   const price=phaseCost(run),justAffordable=run.echoes>=price&&run.echoes-gained<price;
-   if(run.echoes===5&&run.phase===0){
-    showGamePopup({kind:'echo',title:'These are Echoes!',detail:'You earn Echoes by exploring new ground. Keep moving around to build enough to unlock Phase.',icon:pickupIconSvg('echo'),onClose:()=>updateSkills()});
-   }
+  const before=run.echoes||0;run.echoes=before+1;tone(520,.035);
+  const price=phaseCost(run),justAffordable=run.echoes>=price&&before<price;
+  if(run.echoes===1&&run.phase===0){
+   tutorialHighlight='echo';updateSkills();
+   showGamePopup({kind:'echo',title:'Echoes',detail:'Explore new ground to earn Echoes. Echoes are spent to unlock stronger Phase levels.',icon:'',onClose:()=>{tutorialHighlight='';updateSkills()}});
+  }else{
    if(justAffordable&&run.phase===0)tutorialHighlight='upgrade';
    updateSkills();
   }
@@ -367,7 +366,7 @@ function renderHowToPlay(){
   <span class="mapPopupKicker">HOW TO PLAY</span>
   <strong class="mapPopupTitle">Ghostly powers</strong>
   <div class="howPower"><span>${pickupIconSvg('speed')}</span><div><b>Speed ghost</b><small>Collect these to increase your ghostly SPEED!</small></div></div>
-  <div class="howPower"><span>${pickupIconSvg('echo')}</span><div><b>Echoes</b><small>Explore and collect Echoes. When you have enough, the Phase upgrade appears.</small></div></div>
+  <div class="howPower"><span>${pickupIconSvg('echo')}</span><div><b>Echoes</b><small>Explore new ground to earn Echoes. When you have enough, the Phase upgrade appears.</small></div></div>
   <div class="howRule"><b>PHASE</b><small>Spend Echoes to unlock stronger Phase levels. Tap PHASE to activate it, then move through green-tinted walls and doors.</small></div>
   <div class="howPower"><span>${pickupIconSvg('stiff')}</span><div><b>Scary ghost</b><small>Collect these to scare a living creature stiff and stop them returning you to the start.</small></div></div>
   <div class="howRule"><b>DON'T GET SEEN!</b><small>People can catch ghosts. Stay out of their sight.</small></div>
@@ -428,11 +427,12 @@ function guardIconSvg(){
  drawHuman(q,sample,true);
  return `<img class="renderedCharacterIcon" src="${c.toDataURL('image/png')}" alt="">`;
 }
-function showGamePopup({kind='info',title='',detail='',icon='',onClose=null}){
+function showGamePopup({kind='info',title='',detail='',icon=null,onClose=null}){
  const box=$('pickupAnnouncement');if(!box)return;
  resetInput();uiPopupOpen=true;popupCloseAction=onClose;
  box.hidden=false;box.className=`pickupAnnouncement mapPopup ${kind} show`;
- $('pickupIcon').innerHTML=icon||pickupIconSvg(kind);
+ $('pickupIcon').innerHTML=icon===null?pickupIconSvg(kind):icon;
+ $('pickupIcon').classList.toggle('empty',icon==='');
  $('pickupTitle').textContent=title;
  $('pickupDetail').textContent=detail;
 }
@@ -445,7 +445,6 @@ $('pickupClose').onclick=closeGamePopup;
 function announcePickup(event){
  const copy={
   speed:['This is a Speed ghost!','Collect these to increase your ghostly SPEED!'],
-  echo:['This is an Echo!','Echoes unlock stronger Phase levels. When you have enough, the upgrade button appears above PHASE.'],
   stiff:['This is a scary ghost!','Collect these to scare a living creature stiff and stop them returning you to the start of your journey!']
  }[event.kind]||[event.title,event.detail];
  showGamePopup({kind:event.kind,title:copy[0],detail:copy[1]});
@@ -457,9 +456,10 @@ function updateSkills(){
  controls.hidden=mode!=='play';
  const price=phaseCost(run),canUpgrade=(run.phase||0)<RUN_MAX.phase&&(run.echoes||0)>=price;
  const upgradeClass=tutorialHighlight==='upgrade'?' tutorialFocus':'';
- const activateClass=tutorialHighlight==='activate'?' tutorialFocus':'';
+ const activateClass=(tutorialHighlight==='activate'||tutorialHighlight==='echo')?' tutorialFocus':'';
+ const echoClass=tutorialHighlight==='echo'?' tutorialFocus':'';
  bar.innerHTML=`<div class="phaseControl">
-   <div class="echoReadout"><span>ECHOES</span><strong>${run.echoes||0}</strong></div>
+   <div class="echoReadout${echoClass}"><span>ECHOES</span><strong>${run.echoes||0}</strong></div>
    ${canUpgrade?`<button id="phaseUpgrade" class="phaseUpgrade${upgradeClass}" aria-label="Upgrade Phase"><strong>UPGRADE PHASE</strong><small>TIER ${run.phase+1} · ${price} ECHOES</small></button>`:''}
    <button id="ability-phase" class="ability phaseActivate ${run.phase>0?'ready':'locked'}${phaseActive?' active':''}${activateClass}" aria-label="${phaseActive?'Deactivate':'Activate'} Phase" aria-pressed="${phaseActive}">
     <span class="abilityArt">${pickupIconSvg('phase')}</span><strong>PHASE</strong><small>${run.phase>0?`TIER ${run.phase} · ${phaseActive?'ACTIVE':'TAP TO ACTIVATE'}`:'LOCKED'}</small>
@@ -534,8 +534,10 @@ function update(dt){
  let x=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0),len=Math.hypot(x,y);if(len>1){x/=len;y/=len}if(x)ghost.face=x<0?0:2;else if(y)ghost.face=y<0?3:1;
  const speed=runSpeed(run)*dt;if(x)move(x*speed,0,dt);if(y)move(0,y*speed,dt);contact=null;contactTime=0;ghost.x=Math.max(34,Math.min(WORLD.width-34,ghost.x));ghost.y=Math.max(34,Math.min(WORLD.height-34,ghost.y));
  if(!blocks.some(b=>overlap(ghost.x,ghost.y,b,0))&&discover(visited,ghost.x,ghost.y)){
-  run.explored=(run.explored||0)+1;const bands=Math.floor(run.explored/6);
-  if(bands>(run.awardedBands||0)){const gained=(bands-(run.awardedBands||0))*5;run.awardedBands=bands;run.echoes=(run.echoes||0)+gained;tone(520,.035);updateSkills()}
+  run.explored=(run.explored||0)+1;
+  const before=run.echoes||0;run.echoes=before+1;tone(520,.035);
+  if(run.echoes>=phaseCost(run)&&before<phaseCost(run))tutorialHighlight='upgrade';
+  updateSkills();
  }
  for(const event of collectTokens(tokens,ghost,effects,run,t)){
   if(event.kind==='stiffFull'){note('SCARED STIFF · 3 / 3',1.2);continue}
