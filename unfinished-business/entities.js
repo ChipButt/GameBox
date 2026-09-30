@@ -1,4 +1,4 @@
-import {WORLD} from './world.js?v=20260927l';
+import {WORLD,LEVELS} from './world.js?v=20260930b';
 import {overlap,rayBlocked} from './model.js?v=20260927l';
 const STEP=24,COLS=Math.ceil(WORLD.width/STEP),ROWS=Math.ceil(WORLD.height/STEP);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -103,39 +103,73 @@ export function updateEntities(entities,nav,blocks,dt){for(const e of entities){
 export function sees(e,target,blocks,invisible=false){if(invisible||e.frozen>0)return false;const dx=target.x-e.x,dy=target.y-e.y,angle=Math.atan2(dy,dx),delta=Math.atan2(Math.sin(angle-e.angle),Math.cos(angle-e.angle));return Math.hypot(dx,dy)<e.range&&Math.abs(delta)<e.half&&!rayBlocked(e.x,e.y,target.x,target.y,blocks);}
 export function resolveSightings(entities,target,blocks,effects,invisible,alert){let danger=false,blocked=false;for(const e of entities){if(!sees(e,target,blocks,invisible))continue;if(effects.stiff>0){effects.stiff--;e.frozen=8;blocked=true;continue}if(e.kind==='cat'){if(e.cooldown<=0){e.cooldown=9;e.meow=1.5;alert({x:e.x,y:e.y},1)}continue}danger=true;}return {danger,blocked};}
 export function createTokens(nav,level=0){
- const points=[
+ const safeLevel=Math.max(0,Math.min(LEVELS.length-1,level|0)),spawn=LEVELS[safeLevel].spawn;
+ const preferred=[
   [300,2140],[520,2050],[760,1910],[1040,2100],[1390,2070],[1600,1920],[1900,2050],[2110,1840],
   [360,1660],[650,1560],[1080,1710],[1450,1590],[1800,1690],[2080,1450],
   [330,1320],[720,1190],[1050,1320],[1390,1180],[1770,1320],[2070,1120],
   [380,920],[760,830],[1110,930],[1450,760],[1810,900],[2100,680],
   [520,520],[880,430],[1270,560],[1660,470],[2020,390],[1320,300]
  ];
- const rewards=['echo25','speedTier','stiff','echo50','invisibilityTier','echo25','phaseTier','stiff',
-  'speedTier','echo25','speedTier','refill','echo50','stiff','phaseTier','echo25',
-  'invisibilityTier','speedTier','echo50','speedTier','stiff','echo25','refill','speedTier',
-  'phaseTier','echo50','invisibilityTier','stiff','speedTier','echo25','speedTier','echo50'];
- return points.map(([x,y],id)=>{
-  const n=nav.nearest({x,y});return n?{id,...n,reward:rewards[(id+level*5)%rewards.length],collected:false}:null;
- }).filter(Boolean);
+ const pool=[],seen=new Set();
+ const addPoint=(x,y,requireSpawnPath)=>{
+  const n=nav.nearest({x,y});if(!n)return;
+  const key=`${Math.round(n.x)}:${Math.round(n.y)}`;if(seen.has(key))return;
+  if(requireSpawnPath&&!nav.path(spawn,n))return;
+  if(pool.some(p=>distance(p,n)<92))return;
+  seen.add(key);pool.push(n);
+ };
+ // Fill reachable public ground first so the player can always begin progression.
+ for(const [x,y] of preferred)addPoint(x+(safeLevel%2)*18,y-(safeLevel%3)*14,true);
+ for(let y=210;y<WORLD.height-150&&pool.length<25;y+=170)for(let x=180;x<WORLD.width-150&&pool.length<25;x+=190)addPoint(x+((y/170|0)%2)*55,y,true);
+ // Then fill any remaining slots; later Phase tiers can reach these if the map isolates them.
+ for(const [x,y] of preferred)if(pool.length<25)addPoint(x,y,false);
+ for(let y=180;y<WORLD.height-120&&pool.length<25;y+=140)for(let x=160;x<WORLD.width-120&&pool.length<25;x+=155)addPoint(x,y,false);
+ const rewards=[
+  'phaseTier','speedTier','invisibilityTier','stiff',
+  'phaseTier','speedTier','invisibilityTier',
+  'phaseTier','stiff','speedTier','invisibilityTier',
+  'phaseTier','speedTier','invisibilityTier','stiff',
+  'phaseTier','invisibilityTier','speedTier',
+  'phaseTier','stiff','invisibilityTier',
+  'phaseTier','speedTier','invisibilityTier','stiff'
+ ];
+ return rewards.map((reward,id)=>{
+  const n=pool[id]||nav.nearest({x:spawn.x+((id%5)-2)*48,y:spawn.y-Math.floor(id/5)*56})||spawn;
+  return {id,...n,reward,collected:false,respawnAt:0,respawnSeconds:reward==='stiff'?35:0,fullNoticeAt:0};
+ });
 }
-export function collectTokens(tokens,ghost,effects,run,maxEnergy){
- const messages=[];
+export function updateTokenRespawns(tokens,now=0){
  for(const token of tokens){
-  if(token.collected||distance(token,ghost)>21)continue;
+  if(token.reward==='stiff'&&token.collected&&token.respawnAt>0&&now>=token.respawnAt){
+   token.collected=false;token.respawnAt=0;token.fullNoticeAt=0;
+  }
+ }
+}
+export function collectTokens(tokens,ghost,effects,run,maxEnergy,now=0){
+ const events=[];
+ for(const token of tokens){
+  if(token.collected||distance(token,ghost)>24)continue;
+  if(token.reward==='stiff'&&effects.stiff>=3){
+   if(now>=token.fullNoticeAt){token.fullNoticeAt=now+1.5;events.push({kind:'stiffFull',title:'Scared Stiff full',detail:'3 / 3 stored',token});}
+   continue;
+  }
   token.collected=true;
   const upgrade=(k,label)=>{
-   if(run[k]<(k==='speed'?6:7)){run[k]++;messages.push(`${label} strengthened to tier ${run[k]}.`);return true}
-   run.echoes+=25;messages.push(`${label} is already at maximum · token became 25 Echoes.`);return false;
+   const max=k==='speed'?6:7;
+   if((run[k]||0)<max){run[k]=(run[k]||0)+1;events.push({kind:k,title:`${label} upgraded`,detail:`TIER ${run[k]} / ${max}`,token});return true}
+   events.push({kind:k,title:`${label} already maxed`,detail:`TIER ${max} / ${max}`,token});return false;
   };
-  if(token.reward==='speedTier')upgrade('speed','Movement');
-  else if(token.reward==='invisibilityTier'){if(upgrade('invisibility','Vanish'))effects.energy=1.4+(run.invisibility-1)*.85}
-  else if(token.reward==='phaseTier')upgrade('phase','Phase');
-  else if(token.reward==='refill'){
-   if(run.invisibility>0){effects.energy=maxEnergy;messages.push('Vanish fully restored.')}
-   else{run.echoes+=20;messages.push('The token releases 20 Echoes.')}
+  if(token.reward==='speedTier')upgrade('speed','Speed');
+  else if(token.reward==='invisibilityTier'){
+   if(upgrade('invisibility','Vanish'))effects.energy=maxEnergy>0?Math.max(maxEnergy,1.4+(run.invisibility-1)*.85):1.4+(run.invisibility-1)*.85;
   }
-  else if(token.reward==='stiff'){effects.stiff=Math.min(3,effects.stiff+1);messages.push(`Scared Stiff collected · ${effects.stiff}/3 stored.`)}
-  else{const amount=token.reward==='echo50'?50:25;run.echoes+=amount;messages.push(`The token releases ${amount} Echoes.`)}
+  else if(token.reward==='phaseTier')upgrade('phase','Phase');
+  else if(token.reward==='stiff'){
+   effects.stiff=Math.min(3,effects.stiff+1);token.respawnAt=now+(token.respawnSeconds||35);
+   events.push({kind:'stiff',title:'Scared Stiff',detail:`${effects.stiff} / 3 STORED · RESPAWNS`,token});
+  }
  }
- return messages;
+ return events;
 }
+
