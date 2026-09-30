@@ -263,3 +263,91 @@ h1{line-height:.95}h1 em{font-style:normal}
 .howRule{margin-top:9px;padding:9px 10px;border-left:3px solid #d0a75b;background:#0c1a21cc;text-align:left}
 .renderedCharacterIcon{display:block;width:92px;height:92px;object-fit:contain;image-rendering:pixelated}
 .featureGlyph{display:grid;width:78px;height:72px;place-items:center;font-size:52px;color:#c7d6dc;text-shadow:3px 3px 0 #18252b}
+
+
+/* Begin-your-Escape visual language for in-game cards and menus */
+.pickupAnnouncement.mapPopup,
+.taskPopup.mapPopup,
+.settingsPopup.mapPopup{
+  border:3px solid #e2f6ba!important;
+  border-radius:0!important;
+  background:linear-gradient(#c7e9a9,#91bf8d)!important;
+  color:#183532!important;
+  box-shadow:
+    0 6px 0 #456b55,
+    0 10px 0 #0a1922,
+    inset 0 2px #f2ffdb,
+    inset 0 -4px #689e7b!important;
+  clip-path:polygon(
+    7px 0,calc(100% - 7px) 0,
+    calc(100% - 7px) 3px,100% 3px,
+    100% calc(100% - 3px),calc(100% - 7px) calc(100% - 3px),
+    calc(100% - 7px) 100%,7px 100%,
+    7px calc(100% - 3px),0 calc(100% - 3px),
+    0 3px,7px 3px
+  );
+}
+.pickupAnnouncement.mapPopup.warning,
+.pickupAnnouncement.mapPopup.stiff,
+.pickupAnnouncement.mapPopup.speed,
+.pickupAnnouncement.mapPopup.phase{
+  border-color:#e2f6ba!important;
+  box-shadow:0 6px 0 #456b55,0 10px 0 #0a1922,inset 0 2px #f2ffdb,inset 0 -4px #689e7b!important;
+}
+.pickupAnnouncement.mapPopup strong,
+.taskPopup .mapPopupTitle,
+.settingsPopup .mapPopupTitle{
+  color:#183532!important;
+  text-shadow:0 1px #e2ffcf99;
+}
+.pickupAnnouncement.mapPopup small,
+.taskPopup .mapPopupKicker,
+.settingsPopup .mapPopupKicker{
+  color:#294b42!important;
+}
+.mapPopupClose{
+  border:2px solid #315a4b!important;
+  background:linear-gradient(#567d68,#365a4b)!important;
+  color:#f0f8d9!important;
+  box-shadow:0 3px 0 #18382f,inset 0 1px #a9d2a4!important;
+  border-radius:0!important;
+}
+.taskPopup .taskItem,
+.howPower,
+.howRule{
+  border:2px solid #557a63!important;
+  background:linear-gradient(#f0f6ce,#d6e8b7)!important;
+  color:#183532!important;
+  box-shadow:0 3px 0 #5b8065,inset 0 1px #fffde8!important;
+}
+.taskPopup .taskItem strong,
+.howPower b,
+.howRule b{color:#183532!important;text-shadow:0 1px #ffffff66}
+.taskPopup .taskItem small,
+.howPower small,
+.howRule small{color:#36594d!important}
+.taskPopup .taskItem .taskDistance{color:#725c2c!important}
+.taskPopup .taskItem.complete{background:linear-gradient(#c7ddb3,#a8c79e)!important;opacity:.7}
+.settingsChoice{
+  position:relative;
+  border:3px solid #e2f6ba!important;
+  border-radius:0!important;
+  background:linear-gradient(#c7e9a9,#91bf8d)!important;
+  color:#183532!important;
+  text-shadow:0 1px #e2ffcf99;
+  box-shadow:0 4px 0 #456b55,0 6px 0 #0a1922,inset 0 2px #f2ffdb,inset 0 -3px #689e7b!important;
+  clip-path:polygon(6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),0 calc(100% - 3px),0 3px,6px 3px);
+}
+.settingsChoice:active{transform:translateY(3px);box-shadow:0 1px 0 #456b55,0 3px 0 #0a1922,inset 0 2px #f2ffdb!important}
+.settingsChoice.danger{
+  border-color:#f0d2a0!important;
+  background:linear-gradient(#e8d2a4,#c6a875)!important;
+  color:#47351f!important;
+  box-shadow:0 4px 0 #80613d,0 6px 0 #0a1922,inset 0 2px #fff0c9,inset 0 -3px #a98554!important;
+}
+.howBack{
+  color:#21483c!important;
+  font-weight:950!important;
+}
+.pickupIcon,
+.renderedCharacterIcon{filter:drop-shadow(0 3px 1px #36554588)}
