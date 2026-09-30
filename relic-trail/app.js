@@ -227,13 +227,13 @@
     const p=$('#activeAdventurePanel');
     const found=state.discovered.length, pct=state.completed?100:(found/relics.length*100);
     if(state.completed){
-      $('#adventuresLead').textContent='Your first Bidford folio is complete.';
+      if($('#adventuresLead')) $('#adventuresLead').textContent='Your first Bidford folio is complete.';
       p.innerHTML=`<article class="journeyCard"><span class="eyebrow">COMPLETED</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:100%"></i></div><b>10 / 10</b></div><button class="primaryButton" data-open-collection>OPEN FIELD FOLIO <span>→</span></button></article>`;
     } else if(state.adventureActive || found>0){
-      $('#adventuresLead').textContent='Your Bidford trail is in progress.';
+      if($('#adventuresLead')) $('#adventuresLead').textContent='Your Bidford trail is in progress.';
       p.innerHTML=`<article class="journeyCard"><span class="eyebrow">ACTIVE · BIDFORD</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:${pct}%"></i></div><b>${found} / 10</b></div><button class="primaryButton" data-continue-adventure>CONTINUE ADVENTURE <span>→</span></button></article>`;
     } else {
-      $('#adventuresLead').textContent='One trail is waiting by the Avon.';
+      if($('#adventuresLead')) $('#adventuresLead').textContent='One trail is waiting by the Avon.';
       p.innerHTML=`<article class="journeyCard"><span class="eyebrow">READY TO BEGIN</span><h2>The Lost Relics of Bidford</h2><div class="journeyProgress"><div><i style="width:0%"></i></div><b>0 / 10</b></div><button class="primaryButton" data-open-adventure>VIEW ADVENTURE <span>→</span></button></article>`;
     }
     $$('[data-open-collection]',p).forEach(b=>b.onclick=()=>showScreen('collection'));
