@@ -7,15 +7,29 @@
 
   const wrap = document.getElementById('stageWrap');
   const actionLabel = document.getElementById('actionLabel');
-  const directionLabel = document.getElementById('directionLabel');
-  const frameLabel = document.getElementById('frameLabel');
   const loadError = document.getElementById('loadError');
+  const creator = document.getElementById('creator');
+  const creatorPreview = document.getElementById('creatorPreview');
+  const previewCtx = creatorPreview.getContext('2d');
+  previewCtx.imageSmoothingEnabled = false;
 
+  const STORAGE_KEY = 'gamebox-cute-elf-character-v1';
   const WALK_FPS = 10;
   const IDLE_FPS = 6;
+  const SCALE = 2;
+
+  const inputs = {
+    hat: document.getElementById('colourHat'),
+    skin: document.getElementById('colourSkin'),
+    hair: document.getElementById('colourHair'),
+    jacket: document.getElementById('colourJacket'),
+    trousers: document.getElementById('colourTrousers'),
+    shoes: document.getElementById('colourShoes')
+  };
+
   const state = {
     x: 192,
-    y: 204,
+    y: 220,
     dir: 'south',
     sourceDir: 'south',
     mode: 'idle',
@@ -27,6 +41,34 @@
   };
 
   let sprite;
+
+  function validHex(v) {
+    return /^#[0-9a-f]{6}$/i.test(String(v || ''));
+  }
+
+  function themeFromInputs() {
+    return Object.fromEntries(Object.entries(inputs).map(([key,input]) => [key, input.value]));
+  }
+
+  function applyInputs(theme) {
+    const base = sprite?.defaults || {
+      hat:'#548343', skin:'#f2bba0', hair:'#b56531',
+      jacket:'#548343', trousers:'#2d2a37', shoes:'#4f4238'
+    };
+    for (const [key,input] of Object.entries(inputs)) {
+      input.value = validHex(theme?.[key]) ? theme[key] : base[key];
+    }
+  }
+
+  function savedTheme() {
+    try {
+      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!value || typeof value !== 'object') return null;
+      return Object.fromEntries(Object.entries(value).filter(([key,v]) => inputs[key] && validHex(v)));
+    } catch (_) {
+      return null;
+    }
+  }
 
   function resize() {
     const r = wrap.getBoundingClientRect();
@@ -69,7 +111,7 @@
       const nx = state.joyX / mag;
       const ny = state.joyY / mag;
       state.x = Math.max(42, Math.min(342, state.x + nx * 48 * dt));
-      state.y = Math.max(112, Math.min(226, state.y + ny * 48 * dt));
+      state.y = Math.max(108, Math.min(238, state.y + ny * 48 * dt));
       setMode('walk', walkingDirection(state.joyX, state.joyY, state.dir), now);
     } else {
       const idleDir = state.dir === 'north' ? 'north' : state.dir === 'south' ? 'south' : state.dir;
@@ -77,106 +119,77 @@
     }
   }
 
-  function animationFrame(now) {
-    const fps = state.mode === 'walk' ? WALK_FPS : IDLE_FPS;
-    return Math.floor(Math.max(0, now - state.animStart) / 1000 * fps) % 8;
+  function animationFrame(now, fps = null) {
+    const rate = fps || (state.mode === 'walk' ? WALK_FPS : IDLE_FPS);
+    return Math.floor(Math.max(0, now - state.animStart) / 1000 * rate) % 8;
   }
 
-  function drawWorkshop() {
-    ctx.fillStyle = '#123021';
-    ctx.fillRect(0, 0, 384, 256);
+  function currentFrame(now) {
+    const index = animationFrame(now);
+    if (state.mode === 'walk') return sprite.walk(state.sourceDir, index);
+    if (state.sourceDir === 'south' || state.sourceDir === 'north') return sprite.idle(state.sourceDir, index);
+    return sprite.rotation(state.dir);
+  }
 
-    ctx.fillStyle = '#204b34';
-    ctx.fillRect(0, 0, 384, 62);
-    ctx.fillStyle = '#8e2932';
-    ctx.fillRect(0, 58, 384, 4);
+  function drawWorkshop(target, width, height) {
+    target.fillStyle = '#123021';
+    target.fillRect(0, 0, width, height);
 
-    for (let x = 18; x < 384; x += 74) {
-      ctx.fillStyle = '#f5e8c7';
-      ctx.fillRect(x, 12, 48, 34);
-      ctx.fillStyle = '#9f343a';
-      ctx.fillRect(x + 4, 16, 40, 26);
-      ctx.fillStyle = '#ead8ae';
-      ctx.fillRect(x + 8, 20, 32, 18);
-      ctx.fillStyle = '#285a3c';
-      ctx.fillRect(x + 14, 24, 20, 10);
+    target.fillStyle = '#204b34';
+    target.fillRect(0, 0, width, Math.round(height * .24));
+    target.fillStyle = '#8e2932';
+    target.fillRect(0, Math.round(height * .225), width, Math.max(3, Math.round(height * .016)));
+
+    const floorY = Math.round(height * .24);
+    target.fillStyle = '#b38862';
+    target.fillRect(0, floorY, width, height - floorY);
+
+    for (let y = floorY + 8; y < height; y += 18) {
+      target.fillStyle = '#c59a70';
+      target.fillRect(0, y, width, 1);
+    }
+    for (let x = 0; x < width; x += 36) {
+      target.fillStyle = '#9e7658';
+      target.fillRect(x, floorY, 1, height - floorY);
     }
 
-    ctx.fillStyle = '#b38862';
-    ctx.fillRect(0, 62, 384, 194);
-    for (let y = 70; y < 256; y += 18) {
-      ctx.fillStyle = '#c59a70';
-      ctx.fillRect(0, y, 384, 1);
-    }
-    for (let x = 0; x < 384; x += 36) {
-      ctx.fillStyle = '#9e7658';
-      ctx.fillRect(x, 62, 1, 194);
-    }
+    const rugW = Math.round(width * .48), rugH = Math.round(height * .36);
+    const rugX = Math.round((width - rugW) / 2), rugY = Math.round(height * .40);
+    target.fillStyle = '#7c2630'; target.fillRect(rugX, rugY, rugW, rugH);
+    target.fillStyle = '#a4373e'; target.fillRect(rugX+6, rugY+6, rugW-12, rugH-12);
+    target.fillStyle = '#e3bd69'; target.fillRect(rugX+14, rugY+14, rugW-28, rugH-28);
+    target.fillStyle = '#24533a'; target.fillRect(rugX+22, rugY+22, rugW-44, rugH-44);
+  }
 
-    ctx.fillStyle = '#7c2630';
-    ctx.fillRect(100, 100, 184, 92);
-    ctx.fillStyle = '#a4373e';
-    ctx.fillRect(106, 106, 172, 80);
-    ctx.fillStyle = '#e3bd69';
-    ctx.fillRect(114, 114, 156, 64);
-    ctx.fillStyle = '#24533a';
-    ctx.fillRect(122, 122, 140, 48);
+  function drawElf(target, frame, centerX, groundY, scale = SCALE) {
+    const bounds = sprite.bounds(frame);
+    const drawX = Math.round(centerX - 42 * scale);
+    const drawY = Math.round(groundY - (bounds.maxY + 1) * scale);
 
-    ctx.fillStyle = '#6a4b34';
-    ctx.fillRect(14, 76, 62, 42);
-    ctx.fillRect(308, 76, 62, 42);
-    ctx.fillStyle = '#d1a95c';
-    ctx.fillRect(20, 82, 50, 30);
-    ctx.fillRect(314, 82, 50, 30);
-    ctx.fillStyle = '#b8343b';
-    ctx.fillRect(28, 90, 14, 14);
-    ctx.fillStyle = '#315f40';
-    ctx.fillRect(47, 90, 14, 14);
-    ctx.fillStyle = '#b8343b';
-    ctx.fillRect(322, 90, 14, 14);
-    ctx.fillStyle = '#315f40';
-    ctx.fillRect(341, 90, 14, 14);
+    target.fillStyle = '#07120c66';
+    target.beginPath();
+    const shadowW = Math.max(18, Math.min(31, bounds.width * scale * .37));
+    target.ellipse(Math.round(centerX), Math.round(groundY + 2), shadowW, 6, 0, 0, Math.PI * 2);
+    target.fill();
 
-    ctx.fillStyle = '#fff7dd';
-    for (const p of [[30,54],[82,36],[152,50],[224,30],[290,47],[350,28]]) {
-      ctx.fillRect(p[0],p[1],2,2);
-      ctx.fillRect(p[0]-2,p[1]+2,6,1);
-      ctx.fillRect(p[0],p[1]-2,1,6);
-    }
+    target.save();
+    target.imageSmoothingEnabled = false;
+    target.drawImage(frame, drawX, drawY, 84 * scale, 84 * scale);
+    target.restore();
   }
 
   function draw(now) {
-    drawWorkshop();
+    drawWorkshop(ctx, canvas.width, canvas.height);
+    const frame = currentFrame(now);
+    if (frame) drawElf(ctx, frame, state.x, state.y, SCALE);
+  }
 
-    ctx.fillStyle = '#07120c66';
-    ctx.beginPath();
-    ctx.ellipse(Math.round(state.x), Math.round(state.y + 4), 28, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    const index = animationFrame(now);
-    let frame;
-    let sourceText;
-
-    if (state.mode === 'walk') {
-      frame = sprite.walk(state.sourceDir, index);
-      sourceText = 'WALK ' + state.sourceDir.toUpperCase() + ' · frame ' + (index + 1) + '/8';
-    } else if (state.sourceDir === 'south' || state.sourceDir === 'north') {
-      frame = sprite.idle(state.sourceDir, index);
-      sourceText = 'IDLE ' + state.sourceDir.toUpperCase() + ' · frame ' + (index + 1) + '/8';
-    } else {
-      frame = sprite.rotation(state.dir);
-      sourceText = 'FACING ' + state.dir.toUpperCase() + ' · rotation frame';
-    }
-
-    if (frame) {
-      ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(frame, Math.round(state.x - 84), Math.round(state.y - 160), 168, 168);
-      ctx.restore();
-    }
-
-    directionLabel.textContent = state.dir.toUpperCase();
-    frameLabel.textContent = sourceText;
+  function drawPreview(now) {
+    drawWorkshop(previewCtx, creatorPreview.width, creatorPreview.height);
+    if (!sprite) return;
+    const index = Math.floor(now / 1000 * IDLE_FPS) % 8;
+    const frame = sprite.idle('south', index);
+    if (frame) drawElf(previewCtx, frame, creatorPreview.width / 2, creatorPreview.height - 10, SCALE);
   }
 
   function loop(now) {
@@ -184,8 +197,41 @@
     state.last = now;
     update(dt, now);
     draw(now);
+    drawPreview(now);
     requestAnimationFrame(loop);
   }
+
+  function setThemeFromCreator() {
+    if (!sprite) return;
+    sprite.setTheme(themeFromInputs());
+  }
+
+  for (const input of Object.values(inputs)) {
+    input.addEventListener('input', setThemeFromCreator);
+    input.addEventListener('change', setThemeFromCreator);
+  }
+
+  document.getElementById('resetCharacter').addEventListener('click', () => {
+    applyInputs(sprite.defaults);
+    sprite.setTheme(sprite.defaults);
+  });
+
+  document.getElementById('saveCharacter').addEventListener('click', () => {
+    const theme = themeFromInputs();
+    sprite.setTheme(theme);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+    creator.classList.add('hidden');
+    actionLabel.textContent = state.mode === 'walk' ? 'WALKING' : 'IDLE';
+  });
+
+  document.getElementById('customiseBtn').addEventListener('click', () => {
+    applyInputs(sprite.getTheme());
+    creator.classList.remove('hidden');
+  });
+
+  document.getElementById('creatorClose').addEventListener('click', () => {
+    creator.classList.add('hidden');
+  });
 
   const joy = document.getElementById('joystick');
   const knob = document.getElementById('joyKnob');
@@ -228,6 +274,7 @@
   const keys = new Set();
   addEventListener('keydown', event => {
     const key = event.key.toLowerCase();
+    if (event.target?.matches('input,button')) return;
     keys.add(key);
     if (['arrowup','arrowdown','arrowleft','arrowright'].includes(key)) event.preventDefault();
   });
@@ -251,6 +298,11 @@
     if (sprite.data.width !== 84 || sprite.data.height !== 84 || sprite.data.frameCount !== 56) {
       throw new Error('Unexpected elf sprite dimensions.');
     }
+
+    const saved = savedTheme();
+    applyInputs(saved || sprite.defaults);
+    sprite.setTheme(saved || sprite.defaults);
+
     actionLabel.textContent = 'IDLE';
     resize();
     addEventListener('resize', resize, { passive: true });
@@ -262,5 +314,6 @@
     loadError.hidden = false;
     loadError.textContent = 'Could not load coded Christmas elf sprite data: ' + error.message;
     actionLabel.textContent = 'LOAD ERROR';
+    creator.classList.add('hidden');
   }
 })();
