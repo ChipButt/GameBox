@@ -20,6 +20,68 @@
     return bytes[offset] | (bytes[offset + 1] << 8);
   }
 
+  function isBackgroundCandidate(r, g, b, a) {
+    if (!a) return false;
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+    // Flat mid-greys used by the unwanted baked background.
+    if (spread <= 6 && r >= 90 && r <= 160 && g >= 90 && g <= 160 && b >= 90 && b <= 160) return true;
+    // Pale blue-grey blocks that occur in the same bad walking-set backgrounds.
+    if (r >= 140 && r <= 190 && g >= 160 && g <= 210 && b >= 190 && b <= 235) return true;
+    return false;
+  }
+
+  function removeBakedBackground(image, width, height) {
+    const data = image.data;
+    const seen = new Uint8Array(width * height);
+    const stack = new Int32Array(width * height);
+    const component = new Int32Array(width * height);
+
+    const candidateAt = (index) => {
+      const q = index * 4;
+      return isBackgroundCandidate(data[q], data[q + 1], data[q + 2], data[q + 3]);
+    };
+
+    for (let start = 0; start < width * height; start += 1) {
+      if (seen[start] || !candidateAt(start)) continue;
+
+      let stackSize = 0;
+      let componentSize = 0;
+      stack[stackSize++] = start;
+      seen[start] = 1;
+
+      while (stackSize) {
+        const index = stack[--stackSize];
+        component[componentSize++] = index;
+        const x = index % width;
+        const y = (index / width) | 0;
+
+        if (x > 0) {
+          const n = index - 1;
+          if (!seen[n] && candidateAt(n)) { seen[n] = 1; stack[stackSize++] = n; }
+        }
+        if (x + 1 < width) {
+          const n = index + 1;
+          if (!seen[n] && candidateAt(n)) { seen[n] = 1; stack[stackSize++] = n; }
+        }
+        if (y > 0) {
+          const n = index - width;
+          if (!seen[n] && candidateAt(n)) { seen[n] = 1; stack[stackSize++] = n; }
+        }
+        if (y + 1 < height) {
+          const n = index + width;
+          if (!seen[n] && candidateAt(n)) { seen[n] = 1; stack[stackSize++] = n; }
+        }
+      }
+
+      // Only remove large connected regions. Small greys/blues in the elf itself stay untouched.
+      if (componentSize >= 180) {
+        for (let i = 0; i < componentSize; i += 1) {
+          data[component[i] * 4 + 3] = 0;
+        }
+      }
+    }
+  }
+
   function buildFrame(frameIndex) {
     if (api.cache.has(frameIndex)) return api.cache.get(frameIndex);
     const { width, height, palette, indicesOffset, bytes } = api.data;
@@ -46,6 +108,7 @@
       out[q + 3] = 255;
     }
 
+    removeBakedBackground(image, width, height);
     ctx.putImageData(image, 0, 0);
     api.cache.set(safeIndex, canvas);
     return canvas;
