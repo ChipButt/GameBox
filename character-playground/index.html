@@ -4,22 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#173c2a">
-  <title>Christmas Elf Test · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <title>Christmas Elf · GameBox</title>
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
       <div class="title">
-        <strong>Christmas Elf Test</strong>
-        <span id="actionLabel">LOADING CODED SPRITE…</span>
+        <strong>Christmas Elf</strong>
+        <span id="actionLabel">LOADING CHARACTER…</span>
       </div>
-      <div class="sourceBadge">84×84<br>CODED CLEAN</div>
+      <button id="customiseBtn" class="customiseBtn" type="button">CUSTOMISE</button>
     </header>
 
     <main class="stageWrap" id="stageWrap">
-      <canvas id="game" width="384" height="256" aria-label="Christmas elf sprite movement test"></canvas>
+      <canvas id="game" width="384" height="256" aria-label="Christmas elf movement playground"></canvas>
       <div id="loadError" class="loadError" hidden></div>
 
       <div class="controls">
@@ -28,13 +28,40 @@
           <span>MOVE</span>
         </div>
       </div>
-
-      <div class="sourceInfo">
-        <strong id="directionLabel">SOUTH</strong>
-        <span id="frameLabel">Loading exact coded frames…</span>
-      </div>
-      <div class="hint">Joystick or WASD / arrow keys</div>
     </main>
+
+    <section id="creator" class="creator" aria-label="Elf character creator">
+      <div class="creatorCard">
+        <div class="creatorHead">
+          <div>
+            <span class="eyebrow">CHARACTER SELECTOR</span>
+            <h1>Make your elf</h1>
+          </div>
+          <button id="creatorClose" class="creatorClose" type="button" aria-label="Close character selector">×</button>
+        </div>
+
+        <div class="creatorMain">
+          <div class="previewPanel">
+            <canvas id="creatorPreview" width="184" height="184" aria-label="Elf preview"></canvas>
+            <div class="previewLabel">BASE ELF · LIVE PREVIEW</div>
+          </div>
+
+          <div class="colourGrid">
+            <label class="colourChoice"><span>Hat</span><input id="colourHat" type="color" value="#548343"></label>
+            <label class="colourChoice"><span>Skin</span><input id="colourSkin" type="color" value="#f2bba0"></label>
+            <label class="colourChoice"><span>Hair</span><input id="colourHair" type="color" value="#b56531"></label>
+            <label class="colourChoice"><span>Jacket</span><input id="colourJacket" type="color" value="#548343"></label>
+            <label class="colourChoice"><span>Trousers</span><input id="colourTrousers" type="color" value="#2d2a37"></label>
+            <label class="colourChoice"><span>Shoes</span><input id="colourShoes" type="color" value="#4f4238"></label>
+          </div>
+        </div>
+
+        <div class="creatorActions">
+          <button id="resetCharacter" class="creatorBtn secondary" type="button">BASE CHARACTER</button>
+          <button id="saveCharacter" class="creatorBtn primary" type="button">SAVE &amp; PLAY</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="elf-data-1.js?v=2"></script>
@@ -55,7 +82,7 @@
   <script src="elf-data-8c.js?v=2"></script>
   <script src="elf-data-9a.js?v=2"></script>
   <script src="elf-data-9b.js?v=2"></script>
-  <script src="elf-sprite.js?v=2"></script>
-  <script src="game.js?v=4"></script>
+  <script src="elf-sprite.js?v=3"></script>
+  <script src="game.js?v=5"></script>
 </body>
 </html>
