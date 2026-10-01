@@ -4,6 +4,124 @@
   const encoded = (window.__CUTE_ELF_PACKED || []).join('');
   const api = { data: null, cache: new Map(), ready: null };
 
+  const DEFAULT_THEME = Object.freeze({
+    hat: '#548343',
+    skin: '#f2bba0',
+    hair: '#b56531',
+    jacket: '#548343',
+    trousers: '#2d2a37',
+    shoes: '#4f4238'
+  });
+  let theme = { ...DEFAULT_THEME };
+  const boundsCache = new WeakMap();
+
+  const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+
+  function hexToRgb(hex) {
+    const h = String(hex || '').replace('#','');
+    if (!/^[0-9a-f]{6}$/i.test(h)) return [128,128,128];
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+
+  function rgbToHsl(r,g,b) {
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h=0, s=0, l=(max+min)/2;
+    if (max!==min) {
+      const d=max-min;
+      s=l>.5 ? d/(2-max-min) : d/(max+min);
+      if (max===r) h=(g-b)/d+(g<b?6:0);
+      else if (max===g) h=(b-r)/d+2;
+      else h=(r-g)/d+4;
+      h/=6;
+    }
+    return [h,s,l];
+  }
+
+  function hslToRgb(h,s,l) {
+    let r,g,b;
+    if (!s) r=g=b=l;
+    else {
+      const hue2rgb=(p,q,t)=>{
+        if(t<0)t+=1;if(t>1)t-=1;
+        if(t<1/6)return p+(q-p)*6*t;
+        if(t<1/2)return q;
+        if(t<2/3)return p+(q-p)*(2/3-t)*6;
+        return p;
+      };
+      const q=l<.5?l*(1+s):l+s-l*s, p=2*l-q;
+      r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+    }
+    return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];
+  }
+
+  const BASE_HSL = Object.fromEntries(Object.entries(DEFAULT_THEME).map(([k,v]) => [k, rgbToHsl(...hexToRgb(v))]));
+
+  function isSkin(r,g,b) {
+    return r >= 175 && g >= 105 && b >= 82 && r > g * 1.08 && g >= b * 0.78;
+  }
+
+  function isGreen(r,g,b) {
+    return g >= 62 && g > r * 1.12 && g > b * 1.05 && r < 120 && b < 110;
+  }
+
+  function isHair(x,y,r,g,b) {
+    if (y < 23 || y > 39) return false;
+    return r >= 55 && r <= 200 && g >= 35 && g <= 125 && b <= 105 &&
+      r > g * 1.10 && g > b * 1.02 && !(r - g > 95);
+  }
+
+  function isTrousers(x,y,r,g,b) {
+    if (y < 47 || y > 63) return false;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    if (max < 24 || max > 125) return false;
+    if (isGreen(r,g,b)) return false;
+    if (r > g * 1.45 && r > b * 1.30) return false;
+    return max-min <= 45;
+  }
+
+  function isShoes(x,y,r,g,b) {
+    if (y < 58) return false;
+    const max=Math.max(r,g,b);
+    if (max < 24 || max > 125) return false;
+    if (r > g * 1.45 && r > b * 1.30) return false;
+    if (isGreen(r,g,b)) return false;
+    return true;
+  }
+
+  function componentAt(x,y,r,g,b,a) {
+    if (!a) return null;
+    if (isSkin(r,g,b)) return 'skin';
+    if (y < 33 && isGreen(r,g,b)) return 'hat';
+    if (isHair(x,y,r,g,b)) return 'hair';
+    if (y >= 31 && y < 60 && isGreen(r,g,b)) return 'jacket';
+    if (isShoes(x,y,r,g,b)) return 'shoes';
+    if (isTrousers(x,y,r,g,b)) return 'trousers';
+    return null;
+  }
+
+  function recolourPixel(r,g,b,component) {
+    const target = rgbToHsl(...hexToRgb(theme[component] || DEFAULT_THEME[component]));
+    const source = rgbToHsl(r,g,b);
+    const base = BASE_HSL[component];
+    const lightDelta = source[2] - base[2];
+    const l = clamp(target[2] + lightDelta, .025, .965);
+    const s = clamp(target[1] * .82 + source[1] * .18, 0, 1);
+    return hslToRgb(target[0], s, l);
+  }
+
+  function applyTheme(image, width, height) {
+    const data=image.data;
+    for (let y=0;y<height;y++) for (let x=0;x<width;x++) {
+      const q=(y*width+x)*4, a=data[q+3];
+      if(!a) continue;
+      const component=componentAt(x,y,data[q],data[q+1],data[q+2],a);
+      if(!component) continue;
+      const [r,g,b]=recolourPixel(data[q],data[q+1],data[q+2],component);
+      data[q]=r;data[q+1]=g;data[q+2]=b;
+    }
+  }
+
   async function inflate() {
     if (!encoded) throw new Error('Christmas elf sprite data is missing.');
     if (typeof DecompressionStream === 'undefined') {
@@ -109,10 +227,35 @@
     }
 
     removeBakedBackground(image, width, height);
+    applyTheme(image, width, height);
     ctx.putImageData(image, 0, 0);
     api.cache.set(safeIndex, canvas);
     return canvas;
   }
+
+
+  api.defaults = { ...DEFAULT_THEME };
+  api.getTheme = () => ({ ...theme });
+  api.setTheme = (next = {}) => {
+    theme = { ...DEFAULT_THEME, ...next };
+    api.cache.clear();
+    return api.getTheme();
+  };
+  api.bounds = (canvas) => {
+    if (!canvas) return { minX:0,minY:0,maxX:83,maxY:83,width:84,height:84 };
+    if (boundsCache.has(canvas)) return boundsCache.get(canvas);
+    const x=canvas.getContext('2d',{willReadFrequently:true});
+    const d=x.getImageData(0,0,canvas.width,canvas.height).data;
+    let minX=canvas.width,minY=canvas.height,maxX=-1,maxY=-1;
+    for(let yy=0;yy<canvas.height;yy++)for(let xx=0;xx<canvas.width;xx++){
+      if(d[(yy*canvas.width+xx)*4+3]){
+        if(xx<minX)minX=xx;if(xx>maxX)maxX=xx;if(yy<minY)minY=yy;if(yy>maxY)maxY=yy;
+      }
+    }
+    const b=maxX<0?{minX:0,minY:0,maxX:canvas.width-1,maxY:canvas.height-1,width:canvas.width,height:canvas.height}:
+      {minX,minY,maxX,maxY,width:maxX-minX+1,height:maxY-minY+1};
+    boundsCache.set(canvas,b); return b;
+  };
 
   const directions = ['south','south-east','east','north-east','north','north-west','west','south-west'];
 
