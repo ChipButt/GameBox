@@ -188,7 +188,7 @@ function updateAction(){
  }
  actionBtn.disabled=!currentAction;actionBtn.classList.toggle('ready',!!currentAction);actionLabel.textContent=currentAction?currentAction.label:'ACTION';
 }
-actionBtn.onclick=()=>{if(currentAction&&!dialogue.hidden===false)return; if(currentAction)currentAction.fn()};
+actionBtn.onclick=()=>{if(!dialogue.hidden||!puzzlePanel.hidden||!questPanel.hidden)return;if(currentAction)currentAction.fn()};
 
 function collideRect(x,y,r){return state.x+r>x.x&&state.x-r<x.x+x.w&&state.y+r>x.y&&state.y-r<x.y+x.h}
 function blocked(nx,ny){
