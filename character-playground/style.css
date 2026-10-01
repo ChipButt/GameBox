@@ -24,20 +24,6 @@ button{cursor:pointer}
 .creatorHead h1{margin:3px 0 0;font-size:26px}.eyebrow{display:block;color:var(--gold);font-size:9px;font-weight:900;letter-spacing:.18em}
 .creatorClose{width:42px;height:42px;border:2px solid #71917f;border-radius:7px;background:#244f39;color:#fff;font-size:24px;font-weight:900;line-height:1;box-shadow:inset 0 -4px rgba(0,0,0,.24)}
 .creatorMain{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
-.creatorOptions{display:grid;gap:12px}
-.stylePicker{display:grid;gap:7px}
-.optionTitle{font-size:9px;font-weight:900;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
-.styleGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.styleChoice{min-width:0;border:2px solid #466c54;border-radius:10px;background:#10291d;color:#fff;padding:8px;display:grid;grid-template-columns:38px 1fr;gap:8px;align-items:center;text-align:left}
-.styleChoice.active{border-color:var(--gold);background:#183a29;box-shadow:inset 0 0 0 1px #f2c15b55}
-.styleChoice strong{display:block;font-size:10px}.styleChoice small{display:block;margin-top:2px;color:#b8ccbe;font-size:7px;line-height:1.25}
-.styleIcon{position:relative;width:32px;height:32px;display:block;image-rendering:pixelated}
-.styleIcon:before,.styleIcon:after{content:"";position:absolute;display:block}
-.classicIcon{background:linear-gradient(90deg,transparent 0 7px,#b56531 7px 25px,transparent 25px),linear-gradient(#548343 0 11px,#f2e7c9 11px 14px,#f2bba0 14px 24px,#2d2a37 24px 32px);border-radius:4px}
-.classicIcon:after{width:10px;height:7px;background:#548343;right:1px;top:1px;box-shadow:5px 3px 0 #548343,8px 6px 0 #f2e7c9}
-.workshopIcon{background:linear-gradient(90deg,transparent 0 6px,#b56531 6px 26px,transparent 26px),linear-gradient(#548343 0 10px,#f2e7c9 10px 13px,#f2bba0 13px 23px,#2d2a37 23px 32px);border-radius:4px}
-.workshopIcon:before{width:9px;height:4px;background:#548343;left:2px;top:1px;box-shadow:-3px 3px 0 #548343}
-.workshopIcon:after{width:3px;height:13px;background:#b56531;right:1px;top:14px;box-shadow:0 9px 0 #e4b956}
 .previewPanel{border:2px solid #466c54;border-radius:12px;background:#0b1b13;padding:10px;display:grid;place-items:center}
 #creatorPreview{width:184px;height:184px;image-rendering:pixelated;image-rendering:crisp-edges;background:#b38862;border-radius:8px}
 .previewLabel{margin-top:8px;font-size:8px;color:#cfe0d3;letter-spacing:.12em}
@@ -52,7 +38,7 @@ button{cursor:pointer}
 @media(max-width:620px){
   .topbar{grid-template-columns:78px 1fr 78px}.backBtn,.customiseBtn{font-size:8px}.title strong{font-size:12px}
   .creatorCard{padding:14px}.creatorMain{grid-template-columns:1fr}.previewPanel{max-width:220px;width:100%;justify-self:center}
-  .styleGrid{grid-template-columns:1fr 1fr}.colourGrid{grid-template-columns:1fr 1fr}.creatorHead h1{font-size:22px}
+  .colourGrid{grid-template-columns:1fr 1fr}.creatorHead h1{font-size:22px}
   .joystick{width:110px;height:110px}.joyRing{width:88px;height:88px}
 }
-@media(max-width:390px){.styleGrid,.colourGrid{grid-template-columns:1fr}.creatorActions{flex-direction:column}}
+@media(max-width:390px){.colourGrid{grid-template-columns:1fr}.creatorActions{flex-direction:column}}
