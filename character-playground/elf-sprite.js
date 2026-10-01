@@ -14,6 +14,7 @@
   });
   let theme = { ...DEFAULT_THEME };
   const boundsCache = new WeakMap();
+  const openEyeCache = new Map();
 
   const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
 
@@ -251,6 +252,31 @@
     }
   }
 
+  function reopenIdleSouthEyes(frameIndex) {
+    const safeIndex = ((frameIndex % 8) + 8) % 8;
+    if (safeIndex !== 4 && safeIndex !== 5) return buildFrame(40 + safeIndex);
+
+    if (openEyeCache.has(safeIndex)) return openEyeCache.get(safeIndex);
+
+    const target = buildFrame(40 + safeIndex);
+    const donor = buildFrame(43); // south idle frame 3: same low head position, eyes fully open
+    const canvas = document.createElement('canvas');
+    canvas.width = target.width;
+    canvas.height = target.height;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(target, 0, 0);
+
+    // Eye-only patches. The source blink frames keep the same face geometry but
+    // replace these small regions with closed eyelids. Copying only these patches
+    // preserves the rest of the original idle frame and body bob.
+    ctx.drawImage(donor, 34, 34, 4, 3, 34, 36, 4, 3);
+    ctx.drawImage(donor, 45, 34, 4, 3, 45, 36, 4, 3);
+
+    openEyeCache.set(safeIndex, canvas);
+    return canvas;
+  }
+
   function buildFrame(frameIndex) {
     if (api.cache.has(frameIndex)) return api.cache.get(frameIndex);
     const { width, height, palette, indicesOffset, bytes } = api.data;
@@ -290,6 +316,7 @@
   api.setTheme = (next = {}) => {
     theme = { ...DEFAULT_THEME, ...next };
     api.cache.clear();
+    openEyeCache.clear();
     return api.getTheme();
   };
   api.bounds = (canvas) => {
@@ -320,9 +347,14 @@
     return row == null ? api.rotation(direction) : buildFrame(row * 8 + (((frame % 8) + 8) % 8));
   };
 
-  api.idle = (direction, frame = 0) => {
+  api.idle = (direction, frame = 0, blinkEnabled = true) => {
+    const safeFrame = ((frame % 8) + 8) % 8;
     const row = { south: 5, north: 6 }[direction];
-    return row == null ? api.rotation(direction) : buildFrame(row * 8 + (((frame % 8) + 8) % 8));
+    if (row == null) return api.rotation(direction);
+    if (direction === 'south' && !blinkEnabled && (safeFrame === 4 || safeFrame === 5)) {
+      return reopenIdleSouthEyes(safeFrame);
+    }
+    return buildFrame(row * 8 + safeFrame);
   };
 
   api.ready = inflate().then((bytes) => {
