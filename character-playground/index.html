@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#111827">
-  <title>Museum Guard Test · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <meta name="theme-color" content="#173c2a">
+  <title>Christmas Elf Test · GameBox</title>
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
       <div class="title">
-        <strong>Museum Guard Test</strong>
-        <span id="actionLabel">LOADING SPRITE…</span>
+        <strong>Christmas Elf Test</strong>
+        <span id="actionLabel">LOADING CODED SPRITE…</span>
       </div>
-      <div class="sourceBadge">36×36<br>EXACT</div>
+      <div class="sourceBadge">84×84<br>CODED</div>
     </header>
 
     <main class="stageWrap" id="stageWrap">
-      <canvas id="game" width="384" height="256" aria-label="Museum security guard sprite test"></canvas>
+      <canvas id="game" width="384" height="256" aria-label="Christmas elf sprite movement test"></canvas>
       <div id="loadError" class="loadError" hidden></div>
 
       <div class="controls">
@@ -27,27 +27,29 @@
           <div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div>
           <span>MOVE</span>
         </div>
-
-        <div class="actions" aria-label="Guard actions">
-          <button class="action actionY" data-action="fall" type="button"><b>Y</b><span>FALL</span></button>
-          <button class="action actionX" data-action="kick" type="button"><b>X</b><span>KICK</span></button>
-          <button class="action actionB" data-action="punch" type="button"><b>B</b><span>PUNCH</span></button>
-          <button id="runBtn" class="action actionA" type="button"><b>A</b><span>RUN</span></button>
-        </div>
       </div>
 
       <div class="sourceInfo">
         <strong id="directionLabel">SOUTH</strong>
-        <span id="frameLabel">Source frame ready</span>
+        <span id="frameLabel">Loading exact coded frames…</span>
       </div>
+      <div class="hint">Joystick or WASD / arrow keys</div>
     </main>
   </div>
 
-  <script src="guard-data-1.js?v=2"></script>
-  <script src="guard-data-2.js?v=2"></script>
-  <script src="guard-data-3.js?v=2"></script>
-  <script src="guard-data-4.js?v=2"></script>
-  <script src="guard-sprite.js?v=2"></script>
-  <script src="game.js?v=2"></script>
+  <script src="elf-data-1.js?v=1"></script>
+  <script src="elf-data-2.js?v=1"></script>
+  <script src="elf-data-3.js?v=1"></script>
+  <script src="elf-data-4.js?v=1"></script>
+  <script src="elf-data-5.js?v=1"></script>
+  <script src="elf-data-6.js?v=1"></script>
+  <script src="elf-data-7.js?v=1"></script>
+  <script src="elf-data-8a.js?v=1"></script>
+  <script src="elf-data-8b.js?v=1"></script>
+  <script src="elf-data-8c.js?v=1"></script>
+  <script src="elf-data-9a.js?v=1"></script>
+  <script src="elf-data-9b.js?v=1"></script>
+  <script src="elf-sprite.js?v=1"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>
