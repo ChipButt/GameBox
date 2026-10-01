@@ -271,12 +271,12 @@
     if (safeIndex === 4) {
       // Frame 3 open eyes: left/right x 34–37 / 45–48, y 35–36.
       // Copy a tiny surrounding skin patch down by one pixel into blink frame 4.
-      ctx.drawImage(donor, 33, 34, 6, 4, 33, 35, 6, 4);
-      ctx.drawImage(donor, 44, 34, 6, 4, 44, 35, 6, 4);
+      ctx.drawImage(donor, 23, 24, 6, 4, 23, 25, 6, 4);
+      ctx.drawImage(donor, 34, 24, 6, 4, 34, 25, 6, 4);
     } else {
       // Frame 6 open eyes occupy y 34–36. Align them one pixel lower in frame 5.
-      ctx.drawImage(donor, 33, 33, 6, 5, 33, 34, 6, 5);
-      ctx.drawImage(donor, 44, 33, 6, 5, 44, 34, 6, 5);
+      ctx.drawImage(donor, 23, 23, 6, 5, 23, 24, 6, 5);
+      ctx.drawImage(donor, 34, 23, 6, 5, 34, 24, 6, 5);
     }
 
     openEyeCache.set(safeIndex, canvas);
@@ -285,17 +285,22 @@
 
   function buildFrame(frameIndex) {
     if (api.cache.has(frameIndex)) return api.cache.get(frameIndex);
-    const { width, height, palette, indicesOffset, bytes } = api.data;
+
+    const { width: cellWidth, height: cellHeight, palette, indicesOffset, bytes } = api.data;
     const frameCount = 56;
     const safeIndex = ((frameIndex % frameCount) + frameCount) % frameCount;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    const image = ctx.createImageData(width, height);
+
+    // The packed source uses 84×84 sheet cells, but the character itself was
+    // authored as 64×64 inside a 10px border on each side.
+    const sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = cellWidth;
+    sourceCanvas.height = cellHeight;
+    const sourceCtx = sourceCanvas.getContext('2d');
+    sourceCtx.imageSmoothingEnabled = false;
+    const image = sourceCtx.createImageData(cellWidth, cellHeight);
     const out = image.data;
-    const pixels = width * height;
+
+    const pixels = cellWidth * cellHeight;
     let p = indicesOffset + safeIndex * pixels * 2;
 
     for (let i = 0; i < pixels; i += 1, p += 2) {
@@ -309,14 +314,29 @@
       out[q + 3] = 255;
     }
 
-    removeBakedBackground(image, width, height);
-    applyTheme(image, width, height);
-    ctx.putImageData(image, 0, 0);
+    // Clean and recolour while coordinates still match the original 84×84 cells.
+    removeBakedBackground(image, cellWidth, cellHeight);
+    applyTheme(image, cellWidth, cellHeight);
+    sourceCtx.putImageData(image, 0, 0);
+
+    // Runtime frames are the intended 64×64 character asset.
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, 64, 64);
+    ctx.drawImage(sourceCanvas, 10, 10, 64, 64, 0, 0, 64, 64);
+
     api.cache.set(safeIndex, canvas);
     return canvas;
   }
 
 
+  api.frameWidth = 64;
+  api.frameHeight = 64;
+  api.cellWidth = 84;
+  api.cellHeight = 84;
   api.defaults = { ...DEFAULT_THEME };
   api.getTheme = () => ({ ...theme });
   api.setTheme = (next = {}) => {
@@ -326,7 +346,7 @@
     return api.getTheme();
   };
   api.bounds = (canvas) => {
-    if (!canvas) return { minX:0,minY:0,maxX:83,maxY:83,width:84,height:84 };
+    if (!canvas) return { minX:0,minY:0,maxX:63,maxY:63,width:64,height:64 };
     if (boundsCache.has(canvas)) return boundsCache.get(canvas);
     const x=canvas.getContext('2d',{willReadFrequently:true});
     const d=x.getImageData(0,0,canvas.width,canvas.height).data;
