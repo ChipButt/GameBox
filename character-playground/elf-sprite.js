@@ -13,7 +13,6 @@
     shoes: '#4f4238'
   });
   let theme = { ...DEFAULT_THEME };
-  let characterStyle = 'classic';
   const boundsCache = new WeakMap();
   const openEyeCache = new Map();
 
@@ -150,99 +149,6 @@
     if (isShoes(x,y,r,g,b)) return 'shoes';
     if (isTrousers(x,y,r,g,b)) return 'trousers';
     return null;
-  }
-
-  function shadeHex(hex, amount) {
-    const [r,g,b] = hexToRgb(hex);
-    const mix = amount >= 0 ? 255 : 0;
-    const t = Math.min(1, Math.abs(amount));
-    const rr = Math.round(r + (mix-r)*t);
-    const gg = Math.round(g + (mix-g)*t);
-    const bb = Math.round(b + (mix-b)*t);
-    return '#' + [rr,gg,bb].map(v=>v.toString(16).padStart(2,'0')).join('');
-  }
-
-  function directionForFrame(frameIndex) {
-    const safe=((frameIndex%56)+56)%56;
-    const col=safe%8;
-    if(safe<8) return ['south','south-east','east','north-east','north','north-west','west','south-west'][col];
-    if(safe<16) return 'south';
-    if(safe<24) return 'east';
-    if(safe<32) return 'north';
-    if(safe<40) return 'west';
-    if(safe<48) return 'south';
-    return 'north';
-  }
-
-  function drawWorkshopStyle(canvas, frameIndex) {
-    const ctx=canvas.getContext('2d');
-    ctx.imageSmoothingEnabled=false;
-    const dir=directionForFrame(frameIndex);
-    const hat=theme.hat||DEFAULT_THEME.hat;
-    const hair=theme.hair||DEFAULT_THEME.hair;
-    const jacket=theme.jacket||DEFAULT_THEME.jacket;
-    const shoes=theme.shoes||DEFAULT_THEME.shoes;
-    const hatDark=shadeHex(hat,-0.22);
-    const hairDark=shadeHex(hair,-0.25);
-    const jacketLight=shadeHex(jacket,0.22);
-    const shoeLight=shadeHex(shoes,0.18);
-    const cream='#f2e7c9';
-    const gold='#e4b956';
-
-    const fill=(colour,x,y,w=1,h=1)=>{ctx.fillStyle=colour;ctx.fillRect(x,y,w,h)};
-
-    // Folded-cap detail: a little side flap and darker fold that tracks facing.
-    if(dir.includes('west')){
-      fill(hatDark,12,10,5,2); fill(hat,10,12,5,3); fill(cream,9,14,3,2);
-    }else if(dir.includes('east')){
-      fill(hatDark,47,10,5,2); fill(hat,49,12,5,3); fill(cream,52,14,3,2);
-    }else if(dir==='north'){
-      fill(hatDark,27,8,10,2); fill(hat,25,10,14,2); fill(cream,30,7,4,2);
-    }else{
-      fill(hatDark,19,9,9,2); fill(hat,17,11,9,3); fill(cream,15,13,3,2);
-    }
-
-    // Longer coded hair / small braid. It is attached to the head, not the limbs,
-    // so every walking/idle frame keeps the source arm and leg motion untouched.
-    if(dir.includes('west')){
-      fill(hair,17,26,3,8); fill(hairDark,16,30,2,6); fill(gold,16,36,2,1);
-    }else if(dir.includes('east')){
-      fill(hair,44,26,3,8); fill(hairDark,46,30,2,6); fill(gold,46,36,2,1);
-    }else if(dir==='north'){
-      fill(hair,39,23,3,10); fill(hairDark,41,27,2,7); fill(gold,41,34,2,1);
-    }else{
-      fill(hair,42,25,3,10); fill(hairDark,44,29,2,7); fill(gold,44,36,2,1);
-    }
-
-    // Different jacket front/hem: lighter stitched edge and two gold fasteners.
-    if(dir==='south' || dir==='south-east' || dir==='south-west'){
-      fill(jacketLight,31,35,2,13);
-      fill(gold,29,38,2,2); fill(gold,29,43,2,2);
-      fill(cream,24,48,4,1); fill(cream,30,49,4,1); fill(cream,36,48,4,1);
-    }else if(dir==='north' || dir==='north-east' || dir==='north-west'){
-      fill(jacketLight,31,36,2,11);
-      fill(cream,25,48,4,1); fill(cream,31,49,4,1); fill(cream,37,48,4,1);
-    }else if(dir==='east'){
-      fill(jacketLight,36,36,2,11); fill(gold,38,39,2,2);
-      fill(cream,29,49,9,1);
-    }else if(dir==='west'){
-      fill(jacketLight,26,36,2,11); fill(gold,24,39,2,2);
-      fill(cream,26,49,9,1);
-    }
-
-    // Slightly curled shoe toes without changing leg positions.
-    if(dir==='east'){
-      fill(shoes,48,55,4,2); fill(shoeLight,50,54,2,1);
-    }else if(dir==='west'){
-      fill(shoes,12,55,4,2); fill(shoeLight,12,54,2,1);
-    }else{
-      fill(shoes,17,56,4,2); fill(shoeLight,17,55,2,1);
-      fill(shoes,43,56,4,2); fill(shoeLight,45,55,2,1);
-    }
-  }
-
-  function applyCharacterStyle(canvas, frameIndex) {
-    if(characterStyle==='workshop') drawWorkshopStyle(canvas, frameIndex);
   }
 
   function recolourPixel(r,g,b,component) {
@@ -421,7 +327,6 @@
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, 64, 64);
     ctx.drawImage(sourceCanvas, 10, 10, 64, 64, 0, 0, 64, 64);
-    applyCharacterStyle(canvas, safeIndex);
 
     api.cache.set(safeIndex, canvas);
     return canvas;
@@ -432,17 +337,6 @@
   api.frameHeight = 64;
   api.cellWidth = 84;
   api.cellHeight = 84;
-  api.styles = Object.freeze([
-    { id:'classic', name:'Classic Elf' },
-    { id:'workshop', name:'Workshop Elf' }
-  ]);
-  api.getStyle = () => characterStyle;
-  api.setStyle = (next='classic') => {
-    characterStyle = next === 'workshop' ? 'workshop' : 'classic';
-    api.cache.clear();
-    openEyeCache.clear();
-    return characterStyle;
-  };
   api.defaults = { ...DEFAULT_THEME };
   api.getTheme = () => ({ ...theme });
   api.setTheme = (next = {}) => {
