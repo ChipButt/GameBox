@@ -1,49 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#111827">
-<title>Character Playground · GameBox</title>
-<link rel="stylesheet" href="style.css?v=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#111827">
+  <title>Museum Guard Test · GameBox</title>
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
-<div class="app">
-  <header class="topbar">
-    <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
-    <div class="title"><strong>Character Playground</strong><span id="actionLabel">IDLE</span></div>
-    <button id="changeCharacter" class="changeBtn" type="button">CHANGE</button>
-  </header>
+  <div class="app">
+    <header class="topbar">
+      <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
+      <div class="title">
+        <strong>Museum Guard Test</strong>
+        <span id="actionLabel">LOADING SPRITE…</span>
+      </div>
+      <div class="sourceBadge">36×36<br>EXACT</div>
+    </header>
 
-  <main class="stageWrap" id="stageWrap">
-    <canvas id="game" width="384" height="256" aria-label="Character playground"></canvas>
-    <div class="controls">
-      <div id="joystick" class="joystick" aria-label="Movement joystick">
-        <div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div>
-        <span>MOVE</span>
+    <main class="stageWrap" id="stageWrap">
+      <canvas id="game" width="384" height="256" aria-label="Museum security guard sprite test"></canvas>
+      <div id="loadError" class="loadError" hidden></div>
+
+      <div class="controls">
+        <div id="joystick" class="joystick" aria-label="Movement joystick">
+          <div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div>
+          <span>MOVE</span>
+        </div>
+
+        <div class="actions" aria-label="Guard actions">
+          <button class="action actionY" data-action="fall" type="button"><b>Y</b><span>FALL</span></button>
+          <button class="action actionX" data-action="kick" type="button"><b>X</b><span>KICK</span></button>
+          <button class="action actionB" data-action="punch" type="button"><b>B</b><span>PUNCH</span></button>
+          <button id="runBtn" class="action actionA" type="button"><b>A</b><span>RUN</span></button>
+        </div>
       </div>
 
-      <div class="actions" aria-label="Character actions">
-        <button class="action actionY" data-action="fall"><b>Y</b><span>FALL</span></button>
-        <button class="action actionX" data-action="kick"><b>X</b><span>KICK</span></button>
-        <button class="action actionB" data-action="punch"><b>B</b><span>PUNCH</span></button>
-        <button class="action actionA" data-action="jump"><b>A</b><span>JUMP</span></button>
-        <button id="runBtn" class="runBtn" type="button"><b>R</b><span>RUN</span></button>
+      <div class="sourceInfo">
+        <strong id="directionLabel">SOUTH</strong>
+        <span id="frameLabel">Source frame ready</span>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
 
-  <section id="picker" class="picker" aria-label="Choose a character">
-    <div class="pickerCard">
-      <p>CHOOSE CHARACTER</p>
-      <h1>Pick a character</h1>
-      <div id="characterGrid" class="characterGrid"></div>
-      <small>All characters share the same animation set. The colour variants are generated from the same coded sprite template.</small>
-    </div>
-  </section>
-</div>
-
-<script src="../shared/gamebox-pixel-art.js?v=3"></script>
-<script src="game.js?v=1"></script>
+  <script src="guard-data-1.js?v=2"></script>
+  <script src="guard-data-2.js?v=2"></script>
+  <script src="guard-data-3.js?v=2"></script>
+  <script src="guard-data-4.js?v=2"></script>
+  <script src="guard-sprite.js?v=2"></script>
+  <script src="game.js?v=2"></script>
 </body>
 </html>
