@@ -12,9 +12,6 @@
   const creatorPreview = document.getElementById('creatorPreview');
   const previewCtx = creatorPreview.getContext('2d');
   previewCtx.imageSmoothingEnabled = false;
-  const previewLabel = document.querySelector('.previewLabel');
-  const styleButtons = [...document.querySelectorAll('[data-style]')];
-  let selectedStyle = 'classic';
 
   const STORAGE_KEY = 'gamebox-cute-elf-character-v1';
   const WALK_FPS = 10;
@@ -63,31 +60,14 @@
     }
   }
 
-  function savedCharacter() {
+  function savedTheme() {
     try {
       const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
       if (!value || typeof value !== 'object') return null;
-
-      // Backward-compatible with earlier saves that stored only the colour object.
-      if (!value.theme) {
-        const oldTheme = Object.fromEntries(Object.entries(value).filter(([key,v]) => inputs[key] && validHex(v)));
-        return { style:'classic', theme:oldTheme };
-      }
-
-      return {
-        style: value.style === 'workshop' ? 'workshop' : 'classic',
-        theme: Object.fromEntries(Object.entries(value.theme || {}).filter(([key,v]) => inputs[key] && validHex(v)))
-      };
+      return Object.fromEntries(Object.entries(value).filter(([key,v]) => inputs[key] && validHex(v)));
     } catch (_) {
       return null;
     }
-  }
-
-  function setStyleChoice(next) {
-    selectedStyle = next === 'workshop' ? 'workshop' : 'classic';
-    if (sprite) sprite.setStyle(selectedStyle);
-    for (const button of styleButtons) button.classList.toggle('active', button.dataset.style === selectedStyle);
-    if (previewLabel) previewLabel.textContent = (selectedStyle === 'workshop' ? 'WORKSHOP ELF' : 'CLASSIC ELF') + ' · LIVE PREVIEW';
   }
 
   function resize() {
@@ -243,27 +223,20 @@
     input.addEventListener('change', setThemeFromCreator);
   }
 
-  for (const button of styleButtons) {
-    button.addEventListener('click', () => setStyleChoice(button.dataset.style));
-  }
-
   document.getElementById('resetCharacter').addEventListener('click', () => {
-    setStyleChoice('classic');
     applyInputs(sprite.defaults);
     sprite.setTheme(sprite.defaults);
   });
 
   document.getElementById('saveCharacter').addEventListener('click', () => {
     const theme = themeFromInputs();
-    sprite.setStyle(selectedStyle);
     sprite.setTheme(theme);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ style:selectedStyle, theme }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
     creator.classList.add('hidden');
     actionLabel.textContent = state.mode === 'walk' ? 'WALKING' : 'IDLE';
   });
 
   document.getElementById('customiseBtn').addEventListener('click', () => {
-    setStyleChoice(sprite.getStyle());
     applyInputs(sprite.getTheme());
     creator.classList.remove('hidden');
   });
@@ -340,10 +313,9 @@
       throw new Error('Unexpected elf sprite dimensions.');
     }
 
-    const saved = savedCharacter();
-    setStyleChoice(saved?.style || 'classic');
-    applyInputs(saved?.theme || sprite.defaults);
-    sprite.setTheme(saved?.theme || sprite.defaults);
+    const saved = savedTheme();
+    applyInputs(saved || sprite.defaults);
+    sprite.setTheme(saved || sprite.defaults);
 
     actionLabel.textContent = 'IDLE';
     resize();
