@@ -89,12 +89,62 @@
     return true;
   }
 
-  function componentAt(x,y,r,g,b,a) {
+  function classifyGreenComponents(image, width, height) {
+    const data=image.data;
+    const labels=new Int8Array(width*height);
+    const seen=new Uint8Array(width*height);
+    const stack=new Int32Array(width*height);
+    const component=new Int32Array(width*height);
+
+    const greenAt=(index)=>{
+      const q=index*4;
+      return data[q+3] && isGreen(data[q],data[q+1],data[q+2]);
+    };
+
+    for(let start=0;start<width*height;start+=1){
+      if(seen[start] || !greenAt(start)) continue;
+      let stackSize=0, componentSize=0, sumY=0, minY=height, maxY=0;
+      stack[stackSize++]=start; seen[start]=1;
+
+      while(stackSize){
+        const index=stack[--stackSize];
+        component[componentSize++]=index;
+        const x=index%width, y=(index/width)|0;
+        sumY+=y; if(y<minY)minY=y; if(y>maxY)maxY=y;
+
+        if(x>0){
+          const n=index-1;
+          if(!seen[n] && greenAt(n)){seen[n]=1;stack[stackSize++]=n}
+        }
+        if(x+1<width){
+          const n=index+1;
+          if(!seen[n] && greenAt(n)){seen[n]=1;stack[stackSize++]=n}
+        }
+        if(y>0){
+          const n=index-width;
+          if(!seen[n] && greenAt(n)){seen[n]=1;stack[stackSize++]=n}
+        }
+        if(y+1<height){
+          const n=index+width;
+          if(!seen[n] && greenAt(n)){seen[n]=1;stack[stackSize++]=n}
+        }
+      }
+
+      // The sheet's hat green islands all live in the upper head area;
+      // jacket islands (including the lower tail below the belt) begin below it.
+      const centreY=sumY/Math.max(1,componentSize);
+      const label=(maxY<=38 || centreY<34) ? 1 : 2; // 1 hat, 2 jacket
+      for(let i=0;i<componentSize;i+=1) labels[component[i]]=label;
+    }
+    return labels;
+  }
+
+  function componentAt(x,y,r,g,b,a,greenLabel) {
     if (!a) return null;
     if (isSkin(r,g,b)) return 'skin';
-    if (y < 33 && isGreen(r,g,b)) return 'hat';
+    if (greenLabel===1) return 'hat';
+    if (greenLabel===2) return 'jacket';
     if (isHair(x,y,r,g,b)) return 'hair';
-    if (y >= 31 && y < 60 && isGreen(r,g,b)) return 'jacket';
     if (isShoes(x,y,r,g,b)) return 'shoes';
     if (isTrousers(x,y,r,g,b)) return 'trousers';
     return null;
@@ -112,10 +162,11 @@
 
   function applyTheme(image, width, height) {
     const data=image.data;
+    const greenLabels=classifyGreenComponents(image,width,height);
     for (let y=0;y<height;y++) for (let x=0;x<width;x++) {
-      const q=(y*width+x)*4, a=data[q+3];
+      const index=y*width+x, q=index*4, a=data[q+3];
       if(!a) continue;
-      const component=componentAt(x,y,data[q],data[q+1],data[q+2],a);
+      const component=componentAt(x,y,data[q],data[q+1],data[q+2],a,greenLabels[index]);
       if(!component) continue;
       const [r,g,b]=recolourPixel(data[q],data[q+1],data[q+2],component);
       data[q]=r;data[q+1]=g;data[q+2]=b;
