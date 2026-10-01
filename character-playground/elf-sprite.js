@@ -255,11 +255,12 @@
   function reopenIdleSouthEyes(frameIndex) {
     const safeIndex = ((frameIndex % 8) + 8) % 8;
     if (safeIndex !== 4 && safeIndex !== 5) return buildFrame(40 + safeIndex);
-
     if (openEyeCache.has(safeIndex)) return openEyeCache.get(safeIndex);
 
     const target = buildFrame(40 + safeIndex);
-    const donor = buildFrame(43); // south idle frame 3: same low head position, eyes fully open
+    // Frame 4 follows open frame 3; frame 5 precedes open frame 6.
+    // Both blink frames sit one source pixel lower than their open-eye donor.
+    const donor = safeIndex === 4 ? buildFrame(43) : buildFrame(46);
     const canvas = document.createElement('canvas');
     canvas.width = target.width;
     canvas.height = target.height;
@@ -267,11 +268,16 @@
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(target, 0, 0);
 
-    // Eye-only patches. The source blink frames keep the same face geometry but
-    // replace these small regions with closed eyelids. Copying only these patches
-    // preserves the rest of the original idle frame and body bob.
-    ctx.drawImage(donor, 34, 34, 4, 3, 34, 36, 4, 3);
-    ctx.drawImage(donor, 45, 34, 4, 3, 45, 36, 4, 3);
+    if (safeIndex === 4) {
+      // Frame 3 open eyes: left/right x 34–37 / 45–48, y 35–36.
+      // Copy a tiny surrounding skin patch down by one pixel into blink frame 4.
+      ctx.drawImage(donor, 33, 34, 6, 4, 33, 35, 6, 4);
+      ctx.drawImage(donor, 44, 34, 6, 4, 44, 35, 6, 4);
+    } else {
+      // Frame 6 open eyes occupy y 34–36. Align them one pixel lower in frame 5.
+      ctx.drawImage(donor, 33, 33, 6, 5, 33, 34, 6, 5);
+      ctx.drawImage(donor, 44, 33, 6, 5, 44, 34, 6, 5);
+    }
 
     openEyeCache.set(safeIndex, canvas);
     return canvas;
