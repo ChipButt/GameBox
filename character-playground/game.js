@@ -124,10 +124,21 @@
     return Math.floor(Math.max(0, now - state.animStart) / 1000 * rate) % 8;
   }
 
+  function idleCycle(now, start = state.animStart) {
+    return Math.floor(Math.max(0, now - start) / 1000 * IDLE_FPS / 8);
+  }
+
+  function blinkThisIdleCycle(now, start = state.animStart) {
+    // First idle loop stays open; every second complete loop uses the source blink.
+    return idleCycle(now, start) % 2 === 1;
+  }
+
   function currentFrame(now) {
     const index = animationFrame(now);
     if (state.mode === 'walk') return sprite.walk(state.sourceDir, index);
-    if (state.sourceDir === 'south' || state.sourceDir === 'north') return sprite.idle(state.sourceDir, index);
+    if (state.sourceDir === 'south' || state.sourceDir === 'north') {
+      return sprite.idle(state.sourceDir, index, blinkThisIdleCycle(now));
+    }
     return sprite.rotation(state.dir);
   }
 
@@ -187,8 +198,9 @@
   function drawPreview(now) {
     drawWorkshop(previewCtx, creatorPreview.width, creatorPreview.height);
     if (!sprite) return;
+    const previewStart = 0;
     const index = Math.floor(now / 1000 * IDLE_FPS) % 8;
-    const frame = sprite.idle('south', index);
+    const frame = sprite.idle('south', index, blinkThisIdleCycle(now, previewStart));
     if (frame) drawElf(previewCtx, frame, creatorPreview.width / 2, creatorPreview.height - 10, SCALE);
   }
 
