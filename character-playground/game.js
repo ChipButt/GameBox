@@ -174,7 +174,7 @@
 
   function drawElf(target, frame, centerX, groundY, scale = SCALE) {
     const bounds = sprite.bounds(frame);
-    const drawX = Math.round(centerX - 42 * scale);
+    const drawX = Math.round(centerX - 32 * scale);
     const drawY = Math.round(groundY - (bounds.maxY + 1) * scale);
 
     target.fillStyle = '#07120c66';
@@ -185,7 +185,7 @@
 
     target.save();
     target.imageSmoothingEnabled = false;
-    target.drawImage(frame, drawX, drawY, 84 * scale, 84 * scale);
+    target.drawImage(frame, drawX, drawY, 64 * scale, 64 * scale);
     target.restore();
   }
 
@@ -307,7 +307,9 @@
 
   try {
     sprite = await window.CuteElfSprite.ready;
-    if (sprite.data.width !== 84 || sprite.data.height !== 84 || sprite.data.frameCount !== 56) {
+    if (sprite.frameWidth !== 64 || sprite.frameHeight !== 64 ||
+        sprite.data.width !== 84 || sprite.data.height !== 84 ||
+        sprite.data.frameCount !== 56) {
       throw new Error('Unexpected elf sprite dimensions.');
     }
 
