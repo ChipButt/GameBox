@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b2530">
+<title>Pipeworks · GameBox</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div class="app">
+  <section id="home" class="view active">
+    <header class="top"><a class="round" href="../" aria-label="Back to GameBox">←</a><div class="logo">PIPE<span>WORKS</span></div><div class="coins">● <b data-coins>0</b></div></header>
+    <main class="hero">
+      <div class="mark"><i></i><i></i><i></i></div>
+      <h1>Connect the <em>flow.</em></h1>
+      <p>Turn the pipes. Join the valve to the tank. Keep the water moving.</p>
+      <button id="continue" class="primary">Play Level 1</button>
+      <div class="stats"><div><small>LEVEL</small><b id="statLevel">1</b></div><div><small>XP</small><b id="statXp">0</b></div><div><small>STARS</small><b id="statStars">0</b></div></div>
+    </main>
+    <div class="featureRow">
+      <button id="daily" class="feature daily"><b>Daily Challenge</b><small>A new puzzle every day. Earn 75 coins.</small></button>
+      <button id="reward" class="feature reward"><b>Daily Reward</b><small id="rewardText">Claim 50 coins today.</small></button>
+    </div>
+    <h2>Puzzle Packs</h2><div id="packs" class="packs"></div>
+    <footer><span>Progress saves on this device.</span><button id="sound">Sound: On</button></footer>
+  </section>
+
+  <section id="pack" class="view">
+    <header class="top"><button class="round" data-home>←</button><div class="logo">PIPE<span>WORKS</span></div><div class="coins">● <b data-coins>0</b></div></header>
+    <div id="packBanner" class="packBanner"></div><div id="levels" class="levels"></div>
+  </section>
+
+  <section id="game" class="view">
+    <header class="gameTop"><button id="gameBack" class="round">←</button><div><b id="gamePack">Classic Pipes</b><small id="gameLevel">Level 1</small></div><div class="coins">● <b data-coins>0</b></div></header>
+    <div class="boardCard">
+      <div class="meta"><span>Turns <b id="turns">0</b></span><span id="timerBox" hidden>Time <b id="timer">0</b></span><span>Valve → Tank</span></div>
+      <div id="board" class="board"></div>
+      <div class="tools"><button id="hint">Hint<small>25 coins · fix one</small></button><button id="fix3">Fix 3<small>50 coins · fix three</small></button></div>
+    </div>
+    <p class="tip">Tap a pipe to rotate it. Water passes only where neighbouring pipe ends meet.</p>
+  </section>
+</div>
+
+<div id="win" class="overlay"><div class="winCard"><div class="drop">💧</div><h2>Water flowing!</h2><div id="winStars" class="winStars"></div><p><b>+<span id="wonCoins">0</span></b> coins &nbsp; <b>+<span id="wonXp">0</span></b> XP</p><button id="next" class="primary">Next Level</button><button id="levelSelect" class="secondary">Level Select</button></div></div>
+<div id="toast" class="toast"></div>
+<script src="game.js?v=1"></script>
+</body>
+</html>
