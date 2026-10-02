@@ -1,96 +1,49 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#173c2a">
-  <title>Christmas Quest · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#173c2a">
+<title>Advent Apprentice · GameBox</title>
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-  <main class="gameApp">
-    <header class="topbar">
-      <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
-      <div class="title"><strong>Christmas Quest</strong><span id="locationLabel">PLAYER'S HOUSE · BEDROOM</span></div>
-      <button id="questBtn" class="topBtn" type="button">QUESTS</button>
-    </header>
-
-    <section id="gameStage" class="gameStage" hidden>
-      <canvas id="game" width="400" height="240" aria-label="Christmas Quest game world"></canvas>
-
-      <div class="hudTop">
-        <div class="presentHud"><span class="presentIcon" aria-hidden="true">🎁</span><strong id="presentCount">0</strong></div>
-        <div id="toast" class="toast"></div>
-      </div>
-
-      <div class="controls" aria-label="Game controls">
-        <div id="joystick" class="joystick" aria-label="Movement joystick">
-          <div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div>
-          <span>MOVE</span>
-        </div>
-        <button id="actionBtn" class="actionBtn" type="button" disabled><strong>A</strong><span id="actionLabel">ACTION</span></button>
-      </div>
-
-      <div id="dialogue" class="dialogue" hidden>
-        <div class="dialoguePortrait"><canvas id="dialoguePortrait" width="32" height="32"></canvas></div>
-        <div class="dialogueCopy">
-          <strong id="dialogueName">Elf</strong>
-          <p id="dialogueText"></p>
-        </div>
-        <button id="dialogueNext" type="button">NEXT</button>
-      </div>
-    </section>
-
-    <section id="creator" class="creator">
-      <div class="creatorCard">
-        <div class="creatorHead">
-          <div><span class="eyebrow">YOUR CHARACTER</span><h1>Who are you playing?</h1></div>
-        </div>
-        <div class="creatorBody">
-          <div class="previewPanel">
-            <canvas id="creatorPreview" width="144" height="144"></canvas>
-            <div id="presetName" class="previewName">CLASSIC</div>
-          </div>
-          <div class="creatorOptions">
-            <div class="presetGrid">
-              <button class="preset active" data-preset="classic" type="button"><span class="swatch classic"></span><strong>Classic</strong></button>
-              <button class="preset" data-preset="holly" type="button"><span class="swatch holly"></span><strong>Holly</strong></button>
-              <button class="preset" data-preset="frost" type="button"><span class="swatch frost"></span><strong>Frost</strong></button>
-              <button class="preset" data-preset="berry" type="button"><span class="swatch berry"></span><strong>Berry</strong></button>
-            </div>
-            <div class="colourGrid">
-              <label><span>Hat</span><input id="hatColour" type="color" value="#67a7e3"></label>
-              <label><span>Jacket</span><input id="jacketColour" type="color" value="#e61b1f"></label>
-              <label><span>Trousers</span><input id="trouserColour" type="color" value="#404791"></label>
-              <label><span>Skin</span><input id="skinColour" type="color" value="#d9d2a1"></label>
-              <label><span>Shoes</span><input id="shoeColour" type="color" value="#8c6d3f"></label>
-            </div>
-          </div>
-        </div>
-        <button id="startGame" class="startBtn" type="button">START AT HOME</button>
-      </div>
-    </section>
-
-    <aside id="questPanel" class="panelOverlay" hidden>
-      <div class="panelCard">
-        <div class="panelHead"><div><span class="eyebrow">CHRISTMAS QUESTS</span><h2>Helping the village</h2></div><button class="closeBtn" data-close="questPanel" type="button">×</button></div>
-        <div id="questList" class="questList"></div>
-        <div class="inventoryBlock"><span class="eyebrow">BAG</span><div id="inventoryList" class="inventoryList"></div></div>
-      </div>
-    </aside>
-
-    <aside id="puzzlePanel" class="panelOverlay" hidden>
-      <div class="panelCard puzzleCard">
-        <div class="panelHead"><div><span class="eyebrow">LITTLE PUZZLE</span><h2 id="puzzleTitle">Christmas Lights</h2></div></div>
-        <p id="puzzleText"></p>
-        <div id="puzzleDisplay" class="puzzleDisplay"></div>
-        <div id="puzzleButtons" class="puzzleButtons"></div>
-        <button id="puzzleCancel" class="secondaryBtn" type="button">CANCEL</button>
-      </div>
-    </aside>
-  </main>
-
-  <script src="village-assets.js?v=1"></script>
-  <script src="game.js?v=1"></script>
+<main class="app">
+<header class="topbar">
+<a class="backBtn" href="../">GAME BOX</a>
+<div class="brand"><strong>Advent Apprentice</strong><span id="locationLabel">PLAYER HOUSE · BEDROOM</span></div>
+<button id="journalBtn" class="topBtn">ADVENT</button>
+</header>
+<section id="worldStage" class="worldStage">
+<canvas id="world" width="160" height="240"></canvas>
+<div id="dayBadge" class="dayBadge">DEC <strong>24</strong></div>
+<div id="toast" class="toast"></div>
+<div class="controls">
+<div id="joystick" class="joystick"><div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div></div>
+<button id="actionBtn" class="actionBtn" disabled><strong>A</strong><span id="actionLabel">ACTION</span></button>
+</div>
+<div id="dialogue" class="dialogue" hidden>
+<canvas id="portrait" width="32" height="32"></canvas>
+<div class="dialogueCopy"><strong id="dialogueName"></strong><p id="dialogueText"></p></div>
+<button id="dialogueNext">NEXT</button>
+</div>
+</section>
+<aside id="journal" class="overlay" hidden><div class="panel">
+<div class="panelHead"><div><span class="eyebrow">YOUR ADVENT ASSIGNMENT</span><h2>24 village lessons</h2></div><button data-close="journal">×</button></div>
+<p class="panelLead">Find each dated house, meet its resident, then head upstairs to play their lesson. Completed games can be replayed from the same house.</p>
+<div id="dayGrid" class="dayGrid"></div>
+</div></aside>
+<section id="miniScreen" class="miniScreen" hidden>
+<header class="miniHead"><div><span id="miniDay" class="eyebrow">DAY 1</span><h1 id="miniTitle"></h1><p id="miniSubtitle"></p></div><div class="miniScore"><span>SCORE</span><strong id="miniScore">0</strong></div></header>
+<div class="miniCanvasWrap"><canvas id="miniCanvas" width="360" height="560"></canvas></div>
+<div id="miniHelp" class="miniHelp"></div>
+<div id="miniButtons" class="miniButtons"></div>
+<footer class="miniFoot"><button id="restartMini" class="secondary">RESTART</button><button id="returnMap" class="returnBtn">RETURN DOWNSTAIRS</button></footer>
+<div id="miniResult" class="miniResult" hidden><div><span class="eyebrow">LESSON COMPLETE</span><h2 id="resultTitle"></h2><p id="resultText"></p><button id="playAgain">PLAY AGAIN</button><button id="resultReturn">RETURN DOWNSTAIRS</button></div></div>
+</section>
+</main>
+<script src="village-assets.js?v=1"></script>
+<script src="christmas-world.world.js?v=1"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
