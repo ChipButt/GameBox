@@ -5,34 +5,47 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#173c2a">
 <title>Advent Apprentice · GameBox</title>
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <main class="app">
-<header class="topbar">
-<a class="backBtn" href="../">GAME BOX</a>
-<div class="brand"><strong>Advent Apprentice</strong><span id="locationLabel">PLAYER HOUSE · BEDROOM</span></div>
-<button id="journalBtn" class="topBtn">ADVENT</button>
-</header>
 <section id="worldStage" class="worldStage">
 <canvas id="world" width="160" height="240"></canvas>
+<canvas id="uiFrame" class="uiFrame" width="144" height="312" aria-hidden="true"></canvas>
+
+<div class="uiTopline">
+<a class="backBtn" href="../">GAME BOX</a>
+<div class="brand"><strong>ADVENT APPRENTICE</strong><span id="locationLabel">PLAYER HOUSE · BEDROOM</span></div>
+<button id="journalBtn" class="topBtn">ADVENT</button>
+</div>
+
 <div id="dayBadge" class="dayBadge">DEC <strong>24</strong></div>
 <div id="toast" class="toast"></div>
-<div class="controls">
-<div id="joystick" class="joystick"><div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div></div>
-<button id="actionBtn" class="actionBtn" disabled><strong>A</strong><span id="actionLabel">ACTION</span></button>
+
+<div class="dpad" aria-label="Movement controls">
+<button id="upBtn" class="dirBtn up" aria-label="Move up"><canvas width="42" height="42"></canvas></button>
+<button id="leftBtn" class="dirBtn left" aria-label="Move left"><canvas width="42" height="42"></canvas></button>
+<button id="rightBtn" class="dirBtn right" aria-label="Move right"><canvas width="42" height="42"></canvas></button>
+<button id="downBtn" class="dirBtn down" aria-label="Move down"><canvas width="42" height="42"></canvas></button>
 </div>
+
+<button id="actionBtn" class="actionBtn" disabled aria-label="Action">
+<canvas width="45" height="46"></canvas><span id="actionLabel" class="srOnly">ACTION</span>
+</button>
+
 <div id="dialogue" class="dialogue" hidden>
 <canvas id="portrait" width="32" height="32"></canvas>
 <div class="dialogueCopy"><strong id="dialogueName"></strong><p id="dialogueText"></p></div>
 <button id="dialogueNext">NEXT</button>
 </div>
 </section>
+
 <aside id="journal" class="overlay" hidden><div class="panel">
 <div class="panelHead"><div><span class="eyebrow">YOUR ADVENT ASSIGNMENT</span><h2>24 village lessons</h2></div><button data-close="journal">×</button></div>
 <p class="panelLead">Find each dated house, meet its resident, then head upstairs to play their lesson. Completed games can be replayed from the same house.</p>
 <div id="dayGrid" class="dayGrid"></div>
 </div></aside>
+
 <section id="miniScreen" class="miniScreen" hidden>
 <header class="miniHead"><div><span id="miniDay" class="eyebrow">DAY 1</span><h1 id="miniTitle"></h1><p id="miniSubtitle"></p></div><div class="miniScore"><span>SCORE</span><strong id="miniScore">0</strong></div></header>
 <div class="miniCanvasWrap"><canvas id="miniCanvas" width="360" height="560"></canvas></div>
@@ -59,6 +72,7 @@
 <script src="world-builder-uploaded-tiles-data-4.js?v=1"></script>
 <script src="world-builder-uploaded-tiles-runtime.js?v=1"></script>
 <script src="christmas-world.world.js?v=2"></script>
-<script src="game.js?v=7"></script>
+<script src="advent-ui-art.js?v=1"></script>
+<script src="game.js?v=8"></script>
 </body>
 </html>
