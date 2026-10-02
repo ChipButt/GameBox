@@ -296,7 +296,18 @@ function update(dt,t){
  if(triggerMapLinks(prevX,prevY))return;
  actions();
 }
-const joy=$('joystick'),knob=$('joyKnob');function joyMove(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,max=28,mm=Math.hypot(dx,dy)||1,scale=Math.min(1,max/mm);let x=dx*scale,y=dy*scale;if(Math.abs(x)>=Math.abs(y))y=0;else x=0;knob.style.transform='translate('+x+'px,'+y+'px)';state.jx=x/max;state.jy=y/max}joy.onpointerdown=e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;state.jx=state.jy=0;knob.style.transform='translate(0,0)'}joy.onpointerup=joyEnd;joy.onpointercancel=joyEnd;
+function bindDirection(id,dx,dy){
+ const el=$(id);let pointer=null;
+ const start=e=>{pointer=e.pointerId;el.setPointerCapture?.(e.pointerId);state.jx=dx;state.jy=dy;e.preventDefault()};
+ const end=e=>{if(pointer!==e.pointerId)return;pointer=null;if(state.jx===dx&&state.jy===dy){state.jx=0;state.jy=0}e.preventDefault()};
+ el.onpointerdown=start;el.onpointerup=end;el.onpointercancel=end;el.onlostpointercapture=end;
+}
+bindDirection('upBtn',0,-1);bindDirection('downBtn',0,1);bindDirection('leftBtn',-1,0);bindDirection('rightBtn',1,0);
+if(window.AdventPixelUI){
+ AdventPixelUI.drawFrame($('uiFrame'));
+ document.querySelectorAll('.dirBtn canvas').forEach(cv=>AdventPixelUI.drawArrow(cv));
+ AdventPixelUI.drawAction(action.querySelector('canvas'));
+}
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(['arrowleft','arrowright','arrowup','arrowdown',' '].includes(k))e.preventDefault();if(!mini.hidden&&game&&game.key)game.key(k);else if((k===' '||k==='enter')&&currentAction&&dlg.hidden)currentAction.fn()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function renderJournal(){dayGrid.innerHTML='';residents.forEach(r=>{const d=document.createElement('div');d.className='dayCard'+(r.day>unlock?' locked':'')+(state.done[r.day]?' done':'');d.innerHTML='<strong>DAY '+r.day+' · '+r.name+'</strong><span>'+r.game+(state.done[r.day]?' · COMPLETE':'')+'</span>';dayGrid.appendChild(d)})}
 $('journalBtn').onclick=()=>{renderJournal();journal.hidden=false};document.querySelector('[data-close="journal"]').onclick=()=>journal.hidden=true;
