@@ -6,7 +6,8 @@ const packs=[
 {id:"locked",name:"Locked Lines",icon:"🔒",desc:"Some correctly placed pipes cannot be moved.",unlock:35,count:50,mode:"locked"},
 {id:"rush",name:"Pressure Rush",icon:"⏱",desc:"Connect the line before pressure drops.",unlock:70,count:50,mode:"rush"}];
 const fresh={coins:150,xp:0,stars:0,sound:true,lastReward:"",completed:{},lastPack:"classic",lastLevel:1};
-let s=load(),pack=packs[0],level=1,tiles=[],size=5,source=0,target=0,turns=0,timer=0,timerId=null,daily=false,started=0,won=false,flowWinTimer=null;\nconst WATER_STEP_MS=180,WATER_SEGMENT_MS=650;
+let s=load(),pack=packs[0],level=1,tiles=[],size=5,source=0,target=0,turns=0,timer=0,timerId=null,daily=false,started=0,won=false,flowWinTimer=null;
+const WATER_STEP_MS=180,WATER_SEGMENT_MS=650;
 const q=x=>document.querySelector(x),qa=x=>Array.from(document.querySelectorAll(x));
 function load(){try{return Object.assign({},fresh,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return Object.assign({},fresh)}}
 function save(){localStorage.setItem(KEY,JSON.stringify(s));syncCoins()}
