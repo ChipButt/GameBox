@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#10251f">
+<meta name="theme-color" content="#0a1712">
 <title>Christmas Lights · GameBox</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -15,14 +15,14 @@
       <div class="logo">CHRISTMAS<br><span>LIGHTS</span></div>
       <div class="sparks">⚡ <b data-sparks>0</b></div>
     </header>
-
     <main class="hero">
-      <div class="lightMark" aria-hidden="true">
-        <span class="wire"></span>
-        <i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i>
+      <div class="heroTree" aria-hidden="true">
+        <span class="heroStar">★</span>
+        <span class="heroTier t1"></span><span class="heroTier t2"></span><span class="heroTier t3"></span>
+        <i class="hb1"></i><i class="hb2"></i><i class="hb3"></i><i class="hb4"></i><i class="hb5"></i>
       </div>
       <h1>Light up <em>Christmas.</em></h1>
-      <p>Turn the light cables. Connect the plug to the star and bring the whole string to life.</p>
+      <p>Turn the strings into a complete circuit, then throw the switch and see if the tree comes alive.</p>
       <button id="continue" class="primary">Play Level 1</button>
       <div class="stats">
         <div><small>LEVEL</small><b id="statLevel">1</b></div>
@@ -30,12 +30,10 @@
         <div><small>STARS</small><b id="statStars">0</b></div>
       </div>
     </main>
-
     <div class="featureRow">
-      <button id="daily" class="feature daily"><b>Daily Light-Up</b><small>A new festive puzzle every day. Earn 75 sparks.</small></button>
+      <button id="daily" class="feature daily"><b>Daily Light-Up</b><small>A new festive circuit every day. Earn 75 sparks.</small></button>
       <button id="reward" class="feature reward"><b>Daily Gift</b><small id="rewardText">Claim 50 sparks today.</small></button>
     </div>
-
     <h2>Light Sets</h2>
     <div id="packs" class="packs"></div>
     <footer><span>Progress saves on this device.</span><button id="sound">Sound: On</button></footer>
@@ -62,15 +60,25 @@
       <div class="meta">
         <span>Turns <b id="turns">0</b></span>
         <span id="timerBox" hidden>Time <b id="timer">0</b></span>
-        <span>Plug → Star</span>
+        <span>Build → Test</span>
       </div>
 
-      <div class="boardFrame">
-        <div id="sourcePort" class="edgePort plugPort" aria-hidden="true">
-          <span class="plugPins"></span>
+      <div class="treeStage">
+        <div id="targetStar" class="targetStar" aria-label="Star target">
+          <span class="starGlow"></span><span class="starFace">★</span>
         </div>
-        <div id="board" class="board"></div>
-        <div id="targetPort" class="edgePort starPort" aria-hidden="true">★</div>
+
+        <div id="treeBoard" class="treeBoard" aria-label="Christmas tree light puzzle"></div>
+
+        <div class="powerRig">
+          <div id="plug" class="pixelPlug" aria-label="Power plug">
+            <span class="plugLead"></span><span class="plugBody"></span><span class="pin p1"></span><span class="pin p2"></span>
+          </div>
+          <button id="powerSwitch" class="powerSwitch" type="button" aria-label="Test Christmas lights">
+            <span class="switchPlate"><span class="switchLever"></span></span>
+            <span class="switchText">POWER</span>
+          </button>
+        </div>
       </div>
 
       <div class="tools">
@@ -78,14 +86,14 @@
         <button id="fix3">Fix 3<small>50 sparks · fix three</small></button>
       </div>
     </div>
-    <p class="tip">Tap a cable tile to rotate it. Connected bulbs light in sequence from the plug.</p>
+    <p class="tip">Rotate the light strings, then press POWER. A wrong circuit will blow and reset.</p>
   </section>
 </div>
 
 <div id="win" class="overlay">
   <div class="winCard">
-    <div class="winTree" aria-hidden="true">★<span>▲</span><span>▲</span><span>▲</span></div>
-    <h2>Lights are on!</h2>
+    <div class="winTree" aria-hidden="true"><b>★</b><span>▲</span><span>▲</span><span>▲</span></div>
+    <h2>Tree lit!</h2>
     <div id="winStars" class="winStars"></div>
     <p><b>+<span id="wonSparks">0</span></b> sparks &nbsp; <b>+<span id="wonXp">0</span></b> XP</p>
     <button id="next" class="primary">Next Level</button>
@@ -93,7 +101,21 @@
   </div>
 </div>
 
+<div id="failFx" class="failFx" aria-hidden="true">
+  <div id="sparkBurst" class="sparkBurst">
+    <span class="sparkCore"></span>
+    <i class="ray r1"></i><i class="ray r2"></i><i class="ray r3"></i><i class="ray r4"></i>
+    <i class="ray r5"></i><i class="ray r6"></i><i class="ray r7"></i><i class="ray r8"></i>
+  </div>
+  <div class="smokeCloud">
+    <i class="smoke s1"></i><i class="smoke s2"></i><i class="smoke s3"></i><i class="smoke s4"></i>
+    <i class="smoke s5"></i><i class="smoke s6"></i><i class="smoke s7"></i><i class="smoke s8"></i>
+    <i class="smoke s9"></i><i class="smoke s10"></i>
+  </div>
+  <div class="failZap">BZZT!</div>
+</div>
+
 <div id="toast" class="toast"></div>
-<script src="game.js?v=1"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>
