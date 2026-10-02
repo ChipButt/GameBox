@@ -1,0 +1,11 @@
+window.ADVENT_UI_LAYOUT={
+  version:1,
+  canvas:{w:390,h:844},
+  frame:{x:4.5047,y:0,w:380.9906,h:844,lockRatio:true},
+  screen:{x:54.7743,y:159.4075,w:283.0972,h:424.6458,lockRatio:true},
+  up:{x:69,y:674,w:54,h:54,rotation:-90,lockRatio:true},
+  left:{x:21,y:722,w:54,h:54,rotation:180,lockRatio:true},
+  right:{x:117,y:722,w:54,h:54,rotation:0,lockRatio:true},
+  down:{x:69,y:770,w:54,h:54,rotation:90,lockRatio:true},
+  action:{x:285,y:715,w:76,h:78,lockRatio:true}
+};
