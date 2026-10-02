@@ -316,9 +316,11 @@ function bindDirection(id,dx,dy){
 }
 bindDirection('upBtn',0,-1);bindDirection('downBtn',0,1);bindDirection('leftBtn',-1,0);bindDirection('rightBtn',1,0);
 if(window.AdventPixelUI){
- AdventPixelUI.drawFrame($('uiFrame'));
- document.querySelectorAll('.dirBtn canvas').forEach(cv=>AdventPixelUI.drawArrow(cv));
- AdventPixelUI.drawAction(action.querySelector('canvas'));
+ AdventPixelUI.ready.then(()=>{
+   AdventPixelUI.drawFrame($('uiFrame'));
+   document.querySelectorAll('.dirBtn canvas').forEach(cv=>AdventPixelUI.drawArrow(cv));
+   AdventPixelUI.drawAction(action.querySelector('canvas'));
+ }).catch(err=>{console.error('Exact Advent UI artwork failed to decode:',err);msg('Could not load Advent UI artwork')});
 }
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(['arrowleft','arrowright','arrowup','arrowdown',' '].includes(k))e.preventDefault();if(!mini.hidden&&game&&game.key)game.key(k);else if((k===' '||k==='enter')&&currentAction&&dlg.hidden)currentAction.fn()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function renderJournal(){dayGrid.innerHTML='';residents.forEach(r=>{const d=document.createElement('div');d.className='dayCard'+(r.day>unlock?' locked':'')+(state.done[r.day]?' done':'');d.innerHTML='<strong>DAY '+r.day+' · '+r.name+'</strong><span>'+r.game+(state.done[r.day]?' · COMPLETE':'')+'</span>';dayGrid.appendChild(d)})}
