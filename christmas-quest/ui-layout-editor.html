@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b1522">
+<title>Advent UI Layout Editor</title>
+<link rel="stylesheet" href="ui-layout-editor.css?v=1">
+</head>
+<body>
+<div class="editorApp">
+  <header class="editorHead">
+    <div><strong>ADVENT UI LAYOUT EDITOR</strong><span>390 × 844 design surface</span></div>
+    <a href="./">BACK TO GAME</a>
+  </header>
+
+  <main class="editorMain">
+    <section class="previewPane">
+      <div id="stageHolder" class="stageHolder">
+        <div id="stage" class="stage">
+          <div class="safeOutline"></div>
+          <div class="editable frameItem" data-key="frame" aria-label="Christmas frame">
+            <canvas id="frameCanvas" width="144" height="319"></canvas><i class="resizeHandle"></i>
+          </div>
+          <div class="editable screenItem" data-key="screen" aria-label="Playable screen">
+            <span>PLAY AREA</span><i class="resizeHandle"></i>
+          </div>
+          <div class="editable controlItem" data-key="up"><canvas width="42" height="42"></canvas><i class="resizeHandle"></i></div>
+          <div class="editable controlItem" data-key="left"><canvas width="42" height="42"></canvas><i class="resizeHandle"></i></div>
+          <div class="editable controlItem" data-key="right"><canvas width="42" height="42"></canvas><i class="resizeHandle"></i></div>
+          <div class="editable controlItem" data-key="down"><canvas width="42" height="42"></canvas><i class="resizeHandle"></i></div>
+          <div class="editable actionItem" data-key="action"><canvas width="45" height="46"></canvas><i class="resizeHandle"></i></div>
+        </div>
+      </div>
+      <p class="hint">Tap an item to select it. Drag to move. Drag the gold corner to resize.</p>
+    </section>
+
+    <aside class="inspector">
+      <div class="selectedTitle"><span>SELECTED</span><strong id="selectedName">FRAME</strong></div>
+      <div class="fields">
+        <label>X <input id="xField" type="number" step="1"></label>
+        <label>Y <input id="yField" type="number" step="1"></label>
+        <label>WIDTH <input id="wField" type="number" step="1" min="1"></label>
+        <label>HEIGHT <input id="hField" type="number" step="1" min="1"></label>
+      </div>
+      <div class="switchRow">
+        <label><input id="lockRatio" type="checkbox" checked> Lock aspect ratio</label>
+        <label><input id="snapPixels" type="checkbox" checked> Snap to whole pixels</label>
+      </div>
+      <div class="nudge">
+        <button data-nudge="0,-1">↑</button>
+        <button data-nudge="-1,0">←</button>
+        <button data-nudge="1,0">→</button>
+        <button data-nudge="0,1">↓</button>
+      </div>
+      <div class="editorActions">
+        <button id="resetSelected">RESET SELECTED</button>
+        <button id="resetAll">RESET ALL</button>
+        <button id="copyCode" class="primary">COPY LAYOUT CODE</button>
+      </div>
+      <label class="codeLabel">LAYOUT CODE
+        <textarea id="codeOut" readonly spellcheck="false"></textarea>
+      </label>
+      <p class="small">Send me this code block when you are happy. I can apply it directly without estimating positions from a screenshot.</p>
+    </aside>
+  </main>
+</div>
+<script src="advent-ui-exact-data.js?v=1"></script>
+<script src="advent-ui-art.js?v=3"></script>
+<script src="ui-layout.js?v=1"></script>
+<script src="ui-layout-editor.js?v=1"></script>
+</body>
+</html>
