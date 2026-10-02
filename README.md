@@ -13,7 +13,8 @@ A mobile-first browser games hub from **Chip In Games**.
 | `bingo/` | Bingo source page, scripts and styling |
 | `core-empires/` | Core Empires (existing folder preserved) |
 | `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |
-| `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |\n| `christmas-lights/` | Christmas Lights festive rotate-and-connect puzzle game |
+| `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |
+| `christmas-lights/` | Christmas Lights festive rotate-and-connect puzzle game |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
 | `shared/` | Player roster, networking, shared styles and menu/branding assets |
