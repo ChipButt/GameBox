@@ -1,293 +1,96 @@
 (() => {
 'use strict';
-
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-ctx.imageSmoothingEnabled=false;
-const stage=document.getElementById('gameStage');
-const creator=document.getElementById('creator');
-const preview=document.getElementById('creatorPreview'),pctx=preview.getContext('2d');
-const actionBtn=document.getElementById('actionBtn'),actionLabel=document.getElementById('actionLabel');
-const locationLabel=document.getElementById('locationLabel');
-const presentCount=document.getElementById('presentCount');
-const toast=document.getElementById('toast');
-const dialogue=document.getElementById('dialogue'),dialogueName=document.getElementById('dialogueName'),dialogueText=document.getElementById('dialogueText');
-const dialogueNext=document.getElementById('dialogueNext'),portrait=document.getElementById('dialoguePortrait'),portraitCtx=portrait.getContext('2d');
-const questPanel=document.getElementById('questPanel'),questList=document.getElementById('questList'),inventoryList=document.getElementById('inventoryList');
-const puzzlePanel=document.getElementById('puzzlePanel'),puzzleTitle=document.getElementById('puzzleTitle'),puzzleText=document.getElementById('puzzleText'),puzzleDisplay=document.getElementById('puzzleDisplay'),puzzleButtons=document.getElementById('puzzleButtons');
-
-const W=400,H=240,TILE=16,STORE='gamebox-christmas-quest-v1';
+const cv=document.getElementById('world'),c=cv.getContext('2d'),mc=document.getElementById('miniCanvas'),m=mc.getContext('2d');
+c.imageSmoothingEnabled=m.imageSmoothingEnabled=false;
+const $=id=>document.getElementById(id),loc=$('locationLabel'),toast=$('toast'),action=$('actionBtn'),actionLabel=$('actionLabel'),dlg=$('dialogue'),dlgName=$('dialogueName'),dlgText=$('dialogueText'),dlgNext=$('dialogueNext'),portrait=$('portrait'),pc=portrait.getContext('2d');
+const journal=$('journal'),dayGrid=$('dayGrid'),mini=$('miniScreen'),miniTitle=$('miniTitle'),miniDay=$('miniDay'),miniSubtitle=$('miniSubtitle'),miniScore=$('miniScore'),miniHelp=$('miniHelp'),miniButtons=$('miniButtons'),miniResult=$('miniResult'),resultTitle=$('resultTitle'),resultText=$('resultText');
+const P=window.CHIPIN_WORLD_PROJECT,maps=Object.fromEntries(P.maps.map(x=>[x.name.trim(),x])),town=maps['Town Map'],npcMap=maps['NPC House - Downstairs'],W=160,H=240,STORE='advent-apprentice-v2';
+const defs=[
+['Holly Tinkerton','TF Gnome B.png','Light Lines','Planning ahead','I have three hundred lights and no intention of untangling them twice.'],
+['Bernard Boxwood','TF Gnome A.png','Parcel Push','Organisation','Red labels left, gold labels right, and fragile things nowhere near the reindeer.'],
+['Pip Wren','TF Elf B.png','Toy Train Tangle','Attention to detail','Making a toy work once is easy. Making sure it works every time is the job.'],
+['Bramble','TF Reindeer Child.png','Reindeer Run','Confidence and control','Everybody says I am too young for the sleigh team. Race me and we will see.'],
+['Nutmeg Crumb','TF Gnome B.png','Gingerbread Rush','Timing and preparation','Christmas baking is about having the right thing ready at the right moment.'],
+['Rudi Lanternnose','TF Rudolph Child.png','Lantern Maze','Navigation','The nose only lets you see enough to make the next decision.'],
+['Melody Bell','TF Elf B.png','Bell Choir','Listening and memory','Anybody can make a noise. The trick is knowing when your note belongs.'],
+['Copper','TF Reindeer B.png','Sleigh Slide','Precision','Flying fast is easy. Stopping exactly where you are supposed to is skill.'],
+['Bjorn Snowpaw','TF Polar Bear.png','Snow Shift','Problem solving','Move snow from one path and you will put it somewhere else.'],
+['Merry Mistle','TF Gnome A.png','Wreath Weaver','Pattern recognition','You have been following my wreaths all week. About time you learned how they are made.'],
+['Juniper','TF Reindeer.png','Winter Routes','Route planning','The shortest road is not always the fastest road.'],
+['Cocoa Snowpaw','TF Polar Bear Cub.png','Snow Search','Observation','Finding the decorations is fun. Finding them efficiently is the clever bit.'],
+['Clove Hearthwick','TF Gnome A.png','Chimney Drop','Spatial thinking','Santa going down the chimney is not the difficult bit. Try the parcels.'],
+['Aurora','TF Rudolph Adult B.png','Star Flight','Adapting under pressure','A route can change while you are already flying it.'],
+['Felix Ribbon','TF Elf B.png','Perfectly Packed','Efficiency','Paper costs money, ribbon tangles, and boxes are never the shape you want.'],
+['Firkin Switchgear','TF Gnome B.png','Workshop Shift','Thinking ahead','Never move something just because you can. Know what happens next.'],
+['Bellamy Frost','TF Jesus.png','Bell Tower','Timing','Too early is wrong. Too late is wrong. Christmas has quite a lot of that.'],
+['Comet','TF Rudolph Adult.png','Snow Curling','Prediction','Training is not all running. Sometimes you have to beat me at something first.'],
+['Nicholas Quill','TF Jesus.png','Christmas Chronicle','Memory and tradition','Traditions are stories people liked enough to repeat.'],
+['Ember Hearth','TF Gnome B.png','Christmas Kitchen','Prioritisation','One dinner, twenty-four households, six ovens. Welcome to the busy part.'],
+['Northwind','TF Rudolph Adult B.png','Formation','Anticipating others','Eight reindeer do not fly independently. Watch the others.'],
+['Mrs Claus','TF Mrs Claus.png','Christmas Control','Coordination','Santa gets one very busy night. The rest of us get December.'],
+['Star','TF Rudolph Adult.png','The Long Run','Leadership','Tomorrow everyone will be looking forward. Somebody has to know where we are going.'],
+['Santa Claus','TF Santa.png','Christmas Eve','Putting it together','Twenty-three doors. Twenty-three teachers. There is only one thing left to do.']
+];
+const positions=[[400,688],[272,80],[464,80],[752,80],[944,80],[1120,80],[80,336],[272,336],[464,336],[752,336],[944,336],[1120,336],[80,880],[272,880],[464,880],[752,880],[944,880],[1120,880],[80,1112],[272,1112],[464,1112],[752,1112],[944,1112],[1120,1112]];
+const kinds=['rotate','push','rotate','race','sequence','maze','sequence','maze','push','rotate','route','maze','push','race','push','maze','timing','curl','sequence','timing','route','manage','race','final'];
+const residents=defs.map((d,i)=>({day:i+1,name:d[0],asset:d[1],game:d[2],skill:d[3],intro:d[4],kind:kinds[i],x:positions[i][0],y:positions[i][1],doorX:positions[i][0]+32,doorY:positions[i][1]+32}));
+const house=town.assets.find(a=>a.asset==='house2.png');
+const now=new Date(),unlock=now.getMonth()===11?Math.min(24,now.getDate()):24;
+$('dayBadge').querySelector('strong').textContent=String(now.getMonth()===11?Math.min(24,now.getDate()):24);
+const state={map:'Player House - Bedroom',x:P.initialSpawn.x,y:P.initialSpawn.y,dir:'down',moving:false,anim:performance.now(),cam:{x:0,y:0},resident:null,met:{},done:{},scores:{},jx:0,jy:0};
+try{const s=JSON.parse(localStorage.getItem(STORE)||'{}');state.met=s.met||{};state.done=s.done||{};state.scores=s.scores||{}}catch(e){}
+let assets=null,last=performance.now(),joyId=null,currentAction=null,queue=[],afterDlg=null,game=null,gameLast=0,finished=false;
 const keys=new Set();
-let assets=null,last=performance.now(),currentAction=null,joyPointer=null,dialogueQueue=[],dialogueDone=null,currentPuzzle=null;
-let previewTime=0;
-
-const SOURCE={
-  blue:[103,167,227], blueDark:[64,71,145],
-  red:[230,27,31], redDark:[173,29,35],
-  skin:[217,210,161], skinDark:[157,135,86],
-  shoe:[140,109,63], outline:[0,0,0], shadow:[158,158,158]
+function save(){localStorage.setItem(STORE,JSON.stringify({met:state.met,done:state.done,scores:state.scores}))}
+function msg(t){toast.textContent=t;toast.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>toast.classList.remove('show'),1600)}
+function activeMap(){return state.map==='NPC House - Downstairs'?npcMap:maps[state.map]}
+function mapLabel(){return state.resident&&state.map==='NPC House - Downstairs'?'DAY '+state.resident.day+' · '+state.resident.name.toUpperCase():state.map.toUpperCase()}
+function go(name,x,y,r=null){state.map=name;state.x=x;state.y=y;state.resident=r;state.moving=false;loc.textContent=mapLabel();msg(mapLabel())}
+function ac(name,frame,w,h){try{let q;if((q=name.match(/^BigSet r(\d+) c(\d+)/)))return assets.frame('BigSet.png',+q[1]*8+(+q[2]),16,16);if((q=name.match(/^Dungeon r(\d+) c(\d+)/)))return assets.frame('Dungeon.png',+q[1]*10+(+q[2]),16,16);if(frame!=null&&w&&h)return assets.frame(name,frame,w,h);return assets.canvas(name)}catch(e){return null}}
+function drawAsset(a,camx=0,camy=0){const s=ac(a.asset,a.frame,a.w,a.h),x=Math.round(a.x-camx),y=Math.round(a.y-camy);if(!s){c.fillStyle='#7a6650';c.fillRect(x,y,a.w,a.h);return}c.save();c.translate(x+(a.flipX?a.w:0),y+(a.flipY?a.h:0));c.scale(a.flipX?-1:1,a.flipY?-1:1);c.drawImage(s,0,0,a.w,a.h);c.restore()}
+function spr(ctx,name,x,y,dir='down',step=0,size=20){try{const b={down:0,up:4,left:8,right:12}[dir]||0,s=assets.frame(name,b+(step%4),16,16);ctx.drawImage(s,Math.round(x-size/2),Math.round(y-size+3),size,size)}catch(e){ctx.fillStyle='#a9363f';ctx.fillRect(x-size/2,y-size,size,size)}}
+function worldDraw(t){const mp=activeMap(),cam=state.cam;c.fillStyle=mp.bg||'#e8eee9';c.fillRect(0,0,W,H);let arr=mp.assets.slice();if(state.map==='Town Map')residents.slice(1).forEach(r=>arr.push(Object.assign({},house,{x:r.x,y:r.y,id:'h'+r.day,layer:1,aboveCharacters:true})));arr.sort((a,b)=>(a.layer||0)-(b.layer||0)||a.y-b.y);arr.filter(a=>!a.aboveCharacters).forEach(a=>drawAsset(a,cam.x,cam.y));if(state.map==='Town Map')residents.forEach(r=>{const x=r.doorX-cam.x,y=r.doorY-cam.y;c.fillStyle=r.day<=unlock?'#d8ae58':'#777';c.fillRect(x-7,y-24,18,10);c.fillStyle='#18231d';c.font='bold 7px monospace';c.textAlign='center';c.fillText(r.day,x+2,y-16)});if(state.map==='NPC House - Downstairs'&&state.resident)spr(c,state.resident.asset,80,112);const st=state.moving?Math.floor((t-state.anim)/150)%4:0;spr(c,'TF Elf A.png',state.x-cam.x,state.y-cam.y,state.dir,st,20);arr.filter(a=>a.aboveCharacters).forEach(a=>drawAsset(a,cam.x,cam.y))}
+function blocked(nx,ny){const mp=activeMap(),r=5;if(nx<6||ny<8||nx>mp.width-6||ny>mp.height-5)return true;for(const a of mp.assets)if(a.solid&&nx+r>a.x&&nx-r<a.x+a.w&&ny+r>a.y&&ny-r<a.y+a.h)return true;if(state.map==='Town Map')for(const h of residents.slice(1))if(nx+r>h.x+4&&nx-r<h.x+76&&ny+r>h.y+4&&ny-r<h.y+28)return true;return false}
+function dist(x,y){return Math.hypot(state.x-x,state.y-y)}
+function add(label,fn,p=1){if(!currentAction||p>currentAction.p)currentAction={label,fn,p}}
+function transition(t){const m=P.maps.find(x=>x.id===t.targetMapId);if(m)go(m.name.trim(),t.targetX,t.targetY)}
+function talk(r){state.met[r.day]=true;save();dialog(r.name,r.asset,[r.intro,'Your lesson is '+r.skill.toLowerCase()+'.','Head upstairs when you are ready. The room up there is set up for '+r.game+'.'])}
+function actions(){currentAction=null;if(state.map==='Town Map'){for(const r of residents)if(dist(r.doorX,r.doorY)<18)add(r.day<=unlock?'ENTER':'DAY '+r.day,()=>r.day<=unlock?go('NPC House - Downstairs',72,200,r):msg('This door opens on December '+r.day+'.'),8)}else if(state.map==='NPC House - Downstairs'&&state.resident){if(dist(80,112)<23)add('TALK',()=>talk(state.resident),10);const stairs=npcMap.transitions.find(t=>t.targetMapId!==town.id),out=npcMap.transitions.find(t=>t.targetMapId===town.id);if(stairs&&dist(stairs.x+8,stairs.y+8)<18)add('UPSTAIRS',()=>state.met[state.resident.day]?openGame(state.resident):msg('Speak to '+state.resident.name+' first.'),9);if(out&&dist(out.x+8,out.y+8)<18)add('OUTSIDE',()=>go('Town Map',state.resident.doorX,state.resident.doorY+24),9)}else for(const t of activeMap().transitions||[])if(dist(t.x+t.w/2,t.y+t.h/2)<17)add(t.targetMapId===town.id?'OUTSIDE':'STAIRS',()=>transition(t),7);action.disabled=!currentAction;action.classList.toggle('ready',!!currentAction);actionLabel.textContent=currentAction?currentAction.label:'ACTION'}
+function dialog(name,asset,lines){queue=lines.slice();dlgName.textContent=name;dlg.hidden=false;pc.clearRect(0,0,32,32);spr(pc,asset,16,27,'down',0,28);nextDlg()}
+function nextDlg(){if(queue.length){dlgText.textContent=queue.shift();dlgNext.textContent=queue.length?'NEXT':'CLOSE'}else dlg.hidden=true}
+dlgNext.onclick=nextDlg;action.onclick=()=>{if(currentAction&&dlg.hidden)currentAction.fn()};
+function update(dt,t){if(!dlg.hidden||!journal.hidden||!mini.hidden)return;let x=state.jx,y=state.jy;if(joyId===null){x=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);y=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0)}const mag=Math.hypot(x,y);if(mag>.12){x/=mag;y/=mag;const sp=54,nx=state.x+x*sp*dt,ny=state.y+y*sp*dt;if(!blocked(nx,state.y))state.x=nx;if(!blocked(state.x,ny))state.y=ny;const d=Math.abs(x)>Math.abs(y)?(x<0?'left':'right'):(y<0?'up':'down');if(!state.moving||d!==state.dir){state.anim=t;state.dir=d}state.moving=true}else state.moving=false;const mp=activeMap();state.cam.x=mp.width>W?Math.max(0,Math.min(mp.width-W,state.x-W/2)):0;state.cam.y=mp.height>H?Math.max(0,Math.min(mp.height-H,state.y-H/2)):0;actions()}
+const joy=$('joystick'),knob=$('joyKnob');function joyMove(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,max=28,mm=Math.hypot(dx,dy)||1,s=Math.min(1,max/mm),x=dx*s,y=dy*s;knob.style.transform='translate('+x+'px,'+y+'px)';state.jx=x/max;state.jy=y/max}joy.onpointerdown=e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;state.jx=state.jy=0;knob.style.transform='translate(0,0)'}joy.onpointerup=joyEnd;joy.onpointercancel=joyEnd;
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(['arrowleft','arrowright','arrowup','arrowdown',' '].includes(k))e.preventDefault();if(!mini.hidden&&game&&game.key)game.key(k);else if((k===' '||k==='enter')&&currentAction&&dlg.hidden)currentAction.fn()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+function renderJournal(){dayGrid.innerHTML='';residents.forEach(r=>{const d=document.createElement('div');d.className='dayCard'+(r.day>unlock?' locked':'')+(state.done[r.day]?' done':'');d.innerHTML='<strong>DAY '+r.day+' · '+r.name+'</strong><span>'+r.game+(state.done[r.day]?' · COMPLETE':'')+'</span>';dayGrid.appendChild(d)})}
+$('journalBtn').onclick=()=>{renderJournal();journal.hidden=false};document.querySelector('[data-close="journal"]').onclick=()=>journal.hidden=true;
+function setButtons(items){miniButtons.innerHTML='';items.forEach(v=>{const b=document.createElement('button');b.textContent=v[0];b.onclick=v[1];miniButtons.appendChild(b)})}
+function done(text){if(finished)return;finished=true;state.done[game.r.day]=true;state.scores[game.r.day]=Math.max(state.scores[game.r.day]||0,Math.round(game.score||0));save();renderJournal();resultTitle.textContent=game.r.game+' complete';resultText.textContent=text;miniResult.hidden=false}
+function back(){miniResult.hidden=true;mini.hidden=true;const r=game&&game.r?game.r:state.resident;game=null;go('NPC House - Downstairs',120,168,r)}
+$('returnMap').onclick=back;$('resultReturn').onclick=back;$('playAgain').onclick=()=>{miniResult.hidden=true;openGame(state.resident)};$('restartMini').onclick=()=>openGame(state.resident);
+function bg(title){m.fillStyle='#f2ead7';m.fillRect(0,0,360,560);m.fillStyle='#173c2a';m.fillRect(0,0,360,36);m.fillStyle='#fff';m.font='bold 14px monospace';m.textAlign='center';m.fillText(title,180,23)}
+function cell(x,y,s,fill){m.fillStyle=fill;m.fillRect(x,y,s,s);m.strokeStyle='#304238';m.strokeRect(x,y,s,s)}
+function rand(n){return Math.floor(Math.random()*n)}
+function makeMaze(){const N=11,g=Array.from({length:N},(_,y)=>Array.from({length:N},(_,x)=>x===0||y===0||x===N-1||y===N-1||Math.random()<.2?1:0));for(let x=1;x<N-1;x++)g[1][x]=0;for(let y=1;y<N-1;y++)g[y][N-2]=0;return{N,g,p:[1,1],goal:[N-2,N-2],moves:0}}
+function buildGame(r){
+ const kind=r.kind;
+ if(kind==='rotate'){let a=Array.from({length:25},()=>rand(4)),target=Array.from({length:25},()=>rand(4));return{r,score:0,draw(){bg(r.game);for(let y=0;y<5;y++)for(let x=0;x<5;x++){const i=y*5+x,px=55+x*50,py=105+y*50;cell(px,py,44,['#a9363f','#d8ae58','#4c7455','#596f91'][a[i]]);m.fillStyle='#fff';m.font='bold 16px monospace';m.fillText('↻',px+22,py+27)}m.fillStyle='#173c2a';m.font='9px monospace';m.fillText('Rotate every tile to match its hidden Christmas alignment.',180,390)},pointer(x,y){const gx=Math.floor((x-55)/50),gy=Math.floor((y-105)/50);if(gx>=0&&gx<5&&gy>=0&&gy<5){const i=gy*5+gx;a[i]=(a[i]+1)%4;this.score+=4;if(a.every((v,i)=>v===target[i]))done('Every piece is aligned correctly.')}}}}
+ if(kind==='push'){let p=[1,5],boxes=[[2,4],[3,3],[4,2]],goals=[[5,1],[5,2],[5,3]],moves=0;function mv(dx,dy){let nx=p[0]+dx,ny=p[1]+dy;if(nx<0||ny<0||nx>6||ny>6)return;const bi=boxes.findIndex(b=>b[0]===nx&&b[1]===ny);if(bi>=0){const bx=nx+dx,by=ny+dy;if(bx<0||by<0||bx>6||by>6||boxes.some(b=>b[0]===bx&&b[1]===by))return;boxes[bi]=[bx,by]}p=[nx,ny];moves++;if(goals.every(g=>boxes.some(b=>b[0]===g[0]&&b[1]===g[1])))done('You solved the whole spatial puzzle.')}const g={r,get score(){return Math.max(0,800-moves*5)},draw(){bg(r.game);for(let y=0;y<7;y++)for(let x=0;x<7;x++){const px=40+x*40,py=95+y*40;cell(px,py,36,'#e0d3b4');if(goals.some(q=>q[0]===x&&q[1]===y)){m.strokeStyle='#d8ae58';m.lineWidth=4;m.strokeRect(px+5,py+5,26,26)}}boxes.forEach(q=>{m.fillStyle='#a9363f';m.fillRect(45+q[0]*40,100+q[1]*40,26,26)});spr(m,'TF Elf A.png',58+p[0]*40,126+p[1]*40,'down',0,24)},buttons(){return[['←',()=>mv(-1,0)],['↑',()=>mv(0,-1)],['↓',()=>mv(0,1)],['→',()=>mv(1,0)]]},key(k){if(k==='arrowleft')mv(-1,0);if(k==='arrowright')mv(1,0);if(k==='arrowup')mv(0,-1);if(k==='arrowdown')mv(0,1)}};return g}
+ if(kind==='race'){let x=180,t=0,score=0,obs=[];return{r,get score(){return score},update(dt){t+=dt;score+=dt*20;if(Math.random()<dt*1.7)obs.push({x:45+rand(270),y:-20});obs.forEach(o=>o.y+=120*dt);for(const o of obs)if(Math.abs(o.x-x)<26&&Math.abs(o.y-445)<24){score=Math.max(0,score-80);o.y=999}obs=obs.filter(o=>o.y<600);if(t>=24)done('You completed the full run and kept control to the finish.')},draw(){bg(r.game);m.fillStyle='#dbe8ed';m.fillRect(35,50,290,500);obs.forEach(o=>{m.fillStyle='#fff';m.beginPath();m.arc(o.x,o.y,18,0,7);m.fill()});spr(m,r.asset,x,470,'up',1,32);m.fillStyle='#173c2a';m.fillText('TIME '+Math.max(0,24-t).toFixed(1),180,520)},buttons(){return[['LEFT',()=>x=Math.max(55,x-35)],['RIGHT',()=>x=Math.min(305,x+35)]]},key(k){if(k==='arrowleft')x=Math.max(55,x-25);if(k==='arrowright')x=Math.min(305,x+25)}}}
+ if(kind==='sequence'){let seq=[rand(4),rand(4),rand(4)],inp=[],show=true,clock=0,round=0,score=0;return{r,get score(){return score},update(dt){clock+=dt;if(show&&clock>seq.length*.65+.4){show=false;clock=0}},draw(){bg(r.game);for(let i=0;i<4;i++){const on=show&&seq[Math.floor(clock/.65)]===i;m.fillStyle=on?'#ffe76a':['#a9363f','#d8ae58','#4c7455','#596f91'][i];m.beginPath();m.arc(70+i*75,255,28,0,7);m.fill();m.fillStyle='#fff';m.fillText(i+1,70+i*75,260)}m.fillStyle='#173c2a';m.fillText(show?'WATCH':'YOUR TURN',180,360)},buttons(){return[1,2,3,4].map((n,i)=>[''+n,()=>{if(show)return;if(i===seq[inp.length]){inp.push(i);score+=20;if(inp.length===seq.length){round++;if(round>=5)return done('You completed five increasingly difficult patterns.');seq.push(rand(4));inp=[];show=true;clock=0}}else{inp=[];score=Math.max(0,score-20)}}])}}}
+ if(kind==='maze'){const q=makeMaze();function mv(dx,dy){const nx=q.p[0]+dx,ny=q.p[1]+dy;if(!q.g[ny]||q.g[ny][nx])return;q.p=[nx,ny];q.moves++;if(nx===q.goal[0]&&ny===q.goal[1])done('You found the route through the challenge.')}return{r,get score(){return Math.max(0,900-q.moves*4)},draw(){bg(r.game);for(let y=0;y<q.N;y++)for(let x=0;x<q.N;x++){const d=Math.hypot(x-q.p[0],y-q.p[1]);if(d<4.5)cell(38+x*26,90+y*26,23,q.g[y][x]?'#4d6255':'#dbcfae')}m.fillStyle='#d8ae58';m.fillRect(43+q.goal[0]*26,95+q.goal[1]*26,13,13);spr(m,'TF Elf A.png',49+q.p[0]*26,116+q.p[1]*26,'down',0,22)},buttons(){return[['←',()=>mv(-1,0)],['↑',()=>mv(0,-1)],['↓',()=>mv(0,1)],['→',()=>mv(1,0)]]},key(k){if(k==='arrowleft')mv(-1,0);if(k==='arrowright')mv(1,0);if(k==='arrowup')mv(0,-1);if(k==='arrowdown')mv(0,1)}}}
+ if(kind==='route'){const N=7,terrain=Array.from({length:49},()=>1+rand(3));let p=0,cost=0;function mv(dx,dy){const x=p%N,y=Math.floor(p/N),nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=N||ny>=N)return;p=ny*N+nx;cost+=terrain[p];if(p===48)done('Route complete. Your total travel cost was '+cost+'.')}return{r,get score(){return Math.max(0,1000-cost*15)},draw(){bg(r.game);for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,px=40+x*40,py=100+y*40;cell(px,py,36,['#ddd0ad','#d8e8ee','#adc7d1'][terrain[i]-1]);m.fillStyle='#18231d';m.font='8px monospace';m.fillText(terrain[i],px+18,py+21)}m.fillStyle='#a9363f';m.fillRect(46+(p%N)*40,106+Math.floor(p/N)*40,24,24)},buttons(){return[['←',()=>mv(-1,0)],['↑',()=>mv(0,-1)],['↓',()=>mv(0,1)],['→',()=>mv(1,0)]]}}}
+ if(kind==='timing'){let a=0,hits=0,score=0;function hit(){let d=Math.abs(((a%(Math.PI*2))+Math.PI*2)%(Math.PI*2)-Math.PI/2);d=Math.min(d,Math.PI*2-d);if(d<.3){hits++;score+=100;if(hits>=8)done('Eight perfect timings. Lesson complete.')}else score=Math.max(0,score-25)}return{r,get score(){return score},update(dt){a+=2.3*dt},draw(){bg(r.game);m.strokeStyle='#173c2a';m.lineWidth=8;m.beginPath();m.arc(180,270,120,0,7);m.stroke();m.strokeStyle='#d8ae58';m.lineWidth=18;m.beginPath();m.arc(180,270,120,Math.PI/2-.3,Math.PI/2+.3);m.stroke();m.fillStyle='#a9363f';m.beginPath();m.arc(180+Math.cos(a)*120,270+Math.sin(a)*120,13,0,7);m.fill();m.fillStyle='#173c2a';m.fillText('PERFECT '+hits+'/8',180,450)},buttons(){return[['GO',hit]]}}}
+ if(kind==='curl'){let aim=0,shots=0,score=0;function shoot(){const precision=Math.max(0,100-Math.abs(aim)*80-rand(35));score+=precision;shots++;aim=(Math.random()-.5)*1.5;if(shots>=6)done('Six stones played. Your accuracy score was '+Math.round(score)+'.')}return{r,get score(){return score},update(dt){aim+=Math.sin(performance.now()/500)*dt*.8},draw(){bg(r.game);m.fillStyle='#d9e8ee';m.fillRect(40,60,280,470);for(const rr of [85,55,28]){m.strokeStyle=rr===28?'#a9363f':'#6a98aa';m.lineWidth=6;m.beginPath();m.arc(180,140,rr,0,7);m.stroke()}m.strokeStyle='#173c2a';m.beginPath();m.moveTo(180,480);m.lineTo(180+Math.sin(aim)*120,360);m.stroke();m.fillStyle='#173c2a';m.fillText('SHOTS '+shots+'/6',180,525)},buttons(){return[['AIM ←',()=>aim-=.15],['THROW',shoot],['AIM →',()=>aim+=.15]]}}}
+ if(kind==='manage'){let bars=[70,65,75,60],t=0,score=0;function boost(i){bars[i]=Math.min(100,bars[i]+25)}return{r,get score(){return score},update(dt){t+=dt;bars=bars.map((v,i)=>v-(5+i)*dt);score=t*20;if(bars.some(v=>v<=0))return done('The shift ended. Replay to keep every system healthy longer.');if(t>=45)done('You kept every Christmas system running for a full shift.')},draw(){bg(r.game);['WORKSHOP','SLEIGH','KITCHEN','POST'].forEach((n,i)=>{const y=120+i*90;m.fillStyle='#173c2a';m.fillText(n,180,y);m.fillStyle='#57252a';m.fillRect(55,y+16,250,24);m.fillStyle=bars[i]<25?'#e24a50':'#4e8a5b';m.fillRect(55,y+16,250*bars[i]/100,24)})},buttons(){return[['TOOLS',()=>boost(0)],['FEED',()=>boost(1)],['OVEN',()=>boost(2)],['SORT',()=>boost(3)]]}}}
+ let phase=0,score=0,progress=0,land=25,del=0;return{r,get score(){return score},update(dt){if(phase===1){progress+=20*dt;score+=dt*3;if(progress>=100)phase=2}},draw(){bg(r.game);m.fillStyle='#173c2a';m.font='bold 15px monospace';m.fillText(['PLAN THE ROUTE','FLY THE NIGHT','LAND THE SLEIGH','DELIVER THE GIFTS'][phase],180,90);if(phase===0){for(let i=0;i<6;i++){m.fillStyle=i<progress?'#d8ae58':'#d8cba9';m.fillRect(65+i*42,180,32,32)}}if(phase===1){m.fillStyle='#102a42';m.fillRect(40,145,280,270);spr(m,'TF Rudolph Adult.png',180,285,'up',1,34);m.fillStyle='#d8ae58';m.fillRect(40,380,280*Math.min(1,progress/100),18)}if(phase===2){m.strokeStyle='#d8ae58';m.lineWidth=6;m.strokeRect(110,220,140,80);m.fillStyle='#a9363f';m.fillRect(160+land,180,40,30)}if(phase===3){m.fillStyle='#7a543b';m.fillRect(140,170,80,180);m.fillStyle='#a9363f';m.fillRect(165,300-del*35,30,30)}},buttons(){if(phase===0)return[['ROUTE',()=>{progress++;score+=20;if(progress>=6){phase=1;progress=0}}]];if(phase===1)return[['STEADY',()=>score+=1]];if(phase===2)return[['LEFT',()=>land=Math.max(-40,land-10)],['LAND',()=>{if(Math.abs(land)<15){phase=3;score+=200}else score=Math.max(0,score-20)}],['RIGHT',()=>land=Math.min(40,land+10)]];return[['DELIVER',()=>{del++;score+=100;if(del>=3)done('You planned the route, flew it, landed safely and completed the Christmas Eve deliveries.')}]]}}
+}
+const helps={
+1:'Rotate the tiles until every Christmas-light piece is aligned.',2:'Push every parcel onto a gold delivery square.',3:'Rotate the track pieces into the correct railway layout.',4:'Dodge the snowbanks and keep control to the finish.',5:'Watch the order, then repeat the recipe sequence.',6:'Your lantern reveals only nearby tiles. Find the far corner.',7:'Watch the bells, then repeat the pattern.',8:'Navigate the icy route to the target without losing your way.',9:'Push the snow piles into the marked clearing spaces.',10:'Rotate every wreath segment into its correct position.',11:'Reach the far corner while keeping your route cost low.',12:'Search the snowfield and find the hidden target route.',13:'Push the present blocks into the correct chimney positions.',14:'Fly through the storm and avoid every cloud bank you can.',15:'Fit all gifts into their correct packing spaces.',16:'Navigate the shifting workshop maze to the toy.',17:'Press GO when the moving marker crosses the gold zone.',18:'Aim and throw six snowballs as accurately as possible.',19:'Remember the story pattern and repeat it correctly.',20:'Time each kitchen action precisely.',21:'Move the formation along the most efficient route.',22:'Keep all four Christmas systems healthy for a full shift.',23:'Stay in control through the long senior reindeer run.',24:'Complete the final four-part Christmas Eve test.'
 };
-const PRESETS={
- classic:{name:'Classic',hat:'#67a7e3',jacket:'#e61b1f',trousers:'#404791',skin:'#d9d2a1',shoes:'#8c6d3f'},
- holly:{name:'Holly',hat:'#4f8b55',jacket:'#b9363f',trousers:'#6b5437',skin:'#d9c79b',shoes:'#66452f'},
- frost:{name:'Frost',hat:'#a8d9ef',jacket:'#e7e4db',trousers:'#49657d',skin:'#dbcda8',shoes:'#5d4b3a'},
- berry:{name:'Berry',hat:'#8f4b68',jacket:'#c9444e',trousers:'#33374f',skin:'#cfa985',shoes:'#654132'}
-};
-const NPC_PALETTES={
- holly:{hat:'#6c995b',jacket:'#b9363f',trousers:'#684b34',skin:'#d7c797',shoes:'#6b4932'},
- noel:{hat:'#aa393f',jacket:'#49704a',trousers:'#3f465d',skin:'#d8c99e',shoes:'#70503a'},
- ivy:{hat:'#8a526e',jacket:'#467555',trousers:'#55466c',skin:'#d9c89f',shoes:'#604433'},
- finn:{hat:'#547e9e',jacket:'#bd683e',trousers:'#394459',skin:'#d4bf91',shoes:'#684a34'}
-};
-
-let theme={...PRESETS.classic};
-const spriteCache=new Map(),baseFrameCache=new Map();
-
-const state={
- map:'bedroom',x:190,y:164,dir:'down',moving:false,animStart:performance.now(),
- presents:0,inventory:[],quests:{},solved:{},character:{...PRESETS.classic},townReturn:{x:376,y:430}
-};
-
-const MAPS={
- bedroom:{label:"PLAYER'S HOUSE · BEDROOM",w:400,h:240,start:[190,164]},
- downstairs:{label:"PLAYER'S HOUSE · DOWNSTAIRS",w:400,h:240,start:[325,74]},
- town:{label:'CHRISTMAS VILLAGE',w:800,h:560,start:[382,446]},
- hollyHouse:{label:"HOLLY'S HOUSE",w:400,h:240,start:[200,190]},
- noelHouse:{label:"NOEL'S HOUSE",w:400,h:240,start:[200,190]},
- ivyHouse:{label:"IVY'S HOUSE",w:400,h:240,start:[200,190]}
-};
-const camera={x:0,y:0};
-
-const QUESTS={
- cocoa:{npc:'Holly',title:'A Warm Mug',desc:'Bring Holly a hot chocolate from Ivy’s kitchen.',item:'Hot Chocolate',reward:'Present 1'},
- wreath:{npc:'Noel',title:'The Missing Wreath',desc:'Find Noel’s wreath near the snowman and bring it back.',item:'Wreath',reward:'Present 2'},
- stocking:{npc:'Ivy',title:'Fireplace Stocking',desc:'Solve Ivy’s fireplace-light puzzle and bring her stocking.',item:'Stocking',reward:'Present 3'},
- parcel:{npc:'Finn',title:'Upstairs Parcel',desc:'Open the little bedroom toy chest and bring Finn the wrapped parcel.',item:'Wrapped Parcel',reward:'Present 4'}
-};
-
-const npcs=[
- {id:'holly',name:'Holly',map:'town',x:235,y:253,minX:205,maxX:290,minY:220,maxY:294,palette:NPC_PALETTES.holly,quest:'cocoa',targetX:260,targetY:250,speed:15},
- {id:'finn',name:'Finn',map:'town',x:535,y:340,minX:500,maxX:625,minY:310,maxY:390,palette:NPC_PALETTES.finn,quest:'parcel',targetX:600,targetY:355,speed:14},
- {id:'noel',name:'Noel',map:'noelHouse',x:235,y:125,minX:200,maxX:300,minY:105,maxY:155,palette:NPC_PALETTES.noel,quest:'wreath',targetX:270,targetY:135,speed:11},
- {id:'ivy',name:'Ivy',map:'ivyHouse',x:230,y:130,minX:195,maxX:290,minY:105,maxY:160,palette:NPC_PALETTES.ivy,quest:'stocking',targetX:265,targetY:145,speed:10}
-];
-
-const townHouses=[
- {id:'player',x:336,y:390,frame:0,map:'downstairs',label:"Player's House"},
- {id:'holly',x:74,y:82,frame:1,map:'hollyHouse',label:"Holly's House"},
- {id:'noel',x:350,y:75,frame:3,map:'noelHouse',label:"Noel's House"},
- {id:'ivy',x:615,y:92,frame:5,map:'ivyHouse',label:"Ivy's House"}
-];
-
-function hexRgb(hex){const h=hex.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
-function shade(hex,amount){const [r,g,b]=hexRgb(hex),m=amount>0?255:0,t=Math.abs(amount);return [Math.round(r+(m-r)*t),Math.round(g+(m-g)*t),Math.round(b+(m-b)*t)]}
-function same(rgb,target){return rgb[0]===target[0]&&rgb[1]===target[1]&&rgb[2]===target[2]}
-function baseFrame(i){if(baseFrameCache.has(i))return baseFrameCache.get(i);const c=assets.frame('character.png',i,16,16);baseFrameCache.set(i,c);return c}
-function themedFrame(i,palette=theme){
- const key=i+'|'+Object.values(palette).join('|'); if(spriteCache.has(key))return spriteCache.get(key);
- const src=baseFrame(i),sx=src.getContext('2d',{willReadFrequently:true}),im=sx.getImageData(0,0,16,16),d=im.data;
- const hat=hexRgb(palette.hat),hatDark=shade(palette.hat,-.28),jacket=hexRgb(palette.jacket),jacketDark=shade(palette.jacket,-.25),trousers=hexRgb(palette.trousers),skin=hexRgb(palette.skin),skinDark=shade(palette.skin,-.22),shoes=hexRgb(palette.shoes);
- for(let y=0;y<16;y++)for(let x=0;x<16;x++){const q=(y*16+x)*4;if(!d[q+3])continue;const rgb=[d[q],d[q+1],d[q+2]];let c=null;
-   if(same(rgb,SOURCE.blue))c=hat;
-   else if(same(rgb,SOURCE.blueDark))c=y<8?hatDark:trousers;
-   else if(same(rgb,SOURCE.red))c=jacket;
-   else if(same(rgb,SOURCE.redDark))c=jacketDark;
-   else if(same(rgb,SOURCE.skin))c=skin;
-   else if(same(rgb,SOURCE.skinDark))c=y<11?skinDark:shoes;
-   else if(same(rgb,SOURCE.shoe))c=shoes;
-   if(c){d[q]=c[0];d[q+1]=c[1];d[q+2]=c[2]}
- }
- const out=document.createElement('canvas');out.width=16;out.height=16;out.getContext('2d').putImageData(im,0,0);spriteCache.set(key,out);return out;
-}
-
-function frameFor(dir,step){const base={down:0,up:4,left:8,right:12}[dir]||0;return base+(step%4)}
-function drawCharacter(target,x,y,dir,step,palette,size=24){const f=themedFrame(frameFor(dir,step),palette);target.save();target.imageSmoothingEnabled=false;target.drawImage(f,Math.round(x-size/2),Math.round(y-size+4),size,size);target.restore()}
-function previewDraw(t){if(!assets)return;previewTime=t;const step=Math.floor(t/180)%4;pctx.fillStyle='#dfe5dd';pctx.fillRect(0,0,144,144);for(let y=80;y<144;y+=16)for(let x=0;x<144;x+=16)assets.draw(pctx,'floor-tile.png',x,y,{width:16,height:16});drawCharacter(pctx,72,105,'down',step,theme,72);requestAnimationFrame(previewDraw)}
-
-function save(){localStorage.setItem(STORE,JSON.stringify({presents:state.presents,inventory:state.inventory,quests:state.quests,solved:state.solved,character:state.character}))}
-function load(){try{const s=JSON.parse(localStorage.getItem(STORE)||'null');if(!s)return;if(Number.isFinite(s.presents))state.presents=s.presents;if(Array.isArray(s.inventory))state.inventory=s.inventory;if(s.quests)state.quests=s.quests;if(s.solved)state.solved=s.solved;if(s.character){state.character=s.character;theme={...s.character};applyCreator(theme)}}catch(_){}}
-function showToast(text){toast.textContent=text;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1800)}
-function hasItem(item){return state.inventory.includes(item)}
-function addItem(item){if(!hasItem(item)){state.inventory.push(item);showToast('Added: '+item);save();renderQuestPanel()}}
-function removeItem(item){state.inventory=state.inventory.filter(x=>x!==item);save()}
-function questStatus(id){return state.quests[id]||'none'}
-function acceptQuest(id){if(questStatus(id)==='none'){state.quests[id]='active';showToast('New quest: '+QUESTS[id].title);save();renderQuestPanel()}}
-function completeQuest(id){if(questStatus(id)!=='complete'){state.quests[id]='complete';removeItem(QUESTS[id].item);state.presents++;presentCount.textContent=state.presents;showToast('Quest complete — Christmas present earned!');save();renderQuestPanel()}}
-
-function renderQuestPanel(){
- questList.innerHTML='';
- for(const [id,q] of Object.entries(QUESTS)){const st=questStatus(id);if(st==='none')continue;const div=document.createElement('div');div.className='questItem'+(st==='complete'?' complete':'');div.innerHTML='<strong>'+q.title+' · '+(st==='complete'?'DONE':q.npc)+'</strong><span>'+q.desc+'</span>';questList.appendChild(div)}
- if(!questList.children.length)questList.innerHTML='<div class="questItem"><strong>No quests yet</strong><span>Talk to the elves around the village.</span></div>';
- inventoryList.innerHTML='';
- if(!state.inventory.length)inventoryList.innerHTML='<span class="bagItem">Bag is empty</span>';
- else for(const item of state.inventory){const s=document.createElement('span');s.className='bagItem';s.textContent=item;inventoryList.appendChild(s)}
-}
-document.getElementById('questBtn').onclick=()=>{renderQuestPanel();questPanel.hidden=false};
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.close).hidden=true);
-
-function setDialogue(name,palette,lines,onDone=null){
- dialogueQueue=[...lines];dialogueDone=onDone;dialogueName.textContent=name;dialogue.hidden=false;
- portraitCtx.clearRect(0,0,32,32);drawCharacter(portraitCtx,16,27,'down',0,palette,28);nextDialogue();
-}
-function nextDialogue(){if(dialogueQueue.length){dialogueText.textContent=dialogueQueue.shift();dialogueNext.textContent=dialogueQueue.length?'NEXT':'CLOSE'}else{dialogue.hidden=true;const done=dialogueDone;dialogueDone=null;if(done)done()}}
-dialogueNext.onclick=nextDialogue;
-
-function talkToNpc(n){
- const qid=n.quest,q=QUESTS[qid],st=questStatus(qid);
- if(st==='none'){
-   const intro={
-    cocoa:["Oh! You came at just the right time.","Could you bring me a hot chocolate from Ivy's kitchen? I'll wrap you a present for helping."],
-    wreath:["My front-door wreath blew away in the snow.","I saw it tumble towards the snowman. Would you find it for me?"],
-    stocking:["I put my favourite stocking away by the fireplace, but I locked the little box with the light code.","Solve the lights, bring me the stocking, and there's a present in it for you."],
-    parcel:["I left a parcel in the little toy chest upstairs in your bedroom.","The latch has a simple number pattern. Bring the parcel to me and I'll swap it for a Christmas present."]
-   }[qid];
-   setDialogue(n.name,n.palette,intro,()=>acceptQuest(qid));return;
- }
- if(st==='active'&&hasItem(q.item)){
-   setDialogue(n.name,n.palette,["You found it! That's exactly what I needed.","Thank you — this present is yours."],()=>completeQuest(qid));return;
- }
- if(st==='active'){setDialogue(n.name,n.palette,["Still looking? "+q.desc]);return}
- setDialogue(n.name,n.palette,["Thanks again for helping me. Merry Christmas!"]);
-}
-
-function openPuzzle(config){
- currentPuzzle={...config,index:0};puzzleTitle.textContent=config.title;puzzleText.textContent=config.text;puzzleDisplay.textContent=config.display;puzzleButtons.innerHTML='';
- for(let i=1;i<=4;i++){const b=document.createElement('button');b.textContent=String(i);b.onclick=()=>puzzlePress(i);puzzleButtons.appendChild(b)}
- puzzlePanel.hidden=false;
-}
-function puzzlePress(n){
- if(!currentPuzzle)return;
- if(n===currentPuzzle.sequence[currentPuzzle.index]){currentPuzzle.index++;puzzleDisplay.textContent=currentPuzzle.sequence.map((v,i)=>i<currentPuzzle.index?'✓':v).join(' · ');
-   if(currentPuzzle.index===currentPuzzle.sequence.length){const done=currentPuzzle.onSolve;puzzlePanel.hidden=true;currentPuzzle=null;setTimeout(done,120)}
- } else {currentPuzzle.index=0;puzzleDisplay.textContent=currentPuzzle.display;showToast('Not quite — try the sequence again.')}
-}
-document.getElementById('puzzleCancel').onclick=()=>{puzzlePanel.hidden=true;currentPuzzle=null};
-
-function transition(map,x,y){state.map=map;state.x=x;state.y=y;state.moving=false;state.animStart=performance.now();locationLabel.textContent=MAPS[map].label;currentAction=null;actionBtn.disabled=true;actionBtn.classList.remove('ready');showToast(MAPS[map].label)}
-function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by)}
-function near(x,y,r=24){return dist(state.x,state.y,x,y)<=r}
-function addAction(label,fn,priority=1){if(!currentAction||priority>currentAction.priority)currentAction={label,fn,priority}}
-function updateAction(){
- currentAction=null;const map=state.map;
- const localNpcs=npcs.filter(n=>n.map===map);
- for(const n of localNpcs)if(near(n.x,n.y,25))addAction('TALK',()=>talkToNpc(n),5);
- if(map==='bedroom'){
-   if(near(334,54,25))addAction('STAIRS',()=>transition('downstairs',326,76),4);
-   if(questStatus('parcel')==='active'&&!hasItem('Wrapped Parcel')&&near(76,72,25))addAction('PUZZLE',()=>openPuzzle({title:'Toy Chest Latch',text:'The scratched numbers on the lid show the order.',display:'3 · 1 · 4 · 2',sequence:[3,1,4,2],onSolve:()=>{state.solved.parcel=true;addItem('Wrapped Parcel')}}),6);
- } else if(map==='downstairs'){
-   if(near(334,54,25))addAction('STAIRS',()=>transition('bedroom',326,74),4);
-   if(near(200,210,27))addAction('OUTSIDE',()=>transition('town',376,448),4);
- } else if(map==='town'){
-   if(questStatus('wreath')==='active'&&!hasItem('Wreath')&&near(675,370,25))addAction('TAKE',()=>addItem('Wreath'),6);
-   for(const h of townHouses){const doorX=h.x+40,doorY=h.y+62;if(near(doorX,doorY,30)){if(h.id==='player')addAction('ENTER',()=>transition('downstairs',200,190),4);else addAction('ENTER',()=>transition(h.map,200,190),4)}}
- } else {
-   if(near(200,211,27))addAction('LEAVE',()=>{const h=townHouses.find(h=>h.map===map);transition('town',h.x+40,h.y+84)},4);
-   if(map==='ivyHouse'){
-     if(questStatus('cocoa')==='active'&&!hasItem('Hot Chocolate')&&near(104,126,26))addAction('TAKE',()=>addItem('Hot Chocolate'),6);
-     if(questStatus('stocking')==='active'&&!hasItem('Stocking')&&near(319,91,28))addAction('PUZZLE',()=>openPuzzle({title:'Fireplace Lights',text:'The four lights blink in this order. Repeat it on the buttons.',display:'2 · 4 · 1 · 3',sequence:[2,4,1,3],onSolve:()=>{state.solved.stocking=true;addItem('Stocking')}}),6);
-   }
- }
- actionBtn.disabled=!currentAction;actionBtn.classList.toggle('ready',!!currentAction);actionLabel.textContent=currentAction?currentAction.label:'ACTION';
-}
-actionBtn.onclick=()=>{if(!dialogue.hidden||!puzzlePanel.hidden||!questPanel.hidden)return;if(currentAction)currentAction.fn()};
-
-function collideRect(x,y,r){return state.x+r>x.x&&state.x-r<x.x+x.w&&state.y+r>x.y&&state.y-r<x.y+x.h}
-function blocked(nx,ny){
- const map=state.map,r=7;
- if(nx<12||ny<22||nx>MAPS[map].w-12||ny>MAPS[map].h-10)return true;
- const rects=[];
- if(map==='bedroom')rects.push({x:36,y:40,w:80,h:52},{x:250,y:35,w:60,h:42},{x:42,y:138,w:58,h:36});
- if(map==='downstairs')rects.push({x:40,y:50,w:86,h:52},{x:250,y:48,w:64,h:44},{x:126,y:128,w:72,h:40});
- if(map==='town')for(const h of townHouses)rects.push({x:h.x+4,y:h.y+8,w:72,h:55});
- if(map.endsWith('House'))rects.push({x:30,y:50,w:80,h:48},{x:270,y:48,w:75,h:48},{x:142,y:120,w:80,h:40});
- const ox=state.x,oy=state.y;state.x=nx;state.y=ny;const hit=rects.some(q=>collideRect(q,r));state.x=ox;state.y=oy;return hit;
-}
-
-function updateNpc(n,dt){
- if(n.map!==state.map)return;
- const dx=n.targetX-n.x,dy=n.targetY-n.y,d=Math.hypot(dx,dy);
- if(d<4){n.targetX=n.minX+Math.random()*(n.maxX-n.minX);n.targetY=n.minY+Math.random()*(n.maxY-n.minY);return}
- n.x+=dx/d*n.speed*dt;n.y+=dy/d*n.speed*dt;n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');n.step=(Math.floor(performance.now()/180)%4);
-}
-function update(dt,now){
- if(!dialogue.hidden||!questPanel.hidden||!puzzlePanel.hidden)return;
- let vx=0,vy=0;
- if(joyPointer===null){if(keys.has('arrowleft')||keys.has('a'))vx--;if(keys.has('arrowright')||keys.has('d'))vx++;if(keys.has('arrowup')||keys.has('w'))vy--;if(keys.has('arrowdown')||keys.has('s'))vy++}
- else {vx=state.jx||0;vy=state.jy||0}
- const mag=Math.hypot(vx,vy);
- if(mag>.12){vx/=mag;vy/=mag;const speed=58;const nx=state.x+vx*speed*dt,ny=state.y+vy*speed*dt;if(!blocked(nx,state.y))state.x=nx;if(!blocked(state.x,ny))state.y=ny;const dir=Math.abs(vx)>Math.abs(vy)?(vx<0?'left':'right'):(vy<0?'up':'down');if(!state.moving||dir!==state.dir){state.animStart=now;state.dir=dir}state.moving=true}else{if(state.moving)state.animStart=now;state.moving=false}
- for(const n of npcs)updateNpc(n,dt);updateAction();
- camera.x=state.map==='town'?Math.max(0,Math.min(MAPS.town.w-W,state.x-W/2)):0;camera.y=state.map==='town'?Math.max(0,Math.min(MAPS.town.h-H,state.y-H/2)):0;
-}
-
-function tile(name,x,y,w=16,h=16,frame=null){assets.draw(ctx,name,Math.round(x-camera.x),Math.round(y-camera.y),frame==null?{width:w,height:h}:{frame,width:w,height:h})}
-function fillFloor(name='floor-tile.png'){for(let y=0;y<MAPS[state.map].h;y+=16)for(let x=0;x<MAPS[state.map].w;x+=16)tile(name,x,y)}
-function drawRoomShell(){
- ctx.fillStyle='#ccb98c';ctx.fillRect(0,0,W,H);for(let y=32;y<H;y+=16)for(let x=0;x<W;x+=16)assets.draw(ctx,'floor-tile.png',x,y,{width:16,height:16});
- ctx.fillStyle='#734b34';ctx.fillRect(0,0,W,32);ctx.fillStyle='#a57c58';ctx.fillRect(0,27,W,5);
- for(let x=0;x<W;x+=16)assets.draw(ctx,'christmas-lights.png',x,18,{frame:(x/16)%8,cellWidth:16,cellHeight:16,width:16,height:16});
-}
-function stairs(x,y){ctx.fillStyle='#4e3729';ctx.fillRect(x-2,y-2,52,58);for(let i=0;i<6;i++){ctx.fillStyle=i%2?'#8b6848':'#a47a54';ctx.fillRect(x,y+i*9,48,8)}ctx.fillStyle='#2b211a';ctx.fillRect(x+46,y,3,54)}
-function roomAsset(name,x,y,opt={}){assets.draw(ctx,name,x,y,opt)}
-
-function drawBedroom(){
- drawRoomShell();roomAsset('rug.png',142,138,{width:96,height:64});roomAsset('table.png',46,42,{width:48,height:48});roomAsset('chair.png',93,57,{width:32,height:32});roomAsset('small-tree.png',260,42,{width:32,height:64});roomAsset('stocking.png',280,38,{width:16,height:16});roomAsset('present2.png',68,66,{width:20,height:20});stairs(314,34);
- // bed + toy chest coded to match palette
- ctx.fillStyle='#1b211d';ctx.fillRect(28,118,90,48);ctx.fillStyle='#a9363f';ctx.fillRect(31,121,84,42);ctx.fillStyle='#efe3c5';ctx.fillRect(35,124,76,18);ctx.fillStyle='#762832';ctx.fillRect(35,146,76,15);
- ctx.fillStyle='#171d19';ctx.fillRect(55,54,44,28);ctx.fillStyle='#8c6d3f';ctx.fillRect(58,57,38,22);ctx.fillStyle='#d8ae58';ctx.fillRect(75,57,4,22);
- if(questStatus('parcel')==='active'&&!hasItem('Wrapped Parcel')){ctx.strokeStyle='#d8ae58';ctx.lineWidth=2;ctx.strokeRect(54,53,46,30)}
-}
-function drawDownstairs(){
- drawRoomShell();roomAsset('rug.png',135,122,{width:96,height:64});roomAsset('couch.png',40,45,{width:96,height:64});roomAsset('fireplace.png',255,47,{frame:2,cellWidth:16,cellHeight:16,width:64,height:64});roomAsset('table.png',146,128,{width:48,height:48});roomAsset('chair.png',122,140,{width:32,height:32});roomAsset('chair.png',196,140,{width:32,height:32});roomAsset('wreath.png',278,36,{width:16,height:16});stairs(314,34);
- ctx.fillStyle='#1d2a22';ctx.fillRect(184,199,32,41);ctx.fillStyle='#7b5138';ctx.fillRect(188,202,24,38);ctx.fillStyle='#d8ae58';ctx.fillRect(208,221,3,3);
-}
-function drawHouseInterior(which){
- drawRoomShell();roomAsset('rug.png',142,132,{width:96,height:64});roomAsset('couch.png',32,49,{width:96,height:64});roomAsset('table.png',155,124,{width:48,height:48});roomAsset('chair.png',132,138,{width:32,height:32});roomAsset('chair.png',204,138,{width:32,height:32});roomAsset('small-tree.png',278,45,{width:32,height:64});roomAsset('wreath.png',187,37,{width:16,height:16});ctx.fillStyle='#1d2a22';ctx.fillRect(184,199,32,41);ctx.fillStyle='#7b5138';ctx.fillRect(188,202,24,38);
- if(which==='ivyHouse'){roomAsset('fireplace.png',286,52,{frame:1,cellWidth:16,cellHeight:16,width:64,height:64});roomAsset('hot-chocolate.png',80,110,{frame:0,cellWidth:8,cellHeight:8,width:24,height:24});if(questStatus('stocking')==='active'&&!hasItem('Stocking'))roomAsset('stocking.png',320,78,{width:16,height:16})}
- if(which==='noelHouse')roomAsset('present1.png',72,117,{width:24,height:24});
- if(which==='hollyHouse')roomAsset('bench.png',270,118,{width:64,height:64});
-}
-function drawTown(){
- ctx.fillStyle='#eef1e9';ctx.fillRect(0,0,W,H);
- const worldW=MAPS.town.w,worldH=MAPS.town.h;
- // snow tile texture
- for(let y=0;y<worldH;y+=16)for(let x=0;x<worldW;x+=16)tile('snow-tilemap.png',x,y,16,16);
- // paths
- const pathRects=[{x:365,y:0,w:64,h:560},{x:0,y:180,w:800,h:48},{x:0,y:392,w:800,h:48}];
- for(const r of pathRects)for(let y=r.y;y<r.y+r.h;y+=16)for(let x=r.x;x<r.x+r.w;x+=16)tile('path-tilemap.png',x,y,16,16,(Math.floor(x/16)+Math.floor(y/16))%16);
- // houses
- for(const h of townHouses)assets.draw(ctx,'house1.png',Math.round(h.x-camera.x),Math.round(h.y-camera.y),{frame:h.frame,cellWidth:80,cellHeight:64,width:80,height:64});
- // scenery
- const trees=[[28,35],[170,35],[700,30],[735,270],[35,300],[170,465],[650,455],[735,480],[285,260],[515,255]];
- for(const [x,y] of trees)tile('main-tree.png',x,y,48,64);
- const small=[[145,155],[600,160],[256,460],[540,465]];for(const [x,y] of small)tile('small-tree.png',x,y,16,32);
- const lamps=[[340,170],[448,170],[340,382],[448,382]];for(const [x,y] of lamps)tile('lamp-post.png',x,y,16,32);
- tile('bench.png',455,300,48,32);tile('street-sign-post.png',384,245,16,32);tile('snowman1.png',668,352,32,32);
- if(questStatus('wreath')==='active'&&!hasItem('Wreath'))tile('wreath.png',675,362,16,16);
-}
-function drawWorld(now){
- ctx.clearRect(0,0,W,H);
- if(state.map==='bedroom')drawBedroom();else if(state.map==='downstairs')drawDownstairs();else if(state.map==='town')drawTown();else drawHouseInterior(state.map);
- const drawables=[];
- for(const n of npcs.filter(n=>n.map===state.map)){drawables.push({y:n.y,fn:()=>drawCharacter(ctx,n.x-camera.x,n.y-camera.y,n.dir||'down',n.step||0,n.palette,24)})}
- const step=state.moving?Math.floor((now-state.animStart)/150)%4:0;drawables.push({y:state.y,fn:()=>drawCharacter(ctx,state.x-camera.x,state.y-camera.y,state.dir,step,theme,24)});
- drawables.sort((a,b)=>a.y-b.y);for(const d of drawables)d.fn();
-}
-
-function resize(){const r=stage.getBoundingClientRect(),s=Math.max(.5,Math.min(r.width/W,r.height/H));canvas.style.width=Math.round(W*s)+'px';canvas.style.height=Math.round(H*s)+'px'}
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt,now);drawWorld(now);requestAnimationFrame(loop)}
-
-const joy=document.getElementById('joystick'),knob=document.getElementById('joyKnob');
-function moveJoy(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,max=32,m=Math.hypot(dx,dy)||1,s=Math.min(1,max/m);const x=dx*s,y=dy*s;knob.style.transform='translate('+x+'px,'+y+'px)';state.jx=x/max;state.jy=y/max}
-joy.onpointerdown=e=>{joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);moveJoy(e)};joy.onpointermove=e=>{if(e.pointerId===joyPointer)moveJoy(e)};function stopJoy(e){if(e.pointerId!==joyPointer)return;joyPointer=null;state.jx=state.jy=0;knob.style.transform='translate(0,0)'}joy.onpointerup=stopJoy;joy.onpointercancel=stopJoy;
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();keys.add(k);if((k===' '||k==='enter')&&currentAction&&dialogue.hidden&&puzzlePanel.hidden)currentAction.fn()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
-
-function applyCreator(p){theme={...p};document.getElementById('hatColour').value=p.hat;document.getElementById('jacketColour').value=p.jacket;document.getElementById('trouserColour').value=p.trousers;document.getElementById('skinColour').value=p.skin;document.getElementById('shoeColour').value=p.shoes}
-function readCreator(){return {hat:document.getElementById('hatColour').value,jacket:document.getElementById('jacketColour').value,trousers:document.getElementById('trouserColour').value,skin:document.getElementById('skinColour').value,shoes:document.getElementById('shoeColour').value}}
-document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.toggle('active',x===b));const p=PRESETS[b.dataset.preset];applyCreator(p);document.getElementById('presetName').textContent=p.name.toUpperCase();spriteCache.clear()});
-['hatColour','jacketColour','trouserColour','skinColour','shoeColour'].forEach(id=>document.getElementById(id).oninput=()=>{theme=readCreator();document.getElementById('presetName').textContent='CUSTOM';spriteCache.clear()});
-document.getElementById('startGame').onclick=()=>{theme=readCreator();state.character={...theme};save();creator.hidden=true;stage.hidden=false;presentCount.textContent=state.presents;transition('bedroom',190,164);resize()};
-
-window.addEventListener('resize',resize,{passive:true});window.visualViewport?.addEventListener('resize',resize,{passive:true});
-
-VillagePixelAssets.ready.then(api=>{assets=api;load();applyCreator(state.character||PRESETS.classic);theme={...state.character};presentCount.textContent=state.presents;renderQuestPanel();requestAnimationFrame(previewDraw);requestAnimationFrame(loop)}).catch(err=>{console.error(err);document.querySelector('.creatorHead h1').textContent='Could not load Christmas village assets';});
+function openGame(r){state.resident=r;finished=false;game=buildGame(r);mini.hidden=false;miniResult.hidden=true;miniDay.textContent='DAY '+r.day;miniTitle.textContent=r.game;miniSubtitle.textContent=r.name+' · '+r.skill;miniHelp.textContent=helps[r.day];setButtons(game.buttons?game.buttons():[]);gameLast=performance.now();requestAnimationFrame(gameLoop)}
+mc.onpointerdown=e=>{if(!game||!game.pointer)return;const r=mc.getBoundingClientRect();game.pointer((e.clientX-r.left)*360/r.width,(e.clientY-r.top)*560/r.height)};
+function gameLoop(t){if(mini.hidden||!game)return;const dt=Math.min(.05,(t-gameLast)/1000);gameLast=t;if(!finished)game.update&&game.update(dt);game.draw();miniScore.textContent=Math.max(0,Math.round(game.score||0));if(game.r.kind==='final'&&!finished)setButtons(game.buttons());requestAnimationFrame(gameLoop)}
+function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt,t);worldDraw(t);requestAnimationFrame(loop)}
+VillagePixelAssets.ready.then(a=>{assets=a;loc.textContent=mapLabel();renderJournal();requestAnimationFrame(loop)}).catch(e=>{console.error(e);msg('Could not load Christmas assets')});
 })();
