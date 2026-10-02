@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b2530">
 <title>Pipeworks · GameBox</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="app">
@@ -34,8 +34,12 @@
   <section id="game" class="view">
     <header class="gameTop"><button id="gameBack" class="round">←</button><div><b id="gamePack">Classic Pipes</b><small id="gameLevel">Level 1</small></div><div class="coins">● <b data-coins>0</b></div></header>
     <div class="boardCard">
-      <div class="meta"><span>Turns <b id="turns">0</b></span><span id="timerBox" hidden>Time <b id="timer">0</b></span><span>Valve → Tank</span></div>
-      <div id="board" class="board"></div>
+      <div class="meta"><span>Turns <b id="turns">0</b></span><span id="timerBox" hidden>Time <b id="timer">0</b></span><span>Gold inlet → blue outlet</span></div>
+      <div class="boardFrame">
+        <div id="sourcePort" class="edgePort sourcePort" aria-hidden="true"></div>
+        <div id="board" class="board"></div>
+        <div id="targetPort" class="edgePort targetPort" aria-hidden="true"></div>
+      </div>
       <div class="tools"><button id="hint">Hint<small>25 coins · fix one</small></button><button id="fix3">Fix 3<small>50 coins · fix three</small></button></div>
     </div>
     <p class="tip">Tap a pipe to rotate it. Water passes only where neighbouring pipe ends meet.</p>
@@ -44,6 +48,6 @@
 
 <div id="win" class="overlay"><div class="winCard"><div class="drop">💧</div><h2>Water flowing!</h2><div id="winStars" class="winStars"></div><p><b>+<span id="wonCoins">0</span></b> coins &nbsp; <b>+<span id="wonXp">0</span></b> XP</p><button id="next" class="primary">Next Level</button><button id="levelSelect" class="secondary">Level Select</button></div></div>
 <div id="toast" class="toast"></div>
-<script src="game.js?v=1"></script>
+<script src="game.js?v=3"></script>
 </body>
 </html>
