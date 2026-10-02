@@ -6,7 +6,8 @@ const packs=[
 {id:"locked",name:"Locked Lines",icon:"🔒",desc:"Some correctly placed pipes cannot be moved.",unlock:35,count:50,mode:"locked"},
 {id:"rush",name:"Pressure Rush",icon:"⏱",desc:"Connect the line before pressure drops.",unlock:70,count:50,mode:"rush"}];
 const fresh={coins:150,xp:0,stars:0,sound:true,lastReward:"",completed:{},lastPack:"classic",lastLevel:1};
-let s=load(),pack=packs[0],level=1,tiles=[],size=5,sourcePort=null,targetPort=null,turns=0,timer=0,timerId=null,daily=false,started=0,won=false,flowWinTimer=null;\nconst WATER_STEP_MS=260,WATER_SEGMENT_MS=950;
+let s=load(),pack=packs[0],level=1,tiles=[],size=5,sourcePort=null,targetPort=null,turns=0,timer=0,timerId=null,daily=false,started=0,won=false,flowWinTimer=null;
+const WATER_STEP_MS=260,WATER_SEGMENT_MS=950;
 const q=x=>document.querySelector(x),qa=x=>Array.from(document.querySelectorAll(x));
 function load(){try{return Object.assign({},fresh,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return Object.assign({},fresh)}}
 function save(){localStorage.setItem(KEY,JSON.stringify(s));syncCoins()}
@@ -212,6 +213,7 @@ qa("[data-home]").forEach(b=>b.onclick=()=>{home();view("home")});
 q("#gameBack").onclick=()=>{clearInterval(timerId);clearTimeout(flowWinTimer);if(daily){home();view("home")}else{levels();view("pack")}};
 q("#hint").onclick=()=>fix(1,25);q("#fix3").onclick=()=>fix(3,50);
 q("#next").onclick=()=>{closeWin();if(daily){home();view("home")}else if(level>=pack.count)openPack(pack);else start(pack,level+1)};
-window.addEventListener("resize",renderPorts);\nq("#levelSelect").onclick=()=>{closeWin();if(daily){home();view("home")}else{levels();view("pack")}};
+window.addEventListener("resize",renderPorts);
+q("#levelSelect").onclick=()=>{closeWin();if(daily){home();view("home")}else{levels();view("pack")}};
 home();
 })();
