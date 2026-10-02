@@ -12,7 +12,7 @@ A mobile-first browser games hub from **Chip In Games**.
 | `shift-in-maze/` | Shift In Maze, tiles, relics, artwork and `editors/` |
 | `bingo/` | Bingo source page, scripts and styling |
 | `core-empires/` | Core Empires (existing folder preserved) |
-| `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |
+| `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |\n| `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
 | `shared/` | Player roster, networking, shared styles and menu/branding assets |
