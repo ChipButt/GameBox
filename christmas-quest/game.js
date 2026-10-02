@@ -16,6 +16,25 @@ const cv=document.getElementById('world'),c=cv.getContext('2d'),mc=document.getE
 c.imageSmoothingEnabled=m.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id),loc=$('locationLabel'),toast=$('toast'),action=$('actionBtn'),actionLabel=$('actionLabel'),dlg=$('dialogue'),dlgName=$('dialogueName'),dlgText=$('dialogueText'),dlgNext=$('dialogueNext'),portrait=$('portrait'),pc=portrait.getContext('2d');
 const journal=$('journal'),dayGrid=$('dayGrid'),mini=$('miniScreen'),miniTitle=$('miniTitle'),miniDay=$('miniDay'),miniSubtitle=$('miniSubtitle'),miniScore=$('miniScore'),miniHelp=$('miniHelp'),miniButtons=$('miniButtons'),miniResult=$('miniResult'),resultTitle=$('resultTitle'),resultText=$('resultText');
+function applyUILayout(){
+ const L=window.ADVENT_UI_LAYOUT;if(!L)return;
+ const box=(el,b)=>{
+   if(!el||!b)return;
+   el.style.setProperty('left',b.x+'px','important');
+   el.style.setProperty('top',b.y+'px','important');
+   el.style.setProperty('right','auto','important');
+   el.style.setProperty('bottom','auto','important');
+   el.style.setProperty('width',b.w+'px','important');
+   el.style.setProperty('height',b.h+'px','important');
+ };
+ box($('uiFrame'),L.frame);box(cv,L.screen);
+ for(const key of ['up','left','right','down']){
+   const el=$(key+'Btn');box(el,L[key]);
+   const cc=el?.querySelector('canvas');if(cc)cc.style.setProperty('transform','rotate('+(L[key]?.rotation||0)+'deg)','important');
+ }
+ box(action,L.action);
+}
+applyUILayout();
 const P=window.CHIPIN_WORLD_PROJECT,maps=Object.fromEntries(P.maps.map(x=>[x.name.trim(),x])),town=maps['Town Map'],npcMap=maps['NPC House - Downstairs'],W=160,H=240,STORE='advent-apprentice-v2';
 const defs=[
 ['Holly Tinkerton','TF Gnome B.png','Light Lines','Planning ahead','I have three hundred lights and no intention of untangling them twice.'],
