@@ -1,0 +1,31 @@
+:root{--bg:#08101a;--panel:#101c2b;--line:#314660;--gold:#e4ad45;--cream:#f2e6c8;--ink:#dce8f4;--muted:#91a2b6}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+body{min-height:100dvh}.editorApp{min-height:100dvh;display:grid;grid-template-rows:auto 1fr}.editorHead{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:#0c1724;border-bottom:2px solid var(--line)}
+.editorHead strong{display:block;font-size:13px}.editorHead span{display:block;margin-top:3px;color:var(--gold);font-size:9px}.editorHead a{color:var(--cream);text-decoration:none;border:2px solid var(--line);padding:8px 10px;font-size:9px;background:#142338}
+.editorMain{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;padding:12px}
+.previewPane{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:auto}
+.stageHolder{position:relative;display:block;flex:0 0 auto}.stage{position:relative;width:390px;height:844px;transform-origin:top left;background:#07182d;overflow:hidden;touch-action:none;box-shadow:0 0 0 2px #344961}
+.safeOutline{position:absolute;inset:0;border:1px dashed #ffffff33;pointer-events:none;z-index:100}
+.editable{position:absolute;touch-action:none;user-select:none;-webkit-user-select:none;cursor:move}
+.editable.selected{outline:2px solid var(--gold);outline-offset:2px}.editable.selected .resizeHandle{display:block}
+.resizeHandle{display:none;position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;background:var(--gold);border:2px solid #24180a;cursor:nwse-resize;z-index:1000}
+.frameItem{z-index:1}.frameItem canvas,.controlItem canvas,.actionItem canvas{display:block;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
+.screenItem{z-index:2;background:#05080cdd;border:1px solid #d9ecff55;display:grid;place-items:center;color:#ffffff66;font-size:10px;letter-spacing:.12em}
+.controlItem,.actionItem{z-index:4}.hint{margin:10px 0 0;color:var(--muted);font-size:9px;text-align:center;line-height:1.45}
+.inspector{align-self:start;position:sticky;top:76px;background:var(--panel);border:2px solid var(--line);padding:12px;max-height:calc(100dvh - 90px);overflow:auto}
+.selectedTitle{display:flex;justify-content:space-between;align-items:end;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}.selectedTitle span{font-size:8px;color:var(--muted)}.selectedTitle strong{font-size:15px;color:var(--gold)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fields label,.codeLabel{display:grid;gap:4px;font-size:8px;color:var(--muted)}
+input[type=number]{width:100%;border:1px solid var(--line);background:#09131f;color:#fff;padding:8px;font:inherit;font-size:11px}
+.switchRow{display:grid;gap:7px;margin:12px 0;font-size:9px}.switchRow label{display:flex;align-items:center;gap:7px}
+.nudge{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.nudge button,.editorActions button{border:1px solid var(--line);background:#17283d;color:#fff;padding:9px 6px;font:inherit;font-size:9px}
+.editorActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}.editorActions .primary{grid-column:1/-1;background:#a76e20;border-color:#e4ad45;color:#fff;font-weight:900}
+.codeLabel{margin-top:10px}.codeLabel textarea{height:180px;resize:vertical;border:1px solid var(--line);background:#07101a;color:#cfe0ef;padding:8px;font:inherit;font-size:8px;line-height:1.45}
+.small{font-size:8px;color:var(--muted);line-height:1.5;margin-bottom:0}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media(max-width:760px){
+ .editorHead{padding-top:max(10px,env(safe-area-inset-top))}
+ .editorMain{display:block;padding:8px 8px max(12px,env(safe-area-inset-bottom))}
+ .previewPane{overflow:visible}.inspector{position:static;max-height:none;margin-top:12px}
+ .stageHolder{margin:0 auto}.hint{max-width:360px}
+ .codeLabel textarea{height:150px}
+}
