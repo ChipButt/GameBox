@@ -126,3 +126,27 @@ body{
   #world{width:314px;height:471px;max-width:none;max-height:none}
   .uiFrame{width:390px!important;height:844px!important}
 }
+
+/* Exact user-supplied Pixel Snapper assets. Do not redraw or distort. */
+.uiFrame{
+  z-index:1!important;
+  left:4.5047px!important;right:auto!important;top:0!important;bottom:auto!important;
+  width:380.9906px!important;height:844px!important;
+  max-width:none!important;max-height:none!important;
+  image-rendering:pixelated!important;
+  background:transparent!important;
+}
+#world{
+  z-index:2!important;
+  left:54.7743px!important;top:159.4075px!important;
+  width:283.0972px!important;height:424.6458px!important;
+  max-width:none!important;max-height:none!important;
+  aspect-ratio:2/3!important;
+  image-rendering:pixelated!important;
+}
+.actionBtn:not(.ready){filter:none!important;opacity:1!important}
+.dirBtn canvas,.actionBtn canvas,.uiFrame{image-rendering:pixelated!important}
+@media(max-width:420px){
+  .uiFrame{left:4.5047px!important;width:380.9906px!important;height:844px!important}
+  #world{left:54.7743px!important;top:159.4075px!important;width:283.0972px!important;height:424.6458px!important}
+}
