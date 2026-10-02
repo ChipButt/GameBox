@@ -1,5 +1,17 @@
 (() => {
 'use strict';
+function fitAdventUI(){
+  const vv=window.visualViewport;
+  const vw=Math.max(1,vv?.width||window.innerWidth||390);
+  const vh=Math.max(1,vv?.height||window.innerHeight||844);
+  const scale=Math.min(vw/390,vh/844);
+  document.documentElement.style.setProperty('--advent-ui-scale',String(scale));
+}
+fitAdventUI();
+addEventListener('resize',fitAdventUI,{passive:true});
+window.visualViewport?.addEventListener('resize',fitAdventUI,{passive:true});
+window.visualViewport?.addEventListener('scroll',fitAdventUI,{passive:true});
+
 const cv=document.getElementById('world'),c=cv.getContext('2d'),mc=document.getElementById('miniCanvas'),m=mc.getContext('2d');
 c.imageSmoothingEnabled=m.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id),loc=$('locationLabel'),toast=$('toast'),action=$('actionBtn'),actionLabel=$('actionLabel'),dlg=$('dialogue'),dlgName=$('dialogueName'),dlgText=$('dialogueText'),dlgNext=$('dialogueNext'),portrait=$('portrait'),pc=portrait.getContext('2d');
