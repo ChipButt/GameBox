@@ -31,13 +31,21 @@ const defs=[
 ['Star','TF Rudolph Adult.png','The Long Run','Leadership','Tomorrow everyone will be looking forward. Somebody has to know where we are going.'],
 ['Santa Claus','TF Santa.png','Christmas Eve','Putting it together','Twenty-three doors. Twenty-three teachers. There is only one thing left to do.']
 ];
+const roles=[
+'Village Decorator','Parcel Keeper','Toy Tester','Young Reindeer Trainee','Village Baker','Night Navigation Trainee',
+'Carol Keeper','Sleigh Mechanic','Snow Keeper','Wreath Maker','Trail Reindeer','Decoration Finder',
+'Chimney Keeper','Lead Pathfinder','Gift Wrapper','Workshop Engineer','Bell Ringer','Games Champion',
+'Keeper of Christmas Stories','Village Cook','Senior Reindeer Trainer','Christmas Coordinator','Sleigh Leader','Father Christmas'
+];
 const positions=[[400,688],[272,80],[464,80],[752,80],[944,80],[1120,80],[80,336],[272,336],[464,336],[752,336],[944,336],[1120,336],[80,880],[272,880],[464,880],[752,880],[944,880],[1120,880],[80,1112],[272,1112],[464,1112],[752,1112],[944,1112],[1120,1112]];
 const kinds=['rotate','push','rotate','race','sequence','maze','sequence','maze','push','rotate','route','maze','push','race','push','maze','timing','curl','sequence','timing','route','manage','race','final'];
-const residents=defs.map((d,i)=>({day:i+1,name:d[0],asset:d[1],game:d[2],skill:d[3],intro:d[4],kind:kinds[i],x:positions[i][0],y:positions[i][1],doorX:positions[i][0]+32,doorY:positions[i][1]+32}));
+const residents=defs.map((d,i)=>({day:i+1,name:d[0],asset:d[1],game:d[2],skill:d[3],intro:d[4],role:roles[i],kind:kinds[i],x:positions[i][0],y:positions[i][1],doorX:positions[i][0]+32,doorY:positions[i][1]+32,signX:positions[i][0]+48,signY:positions[i][1]+48}));
 const house=town.assets.find(a=>a.asset==='house2.png');
+const npcSign=town.assets.find(a=>a.asset==='sign-post.png'&&Math.abs(a.x-(house?.x+48||448))<2&&Math.abs(a.y-(house?.y+48||736))<2);
+const playerHouse=town.assets.find(a=>a.asset==='house1.png');
 const now=new Date(),unlock=now.getMonth()===11?Math.min(24,now.getDate()):24;
 $('dayBadge').querySelector('strong').textContent=String(now.getMonth()===11?Math.min(24,now.getDate()):24);
-const state={map:'Player House - Bedroom',x:P.initialSpawn.x,y:P.initialSpawn.y,dir:'down',moving:false,anim:performance.now(),cam:{x:0,y:0},resident:null,met:{},done:{},scores:{},jx:0,jy:0};
+const state={map:'Player House - Bedroom',x:P.initialSpawn.x,y:P.initialSpawn.y,dir:'down',moving:false,anim:performance.now(),walkPixels:0,step:0,linkCooldown:0,doorAnim:null,cam:{x:0,y:0},resident:null,met:{},done:{},scores:{},jx:0,jy:0};
 try{const s=JSON.parse(localStorage.getItem(STORE)||'{}');state.met=s.met||{};state.done=s.done||{};state.scores=s.scores||{}}catch(e){}
 let assets=null,extraAssets=null,sheetAssets=null,last=performance.now(),joyId=null,currentAction=null,queue=[],afterDlg=null,game=null,gameLast=0,finished=false;
 const keys=new Set();
@@ -45,7 +53,7 @@ function save(){localStorage.setItem(STORE,JSON.stringify({met:state.met,done:st
 function msg(t){toast.textContent=t;toast.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>toast.classList.remove('show'),1600)}
 function activeMap(){return state.map==='NPC House - Downstairs'?npcMap:maps[state.map]}
 function mapLabel(){return state.resident&&state.map==='NPC House - Downstairs'?'DAY '+state.resident.day+' · '+state.resident.name.toUpperCase():state.map.toUpperCase()}
-function go(name,x,y,r=null){state.map=name;state.x=x;state.y=y;state.resident=r;state.moving=false;loc.textContent=mapLabel();msg(mapLabel())}
+function go(name,x,y,r=null){state.map=name;state.x=x;state.y=y;state.resident=r;state.moving=false;state.step=0;state.walkPixels=0;state.linkCooldown=.45;loc.textContent=mapLabel();msg(mapLabel())}
 const VIRTUAL_ASSETS=P.assetAliases||{};
 const virtualCanvasCache=new Map();
 
@@ -121,8 +129,14 @@ function depthAbove(a,col,row){return Array.isArray(a.depthAboveTiles)&&a.depthA
 function hasDepth(a){const d=depthSpec(a);return !!a.tileDepthEnabled&&(d.cols>1||d.rows>1)}
 function drawPlacedBody(a,camx,camy){
  let frame=a.frame;
- const count=frameCount(a.asset);
- if(a.animated&&count>1){const fps=Math.max(1,Math.min(30,Number(a.animationFps)||6)),start=Number(a.frame)||0;frame=(start+Math.floor(performance.now()/1000*fps))%count}
+ const count=frameCount(a.asset),entry=state.doorAnim;
+ if(entry&&a._houseKey===entry.houseKey&&count>1){
+   const p=Math.max(0,Math.min(.999,(performance.now()-entry.start)/entry.duration));
+   frame=Math.min(count-1,Math.floor(p*count));
+ }else if(a.animated&&count>1){
+   const fps=Math.max(1,Math.min(30,Number(a.animationFps)||6)),start=Number(a.frame)||0;
+   frame=(start+Math.floor(performance.now()/1000*fps))%count;
+ }
  drawAsset(a,camx,camy,frame);
 }
 function drawPlaced(a,pass,camx,camy){
@@ -140,10 +154,33 @@ function drawPlaced(a,pass,camx,camy){
  if(clipped){c.clip();drawPlacedBody(a,camx,camy)}
  c.restore();
 }
+function drawStaticDoorOpening(entry,cam){
+ if(!entry||entry.hasFrames)return;
+ const p=Math.max(0,Math.min(1,(performance.now()-entry.start)/entry.duration));
+ const x=Math.round(entry.linkX-cam.x),y=Math.round(entry.linkY-cam.y);
+ c.save();
+ c.fillStyle='#151915';c.fillRect(x,y,16,16);
+ const remain=Math.max(0,Math.round(16*(1-p)));
+ if(remain){
+   c.fillStyle='#6d4931';
+   c.fillRect(x+16-remain,y,remain,16);
+   c.fillStyle='#d8ae58';c.fillRect(x+16-remain+2,y+8,2,2);
+ }
+ c.restore();
+}
 function worldDraw(t){
  const mp=activeMap(),cam=state.cam;c.fillStyle=mp.bg||'#e8eee9';c.fillRect(0,0,W,H);
- let arr=mp.assets.slice();
- if(state.map==='Town Map'&&house)residents.slice(1).forEach(r=>arr.push(Object.assign({},house,{x:r.x,y:r.y,id:'h'+r.day,layer:1})));
+ let arr=mp.assets.map(a=>Object.assign({},a,{_houseKey:a.id}));
+ if(state.map==='Town Map'&&house){
+   residents.forEach(r=>arr.push(Object.assign({},house,{x:r.x,y:r.y,id:'h'+r.day,_houseKey:'resident-'+r.day,layer:house.layer||1})));
+   if(npcSign)residents.slice(1).forEach(r=>arr.push(Object.assign({},npcSign,{x:r.signX,y:r.signY,id:'sign'+r.day,_houseKey:null,sign:{enabled:true,title:'DAY '+r.day+' · '+r.name,message:r.role+'\nLesson: '+r.skill+'\nGame: '+r.game}})));
+ }
+ if(state.map==='Town Map'&&playerHouse){
+   const base=arr.find(a=>a.id===playerHouse.id);if(base)base._houseKey='player-house';
+ }
+ if(state.map==='Town Map'&&house){
+   const baseNpc=arr.find(a=>a.id===house.id);if(baseNpc)baseNpc._houseKey='resident-1';
+ }
  arr.sort((a,b)=>(a.layer||0)-(b.layer||0)||a.y-b.y);
  arr.forEach(a=>drawPlaced(a,'below',cam.x,cam.y));
  if(state.map==='Town Map')residents.forEach(r=>{
@@ -151,21 +188,115 @@ function worldDraw(t){
    c.fillStyle='#18231d';c.font='bold 7px monospace';c.textAlign='center';c.fillText(r.day,x+2,y-16);
  });
  if(state.map==='NPC House - Downstairs'&&state.resident)spr(c,state.resident.asset,80,112,'down',0);
- const st=state.moving?Math.floor((t-state.anim)/160)%3:0;
- spr(c,'TF Elf A.png',state.x-cam.x,state.y-cam.y,state.dir,st);
+ spr(c,'TF Elf A.png',state.x-cam.x,state.y-cam.y,state.dir,state.moving?state.step:0);
  arr.forEach(a=>drawPlaced(a,'above',cam.x,cam.y));
+ drawStaticDoorOpening(state.doorAnim,cam);
 }
 function blocked(nx,ny){const mp=activeMap(),r=5;if(nx<6||ny<8||nx>mp.width-6||ny>mp.height-5)return true;for(const a of mp.assets)if(a.solid&&nx+r>a.x&&nx-r<a.x+a.w&&ny+r>a.y&&ny-r<a.y+a.h)return true;if(state.map==='Town Map')for(const h of residents.slice(1))if(nx+r>h.x+4&&nx-r<h.x+76&&ny+r>h.y+4&&ny-r<h.y+28)return true;return false}
 function dist(x,y){return Math.hypot(state.x-x,state.y-y)}
 function add(label,fn,p=1){if(!currentAction||p>currentAction.p)currentAction={label,fn,p}}
-function transition(t){const m=P.maps.find(x=>x.id===t.targetMapId);if(m)go(m.name.trim(),t.targetX,t.targetY)}
+function transition(t){const target=P.maps.find(x=>x.id===t.targetMapId);if(target)go(target.name.trim(),Number(t.targetX),Number(t.targetY))}
+function pointIn(t){return state.x>=t.x&&state.x<=t.x+t.w&&state.y>=t.y&&state.y<=t.y+t.h}
 function talk(r){state.met[r.day]=true;save();dialog(r.name,r.asset,[r.intro,'Your lesson is '+r.skill.toLowerCase()+'.','Head upstairs when you are ready. The room up there is set up for '+r.game+'.'])}
-function actions(){currentAction=null;if(state.map==='Town Map'){for(const r of residents)if(dist(r.doorX,r.doorY)<18)add(r.day<=unlock?'ENTER':'DAY '+r.day,()=>r.day<=unlock?go('NPC House - Downstairs',72,200,r):msg('This door opens on December '+r.day+'.'),8)}else if(state.map==='NPC House - Downstairs'&&state.resident){if(dist(80,112)<23)add('TALK',()=>talk(state.resident),10);const stairs=npcMap.transitions.find(t=>t.targetMapId!==town.id),out=npcMap.transitions.find(t=>t.targetMapId===town.id);if(stairs&&dist(stairs.x+8,stairs.y+8)<18)add('UPSTAIRS',()=>state.met[state.resident.day]?openGame(state.resident):msg('Speak to '+state.resident.name+' first.'),9);if(out&&dist(out.x+8,out.y+8)<18)add('OUTSIDE',()=>go('Town Map',state.resident.doorX,state.resident.doorY+24),9)}else for(const t of activeMap().transitions||[])if(dist(t.x+t.w/2,t.y+t.h/2)<17)add(t.targetMapId===town.id?'OUTSIDE':'STAIRS',()=>transition(t),7);action.disabled=!currentAction;action.classList.toggle('ready',!!currentAction);actionLabel.textContent=currentAction?currentAction.label:'ACTION'}
+function showSign(title,message){
+ queue=[String(message||'').trim()||''];
+ dlgName.textContent=title||'Sign';dlg.hidden=false;pc.clearRect(0,0,32,32);
+ const sign=ac('sign-post.png');if(sign){pc.imageSmoothingEnabled=false;pc.drawImage(sign,8,8,16,16)}
+ nextDlg();
+}
+function houseSign(r){showSign('DAY '+r.day+' · '+r.name,r.role+'\nLesson: '+r.skill+'\nGame: '+r.game)}
+function actions(){
+ currentAction=null;
+ const mp=activeMap();
+ for(const a of mp.assets||[]){
+   if(a.asset==='sign-post.png'&&a.sign?.enabled&&dist(a.x+a.w/2,a.y+a.h/2)<25)add('READ',()=>showSign(a.sign.title,a.sign.message),5);
+ }
+ if(state.map==='Town Map'){
+   for(const r of residents)if(dist(r.signX+8,r.signY+8)<25)add('READ',()=>houseSign(r),7);
+ }else if(state.map==='NPC House - Downstairs'&&state.resident){
+   if(dist(80,112)<23)add('TALK',()=>talk(state.resident),10);
+ }
+ action.disabled=!currentAction;action.classList.toggle('ready',!!currentAction);actionLabel.textContent=currentAction?currentAction.label:'ACTION';
+}
+function startDoorEntry({houseKey,asset,linkX,linkY,targetMap,targetX,targetY,resident=null}){
+ if(state.doorAnim)return;
+ const count=frameCount(asset),duration=Math.max(360,count>1?count*90:460);
+ state.moving=false;state.step=0;
+ state.doorAnim={houseKey,asset,linkX,linkY,targetMap,targetX,targetY,resident,start:performance.now(),duration,hasFrames:count>1};
+ currentAction=null;action.disabled=true;action.classList.remove('ready');actionLabel.textContent='ACTION';
+}
+function completeDoorEntry(){
+ const e=state.doorAnim;if(!e)return;
+ state.doorAnim=null;go(e.targetMap,e.targetX,e.targetY,e.resident);
+}
+function triggerMapLinks(prevX,prevY){
+ if(state.linkCooldown>0||state.doorAnim)return false;
+ if(state.map==='Town Map'){
+   for(const r of residents){
+     const link={x:r.doorX,y:r.doorY,w:16,h:16};
+     if(!pointIn(link))continue;
+     if(r.day>unlock){state.x=prevX;state.y=prevY;state.linkCooldown=.65;msg('This door opens on December '+r.day+'.');return true}
+     startDoorEntry({houseKey:'resident-'+r.day,asset:house?.asset||'house2.png',linkX:r.doorX,linkY:r.doorY,targetMap:'NPC House - Downstairs',targetX:72,targetY:200,resident:r});
+     return true;
+   }
+   for(const t of town.transitions||[]){
+     if(!pointIn(t))continue;
+     const target=P.maps.find(x=>x.id===t.targetMapId);
+     if(!target)return false;
+     if(target.name.trim()==='NPC House - Downstairs')continue;
+     const isPlayer=target.name.trim()==='Player House - Downstairs';
+     if(isPlayer){
+       startDoorEntry({houseKey:'player-house',asset:playerHouse?.asset||'house1.png',linkX:t.x,linkY:t.y,targetMap:target.name.trim(),targetX:Number(t.targetX),targetY:Number(t.targetY)});
+     }else transition(t);
+     return true;
+   }
+   return false;
+ }
+ if(state.map==='NPC House - Downstairs'&&state.resident){
+   const stairs=npcMap.transitions.find(t=>t.targetMapId!==town.id);
+   const outside=npcMap.transitions.find(t=>t.targetMapId===town.id);
+   if(stairs&&pointIn(stairs)){
+     if(state.met[state.resident.day])openGame(state.resident);
+     else{state.x=prevX;state.y=prevY;state.linkCooldown=.65;msg('Speak to '+state.resident.name+' first.');}
+     return true;
+   }
+   if(outside&&pointIn(outside)){go('Town Map',state.resident.doorX,state.resident.doorY+24);return true}
+   return false;
+ }
+ for(const t of activeMap().transitions||[])if(pointIn(t)){transition(t);return true}
+ return false;
+}
 function dialog(name,asset,lines){queue=lines.slice();dlgName.textContent=name;dlg.hidden=false;pc.clearRect(0,0,32,32);spr(pc,asset,16,27,'down',0,28);nextDlg()}
 function nextDlg(){if(queue.length){dlgText.textContent=queue.shift();dlgNext.textContent=queue.length?'NEXT':'CLOSE'}else dlg.hidden=true}
-dlgNext.onclick=nextDlg;action.onclick=()=>{if(currentAction&&dlg.hidden)currentAction.fn()};
-function update(dt,t){if(!dlg.hidden||!journal.hidden||!mini.hidden)return;let x=state.jx,y=state.jy;if(joyId===null){x=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);y=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0)}const mag=Math.hypot(x,y);if(mag>.12){x/=mag;y/=mag;const sp=54,nx=state.x+x*sp*dt,ny=state.y+y*sp*dt;if(!blocked(nx,state.y))state.x=nx;if(!blocked(state.x,ny))state.y=ny;const d=Math.abs(x)>Math.abs(y)?(x<0?'left':'right'):(y<0?'up':'down');if(!state.moving||d!==state.dir){state.anim=t;state.dir=d}state.moving=true}else state.moving=false;const mp=activeMap();state.cam.x=mp.width>W?Math.max(0,Math.min(mp.width-W,state.x-W/2)):0;state.cam.y=mp.height>H?Math.max(0,Math.min(mp.height-H,state.y-H/2)):0;actions()}
-const joy=$('joystick'),knob=$('joyKnob');function joyMove(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,max=28,mm=Math.hypot(dx,dy)||1,s=Math.min(1,max/mm),x=dx*s,y=dy*s;knob.style.transform='translate('+x+'px,'+y+'px)';state.jx=x/max;state.jy=y/max}joy.onpointerdown=e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;state.jx=state.jy=0;knob.style.transform='translate(0,0)'}joy.onpointerup=joyEnd;joy.onpointercancel=joyEnd;
+dlgNext.onclick=nextDlg;action.onclick=()=>{if(currentAction&&dlg.hidden&&!state.doorAnim)currentAction.fn()};
+const WALK_FRAME_PIXELS=8;
+function update(dt,t){
+ if(state.linkCooldown>0)state.linkCooldown=Math.max(0,state.linkCooldown-dt);
+ if(state.doorAnim){if(t-state.doorAnim.start>=state.doorAnim.duration)completeDoorEntry();return}
+ if(!dlg.hidden||!journal.hidden||!mini.hidden)return;
+ let x=state.jx,y=state.jy;
+ if(joyId===null){
+   x=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);
+   y=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
+ }
+ const mag=Math.hypot(x,y),prevX=state.x,prevY=state.y;
+ if(mag>.12){
+   if(Math.abs(x)>=Math.abs(y)){x=Math.sign(x);y=0}else{x=0;y=Math.sign(y)}
+   const sp=54,nx=state.x+x*sp*dt,ny=state.y+y*sp*dt;
+   if(x&&!blocked(nx,state.y))state.x=nx;
+   if(y&&!blocked(state.x,ny))state.y=ny;
+   const moved=Math.hypot(state.x-prevX,state.y-prevY);
+   if(moved>.001){
+     const d=x<0?'left':x>0?'right':y<0?'up':'down';
+     if(!state.moving||d!==state.dir){state.dir=d;state.walkPixels=0}
+     state.walkPixels+=moved;state.step=Math.floor(state.walkPixels/WALK_FRAME_PIXELS)%3;state.moving=true;
+   }else{state.moving=false;state.step=0}
+ }else{state.moving=false;state.step=0}
+ const mp=activeMap();state.cam.x=mp.width>W?Math.max(0,Math.min(mp.width-W,state.x-W/2)):0;state.cam.y=mp.height>H?Math.max(0,Math.min(mp.height-H,state.y-H/2)):0;
+ if(triggerMapLinks(prevX,prevY))return;
+ actions();
+}
+const joy=$('joystick'),knob=$('joyKnob');function joyMove(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,max=28,mm=Math.hypot(dx,dy)||1,scale=Math.min(1,max/mm);let x=dx*scale,y=dy*scale;if(Math.abs(x)>=Math.abs(y))y=0;else x=0;knob.style.transform='translate('+x+'px,'+y+'px)';state.jx=x/max;state.jy=y/max}joy.onpointerdown=e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;state.jx=state.jy=0;knob.style.transform='translate(0,0)'}joy.onpointerup=joyEnd;joy.onpointercancel=joyEnd;
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(['arrowleft','arrowright','arrowup','arrowdown',' '].includes(k))e.preventDefault();if(!mini.hidden&&game&&game.key)game.key(k);else if((k===' '||k==='enter')&&currentAction&&dlg.hidden)currentAction.fn()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function renderJournal(){dayGrid.innerHTML='';residents.forEach(r=>{const d=document.createElement('div');d.className='dayCard'+(r.day>unlock?' locked':'')+(state.done[r.day]?' done':'');d.innerHTML='<strong>DAY '+r.day+' · '+r.name+'</strong><span>'+r.game+(state.done[r.day]?' · COMPLETE':'')+'</span>';dayGrid.appendChild(d)})}
 $('journalBtn').onclick=()=>{renderJournal();journal.hidden=false};document.querySelector('[data-close="journal"]').onclick=()=>journal.hidden=true;
