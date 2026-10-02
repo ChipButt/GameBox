@@ -81,25 +81,64 @@ function generate(seed,p,n){
  if(wrong<4){for(let cell of path){let t=tiles[cell];if(t&&!t.locked&&t.rot===0){t.rot=1+Math.floor(R()*3);if(++wrong>=4)break}}}
  initialRotations=tiles.map(t=>t?t.rot:null)
 }
-function edgeXY(d){return d==="N"?[8,0]:d==="E"?[16,8]:d==="S"?[8,16]:[0,8]}
-function routeD(a,b){let A=edgeXY(a);if(!b)return"M"+A[0]+" "+A[1]+" L8 8";let B=edgeXY(b);if(OP[a]===b)return"M"+A[0]+" "+A[1]+" L"+B[0]+" "+B[1];return"M"+A[0]+" "+A[1]+" L8 8 L"+B[0]+" "+B[1]}
-function cablePath(d){return'<path d="'+d+'" fill="none" stroke="#020805" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/><path d="'+d+'" fill="none" stroke="#143c28" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/><path d="'+d+'" fill="none" stroke="#4e8a62" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter"/>'}
-function cableEnd(d){let p=edgeXY(d);return'<rect x="'+(p[0]-1)+'" y="'+(p[1]-1)+'" width="2" height="2" fill="#07140d"/>'}
-function cableSvg(t){let b=t.base,art="";if(b.length===2)art+=cablePath(routeD(b[0],b[1]));else b.forEach(d=>art+=cablePath(routeD(d,null)));art+=b.map(cableEnd).join("");art+='<rect x="6" y="6" width="4" height="4" fill="#06130d"/><rect x="7" y="7" width="2" height="2" fill="#2e6848"/>';return'<svg class="cableArt" viewBox="0 0 16 16" aria-hidden="true">'+art+'</svg>'}
-function bulbSvg(color){
- return'<svg class="bulbArt" viewBox="0 0 16 16" aria-hidden="true" style="--bulb:'+color+'">'+
- '<rect x="6" y="7" width="4" height="2" fill="#06130d"/><rect x="7" y="8" width="2" height="2" fill="#9a8a5d"/>'+
- '<path d="M5 9h6v1h1v3h-1v1h-1v1H6v-1H5v-1H4v-3h1z" fill="#07100c"/>'+
- '<path class="bulbGlow" d="M6 9h4v1h1v3h-1v1H6v-1H5v-3h1z" fill="'+color+'"/>'+
- '<rect class="bulbHighlight" x="6" y="10" width="1" height="2" fill="#fffbd6"/>'+
- '<rect x="7" y="14" width="2" height="1" fill="#08110c"/></svg>'
+function edgeXY(d){return d==="N"?[32,0]:d==="E"?[64,32]:d==="S"?[32,64]:[0,32]}
+function routeD(a,b){
+ let A=edgeXY(a);if(!b)return"M"+A[0]+" "+A[1]+" L32 32";
+ let B=edgeXY(b);
+ if(OP[a]===b)return"M"+A[0]+" "+A[1]+" L"+B[0]+" "+B[1];
+ return"M"+A[0]+" "+A[1]+" L32 32 L"+B[0]+" "+B[1]
+}
+function cablePath(d){
+ return'<path d="'+d+'" fill="none" stroke="#020805" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter"/>'+
+        '<path d="'+d+'" fill="none" stroke="#163d29" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>'+
+        '<path d="'+d+'" fill="none" stroke="#4f8762" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>'
+}
+function cableEnd(d){
+ let p=edgeXY(d);
+ return'<rect x="'+(p[0]-4)+'" y="'+(p[1]-4)+'" width="8" height="8" fill="#020805"/>'+
+        '<rect x="'+(p[0]-2)+'" y="'+(p[1]-2)+'" width="4" height="4" fill="#315d43"/>'
+}
+function bulbSprite(x,y,color,orient){
+ let t="";
+ if(orient==="D"){
+   t='<g transform="translate('+x+' '+y+')"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
+ }else if(orient==="U"){
+   t='<g transform="translate('+x+' '+y+') rotate(180)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
+ }else if(orient==="R"){
+   t='<g transform="translate('+x+' '+y+') rotate(-90)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
+ }else{
+   t='<g transform="translate('+x+' '+y+') rotate(90)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
+ }
+ return t
+}
+function armBulbs(d,seed){
+ const colors=["#e14b48","#f1c33f","#48c879","#4bb9ec","#dc6bd4"];
+ const pts=[8,14,20,26];
+ let out="";
+ pts.forEach((v,n)=>{
+   let color=colors[(seed+n)%colors.length],x=32,y=32,o="D";
+   if(d==="N"){x=32+(n%2?5:-5);y=32-v;o=n%2?"R":"L"}
+   if(d==="S"){x=32+(n%2?5:-5);y=32+v;o=n%2?"L":"R"}
+   if(d==="E"){x=32+v;y=32;o="D"}
+   if(d==="W"){x=32-v;y=32;o="D"}
+   out+=bulbSprite(x,y,color,o)
+ });
+ return out
+}
+function cableSvg(t,cell){
+ let b=t.base,art="";
+ if(b.length===2)art+=cablePath(routeD(b[0],b[1]));else b.forEach(d=>art+=cablePath(routeD(d,null)));
+ art+=b.map(cableEnd).join("");
+ b.forEach((d,n)=>art+=armBulbs(d,(cell+n*2)%BULBS.length));
+ art+='<rect x="24" y="24" width="16" height="16" fill="#020805"/><rect x="28" y="28" width="8" height="8" fill="#2d6143"/><rect x="28" y="28" width="8" height="3" fill="#5f9470"/>';
+ return'<svg class="cableArt" viewBox="0 0 64 64" aria-hidden="true">'+art+'</svg>'
 }
 function draw(){
  let b=q("#treeBoard");b.innerHTML="";
  for(let i=0;i<SIZE*SIZE;i++){
    if(!ACTIVE_SET.has(i)){let gap=document.createElement("div");gap.className="treeCell empty";b.appendChild(gap);continue}
    let t=tiles[i],e=document.createElement("button");e.className="treeCell"+(t.locked?" locked":"");e.dataset.i=i;e.style.setProperty("--rot",t.rot);
-   e.innerHTML=cableSvg(t)+bulbSvg(t.bulb)+'<svg class="powerOverlay" viewBox="0 0 16 16" aria-hidden="true"></svg>';
+   e.innerHTML=cableSvg(t,i)+'<svg class="powerOverlay" viewBox="0 0 64 64" aria-hidden="true"></svg>';
    e.onclick=()=>turn(i,e);b.appendChild(e)
  }
  clearVisualPower()
