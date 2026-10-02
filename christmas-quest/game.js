@@ -39,17 +39,122 @@ const now=new Date(),unlock=now.getMonth()===11?Math.min(24,now.getDate()):24;
 $('dayBadge').querySelector('strong').textContent=String(now.getMonth()===11?Math.min(24,now.getDate()):24);
 const state={map:'Player House - Bedroom',x:P.initialSpawn.x,y:P.initialSpawn.y,dir:'down',moving:false,anim:performance.now(),cam:{x:0,y:0},resident:null,met:{},done:{},scores:{},jx:0,jy:0};
 try{const s=JSON.parse(localStorage.getItem(STORE)||'{}');state.met=s.met||{};state.done=s.done||{};state.scores=s.scores||{}}catch(e){}
-let assets=null,last=performance.now(),joyId=null,currentAction=null,queue=[],afterDlg=null,game=null,gameLast=0,finished=false;
+let assets=null,extraAssets=null,sheetAssets=null,last=performance.now(),joyId=null,currentAction=null,queue=[],afterDlg=null,game=null,gameLast=0,finished=false;
 const keys=new Set();
 function save(){localStorage.setItem(STORE,JSON.stringify({met:state.met,done:state.done,scores:state.scores}))}
 function msg(t){toast.textContent=t;toast.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>toast.classList.remove('show'),1600)}
 function activeMap(){return state.map==='NPC House - Downstairs'?npcMap:maps[state.map]}
 function mapLabel(){return state.resident&&state.map==='NPC House - Downstairs'?'DAY '+state.resident.day+' · '+state.resident.name.toUpperCase():state.map.toUpperCase()}
 function go(name,x,y,r=null){state.map=name;state.x=x;state.y=y;state.resident=r;state.moving=false;loc.textContent=mapLabel();msg(mapLabel())}
-function ac(name,frame,w,h){try{let q;if((q=name.match(/^BigSet r(\d+) c(\d+)/)))return assets.frame('BigSet.png',+q[1]*8+(+q[2]),16,16);if((q=name.match(/^Dungeon r(\d+) c(\d+)/)))return assets.frame('Dungeon.png',+q[1]*10+(+q[2]),16,16);if(frame!=null&&w&&h)return assets.frame(name,frame,w,h);return assets.canvas(name)}catch(e){return null}}
-function drawAsset(a,camx=0,camy=0){const s=ac(a.asset,a.frame,a.w,a.h),x=Math.round(a.x-camx),y=Math.round(a.y-camy);if(!s){c.fillStyle='#7a6650';c.fillRect(x,y,a.w,a.h);return}c.save();c.imageSmoothingEnabled=false;const rot=(a.rotation||0)*Math.PI/180;if(rot){c.translate(x+a.w/2,y+a.h/2);c.rotate(rot);c.scale(a.flipX?-1:1,a.flipY?-1:1);c.drawImage(s,-a.w/2,-a.h/2,a.w,a.h)}else{c.translate(x+(a.flipX?a.w:0),y+(a.flipY?a.h:0));c.scale(a.flipX?-1:1,a.flipY?-1:1);c.drawImage(s,0,0,a.w,a.h)}c.restore()}
-function spr(ctx,name,x,y,dir='down',step=0,size=20){try{const b={down:0,up:4,left:8,right:12}[dir]||0,s=assets.frame(name,b+(step%4),16,16);ctx.drawImage(s,Math.round(x-size/2),Math.round(y-size+3),size,size)}catch(e){ctx.fillStyle='#a9363f';ctx.fillRect(x-size/2,y-size,size,size)}}
-function worldDraw(t){const mp=activeMap(),cam=state.cam;c.fillStyle=mp.bg||'#e8eee9';c.fillRect(0,0,W,H);let arr=mp.assets.slice();if(state.map==='Town Map')residents.slice(1).forEach(r=>arr.push(Object.assign({},house,{x:r.x,y:r.y,id:'h'+r.day,layer:1,aboveCharacters:true})));arr.sort((a,b)=>(a.layer||0)-(b.layer||0)||a.y-b.y);arr.filter(a=>!a.aboveCharacters).forEach(a=>drawAsset(a,cam.x,cam.y));if(state.map==='Town Map')residents.forEach(r=>{const x=r.doorX-cam.x,y=r.doorY-cam.y;c.fillStyle=r.day<=unlock?'#d8ae58':'#777';c.fillRect(x-7,y-24,18,10);c.fillStyle='#18231d';c.font='bold 7px monospace';c.textAlign='center';c.fillText(r.day,x+2,y-16)});if(state.map==='NPC House - Downstairs'&&state.resident)spr(c,state.resident.asset,80,112);const st=state.moving?Math.floor((t-state.anim)/150)%4:0;spr(c,'TF Elf A.png',state.x-cam.x,state.y-cam.y,state.dir,st,20);arr.filter(a=>a.aboveCharacters).forEach(a=>drawAsset(a,cam.x,cam.y))}
+const VIRTUAL_ASSETS=P.assetAliases||{};
+const virtualCanvasCache=new Map();
+
+function assetProvider(name){
+ if(!name)return null;
+ const virtual=VIRTUAL_ASSETS[name];
+ if(virtual)return assetProvider(virtual.source);
+ if(assets?.names?.includes(name))return assets;
+ if(extraAssets?.names?.includes(name))return extraAssets;
+ if(sheetAssets?.names?.includes(name))return sheetAssets;
+ return null;
+}
+function assetMeta(name){
+ const virtual=VIRTUAL_ASSETS[name];
+ if(virtual)return {width:virtual.crop.w,height:virtual.crop.h,cell:null,virtual:true};
+ const p=assetProvider(name);
+ try{return p?.metadata(name)||null}catch(_){return null}
+}
+function virtualCanvas(name){
+ if(virtualCanvasCache.has(name))return virtualCanvasCache.get(name);
+ const v=VIRTUAL_ASSETS[name],p=v&&assetProvider(v.source);
+ if(!v||!p)return null;
+ const src=p.canvas(v.source),out=document.createElement('canvas');
+ out.width=v.crop.w;out.height=v.crop.h;
+ const x=out.getContext('2d');x.imageSmoothingEnabled=false;
+ x.drawImage(src,v.crop.x,v.crop.y,v.crop.w,v.crop.h,0,0,v.crop.w,v.crop.h);
+ virtualCanvasCache.set(name,out);return out;
+}
+function ac(name,frame=null){
+ try{
+   if(VIRTUAL_ASSETS[name])return virtualCanvas(name);
+   const p=assetProvider(name);if(!p)return null;
+   const meta=p.metadata(name);
+   if(frame!=null&&meta?.cell)return p.frame(name,frame,meta.cell.width,meta.cell.height);
+   return p.canvas(name);
+ }catch(e){return null}
+}
+function drawAsset(a,camx=0,camy=0,forcedFrame=undefined){
+ const frame=forcedFrame===undefined?a.frame:forcedFrame;
+ const src=ac(a.asset,frame),x=Math.round(a.x-camx),y=Math.round(a.y-camy);
+ if(!src){c.fillStyle='rgba(122,102,80,.28)';c.fillRect(x,y,a.w,a.h);return}
+ const rotation=((Math.round((Number(a.rotation)||0)/90)*90)%360+360)%360;
+ const drawW=rotation%180===0?a.w:a.h,drawH=rotation%180===0?a.h:a.w;
+ c.save();c.imageSmoothingEnabled=false;c.translate(x+a.w/2,y+a.h/2);
+ if(rotation)c.rotate(rotation*Math.PI/180);
+ c.scale(a.flipX?-1:1,a.flipY?-1:1);
+ c.drawImage(src,-drawW/2,-drawH/2,drawW,drawH);c.restore();
+}
+function spriteFrame(name,step=0,dir='down'){
+ const p=assetProvider(name),meta=assetMeta(name),cell=meta?.cell;
+ if(!p||!cell)return null;
+ const cols=Math.max(1,Math.floor(meta.width/cell.width)),rows=Math.max(1,Math.floor(meta.height/cell.height));
+ let index=0;
+ if(name==='character.png'&&cols>=16){
+   const base={down:0,up:4,left:8,right:12}[dir]||0;index=base+(step%4);
+ }else if(rows>=4){
+   const row={down:0,left:1,right:2,up:3}[dir]??0;index=row*cols+(step%cols);
+ }else index=step%(cols*rows);
+ try{return p.frame(name,index,cell.width,cell.height)}catch(_){return null}
+}
+function spr(ctx,name,x,y,dir='down',step=0,size=null){
+ const f=spriteFrame(name,step,dir),meta=assetMeta(name),cell=meta?.cell;
+ if(!f||!cell){ctx.fillStyle='#a9363f';ctx.fillRect(Math.round(x-8),Math.round(y-16),16,16);return}
+ const h=Math.max(8,Number(size)||cell.height),w=Math.max(8,Math.round(h*cell.width/cell.height));
+ ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(f,Math.round(x-w/2),Math.round(y-h+4),w,h);ctx.restore();
+}
+function frameCount(name){
+ const meta=assetMeta(name);if(!meta?.cell)return 1;
+ return Math.max(1,Math.floor(meta.width/meta.cell.width)*Math.floor(meta.height/meta.cell.height));
+}
+function depthSpec(a){const size=16;return{size,cols:Math.max(1,Math.ceil(a.w/size)),rows:Math.max(1,Math.ceil(a.h/size))}}
+function depthAbove(a,col,row){return Array.isArray(a.depthAboveTiles)&&a.depthAboveTiles.includes(col+','+row)}
+function hasDepth(a){const d=depthSpec(a);return !!a.tileDepthEnabled&&(d.cols>1||d.rows>1)}
+function drawPlacedBody(a,camx,camy){
+ let frame=a.frame;
+ const count=frameCount(a.asset);
+ if(a.animated&&count>1){const fps=Math.max(1,Math.min(30,Number(a.animationFps)||6)),start=Number(a.frame)||0;frame=(start+Math.floor(performance.now()/1000*fps))%count}
+ drawAsset(a,camx,camy,frame);
+}
+function drawPlaced(a,pass,camx,camy){
+ if(!hasDepth(a)){
+   if((pass==='above')!==!!a.aboveCharacters)return;
+   drawPlacedBody(a,camx,camy);return;
+ }
+ const d=depthSpec(a),wantAbove=pass==='above';
+ c.save();c.beginPath();let clipped=0;
+ for(let row=0;row<d.rows;row++)for(let col=0;col<d.cols;col++){
+   if(depthAbove(a,col,row)!==wantAbove)continue;
+   const wx=a.x+col*d.size,wy=a.y+row*d.size,w=Math.min(d.size,a.x+a.w-wx),h=Math.min(d.size,a.y+a.h-wy);
+   if(w>0&&h>0){c.rect(Math.round(wx-camx),Math.round(wy-camy),w,h);clipped++}
+ }
+ if(clipped){c.clip();drawPlacedBody(a,camx,camy)}
+ c.restore();
+}
+function worldDraw(t){
+ const mp=activeMap(),cam=state.cam;c.fillStyle=mp.bg||'#e8eee9';c.fillRect(0,0,W,H);
+ let arr=mp.assets.slice();
+ if(state.map==='Town Map'&&house)residents.slice(1).forEach(r=>arr.push(Object.assign({},house,{x:r.x,y:r.y,id:'h'+r.day,layer:1})));
+ arr.sort((a,b)=>(a.layer||0)-(b.layer||0)||a.y-b.y);
+ arr.forEach(a=>drawPlaced(a,'below',cam.x,cam.y));
+ if(state.map==='Town Map')residents.forEach(r=>{
+   const x=r.doorX-cam.x,y=r.doorY-cam.y;c.fillStyle=r.day<=unlock?'#d8ae58':'#777';c.fillRect(x-7,y-24,18,10);
+   c.fillStyle='#18231d';c.font='bold 7px monospace';c.textAlign='center';c.fillText(r.day,x+2,y-16);
+ });
+ if(state.map==='NPC House - Downstairs'&&state.resident)spr(c,state.resident.asset,80,112,'down',0);
+ const st=state.moving?Math.floor((t-state.anim)/160)%3:0;
+ spr(c,'TF Elf A.png',state.x-cam.x,state.y-cam.y,state.dir,st);
+ arr.forEach(a=>drawPlaced(a,'above',cam.x,cam.y));
+}
 function blocked(nx,ny){const mp=activeMap(),r=5;if(nx<6||ny<8||nx>mp.width-6||ny>mp.height-5)return true;for(const a of mp.assets)if(a.solid&&nx+r>a.x&&nx-r<a.x+a.w&&ny+r>a.y&&ny-r<a.y+a.h)return true;if(state.map==='Town Map')for(const h of residents.slice(1))if(nx+r>h.x+4&&nx-r<h.x+76&&ny+r>h.y+4&&ny-r<h.y+28)return true;return false}
 function dist(x,y){return Math.hypot(state.x-x,state.y-y)}
 function add(label,fn,p=1){if(!currentAction||p>currentAction.p)currentAction={label,fn,p}}
@@ -92,5 +197,12 @@ function openGame(r){state.resident=r;finished=false;game=buildGame(r);mini.hidd
 mc.onpointerdown=e=>{if(!game||!game.pointer)return;const r=mc.getBoundingClientRect();game.pointer((e.clientX-r.left)*360/r.width,(e.clientY-r.top)*560/r.height)};
 function gameLoop(t){if(mini.hidden||!game)return;const dt=Math.min(.05,(t-gameLast)/1000);gameLast=t;if(!finished)game.update&&game.update(dt);game.draw();miniScore.textContent=Math.max(0,Math.round(game.score||0));if(game.r.kind==='final'&&!finished)setButtons(game.buttons());requestAnimationFrame(gameLoop)}
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt,t);worldDraw(t);requestAnimationFrame(loop)}
-VillagePixelAssets.ready.then(a=>{assets=a;loc.textContent=mapLabel();renderJournal();requestAnimationFrame(loop)}).catch(e=>{console.error(e);msg('Could not load Christmas assets')});
+Promise.all([
+ VillagePixelAssets.ready,
+ window.WorldBuilderExtraAssets?.ready||Promise.resolve(null),
+ window.WorldBuilderSheetAssets?.ready||Promise.resolve(null)
+]).then(([base,extra,sheets])=>{
+ assets=base;extraAssets=extra;sheetAssets=sheets;
+ loc.textContent=mapLabel();renderJournal();requestAnimationFrame(loop);
+}).catch(e=>{console.error(e);msg('Could not load Christmas artwork')});
 })();
