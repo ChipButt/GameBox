@@ -74,13 +74,26 @@ footer{display:flex;align-items:center;justify-content:space-between;color:#c9de
     linear-gradient(25deg,transparent 0 58%,#0b291a 59% 62%,transparent 63%)
 }
 .treeCell.empty{visibility:hidden;pointer-events:none}
-.treeCell .cableArt{position:absolute;inset:0;width:100%;height:100%;display:block;transform:rotate(calc(var(--rot)*90deg));transform-origin:50% 50%;transition:transform .14s steps(2,end);shape-rendering:crispEdges;z-index:2}
+.treeCell .pixelLightBundle{
+  position:absolute;inset:0;z-index:2;overflow:visible;
+  transform:rotate(var(--asset-rot));transform-origin:50% 50%;
+  transition:transform .14s steps(2,end);
+  filter:brightness(.42) saturate(.68) contrast(1.06);
+}
+.treeCell .pixelLightLayer{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  object-fit:fill;image-rendering:pixelated;image-rendering:crisp-edges;
+  pointer-events:none;
+}
+.treeCell .pixelLightLayer.vertical{transform:rotate(90deg)}
+.treeCell .pixelLightLayer.upper{clip-path:inset(0 0 50% 0)}
 .treeCell .powerOverlay{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:4;shape-rendering:crispEdges}
-.treeCell .bulbGlass{opacity:.34;transition:opacity .08s steps(1,end),filter .08s steps(1,end)}
-.treeCell .bulbHighlight{opacity:.2;transition:opacity .08s steps(1,end)}
-.treeCell .bulbSocket{opacity:.98}
-.treeCell.powered .bulbGlass{opacity:1;filter:drop-shadow(0 0 2px #fff7b2) drop-shadow(0 0 4px currentColor)}
-.treeCell.powered .bulbHighlight{opacity:1}
+.treeCell.powered .pixelLightBundle{
+  filter:brightness(1.08) saturate(1.28) contrast(1.04)
+         drop-shadow(0 0 2px #fff5aa)
+         drop-shadow(0 0 4px #ffe56588);
+}
+.treeCell.powered .pixelLightLayer{image-rendering:pixelated}
 .treeCell.powered{box-shadow:inset 0 0 0 2px #38724a,0 0 8px #ffe99755}
 .treeCell.locked:after{content:"ICE";position:absolute;right:2px;top:2px;padding:2px;background:#dff8ff;border:1px solid #31596b;color:#17445a;font:4px/1 "Press Start 2P",monospace;z-index:7}
 .treeCell.hint{animation:hintPulse .65s steps(2,end) 2}
