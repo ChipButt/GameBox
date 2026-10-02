@@ -20,6 +20,7 @@ const packs=[
 ];
 const fresh={sparks:150,xp:0,stars:0,sound:true,lastReward:"",completed:{},lastPack:"classic",lastLevel:1};
 const BULBS=["#e14b48","#f1c33f","#48c879","#4bb9ec","#dc6bd4"];
+const USER_LIGHT_ASSETS={straight:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABxUlEQVR4AeyUMU7DUBBEN65BFFwgBRwC0VJwB87HHShoUQ4BRS5AgaAP8xKN//fajrEAISRbO94/uzP+6y/LTfzxtQywnMByAv/nBG6ebnff+WWM+dsT0NMVw1vY7DysGq/a51wr9wNoZ0WEboq6HZFNmVsto8Ks5KzPvJFLUQwiisK/spJBMfwCU/79CRwTPV4/rOp+5tpZURQiisKzPvNGT1cUg4iicFY2OVObA/uca+/+BLSjIkI3RfSui/XVbnv3FuQMGRTFIqKInrb2F3VE4wderq9akwXuvX+8xhjQ4MWziljBwZieOn2joZDhpuuh6/TkPDJUbgdjCHy1h/4xD9qmFmAANABr91m/bDcr8LzdQNuBIOgBa3vIcDyANbUaDQ0w1ERInT5grU9cEcEQrqGrgY6eAQfm9sL3H2HdpLi+PwuyQR9oZwWrA0R21tQZ/0HRv+Oh6twOQBH4T+VMbQ7sc6693tQ1eGeAbMqcr9xmcuZZnzmejM4AuTnEvanzkGaslj3wzgD5T5W5H4zR6zpnfeZo7XXuDIDAJmdqc2Cf85DXm9PrDUDxmJn+FOb4BweY2uAn+8sAywn8+glMfbCfAAAA//9aBqvGAAAABklEQVQDAB0URVDpWwU0AAAAAElFTkSuQmCC",dead:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABo0lEQVR4AeyUO07DQBiEN1uDKLhACjhEREvBHTgfd6CgRTkEFLkABYLezGc03vVmY5uHg5BszWT/+d9ZOYnhj59lgeUGlhv4Pzdw/XjTzPGX0d2Augv1ER7us571PW+7gCYLIehD6Dcqh5ba2SoUrKafUVVCKpAQkp5iqUCof4Gx+vYGhpIeru5XebzUmiykDAkh6TErqruQ0iSEpLE81Ce+32J7A5oohKAPIew9F+tNs7t9DZwlVSCkEgkh6TEruuHletMNcJFjb+8v4RDJoZYaTRawpjPWGtMUOka705PzUBK/c1iCGnyQXwvEHmLMmzrRTdGOYz/vtiv4tNsiu4UQrmGJfHBuk1cy0hAS8LD8xE8cYusVF0JgCfucT3x9d8bR49AS7UtINs1MmtjmJA41WcD6pERDHOJhkdovpeYjH3YLIKC39YlvClkCkpsPzG1iJXsLlENLrVdcSC0khKRzi8Ew99Xs3gK1hNKniUI4+J8Rvvj0Fig3LrV7awPB6mdnbwFaeahPfHNybwGGHWs4s6oLEDgWlwWWG5j9BsZe5g8AAAD///r8/H4AAAAGSURBVAMAVxneQe0vXR0AAAAASUVORK5CYII=",corner:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACSUlEQVR4AeyVPU7kQBCFG8e72mBX2nSCZe+ASAm4A+fjDgSkiENAMBcgQJCb+ux5PW+Ktj2GDDHq53r1uv7U/pmufOL3b3PW//3zv8d6mb6UHrg2xT81gBfVEN7Yucc6Xz3Axd1lD7zIy+vT4LYatrQheHdZNYA3Fv/54/euVCmnm7PKRU5KiVUmf0cPoIZeaXP9q7o6hegWa5SDxBr51PXoAW7Pb94Vk+anQKMIPAHwJRw9AIXU0Pnj9j56oYzQwzh6y9dVA1COIQA8Q7fBdW4dcM356gE8WZxT8NugU/DGzpWHrQMsvS4EZ5ADXNcptBq2tGEAFZH1gvBWoseK+ym0blNL65RMI5B9NZdtxaA9bO8xB/CGzj1oOAEXnHtTdPnx2MdC2SOEWHtfjMZAfrZdZMXay+HE2vtTLIJijbtBYo187XU4gciOVfhmDrbsfnny7Edw/eDoyd+lVsMtBVVIpCMRnMZ3HCsoTk1lpbes3gDteWPn2sd2JGWwoUGw26vngkV3oAnS9Sa0Gra0jgQHhfJA+OhqJovGnoAP+DBxe+COltYRLBDsw4ijq0m27CkOiy94Q+faxw4PIQQwCH+xWAGdwnMgljgs+XCBxkB+tgcD6D2XJZiiDj447sMVpzxZ9CXUAXJS9imkh0gWTcjx2VdctnWAvJH93DT7Of5Yvw6Q3/PsLxXM8dmfyq8DEKAkWTQhP0jZJ055smhLOBiA4LlkNZUlPmMuP8fivxsAcQ5zzefypvZWDzBV6KP69wBf/wSWno03AAAA///7PYhoAAAABklEQVQDAB4iQVC/ZPb8AAAAAElFTkSuQmCC"};
 let s=load(),pack=packs[0],level=1,tiles=Array(SIZE*SIZE).fill(null),turns=0,timer=0,timerId=null,daily=false,won=false,testing=false,initialRotations=[],fxTimers=[],testTimers=[];
 const POWER_STEP=170,POWER_SEGMENT=720;
 const q=x=>document.querySelector(x),qa=x=>Array.from(document.querySelectorAll(x));
@@ -69,7 +70,7 @@ function generate(seed,p,n){
    if(i>0)links[cell].push(OP[dirBetween(path[i-1],cell)]);
    if(i<path.length-1)links[cell].push(dirBetween(cell,path[i+1]))
  }
- let pathSet=new Set(path),simple=[["N","S"],["E","W"],["N","E"],["E","S"],["S","W"],["W","N"],["N"],["E"],["S"],["W"]],busy=simple.concat([["N","E","S"],["E","S","W"],["S","W","N"],["W","N","E"]]);
+ let pathSet=new Set(path),simple=[["N","S"],["E","W"],["N","E"],["E","S"],["S","W"],["W","N"],["N","S"],["E","W"],["N","E"],["E","S"],["S","W"],["W","N"],["N"],["E"],["S"],["W"]],busy=simple.concat([["N","E","S"],["E","S","W"],["S","W","N"],["W","N","E"],["N","E","S","W"]]);
  tiles=Array(SIZE*SIZE).fill(null);
  ACTIVE.forEach((cell,k)=>{
    let on=pathSet.has(cell),pool=p.mode==="classic"?simple:busy,base=on?Array.from(new Set(links[cell])):pool[Math.floor(R()*pool.length)].slice();
@@ -81,64 +82,42 @@ function generate(seed,p,n){
  if(wrong<4){for(let cell of path){let t=tiles[cell];if(t&&!t.locked&&t.rot===0){t.rot=1+Math.floor(R()*3);if(++wrong>=4)break}}}
  initialRotations=tiles.map(t=>t?t.rot:null)
 }
-function edgeXY(d){return d==="N"?[32,0]:d==="E"?[64,32]:d==="S"?[32,64]:[0,32]}
-function routeD(a,b){
- let A=edgeXY(a);if(!b)return"M"+A[0]+" "+A[1]+" L32 32";
- let B=edgeXY(b);
- if(OP[a]===b)return"M"+A[0]+" "+A[1]+" L"+B[0]+" "+B[1];
- return"M"+A[0]+" "+A[1]+" L32 32 L"+B[0]+" "+B[1]
-}
-function cablePath(d){
- return'<path d="'+d+'" fill="none" stroke="#020805" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter"/>'+
-        '<path d="'+d+'" fill="none" stroke="#163d29" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>'+
-        '<path d="'+d+'" fill="none" stroke="#4f8762" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>'
-}
-function cableEnd(d){
- let p=edgeXY(d);
- return'<rect x="'+(p[0]-4)+'" y="'+(p[1]-4)+'" width="8" height="8" fill="#020805"/>'+
-        '<rect x="'+(p[0]-2)+'" y="'+(p[1]-2)+'" width="4" height="4" fill="#315d43"/>'
-}
-function bulbSprite(x,y,color,orient){
- let t="";
- if(orient==="D"){
-   t='<g transform="translate('+x+' '+y+')"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
- }else if(orient==="U"){
-   t='<g transform="translate('+x+' '+y+') rotate(180)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
- }else if(orient==="R"){
-   t='<g transform="translate('+x+' '+y+') rotate(-90)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
- }else{
-   t='<g transform="translate('+x+' '+y+') rotate(90)"><rect class="bulbSocket" x="-4" y="-2" width="8" height="5" fill="#07120d"/><rect x="-2" y="-1" width="4" height="3" fill="#536957"/><path class="bulbGlass" style="color:'+color+'" d="M-5 3H5V7H7V13H5V17H3V21H0V24H-3V21H-5V17H-7V13H-5Z" fill="'+color+'" stroke="#07120d" stroke-width="2"/><rect class="bulbHighlight" x="-2" y="6" width="3" height="6" fill="#fffbd7"/></g>'
+function edgeXY(d){return d==="N"?[16,0]:d==="E"?[32,16]:d==="S"?[16,32]:[0,16]}
+function routeD(a,b){let A=edgeXY(a);if(!b)return"M"+A[0]+" "+A[1]+" L16 16";let B=edgeXY(b);if(OP[a]===b)return"M"+A[0]+" "+A[1]+" L"+B[0]+" "+B[1];return"M"+A[0]+" "+A[1]+" L16 16 L"+B[0]+" "+B[1]}
+function shapeInfo(base){
+ const b=[...base].sort((a,z)=>D.indexOf(a)-D.indexOf(z));
+ if(b.length===1){const a={W:0,N:90,E:180,S:270}[b[0]];return{kind:"dead",angle:a,layers:[{src:USER_LIGHT_ASSETS.dead}]}}
+ if(b.length===2&&b.includes("N")&&b.includes("S"))return{kind:"straight",angle:90,layers:[{src:USER_LIGHT_ASSETS.straight}]};
+ if(b.length===2&&b.includes("E")&&b.includes("W"))return{kind:"straight",angle:0,layers:[{src:USER_LIGHT_ASSETS.straight}]};
+ if(b.length===2){
+   const key=b.join("");
+   const angles={NW:0,EN:90,ES:180,SW:270,NE:90,SE:180,WS:270,WN:0};
+   return{kind:"corner",angle:angles[key]??0,layers:[{src:USER_LIGHT_ASSETS.corner}]}
  }
- return t
+ if(b.length===3){
+   const missing=D.find(d=>!b.includes(d));
+   const angles={S:0,W:90,N:180,E:270};
+   return{kind:"tee",angle:angles[missing],layers:[
+     {src:USER_LIGHT_ASSETS.straight,cls:"full"},
+     {src:USER_LIGHT_ASSETS.straight,cls:"vertical upper"}
+   ]}
+ }
+ return{kind:"cross",angle:0,layers:[
+   {src:USER_LIGHT_ASSETS.straight,cls:"full"},
+   {src:USER_LIGHT_ASSETS.straight,cls:"vertical full"}
+ ]}
 }
-function armBulbs(d,seed){
- const colors=["#e14b48","#f1c33f","#48c879","#4bb9ec","#dc6bd4"];
- const pts=[8,14,20,26];
- let out="";
- pts.forEach((v,n)=>{
-   let color=colors[(seed+n)%colors.length],x=32,y=32,o="D";
-   if(d==="N"){x=32+(n%2?5:-5);y=32-v;o=n%2?"R":"L"}
-   if(d==="S"){x=32+(n%2?5:-5);y=32+v;o=n%2?"L":"R"}
-   if(d==="E"){x=32+v;y=32;o="D"}
-   if(d==="W"){x=32-v;y=32;o="D"}
-   out+=bulbSprite(x,y,color,o)
- });
- return out
-}
-function cableSvg(t,cell){
- let b=t.base,art="";
- if(b.length===2)art+=cablePath(routeD(b[0],b[1]));else b.forEach(d=>art+=cablePath(routeD(d,null)));
- art+=b.map(cableEnd).join("");
- b.forEach((d,n)=>art+=armBulbs(d,(cell+n*2)%BULBS.length));
- art+='<rect x="24" y="24" width="16" height="16" fill="#020805"/><rect x="28" y="28" width="8" height="8" fill="#2d6143"/><rect x="28" y="28" width="8" height="3" fill="#5f9470"/>';
- return'<svg class="cableArt" viewBox="0 0 64 64" aria-hidden="true">'+art+'</svg>'
+function cableSprite(t){
+ const info=shapeInfo(t.base),angle=info.angle+t.rot*90;
+ const layers=info.layers.map(l=>'<img class="pixelLightLayer '+(l.cls||"")+'" src="'+l.src+'" alt="">').join("");
+ return'<div class="pixelLightBundle '+info.kind+'" style="--asset-rot:'+angle+'deg">'+layers+'</div>'
 }
 function draw(){
  let b=q("#treeBoard");b.innerHTML="";
  for(let i=0;i<SIZE*SIZE;i++){
    if(!ACTIVE_SET.has(i)){let gap=document.createElement("div");gap.className="treeCell empty";b.appendChild(gap);continue}
    let t=tiles[i],e=document.createElement("button");e.className="treeCell"+(t.locked?" locked":"");e.dataset.i=i;e.style.setProperty("--rot",t.rot);
-   e.innerHTML=cableSvg(t,i)+'<svg class="powerOverlay" viewBox="0 0 64 64" aria-hidden="true"></svg>';
+   e.innerHTML=cableSprite(t)+'<svg class="powerOverlay" viewBox="0 0 32 32" aria-hidden="true"></svg>';
    e.onclick=()=>turn(i,e);b.appendChild(e)
  }
  clearVisualPower()
@@ -190,7 +169,7 @@ function animateTest(info){
    testTimers.push(setTimeout(()=>failTest(furthest),d))
  }
 }
-function turn(i,e){if(testing||won||tiles[i].locked)return;tiles[i].rot=(tiles[i].rot+1)%4;turns++;q("#turns").textContent=turns;e.style.setProperty("--rot",tiles[i].rot);tone(330,.035)}
+function turn(i,e){if(testing||won||tiles[i].locked)return;tiles[i].rot=(tiles[i].rot+1)%4;turns++;q("#turns").textContent=turns;let bundle=e.querySelector(".pixelLightBundle");if(bundle)bundle.style.setProperty("--asset-rot",(shapeInfo(tiles[i].base).angle+tiles[i].rot*90)+"deg");tone(330,.035)}
 function testCircuit(){
  if(testing||won)return;
  testing=true;q("#powerSwitch").disabled=true;q("#powerSwitch").classList.add("on","testing");
@@ -226,7 +205,7 @@ function fix(count,cost){
  if(testing||won||!spend(cost))return;
  let wrong=ACTIVE.map(i=>({t:tiles[i],i})).filter(x=>x.t.on&&!x.t.locked&&x.t.rot!==0);
  if(!wrong.length){s.sparks+=cost;save();toast("The main circuit is aligned — try the switch");return}
- wrong.slice(0,count).forEach(x=>{x.t.rot=0;let e=q('.treeCell[data-i="'+x.i+'"]');e.style.setProperty("--rot",0);e.classList.add("hint");setTimeout(()=>e.classList.remove("hint"),1200)});
+ wrong.slice(0,count).forEach(x=>{x.t.rot=0;let e=q('.treeCell[data-i="'+x.i+'"]');let bundle=e.querySelector(".pixelLightBundle");if(bundle)bundle.style.setProperty("--asset-rot",shapeInfo(x.t.base).angle+"deg");e.classList.add("hint");setTimeout(()=>e.classList.remove("hint"),1200)});
  tone(760,.07)
 }
 function finish(){
