@@ -152,3 +152,84 @@ footer{display:flex;align-items:center;justify-content:space-between;color:#c9de
   .powerRig{transform:translateX(-50%) scale(.9);transform-origin:top center}
 }
 @media(min-width:620px){.app{padding-left:24px;padding-right:24px}.levels{grid-template-columns:repeat(8,1fr)}}
+
+/* START STUMP POWER CONTROL v4 */
+.treeStage{padding-bottom:112px}
+.powerRig{
+  position:absolute;
+  left:50%;
+  bottom:-2px;
+  transform:translateX(-50%);
+  width:112px;
+  height:104px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  pointer-events:none;
+}
+.startStumpSwitch{
+  position:relative;
+  width:96px;
+  height:96px;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  border-radius:0;
+  pointer-events:auto;
+  cursor:pointer;
+  image-rendering:pixelated;
+}
+.startStumpSwitch:before{
+  content:"";
+  position:absolute;
+  left:45px;
+  top:-28px;
+  width:6px;
+  height:34px;
+  background:#171426;
+  box-shadow:2px 0 0 #242039;
+  z-index:0;
+}
+.startStumpArt{
+  position:relative;
+  z-index:2;
+  width:96px;
+  height:96px;
+  display:block;
+  object-fit:contain;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  transform:translateY(0);
+  filter:none;
+  transition:transform .08s steps(1,end),filter .08s steps(1,end);
+}
+.startStumpSwitch:active .startStumpArt,
+.startStumpSwitch.testing .startStumpArt{
+  transform:translateY(4px);
+}
+.startStumpSwitch.on .startStumpArt,
+.startStumpArt.live{
+  filter:brightness(1.2) drop-shadow(0 0 4px #fff6a8) drop-shadow(0 0 8px #f5c843);
+}
+.startStumpSwitch.testing{
+  background:transparent;
+}
+.startStumpSwitch:disabled{
+  cursor:default;
+  opacity:1;
+}
+.startStumpSwitch.on:before,
+.startStumpSwitch:not(.on):before{
+  content:"";
+}
+.pixelPlug,.plugLead,.plugBody,.pin,.switchPlate,.switchLever,.switchText{
+  display:none!important;
+}
+@media(max-width:430px){
+  .treeStage{padding-bottom:100px}
+  .powerRig{width:96px;height:92px}
+  .startStumpSwitch,.startStumpArt{width:80px;height:80px}
+  .startStumpSwitch:before{left:37px;top:-25px;width:6px;height:30px}
+}
