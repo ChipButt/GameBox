@@ -15,6 +15,7 @@ A mobile-first browser games hub from **Chip In Games**.
 | `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |
 | `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |
 | `christmas-lights/` | Christmas Lights festive rotate-and-connect puzzle game |
+| `santa-letter-sort/` | Santa’s Letter Sort mobile-first festive letter-sorting game |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
 | `shared/` | Player roster, networking, shared styles and menu/branding assets |
@@ -41,6 +42,13 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - Later levels add denser traffic, more colours and hidden trucks
 - Progress is stored locally in the browser
 - Play at `sweet-truck-fever/`
+
+
+### Santa’s Letter Sort
+- Mobile-first endless letter-sorting arcade game set in the North Pole mailroom
+- Match each recipient's delivery route to one of four mail sacks; new routes unlock as shifts progress
+- Streak scoring, a countdown timer, pause/resume, three mistakes per run, and a locally saved high score
+- Play at `santa-letter-sort/`
 
 
 ### Relic
