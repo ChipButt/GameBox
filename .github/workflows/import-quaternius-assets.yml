@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: quaternius-asset-import
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   import:
@@ -45,13 +45,13 @@ jobs:
           set -euo pipefail
 
           PACKS=(
+            ultimate-house-interior
+            ultimate-animated-animals
+            easy-animated-enemy
             ultimate-animated-character
             ultimate-nature
             nature-crops
             ultimate-food
-            ultimate-house-interior
-            ultimate-animated-animals
-            easy-animated-enemy
           )
 
           for pack in "${PACKS[@]}"; do
