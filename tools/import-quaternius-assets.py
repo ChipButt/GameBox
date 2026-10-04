@@ -29,7 +29,7 @@ def read_sources():
     return json.loads(SOURCE_FILE.read_text(encoding="utf-8"))
 
 
-def download_one(asset: dict, retries: int = 4) -> tuple[str, int]:
+def download_one(asset: dict, retries: int = 1) -> tuple[str, int]:
     target = ROOT / asset["target"]
     target.parent.mkdir(parents=True, exist_ok=True)
     expected = asset.get("sourceSize")
