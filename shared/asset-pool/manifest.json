@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-04T16:55:12.560459+00:00",
+  "generatedAt": "2026-10-04T16:55:38.120064+00:00",
   "source": "Quaternius",
   "license": "CC0-1.0",
   "assetRoot": "./",
-  "totalAssets": 533,
+  "totalAssets": 536,
   "expectedTotalAssets": 548,
   "complete": false,
   "packs": [
@@ -66,9 +66,9 @@
       "type": "interior",
       "format": "fbx",
       "animated": false,
-      "assetCount": 120,
+      "assetCount": 123,
       "expectedAssetCount": 123,
-      "complete": false,
+      "complete": true,
       "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
       "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6",
       "license": "CC0-1.0"
@@ -6432,6 +6432,21 @@
       "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
     },
     {
+      "id": "quaternius:ultimate-house-interior:Carpet_1",
+      "pack": "ultimate-house-interior",
+      "packTitle": "Ultimate House Interior Pack",
+      "name": "Carpet_1",
+      "filename": "Carpet_1.fbx",
+      "type": "interior",
+      "format": "fbx",
+      "animated": false,
+      "path": "quaternius/ultimate-house-interior/Carpet_1.fbx",
+      "byteSize": 18044,
+      "license": "CC0-1.0",
+      "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
+      "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
+    },
+    {
       "id": "quaternius:ultimate-house-interior:Carpet_2",
       "pack": "ultimate-house-interior",
       "packTitle": "Ultimate House Interior Pack",
@@ -6757,6 +6772,21 @@
       "animated": false,
       "path": "quaternius/ultimate-house-interior/Door_1.fbx",
       "byteSize": 20380,
+      "license": "CC0-1.0",
+      "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
+      "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
+    },
+    {
+      "id": "quaternius:ultimate-house-interior:Door_2",
+      "pack": "ultimate-house-interior",
+      "packTitle": "Ultimate House Interior Pack",
+      "name": "Door_2",
+      "filename": "Door_2.fbx",
+      "type": "interior",
+      "format": "fbx",
+      "animated": false,
+      "path": "quaternius/ultimate-house-interior/Door_2.fbx",
+      "byteSize": 20460,
       "license": "CC0-1.0",
       "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
       "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
@@ -7402,6 +7432,21 @@
       "animated": false,
       "path": "quaternius/ultimate-house-interior/Light_Cube.fbx",
       "byteSize": 21868,
+      "license": "CC0-1.0",
+      "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
+      "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
+    },
+    {
+      "id": "quaternius:ultimate-house-interior:Light_Cube2",
+      "pack": "ultimate-house-interior",
+      "packTitle": "Ultimate House Interior Pack",
+      "name": "Light_Cube2",
+      "filename": "Light_Cube2.fbx",
+      "type": "interior",
+      "format": "fbx",
+      "animated": false,
+      "path": "quaternius/ultimate-house-interior/Light_Cube2.fbx",
+      "byteSize": 24828,
       "license": "CC0-1.0",
       "sourcePage": "https://quaternius.com/packs/ultimatehomeinterior.html",
       "sourceFolder": "https://drive.google.com/drive/folders/1SNK9PwPi8xqqxmpU5xEZeiQjB26C1oX6"
