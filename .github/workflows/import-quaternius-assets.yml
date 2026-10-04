@@ -39,7 +39,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Import packs in committed batches
+      - name: Import packs in resumable committed batches
         shell: bash
         run: |
           set -euo pipefail
@@ -56,18 +56,37 @@ jobs:
 
           for pack in "${PACKS[@]}"; do
             echo "=== Importing $pack ==="
-            python tools/import-quaternius-assets.py --pack "$pack" --workers 6
+            complete=0
 
-            git add "shared/asset-pool/quaternius/$pack" shared/asset-pool/manifest.json
+            for attempt in 1 2 3 4 5; do
+              echo "--- $pack attempt $attempt/5 ---"
 
-            if git diff --cached --quiet; then
-              echo "No changes for $pack"
-              continue
+              set +e
+              python tools/import-quaternius-assets.py --pack "$pack" --workers 2
+              import_status=$?
+              set -e
+
+              git add "shared/asset-pool/quaternius/$pack" shared/asset-pool/manifest.json
+
+              if ! git diff --cached --quiet; then
+                git commit -m "Import Quaternius $pack asset pack (batch $attempt)"
+                git pull --rebase origin main
+                git push origin HEAD:main
+              fi
+
+              if [ "$import_status" -eq 0 ]; then
+                complete=1
+                break
+              fi
+
+              echo "Some files were throttled; retrying only missing files."
+              sleep 20
+            done
+
+            if [ "$complete" -ne 1 ]; then
+              echo "Pack $pack is still incomplete after retries." >&2
+              exit 1
             fi
-
-            git commit -m "Import Quaternius $pack asset pack"
-            git pull --rebase origin main
-            git push origin HEAD:main
           done
 
       - name: Verify complete asset pool
