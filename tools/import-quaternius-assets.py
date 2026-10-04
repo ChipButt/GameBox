@@ -85,7 +85,7 @@ def existing_assets(source_doc: dict) -> list[dict]:
             "type": asset["type"],
             "format": asset["format"],
             "animated": asset["animated"],
-            "path": str(Path(asset["target"]).relative_to(POOL_ROOT)).replace(os.sep, "/"),
+            "path": str((ROOT / asset["target"]).relative_to(POOL_ROOT)).replace(os.sep, "/"),
             "byteSize": target.stat().st_size,
             "license": "CC0-1.0",
             "sourcePage": asset["sourcePage"],
