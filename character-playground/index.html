@@ -3,86 +3,83 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#173c2a">
+  <meta name="theme-color" content="#c8dbe8">
   <title>Christmas Elf · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
-  <div class="app">
+  <main class="app">
+    <div id="stage"></div>
+
     <header class="topbar">
       <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
       <div class="title">
+        <small>GAMEBOX 3D CHARACTER TEST</small>
         <strong>Christmas Elf</strong>
-        <span id="actionLabel">LOADING CHARACTER…</span>
+        <span id="actionLabel">LOADING 3D ELF…</span>
       </div>
-      <button id="customiseBtn" class="customiseBtn" type="button">CUSTOMISE</button>
+      <div class="topActions">
+        <button id="colourBtn" class="topBtn" type="button">COLOURS</button>
+        <button id="animBtn" class="topBtn" type="button">ANIMS</button>
+      </div>
     </header>
 
-    <main class="stageWrap" id="stageWrap">
-      <canvas id="game" width="384" height="256" aria-label="Christmas elf movement playground"></canvas>
-      <div id="loadError" class="loadError" hidden></div>
+    <div class="badge" id="modelBadge">Quaternius Elf · GameBox Asset Pool</div>
 
-      <div class="controls">
-        <div id="joystick" class="joystick" aria-label="Movement joystick">
-          <div class="joyRing"><div id="joyKnob" class="joyKnob"></div></div>
-          <span>MOVE</span>
-        </div>
+    <section class="panel" id="colourPanel" hidden>
+      <div class="panelHead">
+        <div><span class="eyebrow">MATERIALS</span><h2>Elf colours</h2></div>
+        <button class="closeBtn" id="closeColours" type="button" aria-label="Close">×</button>
       </div>
-    </main>
-
-    <section id="creator" class="creator" aria-label="Elf character creator">
-      <div class="creatorCard">
-        <div class="creatorHead">
-          <div>
-            <span class="eyebrow">CHARACTER SELECTOR</span>
-            <h1>Make your elf</h1>
-          </div>
-          <button id="creatorClose" class="creatorClose" type="button" aria-label="Close character selector">×</button>
-        </div>
-
-        <div class="creatorMain">
-          <div class="previewPanel">
-            <canvas id="creatorPreview" width="184" height="184" aria-label="Elf preview"></canvas>
-            <div class="previewLabel">BASE ELF · LIVE PREVIEW</div>
-          </div>
-
-          <div class="colourGrid">
-            <label class="colourChoice"><span>Hat</span><input id="colourHat" type="color" value="#548343"></label>
-            <label class="colourChoice"><span>Skin</span><input id="colourSkin" type="color" value="#f2bba0"></label>
-            <label class="colourChoice"><span>Hair</span><input id="colourHair" type="color" value="#b56531"></label>
-            <label class="colourChoice"><span>Jacket</span><input id="colourJacket" type="color" value="#548343"></label>
-            <label class="colourChoice"><span>Trousers</span><input id="colourTrousers" type="color" value="#2d2a37"></label>
-            <label class="colourChoice"><span>Shoes</span><input id="colourShoes" type="color" value="#4f4238"></label>
-          </div>
-        </div>
-
-        <div class="creatorActions">
-          <button id="resetCharacter" class="creatorBtn secondary" type="button">BASE CHARACTER</button>
-          <button id="saveCharacter" class="creatorBtn primary" type="button">SAVE &amp; PLAY</button>
-        </div>
+      <p>The model, skeleton and animations stay untouched. These controls only recolour existing material regions.</p>
+      <div class="presetRow">
+        <button data-preset="original" type="button">ORIGINAL</button>
+        <button data-preset="christmas" class="active" type="button">CHRISTMAS</button>
+      </div>
+      <div class="colourGrid">
+        <label><span>Hat</span><input id="colourHat" type="color" value="#b62f3f"></label>
+        <label><span>Clothes</span><input id="colourClothes" type="color" value="#276f43"></label>
+        <label><span>White trim</span><input id="colourTrim" type="color" value="#f5f0e7"></label>
+        <label><span>Gold</span><input id="colourGold" type="color" value="#d5a52e"></label>
+        <label><span>Skin</span><input id="colourSkin" type="color" value="#c98362"></label>
       </div>
     </section>
-  </div>
 
-  <script src="elf-data-1.js?v=2"></script>
-  <script src="elf-data-2.js?v=2"></script>
-  <script src="elf-data-3.js?v=2"></script>
-  <script src="elf-data-4.js?v=2"></script>
-  <script src="elf-data-5a.js?v=2"></script>
-  <script src="elf-data-5b.js?v=2"></script>
-  <script src="elf-data-5c.js?v=2"></script>
-  <script src="elf-data-6a.js?v=2"></script>
-  <script src="elf-data-6b.js?v=2"></script>
-  <script src="elf-data-6c.js?v=2"></script>
-  <script src="elf-data-7a.js?v=2"></script>
-  <script src="elf-data-7b.js?v=2"></script>
-  <script src="elf-data-7c.js?v=2"></script>
-  <script src="elf-data-8a.js?v=2"></script>
-  <script src="elf-data-8b.js?v=2"></script>
-  <script src="elf-data-8c.js?v=2"></script>
-  <script src="elf-data-9a.js?v=2"></script>
-  <script src="elf-data-9b.js?v=2"></script>
-  <script src="elf-sprite.js?v=7"></script>
-  <script src="game.js?v=8"></script>
+    <section class="panel" id="animPanel" hidden>
+      <div class="panelHead">
+        <div><span class="eyebrow">EMBEDDED CLIPS</span><h2>Animations</h2></div>
+        <button class="closeBtn" id="closeAnims" type="button" aria-label="Close">×</button>
+      </div>
+      <p>These are the animation clips embedded in the imported Quaternius Elf file. Movement returns to Walk/Idle automatically.</p>
+      <div class="animMeta"><span><strong id="clipCount">0</strong> clips</span><span>Playing: <strong id="playingClip">—</strong></span></div>
+      <div class="animList" id="animList"></div>
+    </section>
+
+    <div class="quickAnims">
+      <button data-quick="Idle" type="button">IDLE</button>
+      <button data-quick="Walk" type="button">WALK</button>
+      <button data-quick="Run" type="button">RUN</button>
+      <button data-quick="Jump" type="button">JUMP</button>
+      <button data-quick="Victory" type="button">VICTORY</button>
+    </div>
+
+    <div class="joystick" id="joystick" aria-label="Movement joystick">
+      <div class="joyRing"><div class="joyKnob" id="joyKnob"></div></div>
+      <span>MOVE</span>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loadingCard">
+        <strong>Loading the real 3D elf…</strong>
+        <p id="loadText">Reading the Quaternius Elf from GameBox’s shared asset pool.</p>
+        <div class="bar"><i id="loadBar"></i></div>
+      </div>
+    </div>
+
+    <div class="loadError" id="loadError" hidden></div>
+  </main>
+
+  <script type="module" src="game.js?v=9"></script>
 </body>
 </html>
