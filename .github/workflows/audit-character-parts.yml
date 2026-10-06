@@ -1,0 +1,122 @@
+name: Audit Character Part Distinctness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-character-parts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit actual modular part outputs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, hashlib, json, pathlib, struct, collections
+
+          root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+
+          HEAD_BONES={'Head','Neck'}
+          TOP_BONES={'Torso','Abdomen'}
+          ARM_BONES={'Shoulder.L','UpperArm.L','LowerArm.L','Fist.L','Shoulder.R','UpperArm.R','LowerArm.R','Fist.R'}
+          BOTTOM_BONES={'Hips','UpperLeg.L','LowerLeg.L','UpperLeg.R','LowerLeg.R'}
+          FOOT_BONES={'Foot.L','Foot.R'}
+
+          def data_bytes(uri):
+              assert uri.startswith("data:")
+              return base64.b64decode(uri.split(",",1)[1])
+
+          def accessor(doc, idx):
+              acc=doc["accessors"][idx]
+              view=doc["bufferViews"][acc["bufferView"]]
+              raw=data_bytes(doc["buffers"][view["buffer"]]["uri"])
+              fmt,size={5126:("f",4),5125:("I",4),5123:("H",2),5121:("B",1),5122:("h",2),5120:("b",1)}[acc["componentType"]]
+              width={"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4}[acc["type"]]
+              stride=view.get("byteStride",width*size)
+              start=view.get("byteOffset",0)+acc.get("byteOffset",0)
+              vals=[]
+              for i in range(acc["count"]):
+                  vals.append(struct.unpack_from("<"+fmt*width,raw,start+i*stride))
+              return vals
+
+          def score(joints,weights,bone_names,vertices,target):
+              out=0.0
+              for vi in vertices:
+                  for j,w in zip(joints[vi],weights[vi]):
+                      if w>0 and bone_names[int(j)] in target: out+=float(w)
+              return out
+
+          def classify(material_name,positions,joints,weights,bone_names,verts,ymin,yrange):
+              n=(material_name or "").lower()
+              if any(k in n for k in ('helmet','horn','hood','crown','hat','cap')): return 'headwear'
+              if any(k in n for k in ('hair','beard','moustache','mustache')): return 'hair'
+              if any(k in n for k in ('belt','scarf','buckle','cape','strap','apron','glove','pouch','bag','band')): return 'accessory'
+              mean_y=sum(positions[v][1] for v in verts)/3
+              yn=(mean_y-ymin)/yrange if yrange else .5
+              scores={
+                'head':score(joints,weights,bone_names,verts,HEAD_BONES),
+                'top':score(joints,weights,bone_names,verts,TOP_BONES),
+                'arms':score(joints,weights,bone_names,verts,ARM_BONES),
+                'bottom':score(joints,weights,bone_names,verts,BOTTOM_BONES),
+                'shoes':score(joints,weights,bone_names,verts,FOOT_BONES),
+              }
+              winner,wscore=max(scores.items(),key=lambda kv:kv[1])
+              if winner=='bottom' and yn<.16:return 'shoes'
+              if wscore>.01:return winner
+              if yn>.72:return 'head'
+              if yn<.14:return 'shoes'
+              if yn<.48:return 'bottom'
+              return 'top'
+
+          rows=[]
+          by_cat=collections.defaultdict(list)
+          for p in sorted(root.glob("*.gltf")):
+              doc=json.loads(p.read_text())
+              nodes=doc.get("nodes",[])
+              skin=doc["skins"][0]
+              bone_names=[nodes[i].get("name","") for i in skin["joints"]]
+              model=collections.defaultdict(lambda:{"tris":0,"chunks":[]})
+              for mesh in doc.get("meshes",[]):
+                  for prim in mesh.get("primitives",[]):
+                      attrs=prim.get("attributes",{})
+                      if not all(k in attrs for k in ("POSITION","JOINTS_0","WEIGHTS_0")): continue
+                      pos=accessor(doc,attrs["POSITION"])
+                      joints=accessor(doc,attrs["JOINTS_0"])
+                      weights=accessor(doc,attrs["WEIGHTS_0"])
+                      indices=[x[0] for x in accessor(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
+                      mat=doc.get("materials",[{}])[prim.get("material",0)] if doc.get("materials") else {}
+                      mat_name=mat.get("name","")
+                      base=mat.get("pbrMetallicRoughness",{}).get("baseColorFactor",[1,1,1,1])
+                      ymin=min(v[1] for v in pos); ymax=max(v[1] for v in pos); yr=max(1e-9,ymax-ymin)
+                      for i in range(0,len(indices)-2,3):
+                          verts=indices[i:i+3]
+                          cat=classify(mat_name,pos,joints,weights,bone_names,verts,ymin,yr)
+                          payload=[]
+                          for vi in verts:
+                              payload.extend(round(float(x),5) for x in pos[vi])
+                          model[cat]["tris"]+=1
+                          model[cat]["chunks"].append((tuple(payload),mat_name,tuple(round(float(x),4) for x in base)))
+              for cat,data in model.items():
+                  canonical=json.dumps(sorted(data["chunks"],key=str),separators=(",",":"),default=list)
+                  h=hashlib.sha256(canonical.encode()).hexdigest()[:16]
+                  by_cat[cat].append((p.stem,data["tris"],h))
+                  rows.append((p.stem,cat,data["tris"],h))
+
+          print("=== DISTINCT COUNTS ===")
+          for cat in ['head','hair','headwear','top','arms','bottom','shoes','accessory']:
+              vals=by_cat.get(cat,[])
+              groups=collections.defaultdict(list)
+              for model,tris,h in vals: groups[h].append((model,tris))
+              print(cat,"sources",len(vals),"distinct",len(groups))
+              for h,items in sorted(groups.items(),key=lambda kv:(-len(kv[1]),kv[0])):
+                  print("GROUP",cat,h,"x"+str(len(items)),json.dumps(items))
+          print("=== END ===")
+          PY
