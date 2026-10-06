@@ -700,23 +700,26 @@ function updateMonster(dt,m){
   // The actual rear anchor is the NORTH-most edge of the skier sprite.
   const rearY=player.y-TILE/2;
 
+  // The yeti has its own speed. Player boosts NEVER increase it.
+  const yetiDownhillSpeed=baseSpeed*.91;
+  const boostAdvantage=Math.max(0,speed-baseSpeed);
+
   if(monster.phase==='rush'){
-    // It sprints upward from the bottom/side toward that rear anchor. The
-    // player can dodge laterally; if it misses, it passes onto the player's
-    // rear side and immediately stops being a collision threat.
+    // Normal run: it tears upward toward the rear anchor.
+    // Boosted player: the extra player-only speed directly cancels that
+    // closing rate and can even force the yeti to lose ground immediately.
     const rushSpeed=94+Math.min(26,m*.007);
-    monster.screenY-=rushSpeed*dt;
+    const relativeRush=rushSpeed-boostAdvantage*2;
+    monster.screenY-=relativeRush*dt;
 
     if(monster.screenY<=rearY){
       monster.screenY=rearY;
       monster.phase='trailing';
     }
   }else{
-    // Once behind the skier, use the actual relative-speed relationship:
-    // yeti downhill speed is 91% of the skier's base speed, so in camera
-    // space it steadily recedes NORTH/up the screen as the skier outruns it.
-    const yetiDownhillSpeed=baseSpeed*.91;
-    const relativeScreenSpeed=baseSpeed-yetiDownhillSpeed;
+    // Player camera speed uses the full boosted speed; yeti speed remains tied
+    // only to baseSpeed. Therefore every boost opens the gap faster.
+    const relativeScreenSpeed=speed-yetiDownhillSpeed;
     monster.screenY-=relativeScreenSpeed*dt;
   }
 
