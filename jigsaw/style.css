@@ -92,7 +92,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 
 .pieceChoices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .pieceChoices button{
-  appearance:none;min-width:0;height:42px;border:0;padding:0;background-color:transparent;background-image:var(--kenney-square-beige);
+  appearance:none;min-width:0;height:44px;border:0;padding:0;background-color:transparent;background-image:var(--kenney-square-beige);
   background-size:100% 100%;background-repeat:no-repeat;background-position:center;color:#374c5d;font:700 13px Fredoka,sans-serif;text-shadow:none;cursor:pointer
 }
 .pieceChoices button:active{background-image:var(--kenney-square-beige-pressed);transform:translateY(2px)}
