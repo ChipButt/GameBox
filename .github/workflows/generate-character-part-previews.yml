@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - character-playground/part-options.json
+      - character-playground/part-options.js
       - .github/workflows/generate-character-part-previews.yml
 
 permissions:
@@ -31,12 +31,19 @@ jobs:
           set -euo pipefail
           python -m pip install --quiet pillow
           python - <<'PY'
-          import base64, json, math, pathlib, struct
+          import base64, json, math, pathlib, re, shutil, struct
           from PIL import Image, ImageDraw
 
           root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
-          manifest=json.loads(pathlib.Path("character-playground/part-options.json").read_text())
+          source_text=pathlib.Path("character-playground/part-options.js").read_text()
+          match=re.search(r'export const PART_OPTIONS = (\{.*?\});\n\nexport const PART_SOURCE_TO_OPTION',source_text,re.S)
+          if not match:
+              raise SystemExit("Could not parse PART_OPTIONS from part-options.js")
+          part_options=json.loads(match.group(1))
+          manifest={"categories":{category:{"options":options} for category,options in part_options.items()}}
           outroot=pathlib.Path("character-playground/previews")
+          if outroot.exists():
+              shutil.rmtree(outroot)
           outroot.mkdir(parents=True,exist_ok=True)
 
           HEAD={'Head','Neck'}
@@ -161,7 +168,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add character-playground/previews
+          git add -A character-playground/previews
           if git diff --cached --quiet; then
             echo "Part previews already up to date."
             exit 0
