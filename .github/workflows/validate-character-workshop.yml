@@ -124,7 +124,8 @@ jobs:
 
               for cat,verts in buckets.items():
                   if not verts: continue
-                  h=hashlib.sha256(json.dumps(verts,separators=(",",":")).encode()).hexdigest()[:16]
+                  hash_verts = [tuple(round(v,2) for v in p) for p in verts] if cat == "head" else verts
+                  h=hashlib.sha256(json.dumps(hash_verts,separators=(",",":")).encode()).hexdigest()[:16]
                   rec=per_cat[cat].setdefault(h,{"sources":[],"materials":set(),"colors":{}})
                   rec["sources"].append(path.stem)
                   rec["materials"].update(material_sets[cat])
