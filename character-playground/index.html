@@ -3,83 +3,154 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#c8dbe8">
-  <title>Christmas Elf · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <meta name="theme-color" content="#10263a">
+  <title>Character Workshop · GameBox</title>
+  <link rel="stylesheet" href="style.css?v=10">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
   <main class="app">
-    <div id="stage"></div>
+    <div id="stage" aria-label="3D character preview"></div>
 
     <header class="topbar">
-      <a class="backBtn" href="../" aria-label="Back to GameBox">GAME BOX</a>
-      <div class="title">
-        <small>GAMEBOX 3D CHARACTER TEST</small>
-        <strong>Christmas Elf</strong>
-        <span id="actionLabel">LOADING 3D ELF…</span>
+      <a class="backBtn artButton" href="../" aria-label="Back to GameBox">GAME BOX</a>
+      <div class="brandPlate">
+        <span>GAMEBOX CHARACTER SYSTEM</span>
+        <strong>Character Workshop</strong>
+        <small id="modelMeta">52 character styles available</small>
       </div>
-      <div class="topActions">
-        <button id="colourBtn" class="topBtn" type="button">COLOURS</button>
-        <button id="animBtn" class="topBtn" type="button">ANIMS</button>
-      </div>
+      <button id="randomBtn" class="topAction artButton" type="button">RANDOM</button>
     </header>
 
-    <div class="badge" id="modelBadge">Quaternius Elf · GameBox Asset Pool</div>
-
-    <section class="panel" id="colourPanel" hidden>
-      <div class="panelHead">
-        <div><span class="eyebrow">MATERIALS</span><h2>Elf colours</h2></div>
-        <button class="closeBtn" id="closeColours" type="button" aria-label="Close">×</button>
+    <div class="stageHud" aria-hidden="true">
+      <div class="modelPill">
+        <span id="selectedGroup">Fantasy</span>
+        <strong id="selectedModel">Christmas Elf</strong>
       </div>
-      <p>The model, skeleton and animations stay untouched. These controls only recolour existing material regions.</p>
-      <div class="presetRow">
-        <button data-preset="original" type="button">ORIGINAL</button>
-        <button data-preset="christmas" class="active" type="button">CHRISTMAS</button>
+      <div class="viewButtons">
+        <button id="turnLeftBtn" class="squareArtButton" type="button" aria-label="Rotate left">↶</button>
+        <button id="resetViewBtn" class="squareArtButton" type="button" aria-label="Reset view">◎</button>
+        <button id="turnRightBtn" class="squareArtButton" type="button" aria-label="Rotate right">↷</button>
       </div>
-      <div class="colourGrid">
-        <label><span>Hat</span><input id="colourHat" type="color" value="#b62f3f"></label>
-        <label><span>Clothes</span><input id="colourClothes" type="color" value="#276f43"></label>
-        <label><span>White trim</span><input id="colourTrim" type="color" value="#f5f0e7"></label>
-        <label><span>Gold</span><input id="colourGold" type="color" value="#d5a52e"></label>
-        <label><span>Skin</span><input id="colourSkin" type="color" value="#c98362"></label>
-      </div>
-    </section>
-
-    <section class="panel" id="animPanel" hidden>
-      <div class="panelHead">
-        <div><span class="eyebrow">EMBEDDED CLIPS</span><h2>Animations</h2></div>
-        <button class="closeBtn" id="closeAnims" type="button" aria-label="Close">×</button>
-      </div>
-      <p>These are the animation clips embedded in the imported Quaternius Elf file. Movement returns to Walk/Idle automatically.</p>
-      <div class="animMeta"><span><strong id="clipCount">0</strong> clips</span><span>Playing: <strong id="playingClip">—</strong></span></div>
-      <div class="animList" id="animList"></div>
-    </section>
-
-    <div class="quickAnims">
-      <button data-quick="Idle" type="button">IDLE</button>
-      <button data-quick="Walk" type="button">WALK</button>
-      <button data-quick="Run" type="button">RUN</button>
-      <button data-quick="Jump" type="button">JUMP</button>
-      <button data-quick="Victory" type="button">VICTORY</button>
+      <div class="stageHint">DRAG TO TURN · WHEEL / PINCH TO ZOOM</div>
     </div>
 
-    <div class="joystick" id="joystick" aria-label="Movement joystick">
-      <div class="joyRing"><div class="joyKnob" id="joyKnob"></div></div>
-      <span>MOVE</span>
-    </div>
+    <aside class="builder" id="builder">
+      <section class="identityStrip">
+        <label for="characterName">CHARACTER NAME</label>
+        <div class="nameRow">
+          <input id="characterName" maxlength="24" autocomplete="off" value="Jingle" aria-label="Character name">
+          <button id="nameRollBtn" class="miniArtButton" type="button" aria-label="Generate a name">↻</button>
+        </div>
+      </section>
+
+      <nav class="builderTabs" aria-label="Character builder sections">
+        <button class="tabBtn active" type="button" data-tab="style">STYLE</button>
+        <button class="tabBtn" type="button" data-tab="colours">COLOURS</button>
+        <button class="tabBtn" type="button" data-tab="pose">POSE</button>
+        <button class="tabBtn" type="button" data-tab="save">SAVE</button>
+      </nav>
+
+      <div class="tabView active" data-view="style">
+        <div class="sectionTitle">
+          <div>
+            <span>CHOOSE A BASE</span>
+            <strong>Character style</strong>
+          </div>
+          <b id="styleCount">52 / 52</b>
+        </div>
+
+        <div class="searchBox">
+          <input id="styleSearch" type="search" placeholder="Search styles…" autocomplete="off">
+        </div>
+        <div class="filterRow" id="filterRow"></div>
+        <div class="styleGrid" id="styleGrid"></div>
+      </div>
+
+      <div class="tabView" data-view="colours">
+        <div class="sectionTitle">
+          <div>
+            <span>RECOLOUR THE REAL MODEL</span>
+            <strong>Material palette</strong>
+          </div>
+          <b id="materialCount">0</b>
+        </div>
+
+        <div class="presetGrid">
+          <button type="button" data-palette="original">ORIGINAL</button>
+          <button type="button" data-palette="christmas" class="active">CHRISTMAS</button>
+          <button type="button" data-palette="frost">FROST</button>
+          <button type="button" data-palette="candy">CANDY</button>
+          <button type="button" data-palette="midnight">MIDNIGHT</button>
+          <button type="button" data-palette="forest">FOREST</button>
+        </div>
+
+        <p class="helperCopy">Each control below is a real material on the selected model. No fake overlays are being drawn on top.</p>
+        <div class="materialList" id="materialList"></div>
+      </div>
+
+      <div class="tabView" data-view="pose">
+        <div class="sectionTitle">
+          <div>
+            <span>PREVIEW THE RIG</span>
+            <strong>Animation & pose</strong>
+          </div>
+          <b id="clipCount">0 clips</b>
+        </div>
+
+        <div class="poseGrid" id="poseGrid"></div>
+
+        <div class="controlCard">
+          <label for="animSpeed"><span>Animation speed</span><b id="animSpeedValue">1.0×</b></label>
+          <input id="animSpeed" type="range" min="0.35" max="1.65" step="0.05" value="1">
+        </div>
+
+        <label class="toggleRow">
+          <input id="turntableToggle" type="checkbox">
+          <span class="toggleVisual"></span>
+          <span><strong>Turntable preview</strong><small>Slowly rotate the character while you work.</small></span>
+        </label>
+      </div>
+
+      <div class="tabView" data-view="save">
+        <div class="sectionTitle">
+          <div>
+            <span>READY FOR A BIGGER GAME</span>
+            <strong>Save your character</strong>
+          </div>
+        </div>
+
+        <div class="summaryCard">
+          <span>NAME</span><strong id="summaryName">Jingle</strong>
+          <span>STYLE</span><strong id="summaryStyle">Christmas Elf</strong>
+          <span>PALETTE</span><strong id="summaryPalette">Christmas</strong>
+          <span>POSE</span><strong id="summaryPose">Idle</strong>
+        </div>
+
+        <button id="useCharacterBtn" class="primaryAction" type="button">USE THIS CHARACTER</button>
+        <div class="saveGrid">
+          <button id="saveBtn" type="button">SAVE</button>
+          <button id="loadBtn" type="button">LOAD SAVED</button>
+          <button id="copyBtn" type="button">COPY BUILD JSON</button>
+        </div>
+        <p class="helperCopy">The saved build is stored on this device and also exposed as a GameBox character payload for a future game to consume.</p>
+      </div>
+    </aside>
 
     <div class="loading" id="loading">
       <div class="loadingCard">
-        <strong>Loading the real 3D elf…</strong>
-        <p id="loadText">Reading the Quaternius Elf from GameBox’s shared asset pool.</p>
-        <div class="bar"><i id="loadBar"></i></div>
+        <span>GAMEBOX CHARACTER SYSTEM</span>
+        <strong>Opening the workshop…</strong>
+        <p id="loadText">Loading the Christmas Elf from the shared character pool.</p>
+        <div class="progressTrack"><i id="loadBar"></i></div>
       </div>
     </div>
 
+    <div class="modelLoading" id="modelLoading" hidden>LOADING STYLE…</div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=9"></script>
+  <script type="module" src="game.js?v=20"></script>
 </body>
 </html>
