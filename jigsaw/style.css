@@ -5,6 +5,7 @@
   --board-surface:url("../assets/gamebox/kenney/ui/UI Adventure Pack/panelInset_beigeLight.png");
   --worktop:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/pattern_diagonal_grey_large.png");
   --wood-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png");
+  --puzzle-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_brown_arrows_detail.png");
   --metal-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_grey_bolts_detail_a.png");
   --banner:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/banner_hanging.png");
   --round-brown:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/round_brown.png");
@@ -169,16 +170,18 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   pointer-events:none;
 }
 .boardFrame{
+  /* Native 64x64 Kenney framed panel, 9-sliced so that the artwork's
+     corners and wooden edges stay clearly visible around the exact image. */
   position:absolute;
-  z-index:3;
-  left:calc(var(--board-x) - 14px);
-  top:calc(var(--board-y) - 14px);
-  width:calc(var(--board-size) + 28px);
-  height:calc(var(--board-size) + 28px);
-  border:14px solid transparent;
-  border-image-source:var(--wood-frame);
-  border-image-slice:12;
-  border-image-width:14px;
+  z-index:5;
+  left:calc(var(--board-x) - 16px);
+  top:calc(var(--board-y) - 16px);
+  width:calc(var(--board-size) + 32px);
+  height:calc(var(--board-size) + 32px);
+  border:16px solid transparent;
+  border-image-source:var(--puzzle-frame);
+  border-image-slice:16;
+  border-image-width:16px;
   border-image-repeat:stretch;
   pointer-events:none;
 }
@@ -232,19 +235,29 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .sheet,.winOverlay{
   display:grid;
   place-items:center;
-  padding:max(12px,env(safe-area-inset-top)) 10px max(12px,env(safe-area-inset-bottom));
+  min-height:0;
+  padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));
+  overflow:hidden;
 }
 .sheet.show,.winOverlay.show{opacity:1;pointer-events:auto}
 
 .optionsWrap,.winWrap{
   position:relative;
   width:min(100%,500px);
-  max-height:100%;
+  min-width:0;
+  min-height:0;
+  max-height:calc(100dvh - max(10px,env(safe-area-inset-top)) - max(10px,env(safe-area-inset-bottom)));
+  display:flex;
+  flex-direction:column;
   padding-top:24px;
 }
 .optionsBoard,.winBoard{
   position:relative;
-  max-height:calc(100dvh - 60px);
+  flex:1 1 auto;
+  min-width:0;
+  min-height:0;
+  max-height:none;
+  overflow-x:hidden;
   overflow-y:auto;
   overscroll-behavior:contain;
   padding:25px 14px 14px;
@@ -300,6 +313,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .closeControl:active{transform:scale(.96)}
 
 .difficultySection{
+  min-width:0;
   padding:9px 10px 11px;
   border:13px solid transparent;
   border-image-source:var(--wood-frame);
@@ -340,12 +354,13 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 
 .pieceChoices{
   display:grid;
-  grid-template-columns:repeat(6,minmax(48px,1fr));
+  min-width:0;
+  grid-template-columns:repeat(6,minmax(0,1fr));
   gap:5px;
 }
 .pieceChoices button{
   appearance:none;
-  min-width:48px;
+  min-width:0;
   height:52px;
   border:0;
   padding:0;
@@ -495,16 +510,27 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   }
   .hud{padding-left:10px;padding-right:10px}
   .stage{margin-left:1px;margin-right:1px}
-  .optionsBoard{padding-left:8px;padding-right:8px;border-width:14px;border-image-width:14px}
-  .difficultySection{padding-left:6px;padding-right:6px}
-  .optionRows{grid-template-columns:1fr 1fr}
-  .optionRow{padding-left:7px;padding-right:7px;grid-template-columns:31px minmax(0,1fr) 26px;gap:5px}
-  .rowIcon{width:29px;height:29px}
-  .stateCheck{width:25px;height:25px}
 }
-@media(max-width:350px){
-  .optionRows,.actionGrid,.winActions{grid-template-columns:1fr}
-  .overlayBanner{font-size:16px}
+@media(max-width:520px){
+  .pieceChoices{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .optionsBoard{padding-left:8px;padding-right:8px;border-width:14px;border-image-width:14px}
+  .difficultySection{padding-left:6px;padding-right:6px;border-width:10px;border-image-width:10px}
+  .optionRow{padding-left:7px;padding-right:7px;grid-template-columns:30px minmax(0,1fr) 24px;gap:5px}
+  .rowIcon{width:29px;height:29px}
+  .stateCheck{width:24px;height:24px}
+}
+@media(max-width:360px){
+  .sheet,.winOverlay{padding-left:6px;padding-right:6px}
+  .pieceChoices{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .optionRows{grid-template-columns:1fr}
+  .optionRow{min-height:52px}
+  .overlayBanner{font-size:15px}
+  .woodAction{font-size:12px}
+}
+@media(max-height:630px){
+  .optionsWrap{padding-top:19px}
+  .optionsBoard{padding-top:20px}
+  .overlayBanner{width:min(75%,280px)}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001ms!important;transition-duration:.001ms!important}
