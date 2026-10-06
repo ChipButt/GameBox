@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=3';
-import { PART_DEFINITIONS, createModularPartSystem, sourceEntriesForPart } from './modular-parts.js?v=3';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=3';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=2';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -163,7 +164,7 @@ let activeAction = null;
 let activeClipName = '';
 let currentPalette = 'christmas';
 let materialRecords = [];
-let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { sourceId: null, group: null }]));
+let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { optionId: null, kind: null, sourceId: null, wearableId: null, group: null }]));
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
 let loadGeneration = 0;
 let initialLoad = true;
@@ -267,7 +268,12 @@ function compatibleEntries() {
 }
 
 function partCandidates(category) {
-  return sourceEntriesForPart(category, CHARACTER_CATALOG);
+  return optionsForPart(category);
+}
+
+function currentPartOption(category) {
+  const state = activeParts[category];
+  return state?.optionId ? optionById(category, state.optionId) : null;
 }
 
 function partDefinition(category = activePartCategory) {
@@ -291,38 +297,48 @@ function renderPartCategoryRail() {
 function renderPartBrowser() {
   const part = partDefinition();
   const candidates = partCandidates(part.id);
-  const selectedId = activeParts[part.id]?.sourceId || null;
+  const selectedOptionId = activeParts[part.id]?.optionId || null;
 
   activePartEyebrow.textContent = part.optional ? 'OPTIONAL CHARACTER PART' : 'CHARACTER PART';
-  activePartTitle.textContent = part.label;
-  activePartCount.textContent = candidates.length + (candidates.length === 1 ? ' source' : ' sources');
+  activePartTitle.textContent = PART_CATEGORY_LABELS[part.id] || part.label;
+  activePartCount.textContent = candidates.length + (candidates.length === 1 ? ' style' : ' styles');
   removePartBtn.hidden = !part.optional;
-  removePartBtn.disabled = !selectedId;
+  removePartBtn.disabled = !selectedOptionId;
   partSourceGrid.innerHTML = '';
 
   if (part.optional) {
     const none = document.createElement('button');
     none.type = 'button';
-    none.className = 'partSourceCard' + (!selectedId ? ' selected' : '');
-    none.innerHTML = '<strong>None</strong><small>Remove this part</small>';
+    none.className = 'partSourceCard noneCard' + (!selectedOptionId ? ' selected' : '');
+    none.innerHTML = '<span class="partPreview nonePreview">×</span><strong>None</strong>';
     none.addEventListener('click', async () => {
-      await setPart(part.id, null, { allowNone: true });
+      await applyPartOption(part.id, null, { allowNone: true });
       renderPartBrowser();
     });
     partSourceGrid.appendChild(none);
   }
 
-  for (const entry of candidates) {
+  for (const option of candidates) {
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'partSourceCard' + (selectedId === entry.id ? ' selected' : '');
-    card.dataset.source = entry.id;
-    card.innerHTML = '<strong>' + entry.label + '</strong><small>' + entry.variant + ' · ' + entry.group + '</small>';
+    card.className = 'partSourceCard' + (selectedOptionId === option.id ? ' selected' : '');
+    card.dataset.option = option.id;
+
+    const image = document.createElement('img');
+    image.className = 'partPreview';
+    image.src = option.preview;
+    image.alt = '';
+    image.loading = 'lazy';
+
+    const label = document.createElement('strong');
+    label.textContent = option.label;
+
+    card.append(image, label);
     card.addEventListener('click', async () => {
       partSourceGrid.classList.add('loading');
-      const ok = await setPart(part.id, entry.id);
+      const ok = await applyPartOption(part.id, option);
       partSourceGrid.classList.remove('loading');
-      if (!ok) showToast('That source does not contain a usable ' + part.label.toLowerCase() + '.');
+      if (!ok) showToast('That style could not be applied.');
       renderPartBrowser();
     });
     partSourceGrid.appendChild(card);
@@ -396,77 +412,8 @@ function renderPresetSelect() {
 }
 
 function renderPartRows() {
+  // Legacy form controls are intentionally retired. The visual gallery is the builder.
   partRows.innerHTML = '';
-  for (const part of PART_DEFINITIONS) {
-    const row = document.createElement('div');
-    row.className = 'partRow';
-    row.dataset.part = part.id;
-
-    const candidates = partCandidates(part.id);
-
-    const label = document.createElement('div');
-    label.className = 'partRowLabel';
-    const title = document.createElement('strong');
-    title.textContent = part.label;
-    const hint = document.createElement('small');
-    hint.textContent = candidates.length + (part.optional ? ' sources · optional' : ' sources');
-    label.append(title, hint);
-
-    const prev = document.createElement('button');
-    prev.type = 'button';
-    prev.className = 'partCycleBtn';
-    prev.textContent = '‹';
-    prev.setAttribute('aria-label', 'Previous ' + part.label);
-    prev.addEventListener('click', () => cyclePart(part.id, -1));
-
-    const select = document.createElement('select');
-    select.className = 'partChoiceSelect';
-    select.setAttribute('aria-label', 'Choose ' + part.label);
-
-    if (part.optional) {
-      const none = document.createElement('option');
-      none.value = '';
-      none.textContent = 'None';
-      select.appendChild(none);
-    }
-
-    const grouped = new Map();
-    for (const entry of candidates) {
-      if (!grouped.has(entry.group)) grouped.set(entry.group, []);
-      grouped.get(entry.group).push(entry);
-    }
-    for (const [group, entries] of grouped) {
-      const optgroup = document.createElement('optgroup');
-      optgroup.label = group;
-      for (const entry of entries) {
-        const option = document.createElement('option');
-        option.value = entry.id;
-        option.textContent = entry.label + ' · ' + entry.variant;
-        optgroup.appendChild(option);
-      }
-      select.appendChild(optgroup);
-    }
-
-    select.addEventListener('change', async () => {
-      const requested = select.value || null;
-      setPartRowLoading(part.id, true);
-      const ok = await setPart(part.id, requested, { allowNone: true });
-      if (!ok) {
-        updatePartRows();
-        showToast('That ' + part.label.toLowerCase() + ' is not available from the selected source.');
-      }
-    });
-
-    const next = document.createElement('button');
-    next.type = 'button';
-    next.className = 'partCycleBtn';
-    next.textContent = '›';
-    next.setAttribute('aria-label', 'Next ' + part.label);
-    next.addEventListener('click', () => cyclePart(part.id, 1));
-
-    row.append(label, prev, select, next);
-    partRows.appendChild(row);
-  }
 }
 
 function setPartRowLoading(category, loadingNow) {
@@ -476,17 +423,9 @@ function setPartRowLoading(category, loadingNow) {
 }
 
 function updatePartRows() {
-  for (const part of PART_DEFINITIONS) {
-    const row = partRows.querySelector('[data-part="' + part.id + '"]');
-    if (!row) continue;
-    const select = row.querySelector('.partChoiceSelect');
-    const state = activeParts[part.id];
-    if (select) select.value = state?.sourceId || '';
-  }
-
-  const count = compatibleEntries().length;
-  compatibleCount.textContent = count + ' sources';
-  rigLabel.textContent = 'Click a body part to customise it';
+  const totalDistinct = PART_DEFINITIONS.reduce((sum, part) => sum + partCandidates(part.id).length, 0);
+  compatibleCount.textContent = totalDistinct + ' distinct styles';
+  rigLabel.textContent = 'Click the character or choose a category';
   renderPartCategoryRail();
   renderPartBrowser();
 }
