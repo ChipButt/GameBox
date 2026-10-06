@@ -60,9 +60,8 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   z-index:5;
   display:grid;
   grid-template-columns:52px minmax(0,1fr) 52px;
-  grid-template-rows:auto auto;
   align-items:center;
-  gap:4px 7px;
+  gap:7px;
   padding:max(6px,env(safe-area-inset-top)) 5px 4px;
 }
 
@@ -92,7 +91,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .titleBanner{
   min-width:0;
   height:62px;
-  padding:7px 18px 9px;
+  padding:4px 18px 12px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -104,6 +103,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   color:#fff7df;
   text-align:center;
 }
+.titleBanner>span,.titleBanner>strong{transform:translateY(-3px)}
 .titleBanner span{
   display:block;
   font:800 19px Fredoka,sans-serif;
@@ -122,80 +122,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   letter-spacing:.02em;
   color:#ffe7cb;
 }
-
-.progressPanel{
-  grid-column:1/-1;
-  min-height:48px;
-  display:grid;
-  grid-template-columns:auto minmax(90px,1fr);
-  align-items:center;
-  gap:9px;
-  padding:4px 10px 5px;
-  border:10px solid transparent;
-  border-image-source:var(--wood-frame);
-  border-image-slice:20;
-  border-image-width:10px;
-  border-image-repeat:stretch;
-  background-image:var(--paper);
-  background-repeat:repeat;
-  background-size:26px 26px;
-}
-.progressCopy{
-  display:flex;
-  align-items:baseline;
-  gap:7px;
-  white-space:nowrap;
-}
-.progressCopy>span{
-  font:800 8px Fredoka,sans-serif;
-  letter-spacing:.11em;
-  color:#78583a;
-}
-.progressCopy strong{
-  font:700 18px Fredoka,sans-serif;
-  color:#3f5870;
-}
-.progressCopy i{font-style:normal;font-size:11px;color:#8d775c}
-
-.progressBar{
-  position:relative;
-  height:16px;
-  min-width:0;
-  margin:0 6px;
-  background-image:var(--bar-back-mid);
-  background-repeat:repeat-x;
-  background-position:center;
-  background-size:auto 100%;
-}
-.progressBar::before,.progressBar::after,
-.progressFill::before,.progressFill::after{
-  content:"";
-  position:absolute;
-  top:0;
-  width:9px;
-  height:100%;
-  background-repeat:no-repeat;
-  background-position:center;
-  background-size:100% 100%;
-}
-.progressBar::before{left:-7px;background-image:var(--bar-back-left)}
-.progressBar::after{right:-7px;background-image:var(--bar-back-right)}
-.progressFill{
-  position:absolute;
-  z-index:2;
-  left:0;
-  top:0;
-  width:0;
-  height:100%;
-  background-image:var(--bar-blue-mid);
-  background-repeat:repeat-x;
-  background-position:center;
-  background-size:auto 100%;
-  visibility:hidden;
-}
-.progressFill.active{visibility:visible}
-.progressFill::before{left:-5px;background-image:var(--bar-blue-left)}
-.progressFill::after{right:-5px;background-image:var(--bar-blue-right)}
 
 .stage{
   --board-x:20px;
@@ -227,10 +153,10 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .boardBackdrop{
   position:absolute;
   z-index:0;
-  left:calc(var(--board-x) - 6px);
-  top:calc(var(--board-y) - 6px);
-  width:calc(var(--board-size) + 12px);
-  height:calc(var(--board-size) + 12px);
+  left:var(--board-x);
+  top:var(--board-y);
+  width:var(--board-size);
+  height:var(--board-size);
   background-image:var(--paper);
   background-repeat:repeat;
   background-size:28px 28px;
@@ -238,15 +164,15 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 }
 .boardFrame{
   position:absolute;
-  z-index:1;
-  left:calc(var(--board-x) - 13px);
-  top:calc(var(--board-y) - 13px);
-  width:calc(var(--board-size) + 26px);
-  height:calc(var(--board-size) + 26px);
-  border:16px solid transparent;
+  z-index:3;
+  left:calc(var(--board-x) - 14px);
+  top:calc(var(--board-y) - 14px);
+  width:calc(var(--board-size) + 28px);
+  height:calc(var(--board-size) + 28px);
+  border:14px solid transparent;
   border-image-source:var(--wood-frame);
   border-image-slice:20;
-  border-image-width:16px;
+  border-image-width:14px;
   border-image-repeat:stretch;
   pointer-events:none;
 }
@@ -271,13 +197,13 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   position:absolute;
   z-index:4;
   left:50%;
-  top:calc(var(--tray-top) - 18px);
+  top:calc(var(--tray-top) + 5px);
   transform:translateX(-50%);
   width:145px;
   height:38px;
   display:grid;
   place-items:center;
-  padding:2px 15px 6px;
+  padding:0 15px 7px;
   background-image:var(--banner);
   background-size:100% 100%;
   background-repeat:no-repeat;
@@ -345,6 +271,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   letter-spacing:.08em;
   white-space:nowrap;
 }
+.overlayBanner>span,.completeBanner>span{transform:translateY(-4px)}
 
 .closeControl{
   position:absolute;
@@ -430,7 +357,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   color:#fff;
 }
 .pieceChoices button:active{transform:scale(.96)}
-.pieceChoices button span{transform:translateY(-1px)}
+.pieceChoices button span{transform:translateY(-2px)}
 
 .optionRows{
   display:grid;
@@ -466,7 +393,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   background-repeat:no-repeat;
 }
 .rowIcon img{width:17px;height:17px;object-fit:contain}
-.rowCopy{min-width:0}
+.rowCopy{min-width:0;transform:translateY(-2px)}
 .rowCopy small{
   display:block;
   overflow:hidden;
@@ -513,6 +440,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 }
 .woodAction:active{background-image:var(--button-brown-pressed)}
 .woodAction img{width:22px;height:22px;object-fit:contain}
+.woodAction span{transform:translateY(-2px)}
 .homeAction{width:100%;margin-top:7px}
 
 .winWrap{width:min(94%,430px);padding-top:34px}
@@ -561,33 +489,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   }
   .hud{padding-left:10px;padding-right:10px}
   .titleBanner{height:66px}
-  .progressPanel{max-width:760px;width:100%;justify-self:center}
-}
-@media(max-width:520px){
-  .pieceChoices{grid-template-columns:repeat(4,minmax(48px,1fr))}
-}
-@media(max-width:430px){
-  .app{border-width:10px;border-image-width:10px}
-  .hud{
-    grid-template-columns:46px minmax(0,1fr) 46px;
-    gap:3px 5px;
-    padding-left:1px;
-    padding-right:1px;
-  }
-  .hudControl{width:44px;height:44px;margin-top:8px}
-  .hudControl img{width:21px;height:21px}
-  .titleBanner{height:60px;padding-left:12px;padding-right:12px}
-  .titleBanner span{font-size:17px}
-  .titleBanner strong{font-size:10px}
-  .progressPanel{
-    min-height:45px;
-    grid-template-columns:auto 1fr;
-    gap:7px;
-    padding-left:7px;
-    padding-right:7px;
-  }
-  .progressCopy>span{font-size:7px}
-  .progressCopy strong{font-size:16px}
   .stage{margin-left:1px;margin-right:1px}
   .optionsBoard{padding-left:8px;padding-right:8px;border-width:14px;border-image-width:14px}
   .difficultySection{padding-left:6px;padding-right:6px}
@@ -597,9 +498,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   .stateCheck{width:25px;height:25px}
 }
 @media(max-width:350px){
-  .progressPanel{grid-template-columns:1fr}
-  .progressCopy{justify-content:center}
-  .progressBar{margin:0 10px 2px}
   .optionRows,.actionGrid,.winActions{grid-template-columns:1fr}
   .overlayBanner{font-size:16px}
 }
