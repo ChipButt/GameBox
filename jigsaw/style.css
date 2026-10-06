@@ -2,6 +2,7 @@
 
 :root{
   --paper:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/pattern_grid_paper.png");
+  --board-surface:url("../assets/gamebox/kenney/ui/UI Adventure Pack/panelInset_beigeLight.png");
   --worktop:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/pattern_diagonal_grey_large.png");
   --wood-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png");
   --metal-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_grey_bolts_detail_a.png");
@@ -88,14 +89,19 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 }
 .hudControl img{width:23px;height:23px;object-fit:contain}
 
-.titleBanner{
+.titleStack{
   min-width:0;
-  height:62px;
-  padding:4px 18px 12px;
-  display:flex;
-  flex-direction:column;
+  display:grid;
+  grid-template-rows:auto auto;
+  justify-items:center;
   align-items:center;
-  justify-content:center;
+  gap:1px;
+}
+.titleBanner{
+  width:min(100%,310px);
+  aspect-ratio:8 / 1;
+  display:grid;
+  place-items:center;
   background-image:var(--banner);
   background-size:100% 100%;
   background-repeat:no-repeat;
@@ -103,24 +109,23 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   color:#fff7df;
   text-align:center;
 }
-.titleBanner>span,.titleBanner>strong{transform:translateY(-3px)}
 .titleBanner span{
   display:block;
-  font:800 19px Fredoka,sans-serif;
+  transform:translateY(-1px);
+  font:800 clamp(14px,4.2vw,18px) Fredoka,sans-serif;
   line-height:1;
   letter-spacing:.12em;
 }
-.titleBanner strong{
+.puzzleName{
   display:block;
-  width:100%;
-  margin-top:2px;
+  max-width:100%;
   overflow:hidden;
   white-space:nowrap;
   text-overflow:ellipsis;
-  font:700 11px Fredoka,sans-serif;
+  font:700 10px Fredoka,sans-serif;
   line-height:1;
+  color:#f8efd8;
   letter-spacing:.02em;
-  color:#ffe7cb;
 }
 
 .stage{
@@ -157,9 +162,10 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   top:var(--board-y);
   width:var(--board-size);
   height:var(--board-size);
-  background-image:var(--paper);
-  background-repeat:repeat;
-  background-size:28px 28px;
+  background-image:var(--board-surface);
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:100% 100%;
   pointer-events:none;
 }
 .boardFrame{
@@ -171,7 +177,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   height:calc(var(--board-size) + 28px);
   border:14px solid transparent;
   border-image-source:var(--wood-frame);
-  border-image-slice:20;
+  border-image-slice:12;
   border-image-width:14px;
   border-image-repeat:stretch;
   pointer-events:none;
@@ -197,21 +203,22 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   position:absolute;
   z-index:4;
   left:50%;
-  top:calc(var(--tray-top) + 5px);
+  top:calc(var(--tray-top) + 10px);
   transform:translateX(-50%);
-  width:145px;
-  height:38px;
+  width:150px;
+  aspect-ratio:8 / 1;
   display:grid;
   place-items:center;
-  padding:0 15px 7px;
   background-image:var(--banner);
   background-size:100% 100%;
   background-repeat:no-repeat;
   color:#fff4dc;
-  font:800 9px Fredoka,sans-serif;
-  letter-spacing:.15em;
+  font:800 8px Fredoka,sans-serif;
+  line-height:1;
+  letter-spacing:.13em;
   pointer-events:none;
 }
+.trayLabel{padding-bottom:1px}
 
 .sheet,.winOverlay{
   position:fixed;
@@ -233,14 +240,14 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   position:relative;
   width:min(100%,500px);
   max-height:100%;
-  padding-top:29px;
+  padding-top:24px;
 }
 .optionsBoard,.winBoard{
   position:relative;
   max-height:calc(100dvh - 60px);
   overflow-y:auto;
   overscroll-behavior:contain;
-  padding:31px 14px 14px;
+  padding:25px 14px 14px;
   border:18px solid transparent;
   border-image-source:var(--wood-frame);
   border-image-slice:20;
@@ -258,20 +265,21 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   left:50%;
   transform:translateX(-50%);
   width:min(82%,360px);
-  height:63px;
+  aspect-ratio:8 / 1;
   display:grid;
   place-items:center;
-  padding:5px 24px 12px;
   background-image:var(--banner);
   background-size:100% 100%;
   background-repeat:no-repeat;
+  background-position:center;
   color:#fff5dd;
   text-align:center;
-  font:800 clamp(17px,5vw,23px) Fredoka,sans-serif;
-  letter-spacing:.08em;
+  font:800 clamp(14px,4.5vw,19px) Fredoka,sans-serif;
+  line-height:1;
+  letter-spacing:.07em;
   white-space:nowrap;
 }
-.overlayBanner>span,.completeBanner>span{transform:translateY(-4px)}
+.overlayBanner>span,.completeBanner>span{transform:translateY(-1px)}
 
 .closeControl{
   position:absolute;
@@ -443,7 +451,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .woodAction span{transform:translateY(-2px)}
 .homeAction{width:100%;margin-top:7px}
 
-.winWrap{width:min(94%,430px);padding-top:34px}
+.winWrap{width:min(94%,430px);padding-top:26px}
 .winBoard{
   overflow:visible;
   max-height:none;
@@ -452,8 +460,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 }
 .completeBanner{
   width:min(86%,350px);
-  height:68px;
-  font-size:clamp(18px,6vw,25px);
 }
 .starRow{
   display:flex;
@@ -488,7 +494,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
     border-image-width:18px;
   }
   .hud{padding-left:10px;padding-right:10px}
-  .titleBanner{height:66px}
   .stage{margin-left:1px;margin-right:1px}
   .optionsBoard{padding-left:8px;padding-right:8px;border-width:14px;border-image-width:14px}
   .difficultySection{padding-left:6px;padding-right:6px}
