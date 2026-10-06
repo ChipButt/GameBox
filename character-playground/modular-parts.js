@@ -3,14 +3,28 @@ export const PART_DEFINITIONS = [
   { id: 'hair', label: 'Hair / facial hair', optional: true },
   { id: 'headwear', label: 'Hat / headwear', optional: true },
   { id: 'top', label: 'Top / torso', optional: false },
+  { id: 'arms', label: 'Arms / sleeves', optional: false },
   { id: 'bottom', label: 'Bottoms', optional: false },
   { id: 'shoes', label: 'Shoes / feet', optional: false },
   { id: 'accessory', label: 'Accessory', optional: true }
 ];
 
+export const PART_SOURCE_HINTS = {
+  hair: ["BlueSoldier_Female","Casual2_Female","Casual2_Male","Casual3_Female","Casual3_Male","Casual_Female","Casual_Male","Chef_Female","Chef_Hat","Chef_Male","Cowboy_Female","Cowboy_Hair","Cowboy_Male","Doctor_Female_Old","Doctor_Female_Young","Doctor_Male_Old","Doctor_Male_Young","Goblin_Female","Kimono_Female","Knight_Golden_Female","Ninja_Female","Ninja_Male_Hair","Ninja_Sand_Female","OldClassy_Female","OldClassy_Male","Pirate_Female","Soldier_Female","Suit_Female","Suit_Male","VikingHelmet","Viking_Female","Viking_Male","Witch","Wizard","Worker_Female","Zombie_Female"],
+  headwear: ["BlueSoldier_Male","Chef_Hat","Cowboy_Female","Cowboy_Hair","Cowboy_Male","Elf","OldClassy_Female","OldClassy_Male","Soldier_Male","VikingHelmet","Witch","Wizard","Worker_Female","Worker_Male"],
+  accessory: ["Casual2_Female","Casual2_Male","Casual3_Female","Casual3_Male","Casual_Bald","Casual_Female","Casual_Male","Chef_Female","Chef_Hat","Chef_Male","Cow","Cowboy_Female","Cowboy_Hair","Cowboy_Male","Elf","Kimono_Female","Kimono_Male","OldClassy_Female","OldClassy_Male","Pug","Suit_Female","Suit_Male","Witch","Wizard"]
+};
+
+export function sourceEntriesForPart(category, catalog) {
+  const ids = PART_SOURCE_HINTS[category];
+  if (!ids) return catalog.slice();
+  const wanted = new Set(ids);
+  return catalog.filter((entry) => wanted.has(entry.id));
+}
+
 const HEAD_BONES = new Set(['Head', 'Neck']);
-const TOP_BONES = new Set([
-  'Torso', 'Abdomen',
+const TOP_BONES = new Set(['Torso', 'Abdomen']);
+const ARM_BONES = new Set([
   'Shoulder.L', 'UpperArm.L', 'LowerArm.L', 'Fist.L',
   'Shoulder.R', 'UpperArm.R', 'LowerArm.R', 'Fist.R'
 ]);
@@ -89,6 +103,7 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const scores = {
     head: scoreRegion(skinIndex, skinWeight, boneNames, vertices, HEAD_BONES),
     top: scoreRegion(skinIndex, skinWeight, boneNames, vertices, TOP_BONES),
+    arms: scoreRegion(skinIndex, skinWeight, boneNames, vertices, ARM_BONES),
     bottom: scoreRegion(skinIndex, skinWeight, boneNames, vertices, BOTTOM_BONES),
     shoes: scoreRegion(skinIndex, skinWeight, boneNames, vertices, FOOT_BONES)
   };
