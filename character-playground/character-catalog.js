@@ -1,3 +1,23 @@
+export const RIG_GROUPS = {
+  base: ['BaseCharacter'],
+  blueFemale: ['BlueSoldier_Female'],
+  standard: ['BlueSoldier_Male','Casual2_Male','Casual3_Female','Casual_Female','Cow','Cowboy_Female','Cowboy_Hair','Cowboy_Male','Doctor_Female_Old','Doctor_Female_Young','Doctor_Male_Old','Doctor_Male_Young','Elf','Ninja_Female','Ninja_Male','Ninja_Male_Hair','Ninja_Sand_Female','OldClassy_Female','OldClassy_Male','Pirate_Female','Pirate_Male','Pug','Soldier_Female','Suit_Male','VikingHelmet','Viking_Female','Witch','Wizard','Worker_Female','Worker_Male'],
+  compactFemale: ['Casual2_Female','Goblin_Female'],
+  compactMale: ['Casual3_Male','Casual_Bald'],
+  casualMale: ['Casual_Male'],
+  chefFemale: ['Chef_Female'],
+  armour: ['Chef_Hat','Chef_Male','Kimono_Female','Knight_Golden_Female','Knight_Golden_Male','Knight_Male','Zombie_Female','Zombie_Male'],
+  goblinMale: ['Goblin_Male'],
+  kimonoMale: ['Kimono_Male'],
+  soldierMale: ['Ninja_Sand','Soldier_Male'],
+  suitFemale: ['Suit_Female'],
+  vikingMale: ['Viking_Male']
+};
+
+const RIG_BY_ID = Object.fromEntries(
+  Object.entries(RIG_GROUPS).flatMap(([rig, ids]) => ids.map(id => [id, rig]))
+);
+
 export const CHARACTER_CATALOG = [
   { id: 'BaseCharacter', label: 'Base Character', group: 'Core', variant: 'Neutral' },
   { id: 'BlueSoldier_Female', label: 'Blue Soldier', group: 'Combat', variant: 'Feminine' },
@@ -55,7 +75,8 @@ export const CHARACTER_CATALOG = [
   ...entry,
   index,
   file: `${entry.id}.gltf`,
-  path: `../shared/asset-pool/quaternius/ultimate-animated-character/${entry.id}.gltf`
+  path: `../shared/asset-pool/quaternius/ultimate-animated-character/${entry.id}.gltf`,
+  rig: RIG_BY_ID[entry.id] || 'base'
 }));
 
 export const CHARACTER_GROUPS = ['All', 'Core', 'Everyday', 'Roles', 'Adventure', 'Fantasy', 'Combat', 'Creatures'];
