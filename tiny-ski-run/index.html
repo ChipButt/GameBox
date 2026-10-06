@@ -3,70 +3,66 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
-<meta name="theme-color" content="#cfe7f7">
+<meta name="theme-color" content="#b8d9ea">
 <title>Tiny Ski Run · GameBox</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <main class="skiApp">
-  <section class="gameFrame" aria-label="Tiny Ski Run game">
-    <canvas id="gameCanvas" width="360" height="700" aria-label="Continuous downhill skiing course"></canvas>
+  <section class="gameFrame" aria-label="Tiny Ski Run">
+    <canvas id="gameCanvas" width="360" height="720" aria-label="Endless downhill ski slope"></canvas>
 
-    <header class="hud" aria-label="Run status">
-      <a class="iconButton" href="../" aria-label="Back to GameBox">
+    <header class="hud">
+      <a class="hudIcon" href="../" aria-label="GameBox home">
         <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/home.png" alt="">
       </a>
-      <div class="hudPanel"><small>DISTANCE</small><strong><span id="distance">0000</span>m</strong></div>
-      <div class="hudPanel gatePanel"><small>GATES</small><strong id="gates">00</strong></div>
-      <div class="hudPanel bestPanel"><small>BEST</small><strong><span id="best">0000</span>m</strong></div>
-      <button id="pauseButton" class="iconButton" type="button" aria-label="Pause game">
+      <div class="hudBox"><span>DISTANCE</span><strong><b id="distance">0000</b>m</strong></div>
+      <div class="hudBox compact"><span>GATES</span><strong id="gates">00</strong></div>
+      <div class="hudBox"><span>BEST</span><strong><b id="best">0000</b>m</strong></div>
+      <button id="pauseButton" class="hudIcon" type="button" aria-label="Pause">
         <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/gear.png" alt="">
       </button>
     </header>
 
     <div id="speedBadge" class="speedBadge"><span id="speedLabel">CRUISE</span></div>
-    <div id="assetStatus" class="assetStatus" aria-live="polite">Loading Kenney Tiny Ski…</div>
-
-    <nav class="steerControls" aria-label="Ski controls">
-      <button id="leftButton" class="steerButton" type="button" aria-label="Steer left">
-        <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/arrowLeft.png" alt="">
-      </button>
-      <button id="rightButton" class="steerButton right" type="button" aria-label="Steer right">
-        <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/arrowLeft.png" alt="">
-      </button>
-    </nav>
+    <div id="assetStatus" class="assetStatus" aria-live="polite">Loading mountain…</div>
 
     <section id="startOverlay" class="overlay show" aria-label="Start Tiny Ski Run">
-      <div class="panelCard startCard">
-        <div class="heroScene" aria-hidden="true">
-          <img class="heroTree heroTreeLeft" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0030.png" alt="">
-          <img class="heroFlag heroFlagLeft" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0008.png" alt="">
-          <img class="heroSkier" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0070.png" alt="">
-          <img class="heroFlag heroFlagRight" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0009.png" alt="">
-          <img class="heroTree heroTreeRight" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0006.png" alt="">
+      <div class="menuCard">
+        <div class="miniSlope" aria-hidden="true">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0030.png" alt="">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0008.png" alt="">
+          <img class="menuSkier" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0070.png" alt="">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0009.png" alt="">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0006.png" alt="">
         </div>
         <p class="eyebrow">GAMEBOX</p>
-        <h1>TINY SKI <span>RUN</span></h1>
-        <p class="intro">Carve an endless mountain. Thread the gates. Stay upright.</p>
-        <button id="startButton" class="longButton" type="button" disabled>HIT THE SLOPE</button>
-        <div class="bestStart">BEST <strong><span id="startBest">0000</span>m</strong></div>
-        <small class="controlHint">Hold either side of the slope · Arrow keys / A D</small>
+        <h1>TINY SKI <em>RUN</em></h1>
+        <p class="tagline">Stay on the piste. Thread the gates. Dodge the mountain.</p>
+        <button id="startButton" class="kenneyButton" type="button" disabled>HIT THE SLOPE</button>
+        <div class="startStats">BEST <strong><span id="startBest">0000</span>m</strong></div>
+        <div class="controlStrip" aria-label="Controls">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/ui/Mobile%20Controls/Sprites/Style%20C/direction_left.png" alt="">
+          <span>HOLD LEFT / RIGHT SIDE<br>OR DRAG TO CARVE</span>
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/ui/Mobile%20Controls/Sprites/Style%20C/direction_right.png" alt="">
+        </div>
+        <small>Desktop: ← → or A / D</small>
       </div>
     </section>
 
-    <section id="gameOverOverlay" class="overlay" aria-label="Game over">
-      <div class="panelCard gameOverCard">
-        <div class="wipeoutScene" aria-hidden="true">
+    <section id="gameOverOverlay" class="overlay" aria-label="Run over">
+      <div class="menuCard gameOverCard">
+        <div class="crashScene" aria-hidden="true">
           <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0069.png" alt="">
-          <img class="fallenSkier" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0070.png" alt="">
+          <img class="crashedSkier" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0070.png" alt="">
           <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0081.png" alt="">
         </div>
         <p class="eyebrow danger">WIPEOUT</p>
         <h2><span id="finalDistance">0</span>m</h2>
         <p id="runBreakdown">0 gates · 0 near misses</p>
         <p id="recordText">Best: 0m</p>
-        <button id="againButton" class="longButton" type="button">SKI AGAIN</button>
-        <a class="longButton secondaryButton" href="../">GAMEBOX</a>
+        <button id="againButton" class="kenneyButton" type="button">SKI AGAIN</button>
+        <a class="kenneyButton mutedButton" href="../">GAMEBOX</a>
       </div>
     </section>
   </section>
@@ -74,26 +70,26 @@
 
 <div id="pauseSheet" class="sheet" aria-hidden="true">
   <div class="sheetBackdrop"></div>
-  <section class="panelCard pauseCard" role="dialog" aria-modal="true" aria-label="Tiny Ski Run menu">
-    <div class="sheetHead">
+  <section class="menuCard pauseCard" role="dialog" aria-modal="true" aria-label="Pause menu">
+    <div class="pauseTitle">
       <strong>RUN PAUSED</strong>
-      <button id="closePause" class="iconButton" type="button" aria-label="Resume">
+      <button id="closePause" class="hudIcon" type="button" aria-label="Resume">
         <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/cross.png" alt="">
       </button>
     </div>
-    <button id="resumeButton" class="longButton" type="button">RESUME</button>
-    <button id="restartButton" class="longButton" type="button">RESTART RUN</button>
-    <button id="soundButton" class="longButton iconMenu" type="button">
+    <button id="resumeButton" class="kenneyButton" type="button">RESUME</button>
+    <button id="restartButton" class="kenneyButton" type="button">RESTART RUN</button>
+    <button id="soundButton" class="kenneyButton iconLine" type="button">
       <img id="soundIcon" src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/audioOn.png" alt="">
       <span>SOUND ON</span>
     </button>
-    <a class="longButton secondaryButton iconMenu" href="../">
+    <a class="kenneyButton mutedButton iconLine" href="../">
       <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/home.png" alt="">
       <span>GAMEBOX</span>
     </a>
   </section>
 </div>
 
-<script src="game.js?v=2"></script>
+<script src="game.js?v=3"></script>
 </body>
 </html>
