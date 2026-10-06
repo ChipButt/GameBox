@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=6';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=7';
 import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=5';
 
 const $ = (id) => document.getElementById(id);
@@ -670,6 +670,26 @@ function loadWearableTemplate(option) {
   return promise;
 }
 
+function skinBoneWeightMaxima(mesh) {
+  const indices = mesh.geometry?.getAttribute?.('skinIndex');
+  const weights = mesh.geometry?.getAttribute?.('skinWeight');
+  const maxima = {};
+  if (!indices || !weights || !mesh.skeleton) return maxima;
+
+  for (let i = 0; i < indices.count; i += 1) {
+    const ids = [indices.getX(i), indices.getY(i), indices.getZ(i), indices.getW(i)];
+    const ws = [weights.getX(i), weights.getY(i), weights.getZ(i), weights.getW(i)];
+    for (let channel = 0; channel < 4; channel += 1) {
+      const weight = ws[channel] || 0;
+      if (weight <= 0.0001) continue;
+      const bone = mesh.skeleton.bones[Math.round(ids[channel])];
+      if (!bone?.name) continue;
+      maxima[bone.name] = Math.max(maxima[bone.name] || 0, weight);
+    }
+  }
+  return maxima;
+}
+
 function usedSkinBoneIndices(mesh) {
   const indices = mesh.geometry?.getAttribute?.('skinIndex');
   const weights = mesh.geometry?.getAttribute?.('skinWeight');
@@ -1098,11 +1118,15 @@ function workshopDiagnosticSnapshot() {
       if (raw) materialNames.add(raw);
     });
     const weightedBoneNames = new Set();
+    const boneWeightMaxima = {};
     state.group?.traverse?.((node) => {
       if (!node.isSkinnedMesh || !node.skeleton) return;
       for (const index of usedSkinBoneIndices(node)) {
         const bone = node.skeleton.bones[index];
         if (bone?.name) weightedBoneNames.add(bone.name);
+      }
+      for (const [name, weight] of Object.entries(skinBoneWeightMaxima(node))) {
+        boneWeightMaxima[name] = Math.max(boneWeightMaxima[name] || 0, weight);
       }
     });
     parts[part.id] = {
@@ -1110,7 +1134,8 @@ function workshopDiagnosticSnapshot() {
       sourceId: state.sourceId || null,
       wearableId: state.wearableId || null,
       materialNames: Array.from(materialNames).sort(),
-      weightedBoneNames: Array.from(weightedBoneNames).sort()
+      weightedBoneNames: Array.from(weightedBoneNames).sort(),
+      boneWeightMaxima
     };
   }
 
