@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=2';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=2';
+import { PART_DEFINITIONS, createModularPartSystem, sourceEntriesForPart } from './modular-parts.js?v=3';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -234,7 +234,11 @@ function disposeDriver() {
 }
 
 function compatibleEntries() {
-  return CHARACTER_CATALOG.filter((entry) => entry.rig === activeRig);
+  return CHARACTER_CATALOG.slice();
+}
+
+function partCandidates(category) {
+  return sourceEntriesForPart(category, CHARACTER_CATALOG);
 }
 
 function renderPresetSelect() {
@@ -265,12 +269,14 @@ function renderPartRows() {
     row.className = 'partRow';
     row.dataset.part = part.id;
 
+    const candidates = partCandidates(part.id);
+
     const label = document.createElement('div');
     label.className = 'partRowLabel';
     const title = document.createElement('strong');
     title.textContent = part.label;
     const hint = document.createElement('small');
-    hint.textContent = part.optional ? 'optional' : 'required';
+    hint.textContent = candidates.length + (part.optional ? ' sources · optional' : ' sources');
     label.append(title, hint);
 
     const prev = document.createElement('button');
@@ -280,9 +286,43 @@ function renderPartRows() {
     prev.setAttribute('aria-label', 'Previous ' + part.label);
     prev.addEventListener('click', () => cyclePart(part.id, -1));
 
-    const choice = document.createElement('div');
-    choice.className = 'partChoice';
-    choice.innerHTML = '<strong>Loading…</strong><small>—</small>';
+    const select = document.createElement('select');
+    select.className = 'partChoiceSelect';
+    select.setAttribute('aria-label', 'Choose ' + part.label);
+
+    if (part.optional) {
+      const none = document.createElement('option');
+      none.value = '';
+      none.textContent = 'None';
+      select.appendChild(none);
+    }
+
+    const grouped = new Map();
+    for (const entry of candidates) {
+      if (!grouped.has(entry.group)) grouped.set(entry.group, []);
+      grouped.get(entry.group).push(entry);
+    }
+    for (const [group, entries] of grouped) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = group;
+      for (const entry of entries) {
+        const option = document.createElement('option');
+        option.value = entry.id;
+        option.textContent = entry.label + ' · ' + entry.variant;
+        optgroup.appendChild(option);
+      }
+      select.appendChild(optgroup);
+    }
+
+    select.addEventListener('change', async () => {
+      const requested = select.value || null;
+      setPartRowLoading(part.id, true);
+      const ok = await setPart(part.id, requested, { allowNone: true });
+      if (!ok) {
+        updatePartRows();
+        showToast('That ' + part.label.toLowerCase() + ' is not available from the selected source.');
+      }
+    });
 
     const next = document.createElement('button');
     next.type = 'button';
@@ -291,7 +331,7 @@ function renderPartRows() {
     next.setAttribute('aria-label', 'Next ' + part.label);
     next.addEventListener('click', () => cyclePart(part.id, 1));
 
-    row.append(label, prev, choice, next);
+    row.append(label, prev, select, next);
     partRows.appendChild(row);
   }
 }
@@ -305,16 +345,14 @@ function updatePartRows() {
   for (const part of PART_DEFINITIONS) {
     const row = partRows.querySelector('[data-part="' + part.id + '"]');
     if (!row) continue;
-    const choice = row.querySelector('.partChoice');
+    const select = row.querySelector('.partChoiceSelect');
     const state = activeParts[part.id];
-    const source = state?.sourceId ? entryById.get(state.sourceId) : null;
-    choice.querySelector('strong').textContent = source ? source.label : 'None';
-    choice.querySelector('small').textContent = source ? source.variant + ' · ' + source.group : (part.optional ? 'No part' : 'Unavailable');
+    if (select) select.value = state?.sourceId || '';
   }
 
   const count = compatibleEntries().length;
-  compatibleCount.textContent = count + (count === 1 ? ' compatible source' : ' compatible sources');
-  rigLabel.textContent = currentPreset.label + ' frame · ' + count + (count === 1 ? ' source style' : ' source styles');
+  compatibleCount.textContent = count + ' compatible sources';
+  rigLabel.textContent = 'Universal 23-bone frame · ' + count + ' source styles';
 }
 
 function currentMaterials() {
@@ -510,7 +548,7 @@ async function cyclePart(category, direction) {
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
   if (!partDef) return;
 
-  const entries = compatibleEntries();
+  const entries = partCandidates(category);
   const candidates = partDef.optional ? [null, ...entries] : entries;
   if (!candidates.length) return;
 
@@ -541,7 +579,7 @@ async function cyclePart(category, direction) {
 
 async function findRandomPart(category) {
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
-  const entries = compatibleEntries().slice().sort(() => Math.random() - 0.5);
+  const entries = partCandidates(category).slice().sort(() => Math.random() - 0.5);
   if (partDef.optional && Math.random() < 0.22) return null;
   for (const entry of entries) {
     try {
@@ -704,7 +742,7 @@ function updateSummary() {
 
   selectedGroup.textContent = currentPreset.group + ' frame · ' + compatibleEntries().length + ' compatible';
   selectedModel.textContent = sources.length > 1 ? 'Custom ' + currentPreset.label + ' mix' : currentPreset.label;
-  modelMeta.textContent = '52 total styles · ' + compatibleEntries().length + ' current-rig sources · ' + clips.length + ' clips';
+  modelMeta.textContent = '52/52 modular sources · ' + PART_DEFINITIONS.length + ' part slots · ' + clips.length + ' clips';
   presetSelect.value = currentPreset.id;
 }
 
@@ -807,7 +845,7 @@ async function loadDriver(entryId, options = {}) {
         const requestedParts = options.parts || null;
         for (const part of PART_DEFINITIONS) {
           let sourceId = requestedParts?.[part.id];
-          if (sourceId && entryById.get(sourceId)?.rig !== activeRig) sourceId = null;
+          if (sourceId && !entryById.has(sourceId)) sourceId = null;
           if (sourceId === undefined) sourceId = entry.id;
 
           if (sourceId) {
