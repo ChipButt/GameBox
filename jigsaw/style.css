@@ -8,6 +8,7 @@
   --puzzle-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_brown_arrows_detail.png");
   --metal-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_grey_bolts_detail_a.png");
   --banner:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/banner_hanging.png");
+  --title-banner:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/banner_modern.png");
   --round-brown:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/round_brown.png");
   --round-grey:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/round_grey.png");
   --button-brown:url("../assets/gamebox/kenney/ui/UI Adventure Pack/buttonLong_brown.png");
@@ -99,11 +100,11 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   gap:1px;
 }
 .titleBanner{
-  width:min(100%,310px);
-  aspect-ratio:8 / 1;
+  width:min(100%,280px);
+  aspect-ratio:16 / 3;
   display:grid;
   place-items:center;
-  background-image:var(--banner);
+  background-image:var(--title-banner);
   background-size:100% 100%;
   background-repeat:no-repeat;
   background-position:center;
@@ -112,8 +113,8 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 }
 .titleBanner span{
   display:block;
-  transform:translateY(-1px);
-  font:800 clamp(14px,4.2vw,18px) Fredoka,sans-serif;
+  transform:none;
+  font:800 clamp(13px,4vw,17px) Fredoka,sans-serif;
   line-height:1;
   letter-spacing:.12em;
 }
@@ -174,7 +175,7 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   z-index:0;
   left:2px;
   right:2px;
-  top:calc(var(--tray-top) - 8px);
+  top:var(--tray-top);
   bottom:2px;
   border:15px solid transparent;
   border-image-source:var(--metal-frame);
