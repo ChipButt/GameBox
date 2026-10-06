@@ -217,7 +217,7 @@
 
 /* Jigsaw Workshop: an actual picture preview within a Kenney frame.
    No generic .gameTileIcon scaling applies to this image. */
-.toyGameJigsaw .gameTile{background:linear-gradient(145deg,#997148,#634629);border-color:#d8b884}
+.toyGameJigsaw .gameTile{background:#213443;border-color:#6fc8f2}
 .toyBox .jigsawHomeTile{justify-content:center;overflow:hidden}
 .toyBox .jigsawHomePreview{
   display:grid;
@@ -229,7 +229,7 @@
   flex:0 0 96px;
   padding:8px;
   border:8px solid transparent;
-  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png");
+  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_grey_detail.png");
   border-image-slice:14;
   border-image-width:8px;
   border-image-repeat:stretch;
@@ -242,8 +242,8 @@
   object-fit:cover;
   object-position:center;
 }
-.toyGameJigsaw .gameTile strong{color:#fff6de}
-.toyGameJigsaw .gameTile small{color:#eeddbb}
+.toyGameJigsaw .gameTile strong{color:#f3f9ff}
+.toyGameJigsaw .gameTile small{color:#9ed6f4}
 @media(max-width:560px){
   .toyBox .jigsawHomePreview{width:86px;height:86px;flex-basis:86px;padding:7px;border-width:7px;border-image-width:7px}
 }
