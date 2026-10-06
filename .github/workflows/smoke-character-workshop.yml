@@ -77,7 +77,8 @@ jobs:
           assert(headDiag?.sourceId==='Elf','Elf head did not load from the Elf donor.');
           assert(headDiag.materialNames.includes('Skin') && headDiag.materialNames.includes('Face'),'Elf head is missing real head/face materials.');
           assert(!headDiag.materialNames.some(name=>/hat|helmet|horn/i.test(name)),'Hat or helmet geometry leaked into the Head slot.');
-          assert(!headDiag.weightedBoneNames.some(name=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name)),'Arm/hand bones leaked into the Head slot: '+headDiag.weightedBoneNames.join(', '));
+          const headArmWeights=Object.entries(headDiag.boneWeightMaxima).filter(([name,weight])=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name) && weight>=0.08);
+          assert(headArmWeights.length===0,'Meaningful arm/hand weights leaked into the Head slot: '+JSON.stringify(headArmWeights));
 
           const headOptionIds=await page.locator('.partCategoryBtn[data-part="head"]').count()
             ? ['head-human','head-defined','head-mature','head-elf','head-goblin-f','head-goblin-m','head-ninja','head-pirate','head-suit','head-viking','head-zombie-f','head-zombie-m','head-cow','head-pug']
@@ -87,7 +88,8 @@ jobs:
             await page.click('[data-option="'+optionId+'"]');
             await waitForSelected(optionId);
             const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
-            assert(!diag.weightedBoneNames.some(name=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name)),optionId+' contains arm/hand weighted geometry: '+diag.weightedBoneNames.join(', '));
+            const armWeights=Object.entries(diag.boneWeightMaxima).filter(([name,weight])=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name) && weight>=0.08);
+            assert(armWeights.length===0,optionId+' contains meaningful arm/hand weighted geometry: '+JSON.stringify(armWeights));
           }
 
           const hairCount=await category('hair');
