@@ -147,6 +147,7 @@ function splitMeshIntoTemplates(THREE, mesh) {
         yMin,
         yRange
       );
+      if (!category) continue;
       const key = category + '::' + (group.materialIndex || 0);
       if (!buckets.has(key)) {
         buckets.set(key, {
