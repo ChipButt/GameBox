@@ -31,6 +31,10 @@ function runtimeBoneSet(names) {
 }
 
 const HEAD_BONES = runtimeBoneSet(['Head', 'Neck']);
+const ARM_BONES = runtimeBoneSet([
+  'Shoulder.L', 'UpperArm.L', 'LowerArm.L', 'Fist.L',
+  'Shoulder.R', 'UpperArm.R', 'LowerArm.R', 'Fist.R'
+]);
 const TOP_BONES = runtimeBoneSet([
   'Torso', 'Abdomen',
   'Shoulder.L', 'UpperArm.L', 'LowerArm.L', 'Fist.L',
@@ -91,6 +95,19 @@ function scoreRegion(skinIndex, skinWeight, boneNames, vertices, names) {
   return score;
 }
 
+function maxRegionWeight(skinIndex, skinWeight, boneNames, vertices, names) {
+  let maxWeight = 0;
+  if (!skinIndex || !skinWeight) return maxWeight;
+  for (const vertexIndex of vertices) {
+    for (let slot = 0; slot < 4; slot += 1) {
+      const jointIndex = skinIndex.array[vertexIndex * skinIndex.itemSize + slot];
+      const weight = skinWeight.array[vertexIndex * skinWeight.itemSize + slot] || 0;
+      if (names.has(boneNames[jointIndex])) maxWeight = Math.max(maxWeight, weight);
+    }
+  }
+  return maxWeight;
+}
+
 function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, yRange) {
   const material = materialAt(mesh, groupMaterialIndex);
   const materialName = String(material?.name || '');
@@ -123,9 +140,11 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   if (winner === 'head') {
     if (!HEAD_BASE_RE.test(materialName)) return 'top';
     const runnerUpScore = ranked[1]?.[1] || 0;
+    const armWeight = maxRegionWeight(skinIndex, skinWeight, boneNames, vertices, ARM_BONES);
     const stronglyHeadWeighted = scores.head >= 1.65 && scores.head > runnerUpScore * 1.35;
     const physicallyInHeadZone = yNorm >= 0.68;
-    return stronglyHeadWeighted && physicallyInHeadZone ? 'head' : 'top';
+    const noMeaningfulArmInfluence = armWeight < 0.08;
+    return stronglyHeadWeighted && physicallyInHeadZone && noMeaningfulArmInfluence ? 'head' : 'top';
   }
   if (winnerScore > 0.01) return winner;
 
