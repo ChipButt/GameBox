@@ -18,7 +18,7 @@ const puzzle = GameBoxJigsaw.create({
   image: 'my-image.png',
   rows: 6,
   columns: 6,
-  guideOpacity: 0.10,
+  guideOpacity: 0,
   snapTolerance: 0.24,
   snapDuration: 125,
   seed: 'my-puzzle',
@@ -30,3 +30,14 @@ const puzzle = GameBoxJigsaw.create({
 The engine generates paired jigsaw tabs/sockets at runtime, clips the supplied source image into pieces, keeps the original pointer grab offset while dragging, raises held pieces above the pile, snaps near-correct pieces into place, supports pointer/touch input, and fades the seams into the completed source image.
 
 The test page also supports choosing another local image from the menu. That image stays on the device and is not uploaded anywhere.
+
+
+## Changing difficulty
+
+The engine can rebuild the current image at a different grid size without reloading the page:
+
+```js
+puzzle.setGrid(8, 8); // 64 pieces
+```
+
+The GameBox test UI exposes 9, 16, 25, 36, 49 and 64-piece square grids. The default remains 36 pieces, and the default guide is Off.
