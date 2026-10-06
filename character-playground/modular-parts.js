@@ -2,10 +2,9 @@ export const PART_DEFINITIONS = [
   { id: 'head', label: 'Head & face', optional: false },
   { id: 'hair', label: 'Hair / facial hair', optional: true },
   { id: 'headwear', label: 'Hat / headwear', optional: true },
-  { id: 'top', label: 'Top / torso', optional: false },
-  { id: 'arms', label: 'Arms / sleeves', optional: false },
-  { id: 'bottom', label: 'Bottoms', optional: false },
-  { id: 'shoes', label: 'Shoes / feet', optional: false },
+  { id: 'top', label: 'Top / body', optional: false },
+  { id: 'bottom', label: 'Bottoms / legs', optional: false },
+  { id: 'shoes', label: 'Shoes', optional: false },
   { id: 'accessory', label: 'Accessory', optional: true }
 ];
 
@@ -23,8 +22,8 @@ export function sourceEntriesForPart(category, catalog) {
 }
 
 const HEAD_BONES = new Set(['Head', 'Neck']);
-const TOP_BONES = new Set(['Torso', 'Abdomen']);
-const ARM_BONES = new Set([
+const TOP_BONES = new Set([
+  'Torso', 'Abdomen',
   'Shoulder.L', 'UpperArm.L', 'LowerArm.L', 'Fist.L',
   'Shoulder.R', 'UpperArm.R', 'LowerArm.R', 'Fist.R'
 ]);
@@ -35,6 +34,7 @@ const HAIR_RE = /(hair|beard|moustache|mustache)/i;
 const HEADWEAR_RE = /(hat|helmet|horn|hood|crown|cap)/i;
 const SHOE_RE = /(shoe|boot)/i;
 const ACCESSORY_RE = /(belt|scarf|buckle|cape|strap|apron|glove|pouch|bag|band)/i;
+const HEAD_BASE_RE = /^(skin|face|teeth|brain|black_head|white|pink|beige|brown)$/i;
 
 function cloneAttribute(THREE, attribute, vertexIndices) {
   const ArrayType = attribute.array?.constructor || Float32Array;
@@ -87,7 +87,7 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const materialName = String(material?.name || '');
   if (HEADWEAR_RE.test(materialName)) return 'headwear';
   if (HAIR_RE.test(materialName)) return 'hair';
-  if (SHOE_RE.test(materialName)) return 'shoes';
+  if (SHOE_RE.test(materialName)) return null;
   if (ACCESSORY_RE.test(materialName)) return 'accessory';
 
   const position = nonIndexed.getAttribute('position');
@@ -103,7 +103,6 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const scores = {
     head: scoreRegion(skinIndex, skinWeight, boneNames, vertices, HEAD_BONES),
     top: scoreRegion(skinIndex, skinWeight, boneNames, vertices, TOP_BONES),
-    arms: scoreRegion(skinIndex, skinWeight, boneNames, vertices, ARM_BONES),
     bottom: scoreRegion(skinIndex, skinWeight, boneNames, vertices, BOTTOM_BONES),
     shoes: scoreRegion(skinIndex, skinWeight, boneNames, vertices, FOOT_BONES)
   };
@@ -111,11 +110,12 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const [winner, winnerScore] = ranked[0] || ['top', 0];
 
-  if (winner === 'bottom' && yNorm < 0.16) return 'shoes';
+  if (winner === 'shoes') return null;
+  if (winner === 'head') return HEAD_BASE_RE.test(materialName) ? 'head' : 'top';
   if (winnerScore > 0.01) return winner;
 
-  if (yNorm > 0.72) return 'head';
-  if (yNorm < 0.14) return 'shoes';
+  if (yNorm > 0.72) return HEAD_BASE_RE.test(materialName) ? 'head' : 'top';
+  if (yNorm < 0.14) return null;
   if (yNorm < 0.48) return 'bottom';
   return 'top';
 }
@@ -201,7 +201,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
     const promise = new Promise((resolve, reject) => {
       loader.load(
-        entry.path + '?parts=2',
+        entry.path + '?parts=3',
         (gltf) => {
           try {
             const combined = {
