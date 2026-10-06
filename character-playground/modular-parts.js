@@ -21,14 +21,23 @@ export function sourceEntriesForPart(category, catalog) {
   return catalog.filter((entry) => wanted.has(entry.id));
 }
 
-const HEAD_BONES = new Set(['Head', 'Neck']);
-const TOP_BONES = new Set([
+function runtimeBoneSet(names) {
+  const set = new Set();
+  for (const name of names) {
+    set.add(name);
+    set.add(name.replace(/\./g, ''));
+  }
+  return set;
+}
+
+const HEAD_BONES = runtimeBoneSet(['Head', 'Neck']);
+const TOP_BONES = runtimeBoneSet([
   'Torso', 'Abdomen',
   'Shoulder.L', 'UpperArm.L', 'LowerArm.L', 'Fist.L',
   'Shoulder.R', 'UpperArm.R', 'LowerArm.R', 'Fist.R'
 ]);
-const BOTTOM_BONES = new Set(['Hips', 'UpperLeg.L', 'LowerLeg.L', 'UpperLeg.R', 'LowerLeg.R']);
-const FOOT_BONES = new Set(['Foot.L', 'Foot.R']);
+const BOTTOM_BONES = runtimeBoneSet(['Hips', 'UpperLeg.L', 'LowerLeg.L', 'UpperLeg.R', 'LowerLeg.R']);
+const FOOT_BONES = runtimeBoneSet(['Foot.L', 'Foot.R']);
 
 const HAIR_RE = /(hair|beard|moustache|mustache)/i;
 const HEADWEAR_RE = /(hat|helmet|horn|hood|crown|cap)/i;
