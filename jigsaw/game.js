@@ -2,19 +2,24 @@
   'use strict';
 
   const canvas=document.getElementById('puzzleCanvas');
+  const stage=document.getElementById('puzzleStage');
   const placedEl=document.getElementById('placedCount');
   const totalEl=document.getElementById('totalCount');
+  const progressFill=document.getElementById('progressFill');
   const menu=document.getElementById('menuSheet');
   const win=document.getElementById('winOverlay');
   const guideBtn=document.getElementById('guideButton');
   const guideState=document.getElementById('guideState');
+  const guideCheck=document.getElementById('guideCheck');
   const soundBtn=document.getElementById('soundButton');
   const soundState=document.getElementById('soundState');
   const soundIcon=document.getElementById('soundIcon');
+  const soundCheck=document.getElementById('soundCheck');
   const pieceButtons=[...document.querySelectorAll('[data-piece-grid]')];
   const winPieceCount=document.getElementById('winPieceCount');
   const fileInput=document.getElementById('imageFile');
   const titleEl=document.getElementById('puzzleTitle');
+
   let guideIndex=0;
   const guideValues=[0,.10,.28];
   const guideLabels=['Off','Faint','Strong'];
@@ -22,6 +27,9 @@
   let objectUrl='';
 
   const ICON_BASE='../assets/gamebox/kenney/icons/Game Icons/White/2x/';
+  const CHECK_BASE='../assets/gamebox/kenney/ui/UI Pack - Adventure/';
+  const CHECK_EMPTY=CHECK_BASE+'checkbox_brown_empty.png';
+  const CHECK_ON=CHECK_BASE+'checkbox_brown_checked.png';
 
   const puzzle=GameBoxJigsaw.create({
     canvas,
@@ -38,18 +46,54 @@
       placedEl.textContent=placed;
       totalEl.textContent=total;
       if(winPieceCount) winPieceCount.textContent=total;
+
+      const progress=total?Math.max(0,Math.min(100,(placed/total)*100)):0;
+      progressFill.style.width=progress+'%';
+      progressFill.classList.toggle('active',placed>0);
     },
     onComplete(){
       win.classList.add('show');
     }
   });
 
+  function syncStageArt(){
+    const layout=puzzle.layout;
+    if(!layout||!stage) return;
+    stage.style.setProperty('--board-x',layout.boardX+'px');
+    stage.style.setProperty('--board-y',layout.boardY+'px');
+    stage.style.setProperty('--board-size',layout.boardSize+'px');
+    stage.style.setProperty('--tray-top',layout.trayTop+'px');
+  }
+
   function closeMenu(){ menu.classList.remove('show'); }
   function openMenu(){ menu.classList.add('show'); }
+
+  function updateGuideVisual(){
+    const label=guideLabels[guideIndex];
+    guideState.textContent=label;
+    guideCheck.src=guideIndex===0?CHECK_EMPTY:CHECK_ON;
+    guideBtn.dataset.guide=label.toLowerCase();
+    guideBtn.setAttribute('aria-label','Picture guide: '+label);
+  }
+
+  function updateSoundVisual(){
+    soundState.textContent=sound?'On':'Off';
+    soundIcon.src=ICON_BASE+(sound?'audioOn.png':'audioOff.png');
+    soundCheck.src=sound?CHECK_ON:CHECK_EMPTY;
+    soundBtn.dataset.enabled=sound?'true':'false';
+    soundBtn.setAttribute('aria-label','Sound: '+(sound?'On':'Off'));
+  }
 
   document.getElementById('menuButton').addEventListener('click',openMenu);
   document.getElementById('closeMenu').addEventListener('click',closeMenu);
   menu.addEventListener('click',e=>{ if(e.target===menu) closeMenu(); });
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      if(menu.classList.contains('show')) closeMenu();
+      else if(win.classList.contains('show')) win.classList.remove('show');
+    }
+  });
 
   document.getElementById('restartButton').addEventListener('click',()=>{
     closeMenu();
@@ -67,52 +111,61 @@
   guideBtn.addEventListener('click',()=>{
     guideIndex=(guideIndex+1)%guideValues.length;
     puzzle.setGuideOpacity(guideValues[guideIndex]);
-    guideState.textContent=guideLabels[guideIndex];
-    guideBtn.dataset.guide=guideLabels[guideIndex].toLowerCase();
-    guideBtn.setAttribute('aria-label','Guide: '+guideLabels[guideIndex]);
+    updateGuideVisual();
   });
 
   pieceButtons.forEach(button=>{
     button.addEventListener('click',()=>{
       const grid=Number(button.dataset.pieceGrid);
       if(!Number.isFinite(grid)) return;
+
       win.classList.remove('show');
       puzzle.setGrid(grid,grid);
+
       pieceButtons.forEach(item=>{
         const selected=item===button;
         item.classList.toggle('selected',selected);
         item.setAttribute('aria-pressed',selected?'true':'false');
       });
+
       closeMenu();
+      requestAnimationFrame(syncStageArt);
     });
   });
 
   soundBtn.addEventListener('click',()=>{
     sound=!sound;
     puzzle.setSound(sound);
-    soundState.textContent=sound?'On':'Off';
-    soundIcon.src=ICON_BASE+(sound?'audioOn.png':'audioOff.png');
-    soundBtn.dataset.enabled=sound?'true':'false';
-    soundBtn.setAttribute('aria-label','Sound: '+(sound?'On':'Off'));
+    updateSoundVisual();
   });
 
   document.getElementById('chooseImage').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',async()=>{
     const file=fileInput.files&&fileInput.files[0];
     if(!file||!file.type.startsWith('image/')) return;
+
     if(objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl=URL.createObjectURL(file);
     win.classList.remove('show');
     titleEl.textContent=file.name.replace(/\.[^.]+$/,'').slice(0,28)||'Custom Puzzle';
     closeMenu();
-    try{ await puzzle.setImage(objectUrl); }
-    catch(err){ console.error(err); }
+
+    try{
+      await puzzle.setImage(objectUrl);
+      syncStageArt();
+    }catch(err){
+      console.error(err);
+    }
   });
 
-  guideState.textContent=guideLabels[guideIndex];
-  guideBtn.dataset.guide='off';
-  guideBtn.setAttribute('aria-label','Guide: Off');
-  soundState.textContent='On';
-  soundBtn.dataset.enabled='true';
-  soundBtn.setAttribute('aria-label','Sound: On');
+  updateGuideVisual();
+  updateSoundVisual();
+
+  Promise.resolve(puzzle.ready).then(()=>{
+    syncStageArt();
+  }).catch(err=>console.error(err));
+
+  window.addEventListener('resize',()=>{
+    requestAnimationFrame(syncStageArt);
+  },{passive:true});
 })();
