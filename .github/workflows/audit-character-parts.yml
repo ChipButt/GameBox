@@ -103,7 +103,9 @@ jobs:
                           for vi in verts:
                               payload.extend(round(float(x),5) for x in pos[vi])
                           model[cat]["tris"]+=1
-                          model[cat]["chunks"].append((tuple(payload),mat_name,tuple(round(float(x),4) for x in base)))
+                          # Shape identity deliberately ignores material name/colour.
+                          # Colour is a separate CAS customisation dimension, not a separate part style.
+                          model[cat]["chunks"].append(tuple(payload))
               for cat,data in model.items():
                   canonical=json.dumps(sorted(data["chunks"],key=str),separators=(",",":"),default=list)
                   h=hashlib.sha256(canonical.encode()).hexdigest()[:16]
