@@ -1,0 +1,100 @@
+name: Smoke Test Character Workshop
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - character-playground/**
+      - assets/gamebox/wearables/footwear/**
+      - .github/workflows/smoke-character-workshop.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser test tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm install --silent playwright@1.56.1
+          npx playwright install chromium --with-deps >/dev/null
+
+      - name: Run Character Workshop smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 >/tmp/gamebox-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+
+          cat > /tmp/character-workshop-smoke.mjs <<'JS'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({headless:true});
+          const page = await browser.newPage({viewport:{width:1280,height:900}});
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          page.on('console',m=>{ if(m.type()==='error') errors.push(m.text()); });
+
+          await page.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
+          await page.waitForSelector('#partSourceGrid .partSourceCard',{timeout:120000});
+          await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
+
+          const category = async (id) => {
+            await page.click('.partCategoryBtn[data-part="'+id+'"]');
+            await page.waitForTimeout(250);
+            return await page.locator('#partSourceGrid .partSourceCard').count();
+          };
+
+          const assert = (value,message) => { if(!value) throw new Error(message); };
+
+          const headCount=await category('head');
+          assert(headCount>=20 && headCount<52,'Head catalogue should be distinct visual shapes, not 52 source names.');
+
+          const headCards=page.locator('#partSourceGrid .partSourceCard:not(.noneCard)');
+          const firstHead=await headCards.nth(0).getAttribute('data-option');
+          await headCards.nth(1).click();
+          await page.waitForTimeout(500);
+          const selectedHead=await page.locator('#partSourceGrid .partSourceCard.selected').getAttribute('data-option');
+          assert(selectedHead && selectedHead!==firstHead,'Selecting a second head did not change the active option.');
+
+          const hairCount=await category('hair');
+          assert(hairCount>20,'Hair catalogue did not load.');
+
+          const shoeCount=await category('shoes');
+          assert(shoeCount>=30,'Shoes catalogue did not load enough distinct choices.');
+          assert(await page.locator('[data-option="wearable-regular-shoes"]').count()===1,'Regular Shoes wearable missing.');
+          assert(await page.locator('[data-option="wearable-traditional-elf-shoes"]').count()===1,'Traditional Elf Shoes wearable missing.');
+
+          await page.click('[data-option="wearable-regular-shoes"]');
+          await page.waitForTimeout(700);
+          assert(await page.locator('[data-option="wearable-regular-shoes"].selected').count()===1,'Regular Shoes did not become active.');
+
+          await page.click('[data-option="wearable-traditional-elf-shoes"]');
+          await page.waitForTimeout(700);
+          assert(await page.locator('[data-option="wearable-traditional-elf-shoes"].selected').count()===1,'Traditional Elf Shoes did not become active.');
+
+          await page.click('.partCategoryBtn[data-part="body"]');
+          await page.waitForTimeout(150);
+          assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion panel did not open.');
+          await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
+          assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
+
+          const labels=await page.locator('#partSourceGrid .partSourceCard strong').allTextContents();
+          assert(!labels.some(t=>/Cowboy|Soldier|Ninja|Doctor|Elf|Goblin|Pirate|Viking|Wizard|Witch/i.test(t)),'Source character names leaked into the visual part gallery.');
+
+          if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
+          await browser.close();
+          console.log('Character Workshop browser smoke test passed.');
+          JS
+
+          node /tmp/character-workshop-smoke.mjs
