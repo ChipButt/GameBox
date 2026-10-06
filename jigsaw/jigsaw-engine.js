@@ -4,7 +4,7 @@
   const defaults = {
     rows: 6,
     columns: 6,
-    guideOpacity: 0.10,
+    guideOpacity: 0,
     snapTolerance: 0.24,
     snapDuration: 125,
     pieceScaleOnHold: 1.025,
@@ -164,6 +164,27 @@
     }
 
     setSound(enabled){ this.options.sound=!!enabled; }
+
+    setGrid(rows,columns=rows){
+      const nextRows=clamp(Math.round(Number(rows)||this.options.rows),2,12);
+      const nextColumns=clamp(Math.round(Number(columns)||nextRows),2,12);
+      if(this.frame){ cancelAnimationFrame(this.frame); this.frame=0; }
+      this.options.rows=nextRows;
+      this.options.columns=nextColumns;
+      this.completed=false;
+      this.completionStart=0;
+      this.dragging=null;
+      this.pieces=[];
+      this.makeEdges();
+      if(this.image.complete&&this.image.naturalWidth){
+        this.buildPieces();
+        this.restart(false);
+      }else{
+        this.progressChanged();
+        this.render();
+      }
+      return {rows:nextRows,columns:nextColumns,total:nextRows*nextColumns};
+    }
 
     makeEdges(){
       const rows=this.options.rows, cols=this.options.columns;
