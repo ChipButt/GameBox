@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=4';
-import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=4';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=5';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -174,7 +174,6 @@ const PART_ICONS = {
   hair: '≋',
   headwear: '⌃',
   top: '▣',
-  arms: '↔',
   bottom: '▤',
   shoes: '⌂',
   accessory: '✦'
@@ -322,16 +321,40 @@ function renderPartBrowser() {
     card.className = 'partSourceCard' + (option.featured ? ' featured' : '') + (selectedOptionId === option.id ? ' selected' : '');
     card.dataset.option = option.id;
 
-    const image = document.createElement('img');
-    image.className = 'partPreview';
-    image.src = option.preview;
-    image.alt = '';
-    image.loading = 'lazy';
+    let preview;
+    if (option.preview) {
+      const image = document.createElement('img');
+      image.className = 'partPreview';
+      image.src = option.preview;
+      image.alt = '';
+      image.loading = 'lazy';
+      preview = image;
+    } else {
+      const colourPreview = document.createElement('span');
+      colourPreview.className = 'partPreview partColourPreview';
+      const icon = document.createElement('i');
+      icon.className = 'partColourIcon';
+      icon.textContent = PART_ICONS[part.id] || '◆';
+      colourPreview.appendChild(icon);
+
+      const swatches = document.createElement('span');
+      swatches.className = 'partColourSwatches';
+      const colours = Object.entries(option.baseColors || {});
+      for (const [name, value] of colours.slice(0, 5)) {
+        const swatch = document.createElement('b');
+        swatch.style.backgroundColor = value;
+        swatch.title = name;
+        swatch.setAttribute('aria-label', name + ' base colour');
+        swatches.appendChild(swatch);
+      }
+      colourPreview.appendChild(swatches);
+      preview = colourPreview;
+    }
 
     const label = document.createElement('strong');
     label.textContent = option.label;
 
-    card.append(image);
+    card.append(preview);
     if (option.badge) {
       const badge = document.createElement('span');
       badge.className = 'partSourceBadge';
@@ -440,7 +463,6 @@ const CATEGORY_COLOUR_LABELS = {
   hair: 'Hair',
   headwear: 'Headwear',
   top: 'Top',
-  arms: 'Sleeves',
   bottom: 'Bottoms',
   shoes: 'Shoes',
   accessory: 'Accessory'
