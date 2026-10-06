@@ -171,8 +171,8 @@
     setSound(enabled){ this.options.sound=!!enabled; }
 
     setGrid(rows,columns=rows){
-      const nextRows=clamp(Math.round(Number(rows)||this.options.rows),2,12);
-      const nextColumns=clamp(Math.round(Number(columns)||nextRows),2,12);
+      const nextRows=clamp(Math.round(Number(rows)||this.options.rows),2,13);
+      const nextColumns=clamp(Math.round(Number(columns)||nextRows),2,13);
       if(this.frame){ cancelAnimationFrame(this.frame); this.frame=0; }
       this.options.rows=nextRows;
       this.options.columns=nextColumns;
