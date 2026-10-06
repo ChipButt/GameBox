@@ -116,12 +116,33 @@ jobs:
           assert "sourceEntriesForPart" in modular
           assert "createModularPartSystem" in modular
           assert "SkinnedMesh" in modular
-          assert "partChoiceSelect" in game
           assert "partCandidates" in game
-          assert "52 compatible" in html
-          assert "partChoiceSelect" in css
+          assert "pickCharacterPart" in game
+          assert "categoryFromHit" in game
+          assert "Raycaster" in game
+          assert "renderPartCategoryRail" in game
+          assert "renderPartBrowser" in game
+          assert "applyProportions" in game
+          assert "headSize" in game
+          assert "proportions:" in game
+
+          for element_id in [
+              "partCategoryRail",
+              "partSourceGrid",
+              "partPrevBtn",
+              "partNextBtn",
+              "heightSlider",
+              "buildSlider",
+              "headSizeSlider",
+          ]:
+              assert f'id="{element_id}"' in html, f"Missing Create-a-Sim control: {element_id}"
+
+          assert "52 sources" in html
+          assert "partCategoryBtn" in css
+          assert "partSourceCard" in css
+          assert "proportionPanel" in css
           assert "UI Adventure Pack" in css
           assert "ultimate-nature" in game
 
-          print("Character Workshop validation passed: 52/52 universal bind-compatible sources and 8 modular part slots.")
+          print("Character Workshop validation passed: 52/52 universal sources, 8 modular part slots, 3D body-part picking and proportion controls.")
           PY
