@@ -454,7 +454,10 @@ function update(dt){
 function pruneWorld(){
   const behind=scroll-120;
   scenery=scenery.filter(x=>x.worldY>behind);
-  obstacles=obstacles.filter(x=>x.worldY>behind);
+  obstacles=obstacles.filter(x=>
+    x.worldY>behind &&
+    (x.kind!=='skier' || x.worldY<scroll+H+SEGMENT*2)
+  );
   courseGates=courseGates.filter(x=>x.worldY>behind);
   lifts=lifts.filter(x=>x.worldY>behind);
   boostPads=boostPads.filter(x=>x.worldY>behind);
@@ -700,13 +703,18 @@ function drawPiste(){
   ctx.restore();
 
   // Use the pack's actual vertical/curved bank tiles. No rotating arbitrary snow tiles.
-  const yOffset=-(viewScroll%TILE);
   const firstRow=Math.floor(viewScroll/TILE)-1;
-  for(let y=yOffset-TILE,row=firstRow;y<H+TILE;y+=TILE,row++){
-    const worldY=viewScroll+y;
+  const lastRow=Math.ceil((viewScroll+H)/TILE)+1;
+  for(let row=firstRow;row<=lastRow;row++){
+    const worldY=row*TILE;
+    const screenY=worldY-viewScroll+TILE/2;
     const b=boundsAtWorld(worldY);
-    drawSprite(chooseEdgeFrame('left',worldY),b.left,y,TILE);
-    drawSprite(chooseEdgeFrame('right',worldY),b.right,y,TILE);
+
+    // Transition PNGs are authored top-to-bottom across one 16px tile.
+    // Put their centre 8px below the row boundary so their internal edge
+    // lands on the exact same geometry used by the piste and collisions.
+    drawSprite(chooseEdgeFrame('left',worldY),b.left,screenY,TILE);
+    drawSprite(chooseEdgeFrame('right',worldY),b.right,screenY,TILE);
   }
 }
 
