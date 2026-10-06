@@ -54,17 +54,29 @@
       <div class="tabView active" data-view="style">
         <div class="sectionTitle">
           <div>
-            <span>CHOOSE A BASE</span>
-            <strong>Character style</strong>
+            <span>BUILD IT PIECE BY PIECE</span>
+            <strong>Character parts</strong>
           </div>
-          <b id="styleCount">52 / 52</b>
+          <b id="compatibleCount">30 compatible</b>
         </div>
 
-        <div class="searchBox">
-          <input id="styleSearch" type="search" placeholder="Search styles…" autocomplete="off">
+        <div class="presetPicker">
+          <label for="presetSelect">STARTING PRESET</label>
+          <select id="presetSelect" aria-label="Starting character preset"></select>
+          <button id="applyPresetBtn" type="button">LOAD PRESET</button>
         </div>
-        <div class="filterRow" id="filterRow"></div>
-        <div class="styleGrid" id="styleGrid"></div>
+
+        <div class="compatibilityNote">
+          <strong id="rigLabel">Elf-compatible frame</strong>
+          <span id="rigHelp">Only proven rig-compatible pieces are shown, so animations stay intact.</span>
+        </div>
+
+        <div class="partRows" id="partRows"></div>
+
+        <div class="buildActions">
+          <button id="randomPartsBtn" type="button">RANDOMISE PARTS</button>
+          <button id="resetPartsBtn" type="button">RESET TO PRESET</button>
+        </div>
       </div>
 
       <div class="tabView" data-view="colours">
