@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - character-playground/**
+      - assets/gamebox/wearables/footwear/**
       - index.html
       - .github/workflows/validate-character-workshop.yml
   workflow_dispatch:
@@ -15,7 +16,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
 
@@ -24,125 +25,143 @@ jobs:
           node --check character-playground/game.js
           node --check character-playground/character-catalog.js
           node --check character-playground/modular-parts.js
+          node --check character-playground/part-options.js
 
-      - name: Verify 52-source modular character system
+      - name: Verify Character Workshop asset and UI system
+        shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
           import base64, hashlib, json, pathlib, re, struct
 
           root = pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
-          catalog = pathlib.Path("character-playground/character-catalog.js").read_text()
+          catalog_text = pathlib.Path("character-playground/character-catalog.js").read_text()
+          options_text = pathlib.Path("character-playground/part-options.js").read_text()
           modular = pathlib.Path("character-playground/modular-parts.js").read_text()
           game = pathlib.Path("character-playground/game.js").read_text()
           html = pathlib.Path("character-playground/index.html").read_text()
           css = pathlib.Path("character-playground/style.css").read_text()
 
-          ids = re.findall(r"id: '([^']+)'", catalog)
-          assert len(ids) == 52, f"Expected 52 catalog entries, found {len(ids)}"
-          assert len(set(ids)) == 52, "Duplicate character IDs in catalog"
-          assert "universal" in catalog, "Catalog is not using the universal part rig"
-
+          # Full 52-character source pool remains available.
+          ids = re.findall(r"id: '([^']+)'", catalog_text)
+          assert len(ids) == 52, f"Expected 52 source characters, found {len(ids)}"
+          assert len(set(ids)) == 52, "Duplicate source character IDs"
           actual = sorted(p.stem for p in root.glob("*.gltf"))
-          assert sorted(ids) == actual, (
-              f"Catalog/asset mismatch. Missing from catalog: {sorted(set(actual)-set(ids))}; "
-              f"Missing files: {sorted(set(ids)-set(actual))}"
-          )
+          assert sorted(ids) == actual, "Character source catalogue no longer matches the 52 GLTF files"
 
+          # All sources still share the common bind space.
           def read_accessor(doc, accessor_index):
               acc = doc["accessors"][accessor_index]
               view = doc["bufferViews"][acc["bufferView"]]
-              buf = doc["buffers"][view["buffer"]]
-              uri = buf["uri"]
-              assert uri.startswith("data:"), "Character GLTF buffers must remain embedded"
-              raw = base64.b64decode(uri.split(",", 1)[1])
-              fmt, size = {5126:("f",4), 5125:("I",4), 5123:("H",2), 5121:("B",1)}[acc["componentType"]]
+              raw = base64.b64decode(doc["buffers"][view["buffer"]]["uri"].split(",", 1)[1])
+              fmt, size = {5126:("f",4),5125:("I",4),5123:("H",2),5121:("B",1)}[acc["componentType"]]
               width = {"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4,"MAT4":16}[acc["type"]]
               stride = view.get("byteStride", width * size)
               start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
-              return [
-                  struct.unpack_from("<" + fmt * width, raw, start + i * stride)
-                  for i in range(acc["count"])
-              ]
+              return [struct.unpack_from("<" + fmt * width, raw, start + i * stride) for i in range(acc["count"])]
 
-          inverse_hashes = {}
-          mesh_transform_hashes = {}
-          joint_name_sets = {}
-
+          joint_sets = set()
+          inverse_hashes = set()
+          mesh_hashes = set()
           for path in sorted(root.glob("*.gltf")):
               doc = json.loads(path.read_text())
               assert len(doc.get("skins", [])) == 1, f"{path.name}: expected one skin"
               skin = doc["skins"][0]
               nodes = doc.get("nodes", [])
-              joints = [nodes[i].get("name", "") for i in skin.get("joints", [])]
-              assert len(joints) == 23, f"{path.name}: expected 23 joints, found {len(joints)}"
-              joint_name_sets[path.stem] = tuple(joints)
-
+              joints = tuple(nodes[i].get("name", "") for i in skin.get("joints", []))
+              assert len(joints) == 23, f"{path.name}: expected 23 joints"
+              joint_sets.add(joints)
               inverses = read_accessor(doc, skin["inverseBindMatrices"])
-              inv_hash = hashlib.sha256(
-                  json.dumps(inverses, separators=(",", ":")).encode()
-              ).hexdigest()
-              inverse_hashes[path.stem] = inv_hash
-
+              inverse_hashes.add(hashlib.sha256(json.dumps(inverses,separators=(",",":")).encode()).hexdigest())
               mesh_nodes = [{
-                  "mesh": n.get("mesh"),
-                  "skin": n.get("skin"),
-                  "translation": n.get("translation", [0,0,0]),
-                  "rotation": n.get("rotation", [0,0,0,1]),
-                  "scale": n.get("scale", [1,1,1]),
+                  "mesh": n.get("mesh"), "skin": n.get("skin"),
+                  "translation": n.get("translation",[0,0,0]),
+                  "rotation": n.get("rotation",[0,0,0,1]),
+                  "scale": n.get("scale",[1,1,1]),
                   "matrix": n.get("matrix")
               } for n in nodes if "mesh" in n]
-              mesh_transform_hashes[path.stem] = hashlib.sha256(
-                  json.dumps(mesh_nodes, sort_keys=True, separators=(",", ":")).encode()
-              ).hexdigest()
+              mesh_hashes.add(hashlib.sha256(json.dumps(mesh_nodes,sort_keys=True,separators=(",",":")).encode()).hexdigest())
 
-          assert len(set(joint_name_sets.values())) == 1, "Character joint names/order are no longer universal"
-          assert len(set(inverse_hashes.values())) == 1, "Inverse bind matrices are no longer universal"
-          assert len(set(mesh_transform_hashes.values())) == 1, "Skinned mesh transforms are no longer universal"
+          assert len(joint_sets) == 1, "Joint names/order are no longer universal"
+          assert len(inverse_hashes) == 1, "Inverse bind matrices are no longer universal"
+          assert len(mesh_hashes) == 1, "Skinned mesh transforms are no longer universal"
 
-          required_labels = [
-              "Head & face",
-              "Hair / facial hair",
-              "Hat / headwear",
-              "Top / torso",
-              "Arms / sleeves",
-              "Bottoms",
-              "Shoes / feet",
-              "Accessory",
-          ]
+          # Parse the live shape-only visual catalogue.
+          m = re.search(r'export const PART_OPTIONS = (\{.*?\});\n\nexport const PART_SOURCE_TO_OPTION', options_text, re.S)
+          assert m, "Could not parse PART_OPTIONS"
+          part_options = json.loads(m.group(1))
+
+          expected_counts = {
+              "head": 19,
+              "hair": 25,
+              "headwear": 11,
+              "top": 21,
+              "arms": 20,
+              "bottom": 25,
+              "shoes": 25,
+              "accessory": 11,
+          }
+          assert set(part_options) == set(expected_counts), f"Unexpected part categories: {sorted(part_options)}"
+
+          source_names = re.compile(r'Cowboy|Soldier|Ninja|Doctor|Goblin|Pirate|Viking|Wizard|Witch|Chef|Worker|Zombie|Knight|Kimono|Casual', re.I)
+          total = 0
+          for category, expected in expected_counts.items():
+              options = part_options[category]
+              assert len(options) == expected, f"{category}: expected {expected} distinct shapes, found {len(options)}"
+              total += len(options)
+              hashes = [o["geometryHash"] for o in options]
+              assert len(hashes) == len(set(hashes)), f"{category}: duplicate geometry hashes leaked into the visual catalogue"
+              labels = [o["label"] for o in options]
+              assert not any(source_names.search(label) for label in labels), f"{category}: source-character naming leaked into visual labels"
+              for option in options:
+                  assert option["kind"] == "source"
+                  assert option["sourceId"] in ids, f"{category}: unknown source {option['sourceId']}"
+                  preview = pathlib.Path("character-playground") / option["preview"]
+                  assert preview.is_file(), f"Missing preview: {preview}"
+                  assert preview.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n', f"Invalid preview PNG: {preview}"
+
+          assert total == 157, f"Expected 157 built-in shape choices, found {total}"
+
+          # Preview folder must match the catalogue exactly: no stale duplicate images.
+          preview_pngs = list(pathlib.Path("character-playground/previews").glob("*/*.png"))
+          assert len(preview_pngs) == 157, f"Expected 157 generated preview PNGs, found {len(preview_pngs)}"
+
+          # Both finished Blender footwear wearables must remain first-class GameBox assets.
+          footwear = {
+              "regular-shoes": pathlib.Path("assets/gamebox/wearables/footwear/regular-shoes"),
+              "traditional-elf-shoes": pathlib.Path("assets/gamebox/wearables/footwear/traditional-elf-shoes"),
+          }
+          for wearable_id, folder in footwear.items():
+              glb = folder / f"{wearable_id}.glb"
+              meta = folder / f"{wearable_id}.json"
+              preview = folder / "preview.png"
+              assert glb.is_file() and glb.read_bytes()[:4] == b"glTF", f"Invalid/missing {wearable_id} GLB"
+              assert preview.is_file() and preview.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n', f"Invalid/missing {wearable_id} preview"
+              data = json.loads(meta.read_text())
+              assert data["slot"] == "footwear", f"{wearable_id}: incorrect wearable slot"
+
+          for wearable_id in ("wearable-regular-shoes", "wearable-traditional-elf-shoes"):
+              assert wearable_id in options_text, f"Missing wearable option {wearable_id}"
+
+          # UI must be a visual CAS-style builder rather than a source-name form.
+          required_labels = ["Head & face","Hair / facial hair","Hat / headwear","Top / torso","Arms / sleeves","Bottoms","Shoes / feet","Accessory"]
           for label in required_labels:
-              assert label in modular, f"Missing modular part slot: {label}"
+              assert label in modular, f"Missing modular slot {label}"
 
-          assert "PART_SOURCE_HINTS" in modular
-          assert "sourceEntriesForPart" in modular
-          assert "createModularPartSystem" in modular
-          assert "SkinnedMesh" in modular
-          assert "partCandidates" in game
-          assert "pickCharacterPart" in game
-          assert "categoryFromHit" in game
-          assert "Raycaster" in game
-          assert "renderPartCategoryRail" in game
-          assert "renderPartBrowser" in game
-          assert "applyProportions" in game
-          assert "headSize" in game
-          assert "proportions:" in game
+          for token in (
+              "pickCharacterPart","Raycaster","renderPartCategoryRail","renderPartBrowser",
+              "partPreview","applyPartOption","instantiateWearable","syncWearableSkeletons",
+              "applyProportions","headSize","PART_CATEGORY_LABELS"
+          ):
+              assert token in game, f"Missing Character Workshop behavior: {token}"
 
-          for element_id in [
-              "partCategoryRail",
-              "partSourceGrid",
-              "partPrevBtn",
-              "partNextBtn",
-              "heightSlider",
-              "buildSlider",
-              "headSizeSlider",
-          ]:
-              assert f'id="{element_id}"' in html, f"Missing Create-a-Sim control: {element_id}"
+          for element_id in ("partCategoryRail","partSourceGrid","partPrevBtn","partNextBtn","heightSlider","buildSlider","headSizeSlider"):
+              assert f'id="{element_id}"' in html, f"Missing Character Workshop control: {element_id}"
 
-          assert "52 sources" in html
-          assert "partCategoryBtn" in css
-          assert "partSourceCard" in css
-          assert "proportionPanel" in css
-          assert "UI Adventure Pack" in css
-          assert "ultimate-nature" in game
+          assert "Christmas Elf" not in html, "Source preset name leaked into initial Character Workshop UI"
+          assert "Fantasy</span>" not in html, "Source category leaked into initial Character Workshop UI"
+          assert "partSourceCard" in css and "stageCategoryRail" in css and "partPreview" in css
+          assert "wearable-regular-shoes" in options_text and "wearable-traditional-elf-shoes" in options_text
 
-          print("Character Workshop validation passed: 52/52 universal sources, 8 modular part slots, 3D body-part picking and proportion controls.")
+          print("Character Workshop validation passed: 52 source models -> 157 distinct built-in shapes + 2 custom Blender footwear wearables.")
           PY
