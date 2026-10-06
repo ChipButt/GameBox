@@ -68,26 +68,34 @@ jobs:
           };
 
           const headCount=await category('head');
-          assert(headCount===19,'Head catalogue should contain the 19 distinct head shapes.');
+          assert(headCount===14,'Head catalogue should contain only the 14 complete, deduplicated heads.');
+          assert(await page.locator('#partSourceGrid .partColourSwatches b').count()>=14,'Head options are missing authored base-colour swatches.');
 
-          const headCards=page.locator('#partSourceGrid .partSourceCard:not(.noneCard)');
-          const firstHead=await headCards.nth(0).getAttribute('data-option');
-          const secondHead=await headCards.nth(1).getAttribute('data-option');
-          await headCards.nth(1).click();
-          await waitForSelected(secondHead);
-          const selectedHead=await page.locator('#partSourceGrid .partSourceCard.selected').getAttribute('data-option');
-          assert(selectedHead===secondHead && selectedHead!==firstHead,'Selecting a second head did not change the active option.');
+          await page.click('[data-option="head-elf"]');
+          await waitForSelected('head-elf');
+          const headDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
+          assert(headDiag?.sourceId==='Elf','Elf head did not load from the Elf donor.');
+          assert(headDiag.materialNames.includes('Skin') && headDiag.materialNames.includes('Face'),'Elf head is missing real head/face materials.');
+          assert(!headDiag.materialNames.some(name=>/hat|helmet|horn/i.test(name)),'Hat or helmet geometry leaked into the Head slot.');
 
           const hairCount=await category('hair');
-          assert(hairCount===26,'Hair catalogue should contain 25 distinct styles plus None.');
+          assert(hairCount===26,'Hair catalogue should contain 25 labelled styles plus None.');
+
+          const headwearCount=await category('headwear');
+          assert(headwearCount===9,'Headwear should contain 8 actual styles plus None.');
+
+          const topCount=await category('top');
+          assert(topCount===22,'Top/body catalogue should contain 22 curated clothing/body options.');
+
+          const bottomCount=await category('bottom');
+          assert(bottomCount===22,'Bottom/legs catalogue should contain 22 curated options.');
 
           const shoeCount=await category('shoes');
-          assert(shoeCount===27,'Shoes catalogue should contain 25 built-in shapes plus 2 custom wearables.');
+          assert(shoeCount===2,'Shoes must contain exactly the two hand-built custom footwear assets.');
           assert(await page.locator('[data-option="wearable-regular-shoes"]').count()===1,'Regular Shoes wearable missing.');
           assert(await page.locator('[data-option="wearable-traditional-elf-shoes"]').count()===1,'Traditional Elf Shoes wearable missing.');
-          const shoeLabels=await page.locator('#partSourceGrid .partSourceCard strong').allTextContents();
-          assert(shoeLabels.includes('Cowboy Boots') && shoeLabels.includes('Knight Boots'),'Human-readable footwear names are missing.');
-          assert(!shoeLabels.some(t=>/_Female|_Male|BlueSoldier|Knight_Golden|Casual2|Casual3/.test(t)),'Raw source IDs leaked into footwear labels.');
+          const shoeLabels=(await page.locator('#partSourceGrid .partSourceCard strong').allTextContents()).sort();
+          assert(JSON.stringify(shoeLabels)===JSON.stringify(['Regular Shoes','Traditional Elf Shoes'].sort()),'Unexpected source-character shoes leaked into the Shoes catalogue.');
 
           for (const optionId of ['wearable-regular-shoes','wearable-traditional-elf-shoes']) {
             await page.click('[data-option="'+optionId+'"]');
@@ -122,14 +130,14 @@ jobs:
 
           await page.setViewportSize({width:390,height:844});
           await page.waitForTimeout(250);
-          await page.click('.partCategoryBtn[data-part="shoes"]');
+          await page.click('.partCategoryBtn[data-part="top"]');
           await page.waitForTimeout(100);
 
           const cardRects=await page.locator('#partSourceGrid .partSourceCard').evaluateAll(cards=>cards.slice(0,9).map(card=>{
             const r=card.getBoundingClientRect();
             return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};
           }));
-          assert(cardRects.length>=6,'Mobile selector did not render enough option cards.');
+          assert(cardRects.length>=9,'Mobile selector did not render enough top/body option cards.');
           for(let i=0;i<cardRects.length;i++){
             assert(cardRects[i].width>70 && cardRects[i].height>80,'Mobile selector card collapsed.');
             for(let j=i+1;j<cardRects.length;j++){
