@@ -74,23 +74,39 @@ jobs:
           assert(shoeCount===27,'Shoes catalogue should contain 25 built-in shapes plus 2 custom wearables.');
           assert(await page.locator('[data-option="wearable-regular-shoes"]').count()===1,'Regular Shoes wearable missing.');
           assert(await page.locator('[data-option="wearable-traditional-elf-shoes"]').count()===1,'Traditional Elf Shoes wearable missing.');
+          const shoeLabels=await page.locator('#partSourceGrid .partSourceCard strong').allTextContents();
+          assert(shoeLabels.includes('Cowboy Boots') && shoeLabels.includes('Knight Boots'),'Human-readable footwear names are missing.');
+          assert(!shoeLabels.some(t=>/_Female|_Male|BlueSoldier|Knight_Golden|Casual2|Casual3/.test(t)),'Raw source IDs leaked into footwear labels.');
 
-          await page.click('[data-option="wearable-regular-shoes"]');
-          await page.waitForTimeout(700);
-          assert(await page.locator('[data-option="wearable-regular-shoes"].selected').count()===1,'Regular Shoes did not become active.');
+          for (const optionId of ['wearable-regular-shoes','wearable-traditional-elf-shoes']) {
+            await page.click('[data-option="'+optionId+'"]');
+            await page.waitForTimeout(700);
+            assert(await page.locator('[data-option="'+optionId+'"].selected').count()===1,optionId+' did not become active.');
+            const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__?.snapshot?.());
+            assert(diag?.shoes?.directSkeletonBinding===true,optionId+' is not using direct skeleton binding.');
+            assert(diag?.shoes?.usesDriverSkeleton===true,optionId+' is not bound to the live driver skeleton.');
+            assert(diag?.shoes?.skinnedMeshCount>=1,optionId+' contains no active skinned shoe mesh.');
+          }
 
-          await page.click('[data-option="wearable-traditional-elf-shoes"]');
-          await page.waitForTimeout(700);
-          assert(await page.locator('[data-option="wearable-traditional-elf-shoes"].selected').count()===1,'Traditional Elf Shoes did not become active.');
+          await page.click('.tabBtn[data-tab="pose"]');
+          const poseButtons=page.locator('.poseBtn');
+          const poseNames=await poseButtons.allTextContents();
+          const walkIndex=poseNames.findIndex(name=>/walk/i.test(name));
+          assert(walkIndex>=0,'No Walk animation is available for footwear validation.');
+          await poseButtons.nth(walkIndex).click();
+          await page.waitForTimeout(120);
+          const feetA=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().feet);
+          await page.waitForTimeout(520);
+          const feetB=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().feet);
+          assert(JSON.stringify(feetA)!==JSON.stringify(feetB),'Walk animation did not move the live foot bones.');
+          const animatedDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+          assert(animatedDiag.shoes.directSkeletonBinding && animatedDiag.shoes.usesDriverSkeleton,'Custom footwear lost its live skeleton binding during animation.');
 
           await page.click('.partCategoryBtn[data-part="body"]');
           await page.waitForTimeout(150);
           assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion panel did not open.');
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
-
-          const labels=await page.locator('#partSourceGrid .partSourceCard strong').allTextContents();
-          assert(!labels.some(t=>/Cowboy|Soldier|Ninja|Doctor|Goblin|Pirate|Viking|Wizard|Witch/i.test(t)),'Source character names leaked into the visual part gallery.');
 
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
           await browser.close();

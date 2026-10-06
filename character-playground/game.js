@@ -1020,6 +1020,46 @@ function useCharacter() {
   showToast('Exact character build ready for GameBox.');
 }
 
+function workshopDiagnosticSnapshot() {
+  driverScene?.updateMatrixWorld?.(true);
+  const shoeState = activeParts.shoes || {};
+  let skinnedMeshCount = 0;
+  let usesDriverSkeleton = Boolean(shoeState.group);
+  shoeState.group?.traverse?.((node) => {
+    if (!node.isSkinnedMesh) return;
+    skinnedMeshCount += 1;
+    const bones = node.skeleton?.bones || [];
+    if (!bones.length || bones.some((bone) => driverSkeleton?.getBoneByName?.(bone.name) !== bone)) {
+      usesDriverSkeleton = false;
+    }
+  });
+
+  const matrixFor = (boneName) => {
+    const bone = driverSkeleton?.getBoneByName?.(boneName);
+    return bone ? Array.from(bone.matrixWorld.elements) : null;
+  };
+
+  return {
+    presetId: currentPreset?.id || null,
+    pose: activeClipName || '',
+    shoes: {
+      optionId: shoeState.optionId || null,
+      wearableId: shoeState.wearableId || null,
+      directSkeletonBinding: Boolean(shoeState.group?.userData?.directSkeletonBinding),
+      usesDriverSkeleton,
+      skinnedMeshCount
+    },
+    feet: {
+      left: matrixFor('Foot.L'),
+      right: matrixFor('Foot.R')
+    }
+  };
+}
+
+window.__GAMEBOX_CHARACTER_WORKSHOP__ = Object.freeze({
+  snapshot: workshopDiagnosticSnapshot
+});
+
 async function loadDriver(entryId, options = {}) {
   const entry = entryById.get(entryId);
   if (!entry) return false;
