@@ -8,9 +8,11 @@
   const win=document.getElementById('winOverlay');
   const guideBtn=document.getElementById('guideButton');
   const soundBtn=document.getElementById('soundButton');
+  const pieceButtons=[...document.querySelectorAll('[data-piece-grid]')];
+  const winPieceCount=document.getElementById('winPieceCount');
   const fileInput=document.getElementById('imageFile');
   const titleEl=document.getElementById('puzzleTitle');
-  let guideIndex=1;
+  let guideIndex=0;
   const guideValues=[0,.10,.28];
   const guideLabels=['Guide: Off','Guide: Faint','Guide: Strong'];
   let sound=true;
@@ -30,6 +32,7 @@
     onProgress({placed,total}){
       placedEl.textContent=placed;
       totalEl.textContent=total;
+      if(winPieceCount) winPieceCount.textContent=total;
     },
     onComplete(){
       win.classList.add('show');
@@ -57,6 +60,21 @@
     guideIndex=(guideIndex+1)%guideValues.length;
     puzzle.setGuideOpacity(guideValues[guideIndex]);
     guideBtn.textContent=guideLabels[guideIndex];
+  });
+
+  pieceButtons.forEach(button=>{
+    button.addEventListener('click',()=>{
+      const grid=Number(button.dataset.pieceGrid);
+      if(!Number.isFinite(grid)) return;
+      win.classList.remove('show');
+      puzzle.setGrid(grid,grid);
+      pieceButtons.forEach(item=>{
+        const selected=item===button;
+        item.classList.toggle('selected',selected);
+        item.setAttribute('aria-pressed',selected?'true':'false');
+      });
+      closeMenu();
+    });
   });
 
   soundBtn.addEventListener('click',()=>{
