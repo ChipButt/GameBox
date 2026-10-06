@@ -281,3 +281,91 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   .partCategoryRail{grid-template-columns:repeat(4,1fr)}
   .partSourceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Character Workshop CAS layout v2 */
+@media(min-width:981px){
+  .builder{width:390px;right:16px;top:78px;bottom:16px;padding:16px 15px 13px}
+  .stageHud{width:calc(100% - 455px)}
+  .stageCategoryRail{
+    position:fixed;z-index:29;right:418px;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:7px;width:56px;margin:0;padding:3px;
+    overflow:visible;pointer-events:auto
+  }
+  .stageCategoryRail .partCategoryBtn{
+    position:relative;width:50px;height:50px;min-height:50px;padding:0;border-radius:50%;
+    display:grid;place-items:center;box-shadow:0 6px 15px rgba(12,35,52,.18)
+  }
+  .stageCategoryRail .partCategoryBtn i{width:31px;height:31px;margin:0;font-size:17px}
+  .stageCategoryRail .partCategoryBtn span{
+    position:absolute;right:59px;top:50%;transform:translateY(-50%);display:none;
+    width:max-content;max-width:150px;padding:6px 9px;border-radius:7px;
+    background:rgba(12,35,52,.92);color:#fff;font-size:7px;white-space:nowrap
+  }
+  .stageCategoryRail .partCategoryBtn:hover span,
+  .stageCategoryRail .partCategoryBtn:focus-visible span{display:block}
+  .casTip{display:none}
+  .partBrowser{padding:8px;margin:0 0 8px;background:rgba(255,251,239,.70)}
+  .partSourceGrid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    max-height:calc(100vh - 300px);gap:8px;padding:2px 3px 4px
+  }
+  .partSourceCard{
+    aspect-ratio:1 / 1.12;min-height:0;padding:5px 5px 6px;
+    display:grid;grid-template-rows:minmax(0,1fr) auto;align-items:stretch;gap:3px;
+    text-align:center;background:#edf4f6
+  }
+  .partSourceCard:before{display:none}
+  .partPreview{
+    display:block;width:100%;height:100%;min-height:70px;object-fit:contain;
+    border-radius:5px;background:linear-gradient(#dce9ee,#f8fbfc)
+  }
+  .partSourceCard strong{align-self:end;font-size:7px;line-height:1.1}
+  .partSourceCard small{display:none}
+  .nonePreview{display:grid;place-items:center;color:#8a9aa5;font-size:32px;font-weight:300}
+  .proportionPanel{margin:0;padding:14px 12px}
+  .presetDrawer{margin-top:10px}
+}
+.partSourceCard.selected{box-shadow:0 0 0 3px #f5c84f,0 5px 12px rgba(24,62,87,.16)}
+.partSourceCard.selected .partPreview{background:linear-gradient(#d6e8ef,#fff9dd)}
+.partSourceCard img.partPreview{pointer-events:none}
+.partSourceGrid.loading{filter:saturate(.65)}
+.partBrowserHeader{position:sticky;top:0;z-index:2;padding-bottom:5px;background:rgba(244,234,212,.95)}
+.partBrowserMeta{position:sticky;top:42px;z-index:2;padding-bottom:5px;background:rgba(244,234,212,.95)}
+
+@media(max-width:980px){
+  .stageCategoryRail{
+    position:fixed;z-index:31;left:7px;right:7px;top:auto;
+    bottom:calc(min(46svh,420px) + 12px);transform:none;
+    display:flex;flex-direction:row;gap:4px;width:auto;padding:4px 5px;
+    overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+    border-radius:12px;background:rgba(15,39,57,.78);backdrop-filter:blur(9px)
+  }
+  .stageCategoryRail::-webkit-scrollbar{display:none}
+  .stageCategoryRail .partCategoryBtn{
+    flex:0 0 39px;width:39px;height:39px;min-height:39px;padding:0;border-radius:50%;
+    display:grid;place-items:center
+  }
+  .stageCategoryRail .partCategoryBtn i{width:25px;height:25px;margin:0;font-size:13px}
+  .stageCategoryRail .partCategoryBtn span{display:none}
+  .builder{height:min(46svh,420px)}
+  .stageHud{bottom:calc(min(46svh,420px) + 62px)}
+  .casTip{display:none}
+  .partSourceGrid{grid-template-columns:repeat(3,minmax(0,1fr));max-height:155px;gap:5px}
+  .partSourceCard{
+    aspect-ratio:1 / 1.08;min-height:0;padding:4px;
+    display:grid;grid-template-rows:minmax(0,1fr) auto;text-align:center
+  }
+  .partSourceCard:before{display:none}
+  .partPreview{display:block;width:100%;height:100%;min-height:42px;object-fit:contain;border-radius:4px;background:#e1edf1}
+  .partSourceCard strong{font-size:6px;align-self:end}
+  .partSourceCard small{display:none}
+  .nonePreview{display:grid;place-items:center;font-size:22px;color:#82939d}
+  .proportionPanel{margin:0;padding:8px}
+}
+@media(max-width:390px){
+  .stageCategoryRail{bottom:calc(min(48svh,420px) + 10px)}
+  .builder{height:min(48svh,420px)}
+  .stageHud{bottom:calc(min(48svh,420px) + 60px)}
+  .partSourceGrid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:158px}
+}
