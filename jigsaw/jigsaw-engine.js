@@ -115,6 +115,7 @@
       this.image.crossOrigin='anonymous';
       this.frameImage=new Image();
       this.frameImage.decoding='async';
+      this.frameImage.onload=()=>this.render();
       this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png';
       this.pieces=[];
       this.edges=[];
