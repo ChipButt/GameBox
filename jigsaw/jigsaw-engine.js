@@ -116,7 +116,7 @@
       this.frameImage=new Image();
       this.frameImage.decoding='async';
       this.frameImage.onload=()=>this.render();
-      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown.png';
+      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_grey_detail.png';
       this.pieces=[];
       this.edges=[];
       this.dragging=null;
@@ -234,6 +234,7 @@
         boardSize:side,
         frameOutset,
         trayTop,
+        trayPiecesTop:trayTop+44,
         trayHeight:Math.max(90,cssH-trayTop-10)
       };
     }
@@ -263,7 +264,7 @@
             if(saved.locked){ p.locked=true;p.x=p.targetX;p.y=p.targetY; }
             else{
               p.x=clamp(saved.nx*cssW,8-p.pad,cssW-p.w-8+p.pad);
-              p.y=clamp(saved.ny*cssH,this.layout.trayTop-p.pad,cssH-p.h-8+p.pad);
+              p.y=clamp(saved.ny*cssH,this.layout.trayPiecesTop-p.pad,cssH-p.h-8+p.pad);
             }
           });
         }
@@ -315,7 +316,7 @@
 
     scatter(){
       const rnd=mulberry32(hashSeed(this.options.seed+'-scatter-'+this.restartCount));
-      const trayTop=this.layout.trayTop;
+      const trayTop=this.layout.trayPiecesTop;
       const maxY=Math.max(trayTop+4,this.layout.height-this.pieces[0].h-10);
       this.pieces.forEach((p,i)=>{
         p.locked=false; p.anim=null; p.z=i;
