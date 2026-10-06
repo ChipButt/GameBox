@@ -250,8 +250,59 @@
 
 
 /* Tiny Ski Run home box */
-.toyGameTinySki .gameTile{background:linear-gradient(145deg,#bfe9ff,#69abd5);border-color:#f5fbff}
-.toyGameTinySki .gameTile strong{color:#083d70;text-shadow:0 2px 0 rgba(255,255,255,.7)}
+.toyGameTinySki .gameTile{
+  background:linear-gradient(145deg,#dff4fc,#83bfdd);
+  border-color:#f7fcff
+}
+.toyGameTinySki .gameTile strong{
+  color:#083d70;
+  text-shadow:0 2px 0 rgba(255,255,255,.72)
+}
 .toyGameTinySki .gameTile small{color:#174e78;text-shadow:none}
-.tinySkiHomeIcon{position:relative;z-index:1;width:72px;height:72px;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 5px 0 rgba(8,61,112,.15))}
-@media(max-width:560px){.tinySkiHomeIcon{width:64px;height:64px}}
+.tinySkiHomeTile{justify-content:center;overflow:hidden}
+.tinySkiHomeScene{
+  position:relative;
+  z-index:1;
+  width:104px;
+  height:74px;
+  flex:0 0 auto;
+  overflow:hidden;
+  border:2px solid rgba(255,255,255,.92);
+  border-radius:6px;
+  background:#edf9fd;
+  box-shadow:0 5px 10px rgba(8,61,112,.18);
+  image-rendering:pixelated;
+  image-rendering:crisp-edges
+}
+.tinySkiHomePiste{
+  position:absolute;
+  left:29px;
+  top:-5px;
+  width:46px;
+  height:86px;
+  background:#d2edf8;
+  border-left:2px solid #b6dce9;
+  border-right:2px solid #b6dce9
+}
+.tinySkiHomeScene img{
+  position:absolute;
+  width:20px;
+  height:20px;
+  object-fit:contain;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges
+}
+.tinySkiHomeTreeA{left:7px;top:7px}
+.tinySkiHomeTreeB{right:7px;bottom:5px}
+.tinySkiHomeFlagA{left:39px;top:8px}
+.tinySkiHomeFlagB{right:37px;bottom:8px}
+.tinySkiHomeSkier{left:42px;top:34px}
+.tinySkiHomeRock{right:8px;top:8px}
+@media(max-width:560px){
+  .tinySkiHomeScene{width:94px;height:68px}
+  .tinySkiHomePiste{left:27px;width:40px}
+  .tinySkiHomeScene img{width:18px;height:18px}
+  .tinySkiHomeFlagA{left:35px}
+  .tinySkiHomeFlagB{right:34px}
+  .tinySkiHomeSkier{left:38px;top:31px}
+}
