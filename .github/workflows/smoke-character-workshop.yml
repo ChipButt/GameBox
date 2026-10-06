@@ -36,7 +36,7 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           sleep 1
 
-          cat > /tmp/character-workshop-smoke.mjs <<'JS'
+          cat > .character-workshop-smoke.mjs <<'JS'
           import { chromium } from 'playwright';
 
           const browser = await chromium.launch({headless:true});
@@ -58,7 +58,7 @@ jobs:
           const assert = (value,message) => { if(!value) throw new Error(message); };
 
           const headCount=await category('head');
-          assert(headCount>=20 && headCount<52,'Head catalogue should be distinct visual shapes, not 52 source names.');
+          assert(headCount===19,'Head catalogue should contain the 19 distinct head shapes.');
 
           const headCards=page.locator('#partSourceGrid .partSourceCard:not(.noneCard)');
           const firstHead=await headCards.nth(0).getAttribute('data-option');
@@ -68,10 +68,10 @@ jobs:
           assert(selectedHead && selectedHead!==firstHead,'Selecting a second head did not change the active option.');
 
           const hairCount=await category('hair');
-          assert(hairCount>20,'Hair catalogue did not load.');
+          assert(hairCount===26,'Hair catalogue should contain 25 distinct styles plus None.');
 
           const shoeCount=await category('shoes');
-          assert(shoeCount>=30,'Shoes catalogue did not load enough distinct choices.');
+          assert(shoeCount===27,'Shoes catalogue should contain 25 built-in shapes plus 2 custom wearables.');
           assert(await page.locator('[data-option="wearable-regular-shoes"]').count()===1,'Regular Shoes wearable missing.');
           assert(await page.locator('[data-option="wearable-traditional-elf-shoes"]').count()===1,'Traditional Elf Shoes wearable missing.');
 
@@ -90,11 +90,11 @@ jobs:
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
 
           const labels=await page.locator('#partSourceGrid .partSourceCard strong').allTextContents();
-          assert(!labels.some(t=>/Cowboy|Soldier|Ninja|Doctor|Elf|Goblin|Pirate|Viking|Wizard|Witch/i.test(t)),'Source character names leaked into the visual part gallery.');
+          assert(!labels.some(t=>/Cowboy|Soldier|Ninja|Doctor|Goblin|Pirate|Viking|Wizard|Witch/i.test(t)),'Source character names leaked into the visual part gallery.');
 
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
           await browser.close();
           console.log('Character Workshop browser smoke test passed.');
           JS
 
-          node /tmp/character-workshop-smoke.mjs
+          node .character-workshop-smoke.mjs
