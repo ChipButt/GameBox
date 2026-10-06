@@ -264,7 +264,8 @@ function generateSegment(index,isFirst){
     // Opening gate is only scenery / already passed, then the player gets room to ski.
     addGate(H*.18,index,0,true);
   }else if(index%2===1 && index%5!==0){
-    addGate(start+124,index,0,false);
+    // The first live gate starts below the skier; later ones use the standard spacing.
+    addGate(start+(index===1?200:124),index,0,false);
   }
 
   // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
