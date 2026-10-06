@@ -27,43 +27,67 @@ const TILE=16;
 const SEGMENT=224;
 
 const F={
-  piste:[0,2,3,5],
-  powder:[1,4],
-  edgeLeft:[12,14,24,29,50,61,72,77],
-  edgeRight:[15,17,25,28,51,60,73,76],
+  // Ground: the pack uses the first six columns of each terrain row as the piste/autotile family.
+  snowOutside:[0,5],
+  snowPiste:[2,3],
+  leftStraight:1,
+  rightStraight:4,
+  leftCurveIn:[12,24,50,72],
+  leftCurveOut:[14,29,61,77],
+  rightCurveIn:[15,28,51,73],
+  rightCurveOut:[17,25,60,76],
+
   tree:[6,18,30],
   deadTree:[7,19],
   redFlag:[8,20],
   blueFlag:[9,21],
-  redNet:[10],
-  blueNet:[11],
-  signLeft:[32,34,35],
-  signRight:[22,23,33],
-  shrub:[31],
-  liftTower:[42,66],
-  cable:[43,44,45,46],
-  chair:[47,57],
-  gondola:[55,56,67,68],
-  tracks:[58],
-  snowman:[69],
-  player:[70],
+  redNet:10,
+  blueNet:11,
+  arrowBlue:[22,23,33],
+  arrowRed:[32,34,35],
+  shrub:31,
+
+  // Lift components are not interchangeable sprites.
+  liftTop:42,
+  liftCableJoin:43,
+  liftHangerJoin:44,
+  liftTowerHead:45,
+  liftCable:46,
+  chairA:47,
+  liftShadow:53,
+  liftPole:54,
+  gondolaTopLeft:55,
+  gondolaTopRight:56,
+  chairB:57,
+  tracksA:58,
+  tracksB:59,
+  liftFoot:66,
+  gondolaBottomLeft:67,
+  gondolaBottomRight:68,
+
+  snowman:69,
+  player:70,
   skiers:[71,78,79,80,82,83],
-  rock:[81]
+  rock:81
 };
-const REQUIRED=[...new Set(Object.values(F).flat())];
+
+// Load the complete non-font visual half of Tiny Ski so later sections can use the full pack
+// without late network loads. 84+ is the Tiny Ski glyph/font set.
+const REQUIRED=Array.from({length:84},(_,i)=>i);
 const images={};
 
 let W=360,H=720,dpr=1;
 let running=false,paused=false,crashing=false,gameOver=false,soundOn=true;
 let last=0,raf=0,audioCtx=null;
-let speed=142,distance=0,scroll=0,gates=0,nearMisses=0,bonus=0;
+let speed=105,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
 let scenery=[],obstacles=[],courseGates=[],lifts=[];
-let nextSegment=0,trackClock=0,shake=0,crashClock=0,elapsed=0;
+let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
-const BEST_KEY='gamebox.tinySkiRun.best.v4';
+const BEST_KEY='gamebox.tinySkiRun.best.v5';
 let best=Number(
   localStorage.getItem(BEST_KEY)||
+  localStorage.getItem('gamebox.tinySkiRun.best.v4')||
   localStorage.getItem('gamebox.tinySkiRun.best.v3')||
   localStorage.getItem('gamebox.tinySkiRun.best')||
   0
@@ -76,7 +100,7 @@ function pad(v,n){return String(Math.max(0,Math.floor(v))).padStart(n,'0')}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function randRange(r,a,b){return a+r()*(b-a)}
 function pickR(r,arr){return arr[Math.floor(r()*arr.length)]}
-function metres(){return Math.floor(distance/18)}
+function metres(){return Math.floor(distance/15)}
 function mulberry32(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function hash2(a,b){let n=(a*73856093)^(b*19349663);n=(n^(n>>>13))*1274126177;return(n^(n>>>16))>>>0}
 
@@ -104,12 +128,21 @@ Promise.all(REQUIRED.map(loadImage)).then(()=>{
 function resizeCanvas(){
   const r=canvas.getBoundingClientRect();
   if(!r.width||!r.height)return;
-  W=360;
-  H=clamp(Math.round(W*(r.height/r.width)),620,820);
+
+  // Draw directly in CSS pixels, then scale only for devicePixelRatio.
+  // The old fixed 360-wide virtual canvas was being stretched by a non-integer amount,
+  // which caused nearest-neighbour pixel art to shimmer/jerk while scrolling.
+  W=Math.max(280,Math.round(r.width));
+  H=Math.max(520,Math.round(r.height));
   dpr=Math.min(2,window.devicePixelRatio||1);
-  canvas.width=Math.round(r.width*dpr);
-  canvas.height=Math.round(r.height*dpr);
-  if(player)player.y=Math.round(H*.42);
+  canvas.width=Math.max(1,Math.round(W*dpr));
+  canvas.height=Math.max(1,Math.round(H*dpr));
+
+  if(player){
+    player.y=H*.55;
+    const b=boundsAtWorld(scroll+player.y);
+    player.x=clamp(player.x,b.left+8,b.right-8);
+  }
   render();
 }
 new ResizeObserver(resizeCanvas).observe(canvas);
@@ -117,119 +150,146 @@ addEventListener('orientationchange',()=>setTimeout(resizeCanvas,60));
 resizeCanvas();
 
 function boundsAtWorld(worldY){
-  const center=180
-    +34*Math.sin(worldY/390+.35)
-    +13*Math.sin(worldY/173+1.2);
-  const width=190
-    +8*Math.sin(worldY/310+2.1)
-    +5*Math.sin(worldY/127+.6);
-  const safeCenter=clamp(center,102,258);
-  const safeWidth=clamp(width,176,202);
+  const baseWidth=clamp(W*.44,132,212);
+  const center=W*.5
+    +W*.075*Math.sin(worldY/430+.25)
+    +W*.026*Math.sin(worldY/188+1.18);
+  const width=baseWidth
+    +W*.018*Math.sin(worldY/340+2.05)
+    +W*.012*Math.sin(worldY/151+.55);
+  const safeWidth=clamp(width,Math.min(126,W*.38),Math.min(220,W*.5));
+  const sideRoom=Math.max(42,W*.11);
+  const safeCenter=clamp(center,sideRoom+safeWidth/2,W-sideRoom-safeWidth/2);
   return {center:safeCenter,width:safeWidth,left:safeCenter-safeWidth/2,right:safeCenter+safeWidth/2};
 }
-function boundsAtScreen(y){return boundsAtWorld(scroll+y)}
 
 function resetWorld(){
-  speed=142;distance=0;scroll=0;gates=0;nearMisses=0;bonus=0;elapsed=0;
+  speed=105;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
   tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
-  player={x:boundsAtWorld(H*.42).center,y:Math.round(H*.42),vx:0,angle:0,spin:0,slide:0};
+  const py=H*.55;
+  player={x:boundsAtWorld(py).center,y:py,vx:0,angle:0,spin:0,slide:0};
   ensureWorld(true);
   updateHud();
 }
 
 function ensureWorld(initial){
-  const ahead=scroll+H+SEGMENT;
+  const ahead=scroll+H+SEGMENT*2;
   while(nextSegment*SEGMENT<ahead){
     generateSegment(nextSegment,initial&&nextSegment===0);
     nextSegment++;
   }
 }
 
+function addScenery(worldY,side,offset,frame,kind){
+  scenery.push({worldY,side,offset,frame,kind,size:TILE});
+}
+
 function generateSegment(index,isFirst){
   const r=mulberry32(92731+index*7919);
   const start=index*SEGMENT;
 
-  // Side scenery is generated in small composed clusters, not loose random noise.
-  const clusters=3+Math.floor(r()*3);
-  for(let c=0;c<clusters;c++){
-    const worldY=start+24+c*(SEGMENT/clusters)+randRange(r,-12,12);
-    const side=r()<.5?'left':'right';
-    const count=r()<.45?2:3;
-    for(let i=0;i<count;i++){
-      const rr=r();
-      let kind='tree',frame,size=16;
-      if(rr<.55){frame=pickR(r,F.tree);kind='tree'}
-      else if(rr<.68){frame=pickR(r,F.deadTree);kind='dead'}
-      else if(rr<.78){frame=F.rock[0];kind='rock'}
-      else if(rr<.87){frame=F.shrub[0];kind='shrub'}
-      else if(rr<.94){frame=F.snowman[0];kind='snowman'}
-      else{frame=pickR(r,side==='left'?F.signLeft:F.signRight);kind='sign'}
-      scenery.push({
-        worldY:worldY+i*randRange(r,9,19),
-        side,
-        offset:randRange(r,18,58)+i*6,
-        frame,
-        kind,
-        size
-      });
+  // Demo-style side dressing: both sides receive coherent little groups.
+  for(const side of ['left','right']){
+    const clusterCount=2+Math.floor(r()*2);
+    for(let c=0;c<clusterCount;c++){
+      const baseY=start+22+c*(SEGMENT/clusterCount)+randRange(r,-12,12);
+      const count=2+Math.floor(r()*2);
+      for(let i=0;i<count;i++){
+        const rr=r();
+        let frame,kind;
+        if(rr<.54){frame=pickR(r,F.tree);kind='tree'}
+        else if(rr<.69){frame=pickR(r,F.deadTree);kind='dead'}
+        else if(rr<.8){frame=F.rock;kind='rock'}
+        else if(rr<.89){frame=F.shrub;kind='shrub'}
+        else{frame=F.snowman;kind='snowman'}
+        addScenery(
+          baseY+i*randRange(r,9,19),
+          side,
+          randRange(r,18,58)+i*4,
+          frame,
+          kind
+        );
+      }
     }
   }
 
-  // Nets/fencing sit at the piste edge like the reference.
+  // Direction signs and nets are intentional course furniture in the Kenney demo.
+  if(index%2===0){
+    const side=index%4===0?'left':'right';
+    const signFrame=side==='left'?pickR(r,F.arrowBlue):pickR(r,F.arrowRed);
+    addScenery(start+randRange(r,82,132),side,12,signFrame,'sign');
+  }
   if(index%3===1){
-    const y=start+randRange(r,72,150);
-    scenery.push({worldY:y,side:r()<.5?'left':'right',offset:12,frame:r()<.5?F.redNet[0]:F.blueNet[0],kind:'net',size:16});
+    const side=r()<.5?'left':'right';
+    addScenery(start+randRange(r,142,190),side,10,r()<.5?F.redNet:F.blueNet,'net');
   }
 
-  // First screen deliberately contains a chairlift set-piece.
+  // Small standalone course-marker flags appear outside the main piste in the source demo.
+  if(index%4===2){
+    const side=r()<.5?'left':'right';
+    addScenery(start+52,side,randRange(r,20,34),r()<.5?F.redFlag[1]:F.blueFlag[1],'marker');
+  }
+
+  // Put a complete lift crossing in the first screen, then another every few sections.
   if(isFirst){
-    addLift(start+190,r);
-    addGate(start+80,index,0,r,true);
-  }else{
-    if(index%5===0)addLift(start+96,r);
-    const gateCount=index%5===0?1:2;
-    for(let g=0;g<gateCount;g++)addGate(start+112+g*104,index,g,r,false);
+    addLift(H*.29,r);
+  }else if(index%5===0){
+    addLift(start+104,r);
   }
 
-  // Keep the central piste visually open; hazards are sparse and readable.
+  // Alternating slalom gates, kept away from the lift itself.
+  if(!isFirst){
+    addGate(start+74,index,0,false);
+    if(index%5!==0)addGate(start+166,index,1,false);
+  }else{
+    // Visible opening gates are already behind the skier so they don't instantly count as missed.
+    addGate(H*.18,index,0,true);
+    addGate(H*.72,index,1,false);
+  }
+
+  // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
   if(index>1){
-    const worldY=start+166+randRange(r,-16,16);
-    const kind=r()<.52?'rock':r()<.74?'snowman':r()<.9?'tree':'skier';
-    const t=kind==='tree'?(r()<.5?randRange(r,.08,.18):randRange(r,.82,.92)):randRange(r,.2,.8);
+    const worldY=start+132+randRange(r,-18,18);
+    const roll=r();
+    const kind=roll<.42?'rock':roll<.62?'snowman':roll<.8?'tree':'skier';
+    const t=kind==='tree'?(r()<.5?randRange(r,.09,.17):randRange(r,.83,.91)):randRange(r,.22,.78);
     addObstacle(worldY,t,kind,r);
   }
 }
 
-function addGate(worldY,index,g,r,passed){
-  const centerT=clamp(.5+Math.sin((index*2+g)*1.35)*.17,.28,.72);
+function addGate(worldY,index,g,passed){
+  const centerT=clamp(.5+Math.sin((index*2+g)*1.27)*.17,.29,.71);
   const half=.12;
-  courseGates.push({worldY,leftT:centerT-half,rightT:centerT+half,redLeft:(index+g)%2===0,passed:!!passed});
+  courseGates.push({
+    worldY,
+    leftT:centerT-half,
+    rightT:centerT+half,
+    redLeft:(index+g)%2===0,
+    passed:!!passed
+  });
 }
 
 function addObstacle(worldY,t,kind,r){
-  let frame=F.rock[0],radius=5;
+  let frame=F.rock,radius=5;
   if(kind==='tree'){frame=pickR(r,F.tree);radius=6}
-  else if(kind==='snowman'){frame=F.snowman[0];radius=5}
+  else if(kind==='snowman'){frame=F.snowman;radius=5}
   else if(kind==='skier'){frame=pickR(r,F.skiers);radius=5}
   obstacles.push({
     worldY,t,baseT:t,kind,frame,radius,nearChecked:false,
-    phase:randRange(r,0,6.28),
-    weave:kind==='skier'?randRange(r,.025,.055):0,
-    weaveSpeed:kind==='skier'?randRange(r,1.1,1.7):0
+    phase:randRange(r,0,Math.PI*2),
+    weave:kind==='skier'?randRange(r,.025,.05):0,
+    weaveSpeed:kind==='skier'?randRange(r,1.05,1.55):0
   });
 }
 
 function addLift(worldY,r){
   lifts.push({
     worldY,
-    cable:pickR(r,F.cable),
-    towerLeft:pickR(r,F.liftTower),
-    towerMid:pickR(r,F.liftTower),
-    towerRight:pickR(r,F.liftTower),
-    chairLeft:pickR(r,F.chair),
-    gondola:pickR(r,F.gondola),
-    chairRight:pickR(r,F.chair)
+    chairLeft:r()<.5?F.chairA:F.chairB,
+    chairRight:r()<.5?F.chairA:F.chairB,
+    // A 2×2 gondola: 55/56 are its top quadrants and 67/68 its bottom quadrants.
+    gondola:true
   });
 }
 
@@ -247,39 +307,57 @@ function startGame(){
 
 function loop(now){
   if(!running||paused)return;
-  const dt=Math.min(.033,Math.max(.001,(now-last)/1000||.016));
+  const dt=Math.min(.04,Math.max(.001,(now-last)/1000||.016));
   last=now;
+
   update(dt);
+
+  // Smooth visual camera follows simulation scroll. The slight lag absorbs uneven frame timing
+  // without changing collisions or distance.
+  const cameraEase=1-Math.exp(-dt*30);
+  viewScroll+=(scroll-viewScroll)*cameraEase;
+
   render();
   if(running&&!paused)raf=requestAnimationFrame(loop);
 }
 
 function update(dt){
-  elapsed+=dt;
   if(crashing){updateCrash(dt);return}
 
   distance+=speed*dt;
   scroll+=speed*dt;
   const m=metres();
-  speed=Math.min(300,142+m*.085);
+  speed=Math.min(220,105+m*.055);
   ensureWorld(false);
   pruneWorld();
 
   const steer=((input.left?-1:0)+(input.right?1:0))||input.analog;
-  const target=steer*(92+speed*.1);
-  player.vx+=(target-player.vx)*Math.min(1,dt*8.2);
-  if(!steer)player.vx*=Math.pow(.1,dt);
+  const target=steer*(82+speed*.1);
+  player.vx+=(target-player.vx)*Math.min(1,dt*8.5);
+  if(!steer)player.vx*=Math.pow(.08,dt);
   player.x+=player.vx*dt;
-  player.angle=clamp(player.vx/270,-.34,.34);
+  player.angle=clamp(player.vx/250,-.3,.3);
 
   trackClock-=dt;
   if(trackClock<=0){
-    tracks.push({x:player.x,y:player.y+8,a:player.angle,life:1});
-    if(tracks.length>54)tracks.shift();
-    trackClock=.07;
+    tracks.push({
+      worldY:scroll+player.y+7,
+      x:player.x,
+      frame:tracks.length%2?F.tracksA:F.tracksB,
+      angle:player.angle,
+      life:1
+    });
+    if(tracks.length>70)tracks.shift();
+    trackClock=.075;
   }
-  if(Math.abs(steer)>.25&&Math.random()<dt*10){
-    puffs.push({x:player.x+randRange(Math.random,-4,4),y:player.y+7,vx:randRange(Math.random,-15,15),vy:randRange(Math.random,5,18),life:.24,size:2});
+
+  if(Math.abs(steer)>.25&&Math.random()<dt*8){
+    puffs.push({
+      x:player.x+randRange(Math.random,-4,4),
+      worldY:scroll+player.y+7,
+      vx:randRange(Math.random,-12,12),
+      life:.24,size:2
+    });
   }
 
   for(const o of obstacles){
@@ -289,10 +367,11 @@ function update(dt){
     }
   }
 
-  for(const t of tracks){t.y-=speed*dt;t.life-=dt*.2}
-  tracks=tracks.filter(t=>t.y>-20&&t.life>0);
-  for(const p of puffs){p.x+=p.vx*dt;p.y+=p.vy*dt-speed*dt*.18;p.life-=dt}
-  puffs=puffs.filter(p=>p.life>0);
+  for(const t of tracks)t.life-=dt*.18;
+  tracks=tracks.filter(t=>t.worldY>scroll-30&&t.life>0);
+
+  for(const p of puffs){p.x+=p.vx*dt;p.life-=dt}
+  puffs=puffs.filter(p=>p.worldY>scroll-30&&p.life>0);
 
   checkBoundary();
   if(!crashing)checkObstacles();
@@ -302,7 +381,7 @@ function update(dt){
 }
 
 function pruneWorld(){
-  const behind=scroll-100;
+  const behind=scroll-120;
   scenery=scenery.filter(x=>x.worldY>behind);
   obstacles=obstacles.filter(x=>x.worldY>behind);
   courseGates=courseGates.filter(x=>x.worldY>behind);
@@ -314,21 +393,24 @@ function checkBoundary(){
   if(player.x<b.left+5||player.x>b.right-5)startCrash();
 }
 
-function obstaclePosition(o){
-  const y=o.worldY-scroll;
+function obstaclePosition(o,camera=scroll){
   const b=boundsAtWorld(o.worldY);
-  return {x:b.left+b.width*o.t,y};
+  return {x:b.left+b.width*o.t,y:o.worldY-camera};
 }
 
 function checkObstacles(){
   for(const o of obstacles){
-    const p=obstaclePosition(o);
-    if(p.y<player.y-30||p.y>player.y+30)continue;
+    const p=obstaclePosition(o,scroll);
+    if(p.y<player.y-28||p.y>player.y+28)continue;
     const d=Math.hypot(player.x-p.x,player.y-p.y);
     if(d<5+o.radius){startCrash();return}
     if(!o.nearChecked&&p.y<player.y-8){
       o.nearChecked=true;
-      if(d<19&&d>11){nearMisses++;addFeedback('CLOSE!','#1e638a');tone('near')}
+      if(d<18&&d>11){
+        nearMisses++;
+        addFeedback('CLOSE!','#1e638a');
+        tone('near');
+      }
     }
   }
 }
@@ -342,30 +424,40 @@ function checkGates(){
     const lx=b.left+b.width*g.leftT;
     const rx=b.left+b.width*g.rightT;
     if(player.x>lx+3&&player.x<rx-3){
-      gates++;addFeedback('GATE!','#cb424a');tone('gate');vibrate(8);
+      gates++;
+      addFeedback('GATE!','#cb424a');
+      tone('gate');
+      vibrate(8);
     }else{
-      addFeedback('MISSED GATE','#687f8c');tone('miss');
+      addFeedback('MISSED GATE','#687f8c');
+      tone('miss');
     }
   }
 }
 
 function startCrash(){
   if(crashing||gameOver)return;
-  crashing=true;crashClock=0;shake=5;
+  crashing=true;crashClock=0;shake=4;
   input.left=input.right=false;input.analog=0;input.pointerId=null;
   vibrate([55,30,80]);tone('crash');
-  for(let i=0;i<14;i++){
-    puffs.push({x:player.x+randRange(Math.random,-4,4),y:player.y+randRange(Math.random,1,8),vx:randRange(Math.random,-45,45),vy:randRange(Math.random,-6,42),life:randRange(Math.random,.28,.55),size:2});
+  for(let i=0;i<12;i++){
+    puffs.push({
+      x:player.x+randRange(Math.random,-4,4),
+      worldY:scroll+player.y+randRange(Math.random,1,8),
+      vx:randRange(Math.random,-38,38),
+      life:randRange(Math.random,.28,.5),
+      size:2
+    });
   }
 }
 
 function updateCrash(dt){
   crashClock+=dt;
-  player.spin+=dt*4.8;
-  player.slide+=dt*14;
-  player.x+=player.vx*dt*.22;
-  shake=Math.max(0,shake-dt*16);
-  for(const p of puffs){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}
+  player.spin+=dt*4.4;
+  player.slide+=dt*12;
+  player.x+=player.vx*dt*.2;
+  shake=Math.max(0,shake-dt*15);
+  for(const p of puffs){p.x+=p.vx*dt;p.life-=dt}
   puffs=puffs.filter(p=>p.life>0);
   updateFeedback(dt);
   if(crashClock>.62)finishRun();
@@ -388,21 +480,21 @@ function finishRun(){
 
 function addFeedback(textValue,color){feedback.push({x:player.x,y:player.y-14,text:textValue,color,life:1})}
 function updateFeedback(dt){
-  for(const f of feedback){f.y-=16*dt;f.life-=dt*1.4}
+  for(const f of feedback){f.y-=15*dt;f.life-=dt*1.35}
   feedback=feedback.filter(f=>f.life>0);
 }
 function updateHud(){
   distanceEl.textContent=pad(metres(),4);
   gatesEl.textContent=pad(gates,2);
   bestEl.textContent=pad(Math.max(best,metres()),4);
-  speedLabel.textContent=speed<175?'CRUISE':speed<215?'CARVING':speed<260?'FAST':'FLYING';
+  speedLabel.textContent=speed<130?'CRUISE':speed<160?'CARVING':speed<195?'FAST':'FLYING';
 }
 
 function drawSprite(frame,x,y,size=TILE,angle=0,alpha=1,flip=false){
   const img=images[frame];if(!img)return;
   ctx.save();
   ctx.globalAlpha=alpha;
-  ctx.translate(Math.round(x),Math.round(y));
+  ctx.translate(x,y);
   ctx.rotate(angle);
   ctx.scale(flip?-1:1,1);
   ctx.imageSmoothingEnabled=false;
@@ -410,99 +502,180 @@ function drawSprite(frame,x,y,size=TILE,angle=0,alpha=1,flip=false){
   ctx.restore();
 }
 
-function drawTileField(frames){
-  const yOffset=-(scroll%TILE);
-  const firstRow=Math.floor(scroll/TILE)-1;
+function tileFrame(frames,col,row){
+  return frames[hash2(col,row)%frames.length];
+}
+
+function drawTileField(frames,camera=viewScroll){
+  const yOffset=-(camera%TILE);
+  const firstRow=Math.floor(camera/TILE)-1;
+  const startCol=-1;
+  const cols=Math.ceil(W/TILE)+2;
   for(let sy=yOffset-TILE,row=firstRow;sy<H+TILE;sy+=TILE,row++){
-    for(let x=0,col=0;x<W+TILE;x+=TILE,col++){
-      const frame=frames[hash2(col,row)%frames.length];
+    for(let col=startCol;col<cols;col++){
+      const x=col*TILE;
+      const frame=tileFrame(frames,col,row);
       const img=images[frame];
-      if(img)ctx.drawImage(img,x,Math.round(sy),TILE,TILE);
+      if(img)ctx.drawImage(img,x,sy,TILE,TILE);
     }
   }
 }
 
+function chooseEdgeFrame(side,worldY,row){
+  const b=boundsAtWorld(worldY);
+  const next=boundsAtWorld(worldY+TILE);
+  const dx=side==='left'?next.left-b.left:next.right-b.right;
+  if(side==='left'){
+    if(dx>1.1)return F.leftCurveIn[hash2(17,row)%F.leftCurveIn.length];
+    if(dx<-1.1)return F.leftCurveOut[hash2(23,row)%F.leftCurveOut.length];
+    return F.leftStraight;
+  }
+  if(dx>1.1)return F.rightCurveOut[hash2(29,row)%F.rightCurveOut.length];
+  if(dx<-1.1)return F.rightCurveIn[hash2(31,row)%F.rightCurveIn.length];
+  return F.rightStraight;
+}
+
 function drawPiste(){
-  drawTileField(F.powder);
+  drawTileField(F.snowOutside);
 
   ctx.save();
   ctx.beginPath();
-  for(let y=-16;y<=H+16;y+=8){
-    const b=boundsAtWorld(scroll+y);
-    if(y===-16)ctx.moveTo(b.left,y);else ctx.lineTo(b.left,y);
+  for(let y=-TILE;y<=H+TILE;y+=6){
+    const b=boundsAtWorld(viewScroll+y);
+    if(y===-TILE)ctx.moveTo(b.left,y);else ctx.lineTo(b.left,y);
   }
-  for(let y=H+16;y>=-16;y-=8){
-    const b=boundsAtWorld(scroll+y);
+  for(let y=H+TILE;y>=-TILE;y-=6){
+    const b=boundsAtWorld(viewScroll+y);
     ctx.lineTo(b.right,y);
   }
   ctx.closePath();
   ctx.clip();
-  drawTileField(F.piste);
+  drawTileField(F.snowPiste);
   ctx.restore();
 
-  const yOffset=-(scroll%TILE);
-  const firstRow=Math.floor(scroll/TILE)-1;
+  // Use the pack's actual vertical/curved bank tiles. No rotating arbitrary snow tiles.
+  const yOffset=-(viewScroll%TILE);
+  const firstRow=Math.floor(viewScroll/TILE)-1;
   for(let y=yOffset-TILE,row=firstRow;y<H+TILE;y+=TILE,row++){
-    const worldY=scroll+y;
+    const worldY=viewScroll+y;
     const b=boundsAtWorld(worldY);
-    const next=boundsAtWorld(worldY+TILE);
-    const leftFrame=F.edgeLeft[hash2(13,row)%F.edgeLeft.length];
-    const rightFrame=F.edgeRight[hash2(31,row)%F.edgeRight.length];
-    const leftAngle=Math.atan2(next.left-b.left,TILE)*-.18;
-    const rightAngle=Math.atan2(next.right-b.right,TILE)*-.18;
-    drawSprite(leftFrame,b.left,y,TILE,leftAngle);
-    drawSprite(rightFrame,b.right,y,TILE,rightAngle);
+    drawSprite(chooseEdgeFrame('left',worldY,row),b.left,y,TILE);
+    drawSprite(chooseEdgeFrame('right',worldY,row),b.right,y,TILE);
   }
 }
 
 function sceneryPosition(s){
   const b=boundsAtWorld(s.worldY);
   const raw=s.side==='left'?b.left-s.offset:b.right+s.offset;
-  return {x:clamp(raw,9,W-9),y:s.worldY-scroll};
+  return {x:clamp(raw,8,W-8),y:s.worldY-viewScroll};
 }
 
 function drawScenery(){
   const visible=scenery
-    .filter(s=>{const y=s.worldY-scroll;return y>-24&&y<H+24})
+    .filter(s=>{const y=s.worldY-viewScroll;return y>-TILE*2&&y<H+TILE*2})
     .sort((a,b)=>a.worldY-b.worldY);
+
   for(const s of visible){
     const p=sceneryPosition(s);
     drawSprite(s.frame,p.x,p.y,s.size);
   }
 }
 
-function drawLift(lift){
-  const y=lift.worldY-scroll;
-  if(y<-30||y>H+30)return;
-  const b=boundsAtWorld(lift.worldY);
-  const leftTower=clamp(b.left-32,18,W-18);
-  const midTower=clamp(b.center,18,W-18);
-  const rightTower=clamp(b.right+32,18,W-18);
+function drawLiftShadow(lift){
+  const cableY=lift.worldY-viewScroll;
+  const shadowY=cableY+58;
+  if(shadowY<-TILE||shadowY>H+TILE)return;
 
-  for(let x=0;x<=W;x+=TILE)drawSprite(lift.cable,x+TILE/2,y,TILE);
-  drawSprite(lift.towerLeft,leftTower,y,TILE);
-  drawSprite(lift.towerMid,midTower,y,TILE);
-  drawSprite(lift.towerRight,rightTower,y,TILE);
-  drawSprite(lift.chairLeft,(leftTower+midTower)/2,y+5,TILE);
-  drawSprite(lift.gondola,(midTower+rightTower)/2,y+5,TILE);
-  drawSprite(lift.chairRight,clamp(rightTower+34,8,W-8),y+5,TILE);
+  // tile_0053 is the pack's pale horizontal lift/shadow line.
+  for(let x=TILE/2;x<W+TILE;x+=TILE){
+    drawSprite(F.liftShadow,x,shadowY,TILE,0,.62);
+  }
+
+  // Soft mast shadows mirror the pack demo without adding new art.
+  const towerXs=[W*.22,W*.5,W*.78];
+  ctx.save();
+  ctx.globalAlpha=.18;
+  ctx.fillStyle='#8fc0d8';
+  for(const x of towerXs)ctx.fillRect(x-2,shadowY-2,4,46);
+  ctx.restore();
+}
+
+function drawLiftTower(x,cableY){
+  drawSprite(F.liftTowerHead,x,cableY,TILE);
+  drawSprite(F.liftPole,x,cableY+TILE,TILE);
+  drawSprite(F.liftPole,x,cableY+TILE*2,TILE);
+  drawSprite(F.liftPole,x,cableY+TILE*3,TILE);
+  drawSprite(F.liftFoot,x,cableY+TILE*4,TILE);
+}
+
+function drawChair(x,cableY,frame){
+  // hanger line + Kenney chair. Keep it aligned to whole source-pixel widths.
+  ctx.save();
+  ctx.fillStyle='#342c34';
+  ctx.fillRect(x-1,cableY+3,2,14);
+  ctx.restore();
+  drawSprite(frame,x,cableY+TILE+7,TILE);
+}
+
+function drawGondola(x,cableY){
+  ctx.save();
+  ctx.fillStyle='#342c34';
+  ctx.fillRect(x-1,cableY+3,2,12);
+  ctx.restore();
+
+  const topY=cableY+TILE+5;
+  drawSprite(F.gondolaTopLeft,x-TILE/2,topY,TILE);
+  drawSprite(F.gondolaTopRight,x+TILE/2,topY,TILE);
+  drawSprite(F.gondolaBottomLeft,x-TILE/2,topY+TILE,TILE);
+  drawSprite(F.gondolaBottomRight,x+TILE/2,topY+TILE,TILE);
+}
+
+function drawLift(lift){
+  const cableY=lift.worldY-viewScroll;
+  if(cableY<-TILE*6||cableY>H+TILE*2)return;
+
+  // Kenney cable is a repeating horizontal tile; tower intersections use tile_0045.
+  for(let x=TILE/2;x<W+TILE;x+=TILE){
+    drawSprite(F.liftCable,x,cableY,TILE);
+  }
+
+  const towerXs=[W*.22,W*.5,W*.78];
+  for(const x of towerXs)drawLiftTower(x,cableY);
+
+  // Put cable/tower intersection tile over the cable at each tower.
+  for(const x of towerXs)drawSprite(F.liftTowerHead,x,cableY,TILE);
+
+  drawChair(W*.1,cableY,lift.chairLeft);
+  drawGondola(W*.37,cableY);
+  drawChair(W*.66,cableY,lift.chairRight);
+  drawChair(W*.91,cableY,lift.chairLeft);
 }
 
 function render(){
   if(!canvas.width||!canvas.height)return;
+
   ctx.save();
-  ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,W,H);
+
   if(shake>0)ctx.translate(randRange(Math.random,-shake,shake),randRange(Math.random,-shake,shake));
 
   drawPiste();
+
+  // Lift shadows belong underneath people and scenery.
+  for(const lift of lifts)drawLiftShadow(lift);
+
   drawScenery();
 
-  for(const t of tracks)drawSprite(F.tracks[0],t.x,t.y,TILE,t.a,t.life*.55);
+  for(const t of tracks){
+    const y=t.worldY-viewScroll;
+    if(y>-TILE&&y<H+TILE)drawSprite(t.frame,t.x,y,TILE,t.angle,t.life*.62);
+  }
 
   for(const g of courseGates){
-    const y=g.worldY-scroll;
-    if(y<-24||y>H+24)continue;
+    const y=g.worldY-viewScroll;
+    if(y<-TILE*2||y>H+TILE*2)continue;
     const b=boundsAtWorld(g.worldY);
     const lx=b.left+b.width*g.leftT;
     const rx=b.left+b.width*g.rightT;
@@ -511,23 +684,25 @@ function render(){
   }
 
   for(const o of obstacles){
-    const p=obstaclePosition(o);
-    if(p.y<-24||p.y>H+24)continue;
-    drawSprite(o.frame,p.x,p.y,TILE,o.kind==='skier'?Math.sin(o.phase)*.12:0);
+    const p=obstaclePosition(o,viewScroll);
+    if(p.y<-TILE*2||p.y>H+TILE*2)continue;
+    drawSprite(o.frame,p.x,p.y,TILE,o.kind==='skier'?Math.sin(o.phase)*.1:0);
   }
 
   for(const p of puffs){
+    const y=p.worldY-viewScroll;
+    if(y<-10||y>H+10)continue;
     ctx.globalAlpha=clamp(p.life*3,0,1);
     ctx.fillStyle='#fff';
-    ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size,p.size);
+    ctx.fillRect(p.x,y,p.size,p.size);
   }
   ctx.globalAlpha=1;
 
   if(player){
-    drawSprite(F.player[0],player.x,player.y+player.slide,TILE,crashing?player.spin:player.angle);
+    drawSprite(F.player,player.x,player.y+player.slide,TILE,crashing?player.spin:player.angle);
   }
 
-  // The chairlift is overhead, so it is intentionally drawn over the skier.
+  // The physical lift is overhead.
   for(const lift of lifts)drawLift(lift);
 
   for(const f of feedback){
