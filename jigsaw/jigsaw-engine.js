@@ -215,11 +215,12 @@
     }
 
     computeLayout(cssW,cssH){
-      const topGap=10;
-      const side=Math.floor(Math.min(cssW-24, Math.max(210,cssH*.56), 430));
+      const framePad=16;
+      const topGap=18;
+      const side=Math.floor(Math.min(cssW-framePad*2, Math.max(210,cssH*.56), 430));
       const boardX=Math.round((cssW-side)/2);
       const boardY=topGap;
-      const trayTop=boardY+side+14;
+      const trayTop=boardY+side+framePad;
       return {width:cssW,height:cssH,boardX,boardY,boardSize:side,trayTop,trayHeight:Math.max(90,cssH-trayTop-10)};
     }
 
