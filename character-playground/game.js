@@ -159,7 +159,7 @@ let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { 
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
 let loadGeneration = 0;
 let initialLoad = true;
-let viewDistance = 5.8;
+let viewDistance = 6.15;
 let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingPose = null;
@@ -210,7 +210,7 @@ function fitDriver(model) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
-  if (fitDimension > 0) model.scale.setScalar(1.82 / fitDimension);
+  if (fitDimension > 0) model.scale.setScalar(1.68 / fitDimension);
   model.updateMatrixWorld(true);
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
@@ -1315,14 +1315,14 @@ function resize() {
   camera.updateProjectionMatrix();
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
-  previewRoot.position.y = mobile ? 1.12 : 0;
-  camera.position.set(previewRoot.position.x, mobile ? 2.30 : 1.64, viewDistance);
-  camera.lookAt(previewRoot.position.x, mobile ? 1.62 : 1.16, 0);
+  previewRoot.position.y = mobile ? 1.38 : 0;
+  camera.position.set(previewRoot.position.x, mobile ? 2.55 : 1.64, viewDistance);
+  camera.lookAt(previewRoot.position.x, mobile ? 1.78 : 1.16, 0);
 }
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = 5.8;
+  viewDistance = 6.15;
   resize();
 }
 
