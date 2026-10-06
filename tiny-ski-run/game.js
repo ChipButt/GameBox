@@ -32,12 +32,19 @@ const F={
   snowPiste:[2,3],
   leftStraight:1,
   rightStraight:4,
-  // These four transitions have their internal edge centred at the top and
-  // shifted ~7px at the bottom, matching one tile-row of course movement.
-  leftTurnRight:24,
-  leftTurnLeft:14,
-  rightTurnRight:15,
-  rightTurnLeft:29,
+
+  // Full Tiny Ski piste transition set from the supplied eight-tile montage.
+  // Left boundary pieces (off-piste on left, piste on right):
+  leftExitFromRight:12, // right edge -> centre
+  leftEnterLeft:14,     // centre -> left edge
+  leftEnterRight:24,    // centre -> right edge
+  leftDiagonalLeft:25,  // right edge -> left edge
+
+  // Right boundary pieces (piste on left, off-piste on right):
+  rightEnterRight:15,   // centre -> right edge
+  rightExitFromLeft:17, // left edge -> centre
+  rightDiagonalRight:28,// left edge -> right edge
+  rightEnterLeft:29,    // centre -> left edge
 
   // Tree composites: 6 sits directly above 18; 7 sits directly above 19.
   treeTop:6,
@@ -88,6 +95,26 @@ const F={
   yetiAttack:80,
   rock:81
 };
+
+// Exact internal piste-boundary locations, measured from the supplied 16x16
+// assets. Values are the centre of the 2px bank line at the tile's top/bottom.
+// This lets us place every sprite so its painted edge and gameplay boundary
+// are literally the same line.
+const EDGE_PROFILE={
+  1:{top:7.5,bottom:7.5},
+  4:{top:7.5,bottom:7.5},
+  12:{top:14.5,bottom:7.5},
+  14:{top:7.5,bottom:.5},
+  15:{top:7.5,bottom:14.5},
+  17:{top:.5,bottom:7.5},
+  24:{top:7.5,bottom:14.5},
+  25:{top:14.5,bottom:.5},
+  28:{top:.5,bottom:14.5},
+  29:{top:7.5,bottom:.5}
+};
+
+let courseRows=[];
+let courseBaseLeft=0,courseBaseRight=0;
 
 // Load the complete non-font visual half of Tiny Ski so later sections can use the full pack
 // without late network loads. 84+ is the Tiny Ski glyph/font set.
@@ -178,6 +205,9 @@ function resizeCanvas(){
   canvas.width=Math.max(1,Math.round(W*dpr));
   canvas.height=Math.max(1,Math.round(H*dpr));
 
+  rebuildCourseRows();
+  ensureCourseRows(Math.ceil((scroll+H+SEGMENT*2)/TILE)+2);
+
   if(player){
     player.y=H*.55;
     const b=boundsAtWorld(scroll+player.y);
@@ -189,29 +219,88 @@ new ResizeObserver(resizeCanvas).observe(canvas);
 addEventListener('orientationchange',()=>setTimeout(resizeCanvas,60));
 resizeCanvas();
 
-function courseCenterForRow(row){
-  const y=row*TILE;
-  const raw=W*.5
-    +W*.075*Math.sin(y/430+.25)
-    +W*.026*Math.sin(y/188+1.18);
+function rebuildCourseRows(){
+  courseRows=[];
+  const width=clamp(Math.round(clamp(W*.44,132,192)/16)*16,128,192);
+  courseBaseLeft=W/2-width/2;
+  courseBaseRight=W/2+width/2;
+}
 
-  // The Kenney turning edge tiles shift their internal boundary by ~7-8px
-  // from top to bottom. Snap the course centre to 8px row steps so the actual
-  // transition artwork matches the geometry instead of fighting it.
-  return Math.round(raw/8)*8;
+function courseFramesForRow(row){
+  // 32-row repeating piste phrase:
+  // 8 straight -> 4-row right bend -> 8 straight -> 4-row left bend -> 8 straight.
+  //
+  // The continuation tiles 25 and 28 are now used in the middle of the bend,
+  // instead of pretending each row was an isolated corner.
+  const phase=((row%32)+32)%32;
+
+  if(phase>=8 && phase<12){
+    const i=phase-8;
+    return {
+      left:[F.leftEnterRight,F.leftEnterRight,F.leftEnterRight,F.leftEnterRight][i],
+      right:[F.rightEnterRight,F.rightDiagonalRight,F.rightExitFromLeft,F.rightStraight][i],
+      bend:'right'
+    };
+  }
+
+  if(phase>=20 && phase<24){
+    const i=phase-20;
+    return {
+      left:[F.leftEnterLeft,F.leftDiagonalLeft,F.leftExitFromRight,F.leftStraight][i],
+      right:[F.rightEnterLeft,F.rightEnterLeft,F.rightEnterLeft,F.rightEnterLeft][i],
+      bend:'left'
+    };
+  }
+
+  return {left:F.leftStraight,right:F.rightStraight,bend:'straight'};
+}
+
+function buildCourseRow(row,topLeft,topRight){
+  const frames=courseFramesForRow(row);
+  const lp=EDGE_PROFILE[frames.left];
+  const rp=EDGE_PROFILE[frames.right];
+
+  // Position each PNG from its real painted top-edge coordinate.
+  // Its bottom edge then defines the next row's actual collision boundary.
+  const leftX=topLeft-(lp.top-7.5);
+  const rightX=topRight-(rp.top-7.5);
+  const bottomLeft=topLeft+(lp.bottom-lp.top);
+  const bottomRight=topRight+(rp.bottom-rp.top);
+
+  return {
+    row,
+    topLeft,topRight,bottomLeft,bottomRight,
+    leftFrame:frames.left,rightFrame:frames.right,
+    leftX,rightX,bend:frames.bend
+  };
+}
+
+function ensureCourseRows(targetRow){
+  if(targetRow<0)return;
+  while(courseRows.length<=targetRow){
+    const row=courseRows.length;
+    const previous=row?courseRows[row-1]:null;
+    const topLeft=previous?previous.bottomLeft:courseBaseLeft;
+    const topRight=previous?previous.bottomRight:courseBaseRight;
+    courseRows.push(buildCourseRow(row,topLeft,topRight));
+  }
+}
+
+function getCourseRow(row){
+  if(row<0){
+    return buildCourseRow(row,courseBaseLeft,courseBaseRight);
+  }
+  ensureCourseRows(row);
+  return courseRows[row];
 }
 
 function boundsAtWorld(worldY){
   const row=Math.floor(worldY/TILE);
   const frac=(worldY-row*TILE)/TILE;
-  const c0=courseCenterForRow(row);
-  const c1=courseCenterForRow(row+1);
-  const center=c0+(c1-c0)*frac;
-
-  const safeWidth=clamp(Math.round(clamp(W*.44,132,208)/16)*16,128,208);
-  const sideRoom=Math.max(42,W*.11);
-  const safeCenter=clamp(center,sideRoom+safeWidth/2,W-sideRoom-safeWidth/2);
-  return {center:safeCenter,width:safeWidth,left:safeCenter-safeWidth/2,right:safeCenter+safeWidth/2};
+  const r=getCourseRow(row);
+  const left=r.topLeft+(r.bottomLeft-r.topLeft)*frac;
+  const right=r.topRight+(r.bottomRight-r.topRight)*frac;
+  return {left,right,width:right-left,center:(left+right)/2};
 }
 
 function resetWorld(){
@@ -219,6 +308,8 @@ function resetWorld(){
   tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];boostPads=[];
   monster=null;monsterSpawned=false;boostTimer=0;animClock=0;
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
+  rebuildCourseRows();
+  ensureCourseRows(Math.ceil((H+SEGMENT*2)/TILE)+2);
   const py=H*.55;
   player={x:boundsAtWorld(py).center,y:py,vx:0,angle:0,spin:0,slide:0};
   startLineWorldY=py+9;
@@ -228,6 +319,7 @@ function resetWorld(){
 
 function ensureWorld(initial){
   const ahead=scroll+H+SEGMENT*2;
+  ensureCourseRows(Math.ceil(ahead/TILE)+2);
   while(nextSegment*SEGMENT<ahead){
     generateSegment(nextSegment,initial&&nextSegment===0);
     nextSegment++;
@@ -692,25 +784,6 @@ function fillScrollingPattern(pattern){
   ctx.restore();
 }
 
-function chooseEdgeFrame(side,worldY){
-  const rowStart=Math.floor(worldY/TILE)*TILE;
-  const b=boundsAtWorld(rowStart);
-  const next=boundsAtWorld(rowStart+TILE);
-  const dx=side==='left'?next.left-b.left:next.right-b.right;
-
-  // Exact orientation mapping from the Tiny Ski edge pixels:
-  // left: 24 shifts centre -> right, 14 shifts centre -> left
-  // right: 15 shifts centre -> right, 29 shifts centre -> left.
-  if(side==='left'){
-    if(dx>3)return F.leftTurnRight;
-    if(dx<-3)return F.leftTurnLeft;
-    return F.leftStraight;
-  }
-  if(dx>3)return F.rightTurnRight;
-  if(dx<-3)return F.rightTurnLeft;
-  return F.rightStraight;
-}
-
 function drawPiste(){
   // Two prebuilt native-Tiny-Ski patterns replace thousands of per-frame tile draw calls.
   // This keeps the exact pack textures while dramatically reducing mobile render cost.
@@ -731,19 +804,18 @@ function drawPiste(){
   fillScrollingPattern(pistePattern);
   ctx.restore();
 
-  // Use the pack's actual vertical/curved bank tiles. No rotating arbitrary snow tiles.
+  // Render the exact preplanned bank sequence. The same row record supplies
+  // both the visual sprite placement and boundsAtWorld(), so corners cannot
+  // visually disagree with collision geometry.
   const firstRow=Math.floor(viewScroll/TILE)-1;
   const lastRow=Math.ceil((viewScroll+H)/TILE)+1;
+  ensureCourseRows(Math.max(0,lastRow));
   for(let row=firstRow;row<=lastRow;row++){
     const worldY=row*TILE;
     const screenY=worldY-viewScroll+TILE/2;
-    const b=boundsAtWorld(worldY);
-
-    // Transition PNGs are authored top-to-bottom across one 16px tile.
-    // Put their centre 8px below the row boundary so their internal edge
-    // lands on the exact same geometry used by the piste and collisions.
-    drawSprite(chooseEdgeFrame('left',worldY),b.left,screenY,TILE);
-    drawSprite(chooseEdgeFrame('right',worldY),b.right,screenY,TILE);
+    const r=getCourseRow(row);
+    drawSprite(r.leftFrame,r.leftX,screenY,TILE);
+    drawSprite(r.rightFrame,r.rightX,screenY,TILE);
   }
 }
 
