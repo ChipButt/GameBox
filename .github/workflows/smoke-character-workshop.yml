@@ -105,11 +105,13 @@ jobs:
           assert(walkIndex>=0,'No Walk animation is available for footwear validation.');
           await poseButtons.nth(walkIndex).click();
           await page.waitForTimeout(120);
-          const feetA=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().feet);
+          const bonesA=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().shoes.weightedBoneMatrices);
           await page.waitForTimeout(520);
-          const feetB=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().feet);
-          assert(JSON.stringify(feetA)!==JSON.stringify(feetB),'Walk animation did not move the live foot bones.');
           const animatedDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+          const bonesB=animatedDiag.shoes.weightedBoneMatrices;
+          assert(/walk/i.test(animatedDiag.pose),'Walk animation did not become active.');
+          assert(Object.keys(bonesA).length>0,'Custom footwear exposes no weighted driver bones.');
+          assert(JSON.stringify(bonesA)!==JSON.stringify(bonesB),'Walk animation did not move any bone that actually weights the custom footwear.');
           assert(animatedDiag.shoes.directSkeletonBinding && animatedDiag.shoes.usesDriverSkeleton,'Custom footwear lost its live skeleton binding during animation.');
 
           await page.click('.partCategoryBtn[data-part="body"]');

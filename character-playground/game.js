@@ -1048,23 +1048,24 @@ function workshopDiagnosticSnapshot() {
   const shoeState = activeParts.shoes || {};
   let skinnedMeshCount = 0;
   let usesDriverSkeleton = Boolean(shoeState.group);
+  const weightedBoneMatrices = {};
+
   shoeState.group?.traverse?.((node) => {
     if (!node.isSkinnedMesh) return;
     skinnedMeshCount += 1;
     const bones = node.skeleton?.bones || [];
     const weightedIndices = usedSkinBoneIndices(node);
-    if (!weightedIndices.size || Array.from(weightedIndices).some((index) => {
+    if (!weightedIndices.size) usesDriverSkeleton = false;
+
+    for (const index of weightedIndices) {
       const bone = bones[index];
-      return !bone || driverSkeleton?.getBoneByName?.(bone.name) !== bone;
-    })) {
-      usesDriverSkeleton = false;
+      if (!bone || driverSkeleton?.getBoneByName?.(bone.name) !== bone) {
+        usesDriverSkeleton = false;
+        continue;
+      }
+      weightedBoneMatrices[bone.name] = Array.from(bone.matrixWorld.elements);
     }
   });
-
-  const matrixFor = (boneName) => {
-    const bone = driverSkeleton?.getBoneByName?.(boneName);
-    return bone ? Array.from(bone.matrixWorld.elements) : null;
-  };
 
   return {
     presetId: currentPreset?.id || null,
@@ -1074,11 +1075,8 @@ function workshopDiagnosticSnapshot() {
       wearableId: shoeState.wearableId || null,
       directSkeletonBinding: Boolean(shoeState.group?.userData?.directSkeletonBinding),
       usesDriverSkeleton,
-      skinnedMeshCount
-    },
-    feet: {
-      left: matrixFor('Foot.L'),
-      right: matrixFor('Foot.R')
+      skinnedMeshCount,
+      weightedBoneMatrices
     }
   };
 }
