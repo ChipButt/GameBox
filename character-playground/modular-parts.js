@@ -111,10 +111,18 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const [winner, winnerScore] = ranked[0] || ['top', 0];
 
   if (winner === 'shoes') return null;
-  if (winner === 'head') return HEAD_BASE_RE.test(materialName) ? 'head' : 'top';
+  if (winner === 'head') {
+    if (!HEAD_BASE_RE.test(materialName)) return 'top';
+    const runnerUpScore = ranked[1]?.[1] || 0;
+    const stronglyHeadWeighted = scores.head >= 1.65 && scores.head > runnerUpScore * 1.35;
+    const physicallyInHeadZone = yNorm >= 0.68;
+    return stronglyHeadWeighted && physicallyInHeadZone ? 'head' : 'top';
+  }
   if (winnerScore > 0.01) return winner;
 
-  if (yNorm > 0.72) return HEAD_BASE_RE.test(materialName) ? 'head' : 'top';
+  // Never create a Head from position alone. If skinning did not identify Head/Neck,
+  // the triangle belongs with the body rather than being guessed into the head.
+  if (yNorm > 0.72) return 'top';
   if (yNorm < 0.14) return null;
   if (yNorm < 0.48) return 'bottom';
   return 'top';
