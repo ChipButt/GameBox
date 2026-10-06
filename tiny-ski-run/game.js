@@ -82,6 +82,7 @@ let running=false,paused=false,crashing=false,gameOver=false,soundOn=true;
 let last=0,raf=0,audioCtx=null;
 let speed=100,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
+let startLineWorldY=0;
 let scenery=[],obstacles=[],courseGates=[],lifts=[];
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
@@ -189,6 +190,7 @@ function resetWorld(){
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
   const py=H*.55;
   player={x:boundsAtWorld(py).center,y:py,vx:0,angle:0,spin:0,slide:0};
+  startLineWorldY=py+9;
   ensureWorld(true);
   updateHud();
 }
@@ -258,14 +260,11 @@ function generateSegment(index,isFirst){
     addLift(start+104,r);
   }
 
-  // Slalom gates are deliberately sparse. The previous build put one or two in
-  // almost every 224px section, which made the piste feel like a gate tunnel.
-  if(isFirst){
-    // Opening gate is only scenery / already passed, then the player gets room to ski.
-    addGate(H*.18,index,0,true);
-  }else if(index%2===1 && index%5!==0){
-    // The first live gate starts below the skier; later ones use the standard spacing.
-    addGate(start+(index===1?200:124),index,0,false);
+  // One slalom gate per world section after the opening stretch.
+  // This is the middle ground between the old gate tunnel and the later too-sparse version.
+  if(index>=2){
+    const gateY=start+(index%5===0?190:118);
+    addGate(gateY,index,0,false);
   }
 
   // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
@@ -423,11 +422,12 @@ function liftTowerXs(){
 function checkLiftSupports(){
   const playerWorldY=scroll+player.y;
   for(const lift of lifts){
-    // The visible support runs from the cable/head down through three pole tiles
-    // to the orange foot: approximately 72px of vertical solid structure.
-    if(playerWorldY<lift.worldY-6 || playerWorldY>lift.worldY+TILE*4+8)continue;
+    // Only the orange foot/base at the very bottom of each support is solid.
+    // The long vertical mast above it is visual-only so the skier can pass behind it.
+    const footY=lift.worldY+TILE*4+3;
+    if(Math.abs(playerWorldY-footY)>6)continue;
     for(const x of liftTowerXs()){
-      if(Math.abs(player.x-x)<8){
+      if(Math.abs(player.x-x)<7){
         startCrash();
         return;
       }
@@ -610,6 +610,28 @@ function sceneryPosition(s){
   return {x:clamp(raw,safe,W-safe),y:s.worldY-viewScroll};
 }
 
+function drawStartLine(){
+  const y=startLineWorldY-viewScroll;
+  if(y<-20||y>H+20)return;
+  const b=boundsAtWorld(startLineWorldY);
+  const left=b.left+10;
+  const right=b.right-10;
+  const block=4;
+  let col=0;
+
+  // Crisp two-row checkered starting stripe across the piste.
+  for(let x=left;x<right;x+=block,col++){
+    ctx.fillStyle=col%2===0?'#ffffff':'#426a84';
+    ctx.fillRect(x,y-4,Math.min(block,right-x),4);
+    ctx.fillStyle=col%2===0?'#426a84':'#ffffff';
+    ctx.fillRect(x,y,Math.min(block,right-x),4);
+  }
+
+  // Use the Tiny Ski gate flags to frame the start line.
+  drawSprite(F.redFlag[0],b.left+4,y,TILE);
+  drawSprite(F.blueFlag[0],b.right-4,y,TILE);
+}
+
 function drawScenery(){
   const visible=scenery
     .filter(s=>{const y=s.worldY-viewScroll;return y>-TILE*2&&y<H+TILE*2})
@@ -710,6 +732,7 @@ function render(){
   if(shake>0)ctx.translate(randRange(Math.random,-shake,shake),randRange(Math.random,-shake,shake));
 
   drawPiste();
+  drawStartLine();
 
   // Lift shadows belong underneath people and scenery.
   for(const lift of lifts)drawLiftShadow(lift);
