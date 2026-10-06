@@ -39,8 +39,13 @@ const F={
   rightTurnRight:15,
   rightTurnLeft:29,
 
-  tree:[6,18,30],
-  deadTree:[7,19,31],
+  // Tree composites: 6 sits directly above 18; 7 sits directly above 19.
+  treeTop:6,
+  treeBottom:18,
+  smallTree:30,
+  deadTreeTop:7,
+  deadTreeBottom:19,
+  stump:31,
   redFlag:[8,20],
   blueFlag:[9,21],
   redNet:10,
@@ -229,8 +234,8 @@ function ensureWorld(initial){
   }
 }
 
-function addScenery(worldY,side,offset,frame,kind){
-  scenery.push({worldY,side,offset,frame,kind,size:TILE});
+function addScenery(worldY,side,offset,frame,kind,topFrame=null){
+  scenery.push({worldY,side,offset,frame,topFrame,kind,size:TILE});
 }
 
 function generateSegment(index,isFirst){
@@ -246,10 +251,37 @@ function generateSegment(index,isFirst){
       for(let i=0;i<count;i++){
         const rr=r();
         let frame,kind;
-        if(rr<.56){frame=pickR(r,F.tree);kind='tree'}
-        else if(rr<.74){frame=pickR(r,F.deadTree);kind='dead'}
-        else if(rr<.86){frame=F.rock;kind='rock'}
-        else{frame=F.snowman;kind='snowman'}
+        if(rr<.46){
+          // Full 2-tile evergreen: 6 above 18.
+          addScenery(
+            baseY+i*randRange(r,12,22),
+            side,
+            randRange(r,18,58)+i*4,
+            F.treeBottom,
+            'treeFull',
+            F.treeTop
+          );
+          continue;
+        }else if(rr<.58){
+          frame=F.smallTree;kind='treeSmall';
+        }else if(rr<.70){
+          // Full 2-tile dead tree: 7 above 19.
+          addScenery(
+            baseY+i*randRange(r,12,22),
+            side,
+            randRange(r,18,58)+i*4,
+            F.deadTreeBottom,
+            'deadFull',
+            F.deadTreeTop
+          );
+          continue;
+        }else if(rr<.76){
+          frame=F.stump;kind='stump';
+        }else if(rr<.88){
+          frame=F.rock;kind='rock';
+        }else{
+          frame=F.snowman;kind='snowman';
+        }
         addScenery(
           baseY+i*randRange(r,9,19),
           side,
@@ -321,7 +353,10 @@ function addGate(worldY,index,g,passed){
 
 function addObstacle(worldY,t,kind,r){
   let frame=F.rock,radius=5,frameBase=null,speedFactor=0,animOffset=0;
-  if(kind==='tree'){frame=pickR(r,F.tree);radius=5}
+  if(kind==='tree'){
+    frame=F.treeBottom;
+    radius=5;
+  }
   else if(kind==='snowman'){frame=F.snowman;radius=5}
   else if(kind==='skier'){
     frameBase=pickR(r,F.skierBases);
@@ -334,7 +369,9 @@ function addObstacle(worldY,t,kind,r){
     animOffset=randRange(r,0,10);
   }
   obstacles.push({
-    worldY,t,baseT:t,kind,frame,frameBase,radius,nearChecked:false,
+    worldY,t,baseT:t,kind,frame,frameBase,
+    topFrame:kind==='tree'?F.treeTop:null,
+    radius,nearChecked:false,
     speedFactor,animOffset
   });
 }
@@ -559,14 +596,6 @@ function checkObstacles(){
 }
 
 function checkGates(){
-  for(const pad of boostPads){
-    if(pad.used)continue;
-    const p=boostPadPosition(pad,viewScroll);
-    if(p.y<-TILE*2||p.y>H+TILE*2)continue;
-    drawSprite(F.boostLeft,p.x-TILE/2,p.y,TILE);
-    drawSprite(F.boostRight,p.x+TILE/2,p.y,TILE);
-  }
-
   for(const g of courseGates){
     const y=g.worldY-scroll;
     if(g.passed||y>player.y+2)continue;
@@ -721,9 +750,8 @@ function drawPiste(){
 function sceneryPosition(s){
   const b=boundsAtWorld(s.worldY);
   const raw=s.side==='left'?b.left-s.offset:b.right+s.offset;
-  // All current Tiny Ski trees are standalone 16x16 PNGs. Apparent cropping was
-  // caused by their centres being allowed only 8px from the viewport edge.
-  // Keep the full sprite plus a little breathing room on-screen.
+  // Composite trees are 16px wide but 32px tall; horizontal safe margin still
+  // needs only the base tile width plus a little breathing room.
   const half=(s.size||TILE)/2;
   const safe=half+4;
   return {x:clamp(raw,safe,W-safe),y:s.worldY-viewScroll};
@@ -759,6 +787,11 @@ function drawScenery(){
   for(const s of visible){
     const p=sceneryPosition(s);
     drawSprite(s.frame,p.x,p.y,s.size);
+    if(s.topFrame!==null){
+      // Exact tile relationship from the Tiny Ski sheet:
+      // top tile centre is one 16px tile above the bottom tile centre.
+      drawSprite(s.topFrame,p.x,p.y-TILE,s.size);
+    }
   }
 }
 
@@ -863,6 +896,14 @@ function render(){
     if(y>-TILE&&y<H+TILE)drawSprite(t.frame,t.x,y,TILE,t.angle,t.life*.62);
   }
 
+  for(const pad of boostPads){
+    if(pad.used)continue;
+    const p=boostPadPosition(pad,viewScroll);
+    if(p.y<-TILE*2||p.y>H+TILE*2)continue;
+    drawSprite(F.boostLeft,p.x-TILE/2,p.y,TILE);
+    drawSprite(F.boostRight,p.x+TILE/2,p.y,TILE);
+  }
+
   for(const g of courseGates){
     const y=g.worldY-viewScroll;
     if(y<-TILE*2||y>H+TILE*2)continue;
@@ -880,6 +921,9 @@ function render(){
       ? o.frameBase+((Math.floor((animClock+o.animOffset)*7)&1))
       : o.frame;
     drawSprite(frame,p.x,p.y,TILE,0);
+    if(o.topFrame!==null && o.topFrame!==undefined){
+      drawSprite(o.topFrame,p.x,p.y-TILE,TILE,0);
+    }
   }
 
   for(const p of puffs){
