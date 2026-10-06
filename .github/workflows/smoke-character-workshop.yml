@@ -56,16 +56,27 @@ jobs:
           };
 
           const assert = (value,message) => { if(!value) throw new Error(message); };
+          const waitForSelected = async (optionId) => {
+            await page.waitForFunction((id) => {
+              const selected=document.querySelector('[data-option="'+id+'"].selected');
+              const loadError=document.querySelector('#loadError:not([hidden])');
+              return Boolean(selected || loadError);
+            },optionId,{timeout:15000});
+            const errorText=await page.locator('#loadError:not([hidden])').allTextContents();
+            if(errorText.length) throw new Error(optionId+' failed to load: '+errorText.join(' '));
+            assert(await page.locator('[data-option="'+optionId+'"].selected').count()===1,optionId+' did not become active.');
+          };
 
           const headCount=await category('head');
           assert(headCount===19,'Head catalogue should contain the 19 distinct head shapes.');
 
           const headCards=page.locator('#partSourceGrid .partSourceCard:not(.noneCard)');
           const firstHead=await headCards.nth(0).getAttribute('data-option');
+          const secondHead=await headCards.nth(1).getAttribute('data-option');
           await headCards.nth(1).click();
-          await page.waitForTimeout(500);
+          await waitForSelected(secondHead);
           const selectedHead=await page.locator('#partSourceGrid .partSourceCard.selected').getAttribute('data-option');
-          assert(selectedHead && selectedHead!==firstHead,'Selecting a second head did not change the active option.');
+          assert(selectedHead===secondHead && selectedHead!==firstHead,'Selecting a second head did not change the active option.');
 
           const hairCount=await category('hair');
           assert(hairCount===26,'Hair catalogue should contain 25 distinct styles plus None.');
@@ -80,8 +91,7 @@ jobs:
 
           for (const optionId of ['wearable-regular-shoes','wearable-traditional-elf-shoes']) {
             await page.click('[data-option="'+optionId+'"]');
-            await page.waitForTimeout(700);
-            assert(await page.locator('[data-option="'+optionId+'"].selected').count()===1,optionId+' did not become active.');
+            await waitForSelected(optionId);
             const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__?.snapshot?.());
             assert(diag?.shoes?.directSkeletonBinding===true,optionId+' is not using direct skeleton binding.');
             assert(diag?.shoes?.usesDriverSkeleton===true,optionId+' is not bound to the live driver skeleton.');
