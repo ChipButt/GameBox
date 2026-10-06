@@ -392,22 +392,12 @@ function resetProportions() {
 
 function renderPresetSelect() {
   presetSelect.innerHTML = '';
-  const groups = new Map();
-  for (const entry of CHARACTER_CATALOG) {
-    if (!groups.has(entry.group)) groups.set(entry.group, []);
-    groups.get(entry.group).push(entry);
-  }
-  for (const [group, entries] of groups) {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = group;
-    for (const entry of entries) {
-      const option = document.createElement('option');
-      option.value = entry.id;
-      option.textContent = entry.label + ' · ' + entry.variant;
-      optgroup.appendChild(option);
-    }
-    presetSelect.appendChild(optgroup);
-  }
+  CHARACTER_CATALOG.forEach((entry, index) => {
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = 'Complete Look ' + String(index + 1).padStart(2, '0');
+    presetSelect.appendChild(option);
+  });
   presetSelect.value = currentPreset.id;
 }
 
@@ -862,19 +852,37 @@ function snapshotMaterialColors() {
   return colors;
 }
 
-function partSourceMap() {
-  return Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, activeParts[part.id]?.sourceId || null]));
+function partSelectionMap() {
+  const result = {};
+  for (const part of PART_DEFINITIONS) {
+    const state = activeParts[part.id];
+    if (!state?.optionId) {
+      result[part.id] = null;
+      continue;
+    }
+    const option = optionById(part.id, state.optionId);
+    result[part.id] = {
+      optionId: state.optionId,
+      kind: state.kind,
+      sourceId: state.sourceId || null,
+      wearableId: state.wearableId || null,
+      assetPath: option?.kind === 'wearable'
+        ? option.path
+        : (state.sourceId ? entryById.get(state.sourceId)?.path?.replace('../', '') || null : null)
+    };
+  }
+  return result;
 }
 
 function buildPayload() {
   return {
-    version: 3,
+    version: 4,
     name: (characterName.value || 'Unnamed Character').trim().slice(0, 24),
     presetId: currentPreset.id,
     modelId: currentPreset.id,
     framePath: currentPreset.path.replace('../', ''),
     rig: activeRig,
-    parts: partSourceMap(),
+    parts: partSelectionMap(),
     palette: currentPalette,
     materialColors: snapshotMaterialColors(),
     pose: activeClipName || '',
@@ -886,23 +894,23 @@ function buildPayload() {
   };
 }
 
-function uniquePartSources() {
-  return [...new Set(PART_DEFINITIONS.map((part) => activeParts[part.id]?.sourceId).filter(Boolean))];
+function selectedPartCount() {
+  return PART_DEFINITIONS.filter((part) => activeParts[part.id]?.optionId).length;
 }
 
 function updateSummary() {
   const name = (characterName.value || 'Unnamed Character').trim() || 'Unnamed Character';
-  const sources = uniquePartSources();
+  const count = selectedPartCount();
+  const totalStyles = PART_DEFINITIONS.reduce((sum, part) => sum + partCandidates(part.id).length, 0);
+
   summaryName.textContent = name;
-  summaryStyle.textContent = sources.length <= 1
-    ? (entryById.get(sources[0])?.label || currentPreset.label)
-    : 'Custom mix · ' + sources.length + ' source styles';
+  summaryStyle.textContent = 'Custom character · ' + count + ' parts';
   summaryPalette.textContent = humanPalette(currentPalette);
   summaryPose.textContent = activeClipName || '—';
 
-  selectedGroup.textContent = currentPreset.group + ' frame · ' + compatibleEntries().length + ' compatible';
-  selectedModel.textContent = sources.length > 1 ? 'Custom ' + currentPreset.label + ' mix' : currentPreset.label;
-  modelMeta.textContent = '52/52 modular sources · ' + PART_DEFINITIONS.length + ' part slots · ' + clips.length + ' clips';
+  selectedGroup.textContent = 'CREATE A CHARACTER';
+  selectedModel.textContent = name;
+  modelMeta.textContent = totalStyles + ' distinct part styles · ' + clips.length + ' animation clips';
   presetSelect.value = currentPreset.id;
 }
 
@@ -1004,21 +1012,31 @@ async function loadDriver(entryId, options = {}) {
 
         const requestedParts = options.parts || null;
         for (const part of PART_DEFINITIONS) {
-          let sourceId = requestedParts?.[part.id];
-          if (sourceId && !entryById.has(sourceId)) sourceId = null;
-          if (sourceId === undefined) sourceId = entry.id;
+          let selection;
+          const hasSavedValue = requestedParts && Object.prototype.hasOwnProperty.call(requestedParts, part.id);
 
-          if (sourceId) {
-            const has = await partSystem.hasPart(sourceId, part.id);
-            if (has) {
-              await setPart(part.id, sourceId);
-              continue;
+          if (hasSavedValue) {
+            const saved = requestedParts[part.id];
+            if (saved == null) {
+              selection = null;
+            } else if (typeof saved === 'string') {
+              selection = optionById(part.id, saved) || canonicalOptionForSource(part.id, saved);
+            } else if (typeof saved === 'object') {
+              selection = optionById(part.id, saved.optionId)
+                || (saved.sourceId ? canonicalOptionForSource(part.id, saved.sourceId) : null)
+                || (saved.wearableId ? partCandidates(part.id).find((candidate) => candidate.wearableId === saved.wearableId) : null);
             }
+          } else {
+            selection = canonicalOptionForSource(part.id, entry.id);
           }
 
-          const presetHas = await partSystem.hasPart(entry.id, part.id);
-          if (presetHas) await setPart(part.id, entry.id);
-          else if (part.optional) await setPart(part.id, null);
+          if (selection) {
+            await applyPartOption(part.id, selection);
+          } else if (part.optional) {
+            await applyPartOption(part.id, null, { allowNone: true });
+          } else {
+            await applyPartOption(part.id, partCandidates(part.id)[0] || null);
+          }
         }
 
         if (pendingSavedColors) {
@@ -1290,6 +1308,7 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
   if (mixer) mixer.update(dt);
+  syncWearableSkeletons();
   if (turntableToggle.checked) characterHolder.rotation.y += dt * 0.38;
 
   const positions = snowGeo.attributes.position.array;
