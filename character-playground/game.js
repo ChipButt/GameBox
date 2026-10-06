@@ -1315,7 +1315,7 @@ function resize() {
   camera.updateProjectionMatrix();
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
-  previewRoot.position.y = mobile ? 1.38 : 0;
+  previewRoot.position.y = mobile ? 1.42 : 0;
   camera.position.set(previewRoot.position.x, mobile ? 2.55 : 1.64, viewDistance);
   camera.lookAt(previewRoot.position.x, mobile ? 1.78 : 1.16, 0);
 }
