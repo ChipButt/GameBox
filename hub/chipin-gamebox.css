@@ -213,3 +213,8 @@
 }
 .toyGameRelic .gameTile small{color:#d8b16b;text-shadow:0 1px 0 rgba(0,0,0,.45)}
 @media(max-width:560px){.toyGameRelic{width:88%}.relicHomeIcon{width:62px;height:62px}}
+
+
+/* Jigsaw home box */
+.toyGameJigsaw .gameTile{background:linear-gradient(145deg,#764a9b,#35245d)}
+.toyGameJigsaw .gameTileIcon{background:linear-gradient(145deg,#fff8ff,#eaddf2)!important}

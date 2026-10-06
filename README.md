@@ -16,6 +16,7 @@ A mobile-first browser games hub from **Chip In Games**.
 | `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |
 | `christmas-lights/` | Christmas Lights festive rotate-and-connect puzzle game |
 | `santa-letter-sort/` | Santa’s Letter Sort mobile-first festive letter-sorting game |
+| `jigsaw/` | Reusable mobile-first jigsaw engine and playable 36-piece test puzzle |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
 | `shared/` | Player roster, networking, shared styles and menu/branding assets |
@@ -42,6 +43,14 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - Later levels add denser traffic, more colours and hidden trucks
 - Progress is stored locally in the browser
 - Play at `sweet-truck-fever/`
+
+
+### Jigsaw
+- Reusable mobile-first jigsaw engine with procedurally paired tabs and sockets
+- Default 6×6 / 36-piece puzzle using a generated original Christmas test scene
+- 1:1 pointer dragging with preserved grab position, raised held pieces, tactile snap animation, sound/haptic feedback and completion seam fade
+- Faint/off/strong guide modes plus local image selection for testing other artwork without uploading it
+- Play at `jigsaw/`
 
 
 ### Santa’s Letter Sort

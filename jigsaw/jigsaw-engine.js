@@ -1,0 +1,436 @@
+(function(global){
+  'use strict';
+
+  const defaults = {
+    rows: 6,
+    columns: 6,
+    guideOpacity: 0.10,
+    snapTolerance: 0.24,
+    snapDuration: 125,
+    pieceScaleOnHold: 1.025,
+    seed: 'gamebox-jigsaw',
+    sound: true,
+    vibration: true,
+    onProgress: null,
+    onComplete: null
+  };
+
+  function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+  function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
+
+  function hashSeed(value){
+    let h=2166136261>>>0;
+    const s=String(value);
+    for(let i=0;i<s.length;i++){
+      h^=s.charCodeAt(i);
+      h=Math.imul(h,16777619);
+    }
+    return h>>>0;
+  }
+
+  function mulberry32(seed){
+    let a=seed>>>0;
+    return function(){
+      a|=0; a=(a+0x6D2B79F5)|0;
+      let t=Math.imul(a^(a>>>15),1|a);
+      t=(t+Math.imul(t^(t>>>7),61|t))^t;
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }
+
+  function point(x0,y0,x1,y1,t,nx,ny,n){
+    return {x:x0+(x1-x0)*t+nx*n,y:y0+(y1-y0)*t+ny*n};
+  }
+
+  function addEdge(path,x0,y0,x1,y1,nx,ny,shape,depth){
+    if(!shape){ path.lineTo(x1,y1); return; }
+    const d=depth*shape;
+    const a=point(x0,y0,x1,y1,.34,nx,ny,0);
+    const b=point(x0,y0,x1,y1,.42,nx,ny,0);
+    const c=point(x0,y0,x1,y1,.58,nx,ny,0);
+    const e=point(x0,y0,x1,y1,.66,nx,ny,0);
+    const b1=point(x0,y0,x1,y1,.38,nx,ny,d*.16);
+    const b2=point(x0,y0,x1,y1,.42,nx,ny,d*.96);
+    const c1=point(x0,y0,x1,y1,.58,nx,ny,d*.96);
+    const c2=point(x0,y0,x1,y1,.62,nx,ny,d*.16);
+    path.lineTo(a.x,a.y);
+    path.bezierCurveTo(b1.x,b1.y,b2.x,b2.y,b.x,b.y);
+    const m1=point(x0,y0,x1,y1,.44,nx,ny,d);
+    const m2=point(x0,y0,x1,y1,.56,nx,ny,d);
+    path.bezierCurveTo(m1.x,m1.y,m2.x,m2.y,c.x,c.y);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,e.x,e.y);
+    path.lineTo(x1,y1);
+  }
+
+  function piecePath(w,h,pad,edges){
+    const p=new Path2D();
+    const depth=Math.min(w,h)*.185;
+    p.moveTo(pad,pad);
+    addEdge(p,pad,pad,pad+w,pad,0,-1,edges.top,depth);
+    addEdge(p,pad+w,pad,pad+w,pad+h,1,0,edges.right,depth);
+    addEdge(p,pad+w,pad+h,pad,pad+h,0,1,edges.bottom,depth);
+    addEdge(p,pad,pad+h,pad,pad,-1,0,edges.left,depth);
+    p.closePath();
+    return p;
+  }
+
+  class GameBoxJigsaw {
+    constructor(options){
+      this.options=Object.assign({},defaults,options||{});
+      this.canvas=this.options.canvas;
+      if(!this.canvas) throw new Error('GameBoxJigsaw requires a canvas.');
+      this.ctx=this.canvas.getContext('2d');
+      this.hitCanvas=document.createElement('canvas');
+      this.hitCtx=this.hitCanvas.getContext('2d');
+      this.image=new Image();
+      this.image.decoding='async';
+      this.image.crossOrigin='anonymous';
+      this.pieces=[];
+      this.edges=[];
+      this.dragging=null;
+      this.completed=false;
+      this.completionStart=0;
+      this.restartCount=0;
+      this.frame=0;
+      this.oldCssW=0;
+      this.oldCssH=0;
+      this.audioCtx=null;
+      if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        this.options.snapDuration=1;
+      }
+      this.boundResize=()=>this.resize();
+      this.boundDown=e=>this.pointerDown(e);
+      this.boundMove=e=>this.pointerMove(e);
+      this.boundUp=e=>this.pointerUp(e);
+      this.canvas.addEventListener('pointerdown',this.boundDown);
+      this.canvas.addEventListener('pointermove',this.boundMove);
+      this.canvas.addEventListener('pointerup',this.boundUp);
+      this.canvas.addEventListener('pointercancel',this.boundUp);
+      window.addEventListener('resize',this.boundResize,{passive:true});
+      this.ready=this.loadImage(this.options.image);
+    }
+
+    async loadImage(src){
+      if(!src) throw new Error('GameBoxJigsaw requires an image.');
+      this.image.src=src;
+      if(this.image.decode){
+        try{ await this.image.decode(); }
+        catch(_){ await new Promise((resolve,reject)=>{this.image.onload=resolve;this.image.onerror=reject;}); }
+      }else{
+        await new Promise((resolve,reject)=>{this.image.onload=resolve;this.image.onerror=reject;});
+      }
+      this.makeEdges();
+      this.resize(true);
+      this.restart(false);
+      return this;
+    }
+
+    setImage(src){
+      this.completed=false;
+      this.completionStart=0;
+      this.image=new Image();
+      this.image.decoding='async';
+      this.image.crossOrigin='anonymous';
+      this.ready=this.loadImage(src);
+      return this.ready;
+    }
+
+    setGuideOpacity(value){
+      this.options.guideOpacity=clamp(Number(value)||0,0,1);
+      this.render();
+    }
+
+    setSound(enabled){ this.options.sound=!!enabled; }
+
+    makeEdges(){
+      const rows=this.options.rows, cols=this.options.columns;
+      const rnd=mulberry32(hashSeed(this.options.seed));
+      const grid=Array.from({length:rows},()=>Array.from({length:cols},()=>({top:0,right:0,bottom:0,left:0})));
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          if(c<cols-1){
+            const s=rnd()<.5?-1:1;
+            grid[r][c].right=s;
+            grid[r][c+1].left=-s;
+          }
+          if(r<rows-1){
+            const s=rnd()<.5?-1:1;
+            grid[r][c].bottom=s;
+            grid[r+1][c].top=-s;
+          }
+        }
+      }
+      this.edges=grid;
+    }
+
+    computeLayout(cssW,cssH){
+      const topGap=10;
+      const side=Math.floor(Math.min(cssW-24, Math.max(210,cssH*.56), 430));
+      const boardX=Math.round((cssW-side)/2);
+      const boardY=topGap;
+      const trayTop=boardY+side+14;
+      return {width:cssW,height:cssH,boardX,boardY,boardSize:side,trayTop,trayHeight:Math.max(90,cssH-trayTop-10)};
+    }
+
+    resize(first){
+      const rect=this.canvas.getBoundingClientRect();
+      const cssW=Math.max(280,Math.round(rect.width||this.canvas.parentElement.clientWidth||window.innerWidth));
+      const cssH=Math.max(430,Math.round(rect.height||this.canvas.parentElement.clientHeight||window.innerHeight-64));
+      const dpr=Math.min(2,window.devicePixelRatio||1);
+      const previous=this.layout;
+      const oldW=this.oldCssW||cssW, oldH=this.oldCssH||cssH;
+      const loose=this.pieces.map(p=>({nx:p.x/oldW,ny:p.y/oldH,locked:p.locked}));
+      this.canvas.width=Math.round(cssW*dpr);
+      this.canvas.height=Math.round(cssH*dpr);
+      this.ctx.setTransform(dpr,0,0,dpr,0,0);
+      this.dpr=dpr;
+      this.layout=this.computeLayout(cssW,cssH);
+      this.oldCssW=cssW; this.oldCssH=cssH;
+      if(this.image.complete&&this.image.naturalWidth){
+        this.buildPieces();
+        if(previous&&!first&&loose.length===this.pieces.length){
+          loose.forEach((saved,i)=>{
+            const p=this.pieces[i];
+            if(saved.locked){ p.locked=true;p.x=p.targetX;p.y=p.targetY; }
+            else{
+              p.x=clamp(saved.nx*cssW,8-p.pad,cssW-p.w-8+p.pad);
+              p.y=clamp(saved.ny*cssH,this.layout.trayTop-p.pad,cssH-p.h-8+p.pad);
+            }
+          });
+        }
+      }
+      if(this.dragging){ this.dragging=null; }
+      this.render();
+    }
+
+    buildPieces(){
+      const rows=this.options.rows, cols=this.options.columns;
+      const w=this.layout.boardSize/cols, h=this.layout.boardSize/rows;
+      const pad=Math.ceil(Math.min(w,h)*.22);
+      const old=this.pieces;
+      const next=[];
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const id=r*cols+c;
+          const pCanvas=document.createElement('canvas');
+          pCanvas.width=Math.ceil((w+pad*2)*this.dpr);
+          pCanvas.height=Math.ceil((h+pad*2)*this.dpr);
+          const pc=pCanvas.getContext('2d');
+          pc.setTransform(this.dpr,0,0,this.dpr,0,0);
+          const path=piecePath(w,h,pad,this.edges[r][c]);
+          pc.save();
+          pc.clip(path);
+          pc.drawImage(this.image,-c*w+pad,-r*h+pad,this.layout.boardSize,this.layout.boardSize);
+          pc.restore();
+          pc.lineJoin='round';
+          pc.strokeStyle='rgba(255,255,255,.48)';
+          pc.lineWidth=1.1;
+          pc.stroke(path);
+          pc.strokeStyle='rgba(7,25,43,.28)';
+          pc.lineWidth=.7;
+          pc.stroke(path);
+          const prev=old[id];
+          next.push({
+            id,row:r,col:c,w,h,pad,canvas:pCanvas,path,
+            targetX:this.layout.boardX+c*w,
+            targetY:this.layout.boardY+r*h,
+            x:prev?prev.x:0,y:prev?prev.y:0,
+            locked:prev?prev.locked:false,
+            z:prev?prev.z:id,
+            anim:null
+          });
+        }
+      }
+      this.pieces=next;
+    }
+
+    scatter(){
+      const rnd=mulberry32(hashSeed(this.options.seed+'-scatter-'+this.restartCount));
+      const trayTop=this.layout.trayTop;
+      const maxY=Math.max(trayTop+4,this.layout.height-this.pieces[0].h-10);
+      this.pieces.forEach((p,i)=>{
+        p.locked=false; p.anim=null; p.z=i;
+        p.x=clamp(10+rnd()*(this.layout.width-p.w-20),8-p.pad,this.layout.width-p.w-8+p.pad);
+        p.y=clamp(trayTop+rnd()*Math.max(1,maxY-trayTop),trayTop-p.pad,maxY);
+      });
+    }
+
+    restart(increment=true){
+      if(increment) this.restartCount++;
+      this.completed=false;
+      this.completionStart=0;
+      this.dragging=null;
+      if(!this.pieces.length&&this.image.complete&&this.image.naturalWidth) this.buildPieces();
+      if(this.pieces.length) this.scatter();
+      this.progressChanged();
+      this.render();
+    }
+
+    progressChanged(){
+      const placed=this.pieces.filter(p=>p.locked).length;
+      if(typeof this.options.onProgress==='function') this.options.onProgress({placed,total:this.pieces.length});
+    }
+
+    pointerPos(e){
+      const r=this.canvas.getBoundingClientRect();
+      return {x:e.clientX-r.left,y:e.clientY-r.top};
+    }
+
+    pointerDown(e){
+      if(this.completed||!this.pieces.length) return;
+      const pt=this.pointerPos(e);
+      const candidates=this.pieces.filter(p=>!p.locked&&!p.anim).sort((a,b)=>b.z-a.z);
+      const p=candidates.find(piece=>{
+        const localX=pt.x-(piece.x-piece.pad), localY=pt.y-(piece.y-piece.pad);
+        return this.hitCtx.isPointInPath(piece.path,localX,localY) ||
+          (e.pointerType==='touch' && pt.x>=piece.x-5 && pt.x<=piece.x+piece.w+5 && pt.y>=piece.y-5 && pt.y<=piece.y+piece.h+5);
+      });
+      if(!p) return;
+      e.preventDefault();
+      this.canvas.setPointerCapture(e.pointerId);
+      const maxZ=Math.max(0,...this.pieces.map(q=>q.z));
+      p.z=maxZ+1;
+      this.dragging={piece:p,pointerId:e.pointerId,grabX:pt.x-p.x,grabY:pt.y-p.y};
+      this.render();
+    }
+
+    pointerMove(e){
+      if(!this.dragging||e.pointerId!==this.dragging.pointerId) return;
+      e.preventDefault();
+      const pt=this.pointerPos(e), p=this.dragging.piece;
+      p.x=clamp(pt.x-this.dragging.grabX,-p.pad+4,this.layout.width-p.w+p.pad-4);
+      p.y=clamp(pt.y-this.dragging.grabY,-p.pad+4,this.layout.height-p.h+p.pad-4);
+      this.render();
+    }
+
+    pointerUp(e){
+      if(!this.dragging||e.pointerId!==this.dragging.pointerId) return;
+      e.preventDefault();
+      const p=this.dragging.piece;
+      try{ this.canvas.releasePointerCapture(e.pointerId); }catch(_){ }
+      this.dragging=null;
+      const distance=Math.hypot(p.x-p.targetX,p.y-p.targetY);
+      const threshold=Math.min(p.w,p.h)*this.options.snapTolerance;
+      if(distance<=threshold) this.snapPiece(p);
+      else this.render();
+    }
+
+    snapPiece(p){
+      p.anim={fromX:p.x,fromY:p.y,start:performance.now(),duration:this.options.snapDuration};
+      this.startLoop();
+    }
+
+    startLoop(){
+      if(this.frame) return;
+      const tick=(now)=>{
+        this.frame=0;
+        let active=false;
+        this.pieces.forEach(p=>{
+          if(!p.anim) return;
+          const t=clamp((now-p.anim.start)/p.anim.duration,0,1);
+          const k=easeOutCubic(t);
+          p.x=p.anim.fromX+(p.targetX-p.anim.fromX)*k;
+          p.y=p.anim.fromY+(p.targetY-p.anim.fromY)*k;
+          if(t>=1){
+            p.x=p.targetX;p.y=p.targetY;p.anim=null;p.locked=true;
+            this.placementFeedback();
+            this.progressChanged();
+            if(this.pieces.every(q=>q.locked)) this.finishPuzzle();
+          }else active=true;
+        });
+        if(this.completed&&this.completionStart){
+          const elapsed=now-this.completionStart;
+          if(elapsed<1200) active=true;
+        }
+        this.render(now);
+        if(active) this.frame=requestAnimationFrame(tick);
+      };
+      this.frame=requestAnimationFrame(tick);
+    }
+
+    placementFeedback(){
+      if(this.options.vibration&&navigator.vibrate) navigator.vibrate(7);
+      if(!this.options.sound) return;
+      try{
+        this.audioCtx=this.audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+        const ctx=this.audioCtx;
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type='sine';osc.frequency.setValueAtTime(680,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(470,ctx.currentTime+.055);
+        gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.06,ctx.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.075);
+        osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.08);
+      }catch(_){ }
+    }
+
+    finishPuzzle(){
+      this.completed=true;
+      this.completionStart=performance.now()+220;
+      if(this.options.vibration&&navigator.vibrate) navigator.vibrate([18,40,28]);
+      if(typeof this.options.onComplete==='function') setTimeout(()=>this.options.onComplete(),760);
+      this.startLoop();
+    }
+
+    render(now=performance.now()){
+      if(!this.layout) return;
+      const c=this.ctx,l=this.layout;
+      c.clearRect(0,0,l.width,l.height);
+      const grd=c.createLinearGradient(0,0,0,l.height);
+      grd.addColorStop(0,'#102a4a');grd.addColorStop(1,'#06192d');
+      c.fillStyle=grd;c.fillRect(0,0,l.width,l.height);
+
+      c.save();
+      c.shadowColor='rgba(0,0,0,.34)';c.shadowBlur=16;c.shadowOffsetY=7;
+      c.fillStyle='#f7f0df';c.fillRect(l.boardX-5,l.boardY-5,l.boardSize+10,l.boardSize+10);
+      c.restore();
+      c.fillStyle='#e7dfcb';c.fillRect(l.boardX,l.boardY,l.boardSize,l.boardSize);
+      if(this.image.complete&&this.image.naturalWidth&&this.options.guideOpacity>0){
+        c.save();c.globalAlpha=this.options.guideOpacity;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
+      }
+
+      c.save();
+      c.setLineDash([5,7]);c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=1;
+      c.strokeRect(8,l.trayTop-6,l.width-16,l.height-l.trayTop-2);
+      c.restore();
+
+      const ordered=this.pieces.slice().sort((a,b)=>a.z-b.z);
+      const held=this.dragging&&this.dragging.piece;
+      ordered.forEach(p=>{ if(p!==held) this.drawPiece(p,false); });
+      if(held) this.drawPiece(held,true);
+
+      if(this.completed&&this.completionStart&&now>=this.completionStart){
+        const alpha=clamp((now-this.completionStart)/520,0,1);
+        c.save();c.globalAlpha=alpha;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
+        const glow=clamp((now-this.completionStart-180)/500,0,1)*(1-clamp((now-this.completionStart-720)/350,0,1));
+        if(glow>0){
+          c.save();c.globalAlpha=glow*.48;c.strokeStyle='#fff7cc';c.lineWidth=8;c.shadowColor='#f7bd18';c.shadowBlur=24;c.strokeRect(l.boardX-3,l.boardY-3,l.boardSize+6,l.boardSize+6);c.restore();
+        }
+      }
+    }
+
+    drawPiece(p,held){
+      const c=this.ctx;
+      c.save();
+      c.shadowColor=held?'rgba(0,0,0,.48)':'rgba(0,0,0,.28)';
+      c.shadowBlur=held?13:(p.locked?0:5);
+      c.shadowOffsetY=held?7:(p.locked?0:3);
+      const scale=held?this.options.pieceScaleOnHold:1;
+      const cx=p.x+p.w/2,cy=p.y+p.h/2;
+      c.translate(cx,cy);c.scale(scale,scale);c.translate(-cx,-cy);
+      c.drawImage(p.canvas,p.x-p.pad,p.y-p.pad,(p.w+p.pad*2),(p.h+p.pad*2));
+      c.restore();
+    }
+
+    destroy(){
+      if(this.frame) cancelAnimationFrame(this.frame);
+      this.canvas.removeEventListener('pointerdown',this.boundDown);
+      this.canvas.removeEventListener('pointermove',this.boundMove);
+      this.canvas.removeEventListener('pointerup',this.boundUp);
+      this.canvas.removeEventListener('pointercancel',this.boundUp);
+      window.removeEventListener('resize',this.boundResize);
+    }
+  }
+
+  global.GameBoxJigsaw={
+    create(options){ return new GameBoxJigsaw(options); },
+    Engine:GameBoxJigsaw
+  };
+})(window);

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07192d">
+<title>Jigsaw · GameBox</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div class="app">
+  <header class="hud">
+    <a class="roundButton" href="../" aria-label="Back to GameBox">←</a>
+    <div class="titleBlock"><small>JIGSAW</small><strong id="puzzleTitle">Christmas Test</strong></div>
+    <div class="progress" aria-label="Puzzle progress"><b id="placedCount">0</b><span>/</span><b id="totalCount">36</b></div>
+    <button id="menuButton" class="roundButton" type="button" aria-label="Game menu">☰</button>
+  </header>
+  <main class="stage" aria-label="Jigsaw puzzle">
+    <canvas id="puzzleCanvas"></canvas>
+    <div class="trayLabel" aria-hidden="true">PIECES</div>
+  </main>
+</div>
+
+<div id="menuSheet" class="sheet" role="dialog" aria-modal="true" aria-label="Jigsaw menu">
+  <div class="sheetCard">
+    <div class="sheetHead"><strong>Jigsaw</strong><button id="closeMenu" class="roundButton" aria-label="Close menu">×</button></div>
+    <button id="restartButton" class="menuAction">Restart puzzle</button>
+    <button id="guideButton" class="menuAction">Guide: Faint</button>
+    <button id="soundButton" class="menuAction">Sound: On</button>
+    <button id="chooseImage" class="menuAction">Use another image</button>
+    <input id="imageFile" type="file" accept="image/*" hidden>
+    <a class="menuAction homeAction" href="../">Back to GameBox</a>
+  </div>
+</div>
+
+<div id="winOverlay" class="winOverlay" role="dialog" aria-modal="true" aria-label="Puzzle complete">
+  <div class="snow" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="winCard">
+    <div class="completeMark">✓</div>
+    <small>PUZZLE COMPLETE</small>
+    <h1>Picture restored.</h1>
+    <p>36 pieces, one finished scene.</p>
+    <button id="winRestart" class="primary">Play again</button>
+    <button id="winHome" class="secondary">GameBox</button>
+  </div>
+</div>
+
+<script src="jigsaw-engine.js?v=1"></script>
+<script src="game.js?v=1"></script>
+</body>
+</html>
