@@ -242,7 +242,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .partBrowserMeta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .partBrowserMeta span{color:#70828f;font-size:7px;font-weight:850}
 .partBrowserMeta button{border:0;border-radius:6px;padding:5px 8px;background:#8f3942;color:#fff;font-size:6px;font-weight:950;letter-spacing:.06em}
-.partSourceGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:164px;overflow:auto;padding:1px;scrollbar-width:thin}
+.partSourceGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:164px;overflow:auto;padding:1px;scrollbar-width:thin;transition:opacity .15s}\n.partSourceGrid.loading{opacity:.5;pointer-events:none}
 .partSourceCard{position:relative;min-height:54px;border:1px solid rgba(45,74,92,.16);border-radius:7px;padding:8px 7px;text-align:left;background:#eef4f6;color:#24475f;overflow:hidden}
 .partSourceCard strong{display:block;font-size:8px;line-height:1.12}
 .partSourceCard small{display:block;margin-top:4px;color:#748995;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
