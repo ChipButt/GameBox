@@ -120,6 +120,30 @@ jobs:
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
 
+          await page.setViewportSize({width:390,height:844});
+          await page.waitForTimeout(250);
+          await page.click('.partCategoryBtn[data-part="shoes"]');
+          await page.waitForTimeout(100);
+
+          const cardRects=await page.locator('#partSourceGrid .partSourceCard').evaluateAll(cards=>cards.slice(0,9).map(card=>{
+            const r=card.getBoundingClientRect();
+            return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};
+          }));
+          assert(cardRects.length>=6,'Mobile selector did not render enough option cards.');
+          for(let i=0;i<cardRects.length;i++){
+            assert(cardRects[i].width>70 && cardRects[i].height>80,'Mobile selector card collapsed.');
+            for(let j=i+1;j<cardRects.length;j++){
+              const a=cardRects[i],b=cardRects[j];
+              const overlaps=!(a.right<=b.left+1 || b.right<=a.left+1 || a.bottom<=b.top+1 || b.bottom<=a.top+1);
+              assert(!overlaps,'Selector cards overlap on mobile.');
+            }
+          }
+
+          const layout=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().characterScreenBounds);
+          const builderBox=await page.locator('#builder').boundingBox();
+          assert(layout && builderBox,'Could not measure mobile Character Workshop layout.');
+          assert(layout.bottom <= builderBox.y + 4,'Character legs or feet are hidden behind the mobile selector.');
+
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
           await browser.close();
           console.log('Character Workshop browser smoke test passed.');

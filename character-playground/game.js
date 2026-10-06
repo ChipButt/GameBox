@@ -159,7 +159,7 @@ let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { 
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
 let loadGeneration = 0;
 let initialLoad = true;
-let viewDistance = 5.15;
+let viewDistance = 5.8;
 let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingPose = null;
@@ -210,7 +210,7 @@ function fitDriver(model) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
-  if (fitDimension > 0) model.scale.setScalar(2.15 / fitDimension);
+  if (fitDimension > 0) model.scale.setScalar(1.82 / fitDimension);
   model.updateMatrixWorld(true);
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
@@ -1081,8 +1081,38 @@ function workshopDiagnosticSnapshot() {
   };
 }
 
+function characterScreenBounds() {
+  if (!driverScene) return null;
+  characterHolder.updateWorldMatrix(true, true);
+  const box = new THREE.Box3().setFromObject(characterHolder);
+  if (box.isEmpty()) return null;
+
+  const corners = [];
+  for (const x of [box.min.x, box.max.x]) {
+    for (const y of [box.min.y, box.max.y]) {
+      for (const z of [box.min.z, box.max.z]) corners.push(new THREE.Vector3(x, y, z));
+    }
+  }
+
+  const rect = renderer.domElement.getBoundingClientRect();
+  const projected = corners.map((point) => {
+    point.project(camera);
+    return {
+      x: rect.left + (point.x * 0.5 + 0.5) * rect.width,
+      y: rect.top + (-point.y * 0.5 + 0.5) * rect.height
+    };
+  });
+
+  return {
+    left: Math.min(...projected.map((point) => point.x)),
+    right: Math.max(...projected.map((point) => point.x)),
+    top: Math.min(...projected.map((point) => point.y)),
+    bottom: Math.max(...projected.map((point) => point.y))
+  };
+}
+
 window.__GAMEBOX_CHARACTER_WORKSHOP__ = Object.freeze({
-  snapshot: workshopDiagnosticSnapshot
+  snapshot: () => ({ ...workshopDiagnosticSnapshot(), characterScreenBounds: characterScreenBounds() })
 });
 
 async function loadDriver(entryId, options = {}) {
@@ -1281,18 +1311,18 @@ function resize() {
   const height = Math.max(1, window.innerHeight);
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
-  camera.fov = width <= 980 ? 39 : 35;
+  camera.fov = width <= 980 ? 40 : 35;
   camera.updateProjectionMatrix();
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
-  previewRoot.position.y = mobile ? 0.52 : 0;
-  camera.position.set(previewRoot.position.x, mobile ? 1.72 : 1.64, viewDistance);
-  camera.lookAt(previewRoot.position.x, mobile ? 1.02 : 1.16, 0);
+  previewRoot.position.y = mobile ? 1.12 : 0;
+  camera.position.set(previewRoot.position.x, mobile ? 2.30 : 1.64, viewDistance);
+  camera.lookAt(previewRoot.position.x, mobile ? 1.62 : 1.16, 0);
 }
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = 5.15;
+  viewDistance = 5.8;
   resize();
 }
 
