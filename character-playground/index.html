@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#10263a">
   <title>Character Workshop · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -34,6 +34,8 @@
       </div>
       <div class="stageHint">DRAG TO TURN · WHEEL / PINCH TO ZOOM</div>
     </div>
+
+    <nav class="partCategoryRail stageCategoryRail" id="partCategoryRail" aria-label="Character customisation categories"></nav>
 
     <aside class="builder" id="builder">
       <section class="identityStrip">
@@ -65,9 +67,7 @@
           <span id="rigHelp">Head, torso, arms, legs and feet can be selected directly on the 3D character.</span>
         </div>
 
-        <nav class="partCategoryRail" id="partCategoryRail" aria-label="Character part categories"></nav>
-
-        <section class="partBrowser">
+        <section class="partBrowser" id="partBrowser">
           <header class="partBrowserHeader">
             <div>
               <span id="activePartEyebrow">CHARACTER PART</span>
@@ -85,7 +85,7 @@
           <div class="partSourceGrid" id="partSourceGrid"></div>
         </section>
 
-        <section class="proportionPanel">
+        <section class="proportionPanel" id="proportionPanel" hidden>
           <div class="proportionTitle">
             <span>BODY</span>
             <strong>Proportions</strong>
@@ -205,6 +205,6 @@
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=22"></script>
+  <script type="module" src="game.js?v=23"></script>
 </body>
 </html>
