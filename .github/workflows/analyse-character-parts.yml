@@ -1,0 +1,69 @@
+name: Analyse Character Parts Compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/analyse-character-parts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Analyse all 52 character GLTFs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+
+          root=Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          rows=[]
+          sig_groups={}
+          joint_name_groups={}
+
+          for path in sorted(root.glob("*.gltf")):
+              j=json.loads(path.read_text())
+              skin=(j.get("skins") or [{}])[0]
+              joint_ids=skin.get("joints",[])
+              nodes=j.get("nodes",[])
+              joint_names=[nodes[i].get("name",f"#{i}") for i in joint_ids]
+              joint_data=[{
+                  "name":nodes[i].get("name"),
+                  "translation":nodes[i].get("translation"),
+                  "rotation":nodes[i].get("rotation"),
+                  "scale":nodes[i].get("scale"),
+                  "children":nodes[i].get("children"),
+              } for i in joint_ids]
+              sig=hashlib.sha256(json.dumps(joint_data,sort_keys=True,separators=(",",":")).encode()).hexdigest()[:12]
+              namesig=hashlib.sha256(json.dumps(joint_names).encode()).hexdigest()[:12]
+              sig_groups.setdefault(sig,[]).append(path.stem)
+              joint_name_groups.setdefault(namesig,{"names":joint_names,"ids":[]})["ids"].append(path.stem)
+              rows.append({
+                  "id":path.stem,
+                  "skin_count":len(j.get("skins",[])),
+                  "joint_count":len(joint_ids),
+                  "skeleton_signature":sig,
+                  "joint_name_signature":namesig,
+                  "mesh_count":len(j.get("meshes",[])),
+                  "primitive_count":sum(len(m.get("primitives",[])) for m in j.get("meshes",[])),
+                  "materials":[m.get("name","") for m in j.get("materials",[])],
+                  "animations":[a.get("name","") for a in j.get("animations",[])],
+              })
+
+          print("=== CHARACTER COMPATIBILITY REPORT ===")
+          print(json.dumps({
+              "count":len(rows),
+              "skeleton_groups":sig_groups,
+              "joint_name_groups":joint_name_groups,
+              "characters":rows,
+              "all_material_names":sorted(set(x for row in rows for x in row["materials"]))
+          },indent=2))
+          print("=== END REPORT ===")
+          PY
