@@ -7,16 +7,21 @@
   const menu=document.getElementById('menuSheet');
   const win=document.getElementById('winOverlay');
   const guideBtn=document.getElementById('guideButton');
+  const guideState=document.getElementById('guideState');
   const soundBtn=document.getElementById('soundButton');
+  const soundState=document.getElementById('soundState');
+  const soundIcon=document.getElementById('soundIcon');
   const pieceButtons=[...document.querySelectorAll('[data-piece-grid]')];
   const winPieceCount=document.getElementById('winPieceCount');
   const fileInput=document.getElementById('imageFile');
   const titleEl=document.getElementById('puzzleTitle');
   let guideIndex=0;
   const guideValues=[0,.10,.28];
-  const guideLabels=['Guide: Off','Guide: Faint','Guide: Strong'];
+  const guideLabels=['Off','Faint','Strong'];
   let sound=true;
   let objectUrl='';
+
+  const ICON_BASE='../assets/gamebox/kenney/icons/Game Icons/White/2x/';
 
   const puzzle=GameBoxJigsaw.create({
     canvas,
@@ -47,11 +52,14 @@
   menu.addEventListener('click',e=>{ if(e.target===menu) closeMenu(); });
 
   document.getElementById('restartButton').addEventListener('click',()=>{
-    closeMenu(); win.classList.remove('show'); puzzle.restart();
+    closeMenu();
+    win.classList.remove('show');
+    puzzle.restart();
   });
 
   document.getElementById('winRestart').addEventListener('click',()=>{
-    win.classList.remove('show'); puzzle.restart();
+    win.classList.remove('show');
+    puzzle.restart();
   });
 
   document.getElementById('winHome').addEventListener('click',()=>{ location.href='../'; });
@@ -59,7 +67,9 @@
   guideBtn.addEventListener('click',()=>{
     guideIndex=(guideIndex+1)%guideValues.length;
     puzzle.setGuideOpacity(guideValues[guideIndex]);
-    guideBtn.textContent=guideLabels[guideIndex];
+    guideState.textContent=guideLabels[guideIndex];
+    guideBtn.dataset.guide=guideLabels[guideIndex].toLowerCase();
+    guideBtn.setAttribute('aria-label','Guide: '+guideLabels[guideIndex]);
   });
 
   pieceButtons.forEach(button=>{
@@ -78,8 +88,11 @@
   });
 
   soundBtn.addEventListener('click',()=>{
-    sound=!sound;puzzle.setSound(sound);
-    soundBtn.textContent='Sound: '+(sound?'On':'Off');
+    sound=!sound;
+    puzzle.setSound(sound);
+    soundState.textContent=sound?'On':'Off';
+    soundIcon.src=ICON_BASE+(sound?'audioOn.png':'audioOff.png');
+    soundBtn.setAttribute('aria-label','Sound: '+(sound?'On':'Off'));
   });
 
   document.getElementById('chooseImage').addEventListener('click',()=>fileInput.click());
@@ -95,6 +108,9 @@
     catch(err){ console.error(err); }
   });
 
-  guideBtn.textContent=guideLabels[guideIndex];
-  soundBtn.textContent='Sound: On';
+  guideState.textContent=guideLabels[guideIndex];
+  guideBtn.dataset.guide='off';
+  guideBtn.setAttribute('aria-label','Guide: Off');
+  soundState.textContent='On';
+  soundBtn.setAttribute('aria-label','Sound: On');
 })();
