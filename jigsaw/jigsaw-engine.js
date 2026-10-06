@@ -219,13 +219,23 @@
     }
 
     computeLayout(cssW,cssH){
-      const framePad=16;
-      const topGap=18;
-      const side=Math.floor(Math.min(cssW-framePad*2, Math.max(210,cssH*.56), 430));
+      const frameClearance=20;
+      const frameOutset=16;
+      const trayGap=28;
+      const side=Math.floor(Math.min(cssW-frameClearance*2, Math.max(210,cssH*.56), 430));
       const boardX=Math.round((cssW-side)/2);
-      const boardY=topGap;
-      const trayTop=boardY+side+framePad;
-      return {width:cssW,height:cssH,boardX,boardY,boardSize:side,trayTop,trayHeight:Math.max(90,cssH-trayTop-10)};
+      const boardY=frameClearance;
+      const trayTop=boardY+side+trayGap;
+      return {
+        width:cssW,
+        height:cssH,
+        boardX,
+        boardY,
+        boardSize:side,
+        frameOutset,
+        trayTop,
+        trayHeight:Math.max(90,cssH-trayTop-10)
+      };
     }
 
     resize(first){
@@ -488,7 +498,7 @@
         const sw=img.naturalWidth;
         const sh=img.naturalHeight;
         const src=Math.max(8,Math.round(Math.min(sw,sh)*.25));
-        const dst=18;
+        const dst=l.frameOutset||16;
         const x=l.boardX-dst;
         const y=l.boardY-dst;
         const w=l.boardSize+dst*2;
