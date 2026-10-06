@@ -92,6 +92,7 @@
     puzzle.setSound(sound);
     soundState.textContent=sound?'On':'Off';
     soundIcon.src=ICON_BASE+(sound?'audioOn.png':'audioOff.png');
+    soundBtn.dataset.enabled=sound?'true':'false';
     soundBtn.setAttribute('aria-label','Sound: '+(sound?'On':'Off'));
   });
 
@@ -112,5 +113,6 @@
   guideBtn.dataset.guide='off';
   guideBtn.setAttribute('aria-label','Guide: Off');
   soundState.textContent='On';
+  soundBtn.dataset.enabled='true';
   soundBtn.setAttribute('aria-label','Sound: On');
 })();
