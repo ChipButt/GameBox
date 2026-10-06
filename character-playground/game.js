@@ -1097,11 +1097,20 @@ function workshopDiagnosticSnapshot() {
       const raw = node.userData?.sourceMaterialName || node.material?.name || '';
       if (raw) materialNames.add(raw);
     });
+    const weightedBoneNames = new Set();
+    state.group?.traverse?.((node) => {
+      if (!node.isSkinnedMesh || !node.skeleton) return;
+      for (const index of usedSkinBoneIndices(node)) {
+        const bone = node.skeleton.bones[index];
+        if (bone?.name) weightedBoneNames.add(bone.name);
+      }
+    });
     parts[part.id] = {
       optionId: state.optionId || null,
       sourceId: state.sourceId || null,
       wearableId: state.wearableId || null,
-      materialNames: Array.from(materialNames).sort()
+      materialNames: Array.from(materialNames).sort(),
+      weightedBoneNames: Array.from(weightedBoneNames).sort()
     };
   }
 
