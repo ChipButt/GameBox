@@ -1,0 +1,60 @@
+name: Inspect Character Part Compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-character-parts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Quaternius GLTF structure
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib, collections
+          root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          rows=[]
+          mesh_names=collections.Counter()
+          node_names=collections.Counter()
+          signatures=collections.Counter()
+          for p in sorted(root.glob("*.gltf")):
+              j=json.loads(p.read_text())
+              meshes=[m.get("name","") for m in j.get("meshes",[])]
+              nodes=[n.get("name","") for n in j.get("nodes",[])]
+              skins=j.get("skins",[])
+              joints=[]
+              for s in skins:
+                  joints.append([nodes[i] if i < len(nodes) else str(i) for i in s.get("joints",[])])
+              mesh_names.update(x for x in meshes if x)
+              node_names.update(x for x in nodes if x)
+              sig=tuple(joints[0]) if joints else ()
+              signatures[sig]+=1
+              rows.append({
+                  "file":p.name,
+                  "meshes":meshes,
+                  "nodes":nodes,
+                  "skins":len(skins),
+                  "jointCount":len(joints[0]) if joints else 0,
+                  "joints":joints[0] if joints else [],
+                  "animations":[a.get("name","") for a in j.get("animations",[])],
+                  "materials":[m.get("name","") for m in j.get("materials",[])],
+              })
+          print("FILES",len(rows))
+          print("SKELETON_SIGNATURES",[(len(k),v) for k,v in signatures.items()])
+          for r in rows:
+              print("===MODEL",r["file"])
+              print("SKINS",r["skins"],"JOINTS",r["jointCount"])
+              print("MESHES",json.dumps(r["meshes"]))
+              print("NODES",json.dumps(r["nodes"]))
+              print("MATERIALS",json.dumps(r["materials"]))
+              print("ANIMS",json.dumps(r["animations"]))
+          PY
