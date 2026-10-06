@@ -1,62 +1,62 @@
 :root{
-  --snow:#cfe7f7;
-  --ink:#102f52;
-  --blue:#3478ad;
-  --red:#d84c55;
+  --snow:#dceef7;
+  --ink:#123651;
+  --blue:#2e6f9e;
+  --red:#d95055;
 }
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#9ccbe6;color:#fff;font-family:ui-rounded,"Arial Rounded MT Bold",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{touch-action:none}
-button,a{-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#91bdd4;color:#fff;font-family:ui-rounded,"Arial Rounded MT Bold",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,a{-webkit-tap-highlight-color:transparent;outline:none}
 button{font:inherit}
-img{image-rendering:pixelated}
-.skiApp{width:min(100vw,520px);height:100dvh;margin:0 auto;position:relative;overflow:hidden;background:var(--snow)}
-.gameFrame{position:absolute;inset:0;overflow:hidden;background:var(--snow)}
-#gameCanvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none;background:var(--snow)}
-.hud{position:absolute;z-index:12;top:0;left:0;right:0;padding:max(8px,env(safe-area-inset-top)) 8px 0;display:grid;grid-template-columns:42px minmax(0,1.25fr) minmax(0,.75fr) minmax(0,1.05fr) 42px;gap:5px;align-items:start;pointer-events:none}
+img{image-rendering:pixelated;image-rendering:crisp-edges}
+.skiApp{width:min(100vw,520px);height:100dvh;margin:0 auto;position:relative;overflow:hidden;background:#b8d9ea}
+.gameFrame{position:absolute;inset:0;overflow:hidden;background:#b8d9ea}
+#gameCanvas{width:100%;height:100%;display:block;touch-action:none;background:#b8d9ea}
+.hud{position:absolute;z-index:12;top:0;left:0;right:0;display:grid;grid-template-columns:42px minmax(0,1.25fr) minmax(0,.72fr) minmax(0,1.1fr) 42px;gap:5px;align-items:start;padding:max(8px,env(safe-area-inset-top)) 8px 0;pointer-events:none}
 .hud>*{pointer-events:auto}
-.iconButton,.steerButton{border:0;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonSquare_blue.png") center/100% 100% no-repeat;background-color:transparent;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff}
-.iconButton{width:42px;height:42px}
-.iconButton:active,.steerButton:active{background-image:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonSquare_blue_pressed.png");transform:translateY(2px)}
-.iconButton img{width:22px;height:22px;object-fit:contain}
-.hudPanel{height:42px;min-width:0;padding:5px 5px 4px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panelInset_blue.png") center/100% 100% no-repeat;text-align:center;display:flex;flex-direction:column;justify-content:center;color:#fff;text-shadow:0 1px 0 #173657}
-.hudPanel small{font-size:7px;line-height:1;font-weight:900;letter-spacing:.12em;opacity:.82}
-.hudPanel strong{font-size:15px;line-height:1.25;white-space:nowrap;letter-spacing:.02em}
-.gatePanel strong{color:#ffe16b}.bestPanel strong{color:#dff5ff}
-.speedBadge{position:absolute;z-index:10;top:calc(max(8px,env(safe-area-inset-top)) + 50px);left:50%;transform:translateX(-50%);min-width:90px;height:26px;padding:4px 12px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panelInset_blue.png") center/100% 100% no-repeat;color:#fff;text-shadow:0 1px 0 #173657;text-align:center;font-size:9px;line-height:18px;font-weight:900;letter-spacing:.14em;pointer-events:none}
-.assetStatus{position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 15px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panel_beigeLight.png") center/100% 100% no-repeat;color:#174d7a;font-size:11px;font-weight:900;letter-spacing:.05em;text-align:center;white-space:nowrap;pointer-events:none}
-.assetStatus.ready{opacity:0;transition:opacity .22s linear}
-.steerControls{position:absolute;z-index:11;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;padding:0 14px;pointer-events:none}
-.steerButton{width:70px;height:70px;opacity:.82;pointer-events:auto;touch-action:none}
-.steerButton img{width:37px;height:37px;object-fit:contain}
-.steerButton.right img{transform:scaleX(-1)}
-.overlay{position:absolute;inset:0;z-index:16;display:grid;place-items:center;padding:82px 18px max(22px,env(safe-area-inset-bottom));background:rgba(207,231,247,.82);opacity:0;pointer-events:none;transition:opacity .16s linear}
+.hudIcon{width:42px;height:42px;border:0;padding:0;display:grid;place-items:center;background:url("https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/ui/UI%20Pack%20-%20Pixel%20Adventure/Tiles/Large%20tiles/Thin%20outline/tile_0022.png") center/100% 100% no-repeat;color:#fff;text-decoration:none;cursor:pointer;touch-action:manipulation}
+.hudIcon img{width:20px;height:20px;object-fit:contain}
+.hudIcon:active{transform:translateY(1px)}
+.hudBox{height:42px;min-width:0;padding:5px 5px 4px;display:flex;flex-direction:column;justify-content:center;text-align:center;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panelInset_blue.png") center/100% 100% no-repeat;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.hudBox span{font-size:7px;line-height:1;font-weight:900;letter-spacing:.14em;opacity:.85}
+.hudBox strong{font-size:15px;line-height:1.3;white-space:nowrap}
+.hudBox.compact strong{color:#ffe37a}.hudBox:last-of-type strong{color:#dff5ff}
+.speedBadge{position:absolute;z-index:10;top:calc(max(8px,env(safe-area-inset-top)) + 49px);left:50%;transform:translateX(-50%);height:25px;min-width:92px;padding:4px 12px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panelInset_blue.png") center/100% 100% no-repeat;color:#fff;text-align:center;text-shadow:0 1px 0 rgba(0,0,0,.35);font-size:8px;line-height:17px;font-weight:900;letter-spacing:.15em;pointer-events:none}
+.assetStatus{position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panel_beigeLight.png") center/100% 100% no-repeat;color:#184d73;font-size:11px;font-weight:900;letter-spacing:.05em;white-space:nowrap;pointer-events:none}
+.assetStatus.ready{opacity:0;transition:opacity .18s linear}
+.overlay{position:absolute;inset:0;z-index:16;display:grid;place-items:center;padding:76px 18px max(18px,env(safe-area-inset-bottom));background:rgba(186,218,234,.78);opacity:0;pointer-events:none;transition:opacity .14s linear}
 .overlay.show{opacity:1;pointer-events:auto}
-.panelCard{background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panel_beigeLight.png") center/100% 100% no-repeat;color:var(--ink);text-align:center}
-.startCard,.gameOverCard{width:min(92%,350px);padding:19px 18px 17px;filter:drop-shadow(0 10px 0 rgba(28,71,104,.18))}
-.heroScene,.wipeoutScene{height:86px;position:relative;margin:-2px auto 2px;max-width:270px}
-.heroScene img,.wipeoutScene img{position:absolute;width:54px;height:54px;object-fit:contain;transform:scale(2.15);transform-origin:center}
-.heroSkier{left:50%;top:20px;margin-left:-27px}
-.heroTreeLeft{left:22px;top:10px}.heroTreeRight{right:20px;top:4px}.heroFlagLeft{left:82px;top:32px}.heroFlagRight{right:80px;top:30px}
-.eyebrow{margin:0 0 4px;font-size:9px;font-weight:900;letter-spacing:.24em;color:#377bab}.eyebrow.danger{color:var(--red)}
-.startCard h1{margin:0;font-size:31px;line-height:1;letter-spacing:-.035em;color:#174d7a;text-shadow:0 2px 0 #fff}.startCard h1 span{color:var(--red)}
-.intro{max-width:250px;margin:10px auto 14px;font-size:13px;line-height:1.35;font-weight:800;color:#3e6380}
-.longButton{width:100%;min-height:50px;margin:5px 0;border:0;padding:0 16px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue.png") center/100% 100% no-repeat;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:900;letter-spacing:.035em;cursor:pointer}
-.longButton:active:not(:disabled){background-image:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue_pressed.png");transform:translateY(2px)}
-.longButton:disabled{opacity:.55;filter:grayscale(.55)}
-.secondaryButton{background-image:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue.png");color:#fff}.secondaryButton:active{background-image:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue_pressed.png")}
-.iconMenu img{width:20px;height:20px;object-fit:contain}
-.bestStart{margin:7px 0 3px;font-size:10px;font-weight:900;letter-spacing:.13em;color:#55758e}.bestStart strong{color:#174d7a}
-.controlHint{display:block;margin-top:8px;font-size:9px;line-height:1.3;font-weight:800;color:#67859a}
-.wipeoutScene img:first-child{left:44px;top:18px}.wipeoutScene img:last-child{right:46px;top:22px}.fallenSkier{left:50%;top:22px;margin-left:-27px;transform:scale(2.15) rotate(72deg)!important}
-.gameOverCard h2{margin:0;font-size:44px;line-height:1;color:var(--red)}
-.gameOverCard p{margin:7px 0;font-size:12px;font-weight:900;color:#476986}
-#recordText{color:#1d5c8f}
-.sheet{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .14s linear}
+.menuCard{width:min(92%,348px);padding:18px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panel_beigeLight.png") center/100% 100% no-repeat;color:var(--ink);text-align:center;filter:drop-shadow(0 8px 0 rgba(33,77,103,.18))}
+.miniSlope,.crashScene{height:62px;display:flex;align-items:center;justify-content:center;gap:10px;margin:0 auto 5px}
+.miniSlope img,.crashScene img{width:32px;height:32px;object-fit:contain}
+.miniSlope .menuSkier{margin:0 5px}
+.crashScene .crashedSkier{transform:rotate(72deg)}
+.eyebrow{margin:0 0 3px;font-size:9px;font-weight:900;letter-spacing:.23em;color:#3979a4}.eyebrow.danger{color:var(--red)}
+.menuCard h1{margin:0;font-size:30px;line-height:1;letter-spacing:-.03em;color:#174c73;text-shadow:0 2px 0 #fff}
+.menuCard h1 em{font-style:normal;color:var(--red)}
+.tagline{max-width:260px;margin:10px auto 13px;font-size:13px;line-height:1.35;font-weight:800;color:#476a82}
+.kenneyButton{width:100%;min-height:50px;margin:5px 0;border:0;padding:0 15px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue.png") center/100% 100% no-repeat;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:900;letter-spacing:.035em;cursor:pointer;touch-action:manipulation}
+.kenneyButton:active:not(:disabled){background-image:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/buttonLong_blue_pressed.png");transform:translateY(1px)}
+.kenneyButton:disabled{opacity:.55;filter:grayscale(.5)}
+.mutedButton{filter:saturate(.25) brightness(1.07)}
+.startStats{margin:7px 0 5px;font-size:10px;font-weight:900;letter-spacing:.12em;color:#5d7b91}.startStats strong{color:#174c73}
+.controlStrip{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:8px;margin:8px 0 3px;padding:6px 10px;background:url("../assets/gamebox/kenney/ui/UI%20Adventure%20Pack/panelInset_blue.png") center/100% 100% no-repeat;color:#fff;font-size:9px;line-height:1.25;font-weight:900;letter-spacing:.05em}
+.controlStrip img{width:34px;height:34px;object-fit:contain}
+.menuCard>small{display:block;margin-top:5px;color:#6a8598;font-size:9px;font-weight:800}
+.gameOverCard h2{margin:0;font-size:43px;line-height:1;color:var(--red)}
+.gameOverCard p{margin:6px 0;font-size:12px;font-weight:900;color:#4d6c82}
+#recordText{color:#1d5d8d}
+.sheet{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .12s linear}
 .sheet.open{opacity:1;pointer-events:auto}
-.sheetBackdrop{position:absolute;inset:0;background:rgba(12,39,62,.65)}
-.pauseCard{position:relative;width:min(94vw,350px);padding:18px;filter:drop-shadow(0 10px 0 rgba(19,50,74,.25))}
-.sheetHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}.sheetHead strong{font-size:20px;color:#174d7a}.sheetHead .iconButton{width:40px;height:40px}
-@media(pointer:fine){.steerControls{opacity:.72}.steerButton{width:62px;height:62px}.steerButton img{width:32px;height:32px}}
-@media(max-width:360px){.hud{grid-template-columns:38px minmax(0,1.25fr) minmax(0,.72fr) minmax(0,1fr) 38px;gap:3px;padding-left:4px;padding-right:4px}.iconButton{width:38px;height:38px}.hudPanel{height:38px}.hudPanel strong{font-size:13px}.hudPanel small{font-size:6px}.steerButton{width:62px;height:62px}.startCard,.gameOverCard{padding-left:14px;padding-right:14px}}
+.sheetBackdrop{position:absolute;inset:0;background:rgba(8,36,54,.63)}
+.pauseCard{position:relative}
+.pauseTitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pauseTitle strong{font-size:20px;color:#174c73}.pauseTitle .hudIcon{width:40px;height:40px}
+.iconLine img{width:20px;height:20px;object-fit:contain}
+@media(max-width:360px){
+  .hud{grid-template-columns:38px minmax(0,1.25fr) minmax(0,.72fr) minmax(0,1fr) 38px;gap:3px;padding-left:4px;padding-right:4px}
+  .hudIcon{width:38px;height:38px}.hudBox{height:38px}.hudBox strong{font-size:13px}.hudBox span{font-size:6px}
+  .menuCard{padding:15px}.menuCard h1{font-size:27px}
+}
 @media(prefers-reduced-motion:reduce){.overlay,.sheet,.assetStatus{transition:none}}
