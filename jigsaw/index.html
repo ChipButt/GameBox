@@ -3,108 +3,137 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#173f68">
+<meta name="theme-color" content="#6f879b">
 <title>Jigsaw · GameBox</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <div class="app">
   <header class="hud">
-    <a class="kenneySquare hudButton" href="../" aria-label="Back to GameBox">
+    <a class="roundControl hudControl" href="../" aria-label="Back to GameBox">
       <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/arrowLeft.png" alt="">
     </a>
-    <div class="titleBlock">
-      <small>JIGSAW</small>
+
+    <div class="titleBanner" aria-label="Jigsaw puzzle">
+      <span>JIGSAW</span>
       <strong id="puzzleTitle">Christmas Test</strong>
     </div>
-    <div class="progress" aria-label="Puzzle progress">
-      <span class="progressLabel">PLACED</span>
-      <span class="progressValue"><b id="placedCount">0</b><i>/</i><b id="totalCount">36</b></span>
-    </div>
-    <button id="menuButton" class="kenneySquare hudButton" type="button" aria-label="Puzzle options">
+
+    <button id="menuButton" class="roundControl hudControl" type="button" aria-label="Puzzle options">
       <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/gear.png" alt="">
     </button>
+
+    <div class="progressPanel" aria-label="Puzzle progress">
+      <div class="progressCopy">
+        <span>PIECES PLACED</span>
+        <strong><b id="placedCount">0</b><i>/</i><b id="totalCount">36</b></strong>
+      </div>
+      <div class="progressBar" aria-hidden="true">
+        <div id="progressFill" class="progressFill"></div>
+      </div>
+    </div>
   </header>
-  <main class="stage" aria-label="Jigsaw puzzle">
+
+  <main id="puzzleStage" class="stage" aria-label="Jigsaw puzzle">
+    <div id="boardBackdrop" class="boardBackdrop" aria-hidden="true"></div>
+    <div id="trayBackdrop" class="trayBackdrop" aria-hidden="true"></div>
     <canvas id="puzzleCanvas"></canvas>
-    <div class="trayLabel" aria-hidden="true">PIECES</div>
+    <div id="boardFrame" class="boardFrame" aria-hidden="true"></div>
+    <div id="trayLabel" class="trayLabel" aria-hidden="true">LOOSE PIECES</div>
   </main>
 </div>
 
 <div id="menuSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
-  <div class="sheetCard">
-    <div class="sheetHead">
-      <div><small>JIGSAW</small><strong id="menuTitle">Puzzle Options</strong></div>
-      <button id="closeMenu" class="kenneySquare compactSquare" type="button" aria-label="Close options">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/cross.png" alt="">
-      </button>
+  <div class="optionsWrap">
+    <div class="overlayBanner">
+      <span id="menuTitle">PUZZLE OPTIONS</span>
     </div>
 
-    <section class="settingPanel" aria-labelledby="piecesLabel">
-      <div class="settingTitle">
-        <span class="settingIcon"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/menuGrid.png" alt=""></span>
-        <div><small>DIFFICULTY</small><strong id="piecesLabel">Pieces</strong></div>
-      </div>
-      <div class="pieceChoices" id="pieceChoices" role="group" aria-label="Number of puzzle pieces">
-        <button type="button" data-piece-grid="2" aria-pressed="false">4</button>
-        <button type="button" data-piece-grid="3" aria-pressed="false">9</button>
-        <button type="button" data-piece-grid="4" aria-pressed="false">16</button>
-        <button type="button" data-piece-grid="5" aria-pressed="false">25</button>
-        <button type="button" data-piece-grid="6" class="selected" aria-pressed="true">36</button>
-        <button type="button" data-piece-grid="7" aria-pressed="false">49</button>
-        <button type="button" data-piece-grid="8" aria-pressed="false">64</button>
-        <button type="button" data-piece-grid="9" aria-pressed="false">81</button>
-        <button type="button" data-piece-grid="10" aria-pressed="false">100</button>
-        <button type="button" data-piece-grid="11" aria-pressed="false">121</button>
-        <button type="button" data-piece-grid="12" aria-pressed="false">144</button>
-        <button type="button" data-piece-grid="13" aria-pressed="false">169</button>
-      </div>
-    </section>
+    <div class="optionsBoard">
+      <button id="closeMenu" class="closeControl" type="button" aria-label="Close options"></button>
 
-    <div class="optionGrid">
-      <button id="guideButton" class="kenneyLong optionButton" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/target.png" alt="">
-        <span class="optionCopy"><small>GUIDE</small><strong id="guideState">Off</strong></span>
-      </button>
-      <button id="soundButton" class="kenneyLong optionButton" type="button">
-        <img id="soundIcon" src="../assets/gamebox/kenney/icons/Game Icons/White/2x/audioOn.png" alt="">
-        <span class="optionCopy"><small>SOUND</small><strong id="soundState">On</strong></span>
-      </button>
+      <section class="difficultySection" aria-labelledby="piecesLabel">
+        <div class="sectionHeading">
+          <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/menuGrid.png" alt="">
+          <div>
+            <small>CHOOSE YOUR CHALLENGE</small>
+            <strong id="piecesLabel">Puzzle pieces</strong>
+          </div>
+        </div>
+
+        <div class="pieceChoices" id="pieceChoices" role="group" aria-label="Number of puzzle pieces">
+          <button type="button" data-piece-grid="2" aria-pressed="false"><span>4</span></button>
+          <button type="button" data-piece-grid="3" aria-pressed="false"><span>9</span></button>
+          <button type="button" data-piece-grid="4" aria-pressed="false"><span>16</span></button>
+          <button type="button" data-piece-grid="5" aria-pressed="false"><span>25</span></button>
+          <button type="button" data-piece-grid="6" class="selected" aria-pressed="true"><span>36</span></button>
+          <button type="button" data-piece-grid="7" aria-pressed="false"><span>49</span></button>
+          <button type="button" data-piece-grid="8" aria-pressed="false"><span>64</span></button>
+          <button type="button" data-piece-grid="9" aria-pressed="false"><span>81</span></button>
+          <button type="button" data-piece-grid="10" aria-pressed="false"><span>100</span></button>
+          <button type="button" data-piece-grid="11" aria-pressed="false"><span>121</span></button>
+          <button type="button" data-piece-grid="12" aria-pressed="false"><span>144</span></button>
+          <button type="button" data-piece-grid="13" aria-pressed="false"><span>169</span></button>
+        </div>
+      </section>
+
+      <div class="optionRows">
+        <button id="guideButton" class="optionRow" type="button">
+          <span class="rowIcon"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/target.png" alt=""></span>
+          <span class="rowCopy"><small>PICTURE GUIDE</small><strong id="guideState">Off</strong></span>
+          <img id="guideCheck" class="stateCheck" src="../assets/gamebox/kenney/ui/UI Pack - Adventure/checkbox_brown_empty.png" alt="">
+        </button>
+
+        <button id="soundButton" class="optionRow" type="button">
+          <span class="rowIcon"><img id="soundIcon" src="../assets/gamebox/kenney/icons/Game Icons/White/2x/audioOn.png" alt=""></span>
+          <span class="rowCopy"><small>SOUND</small><strong id="soundState">On</strong></span>
+          <img id="soundCheck" class="stateCheck" src="../assets/gamebox/kenney/ui/UI Pack - Adventure/checkbox_brown_checked.png" alt="">
+        </button>
+      </div>
+
+      <div class="actionGrid">
+        <button id="restartButton" class="woodAction" type="button">
+          <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Restart</span>
+        </button>
+        <button id="chooseImage" class="woodAction" type="button">
+          <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/import.png" alt=""><span>New image</span>
+        </button>
+      </div>
+      <input id="imageFile" type="file" accept="image/*" hidden>
+
+      <a class="woodAction homeAction" href="../">
+        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>Back to GameBox</span>
+      </a>
     </div>
-
-    <button id="restartButton" class="kenneyLong menuAction" type="button">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Restart puzzle</span>
-    </button>
-    <button id="chooseImage" class="kenneyLong menuAction" type="button">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/import.png" alt=""><span>Use another image</span>
-    </button>
-    <input id="imageFile" type="file" accept="image/*" hidden>
-    <a class="kenneyLong menuAction homeAction" href="../">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>Back to GameBox</span>
-    </a>
   </div>
 </div>
 
 <div id="winOverlay" class="winOverlay" role="dialog" aria-modal="true" aria-labelledby="completeTitle">
-  <div class="winCard">
-    <div class="completeMark" aria-hidden="true">
-      <img src="../assets/gamebox/kenney/ui/UI Adventure Pack/iconCheck_blue.png" alt="">
-    </div>
-    <small>PUZZLE COMPLETE</small>
-    <h1 id="completeTitle">Picture restored!</h1>
-    <p>You placed all <strong id="winPieceCount">36</strong> pieces.</p>
-    <div class="winActions">
-      <button id="winRestart" class="kenneyLong completionAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Play again</span>
-      </button>
-      <button id="winHome" class="kenneyLong completionAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>GameBox</span>
-      </button>
+  <div class="winWrap">
+    <div class="completeBanner"><span>PUZZLE COMPLETE!</span></div>
+
+    <div class="winBoard">
+      <div class="starRow" aria-hidden="true">
+        <img src="../assets/gamebox/kenney/ui/UI Pack - Adventure/minimap_icon_star_yellow.png" alt="">
+        <img class="heroStar" src="../assets/gamebox/kenney/ui/UI Pack - Adventure/minimap_icon_star_yellow.png" alt="">
+        <img src="../assets/gamebox/kenney/ui/UI Pack - Adventure/minimap_icon_star_yellow.png" alt="">
+      </div>
+      <h1 id="completeTitle">Picture restored!</h1>
+      <p>All <strong id="winPieceCount">36</strong> pieces are back where they belong.</p>
+
+      <div class="winActions">
+        <button id="winRestart" class="woodAction" type="button">
+          <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Play again</span>
+        </button>
+        <button id="winHome" class="woodAction" type="button">
+          <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>GameBox</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<script src="jigsaw-engine.js?v=6"></script>
-<script src="game.js?v=4"></script>
+<script src="jigsaw-engine.js?v=7"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
