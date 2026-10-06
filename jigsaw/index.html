@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#07192d">
 <title>Jigsaw · GameBox</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -25,7 +25,18 @@
   <div class="sheetCard">
     <div class="sheetHead"><strong>Jigsaw</strong><button id="closeMenu" class="roundButton" aria-label="Close menu">×</button></div>
     <button id="restartButton" class="menuAction">Restart puzzle</button>
-    <button id="guideButton" class="menuAction">Guide: Faint</button>
+    <div class="pieceSetting">
+      <span>Pieces</span>
+      <div class="pieceChoices" id="pieceChoices" role="group" aria-label="Number of puzzle pieces">
+        <button type="button" data-piece-grid="3" aria-pressed="false">9</button>
+        <button type="button" data-piece-grid="4" aria-pressed="false">16</button>
+        <button type="button" data-piece-grid="5" aria-pressed="false">25</button>
+        <button type="button" data-piece-grid="6" class="selected" aria-pressed="true">36</button>
+        <button type="button" data-piece-grid="7" aria-pressed="false">49</button>
+        <button type="button" data-piece-grid="8" aria-pressed="false">64</button>
+      </div>
+    </div>
+    <button id="guideButton" class="menuAction">Guide: Off</button>
     <button id="soundButton" class="menuAction">Sound: On</button>
     <button id="chooseImage" class="menuAction">Use another image</button>
     <input id="imageFile" type="file" accept="image/*" hidden>
@@ -39,13 +50,13 @@
     <div class="completeMark">✓</div>
     <small>PUZZLE COMPLETE</small>
     <h1>Picture restored.</h1>
-    <p>36 pieces, one finished scene.</p>
+    <p><span id="winPieceCount">36</span> pieces, one finished scene.</p>
     <button id="winRestart" class="primary">Play again</button>
     <button id="winHome" class="secondary">GameBox</button>
   </div>
 </div>
 
-<script src="jigsaw-engine.js?v=3"></script>
-<script src="game.js?v=1"></script>
+<script src="jigsaw-engine.js?v=4"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>
