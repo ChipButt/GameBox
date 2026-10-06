@@ -472,6 +472,7 @@ function renderPartRows() {
 function setPartRowLoading(category, loadingNow) {
   const row = partRows.querySelector('[data-part="' + category + '"]');
   row?.classList.toggle('loading', Boolean(loadingNow));
+  if (category === activePartCategory) partSourceGrid.classList.toggle('loading', Boolean(loadingNow));
 }
 
 function updatePartRows() {
