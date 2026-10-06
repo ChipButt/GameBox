@@ -16,45 +16,78 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect Quaternius GLTF structure
+      - name: Inspect Quaternius GLTF compatibility
         shell: bash
         run: |
           python - <<'PY'
-          import json, pathlib, collections
+          import base64, hashlib, json, pathlib, struct
+          from collections import defaultdict
           root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+
+          def canon(v):
+              return json.dumps(v,sort_keys=True,separators=(",",":"))
+
+          def read_accessor(j, accessor_index):
+              acc=j["accessors"][accessor_index]
+              bv=j["bufferViews"][acc["bufferView"]]
+              buf=j["buffers"][bv["buffer"]]
+              uri=buf["uri"]
+              assert uri.startswith("data:"), uri
+              raw=base64.b64decode(uri.split(",",1)[1])
+              component={5126:("f",4),5125:("I",4),5123:("H",2),5121:("B",1)}[acc["componentType"]]
+              counts={"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4,"MAT4":16}
+              n=counts[acc["type"]]
+              stride=bv.get("byteStride", n*component[1])
+              start=bv.get("byteOffset",0)+acc.get("byteOffset",0)
+              out=[]
+              for i in range(acc["count"]):
+                  off=start+i*stride
+                  out.append(struct.unpack_from("<"+component[0]*n,raw,off))
+              return out
+
+          groups=defaultdict(list)
+          node_groups=defaultdict(list)
+          inverse_groups=defaultdict(list)
+          mesh_transform_groups=defaultdict(list)
           rows=[]
-          mesh_names=collections.Counter()
-          node_names=collections.Counter()
-          signatures=collections.Counter()
           for p in sorted(root.glob("*.gltf")):
               j=json.loads(p.read_text())
-              meshes=[m.get("name","") for m in j.get("meshes",[])]
-              nodes=[n.get("name","") for n in j.get("nodes",[])]
+              nodes=j.get("nodes",[])
               skins=j.get("skins",[])
-              joints=[]
-              for s in skins:
-                  joints.append([nodes[i] if i < len(nodes) else str(i) for i in s.get("joints",[])])
-              mesh_names.update(x for x in meshes if x)
-              node_names.update(x for x in nodes if x)
-              sig=tuple(joints[0]) if joints else ()
-              signatures[sig]+=1
-              rows.append({
-                  "file":p.name,
-                  "meshes":meshes,
-                  "nodes":nodes,
-                  "skins":len(skins),
-                  "jointCount":len(joints[0]) if joints else 0,
-                  "joints":joints[0] if joints else [],
-                  "animations":[a.get("name","") for a in j.get("animations",[])],
-                  "materials":[m.get("name","") for m in j.get("materials",[])],
-              })
+              assert len(skins)==1, (p.name,len(skins))
+              skin=skins[0]
+              joint_ids=skin.get("joints",[])
+              joint_names=[nodes[i].get("name","") for i in joint_ids]
+              joint_trs=[{
+                  "name":nodes[i].get("name",""),
+                  "translation":nodes[i].get("translation",[0,0,0]),
+                  "rotation":nodes[i].get("rotation",[0,0,0,1]),
+                  "scale":nodes[i].get("scale",[1,1,1]),
+                  "matrix":nodes[i].get("matrix")
+              } for i in joint_ids]
+              inv=read_accessor(j,skin["inverseBindMatrices"]) if "inverseBindMatrices" in skin else []
+              mesh_nodes=[{
+                  "name":n.get("name",""),
+                  "mesh":n.get("mesh"),
+                  "skin":n.get("skin"),
+                  "translation":n.get("translation",[0,0,0]),
+                  "rotation":n.get("rotation",[0,0,0,1]),
+                  "scale":n.get("scale",[1,1,1]),
+                  "matrix":n.get("matrix")
+              } for n in nodes if "mesh" in n]
+              node_sig=hashlib.sha256(canon(joint_trs).encode()).hexdigest()[:16]
+              inv_sig=hashlib.sha256(canon(inv).encode()).hexdigest()[:16]
+              mesh_sig=hashlib.sha256(canon(mesh_nodes).encode()).hexdigest()[:16]
+              total_sig=hashlib.sha256((canon(joint_trs)+canon(inv)+canon(mesh_nodes)).encode()).hexdigest()[:16]
+              node_groups[node_sig].append(p.stem)
+              inverse_groups[inv_sig].append(p.stem)
+              mesh_transform_groups[mesh_sig].append(p.stem)
+              groups[total_sig].append(p.stem)
+              rows.append((p.stem,node_sig,inv_sig,mesh_sig,total_sig,len(joint_ids)))
           print("FILES",len(rows))
-          print("SKELETON_SIGNATURES",[(len(k),v) for k,v in signatures.items()])
-          for r in rows:
-              print("===MODEL",r["file"])
-              print("SKINS",r["skins"],"JOINTS",r["jointCount"])
-              print("MESHES",json.dumps(r["meshes"]))
-              print("NODES",json.dumps(r["nodes"]))
-              print("MATERIALS",json.dumps(r["materials"]))
-              print("ANIMS",json.dumps(r["animations"]))
+          print("JOINT_TRS_GROUPS",json.dumps(node_groups,sort_keys=True))
+          print("INVERSE_BIND_GROUPS",json.dumps(inverse_groups,sort_keys=True))
+          print("MESH_TRANSFORM_GROUPS",json.dumps(mesh_transform_groups,sort_keys=True))
+          print("TOTAL_BIND_GROUPS",json.dumps(groups,sort_keys=True))
+          for row in rows: print("ROW",*row)
           PY
