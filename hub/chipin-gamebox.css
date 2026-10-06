@@ -218,3 +218,11 @@
 /* Jigsaw home box */
 .toyGameJigsaw .gameTile{background:linear-gradient(145deg,#764a9b,#35245d)}
 .toyGameJigsaw .gameTileIcon{background:linear-gradient(145deg,#fff8ff,#eaddf2)!important}
+
+
+/* Tiny Ski Run home box */
+.toyGameTinySki .gameTile{background:linear-gradient(145deg,#bfe9ff,#69abd5);border-color:#f5fbff}
+.toyGameTinySki .gameTile strong{color:#083d70;text-shadow:0 2px 0 rgba(255,255,255,.7)}
+.toyGameTinySki .gameTile small{color:#174e78;text-shadow:none}
+.tinySkiHomeIcon{position:relative;z-index:1;width:64px;height:64px;object-fit:contain;image-rendering:pixelated;transform:scale(2);filter:drop-shadow(0 5px 0 rgba(8,61,112,.15))}
+@media(max-width:560px){.tinySkiHomeIcon{width:58px;height:58px}}

@@ -15,7 +15,7 @@ A mobile-first browser games hub from **Chip In Games**.
 | `sweet-truck-fever/` | Sweet Truck Fever colour-sorting delivery game |
 | `pipeworks/` | Pipeworks rotate-and-connect water puzzle game |
 | `christmas-lights/` | Christmas Lights festive rotate-and-connect puzzle game |
-| `santa-letter-sort/` | Santa’s Letter Sort mobile-first festive letter-sorting game |
+| `santa-letter-sort/` | Santa’s Letter Sort mobile-first festive letter-sorting game |\n| `tiny-ski-run/` | Endless mobile-first skiing mini-game using Kenney Tiny Ski assets |
 | `jigsaw/` | Reusable mobile-first jigsaw engine and playable 36-piece test puzzle |
 | `race-manager/` | Gridline Racing (existing folder and URLs preserved) |
 | `unfinished-business/` | Unfinished Business (existing folder and URLs preserved) |
@@ -43,6 +43,14 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - Later levels add denser traffic, more colours and hidden trucks
 - Progress is stored locally in the browser
 - Play at `sweet-truck-fever/`
+
+
+### Tiny Ski Run
+- Endless downhill skiing with continuous procedural obstacle patterns and increasing speed
+- Uses the actual Kenney Tiny Ski CC0 sprites from the shared ToolBox asset pool
+- Touch/hold left-right steering, keyboard controls, pickups, crash/restart and locally saved best distance
+- Kenney-compatible HUD and pause menu using the UI Adventure Pack and Game Icons
+- Play at `tiny-ski-run/`
 
 
 ### Jigsaw
