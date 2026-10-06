@@ -27,6 +27,35 @@ jobs:
           node --check character-playground/modular-parts.js
           node --check character-playground/part-options.js
 
+      - name: Inspect Quaternius source labels
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root = pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          for path in sorted(root.glob("*.gltf")):
+              doc = json.loads(path.read_text())
+              materials = [m.get("name","") for m in doc.get("materials",[])]
+              meshes = [m.get("name","") for m in doc.get("meshes",[])]
+              nodes = [n.get("name","") for n in doc.get("nodes",[]) if n.get("name")]
+              primitives = []
+              for mi, mesh in enumerate(doc.get("meshes",[])):
+                  for pi, prim in enumerate(mesh.get("primitives",[])):
+                      mat_i = prim.get("material")
+                      primitives.append({
+                          "mesh": meshes[mi] if mi < len(meshes) else "",
+                          "primitive": pi,
+                          "material": materials[mat_i] if isinstance(mat_i,int) and mat_i < len(materials) else ""
+                      })
+              print("ASSET_META " + json.dumps({
+                  "id": path.stem,
+                  "materials": materials,
+                  "meshes": meshes,
+                  "nodes": nodes,
+                  "primitives": primitives
+              }, separators=(",",":")))
+          PY
+
       - name: Verify Character Workshop asset and UI system
         shell: bash
         run: |
