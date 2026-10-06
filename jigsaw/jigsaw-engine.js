@@ -113,6 +113,9 @@
       this.image=new Image();
       this.image.decoding='async';
       this.image.crossOrigin='anonymous';
+      this.frameImage=new Image();
+      this.frameImage.decoding='async';
+      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png';
       this.pieces=[];
       this.edges=[];
       this.dragging=null;
@@ -477,6 +480,17 @@
       if(this.completed&&this.completionStart&&now>=this.completionStart){
         const alpha=clamp((now-this.completionStart)/520,0,1);
         c.save();c.globalAlpha=alpha;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
+      }
+
+      if(this.frameImage.complete&&this.frameImage.naturalWidth){
+        const pad=18;
+        c.drawImage(
+          this.frameImage,
+          l.boardX-pad,
+          l.boardY-pad,
+          l.boardSize+pad*2,
+          l.boardSize+pad*2
+        );
       }
     }
 
