@@ -62,7 +62,12 @@ let scenery=[],obstacles=[],courseGates=[],lifts=[];
 let nextSegment=0,trackClock=0,shake=0,crashClock=0,elapsed=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
 const BEST_KEY='gamebox.tinySkiRun.best.v4';
-let best=Number(localStorage.getItem(BEST_KEY)||0)||0;
+let best=Number(
+  localStorage.getItem(BEST_KEY)||
+  localStorage.getItem('gamebox.tinySkiRun.best.v3')||
+  localStorage.getItem('gamebox.tinySkiRun.best')||
+  0
+)||0;
 
 bestEl.textContent=pad(best,4);
 startBestEl.textContent=pad(best,4);
@@ -104,7 +109,7 @@ function resizeCanvas(){
   dpr=Math.min(2,window.devicePixelRatio||1);
   canvas.width=Math.round(r.width*dpr);
   canvas.height=Math.round(r.height*dpr);
-  if(player)player.y=Math.round(H*.48);
+  if(player)player.y=Math.round(H*.42);
   render();
 }
 new ResizeObserver(resizeCanvas).observe(canvas);
@@ -128,7 +133,7 @@ function resetWorld(){
   speed=142;distance=0;scroll=0;gates=0;nearMisses=0;bonus=0;elapsed=0;
   tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
-  player={x:boundsAtWorld(H*.48).center,y:Math.round(H*.48),vx:0,angle:0,spin:0,slide:0};
+  player={x:boundsAtWorld(H*.42).center,y:Math.round(H*.42),vx:0,angle:0,spin:0,slide:0};
   ensureWorld(true);
   updateHud();
 }
@@ -180,12 +185,11 @@ function generateSegment(index,isFirst){
   // First screen deliberately contains a chairlift set-piece.
   if(isFirst){
     addLift(start+190,r);
-    addGate(start+72,index,0,r);
-    addGate(start+410,index,1,r);
+    addGate(start+80,index,0,r,true);
   }else{
     if(index%5===0)addLift(start+96,r);
     const gateCount=index%5===0?1:2;
-    for(let g=0;g<gateCount;g++)addGate(start+58+g*104,index,g,r);
+    for(let g=0;g<gateCount;g++)addGate(start+112+g*104,index,g,r,false);
   }
 
   // Keep the central piste visually open; hazards are sparse and readable.
@@ -200,10 +204,10 @@ function generateSegment(index,isFirst){
   }
 }
 
-function addGate(worldY,index,g,r){
+function addGate(worldY,index,g,r,passed){
   const centerT=clamp(.5+Math.sin((index*2+g)*1.35)*.17,.28,.72);
   const half=.12;
-  courseGates.push({worldY,leftT:centerT-half,rightT:centerT+half,redLeft:(index+g)%2===0,passed:false});
+  courseGates.push({worldY,leftT:centerT-half,rightT:centerT+half,redLeft:(index+g)%2===0,passed:!!passed});
 }
 
 function addObstacle(worldY,t,kind,r){
