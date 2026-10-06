@@ -123,10 +123,14 @@ function resetWorld(){
 
 function initCourse(){
   courseNodes=[];
-  let center=W/2,width=238;
+  let center=W/2,width=238,seedTurn=-.22;
   for(let y=-96;y<=H+144;y+=48){
     courseNodes.push(makeCourseNode(y,center,width));
+    seedTurn=clamp(seedTurn+rand(-.12,.12),-.42,.42);
+    center=clamp(center+seedTurn*14,112,W-112);
+    width=clamp(width+rand(-8,8),208,252);
   }
+  courseTurn=seedTurn;
 }
 function makeCourseNode(y,center,width){
   return {y,center,width,edgeL:pick(F.bankLeft),edgeR:pick(F.bankRight)};
@@ -425,13 +429,17 @@ function drawPiste(){
   drawTileField(F.piste);
   ctx.restore();
 
-  for(const n of courseNodes){
-    if(n.y<-40||n.y>H+40)continue;
-    const b=boundsAt(n.y);
-    const next=boundsAt(n.y+18);
-    const bankAngle=Math.atan2(next.left-b.left,18)*-.4;
-    drawSprite(n.edgeL,b.left,n.y,32,bankAngle);
-    drawSprite(n.edgeR,b.right,n.y,32,-bankAngle);
+  const bankStep=24;
+  const firstBankRow=Math.floor(scrollTotal/bankStep)-1;
+  const bankOffset=-(scrollTotal%bankStep);
+  for(let y=bankOffset-bankStep,row=firstBankRow;y<H+bankStep;y+=bankStep,row++){
+    const b=boundsAt(y),next=boundsAt(y+12);
+    const leftFrame=F.bankLeft[hash2(17,row)%F.bankLeft.length];
+    const rightFrame=F.bankRight[hash2(29,row)%F.bankRight.length];
+    const leftAngle=Math.atan2(next.left-b.left,12)*-.28;
+    const rightAngle=Math.atan2(next.right-b.right,12)*-.28;
+    drawSprite(leftFrame,b.left,y,32,leftAngle);
+    drawSprite(rightFrame,b.right,y,32,rightAngle);
   }
 }
 
