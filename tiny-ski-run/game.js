@@ -507,7 +507,8 @@ function addLift(worldY,r){
     chairLeft:r()<.5?F.chairA:F.chairB,
     chairRight:r()<.5?F.chairA:F.chairB,
     // A 2×2 gondola: 55/56 are its top quadrants and 67/68 its bottom quadrants.
-    gondola:true
+    gondola:true,
+    movePhase:r()
   });
 }
 
@@ -667,22 +668,23 @@ function checkBoostPads(){
 }
 
 function updateMonster(dt,m){
-  // Activate the next encounter the moment its row enters the visible screen.
-  // The yeti begins off-piste at the side and immediately starts tracking the
-  // player's lateral position, so it visibly "runs in" rather than appearing
-  // behind the player as a chase mechanic.
+  // Trigger as soon as the encounter tile reaches the bottom of the viewport.
+  // The yeti appears low in the treeline and immediately tears inward/upward
+  // toward the BACK of the player's skier.
   if(!monster){
     for(const encounter of yetiEncounters){
       if(encounter.activated)continue;
-      const screenY=encounter.worldY-scroll;
-      if(screenY<=H-12 && screenY>-TILE*2){
+      const markerY=encounter.worldY-scroll;
+      if(markerY<=H-8 && markerY>-TILE*2){
         encounter.activated=true;
-        const b=boundsAtWorld(encounter.worldY);
-        const sideX=encounter.side==='left'?b.left-22:b.right+22;
+        const spawnWorldY=scroll+H-10;
+        const b=boundsAtWorld(spawnWorldY);
+        const sideX=encounter.side==='left'?b.left-18:b.right+18;
         monster={
-          worldY:encounter.worldY,
           x:clamp(sideX,8,W-8),
-          side:encounter.side
+          screenY:H-10,
+          side:encounter.side,
+          phase:'rush'
         };
         break;
       }
@@ -691,27 +693,50 @@ function updateMonster(dt,m){
 
   if(!monster)return;
 
-  // The yeti is deliberately a little slower downhill than the skier. It
-  // tracks the player's X position, creating an unnerving crossing obstacle,
-  // but the player naturally outruns it after the encounter.
+  // Always track the player's horizontal position: that is what makes it
+  // unsettling. It is trying to get directly onto the skier's tail.
   const targetX=player.x;
-  const lateralSpeed=58+Math.min(24,m*.01);
+  const lateralSpeed=68+Math.min(28,m*.012);
   monster.x+=clamp(targetX-monster.x,-lateralSpeed*dt,lateralSpeed*dt);
-  monster.worldY+=baseSpeed*.88*dt;
-  monster.x=clamp(monster.x,8,W-8);
 
-  // Once it has been passed and leaves through the top, clear it so a later
-  // encounter marker can introduce another yeti.
-  const screenY=monster.worldY-scroll;
-  if(screenY<-TILE*2){
+  const rearY=player.y+10;
+
+  if(monster.phase==='rush'){
+    // Initial burst from the trees. It closes from below but is NEVER allowed
+    // to pass in front of the skier. This is the actual dodge window.
+    const rushSpeed=92+Math.min(28,m*.008);
+    monster.screenY=Math.max(rearY+3,monster.screenY-rushSpeed*dt);
+
+    if(monster.screenY<=rearY+3){
+      monster.phase='fallBack';
+    }
+  }else{
+    // After its one chance to catch the skier, the player's greater downhill
+    // speed wins. The yeti keeps tracking their line but visibly loses ground.
+    const fallBackSpeed=13+Math.min(16,baseSpeed*.045);
+    monster.screenY+=fallBackSpeed*dt;
+  }
+
+  // Clamp horizontally around the current slice of piste, but allow enough
+  // side room that it visibly emerges from / returns toward the treeline.
+  const worldY=scroll+monster.screenY;
+  const b=boundsAtWorld(worldY);
+  monster.x=clamp(monster.x,b.left-22,b.right+22);
+
+  if(monster.screenY>H+TILE*2){
     monster=null;
   }
 }
 
 function checkMonsterCollision(){
-  if(!monster)return;
-  const y=monster.worldY-scroll;
-  if(Math.hypot(monster.x-player.x,y-player.y)<11)startCrash();
+  if(!monster || monster.phase!=='rush')return;
+  const rearY=player.y+9;
+  if(
+    monster.screenY>=player.y+3 &&
+    Math.hypot(monster.x-player.x,monster.screenY-rearY)<10
+  ){
+    startCrash();
+  }
 }
 
 function obstaclePosition(o,camera=scroll){
@@ -966,16 +991,19 @@ function drawGondola(x,cableY){
   drawSprite(F.gondolaBottomRight,x+TILE/2,topY+TILE,TILE);
 }
 
+function wrapCableX(x){
+  const span=W+TILE*4;
+  return ((x+TILE*2)%span+span)%span-TILE*2;
+}
+
 function drawLift(lift){
   const cableY=lift.worldY-viewScroll;
   if(cableY<-TILE*6||cableY>H+TILE*2)return;
 
   const towerXs=liftTowerXs();
-  const chairXs=[W*.1,W*.66,W*.91];
-  const gondolaX=W*.37;
 
-  // Straight triple cable is tile_0046. At structural points the pack provides
-  // dedicated join/hanger tiles rather than requiring a generic sprite.
+  // Straight triple cable is tile_0046. The supports stay fixed; chairs and
+  // gondola now physically travel along the cable.
   for(let x=TILE/2;x<W+TILE;x+=TILE)drawSprite(F.liftCable,x,cableY,TILE);
   drawSprite(F.liftCableJoin,TILE/2,cableY,TILE);
   drawSprite(F.liftCableJoin,W-TILE/2,cableY,TILE);
@@ -985,13 +1013,21 @@ function drawLift(lift){
     drawLiftTower(x,cableY);
   }
 
-  for(const x of chairXs)drawSprite(F.liftHangerJoin,x,cableY,TILE);
-  drawSprite(F.liftHangerJoin,gondolaX,cableY,TILE);
+  const cableSpeed=18;
+  const base=animClock*cableSpeed+(lift.movePhase||0)*(W+TILE*4);
+  const moving=[
+    {type:'chair',x:wrapCableX(base),frame:lift.chairLeft},
+    {type:'gondola',x:wrapCableX(base+W*.28)},
+    {type:'chair',x:wrapCableX(base+W*.56),frame:lift.chairRight},
+    {type:'chair',x:wrapCableX(base+W*.82),frame:lift.chairLeft}
+  ];
 
-  drawChair(chairXs[0],cableY,lift.chairLeft);
-  drawGondola(gondolaX,cableY);
-  drawChair(chairXs[1],cableY,lift.chairRight);
-  drawChair(chairXs[2],cableY,lift.chairLeft);
+  for(const car of moving){
+    if(car.x<-TILE*2||car.x>W+TILE*2)continue;
+    drawSprite(F.liftHangerJoin,car.x,cableY,TILE);
+    if(car.type==='gondola')drawGondola(car.x,cableY);
+    else drawChair(car.x,cableY,car.frame);
+  }
 }
 
 function render(){
@@ -1059,9 +1095,9 @@ function render(){
   ctx.globalAlpha=1;
 
   if(monster){
-    const my=monster.worldY-viewScroll;
+    const my=monster.screenY;
     if(my>-TILE*2&&my<H+TILE*2){
-      const close=Math.hypot(monster.x-player.x,my-player.y)<28;
+      const close=monster.phase==='rush' && Math.hypot(monster.x-player.x,my-(player.y+9))<25;
       const mFrame=close?F.yetiAttack:(F.yetiA+(Math.floor(animClock*7)&1));
       drawSprite(mFrame,monster.x,my,TILE,0);
     }
