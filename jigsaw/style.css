@@ -169,19 +169,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   background-size:100% 100%;
   pointer-events:none;
 }
-.boardFrame{
-  position:absolute;
-  z-index:6;
-  left:calc(var(--board-x) - 18px);
-  top:calc(var(--board-y) - 18px);
-  width:calc(var(--board-size) + 36px);
-  height:calc(var(--board-size) + 36px);
-  background-image:var(--wood-frame);
-  background-repeat:no-repeat;
-  background-position:center;
-  background-size:100% 100%;
-  pointer-events:none;
-}
 .trayBackdrop{
   position:absolute;
   z-index:0;
