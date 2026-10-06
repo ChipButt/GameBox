@@ -1,0 +1,53 @@
+name: Validate Character Workshop
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - character-playground/**
+      - index.html
+      - .github/workflows/validate-character-workshop.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check character-playground/game.js
+          node --check character-playground/character-catalog.js
+      - name: Verify full character catalog
+        run: |
+          python - <<'PY'
+          import pathlib, re
+
+          catalog_path = pathlib.Path("character-playground/character-catalog.js")
+          text = catalog_path.read_text()
+          ids = re.findall(r"id: '([^']+)'", text)
+          assert len(ids) == 52, f"Expected 52 catalog entries, found {len(ids)}"
+          assert len(set(ids)) == 52, "Duplicate character IDs in catalog"
+
+          root = pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          actual = sorted(p.stem for p in root.glob("*.gltf"))
+          expected = sorted(ids)
+          assert actual == expected, (
+              "Catalog/asset mismatch\n"
+              f"Missing from catalog: {sorted(set(actual)-set(expected))}\n"
+              f"Missing files: {sorted(set(expected)-set(actual))}"
+          )
+
+          html = pathlib.Path("character-playground/index.html").read_text()
+          css = pathlib.Path("character-playground/style.css").read_text()
+          game = pathlib.Path("character-playground/game.js").read_text()
+          assert "Character Workshop" in html
+          assert "character-catalog.js" in game
+          assert "UI Adventure Pack" in css
+          assert "ultimate-nature" in game
+          print("Character Workshop validation passed: 52/52 character assets.")
+          PY
