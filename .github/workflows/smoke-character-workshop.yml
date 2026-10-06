@@ -142,7 +142,7 @@ jobs:
           const layout=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().characterScreenBounds);
           const builderBox=await page.locator('#builder').boundingBox();
           assert(layout && builderBox,'Could not measure mobile Character Workshop layout.');
-          assert(layout.bottom <= builderBox.y + 4,'Character legs or feet are hidden behind the mobile selector.');
+          assert(layout.bottom <= builderBox.y - 8,'Character legs or feet are hidden behind the mobile selector. characterBottom='+layout.bottom.toFixed(1)+' selectorTop='+builderBox.y.toFixed(1));
 
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
           await browser.close();
