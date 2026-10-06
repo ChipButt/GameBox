@@ -3,9 +3,6 @@
 
   const canvas=document.getElementById('puzzleCanvas');
   const stage=document.getElementById('puzzleStage');
-  const placedEl=document.getElementById('placedCount');
-  const totalEl=document.getElementById('totalCount');
-  const progressFill=document.getElementById('progressFill');
   const menu=document.getElementById('menuSheet');
   const win=document.getElementById('winOverlay');
   const guideBtn=document.getElementById('guideButton');
@@ -42,14 +39,8 @@
     seed:'gamebox-jigsaw-christmas-test-v1',
     sound:true,
     vibration:true,
-    onProgress({placed,total}){
-      placedEl.textContent=placed;
-      totalEl.textContent=total;
+    onProgress({total}){
       if(winPieceCount) winPieceCount.textContent=total;
-
-      const progress=total?Math.max(0,Math.min(100,(placed/total)*100)):0;
-      progressFill.style.width=progress+'%';
-      progressFill.classList.toggle('active',placed>0);
     },
     onComplete(){
       win.classList.add('show');
