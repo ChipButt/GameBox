@@ -648,6 +648,22 @@ function loadWearableTemplate(option) {
   return promise;
 }
 
+function usedSkinBoneIndices(mesh) {
+  const indices = mesh.geometry?.getAttribute?.('skinIndex');
+  const weights = mesh.geometry?.getAttribute?.('skinWeight');
+  const used = new Set();
+  if (!indices || !weights) return used;
+
+  for (let i = 0; i < indices.count; i += 1) {
+    const ids = [indices.getX(i), indices.getY(i), indices.getZ(i), indices.getW(i)];
+    const ws = [weights.getX(i), weights.getY(i), weights.getZ(i), weights.getW(i)];
+    for (let channel = 0; channel < 4; channel += 1) {
+      if (ws[channel] > 0.0001) used.add(Math.round(ids[channel]));
+    }
+  }
+  return used;
+}
+
 function bindWearableToDriverSkeleton(group) {
   let boundMeshes = 0;
 
@@ -656,13 +672,19 @@ function bindWearableToDriverSkeleton(group) {
     const sourceSkeleton = node.skeleton;
     if (!sourceSkeleton?.bones?.length) throw new Error('Custom footwear has no usable source skeleton.');
 
-    const mappedBones = sourceSkeleton.bones.map((sourceBone) => driverSkeleton?.getBoneByName?.(sourceBone.name) || null);
-    const missing = sourceSkeleton.bones
-      .filter((_, index) => !mappedBones[index])
-      .map((bone) => bone.name || '(unnamed)');
+    const weightedIndices = usedSkinBoneIndices(node);
+    if (!weightedIndices.size) throw new Error('Custom footwear has no weighted shoe bones.');
 
-    if (missing.length) {
-      throw new Error('Custom footwear is missing compatible GameBox bones: ' + missing.join(', '));
+    const missingWeightedBones = [];
+    const mappedBones = sourceSkeleton.bones.map((sourceBone, index) => {
+      const driverBone = driverSkeleton?.getBoneByName?.(sourceBone.name) || null;
+      if (driverBone) return driverBone;
+      if (weightedIndices.has(index)) missingWeightedBones.push(sourceBone.name || '(unnamed)');
+      return sourceBone;
+    });
+
+    if (missingWeightedBones.length) {
+      throw new Error('Custom footwear is missing weighted GameBox bones: ' + missingWeightedBones.join(', '));
     }
 
     const boneInverses = sourceSkeleton.boneInverses.map((inverse) => inverse.clone());
@@ -670,6 +692,7 @@ function bindWearableToDriverSkeleton(group) {
     node.bind(mappedSkeleton, node.bindMatrix.clone());
     node.normalizeSkinWeights();
     node.userData.directSkeletonBinding = true;
+    node.userData.weightedBoneIndices = Array.from(weightedIndices);
     boundMeshes += 1;
   });
 
@@ -1029,7 +1052,11 @@ function workshopDiagnosticSnapshot() {
     if (!node.isSkinnedMesh) return;
     skinnedMeshCount += 1;
     const bones = node.skeleton?.bones || [];
-    if (!bones.length || bones.some((bone) => driverSkeleton?.getBoneByName?.(bone.name) !== bone)) {
+    const weightedIndices = usedSkinBoneIndices(node);
+    if (!weightedIndices.size || Array.from(weightedIndices).some((index) => {
+      const bone = bones[index];
+      return !bone || driverSkeleton?.getBoneByName?.(bone.name) !== bone;
+    })) {
       usesDriverSkeleton = false;
     }
   });

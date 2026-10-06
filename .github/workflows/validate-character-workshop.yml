@@ -158,7 +158,7 @@ jobs:
           for token in (
               "pickCharacterPart","Raycaster","renderPartCategoryRail","renderPartBrowser",
               "partPreview","applyPartOption","instantiateWearable","loadWearableTemplate",
-              "bindWearableToDriverSkeleton","directSkeletonBinding","workshopDiagnosticSnapshot",
+              "usedSkinBoneIndices","bindWearableToDriverSkeleton","directSkeletonBinding","workshopDiagnosticSnapshot",
               "applyProportions","headSize","PART_CATEGORY_LABELS"
           ):
               assert token in game, f"Missing Character Workshop behavior: {token}"
