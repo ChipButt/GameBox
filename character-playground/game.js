@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
-import { CHARACTER_CATALOG, CHARACTER_GROUPS } from './character-catalog.js?v=1';
+import { CHARACTER_CATALOG } from './character-catalog.js?v=2';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=2';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -15,10 +16,10 @@ const modelMeta = $('modelMeta');
 const selectedGroup = $('selectedGroup');
 const selectedModel = $('selectedModel');
 const characterName = $('characterName');
-const styleSearch = $('styleSearch');
-const styleCount = $('styleCount');
-const filterRow = $('filterRow');
-const styleGrid = $('styleGrid');
+const compatibleCount = $('compatibleCount');
+const presetSelect = $('presetSelect');
+const rigLabel = $('rigLabel');
+const partRows = $('partRows');
 const materialCount = $('materialCount');
 const materialList = $('materialList');
 const clipCount = $('clipCount');
@@ -31,15 +32,10 @@ const summaryStyle = $('summaryStyle');
 const summaryPalette = $('summaryPalette');
 const summaryPose = $('summaryPose');
 
-if (CHARACTER_CATALOG.length !== 52) {
-  throw new Error('Character catalog must expose all 52 GameBox character assets.');
-}
+if (CHARACTER_CATALOG.length !== 52) throw new Error('Character Workshop requires all 52 source characters.');
 
-const renderer = new THREE.WebGLRenderer({
-  antialias: true,
-  alpha: false,
-  powerPreference: 'high-performance'
-});
+const entryById = new Map(CHARACTER_CATALOG.map((entry) => [entry.id, entry]));
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
@@ -100,8 +96,10 @@ platformRing.rotation.x = Math.PI / 2;
 platformRing.position.y = 0.295;
 previewRoot.add(platformRing);
 
-const snowMat = new THREE.MeshStandardMaterial({ color: 0xf3f7f7, roughness: 1 });
-const snowFloor = new THREE.Mesh(new THREE.CircleGeometry(7.5, 80), snowMat);
+const snowFloor = new THREE.Mesh(
+  new THREE.CircleGeometry(7.5, 80),
+  new THREE.MeshStandardMaterial({ color: 0xf3f7f7, roughness: 1 })
+);
 snowFloor.rotation.x = -Math.PI / 2;
 snowFloor.position.y = -0.015;
 snowFloor.receiveShadow = true;
@@ -110,11 +108,7 @@ scene.add(snowFloor);
 const snowGeo = new THREE.BufferGeometry();
 const snowPositions = [];
 for (let i = 0; i < 190; i += 1) {
-  snowPositions.push(
-    (Math.random() - 0.5) * 17,
-    Math.random() * 8.5 + 0.2,
-    (Math.random() - 0.5) * 11 - 1
-  );
+  snowPositions.push((Math.random() - 0.5) * 17, Math.random() * 8.5 + 0.2, (Math.random() - 0.5) * 11 - 1);
 }
 snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(snowPositions, 3));
 const snowPoints = new THREE.Points(
@@ -125,25 +119,11 @@ scene.add(snowPoints);
 
 const gltfLoader = new GLTFLoader();
 const fbxLoader = new FBXLoader();
+const partSystem = createModularPartSystem(THREE, gltfLoader, CHARACTER_CATALOG);
 const clock = new THREE.Clock();
 
-let currentEntry = CHARACTER_CATALOG.find((entry) => entry.id === 'Elf');
-let currentModel = null;
-let mixer = null;
-let clips = [];
-let activeAction = null;
-let activeClipName = '';
-let materialRecords = [];
-let loadGeneration = 0;
-let initialLoad = true;
-let currentFilter = 'All';
-let currentPalette = 'christmas';
-let viewDistance = 5.15;
-let toastTimer = 0;
-let pendingSavedColors = null;
-let pendingPose = null;
-
-const STORAGE_KEY = 'gamebox.characterBuilder.v1';
+const STORAGE_KEY = 'gamebox.characterBuilder.v2';
+const LEGACY_STORAGE_KEY = 'gamebox.characterBuilder.v1';
 const SESSION_KEY = 'gamebox.characterBuilder.current';
 
 const paletteSchemes = {
@@ -157,10 +137,30 @@ const paletteSchemes = {
 const nameStarts = ['Jingle', 'Holly', 'Pip', 'Tinker', 'Juniper', 'Merry', 'Rowan', 'Ember', 'Noelle', 'Sprig', 'Robin', 'Poppy', 'Finn', 'Milo', 'Ivy', 'Nico'];
 const nameEnds = ['Bell', 'Frost', 'Pine', 'Spark', 'Snow', 'Vale', 'Wren', 'Berry', 'Star', 'Moss', 'Fox', 'Glow'];
 
+let currentPreset = entryById.get('Elf') || CHARACTER_CATALOG[0];
+let activeRig = currentPreset.rig;
+let driverScene = null;
+let driverMesh = null;
+let driverSkeleton = null;
+let driverParent = null;
+let mixer = null;
+let clips = [];
+let activeAction = null;
+let activeClipName = '';
+let currentPalette = 'christmas';
+let materialRecords = [];
+let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { sourceId: null, group: null }]));
+let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
+let loadGeneration = 0;
+let initialLoad = true;
+let viewDistance = 5.15;
+let toastTimer = 0;
+let pendingSavedColors = null;
+let pendingPose = null;
+let pendingParts = null;
+
 function randomName() {
-  const first = nameStarts[Math.floor(Math.random() * nameStarts.length)];
-  const last = nameEnds[Math.floor(Math.random() * nameEnds.length)];
-  return first + ' ' + last;
+  return nameStarts[Math.floor(Math.random() * nameStarts.length)] + ' ' + nameEnds[Math.floor(Math.random() * nameEnds.length)];
 }
 
 function showToast(message) {
@@ -170,57 +170,20 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 1900);
 }
 
+function showLoadError(error) {
+  console.error(error);
+  modelLoading.hidden = true;
+  loadError.hidden = false;
+  loadError.textContent = 'That character part could not be loaded. ' + (error?.message || '');
+  setTimeout(() => { loadError.hidden = true; }, 5200);
+}
+
 function humanPalette(name) {
   if (!name) return 'Original';
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-function cleanMaterialName(name, index) {
-  const raw = String(name || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!raw || /^material(\.\d+)?$/i.test(raw)) return 'Material ' + (index + 1);
-  return raw.replace(/\bmaterial\b/ig, '').trim() || ('Material ' + (index + 1));
-}
-
-function colourHex(material) {
-  return material && material.color ? '#' + material.color.getHexString() : '#ffffff';
-}
-
-function looksLikeSkin(record) {
-  const name = record.name.toLowerCase();
-  if (/skin|face|flesh/.test(name)) return true;
-  const color = record.originalColor;
-  if (!color) return false;
-  const c = new THREE.Color(color);
-  const max = Math.max(c.r, c.g, c.b);
-  const min = Math.min(c.r, c.g, c.b);
-  return c.r > c.g * 1.05 && c.g >= c.b * 0.72 && c.r > 0.46 && max - min > 0.08;
-}
-
-function looksLikeHair(record) {
-  return /hair|beard|brow|mustache|moustache/.test(record.name.toLowerCase());
-}
-
-function looksLikeEye(record) {
-  return /eye|pupil|iris/.test(record.name.toLowerCase());
-}
-
-function disposeObject(object) {
-  if (!object) return;
-  object.traverse((node) => {
-    if (node.geometry && node.geometry.dispose) node.geometry.dispose();
-    if (!node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material) => {
-      if (!material) return;
-      Object.values(material).forEach((value) => {
-        if (value && value.isTexture && value.dispose) value.dispose();
-      });
-      if (material.dispose) material.dispose();
-    });
-  });
-}
-
-function fitModel(model) {
+function fitDriver(model) {
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
   const size = new THREE.Vector3();
@@ -228,7 +191,6 @@ function fitModel(model) {
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
   if (fitDimension > 0) model.scale.setScalar(2.15 / fitDimension);
   model.updateMatrixWorld(true);
-
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
   fitted.getCenter(center);
@@ -238,39 +200,173 @@ function fitModel(model) {
   model.updateMatrixWorld(true);
 }
 
-function prepareModel(model) {
-  const materialCloneMap = new Map();
-  model.traverse((node) => {
-    if (!node.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
-
-    const sourceMaterials = Array.isArray(node.material) ? node.material : [node.material];
-    const clones = sourceMaterials.map((source) => {
-      if (!source) return source;
-      if (!materialCloneMap.has(source.uuid)) materialCloneMap.set(source.uuid, source.clone());
-      return materialCloneMap.get(source.uuid);
-    });
-    node.material = Array.isArray(node.material) ? clones : clones[0];
+function disposeGroup(group) {
+  group?.traverse((node) => {
+    node.geometry?.dispose?.();
+    const materials = Array.isArray(node.material) ? node.material : node.material ? [node.material] : [];
+    materials.forEach((material) => material?.dispose?.());
   });
-
-  materialRecords = Array.from(materialCloneMap.values())
-    .filter((material) => material && material.color)
-    .map((material, index) => ({
-      material,
-      index,
-      name: cleanMaterialName(material.name, index),
-      key: (cleanMaterialName(material.name, index) + '::' + index).toLowerCase(),
-      originalColor: colourHex(material)
-    }));
-
-  fitModel(model);
 }
 
-function restoreOriginalMaterials() {
-  materialRecords.forEach((record) => {
-    record.material.color.set(record.originalColor);
-  });
+function clearActiveParts() {
+  for (const part of PART_DEFINITIONS) {
+    const state = activeParts[part.id];
+    if (state?.group?.parent) state.group.parent.remove(state.group);
+    disposeGroup(state?.group);
+    activeParts[part.id] = { sourceId: null, group: null };
+  }
+  materialRecords = [];
+}
+
+function disposeDriver() {
+  clearActiveParts();
+  if (driverScene?.parent) driverScene.parent.remove(driverScene);
+  disposeGroup(driverScene);
+  driverScene = null;
+  driverMesh = null;
+  driverSkeleton = null;
+  driverParent = null;
+  mixer?.stopAllAction?.();
+  mixer = null;
+  clips = [];
+  activeAction = null;
+  activeClipName = '';
+}
+
+function compatibleEntries() {
+  return CHARACTER_CATALOG.filter((entry) => entry.rig === activeRig);
+}
+
+function renderPresetSelect() {
+  presetSelect.innerHTML = '';
+  const groups = new Map();
+  for (const entry of CHARACTER_CATALOG) {
+    if (!groups.has(entry.group)) groups.set(entry.group, []);
+    groups.get(entry.group).push(entry);
+  }
+  for (const [group, entries] of groups) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group;
+    for (const entry of entries) {
+      const option = document.createElement('option');
+      option.value = entry.id;
+      option.textContent = entry.label + ' · ' + entry.variant;
+      optgroup.appendChild(option);
+    }
+    presetSelect.appendChild(optgroup);
+  }
+  presetSelect.value = currentPreset.id;
+}
+
+function renderPartRows() {
+  partRows.innerHTML = '';
+  for (const part of PART_DEFINITIONS) {
+    const row = document.createElement('div');
+    row.className = 'partRow';
+    row.dataset.part = part.id;
+
+    const label = document.createElement('div');
+    label.className = 'partRowLabel';
+    const title = document.createElement('strong');
+    title.textContent = part.label;
+    const hint = document.createElement('small');
+    hint.textContent = part.optional ? 'optional' : 'required';
+    label.append(title, hint);
+
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'partCycleBtn';
+    prev.textContent = '‹';
+    prev.setAttribute('aria-label', 'Previous ' + part.label);
+    prev.addEventListener('click', () => cyclePart(part.id, -1));
+
+    const choice = document.createElement('div');
+    choice.className = 'partChoice';
+    choice.innerHTML = '<strong>Loading…</strong><small>—</small>';
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'partCycleBtn';
+    next.textContent = '›';
+    next.setAttribute('aria-label', 'Next ' + part.label);
+    next.addEventListener('click', () => cyclePart(part.id, 1));
+
+    row.append(label, prev, choice, next);
+    partRows.appendChild(row);
+  }
+}
+
+function setPartRowLoading(category, loadingNow) {
+  const row = partRows.querySelector('[data-part="' + category + '"]');
+  row?.classList.toggle('loading', Boolean(loadingNow));
+}
+
+function updatePartRows() {
+  for (const part of PART_DEFINITIONS) {
+    const row = partRows.querySelector('[data-part="' + part.id + '"]');
+    if (!row) continue;
+    const choice = row.querySelector('.partChoice');
+    const state = activeParts[part.id];
+    const source = state?.sourceId ? entryById.get(state.sourceId) : null;
+    choice.querySelector('strong').textContent = source ? source.label : 'None';
+    choice.querySelector('small').textContent = source ? source.variant + ' · ' + source.group : (part.optional ? 'No part' : 'Unavailable');
+  }
+
+  const count = compatibleEntries().length;
+  compatibleCount.textContent = count + (count === 1 ? ' compatible source' : ' compatible sources');
+  rigLabel.textContent = currentPreset.label + ' frame · ' + count + (count === 1 ? ' source style' : ' source styles');
+}
+
+function currentMaterials() {
+  const records = [];
+  for (const part of PART_DEFINITIONS) {
+    const state = activeParts[part.id];
+    if (!state?.group) continue;
+    let localIndex = 0;
+    state.group.traverse((node) => {
+      if (!node.isSkinnedMesh || !node.material) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      for (const material of mats) {
+        if (!material?.color) continue;
+        const name = node.userData.sourceMaterialName || material.name || ('Material ' + (localIndex + 1));
+        const key = part.id + '::' + (state.sourceId || 'none') + '::' + name + '::' + localIndex;
+        records.push({
+          part: part.id,
+          sourceId: state.sourceId,
+          material,
+          name,
+          key: key.toLowerCase(),
+          originalColor: node.userData.originalColor || ('#' + material.color.getHexString())
+        });
+        localIndex += 1;
+      }
+    });
+  }
+  return records;
+}
+
+function looksLikeSkin(record) {
+  const name = record.name.toLowerCase();
+  if (/skin|face|flesh|teeth/.test(name)) return true;
+  const c = new THREE.Color(record.originalColor);
+  const max = Math.max(c.r, c.g, c.b);
+  const min = Math.min(c.r, c.g, c.b);
+  return c.r > c.g * 1.05 && c.g >= c.b * 0.72 && c.r > 0.46 && max - min > 0.08;
+}
+
+function looksLikeHair(record) {
+  return /hair|beard|moustache|mustache|brow/.test(record.name.toLowerCase());
+}
+
+function looksLikeEye(record) {
+  return /eye|pupil|iris/.test(record.name.toLowerCase());
+}
+
+function refreshMaterialRecords() {
+  materialRecords = currentMaterials();
+  if (currentPalette !== 'custom') applyPalette(currentPalette, false);
+  renderMaterialControls();
+  updateSummary();
 }
 
 function refreshPaletteButtons() {
@@ -281,18 +377,17 @@ function refreshPaletteButtons() {
 
 function applyPalette(name, render = true) {
   currentPalette = name;
-  restoreOriginalMaterials();
+  for (const record of materialRecords) record.material.color.set(record.originalColor);
 
   if (name !== 'original' && name !== 'custom') {
     const scheme = paletteSchemes[name] || paletteSchemes.christmas;
-    let colourIndex = 0;
-    materialRecords.forEach((record) => {
-      if (looksLikeSkin(record) || looksLikeHair(record) || looksLikeEye(record)) return;
-      record.material.color.set(scheme[colourIndex % scheme.length]);
-      colourIndex += 1;
-    });
+    let index = 0;
+    for (const record of materialRecords) {
+      if (looksLikeSkin(record) || looksLikeHair(record) || looksLikeEye(record)) continue;
+      record.material.color.set(scheme[index % scheme.length]);
+      index += 1;
+    }
   }
-
   refreshPaletteButtons();
   if (render) renderMaterialControls();
   updateSummary();
@@ -301,13 +396,13 @@ function applyPalette(name, render = true) {
 function applySavedColors(colors) {
   if (!colors || typeof colors !== 'object') return false;
   let applied = 0;
-  materialRecords.forEach((record) => {
+  for (const record of materialRecords) {
     const value = colors[record.key];
     if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) {
       record.material.color.set(value);
       applied += 1;
     }
-  });
+  }
   if (applied) {
     currentPalette = 'custom';
     refreshPaletteButtons();
@@ -323,24 +418,25 @@ function renderMaterialControls() {
   materialCount.textContent = materialRecords.length + (materialRecords.length === 1 ? ' material' : ' materials');
 
   if (!materialRecords.length) {
-    materialList.innerHTML = '<p class="helperCopy">This model does not expose tintable materials.</p>';
+    materialList.innerHTML = '<p class="helperCopy">Choose character parts to expose their real model materials.</p>';
     return;
   }
 
-  materialRecords.forEach((record) => {
+  for (const record of materialRecords) {
     const row = document.createElement('div');
     row.className = 'materialRow';
 
     const text = document.createElement('div');
     const title = document.createElement('strong');
-    const subtitle = document.createElement('small');
     title.textContent = record.name;
-    subtitle.textContent = looksLikeSkin(record) ? 'Skin / face' : looksLikeHair(record) ? 'Hair detail' : looksLikeEye(record) ? 'Eye detail' : 'Model material';
+    const subtitle = document.createElement('small');
+    const source = entryById.get(record.sourceId);
+    subtitle.textContent = PART_DEFINITIONS.find((part) => part.id === record.part)?.label + ' · ' + (source?.label || 'Source');
     text.append(title, subtitle);
 
     const input = document.createElement('input');
     input.type = 'color';
-    input.value = colourHex(record.material);
+    input.value = '#' + record.material.color.getHexString();
     input.setAttribute('aria-label', 'Colour for ' + record.name);
     input.addEventListener('input', () => {
       record.material.color.set(input.value);
@@ -364,11 +460,132 @@ function renderMaterialControls() {
 
     row.append(text, input, reset);
     materialList.appendChild(row);
-  });
+  }
+}
+
+async function setPart(category, sourceId, options = {}) {
+  if (!driverSkeleton || !driverParent) return false;
+  const partDef = PART_DEFINITIONS.find((part) => part.id === category);
+  if (!partDef) return false;
+
+  const token = ++partTokens[category];
+  setPartRowLoading(category, true);
+
+  try {
+    let newGroup = null;
+    if (sourceId) {
+      const source = entryById.get(sourceId);
+      if (!source || source.rig !== activeRig) return false;
+      newGroup = await partSystem.instantiate(sourceId, category, driverSkeleton);
+      if (token !== partTokens[category]) {
+        disposeGroup(newGroup);
+        return false;
+      }
+      if (!newGroup) {
+        if (options.allowNone && partDef.optional) sourceId = null;
+        else return false;
+      }
+    } else if (!partDef.optional) {
+      return false;
+    }
+
+    const previous = activeParts[category];
+    if (previous?.group?.parent) previous.group.parent.remove(previous.group);
+    disposeGroup(previous?.group);
+
+    if (newGroup) driverParent.add(newGroup);
+    activeParts[category] = { sourceId: sourceId || null, group: newGroup };
+    refreshMaterialRecords();
+    updatePartRows();
+    return true;
+  } catch (error) {
+    showLoadError(error);
+    return false;
+  } finally {
+    if (token === partTokens[category]) setPartRowLoading(category, false);
+  }
+}
+
+async function cyclePart(category, direction) {
+  const partDef = PART_DEFINITIONS.find((part) => part.id === category);
+  if (!partDef) return;
+
+  const entries = compatibleEntries();
+  const candidates = partDef.optional ? [null, ...entries] : entries;
+  if (!candidates.length) return;
+
+  const currentId = activeParts[category]?.sourceId || null;
+  let index = candidates.findIndex((candidate) => (candidate?.id || null) === currentId);
+  if (index < 0) index = 0;
+
+  setPartRowLoading(category, true);
+  for (let attempt = 1; attempt <= candidates.length; attempt += 1) {
+    const nextIndex = (index + direction * attempt + candidates.length * 4) % candidates.length;
+    const candidate = candidates[nextIndex];
+
+    if (!candidate) {
+      await setPart(category, null);
+      return;
+    }
+
+    try {
+      if (!(await partSystem.hasPart(candidate.id, category))) continue;
+      if (await setPart(category, candidate.id)) return;
+    } catch (error) {
+      console.warn('Skipping incompatible part candidate', candidate.id, category, error);
+    }
+  }
+  setPartRowLoading(category, false);
+  showToast('No other compatible ' + partDef.label.toLowerCase() + ' found.');
+}
+
+async function findRandomPart(category) {
+  const partDef = PART_DEFINITIONS.find((part) => part.id === category);
+  const entries = compatibleEntries().slice().sort(() => Math.random() - 0.5);
+  if (partDef.optional && Math.random() < 0.22) return null;
+  for (const entry of entries) {
+    try {
+      if (await partSystem.hasPart(entry.id, category)) return entry.id;
+    } catch (_) {}
+  }
+  return partDef.optional ? null : currentPreset.id;
+}
+
+async function randomiseParts() {
+  modelLoading.hidden = false;
+  modelLoading.textContent = 'MIXING PARTS…';
+  try {
+    for (const part of PART_DEFINITIONS) {
+      const sourceId = await findRandomPart(part.id);
+      await setPart(part.id, sourceId, { allowNone: true });
+    }
+    characterName.value = randomName();
+    updateSummary();
+    showToast('Compatible parts randomised.');
+  } finally {
+    modelLoading.hidden = true;
+    modelLoading.textContent = 'LOADING STYLE…';
+  }
+}
+
+async function resetPartsToPreset() {
+  modelLoading.hidden = false;
+  modelLoading.textContent = 'RESETTING PARTS…';
+  try {
+    for (const part of PART_DEFINITIONS) {
+      const sourceHasPart = await partSystem.hasPart(currentPreset.id, part.id);
+      if (sourceHasPart) await setPart(part.id, currentPreset.id);
+      else if (part.optional) await setPart(part.id, null);
+    }
+    showToast('Parts reset to ' + currentPreset.label + '.');
+  } finally {
+    modelLoading.hidden = true;
+    modelLoading.textContent = 'LOADING STYLE…';
+  }
 }
 
 function clipScore(name) {
-  const n = name.toLowerCase();
+  const n = String(name || '').toLowerCase();
   const order = ['idle', 'walk', 'run', 'jump', 'wave', 'victory', 'dance', 'attack', 'kick', 'punch', 'sit'];
   const index = order.findIndex((term) => n === term || n.includes(term));
   return index < 0 ? 100 : index;
@@ -395,13 +612,11 @@ function playClip(clipOrName, userSelected = true) {
 
   const next = mixer.clipAction(clip);
   const looping = /idle|walk|run/i.test(clip.name);
-  next.reset();
-  next.enabled = true;
+  next.reset().enabled = true;
   next.setEffectiveWeight(1);
   next.setLoop(looping ? THREE.LoopRepeat : THREE.LoopOnce, looping ? Infinity : 1);
   next.clampWhenFinished = !looping;
   next.fadeIn(0.14).play();
-
   if (activeAction && activeAction !== next) activeAction.fadeOut(0.14);
   activeAction = next;
   activeClipName = clip.name;
@@ -416,13 +631,8 @@ function playClip(clipOrName, userSelected = true) {
 function renderPoseControls() {
   poseGrid.innerHTML = '';
   clipCount.textContent = clips.length + (clips.length === 1 ? ' clip' : ' clips');
-
-  const ordered = clips.slice().sort((a, b) => {
-    const scoreDiff = clipScore(a.name) - clipScore(b.name);
-    return scoreDiff || a.name.localeCompare(b.name);
-  });
-
-  ordered.forEach((clip) => {
+  const ordered = clips.slice().sort((a, b) => clipScore(a.name) - clipScore(b.name) || a.name.localeCompare(b.name));
+  for (const clip of ordered) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'poseBtn';
@@ -431,168 +641,12 @@ function renderPoseControls() {
     button.title = clip.name;
     button.addEventListener('click', () => playClip(clip));
     poseGrid.appendChild(button);
-  });
-
-  if (!ordered.length) poseGrid.innerHTML = '<p class="helperCopy">No embedded animation clips found on this style.</p>';
-}
-
-function snapshotMaterialColors() {
-  const colors = {};
-  materialRecords.forEach((record) => {
-    colors[record.key] = colourHex(record.material);
-  });
-  return colors;
-}
-
-function buildPayload() {
-  return {
-    version: 1,
-    name: (characterName.value || 'Unnamed Character').trim().slice(0, 24),
-    modelId: currentEntry.id,
-    modelLabel: currentEntry.label,
-    modelPath: currentEntry.path.replace('../', ''),
-    group: currentEntry.group,
-    variant: currentEntry.variant,
-    palette: currentPalette,
-    materialColors: snapshotMaterialColors(),
-    pose: activeClipName || '',
-    animationSpeed: Number(animSpeed.value),
-    turntable: Boolean(turntableToggle.checked),
-    source: 'GameBox Character Workshop',
-    updatedAt: new Date().toISOString()
-  };
-}
-
-function updateSummary() {
-  if (!currentEntry) return;
-  const name = (characterName.value || 'Unnamed Character').trim() || 'Unnamed Character';
-  summaryName.textContent = name;
-  summaryStyle.textContent = currentEntry.label;
-  summaryPalette.textContent = humanPalette(currentPalette);
-  summaryPose.textContent = activeClipName || '—';
-  selectedGroup.textContent = currentEntry.group + ' · ' + currentEntry.variant;
-  selectedModel.textContent = currentEntry.label;
-  modelMeta.textContent = (currentEntry.index + 1) + ' of ' + CHARACTER_CATALOG.length + ' styles · ' + clips.length + ' clips';
-}
-
-function saveCharacter(showMessage = true) {
-  const payload = buildPayload();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-  if (showMessage) showToast('Character saved on this device.');
-  return payload;
-}
-
-async function loadSavedCharacter() {
-  let saved = null;
-  try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-  } catch (_) {
-    saved = null;
   }
-
-  if (!saved || !CHARACTER_CATALOG.some((entry) => entry.id === saved.modelId)) {
-    showToast('No saved GameBox character yet.');
-    return false;
-  }
-
-  characterName.value = saved.name || 'Unnamed Character';
-  animSpeed.value = String(Number(saved.animationSpeed) || 1);
-  animSpeedValue.textContent = Number(animSpeed.value).toFixed(1) + '×';
-  turntableToggle.checked = Boolean(saved.turntable);
-  currentPalette = saved.palette || 'original';
-  pendingSavedColors = saved.materialColors || null;
-  pendingPose = saved.pose || null;
-
-  await selectStyle(saved.modelId, { preservePalette: true });
-  showToast('Saved character loaded.');
-  return true;
-}
-
-function useCharacter() {
-  const payload = saveCharacter(false);
-  window.dispatchEvent(new CustomEvent('gamebox-character-ready', { detail: payload }));
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: 'gamebox-character-ready', character: payload }, window.location.origin);
-  }
-  showToast('Character ready for GameBox.');
-}
-
-async function copyBuildJson() {
-  const json = JSON.stringify(buildPayload(), null, 2);
-  try {
-    await navigator.clipboard.writeText(json);
-    showToast('Build JSON copied.');
-  } catch (_) {
-    const area = document.createElement('textarea');
-    area.value = json;
-    area.style.position = 'fixed';
-    area.style.opacity = '0';
-    document.body.appendChild(area);
-    area.select();
-    document.execCommand('copy');
-    area.remove();
-    showToast('Build JSON copied.');
-  }
-}
-
-function renderFilters() {
-  filterRow.innerHTML = '';
-  CHARACTER_GROUPS.forEach((group) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'filterChip' + (group === currentFilter ? ' active' : '');
-    button.textContent = group.toUpperCase();
-    button.addEventListener('click', () => {
-      currentFilter = group;
-      renderFilters();
-      renderStyleGrid();
-    });
-    filterRow.appendChild(button);
-  });
-}
-
-function renderStyleGrid() {
-  const query = styleSearch.value.trim().toLowerCase();
-  const filtered = CHARACTER_CATALOG.filter((entry) => {
-    const groupMatch = currentFilter === 'All' || entry.group === currentFilter;
-    const searchMatch = !query || [entry.label, entry.id, entry.group, entry.variant].join(' ').toLowerCase().includes(query);
-    return groupMatch && searchMatch;
-  });
-
-  styleCount.textContent = filtered.length + ' / ' + CHARACTER_CATALOG.length;
-  styleGrid.innerHTML = '';
-
-  filtered.forEach((entry) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'styleCard' + (entry.id === currentEntry.id ? ' selected' : '');
-    button.dataset.model = entry.id;
-
-    const title = document.createElement('strong');
-    title.textContent = entry.label;
-    const meta = document.createElement('span');
-    meta.textContent = entry.group;
-    const index = document.createElement('i');
-    index.textContent = String(entry.index + 1).padStart(2, '0') + '/52';
-    button.append(title, meta, index);
-
-    button.addEventListener('click', () => selectStyle(entry.id));
-    styleGrid.appendChild(button);
-  });
-}
-
-function setActiveTab(name) {
-  document.querySelectorAll('.tabBtn').forEach((button) => {
-    button.classList.toggle('active', button.dataset.tab === name);
-  });
-  document.querySelectorAll('.tabView').forEach((view) => {
-    view.classList.toggle('active', view.dataset.view === name);
-  });
+  if (!ordered.length) poseGrid.innerHTML = '<p class="helperCopy">No animation clips found on this frame.</p>';
 }
 
 function updateLoadingProgress(event) {
-  if (!event || !event.total) return;
+  if (!event?.total) return;
   const value = Math.min(96, Math.max(8, (event.loaded / event.total) * 100));
   loadBar.style.width = value.toFixed(1) + '%';
 }
@@ -605,12 +659,235 @@ function finishInitialLoad() {
   setTimeout(() => { loading.style.display = 'none'; }, 480);
 }
 
-function showLoadError(error) {
-  console.error(error);
-  modelLoading.hidden = true;
-  loadError.hidden = false;
-  loadError.textContent = 'This character style could not be loaded. The previous style has been kept. ' + (error && error.message ? error.message : '');
-  setTimeout(() => { loadError.hidden = true; }, 5200);
+function snapshotMaterialColors() {
+  const colors = {};
+  for (const record of materialRecords) colors[record.key] = '#' + record.material.color.getHexString();
+  return colors;
+}
+
+function partSourceMap() {
+  return Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, activeParts[part.id]?.sourceId || null]));
+}
+
+function buildPayload() {
+  return {
+    version: 2,
+    name: (characterName.value || 'Unnamed Character').trim().slice(0, 24),
+    presetId: currentPreset.id,
+    modelId: currentPreset.id,
+    framePath: currentPreset.path.replace('../', ''),
+    rig: activeRig,
+    parts: partSourceMap(),
+    palette: currentPalette,
+    materialColors: snapshotMaterialColors(),
+    pose: activeClipName || '',
+    animationSpeed: Number(animSpeed.value),
+    turntable: Boolean(turntableToggle.checked),
+    source: 'GameBox Character Workshop',
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function uniquePartSources() {
+  return [...new Set(PART_DEFINITIONS.map((part) => activeParts[part.id]?.sourceId).filter(Boolean))];
+}
+
+function updateSummary() {
+  const name = (characterName.value || 'Unnamed Character').trim() || 'Unnamed Character';
+  const sources = uniquePartSources();
+  summaryName.textContent = name;
+  summaryStyle.textContent = sources.length <= 1
+    ? (entryById.get(sources[0])?.label || currentPreset.label)
+    : 'Custom mix · ' + sources.length + ' source styles';
+  summaryPalette.textContent = humanPalette(currentPalette);
+  summaryPose.textContent = activeClipName || '—';
+
+  selectedGroup.textContent = currentPreset.group + ' frame · ' + compatibleEntries().length + ' compatible';
+  selectedModel.textContent = sources.length > 1 ? 'Custom ' + currentPreset.label + ' mix' : currentPreset.label;
+  modelMeta.textContent = '52 total styles · ' + compatibleEntries().length + ' current-rig sources · ' + clips.length + ' clips';
+  presetSelect.value = currentPreset.id;
+}
+
+function saveCharacter(showMessage = true) {
+  const payload = buildPayload();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  if (showMessage) showToast('Exact modular character saved.');
+  return payload;
+}
+
+async function copyBuildJson() {
+  const json = JSON.stringify(buildPayload(), null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    showToast('Modular build JSON copied.');
+  } catch (_) {
+    const area = document.createElement('textarea');
+    area.value = json;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+    showToast('Modular build JSON copied.');
+  }
+}
+
+function useCharacter() {
+  const payload = saveCharacter(false);
+  window.dispatchEvent(new CustomEvent('gamebox-character-ready', { detail: payload }));
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'gamebox-character-ready', character: payload }, window.location.origin);
+  }
+  showToast('Exact character build ready for GameBox.');
+}
+
+async function loadDriver(entryId, options = {}) {
+  const entry = entryById.get(entryId);
+  if (!entry) return false;
+  const generation = ++loadGeneration;
+  loadError.hidden = true;
+  if (!initialLoad) {
+    modelLoading.hidden = false;
+    modelLoading.textContent = 'LOADING FRAME…';
+  } else {
+    loadText.textContent = 'Preparing ' + entry.label + ' and its compatible modular pieces.';
+    loadBar.style.width = '10%';
+  }
+
+  return new Promise((resolve) => {
+    gltfLoader.load(
+      entry.path + '?frame=2',
+      async (gltf) => {
+        if (generation !== loadGeneration) {
+          disposeGroup(gltf.scene);
+          resolve(false);
+          return;
+        }
+
+        const skinnedMeshes = [];
+        gltf.scene.traverse((node) => {
+          if (node.isSkinnedMesh) skinnedMeshes.push(node);
+          if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        });
+        const frameMesh = skinnedMeshes[0];
+        if (!frameMesh?.skeleton) {
+          disposeGroup(gltf.scene);
+          showLoadError(new Error('Selected frame has no usable skinned skeleton.'));
+          resolve(false);
+          return;
+        }
+
+        fitDriver(gltf.scene);
+        disposeDriver();
+
+        currentPreset = entry;
+        activeRig = entry.rig;
+        driverScene = gltf.scene;
+        driverMesh = frameMesh;
+        driverSkeleton = frameMesh.skeleton;
+        driverParent = frameMesh.parent || driverScene;
+        clips = gltf.animations || [];
+        mixer = new THREE.AnimationMixer(driverScene);
+        mixer.timeScale = Number(animSpeed.value) || 1;
+        activeAction = null;
+        activeClipName = '';
+
+        for (const mesh of skinnedMeshes) mesh.visible = false;
+        characterHolder.add(driverScene);
+
+        renderPoseControls();
+        renderPresetSelect();
+        updatePartRows();
+
+        const requestedParts = options.parts || null;
+        for (const part of PART_DEFINITIONS) {
+          let sourceId = requestedParts?.[part.id];
+          if (sourceId && entryById.get(sourceId)?.rig !== activeRig) sourceId = null;
+          if (sourceId === undefined) sourceId = entry.id;
+
+          if (sourceId) {
+            const has = await partSystem.hasPart(sourceId, part.id);
+            if (has) {
+              await setPart(part.id, sourceId);
+              continue;
+            }
+          }
+
+          const presetHas = await partSystem.hasPart(entry.id, part.id);
+          if (presetHas) await setPart(part.id, entry.id);
+          else if (part.optional) await setPart(part.id, null);
+        }
+
+        if (pendingSavedColors) {
+          applySavedColors(pendingSavedColors);
+          pendingSavedColors = null;
+        } else if (currentPalette !== 'custom') {
+          applyPalette(currentPalette);
+        }
+
+        const desiredPose = pendingPose ? findClipByName(pendingPose) : null;
+        pendingPose = null;
+        playClip(desiredPose || findIdleClip(), false);
+
+        characterHolder.rotation.y = 0;
+        modelLoading.hidden = true;
+        modelLoading.textContent = 'LOADING STYLE…';
+        finishInitialLoad();
+        updatePartRows();
+        updateSummary();
+        resolve(true);
+      },
+      updateLoadingProgress,
+      (error) => {
+        if (generation !== loadGeneration) {
+          resolve(false);
+          return;
+        }
+        showLoadError(error);
+        if (initialLoad) finishInitialLoad();
+        resolve(false);
+      }
+    );
+  });
+}
+
+async function loadSavedCharacter() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || 'null');
+  } catch (_) {
+    saved = null;
+  }
+
+  const presetId = saved?.presetId || saved?.modelId;
+  if (!saved || !entryById.has(presetId)) {
+    showToast('No saved GameBox character yet.');
+    return false;
+  }
+
+  characterName.value = saved.name || 'Unnamed Character';
+  animSpeed.value = String(Number(saved.animationSpeed) || 1);
+  animSpeedValue.textContent = Number(animSpeed.value).toFixed(1) + '×';
+  turntableToggle.checked = Boolean(saved.turntable);
+  currentPalette = saved.palette || 'original';
+  pendingSavedColors = saved.materialColors || null;
+  pendingPose = saved.pose || null;
+  pendingParts = saved.parts || null;
+
+  await loadDriver(presetId, { parts: pendingParts });
+  pendingParts = null;
+  showToast('Saved modular character loaded.');
+  return true;
+}
+
+function setActiveTab(name) {
+  document.querySelectorAll('.tabBtn').forEach((button) => button.classList.toggle('active', button.dataset.tab === name));
+  document.querySelectorAll('.tabView').forEach((view) => view.classList.toggle('active', view.dataset.view === name));
 }
 
 function loadDecorAsset(path, x, z, targetHeight, rotation = 0) {
@@ -620,13 +897,11 @@ function loadDecorAsset(path, x, z, targetHeight, rotation = 0) {
       node.castShadow = true;
       node.receiveShadow = true;
     });
-
     const box = new THREE.Box3().setFromObject(object);
     const size = new THREE.Vector3();
     box.getSize(size);
     if (size.y > 0) object.scale.setScalar(targetHeight / size.y);
     object.updateMatrixWorld(true);
-
     const fitted = new THREE.Box3().setFromObject(object);
     object.position.set(x, -fitted.min.y, z);
     object.rotation.y = rotation;
@@ -641,90 +916,6 @@ function buildWorkshopDecor() {
   loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/WoodLog_Snow.fbx', 2.6, -1.1, 0.55, -0.55);
 }
 
-async function selectStyle(id, options = {}) {
-  const entry = CHARACTER_CATALOG.find((item) => item.id === id);
-  if (!entry) return false;
-
-  const generation = ++loadGeneration;
-  const oldEntry = currentEntry;
-  currentEntry = entry;
-  renderStyleGrid();
-  updateSummary();
-
-  if (!initialLoad) modelLoading.hidden = false;
-  loadError.hidden = true;
-  if (initialLoad) {
-    loadText.textContent = 'Loading ' + entry.label + ' from the shared 52-character asset pool.';
-    loadBar.style.width = '10%';
-  }
-
-  return new Promise((resolve) => {
-    gltfLoader.load(
-      entry.path + '?v=1',
-      (gltf) => {
-        if (generation !== loadGeneration) {
-          disposeObject(gltf.scene);
-          resolve(false);
-          return;
-        }
-
-        if (currentModel) {
-          characterHolder.remove(currentModel);
-          disposeObject(currentModel);
-        }
-        if (mixer) mixer.stopAllAction();
-
-        currentModel = gltf.scene;
-        prepareModel(currentModel);
-        characterHolder.add(currentModel);
-
-        clips = gltf.animations || [];
-        mixer = new THREE.AnimationMixer(currentModel);
-        mixer.timeScale = Number(animSpeed.value) || 1;
-        activeAction = null;
-        activeClipName = '';
-
-        renderMaterialControls();
-        renderPoseControls();
-
-        const savedApplied = pendingSavedColors ? applySavedColors(pendingSavedColors) : false;
-        pendingSavedColors = null;
-
-        if (!savedApplied) {
-          const desiredPalette = options.preservePalette ? currentPalette : currentPalette === 'custom' ? 'original' : currentPalette;
-          applyPalette(desiredPalette || 'original');
-        }
-
-        const desiredPose = pendingPose ? findClipByName(pendingPose) : null;
-        pendingPose = null;
-        playClip(desiredPose || findIdleClip(), false);
-
-        characterHolder.rotation.y = 0;
-        modelLoading.hidden = true;
-        finishInitialLoad();
-        updateSummary();
-        renderStyleGrid();
-        resolve(true);
-      },
-      updateLoadingProgress,
-      (error) => {
-        if (generation !== loadGeneration) {
-          resolve(false);
-          return;
-        }
-        currentEntry = oldEntry || currentEntry;
-        renderStyleGrid();
-        updateSummary();
-        showLoadError(error);
-        if (initialLoad) {
-          finishInitialLoad();
-        }
-        resolve(false);
-      }
-    );
-  });
-}
-
 function resize() {
   const width = Math.max(1, window.innerWidth);
   const height = Math.max(1, window.innerHeight);
@@ -732,11 +923,9 @@ function resize() {
   camera.aspect = width / height;
   camera.fov = width <= 980 ? 39 : 35;
   camera.updateProjectionMatrix();
-
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
   previewRoot.position.y = mobile ? 0.52 : 0;
-
   camera.position.set(previewRoot.position.x, mobile ? 1.72 : 1.64, viewDistance);
   camera.lookAt(previewRoot.position.x, mobile ? 1.02 : 1.16, 0);
 }
@@ -766,8 +955,7 @@ renderer.domElement.addEventListener('pointermove', (event) => {
   pointerMap.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
   if (pointerMap.size === 1) {
-    const dx = event.clientX - lastSingleX;
-    characterHolder.rotation.y += dx * 0.012;
+    characterHolder.rotation.y += (event.clientX - lastSingleX) * 0.012;
     lastSingleX = event.clientX;
     return;
   }
@@ -791,22 +979,14 @@ function releasePointer(event) {
 }
 renderer.domElement.addEventListener('pointerup', releasePointer);
 renderer.domElement.addEventListener('pointercancel', releasePointer);
-
 renderer.domElement.addEventListener('wheel', (event) => {
   event.preventDefault();
   viewDistance = THREE.MathUtils.clamp(viewDistance + event.deltaY * 0.0045, 3.35, 6.8);
   resize();
 }, { passive: false });
 
-document.querySelectorAll('.tabBtn').forEach((button) => {
-  button.addEventListener('click', () => setActiveTab(button.dataset.tab));
-});
-
-document.querySelectorAll('[data-palette]').forEach((button) => {
-  button.addEventListener('click', () => applyPalette(button.dataset.palette));
-});
-
-styleSearch.addEventListener('input', renderStyleGrid);
+document.querySelectorAll('.tabBtn').forEach((button) => button.addEventListener('click', () => setActiveTab(button.dataset.tab)));
+document.querySelectorAll('[data-palette]').forEach((button) => button.addEventListener('click', () => applyPalette(button.dataset.palette)));
 characterName.addEventListener('input', updateSummary);
 
 $('nameRollBtn').addEventListener('click', () => {
@@ -817,6 +997,10 @@ $('nameRollBtn').addEventListener('click', () => {
 $('turnLeftBtn').addEventListener('click', () => { characterHolder.rotation.y -= Math.PI / 6; });
 $('turnRightBtn').addEventListener('click', () => { characterHolder.rotation.y += Math.PI / 6; });
 $('resetViewBtn').addEventListener('click', resetView);
+
+$('applyPresetBtn').addEventListener('click', () => loadDriver(presetSelect.value));
+$('randomPartsBtn').addEventListener('click', randomiseParts);
+$('resetPartsBtn').addEventListener('click', resetPartsToPreset);
 
 animSpeed.addEventListener('input', () => {
   const value = Number(animSpeed.value) || 1;
@@ -831,18 +1015,19 @@ $('copyBtn').addEventListener('click', copyBuildJson);
 $('useCharacterBtn').addEventListener('click', useCharacter);
 
 $('randomBtn').addEventListener('click', async () => {
-  const entry = CHARACTER_CATALOG[Math.floor(Math.random() * CHARACTER_CATALOG.length)];
+  const preset = CHARACTER_CATALOG[Math.floor(Math.random() * CHARACTER_CATALOG.length)];
   const palettes = Object.keys(paletteSchemes);
   currentPalette = palettes[Math.floor(Math.random() * palettes.length)];
   characterName.value = randomName();
   pendingPose = ['Idle', 'Walk', 'Run', 'Jump', 'Victory'][Math.floor(Math.random() * 5)];
-  await selectStyle(entry.id, { preservePalette: true });
+  await loadDriver(preset.id);
+  await randomiseParts();
   setActiveTab('style');
-  showToast('Random character created.');
+  showToast('New modular character created.');
 });
 
 window.addEventListener('resize', resize);
-window.visualViewport && window.visualViewport.addEventListener('resize', resize);
+window.visualViewport?.addEventListener('resize', resize);
 
 function animate() {
   requestAnimationFrame(animate);
@@ -856,24 +1041,26 @@ function animate() {
     if (positions[i] < 0.05) positions[i] = 8.7;
   }
   snowGeo.attributes.position.needsUpdate = true;
-
   renderer.render(scene, camera);
 }
 
 async function bootstrap() {
-  renderFilters();
-  renderStyleGrid();
+  renderPresetSelect();
+  renderPartRows();
   resize();
   buildWorkshopDecor();
 
   let saved = null;
   try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || 'null');
   } catch (_) {
     saved = null;
   }
 
-  if (saved && CHARACTER_CATALOG.some((entry) => entry.id === saved.modelId)) {
+  const savedPresetId = saved?.presetId || saved?.modelId;
+  if (saved && entryById.has(savedPresetId)) {
+    currentPreset = entryById.get(savedPresetId);
+    activeRig = currentPreset.rig;
     characterName.value = saved.name || 'Jingle';
     animSpeed.value = String(Number(saved.animationSpeed) || 1);
     animSpeedValue.textContent = Number(animSpeed.value).toFixed(1) + '×';
@@ -881,12 +1068,14 @@ async function bootstrap() {
     currentPalette = saved.palette || 'original';
     pendingSavedColors = saved.materialColors || null;
     pendingPose = saved.pose || null;
-    currentEntry = CHARACTER_CATALOG.find((entry) => entry.id === saved.modelId) || currentEntry;
+    pendingParts = saved.parts || null;
   }
 
+  renderPresetSelect();
+  updatePartRows();
   updateSummary();
-  renderStyleGrid();
-  await selectStyle(currentEntry.id, { preservePalette: true });
+  await loadDriver(currentPreset.id, { parts: pendingParts });
+  pendingParts = null;
 }
 
 animate();
