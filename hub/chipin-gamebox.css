@@ -215,38 +215,26 @@
 @media(max-width:560px){.toyGameRelic{width:88%}.relicHomeIcon{width:62px;height:62px}}
 
 
-/* Jigsaw Workshop: an actual picture preview within a Kenney frame.
-   No generic .gameTileIcon scaling applies to this image. */
-.toyGameJigsaw .gameTile{background:#213443;border-color:#6fc8f2}
+/* Jigsaw: Christmas puzzle-table home box. */
+.toyGameJigsaw .gameTile{
+  background-color:#49372d;
+  background-image:url("../assets/gamebox/kenney/2d/Retro Textures Fantasy/floor_wood_planks_wide.png");
+  background-repeat:repeat;
+  background-size:54px 54px;
+  background-blend-mode:multiply;
+  border-color:#c9d4db;
+}
 .toyBox .jigsawHomeTile{justify-content:center;overflow:hidden}
 .toyBox .jigsawHomePreview{
-  display:grid;
-  place-items:center;
-  position:relative;
-  z-index:1;
-  width:96px;
-  height:96px;
-  flex:0 0 96px;
-  padding:8px;
-  border:8px solid transparent;
-  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_grey_detail.png");
-  border-image-slice:14;
-  border-image-width:8px;
-  border-image-repeat:stretch;
+  display:grid;place-items:center;position:relative;z-index:1;width:96px;height:96px;flex:0 0 96px;padding:7px;
+  border:9px solid transparent;
+  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/Double/panel_border_grey_detail.png");
+  border-image-slice:32;border-image-width:9px;border-image-repeat:stretch;background:#10171b;
 }
-.toyBox .jigsawHomeIcon{
-  display:block;
-  width:100%;
-  height:100%;
-  max-width:none;
-  object-fit:cover;
-  object-position:center;
-}
-.toyGameJigsaw .gameTile strong{color:#f3f9ff}
-.toyGameJigsaw .gameTile small{color:#9ed6f4}
-@media(max-width:560px){
-  .toyBox .jigsawHomePreview{width:86px;height:86px;flex-basis:86px;padding:7px;border-width:7px;border-image-width:7px}
-}
+.toyBox .jigsawHomeIcon{display:block;width:100%;height:100%;max-width:none;object-fit:cover;object-position:center}
+.jigsawHomeChristmasMark{position:absolute;right:5px;bottom:3px;z-index:1;width:56px;height:56px;object-fit:contain;opacity:.9}
+.toyGameJigsaw .gameTile strong{color:#fff}.toyGameJigsaw .gameTile small{color:#ffd86a}
+@media(max-width:560px){.toyBox .jigsawHomePreview{width:86px;height:86px;flex-basis:86px;padding:6px;border-width:8px;border-image-width:8px}.jigsawHomeChristmasMark{width:50px;height:50px}}
 
 
 /* Tiny Ski Run home box */

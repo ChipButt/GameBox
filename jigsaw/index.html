@@ -3,47 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#172431">
+<meta name="theme-color" content="#11191e">
 <title>Jigsaw · GameBox</title>
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div class="app">
   <header class="hud">
-    <a class="roundAsset hudButton" href="../" aria-label="Back to GameBox">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/arrowLeft.png" alt="">
-    </a>
-
-    <div class="titleStack" aria-label="Jigsaw puzzle">
-      <div class="titlePlaque"><span>JIGSAW</span></div>
-      <strong id="puzzleTitle" class="puzzleName">Christmas Test</strong>
-    </div>
-
-    <button id="menuButton" class="roundAsset hudButton" type="button" aria-label="Puzzle options">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/gear.png" alt="">
-    </button>
+    <a class="roundAsset hudButton backButtonAsset" href="../" aria-label="Back to GameBox"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/arrowLeft.png" alt=""></a>
+    <div class="titleStack" aria-label="Jigsaw puzzle"><span class="titleEdition">CHRISTMAS EDITION</span><h1>JIGSAW</h1><strong id="puzzleTitle" class="puzzleName">Christmas Test</strong></div>
+    <button id="menuButton" class="roundAsset hudButton settingsButtonAsset" type="button" aria-label="Puzzle settings"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/gear.png" alt=""></button>
   </header>
 
-  <main id="puzzleStage" class="stage" aria-label="Jigsaw puzzle">
-    <div class="boardBackdrop" aria-hidden="true"></div>
-    <div class="trayBackdrop" aria-hidden="true"></div>
-    <canvas id="puzzleCanvas"></canvas>
-    <div class="trayPlaque" aria-hidden="true">PIECES</div>
-  </main>
+  <main id="puzzleStage" class="stage" aria-label="Jigsaw puzzle"><div class="boardBackdrop" aria-hidden="true"></div><canvas id="puzzleCanvas"></canvas></main>
 </div>
 
 <div id="menuSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
-  <section class="optionsPanel">
-    <div class="panelTitle"><span id="menuTitle">OPTIONS</span></div>
-    <button id="closeMenu" class="roundAsset closeButton" type="button" aria-label="Close options">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/cross.png" alt="">
-    </button>
+  <section class="optionsPanel festivePanel">
+    <img class="panelChristmasMark" src="../assets/gamebox/kenney/2d/Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png" alt="" aria-hidden="true">
+    <button id="closeMenu" class="roundAsset closeButton backButtonAsset" type="button" aria-label="Close settings"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/cross.png" alt=""></button>
+    <header class="panelHeading"><span>CHRISTMAS PUZZLE</span><h2 id="menuTitle">Settings</h2></header>
 
-    <div class="sectionLabel">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/menuGrid.png" alt="">
-      <div><small>DIFFICULTY</small><strong>Number of pieces</strong></div>
-    </div>
-
+    <div class="sectionLabel"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/menuGrid.png" alt=""><div><small>DIFFICULTY</small><strong>Choose your challenge</strong></div></div>
+    <div class="difficultyScale" aria-hidden="true"><span>EASIER</span><span>HARDER</span></div>
     <div class="pieceChoices" id="pieceChoices" role="group" aria-label="Number of puzzle pieces">
       <button type="button" data-piece-grid="2" aria-pressed="false"><span>4</span></button>
       <button type="button" data-piece-grid="3" aria-pressed="false"><span>9</span></button>
@@ -60,52 +42,41 @@
     </div>
 
     <div class="optionRows">
-      <button id="guideButton" class="settingButton" type="button">
+      <button id="guideButton" class="settingButton guideButton" type="button" data-guide="off">
         <span class="settingIcon"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/target.png" alt=""></span>
         <span class="settingText"><small>PICTURE GUIDE</small><strong id="guideState">Off</strong></span>
-        <img id="guideCheck" class="stateCheck" src="../assets/gamebox/kenney/ui/UI Pack/Grey/Double/check_square_grey.png" alt="">
+        <span class="guideStates" aria-hidden="true"><span data-guide-label="off" class="active">Off</span><span data-guide-label="faint">Faint</span><span data-guide-label="strong">Strong</span></span>
       </button>
-
-      <button id="soundButton" class="settingButton" type="button">
+      <button id="soundButton" class="settingButton soundButton" type="button">
         <span class="settingIcon"><img id="soundIcon" src="../assets/gamebox/kenney/icons/Game Icons/White/2x/audioOn.png" alt=""></span>
         <span class="settingText"><small>SOUND</small><strong id="soundState">On</strong></span>
-        <img id="soundCheck" class="stateCheck" src="../assets/gamebox/kenney/ui/UI Pack/Blue/Double/check_square_color_checkmark.png" alt="">
+        <img id="soundCheck" class="stateCheck" src="../assets/gamebox/kenney/ui/UI Pack/Green/Double/check_square_color_checkmark.png" alt="">
       </button>
     </div>
 
     <div class="actionGrid">
-      <button id="restartButton" class="assetAction secondaryAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Restart</span>
-      </button>
-      <button id="chooseImage" class="assetAction primaryAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/import.png" alt=""><span>New image</span>
-      </button>
+      <button id="restartButton" class="assetAction dangerAction" type="button"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Restart</span></button>
+      <button id="chooseImage" class="assetAction primaryAction" type="button"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/import.png" alt=""><span>New image</span></button>
     </div>
     <input id="imageFile" type="file" accept="image/*" hidden>
-
-    <a class="assetAction secondaryAction homeAction" href="../">
-      <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>Back to GameBox</span>
-    </a>
+    <a class="assetAction secondaryAction homeAction" href="../"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>Back to GameBox</span></a>
   </section>
 </div>
 
 <div id="winOverlay" class="winOverlay" role="dialog" aria-modal="true" aria-labelledby="completeTitle">
-  <section class="completePanel">
-    <div class="completeCheck"><img src="../assets/gamebox/kenney/ui/UI Pack/Blue/Double/check_square_color_checkmark.png" alt=""></div>
-    <h1 id="completeTitle">Puzzle complete</h1>
+  <section class="completePanel festivePanel">
+    <img class="completeChristmasMark" src="../assets/gamebox/kenney/2d/Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png" alt="" aria-hidden="true">
+    <span class="completeKicker">MERRY CHRISTMAS</span><h1 id="completeTitle">Puzzle complete</h1>
     <p>All <strong id="winPieceCount">36</strong> pieces are in place.</p>
     <div class="winActions">
-      <button id="winRestart" class="assetAction primaryAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Play again</span>
-      </button>
-      <button id="winHome" class="assetAction secondaryAction" type="button">
-        <img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>GameBox</span>
-      </button>
+      <button id="winRestart" class="assetAction primaryAction" type="button"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/return.png" alt=""><span>Play again</span></button>
+      <button id="winChooseImage" class="assetAction highlightAction" type="button"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/import.png" alt=""><span>New image</span></button>
     </div>
+    <button id="winHome" class="assetAction secondaryAction winHomeAction" type="button"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""><span>GameBox</span></button>
   </section>
 </div>
 
-<script src="jigsaw-engine.js?v=12"></script>
-<script src="game.js?v=7"></script>
+<script src="jigsaw-engine.js?v=13"></script>
+<script src="game.js?v=8"></script>
 </body>
 </html>

@@ -116,7 +116,7 @@
       this.frameImage=new Image();
       this.frameImage.decoding='async';
       this.frameImage.onload=()=>this.render();
-      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_grey_detail.png';
+      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/Double/panel_border_grey_detail.png';
       this.pieces=[];
       this.edges=[];
       this.dragging=null;
@@ -219,10 +219,11 @@
     }
 
     computeLayout(cssW,cssH){
-      const frameClearance=20;
-      const frameOutset=16;
-      const trayGap=28;
-      const side=Math.floor(Math.min(cssW-frameClearance*2, Math.max(210,cssH*.56), 430));
+      const frameClearance=22;
+      const frameOutset=18;
+      const trayGap=26;
+      const boardShare=cssH<560?.48:.56;
+      const side=Math.floor(Math.min(cssW-frameClearance*2, Math.max(220,cssH*boardShare), 430));
       const boardX=Math.round((cssW-side)/2);
       const boardY=frameClearance;
       const trayTop=boardY+side+trayGap;
