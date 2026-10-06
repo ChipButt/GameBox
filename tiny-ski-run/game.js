@@ -75,6 +75,7 @@ const F={
 // without late network loads. 84+ is the Tiny Ski glyph/font set.
 const REQUIRED=Array.from({length:84},(_,i)=>i);
 const images={};
+let outsidePattern=null,pistePattern=null;
 
 let W=360,H=720,dpr=1;
 let running=false,paused=false,crashing=false,gameOver=false,soundOn=true;
@@ -115,6 +116,7 @@ function loadImage(frame){
 }
 
 Promise.all(REQUIRED.map(loadImage)).then(()=>{
+  buildTerrainPatterns();
   assetStatus.textContent='Mountain ready';
   assetStatus.classList.add('ready');
   startButton.disabled=false;
@@ -124,6 +126,24 @@ Promise.all(REQUIRED.map(loadImage)).then(()=>{
   console.error(err);
   assetStatus.textContent='Tiny Ski assets failed';
 });
+
+function buildTerrainPatterns(){
+  function make(frames,seed){
+    const c=document.createElement('canvas');
+    c.width=TILE*4;c.height=TILE*4;
+    const cctx=c.getContext('2d');
+    cctx.imageSmoothingEnabled=false;
+    for(let row=0;row<4;row++){
+      for(let col=0;col<4;col++){
+        const frame=frames[hash2(col+seed,row+seed)%frames.length];
+        cctx.drawImage(images[frame],col*TILE,row*TILE,TILE,TILE);
+      }
+    }
+    return ctx.createPattern(c,'repeat');
+  }
+  outsidePattern=make(F.snowOutside,3);
+  pistePattern=make(F.snowPiste,11);
+}
 
 function resizeCanvas(){
   const r=canvas.getBoundingClientRect();
@@ -502,23 +522,14 @@ function drawSprite(frame,x,y,size=TILE,angle=0,alpha=1,flip=false){
   ctx.restore();
 }
 
-function tileFrame(frames,col,row){
-  return frames[hash2(col,row)%frames.length];
-}
-
-function drawTileField(frames,camera=viewScroll){
-  const yOffset=-(camera%TILE);
-  const firstRow=Math.floor(camera/TILE)-1;
-  const startCol=-1;
-  const cols=Math.ceil(W/TILE)+2;
-  for(let sy=yOffset-TILE,row=firstRow;sy<H+TILE;sy+=TILE,row++){
-    for(let col=startCol;col<cols;col++){
-      const x=col*TILE;
-      const frame=tileFrame(frames,col,row);
-      const img=images[frame];
-      if(img)ctx.drawImage(img,x,sy,TILE,TILE);
-    }
-  }
+function fillScrollingPattern(pattern){
+  if(!pattern)return;
+  const phase=-(viewScroll%(TILE*4));
+  ctx.save();
+  ctx.translate(0,phase);
+  ctx.fillStyle=pattern;
+  ctx.fillRect(0,-TILE*4,W,H+TILE*8);
+  ctx.restore();
 }
 
 function chooseEdgeFrame(side,worldY,row){
@@ -536,7 +547,9 @@ function chooseEdgeFrame(side,worldY,row){
 }
 
 function drawPiste(){
-  drawTileField(F.snowOutside);
+  // Two prebuilt native-Tiny-Ski patterns replace thousands of per-frame tile draw calls.
+  // This keeps the exact pack textures while dramatically reducing mobile render cost.
+  fillScrollingPattern(outsidePattern);
 
   ctx.save();
   ctx.beginPath();
@@ -550,7 +563,7 @@ function drawPiste(){
   }
   ctx.closePath();
   ctx.clip();
-  drawTileField(F.snowPiste);
+  fillScrollingPattern(pistePattern);
   ctx.restore();
 
   // Use the pack's actual vertical/curved bank tiles. No rotating arbitrary snow tiles.
@@ -601,7 +614,8 @@ function drawLiftShadow(lift){
 }
 
 function drawLiftTower(x,cableY){
-  drawSprite(F.liftTowerHead,x,cableY,TILE);
+  // 42 is the mast head; 54 is the shaft; 66 is the orange foot.
+  drawSprite(F.liftTop,x,cableY,TILE);
   drawSprite(F.liftPole,x,cableY+TILE,TILE);
   drawSprite(F.liftPole,x,cableY+TILE*2,TILE);
   drawSprite(F.liftPole,x,cableY+TILE*3,TILE);
@@ -634,21 +648,28 @@ function drawLift(lift){
   const cableY=lift.worldY-viewScroll;
   if(cableY<-TILE*6||cableY>H+TILE*2)return;
 
-  // Kenney cable is a repeating horizontal tile; tower intersections use tile_0045.
-  for(let x=TILE/2;x<W+TILE;x+=TILE){
-    drawSprite(F.liftCable,x,cableY,TILE);
+  const towerXs=[W*.22,W*.5,W*.78];
+  const chairXs=[W*.1,W*.66,W*.91];
+  const gondolaX=W*.37;
+
+  // Straight triple cable is tile_0046. At structural points the pack provides
+  // dedicated join/hanger tiles rather than requiring a generic sprite.
+  for(let x=TILE/2;x<W+TILE;x+=TILE)drawSprite(F.liftCable,x,cableY,TILE);
+  drawSprite(F.liftCableJoin,TILE/2,cableY,TILE);
+  drawSprite(F.liftCableJoin,W-TILE/2,cableY,TILE);
+
+  for(const x of towerXs){
+    drawSprite(F.liftTowerHead,x,cableY,TILE);
+    drawLiftTower(x,cableY);
   }
 
-  const towerXs=[W*.22,W*.5,W*.78];
-  for(const x of towerXs)drawLiftTower(x,cableY);
+  for(const x of chairXs)drawSprite(F.liftHangerJoin,x,cableY,TILE);
+  drawSprite(F.liftHangerJoin,gondolaX,cableY,TILE);
 
-  // Put cable/tower intersection tile over the cable at each tower.
-  for(const x of towerXs)drawSprite(F.liftTowerHead,x,cableY,TILE);
-
-  drawChair(W*.1,cableY,lift.chairLeft);
-  drawGondola(W*.37,cableY);
-  drawChair(W*.66,cableY,lift.chairRight);
-  drawChair(W*.91,cableY,lift.chairLeft);
+  drawChair(chairXs[0],cableY,lift.chairLeft);
+  drawGondola(gondolaX,cableY);
+  drawChair(chairXs[1],cableY,lift.chairRight);
+  drawChair(chairXs[2],cableY,lift.chairLeft);
 }
 
 function render(){
