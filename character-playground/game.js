@@ -498,7 +498,7 @@ function currentMaterials() {
   return records;
 }
 
-function looksLikeSkin(record) {function looksLikeSkin(record) {
+function looksLikeSkin(record) {
   const name = record.name.toLowerCase();
   if (/skin|face|flesh|teeth/.test(name)) return true;
   const c = new THREE.Color(record.originalColor);
@@ -700,7 +700,7 @@ async function instantiateWearable(option, category) {
   return group;
 }
 
-async function applyPartOption(category, option, options = {}) {async function applyPartOption(category, option, options = {}) {
+async function applyPartOption(category, option, options = {}) {
   return setPart(category, option, options);
 }
 

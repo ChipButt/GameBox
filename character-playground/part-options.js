@@ -1664,7 +1664,7 @@ export const WEARABLE_OPTIONS = [
   }
 ];
 
-export function optionsForPart(category){export function optionsForPart(category){
+export function optionsForPart(category){
   const base = PART_OPTIONS[category] || [];
   return category === 'shoes' ? [...WEARABLE_OPTIONS, ...base] : base.slice();
 }
