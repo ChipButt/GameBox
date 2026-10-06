@@ -995,7 +995,7 @@ export const PART_OPTIONS = {
   "shoes": [
     {
       "id": "shoes-01",
-      "label": "Shoes 01",
+      "label": "Formal Shoes",
       "kind": "source",
       "sourceId": "Cow",
       "geometryHash": "9c2bdd8ca912fc89",
@@ -1003,7 +1003,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-02",
-      "label": "Shoes 02",
+      "label": "Practical Shoes",
       "kind": "source",
       "sourceId": "Doctor_Female_Old",
       "geometryHash": "dd1f7a42a4071ed4",
@@ -1011,7 +1011,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-03",
-      "label": "Shoes 03",
+      "label": "Cowboy Boots",
       "kind": "source",
       "sourceId": "Cowboy_Female",
       "geometryHash": "14c37af25f290cc6",
@@ -1019,7 +1019,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-04",
-      "label": "Shoes 04",
+      "label": "Casual Shoes",
       "kind": "source",
       "sourceId": "Casual_Bald",
       "geometryHash": "23820c74c0e6d714",
@@ -1027,7 +1027,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-05",
-      "label": "Shoes 05",
+      "label": "Viking Boots",
       "kind": "source",
       "sourceId": "VikingHelmet",
       "geometryHash": "5d6c08589c981a7c",
@@ -1035,7 +1035,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-06",
-      "label": "Shoes 06",
+      "label": "Fantasy Boots",
       "kind": "source",
       "sourceId": "Elf",
       "geometryHash": "7ce05c87281ed7db",
@@ -1043,7 +1043,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-07",
-      "label": "Shoes 07",
+      "label": "Kitchen Shoes",
       "kind": "source",
       "sourceId": "Chef_Female",
       "geometryHash": "c76b72bed8db2db8",
@@ -1051,7 +1051,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-08",
-      "label": "Shoes 08",
+      "label": "Ninja Boots",
       "kind": "source",
       "sourceId": "Ninja_Female",
       "geometryHash": "e7ac31a2c9dcea48",
@@ -1059,7 +1059,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-09",
-      "label": "Shoes 09",
+      "label": "Ninja Boots · Tall",
       "kind": "source",
       "sourceId": "Ninja_Male",
       "geometryHash": "711097ea85764a9f",
@@ -1067,7 +1067,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-10",
-      "label": "Shoes 10",
+      "label": "Classic Shoes",
       "kind": "source",
       "sourceId": "OldClassy_Female",
       "geometryHash": "791afb32b97af217",
@@ -1075,7 +1075,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-11",
-      "label": "Shoes 11",
+      "label": "Casual Shoes · Alt",
       "kind": "source",
       "sourceId": "Casual3_Female",
       "geometryHash": "b19f8efeba3fe419",
@@ -1083,7 +1083,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-12",
-      "label": "Shoes 12",
+      "label": "Pirate Boots",
       "kind": "source",
       "sourceId": "Pirate_Female",
       "geometryHash": "b75e91ffcf702cf6",
@@ -1091,7 +1091,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-13",
-      "label": "Shoes 13",
+      "label": "Soldier Boots",
       "kind": "source",
       "sourceId": "BlueSoldier_Male",
       "geometryHash": "c200edf117d8f5c9",
@@ -1099,7 +1099,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-14",
-      "label": "Shoes 14",
+      "label": "Everyday Shoes",
       "kind": "source",
       "sourceId": "Casual2_Female",
       "geometryHash": "c7f2e0b5f9013e86",
@@ -1107,7 +1107,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-15",
-      "label": "Shoes 15",
+      "label": "Soldier Boots · Alt",
       "kind": "source",
       "sourceId": "BlueSoldier_Female",
       "geometryHash": "d30a833d6ca94d3b",
@@ -1115,7 +1115,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-16",
-      "label": "Shoes 16",
+      "label": "Kimono Sandals",
       "kind": "source",
       "sourceId": "Kimono_Female",
       "geometryHash": "dcc8d1381386bcaf",
@@ -1123,7 +1123,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-17",
-      "label": "Shoes 17",
+      "label": "Work Boots",
       "kind": "source",
       "sourceId": "Worker_Female",
       "geometryHash": "f6fd47b6873a8b8f",
@@ -1131,7 +1131,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-18",
-      "label": "Shoes 18",
+      "label": "Basic Shoes",
       "kind": "source",
       "sourceId": "BaseCharacter",
       "geometryHash": "0fdc356d87917d00",
@@ -1139,7 +1139,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-19",
-      "label": "Shoes 19",
+      "label": "Golden Greaves",
       "kind": "source",
       "sourceId": "Knight_Golden_Female",
       "geometryHash": "214c8a8559022182",
@@ -1147,7 +1147,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-20",
-      "label": "Shoes 20",
+      "label": "Worn Boots",
       "kind": "source",
       "sourceId": "Zombie_Female",
       "geometryHash": "51749bb62e560987",
@@ -1155,7 +1155,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-21",
-      "label": "Shoes 21",
+      "label": "Goblin Feet",
       "kind": "source",
       "sourceId": "Goblin_Female",
       "geometryHash": "8c3acef76ae52bcd",
@@ -1163,7 +1163,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-22",
-      "label": "Shoes 22",
+      "label": "Goblin Feet · Alt",
       "kind": "source",
       "sourceId": "Goblin_Male",
       "geometryHash": "b189dde32e99cf67",
@@ -1171,7 +1171,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-23",
-      "label": "Shoes 23",
+      "label": "Worn Boots · Alt",
       "kind": "source",
       "sourceId": "Zombie_Male",
       "geometryHash": "d44f01befaeb6ac2",
@@ -1179,7 +1179,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-24",
-      "label": "Shoes 24",
+      "label": "Golden Greaves · Alt",
       "kind": "source",
       "sourceId": "Knight_Golden_Male",
       "geometryHash": "e35247c6c9d97b48",
@@ -1187,7 +1187,7 @@ export const PART_OPTIONS = {
     },
     {
       "id": "shoes-25",
-      "label": "Shoes 25",
+      "label": "Knight Boots",
       "kind": "source",
       "sourceId": "Knight_Male",
       "geometryHash": "fb79a6d0fcb63359",
@@ -1647,7 +1647,9 @@ export const WEARABLE_OPTIONS = [
     "category": "shoes",
     "wearableId": "regular-shoes",
     "path": "../assets/gamebox/wearables/footwear/regular-shoes/regular-shoes.glb",
-    "preview": "../assets/gamebox/wearables/footwear/regular-shoes/preview.png"
+    "preview": "../assets/gamebox/wearables/footwear/regular-shoes/preview.png",
+    "featured": true,
+    "badge": "CUSTOM"
   },
   {
     "id": "wearable-traditional-elf-shoes",
@@ -1656,13 +1658,15 @@ export const WEARABLE_OPTIONS = [
     "category": "shoes",
     "wearableId": "traditional-elf-shoes",
     "path": "../assets/gamebox/wearables/footwear/traditional-elf-shoes/traditional-elf-shoes.glb",
-    "preview": "../assets/gamebox/wearables/footwear/traditional-elf-shoes/preview.png"
+    "preview": "../assets/gamebox/wearables/footwear/traditional-elf-shoes/preview.png",
+    "featured": true,
+    "badge": "CUSTOM"
   }
 ];
 
-export function optionsForPart(category){
+export function optionsForPart(category){export function optionsForPart(category){
   const base = PART_OPTIONS[category] || [];
-  return category === 'shoes' ? [...base, ...WEARABLE_OPTIONS] : base.slice();
+  return category === 'shoes' ? [...WEARABLE_OPTIONS, ...base] : base.slice();
 }
 export function canonicalOptionForSource(category, sourceId){
   const id = PART_SOURCE_TO_OPTION[category]?.[sourceId];

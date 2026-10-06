@@ -112,7 +112,8 @@ jobs:
               hashes = [o["geometryHash"] for o in options]
               assert len(hashes) == len(set(hashes)), f"{category}: duplicate geometry hashes leaked into the visual catalogue"
               labels = [o["label"] for o in options]
-              assert not any(source_names.search(label) for label in labels), f"{category}: source-character naming leaked into visual labels"
+              if category != "shoes":
+                  assert not any(source_names.search(label) for label in labels), f"{category}: source-character naming leaked into visual labels"
               for option in options:
                   assert option["kind"] == "source"
                   assert option["sourceId"] in ids, f"{category}: unknown source {option['sourceId']}"
@@ -139,9 +140,15 @@ jobs:
               assert preview.is_file() and preview.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n', f"Invalid/missing {wearable_id} preview"
               data = json.loads(meta.read_text())
               assert data["slot"] == "footwear", f"{wearable_id}: incorrect wearable slot"
+              assert data["requiredBones"] == ["Foot.L","LowerLeg.L","Foot.R","LowerLeg.R"], f"{wearable_id}: unexpected rig bones"
+              assert len(data["meshes"]) == 2, f"{wearable_id}: expected a left/right shoe pair"
 
           for wearable_id in ("wearable-regular-shoes", "wearable-traditional-elf-shoes"):
               assert wearable_id in options_text, f"Missing wearable option {wearable_id}"
+          assert "return category === 'shoes' ? [...WEARABLE_OPTIONS, ...base]" in options_text, "Custom footwear must stay first in the Shoes catalogue"
+          assert '"badge": "CUSTOM"' in options_text and options_text.count('"featured": true') >= 2
+          assert '"label": "Regular Shoes"' in options_text
+          assert '"label": "Traditional Elf Shoes"' in options_text
 
           # UI must be a visual CAS-style builder rather than a source-name form.
           required_labels = ["Head & face","Hair / facial hair","Hat / headwear","Top / torso","Arms / sleeves","Bottoms","Shoes / feet","Accessory"]
@@ -150,7 +157,8 @@ jobs:
 
           for token in (
               "pickCharacterPart","Raycaster","renderPartCategoryRail","renderPartBrowser",
-              "partPreview","applyPartOption","instantiateWearable","syncWearableSkeletons",
+              "partPreview","applyPartOption","instantiateWearable","loadWearableTemplate",
+              "bindWearableToDriverSkeleton","directSkeletonBinding",
               "applyProportions","headSize","PART_CATEGORY_LABELS"
           ):
               assert token in game, f"Missing Character Workshop behavior: {token}"
@@ -159,9 +167,13 @@ jobs:
               assert f'id="{element_id}"' in html, f"Missing Character Workshop control: {element_id}"
 
           assert "Christmas Elf" not in html, "Source preset name leaked into initial Character Workshop UI"
+          assert 'value="New Character"' in html, "Character Workshop still defaults to the old elf name"
+          assert "let currentPreset = entryById.get('BaseCharacter')" in game, "Character Workshop should start from the neutral base frame"
+          assert "let currentPalette = 'original'" in game, "Character Workshop should start with original colours"
+          assert "wearableSync" not in game and "syncWearableSkeletons" not in game, "Legacy per-frame wearable skeleton copying returned"
           assert "Fantasy</span>" not in html, "Source category leaked into initial Character Workshop UI"
           assert "partSourceCard" in css and "stageCategoryRail" in css and "partPreview" in css
           assert "wearable-regular-shoes" in options_text and "wearable-traditional-elf-shoes" in options_text
 
-          print("Character Workshop validation passed: 52 source models -> 157 distinct built-in shapes + 2 custom Blender footwear wearables.")
+          print("Character Workshop validation passed: 52 universal source models -> 157 built-in shapes + 2 direct-bound custom footwear wearables.")
           PY

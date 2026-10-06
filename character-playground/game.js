@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
-import { CHARACTER_CATALOG } from './character-catalog.js?v=3';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=3';
-import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=3';
+import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=4';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -113,30 +113,19 @@ platformRing.rotation.x = Math.PI / 2;
 platformRing.position.y = 0.295;
 previewRoot.add(platformRing);
 
-const snowFloor = new THREE.Mesh(
+const studioFloor = new THREE.Mesh(
   new THREE.CircleGeometry(7.5, 80),
-  new THREE.MeshStandardMaterial({ color: 0xf3f7f7, roughness: 1 })
+  new THREE.MeshStandardMaterial({ color: 0xe8eef1, roughness: 1 })
 );
-snowFloor.rotation.x = -Math.PI / 2;
-snowFloor.position.y = -0.015;
-snowFloor.receiveShadow = true;
-scene.add(snowFloor);
-
-const snowGeo = new THREE.BufferGeometry();
-const snowPositions = [];
-for (let i = 0; i < 190; i += 1) {
-  snowPositions.push((Math.random() - 0.5) * 17, Math.random() * 8.5 + 0.2, (Math.random() - 0.5) * 11 - 1);
-}
-snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(snowPositions, 3));
-const snowPoints = new THREE.Points(
-  snowGeo,
-  new THREE.PointsMaterial({ color: 0xffffff, size: 0.035, transparent: true, opacity: 0.72, depthWrite: false })
-);
-scene.add(snowPoints);
+studioFloor.rotation.x = -Math.PI / 2;
+studioFloor.position.y = -0.015;
+studioFloor.receiveShadow = true;
+scene.add(studioFloor);
 
 const gltfLoader = new GLTFLoader();
 const fbxLoader = new FBXLoader();
 const partSystem = createModularPartSystem(THREE, gltfLoader, CHARACTER_CATALOG);
+const wearableAssetCache = new Map();
 const clock = new THREE.Clock();
 
 const STORAGE_KEY = 'gamebox.characterBuilder.v2';
@@ -151,10 +140,10 @@ const paletteSchemes = {
   forest: ['#254d35', '#49775b', '#c9b986', '#794b34', '#d7d0b0']
 };
 
-const nameStarts = ['Jingle', 'Holly', 'Pip', 'Tinker', 'Juniper', 'Merry', 'Rowan', 'Ember', 'Noelle', 'Sprig', 'Robin', 'Poppy', 'Finn', 'Milo', 'Ivy', 'Nico'];
-const nameEnds = ['Bell', 'Frost', 'Pine', 'Spark', 'Snow', 'Vale', 'Wren', 'Berry', 'Star', 'Moss', 'Fox', 'Glow'];
+const nameStarts = ['Alex', 'Ari', 'Ash', 'Bailey', 'Blake', 'Casey', 'Charlie', 'Drew', 'Ellis', 'Emery', 'Finley', 'Harper', 'Jamie', 'Jordan', 'Kai', 'Morgan', 'Parker', 'Quinn', 'Reese', 'Riley', 'Robin', 'Rowan', 'Sam', 'Taylor'];
+const nameEnds = ['Stone', 'Vale', 'Wren', 'Fox', 'Hart', 'Reed', 'Lane', 'Brooks', 'Rivers', 'Gray', 'Bell', 'Moss'];
 
-let currentPreset = entryById.get('Elf') || CHARACTER_CATALOG[0];
+let currentPreset = entryById.get('BaseCharacter') || CHARACTER_CATALOG[0];
 let activeRig = currentPreset.rig;
 let driverScene = null;
 let driverMesh = null;
@@ -164,7 +153,7 @@ let mixer = null;
 let clips = [];
 let activeAction = null;
 let activeClipName = '';
-let currentPalette = 'christmas';
+let currentPalette = 'original';
 let materialRecords = [];
 let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { optionId: null, kind: null, sourceId: null, wearableId: null, group: null }]));
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
@@ -330,7 +319,7 @@ function renderPartBrowser() {
   for (const option of candidates) {
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'partSourceCard' + (selectedOptionId === option.id ? ' selected' : '');
+    card.className = 'partSourceCard' + (option.featured ? ' featured' : '') + (selectedOptionId === option.id ? ' selected' : '');
     card.dataset.option = option.id;
 
     const image = document.createElement('img');
@@ -342,7 +331,14 @@ function renderPartBrowser() {
     const label = document.createElement('strong');
     label.textContent = option.label;
 
-    card.append(image, label);
+    card.append(image);
+    if (option.badge) {
+      const badge = document.createElement('span');
+      badge.className = 'partSourceBadge';
+      badge.textContent = option.badge;
+      card.append(badge);
+    }
+    card.append(label);
     card.addEventListener('click', async () => {
       partSourceGrid.classList.add('loading');
       const ok = await applyPartOption(part.id, option);
@@ -439,6 +435,38 @@ function updatePartRows() {
   }
 }
 
+const CATEGORY_COLOUR_LABELS = {
+  head: 'Head',
+  hair: 'Hair',
+  headwear: 'Headwear',
+  top: 'Top',
+  arms: 'Sleeves',
+  bottom: 'Bottoms',
+  shoes: 'Shoes',
+  accessory: 'Accessory'
+};
+
+function friendlyMaterialName(partId, rawName, index) {
+  const raw = String(rawName || '').trim();
+  const lower = raw.toLowerCase();
+  if (/skin|face|flesh/.test(lower)) return 'Skin';
+  if (/hair|beard|moustache|mustache|brow/.test(lower)) return 'Hair';
+  if (/eye|pupil|iris/.test(lower)) return 'Eyes';
+  if (/shoe|boot|foot/.test(lower)) return 'Shoes';
+  if (/hat|helmet|hood|crown|cap/.test(lower)) return 'Headwear';
+  if (/armou?r|metal|plate|mail/.test(lower)) return 'Armour';
+  if (/shirt|top|torso|coat|jacket|tunic/.test(lower)) return 'Top';
+  if (/trouser|pants|bottom|skirt|short/.test(lower)) return 'Bottoms';
+  if (/belt|buckle|pouch|bag|cape|strap|apron|accessory/.test(lower)) return 'Accessory';
+
+  const generic = !raw || /^material(?:[ ._-]*\d+)?$/i.test(raw) || /^mat(?:[ ._-]*\d+)?$/i.test(raw);
+  if (generic) {
+    const base = CATEGORY_COLOUR_LABELS[partId] || 'Part';
+    return index ? base + ' colour ' + (index + 1) : base + ' colour';
+  }
+  return raw.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 function currentMaterials() {
   const records = [];
   for (const part of PART_DEFINITIONS) {
@@ -446,18 +474,20 @@ function currentMaterials() {
     if (!state?.group) continue;
     let localIndex = 0;
     state.group.traverse((node) => {
-      if (!node.isSkinnedMesh || !node.material) return;
+      if (!node.isMesh || !node.material) return;
       const mats = Array.isArray(node.material) ? node.material : [node.material];
       for (const material of mats) {
         if (!material?.color) continue;
-        const name = node.userData.sourceMaterialName || material.name || ('Material ' + (localIndex + 1));
-        const key = part.id + '::' + (state.optionId || 'none') + '::' + name + '::' + localIndex;
+        const rawName = node.userData.sourceMaterialName || material.name || ('Material ' + (localIndex + 1));
+        const name = friendlyMaterialName(part.id, rawName, localIndex);
+        const key = part.id + '::' + (state.optionId || 'none') + '::' + rawName + '::' + localIndex;
         records.push({
           part: part.id,
           optionId: state.optionId,
           sourceId: state.sourceId,
           material,
           name,
+          rawName,
           key: key.toLowerCase(),
           originalColor: material.userData?.originalColor || node.userData.originalColor || ('#' + material.color.getHexString())
         });
@@ -468,7 +498,7 @@ function currentMaterials() {
   return records;
 }
 
-function looksLikeSkin(record) {
+function looksLikeSkin(record) {function looksLikeSkin(record) {
   const name = record.name.toLowerCase();
   if (/skin|face|flesh|teeth/.test(name)) return true;
   const c = new THREE.Color(record.originalColor);
@@ -538,30 +568,44 @@ function applySavedColors(colors) {
 
 function renderMaterialControls() {
   materialList.innerHTML = '';
-  materialCount.textContent = materialRecords.length + (materialRecords.length === 1 ? ' material' : ' materials');
 
-  if (!materialRecords.length) {
+  const grouped = [];
+  const groupedByKey = new Map();
+  for (const record of materialRecords) {
+    const key = [record.part, record.name.toLowerCase(), record.originalColor.toLowerCase()].join('::');
+    let group = groupedByKey.get(key);
+    if (!group) {
+      group = { part: record.part, name: record.name, records: [] };
+      groupedByKey.set(key, group);
+      grouped.push(group);
+    }
+    group.records.push(record);
+  }
+
+  materialCount.textContent = grouped.length + (grouped.length === 1 ? ' colour control' : ' colour controls');
+
+  if (!grouped.length) {
     materialList.innerHTML = '<p class="helperCopy">Choose character parts to expose their real model materials.</p>';
     return;
   }
 
-  for (const record of materialRecords) {
+  for (const group of grouped) {
     const row = document.createElement('div');
     row.className = 'materialRow';
 
     const text = document.createElement('div');
     const title = document.createElement('strong');
-    title.textContent = record.name;
+    title.textContent = group.name;
     const subtitle = document.createElement('small');
-    subtitle.textContent = PART_CATEGORY_LABELS[record.part] || PART_DEFINITIONS.find((part) => part.id === record.part)?.label || 'Character part';
+    subtitle.textContent = PART_CATEGORY_LABELS[group.part] || PART_DEFINITIONS.find((part) => part.id === group.part)?.label || 'Character part';
     text.append(title, subtitle);
 
     const input = document.createElement('input');
     input.type = 'color';
-    input.value = '#' + record.material.color.getHexString();
-    input.setAttribute('aria-label', 'Colour for ' + record.name);
+    input.value = '#' + group.records[0].material.color.getHexString();
+    input.setAttribute('aria-label', 'Colour for ' + group.name);
     input.addEventListener('input', () => {
-      record.material.color.set(input.value);
+      for (const record of group.records) record.material.color.set(input.value);
       currentPalette = 'custom';
       refreshPaletteButtons();
       updateSummary();
@@ -571,10 +615,10 @@ function renderMaterialControls() {
     reset.type = 'button';
     reset.className = 'materialReset';
     reset.textContent = '↺';
-    reset.setAttribute('aria-label', 'Reset ' + record.name);
+    reset.setAttribute('aria-label', 'Reset ' + group.name);
     reset.addEventListener('click', () => {
-      record.material.color.set(record.originalColor);
-      input.value = record.originalColor;
+      for (const record of group.records) record.material.color.set(record.originalColor);
+      input.value = group.records[0].originalColor;
       currentPalette = 'custom';
       refreshPaletteButtons();
       updateSummary();
@@ -595,60 +639,68 @@ function cloneWearableMaterials(node) {
   node.material = Array.isArray(node.material) ? materials : materials[0];
 }
 
-async function instantiateWearable(option, category) {
-  return new Promise((resolve, reject) => {
-    gltfLoader.load(
-      option.path + '?wearable=2',
-      (gltf) => {
-        try {
-          const group = gltf.scene;
-          group.name = 'Wearable:' + option.id;
-          group.userData.partCategory = category;
-          group.userData.optionId = option.id;
-          group.userData.attachToDriverRoot = true;
-
-          const wearableBones = new Map();
-          group.traverse((node) => {
-            if (node.isBone && node.name) wearableBones.set(node.name, node);
-            if (!node.isMesh) return;
-            node.castShadow = true;
-            node.receiveShadow = true;
-            cloneWearableMaterials(node);
-            node.userData.partCategory = category;
-          });
-
-          const syncPairs = [];
-          for (const targetBone of driverSkeleton?.bones || []) {
-            const wearableBone = wearableBones.get(targetBone.name);
-            if (wearableBone) syncPairs.push([wearableBone, targetBone]);
-          }
-          group.userData.wearableSync = syncPairs;
-          resolve(group);
-        } catch (error) {
-          reject(error);
-        }
-      },
-      undefined,
-      reject
-    );
+function loadWearableTemplate(option) {
+  if (wearableAssetCache.has(option.path)) return wearableAssetCache.get(option.path);
+  const promise = new Promise((resolve, reject) => {
+    gltfLoader.load(option.path + '?wearable=3', (gltf) => resolve(gltf.scene), undefined, reject);
   });
+  wearableAssetCache.set(option.path, promise);
+  return promise;
 }
 
-function syncWearableSkeletons() {
-  for (const part of PART_DEFINITIONS) {
-    const group = activeParts[part.id]?.group;
-    const pairs = group?.userData?.wearableSync;
-    if (!pairs) continue;
-    for (const [wearableBone, driverBone] of pairs) {
-      wearableBone.position.copy(driverBone.position);
-      wearableBone.quaternion.copy(driverBone.quaternion);
-      wearableBone.scale.copy(driverBone.scale);
+function bindWearableToDriverSkeleton(group) {
+  let boundMeshes = 0;
+
+  group.traverse((node) => {
+    if (!node.isSkinnedMesh) return;
+    const sourceSkeleton = node.skeleton;
+    if (!sourceSkeleton?.bones?.length) throw new Error('Custom footwear has no usable source skeleton.');
+
+    const mappedBones = sourceSkeleton.bones.map((sourceBone) => driverSkeleton?.getBoneByName?.(sourceBone.name) || null);
+    const missing = sourceSkeleton.bones
+      .filter((_, index) => !mappedBones[index])
+      .map((bone) => bone.name || '(unnamed)');
+
+    if (missing.length) {
+      throw new Error('Custom footwear is missing compatible GameBox bones: ' + missing.join(', '));
     }
-    group.updateMatrixWorld(true);
-  }
+
+    const boneInverses = sourceSkeleton.boneInverses.map((inverse) => inverse.clone());
+    const mappedSkeleton = new THREE.Skeleton(mappedBones, boneInverses);
+    node.bind(mappedSkeleton, node.bindMatrix.clone());
+    node.normalizeSkinWeights();
+    node.userData.directSkeletonBinding = true;
+    boundMeshes += 1;
+  });
+
+  if (!boundMeshes) throw new Error('Custom footwear contains no skinned shoe meshes.');
+  group.userData.directSkeletonBinding = true;
+  return boundMeshes;
 }
 
-async function applyPartOption(category, option, options = {}) {
+async function instantiateWearable(option, category) {
+  const template = await loadWearableTemplate(option);
+  const group = template.clone(true);
+  group.name = 'Wearable:' + option.id;
+  group.userData.partCategory = category;
+  group.userData.optionId = option.id;
+  group.userData.attachToDriverRoot = true;
+
+  group.traverse((node) => {
+    if (!node.isMesh) return;
+    if (node.geometry) node.geometry = node.geometry.clone();
+    node.castShadow = true;
+    node.receiveShadow = true;
+    cloneWearableMaterials(node);
+    node.userData.partCategory = category;
+    node.userData.optionId = option.id;
+  });
+
+  bindWearableToDriverSkeleton(group);
+  return group;
+}
+
+async function applyPartOption(category, option, options = {}) {async function applyPartOption(category, option, options = {}) {
   return setPart(category, option, options);
 }
 
@@ -1153,10 +1205,10 @@ function loadDecorAsset(path, x, z, targetHeight, rotation = 0) {
 }
 
 function buildWorkshopDecor() {
-  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/PineTree_Snow_2.fbx', -3.4, -2.8, 3.6, 0.25);
-  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/PineTree_Snow_4.fbx', 3.3, -3.2, 3.1, -0.35);
-  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/Rock_Snow_2.fbx', -2.7, -0.8, 0.85, 0.4);
-  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/WoodLog_Snow.fbx', 2.6, -1.1, 0.55, -0.55);
+  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/CommonTree_2.fbx', -3.4, -2.8, 3.4, 0.25);
+  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/BirchTree_3.fbx', 3.3, -3.2, 3.0, -0.35);
+  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/Rock_Moss_2.fbx', -2.7, -0.8, 0.85, 0.4);
+  loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/WoodLog_Moss.fbx', 2.6, -1.1, 0.55, -0.55);
 }
 
 function resize() {
@@ -1327,15 +1379,8 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
   if (mixer) mixer.update(dt);
-  syncWearableSkeletons();
   if (turntableToggle.checked) characterHolder.rotation.y += dt * 0.38;
 
-  const positions = snowGeo.attributes.position.array;
-  for (let i = 1; i < positions.length; i += 3) {
-    positions[i] -= dt * 0.34;
-    if (positions[i] < 0.05) positions[i] = 8.7;
-  }
-  snowGeo.attributes.position.needsUpdate = true;
   renderer.render(scene, camera);
 }
 
@@ -1359,7 +1404,7 @@ async function bootstrap() {
   if (saved && entryById.has(savedPresetId)) {
     currentPreset = entryById.get(savedPresetId);
     activeRig = currentPreset.rig;
-    characterName.value = saved.name || 'Jingle';
+    characterName.value = saved.name || 'New Character';
     animSpeed.value = String(Number(saved.animationSpeed) || 1);
     animSpeedValue.textContent = Number(animSpeed.value).toFixed(1) + '×';
     turntableToggle.checked = Boolean(saved.turntable);

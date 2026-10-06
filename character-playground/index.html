@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#10263a">
   <title>Character Workshop · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -41,7 +41,7 @@
       <section class="identityStrip">
         <label for="characterName">CHARACTER NAME</label>
         <div class="nameRow">
-          <input id="characterName" maxlength="24" autocomplete="off" value="Jingle" aria-label="Character name">
+          <input id="characterName" maxlength="24" autocomplete="off" value="New Character" aria-label="Character name">
           <button id="nameRollBtn" class="miniArtButton" type="button" aria-label="Generate a name">↻</button>
         </div>
       </section>
@@ -131,8 +131,8 @@
         </div>
 
         <div class="presetGrid">
-          <button type="button" data-palette="original">ORIGINAL</button>
-          <button type="button" data-palette="christmas" class="active">CHRISTMAS</button>
+          <button type="button" data-palette="original" class="active">ORIGINAL</button>
+          <button type="button" data-palette="christmas">CHRISTMAS</button>
           <button type="button" data-palette="frost">FROST</button>
           <button type="button" data-palette="candy">CANDY</button>
           <button type="button" data-palette="midnight">MIDNIGHT</button>
@@ -205,6 +205,6 @@
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=24"></script>
+  <script type="module" src="game.js?v=15"></script>
 </body>
 </html>
