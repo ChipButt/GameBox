@@ -80,7 +80,7 @@ let outsidePattern=null,pistePattern=null;
 let W=360,H=720,dpr=1;
 let running=false,paused=false,crashing=false,gameOver=false,soundOn=true;
 let last=0,raf=0,audioCtx=null;
-let speed=105,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
+let speed=100,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
 let scenery=[],obstacles=[],courseGates=[],lifts=[];
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
@@ -184,7 +184,7 @@ function boundsAtWorld(worldY){
 }
 
 function resetWorld(){
-  speed=105;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
+  speed=100;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
   tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
   const py=H*.55;
@@ -258,14 +258,13 @@ function generateSegment(index,isFirst){
     addLift(start+104,r);
   }
 
-  // Alternating slalom gates, kept away from the lift itself.
-  if(!isFirst){
-    addGate(start+74,index,0,false);
-    if(index%5!==0)addGate(start+166,index,1,false);
-  }else{
-    // Visible opening gates are already behind the skier so they don't instantly count as missed.
+  // Slalom gates are deliberately sparse. The previous build put one or two in
+  // almost every 224px section, which made the piste feel like a gate tunnel.
+  if(isFirst){
+    // Opening gate is only scenery / already passed, then the player gets room to ski.
     addGate(H*.18,index,0,true);
-    addGate(H*.72,index,1,false);
+  }else if(index%2===1 && index%5!==0){
+    addGate(start+124,index,0,false);
   }
 
   // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
@@ -347,7 +346,9 @@ function update(dt){
   distance+=speed*dt;
   scroll+=speed*dt;
   const m=metres();
-  speed=Math.min(220,105+m*.055);
+  // Keep increasing with distance for a long run instead of flattening early.
+  // ~100 at the start, ~150 around 1km, ~250 around 3km, capped only at 330.
+  speed=Math.min(330,100+m*.05);
   ensureWorld(false);
   pruneWorld();
 
@@ -394,6 +395,7 @@ function update(dt){
   puffs=puffs.filter(p=>p.worldY>scroll-30&&p.life>0);
 
   checkBoundary();
+  if(!crashing)checkLiftSupports();
   if(!crashing)checkObstacles();
   if(!crashing)checkGates();
   updateFeedback(dt);
@@ -411,6 +413,25 @@ function pruneWorld(){
 function checkBoundary(){
   const b=boundsAtWorld(scroll+player.y);
   if(player.x<b.left+5||player.x>b.right-5)startCrash();
+}
+
+function liftTowerXs(){
+  return [W*.22,W*.5,W*.78];
+}
+
+function checkLiftSupports(){
+  const playerWorldY=scroll+player.y;
+  for(const lift of lifts){
+    // The visible support runs from the cable/head down through three pole tiles
+    // to the orange foot: approximately 72px of vertical solid structure.
+    if(playerWorldY<lift.worldY-6 || playerWorldY>lift.worldY+TILE*4+8)continue;
+    for(const x of liftTowerXs()){
+      if(Math.abs(player.x-x)<8){
+        startCrash();
+        return;
+      }
+    }
+  }
 }
 
 function obstaclePosition(o,camera=scroll){
@@ -507,7 +528,7 @@ function updateHud(){
   distanceEl.textContent=pad(metres(),4);
   gatesEl.textContent=pad(gates,2);
   bestEl.textContent=pad(Math.max(best,metres()),4);
-  speedLabel.textContent=speed<130?'CRUISE':speed<160?'CARVING':speed<195?'FAST':'FLYING';
+  speedLabel.textContent=speed<135?'CRUISE':speed<190?'CARVING':speed<255?'FAST':'FLYING';
 }
 
 function drawSprite(frame,x,y,size=TILE,angle=0,alpha=1,flip=false){
@@ -580,7 +601,12 @@ function drawPiste(){
 function sceneryPosition(s){
   const b=boundsAtWorld(s.worldY);
   const raw=s.side==='left'?b.left-s.offset:b.right+s.offset;
-  return {x:clamp(raw,8,W-8),y:s.worldY-viewScroll};
+  // All current Tiny Ski trees are standalone 16x16 PNGs. Apparent cropping was
+  // caused by their centres being allowed only 8px from the viewport edge.
+  // Keep the full sprite plus a little breathing room on-screen.
+  const half=(s.size||TILE)/2;
+  const safe=half+4;
+  return {x:clamp(raw,safe,W-safe),y:s.worldY-viewScroll};
 }
 
 function drawScenery(){
@@ -605,7 +631,7 @@ function drawLiftShadow(lift){
   }
 
   // Soft mast shadows mirror the pack demo without adding new art.
-  const towerXs=[W*.22,W*.5,W*.78];
+  const towerXs=liftTowerXs();
   ctx.save();
   ctx.globalAlpha=.18;
   ctx.fillStyle='#8fc0d8';
@@ -648,7 +674,7 @@ function drawLift(lift){
   const cableY=lift.worldY-viewScroll;
   if(cableY<-TILE*6||cableY>H+TILE*2)return;
 
-  const towerXs=[W*.22,W*.5,W*.78];
+  const towerXs=liftTowerXs();
   const chairXs=[W*.1,W*.66,W*.91];
   const gondolaX=W*.37;
 
