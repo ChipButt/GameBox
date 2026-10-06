@@ -22,6 +22,7 @@ jobs:
         run: |
           node --check character-playground/game.js
           node --check character-playground/character-catalog.js
+          node --check character-playground/modular-parts.js
       - name: Verify full character catalog
         run: |
           python - <<'PY'
@@ -46,8 +47,16 @@ jobs:
           css = pathlib.Path("character-playground/style.css").read_text()
           game = pathlib.Path("character-playground/game.js").read_text()
           assert "Character Workshop" in html
+          modular = pathlib.Path("character-playground/modular-parts.js").read_text()
           assert "character-catalog.js" in game
+          assert "modular-parts.js" in game
+          assert "createModularPartSystem" in modular
+          assert "SkinnedMesh" in modular
+          assert "Head & face" in modular
+          assert "Shoes / feet" in modular
+          assert "partRows" in html
+          assert "RIG_GROUPS" in catalog_path.read_text()
           assert "UI Adventure Pack" in css
           assert "ultimate-nature" in game
-          print("Character Workshop validation passed: 52/52 character assets.")
+          print("Character Workshop validation passed: 52/52 assets + modular rigged part system.")
           PY
