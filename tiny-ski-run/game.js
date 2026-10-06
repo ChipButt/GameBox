@@ -193,14 +193,11 @@ function generateSegment(index,isFirst){
   }
 
   // Keep the central piste visually open; hazards are sparse and readable.
-  if(index>0){
-    const hazardCount=index<4?1:(r()<.55?1:2);
-    for(let i=0;i<hazardCount;i++){
-      const worldY=start+110+i*72+randRange(r,-18,18);
-      const kind=r()<.52?'rock':r()<.74?'snowman':r()<.9?'tree':'skier';
-      const t=kind==='tree'?(r()<.5?randRange(r,.08,.18):randRange(r,.82,.92)):randRange(r,.2,.8);
-      addObstacle(worldY,t,kind,r);
-    }
+  if(index>1){
+    const worldY=start+166+randRange(r,-16,16);
+    const kind=r()<.52?'rock':r()<.74?'snowman':r()<.9?'tree':'skier';
+    const t=kind==='tree'?(r()<.5?randRange(r,.08,.18):randRange(r,.82,.92)):randRange(r,.2,.8);
+    addObstacle(worldY,t,kind,r);
   }
 }
 
@@ -331,7 +328,7 @@ function checkObstacles(){
     if(d<5+o.radius){startCrash();return}
     if(!o.nearChecked&&p.y<player.y-8){
       o.nearChecked=true;
-      if(d<19&&d>11){nearMisses++;bonus+=25;addFeedback('NEAR +25','#1e638a');tone('near')}
+      if(d<19&&d>11){nearMisses++;addFeedback('CLOSE!','#1e638a');tone('near')}
     }
   }
 }
@@ -345,7 +342,7 @@ function checkGates(){
     const lx=b.left+b.width*g.leftT;
     const rx=b.left+b.width*g.rightT;
     if(player.x>lx+3&&player.x<rx-3){
-      gates++;bonus+=75;addFeedback('GATE +75','#cb424a');tone('gate');vibrate(8);
+      gates++;addFeedback('GATE!','#cb424a');tone('gate');vibrate(8);
     }else{
       addFeedback('MISSED GATE','#687f8c');tone('miss');
     }
