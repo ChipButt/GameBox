@@ -1089,9 +1089,26 @@ function workshopDiagnosticSnapshot() {
     }
   });
 
+  const parts = {};
+  for (const part of PART_DEFINITIONS) {
+    const state = activeParts[part.id] || {};
+    const materialNames = new Set();
+    state.group?.traverse?.((node) => {
+      const raw = node.userData?.sourceMaterialName || node.material?.name || '';
+      if (raw) materialNames.add(raw);
+    });
+    parts[part.id] = {
+      optionId: state.optionId || null,
+      sourceId: state.sourceId || null,
+      wearableId: state.wearableId || null,
+      materialNames: Array.from(materialNames).sort()
+    };
+  }
+
   return {
     presetId: currentPreset?.id || null,
     pose: activeClipName || '',
+    parts,
     shoes: {
       optionId: shoeState.optionId || null,
       wearableId: shoeState.wearableId || null,
