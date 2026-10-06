@@ -418,16 +418,24 @@ function generateSegment(index,isFirst){
 
   // Blue chevron strips are placed on the piste as boost pads, not roadside signs.
   if(index>=2 && index%4===2){
-    addBoostPad(start+176,.5);
+    addBoostPad(start+176);
   }
 
-  // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
+  // Sparse static hazards: keep the middle of the piste readable.
   if(index>1){
-    const worldY=start+132+randRange(r,-18,18);
+    const worldY=start+142+randRange(r,-14,14);
     const roll=r();
-    const kind=roll<.42?'rock':roll<.62?'snowman':roll<.8?'tree':'skier';
-    const t=kind==='tree'?(r()<.5?randRange(r,.09,.17):randRange(r,.83,.91)):randRange(r,.22,.78);
+    const kind=roll<.5?'rock':roll<.72?'snowman':'tree';
+    const t=kind==='tree'
+      ? (r()<.5?randRange(r,.09,.17):randRange(r,.83,.91))
+      : randRange(r,.22,.78);
     addObstacle(worldY,t,kind,r);
+  }
+
+  // Other skiers are recurring traffic, not a rare random hazard.
+  // They hold a line and descend at different speeds so the player catches them.
+  if(index>=1 && index%2===0){
+    addObstacle(start+62+randRange(r,-12,12),randRange(r,.24,.76),'skier',r);
   }
 }
 
@@ -457,7 +465,7 @@ function addObstacle(worldY,t,kind,r){
 
     // Other skiers are actually skiing downhill. Each gets their own pace:
     // slower ones are overtaken; faster ones can pass the player.
-    speedFactor=randRange(r,.62,1.16);
+    speedFactor=randRange(r,.58,.94);
     animOffset=randRange(r,0,10);
   }
   obstacles.push({
@@ -468,8 +476,19 @@ function addObstacle(worldY,t,kind,r){
   });
 }
 
-function addBoostPad(worldY,t){
-  boostPads.push({worldY,t,used:false});
+function addBoostPad(worldY){
+  // Boost art is a 16x32 vertical pad. Move the requested point forward to
+  // the nearest pair of straight piste rows so it can never straddle a bank.
+  let row=Math.floor(worldY/TILE);
+  for(let i=0;i<10;i++){
+    const r0=getCourseRow(row+i);
+    const r1=getCourseRow(row+i+1);
+    if(r0.bend==='straight' && r1.bend==='straight'){
+      row+=i;
+      break;
+    }
+  }
+  boostPads.push({worldY:row*TILE+TILE,used:false});
 }
 
 function addLift(worldY,r){
@@ -619,14 +638,14 @@ function checkLiftSupports(){
 
 function boostPadPosition(pad,camera=scroll){
   const b=boundsAtWorld(pad.worldY);
-  return {x:b.left+b.width*pad.t,y:pad.worldY-camera};
+  return {x:b.center,y:pad.worldY-camera};
 }
 
 function checkBoostPads(){
   for(const pad of boostPads){
     if(pad.used)continue;
     const p=boostPadPosition(pad,scroll);
-    if(Math.abs(p.y-player.y)<10 && Math.abs(p.x-player.x)<20){
+    if(Math.abs(p.y-player.y)<18 && Math.abs(p.x-player.x)<9){
       pad.used=true;
       boostTimer=1.35;
       addFeedback('BOOST!','#187bb4');
@@ -637,11 +656,13 @@ function checkBoostPads(){
 }
 
 function updateMonster(dt,m){
-  if(!monsterSpawned && m>=1100){
+  if(!monsterSpawned && m>=350){
     monsterSpawned=true;
+    const spawnWorldY=scroll+player.y-115;
+    const spawnBounds=boundsAtWorld(spawnWorldY);
     monster={
-      x:clamp(player.x+80,boundsAtWorld(scroll+player.y-180).left+8,boundsAtWorld(scroll+player.y-180).right-8),
-      worldY:scroll+player.y-180
+      x:clamp(player.x+58,spawnBounds.left+8,spawnBounds.right-8),
+      worldY:spawnWorldY
     };
     addFeedback('YETI!','#7a3944');
   }
@@ -972,8 +993,10 @@ function render(){
     if(pad.used)continue;
     const p=boostPadPosition(pad,viewScroll);
     if(p.y<-TILE*2||p.y>H+TILE*2)continue;
-    drawSprite(F.boostLeft,p.x-TILE/2,p.y,TILE);
-    drawSprite(F.boostRight,p.x+TILE/2,p.y,TILE);
+    // 22+23 form one right-pointing 32x16 chevron. Rotate the complete
+    // composite clockwise so the arrow points downhill (screen-down).
+    drawSprite(F.boostLeft,p.x,p.y-TILE/2,TILE,Math.PI/2);
+    drawSprite(F.boostRight,p.x,p.y+TILE/2,TILE,Math.PI/2);
   }
 
   for(const g of courseGates){
