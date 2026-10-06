@@ -40,4 +40,4 @@ The engine can rebuild the current image at a different grid size without reload
 puzzle.setGrid(8, 8); // 64 pieces
 ```
 
-The GameBox test UI exposes 4, 9, 16, 25, 36, 49, 64, 81, 100, 121 and 144-piece square grids. The default remains 36 pieces, and the default guide is Off.
+The GameBox test UI exposes 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144 and 169-piece square grids. The default remains 36 pieces, and the default guide is Off.
