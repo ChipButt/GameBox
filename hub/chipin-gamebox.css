@@ -215,9 +215,31 @@
 @media(max-width:560px){.toyGameRelic{width:88%}.relicHomeIcon{width:62px;height:62px}}
 
 
-/* Jigsaw home box */
-.toyGameJigsaw .gameTile{background:linear-gradient(145deg,#764a9b,#35245d)}
-.toyGameJigsaw .gameTileIcon{background:linear-gradient(145deg,#fff8ff,#eaddf2)!important}
+/* Jigsaw Workshop: an actual picture preview within a Kenney frame.
+   No generic .gameTileIcon scaling applies to this image. */
+.toyGameJigsaw .gameTile{background:linear-gradient(145deg,#997148,#634629);border-color:#d8b884}
+.toyBox .jigsawHomeTile{justify-content:center;overflow:hidden}
+.toyBox .jigsawHomeIcon{
+  display:block;
+  position:relative;
+  z-index:1;
+  width:84px;
+  height:84px;
+  max-width:100%;
+  flex:0 0 auto;
+  object-fit:contain;
+  padding:0;
+  border:8px solid transparent;
+  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png");
+  border-image-slice:14;
+  border-image-width:8px;
+  border-image-repeat:stretch;
+}
+.toyGameJigsaw .gameTile strong{color:#fff6de}
+.toyGameJigsaw .gameTile small{color:#eeddbb}
+@media(max-width:560px){
+  .toyBox .jigsawHomeIcon{width:74px;height:74px;border-width:7px;border-image-width:7px}
+}
 
 
 /* Tiny Ski Run home box */
