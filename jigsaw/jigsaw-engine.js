@@ -116,7 +116,7 @@
       this.frameImage=new Image();
       this.frameImage.decoding='async';
       this.frameImage.onload=()=>this.render();
-      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png';
+      this.frameImage.src='../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown.png';
       this.pieces=[];
       this.edges=[];
       this.dragging=null;
@@ -484,14 +484,35 @@
       }
 
       if(this.frameImage.complete&&this.frameImage.naturalWidth){
-        const pad=18;
-        c.drawImage(
-          this.frameImage,
-          l.boardX-pad,
-          l.boardY-pad,
-          l.boardSize+pad*2,
-          l.boardSize+pad*2
-        );
+        const img=this.frameImage;
+        const sw=img.naturalWidth;
+        const sh=img.naturalHeight;
+        const src=Math.max(8,Math.round(Math.min(sw,sh)*.25));
+        const dst=18;
+        const x=l.boardX-dst;
+        const y=l.boardY-dst;
+        const w=l.boardSize+dst*2;
+        const h=l.boardSize+dst*2;
+        const midSW=sw-src*2;
+        const midSH=sh-src*2;
+        const midDW=w-dst*2;
+        const midDH=h-dst*2;
+
+        c.save();
+        c.imageSmoothingEnabled=false;
+
+        // Corners stay crisp; only edge strips stretch along one axis.
+        c.drawImage(img,0,0,src,src,x,y,dst,dst);
+        c.drawImage(img,sw-src,0,src,src,x+w-dst,y,dst,dst);
+        c.drawImage(img,0,sh-src,src,src,x,y+h-dst,dst,dst);
+        c.drawImage(img,sw-src,sh-src,src,src,x+w-dst,y+h-dst,dst,dst);
+
+        c.drawImage(img,src,0,midSW,src,x+dst,y,midDW,dst);
+        c.drawImage(img,src,sh-src,midSW,src,x+dst,y+h-dst,midDW,dst);
+        c.drawImage(img,0,src,src,midSH,x,y+dst,dst,midDH);
+        c.drawImage(img,sw-src,src,src,midSH,x+w-dst,y+dst,dst,midDH);
+
+        c.restore();
       }
     }
 
