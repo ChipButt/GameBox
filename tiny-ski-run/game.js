@@ -32,20 +32,27 @@ const F={
   snowPiste:[2,3],
   leftStraight:1,
   rightStraight:4,
-  leftCurveIn:[12,24,50,72],
-  leftCurveOut:[14,29,61,77],
-  rightCurveIn:[15,28,51,73],
-  rightCurveOut:[17,25,60,76],
+  // These four transitions have their internal edge centred at the top and
+  // shifted ~7px at the bottom, matching one tile-row of course movement.
+  leftTurnRight:24,
+  leftTurnLeft:14,
+  rightTurnRight:15,
+  rightTurnLeft:29,
 
   tree:[6,18,30],
-  deadTree:[7,19],
+  deadTree:[7,19,31],
   redFlag:[8,20],
   blueFlag:[9,21],
   redNet:10,
   blueNet:11,
-  arrowBlue:[22,23,33],
-  arrowRed:[32,34,35],
-  shrub:31,
+
+  // Small bordered signs are roadside course signs.
+  signRed:32,
+  signBlue:33,
+
+  // Long blue chevrons are piste boost-pad halves.
+  boostLeft:22,
+  boostRight:23,
 
   // Lift components are not interchangeable sprites.
   liftTop:42,
@@ -66,8 +73,14 @@ const F={
   gondolaBottomRight:68,
 
   snowman:69,
-  player:70,
-  skiers:[71,78,79,80,82,83],
+
+  // Skier animations are 70/71 and 82/83. Yeti is 78/79 with 80 as attack.
+  playerA:70,
+  playerB:71,
+  skierBases:[70,82],
+  yetiA:78,
+  yetiB:79,
+  yetiAttack:80,
   rock:81
 };
 
@@ -83,7 +96,8 @@ let last=0,raf=0,audioCtx=null;
 let speed=100,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
 let startLineWorldY=0;
-let scenery=[],obstacles=[],courseGates=[],lifts=[];
+let scenery=[],obstacles=[],courseGates=[],lifts=[],boostPads=[];
+let monster=null,monsterSpawned=false,boostTimer=0,animClock=0,baseSpeed=100;
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
 const BEST_KEY='gamebox.tinySkiRun.best.v5';
@@ -170,23 +184,35 @@ new ResizeObserver(resizeCanvas).observe(canvas);
 addEventListener('orientationchange',()=>setTimeout(resizeCanvas,60));
 resizeCanvas();
 
+function courseCenterForRow(row){
+  const y=row*TILE;
+  const raw=W*.5
+    +W*.075*Math.sin(y/430+.25)
+    +W*.026*Math.sin(y/188+1.18);
+
+  // The Kenney turning edge tiles shift their internal boundary by ~7-8px
+  // from top to bottom. Snap the course centre to 8px row steps so the actual
+  // transition artwork matches the geometry instead of fighting it.
+  return Math.round(raw/8)*8;
+}
+
 function boundsAtWorld(worldY){
-  const baseWidth=clamp(W*.44,132,212);
-  const center=W*.5
-    +W*.075*Math.sin(worldY/430+.25)
-    +W*.026*Math.sin(worldY/188+1.18);
-  const width=baseWidth
-    +W*.018*Math.sin(worldY/340+2.05)
-    +W*.012*Math.sin(worldY/151+.55);
-  const safeWidth=clamp(width,Math.min(126,W*.38),Math.min(220,W*.5));
+  const row=Math.floor(worldY/TILE);
+  const frac=(worldY-row*TILE)/TILE;
+  const c0=courseCenterForRow(row);
+  const c1=courseCenterForRow(row+1);
+  const center=c0+(c1-c0)*frac;
+
+  const safeWidth=clamp(Math.round(clamp(W*.44,132,208)/16)*16,128,208);
   const sideRoom=Math.max(42,W*.11);
   const safeCenter=clamp(center,sideRoom+safeWidth/2,W-sideRoom-safeWidth/2);
   return {center:safeCenter,width:safeWidth,left:safeCenter-safeWidth/2,right:safeCenter+safeWidth/2};
 }
 
 function resetWorld(){
-  speed=100;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
-  tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];
+  speed=100;baseSpeed=100;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
+  tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];boostPads=[];
+  monster=null;monsterSpawned=false;boostTimer=0;animClock=0;
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
   const py=H*.55;
   player={x:boundsAtWorld(py).center,y:py,vx:0,angle:0,spin:0,slide:0};
@@ -220,10 +246,9 @@ function generateSegment(index,isFirst){
       for(let i=0;i<count;i++){
         const rr=r();
         let frame,kind;
-        if(rr<.54){frame=pickR(r,F.tree);kind='tree'}
-        else if(rr<.69){frame=pickR(r,F.deadTree);kind='dead'}
-        else if(rr<.8){frame=F.rock;kind='rock'}
-        else if(rr<.89){frame=F.shrub;kind='shrub'}
+        if(rr<.56){frame=pickR(r,F.tree);kind='tree'}
+        else if(rr<.74){frame=pickR(r,F.deadTree);kind='dead'}
+        else if(rr<.86){frame=F.rock;kind='rock'}
         else{frame=F.snowman;kind='snowman'}
         addScenery(
           baseY+i*randRange(r,9,19),
@@ -239,7 +264,7 @@ function generateSegment(index,isFirst){
   // Direction signs and nets are intentional course furniture in the Kenney demo.
   if(index%2===0){
     const side=index%4===0?'left':'right';
-    const signFrame=side==='left'?pickR(r,F.arrowBlue):pickR(r,F.arrowRed);
+    const signFrame=side==='left'?F.signBlue:F.signRed;
     addScenery(start+randRange(r,82,132),side,12,signFrame,'sign');
   }
   if(index%3===1){
@@ -267,6 +292,11 @@ function generateSegment(index,isFirst){
     addGate(gateY,index,0,false);
   }
 
+  // Blue chevron strips are placed on the piste as boost pads, not roadside signs.
+  if(index>=2 && index%4===2){
+    addBoostPad(start+176,.5);
+  }
+
   // Sparse hazards: the Kenney demo leaves lots of readable empty piste.
   if(index>1){
     const worldY=start+132+randRange(r,-18,18);
@@ -290,16 +320,27 @@ function addGate(worldY,index,g,passed){
 }
 
 function addObstacle(worldY,t,kind,r){
-  let frame=F.rock,radius=5;
-  if(kind==='tree'){frame=pickR(r,F.tree);radius=6}
+  let frame=F.rock,radius=5,frameBase=null,speedFactor=0,animOffset=0;
+  if(kind==='tree'){frame=pickR(r,F.tree);radius=5}
   else if(kind==='snowman'){frame=F.snowman;radius=5}
-  else if(kind==='skier'){frame=pickR(r,F.skiers);radius=5}
+  else if(kind==='skier'){
+    frameBase=pickR(r,F.skierBases);
+    frame=frameBase;
+    radius=5;
+
+    // Other skiers are actually skiing downhill. Each gets their own pace:
+    // slower ones are overtaken; faster ones can pass the player.
+    speedFactor=randRange(r,.62,1.16);
+    animOffset=randRange(r,0,10);
+  }
   obstacles.push({
-    worldY,t,baseT:t,kind,frame,radius,nearChecked:false,
-    phase:randRange(r,0,Math.PI*2),
-    weave:kind==='skier'?randRange(r,.025,.05):0,
-    weaveSpeed:kind==='skier'?randRange(r,1.05,1.55):0
+    worldY,t,baseT:t,kind,frame,frameBase,radius,nearChecked:false,
+    speedFactor,animOffset
   });
+}
+
+function addBoostPad(worldY,t){
+  boostPads.push({worldY,t,used:false});
 }
 
 function addLift(worldY,r){
@@ -343,12 +384,15 @@ function loop(now){
 function update(dt){
   if(crashing){updateCrash(dt);return}
 
+  animClock+=dt;
   distance+=speed*dt;
   scroll+=speed*dt;
   const m=metres();
-  // Keep increasing with distance for a long run instead of flattening early.
-  // ~100 at the start, ~150 around 1km, ~250 around 3km, capped only at 330.
-  speed=Math.min(330,100+m*.05);
+
+  // Base course speed keeps rising; boost is a temporary player advantage.
+  baseSpeed=Math.min(330,100+m*.05);
+  boostTimer=Math.max(0,boostTimer-dt);
+  speed=baseSpeed+(boostTimer>0?52:0);
   ensureWorld(false);
   pruneWorld();
 
@@ -383,10 +427,13 @@ function update(dt){
 
   for(const o of obstacles){
     if(o.kind==='skier'){
-      o.phase+=dt*o.weaveSpeed;
-      o.t=clamp(o.baseT+Math.sin(o.phase)*o.weave,.12,.88);
+      // No side-to-side walking. They hold their line and move downhill at
+      // individual speeds relative to the player's current course pace.
+      o.worldY+=baseSpeed*o.speedFactor*dt;
     }
   }
+
+  updateMonster(dt,m);
 
   for(const t of tracks)t.life-=dt*.18;
   tracks=tracks.filter(t=>t.worldY>scroll-30&&t.life>0);
@@ -396,6 +443,8 @@ function update(dt){
 
   checkBoundary();
   if(!crashing)checkLiftSupports();
+  if(!crashing)checkBoostPads();
+  if(!crashing)checkMonsterCollision();
   if(!crashing)checkObstacles();
   if(!crashing)checkGates();
   updateFeedback(dt);
@@ -408,6 +457,7 @@ function pruneWorld(){
   obstacles=obstacles.filter(x=>x.worldY>behind);
   courseGates=courseGates.filter(x=>x.worldY>behind);
   lifts=lifts.filter(x=>x.worldY>behind);
+  boostPads=boostPads.filter(x=>x.worldY>behind);
 }
 
 function checkBoundary(){
@@ -435,6 +485,54 @@ function checkLiftSupports(){
   }
 }
 
+function boostPadPosition(pad,camera=scroll){
+  const b=boundsAtWorld(pad.worldY);
+  return {x:b.left+b.width*pad.t,y:pad.worldY-camera};
+}
+
+function checkBoostPads(){
+  for(const pad of boostPads){
+    if(pad.used)continue;
+    const p=boostPadPosition(pad,scroll);
+    if(Math.abs(p.y-player.y)<10 && Math.abs(p.x-player.x)<20){
+      pad.used=true;
+      boostTimer=1.35;
+      addFeedback('BOOST!','#187bb4');
+      tone('gate');
+      vibrate(10);
+    }
+  }
+}
+
+function updateMonster(dt,m){
+  if(!monsterSpawned && m>=1100){
+    monsterSpawned=true;
+    monster={
+      x:clamp(player.x+80,boundsAtWorld(scroll+player.y-180).left+8,boundsAtWorld(scroll+player.y-180).right-8),
+      worldY:scroll+player.y-180
+    };
+    addFeedback('YETI!','#7a3944');
+  }
+
+  if(!monster)return;
+
+  // Yeti starts behind the player, follows their lateral movement, and is
+  // slightly faster than the base course speed. A boost can buy real distance.
+  const targetX=player.x;
+  const turnSpeed=42+Math.min(34,m*.008);
+  monster.x+=clamp(targetX-monster.x,-turnSpeed*dt,turnSpeed*dt);
+  monster.worldY+=baseSpeed*(1.105+Math.min(.055,m/18000))*dt;
+
+  const b=boundsAtWorld(monster.worldY);
+  monster.x=clamp(monster.x,b.left+8,b.right-8);
+}
+
+function checkMonsterCollision(){
+  if(!monster)return;
+  const y=monster.worldY-scroll;
+  if(Math.hypot(monster.x-player.x,y-player.y)<11)startCrash();
+}
+
 function obstaclePosition(o,camera=scroll){
   const b=boundsAtWorld(o.worldY);
   return {x:b.left+b.width*o.t,y:o.worldY-camera};
@@ -458,6 +556,14 @@ function checkObstacles(){
 }
 
 function checkGates(){
+  for(const pad of boostPads){
+    if(pad.used)continue;
+    const p=boostPadPosition(pad,viewScroll);
+    if(p.y<-TILE*2||p.y>H+TILE*2)continue;
+    drawSprite(F.boostLeft,p.x-TILE/2,p.y,TILE);
+    drawSprite(F.boostRight,p.x+TILE/2,p.y,TILE);
+  }
+
   for(const g of courseGates){
     const y=g.worldY-scroll;
     if(g.passed||y>player.y+2)continue;
@@ -554,17 +660,22 @@ function fillScrollingPattern(pattern){
   ctx.restore();
 }
 
-function chooseEdgeFrame(side,worldY,row){
-  const b=boundsAtWorld(worldY);
-  const next=boundsAtWorld(worldY+TILE);
+function chooseEdgeFrame(side,worldY){
+  const rowStart=Math.floor(worldY/TILE)*TILE;
+  const b=boundsAtWorld(rowStart);
+  const next=boundsAtWorld(rowStart+TILE);
   const dx=side==='left'?next.left-b.left:next.right-b.right;
+
+  // Exact orientation mapping from the Tiny Ski edge pixels:
+  // left: 24 shifts centre -> right, 14 shifts centre -> left
+  // right: 15 shifts centre -> right, 29 shifts centre -> left.
   if(side==='left'){
-    if(dx>1.1)return F.leftCurveIn[hash2(17,row)%F.leftCurveIn.length];
-    if(dx<-1.1)return F.leftCurveOut[hash2(23,row)%F.leftCurveOut.length];
+    if(dx>3)return F.leftTurnRight;
+    if(dx<-3)return F.leftTurnLeft;
     return F.leftStraight;
   }
-  if(dx>1.1)return F.rightCurveOut[hash2(29,row)%F.rightCurveOut.length];
-  if(dx<-1.1)return F.rightCurveIn[hash2(31,row)%F.rightCurveIn.length];
+  if(dx>3)return F.rightTurnRight;
+  if(dx<-3)return F.rightTurnLeft;
   return F.rightStraight;
 }
 
@@ -594,8 +705,8 @@ function drawPiste(){
   for(let y=yOffset-TILE,row=firstRow;y<H+TILE;y+=TILE,row++){
     const worldY=viewScroll+y;
     const b=boundsAtWorld(worldY);
-    drawSprite(chooseEdgeFrame('left',worldY,row),b.left,y,TILE);
-    drawSprite(chooseEdgeFrame('right',worldY,row),b.right,y,TILE);
+    drawSprite(chooseEdgeFrame('left',worldY),b.left,y,TILE);
+    drawSprite(chooseEdgeFrame('right',worldY),b.right,y,TILE);
   }
 }
 
@@ -757,7 +868,10 @@ function render(){
   for(const o of obstacles){
     const p=obstaclePosition(o,viewScroll);
     if(p.y<-TILE*2||p.y>H+TILE*2)continue;
-    drawSprite(o.frame,p.x,p.y,TILE,o.kind==='skier'?Math.sin(o.phase)*.1:0);
+    const frame=o.kind==='skier'
+      ? o.frameBase+((Math.floor((animClock+o.animOffset)*7)&1))
+      : o.frame;
+    drawSprite(frame,p.x,p.y,TILE,0);
   }
 
   for(const p of puffs){
@@ -769,8 +883,18 @@ function render(){
   }
   ctx.globalAlpha=1;
 
+  if(monster){
+    const my=monster.worldY-viewScroll;
+    if(my>-TILE*2&&my<H+TILE*2){
+      const close=Math.hypot(monster.x-player.x,my-player.y)<28;
+      const mFrame=close?F.yetiAttack:(F.yetiA+(Math.floor(animClock*7)&1));
+      drawSprite(mFrame,monster.x,my,TILE,0);
+    }
+  }
+
   if(player){
-    drawSprite(F.player,player.x,player.y+player.slide,TILE,crashing?player.spin:player.angle);
+    const pFrame=F.playerA+(Math.floor(animClock*7)&1);
+    drawSprite(pFrame,player.x,player.y+player.slide,TILE,crashing?player.spin:player.angle);
   }
 
   // The physical lift is overhead.
