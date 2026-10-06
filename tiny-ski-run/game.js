@@ -128,8 +128,8 @@ let last=0,raf=0,audioCtx=null;
 let speed=100,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
 let startLineWorldY=0;
-let scenery=[],obstacles=[],courseGates=[],lifts=[],boostPads=[];
-let monster=null,monsterSpawned=false,boostTimer=0,animClock=0,baseSpeed=100;
+let scenery=[],obstacles=[],courseGates=[],lifts=[],boostPads=[],yetiEncounters=[];
+let monster=null,boostTimer=0,animClock=0,baseSpeed=100;
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
 const BEST_KEY='gamebox.tinySkiRun.best.v5';
@@ -305,8 +305,8 @@ function boundsAtWorld(worldY){
 
 function resetWorld(){
   speed=100;baseSpeed=100;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
-  tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];boostPads=[];
-  monster=null;monsterSpawned=false;boostTimer=0;animClock=0;
+  tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];boostPads=[];yetiEncounters=[];
+  monster=null;boostTimer=0;animClock=0;
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
   rebuildCourseRows();
   ensureCourseRows(Math.ceil((H+SEGMENT*2)/TILE)+2);
@@ -434,8 +434,18 @@ function generateSegment(index,isFirst){
 
   // Other skiers are recurring traffic, not a rare random hazard.
   // They hold a line and descend at different speeds so the player catches them.
-  if(index>=1 && index%2===0){
+  if(index>=4 && index%2===0){
     addObstacle(start+62+randRange(r,-12,12),randRange(r,.24,.76),'skier',r);
+  }
+
+  // Yeti encounters are course events, not a permanent pursuer. The marker
+  // activates as soon as its row scrolls onto the bottom of the screen.
+  if(index>=4 && (index-4)%7===0){
+    yetiEncounters.push({
+      worldY:start+128,
+      side:((index-4)/7)%2===0?'left':'right',
+      activated:false
+    });
   }
 }
 
@@ -609,6 +619,7 @@ function pruneWorld(){
   courseGates=courseGates.filter(x=>x.worldY>behind);
   lifts=lifts.filter(x=>x.worldY>behind);
   boostPads=boostPads.filter(x=>x.worldY>behind);
+  yetiEncounters=yetiEncounters.filter(x=>!x.activated || x.worldY>behind);
 }
 
 function checkBoundary(){
@@ -656,28 +667,45 @@ function checkBoostPads(){
 }
 
 function updateMonster(dt,m){
-  if(!monsterSpawned && m>=180){
-    monsterSpawned=true;
-    const spawnWorldY=scroll+player.y-115;
-    const spawnBounds=boundsAtWorld(spawnWorldY);
-    monster={
-      x:clamp(player.x+58,spawnBounds.left+8,spawnBounds.right-8),
-      worldY:spawnWorldY
-    };
-    addFeedback('YETI!','#7a3944');
+  // Activate the next encounter the moment its row enters the visible screen.
+  // The yeti begins off-piste at the side and immediately starts tracking the
+  // player's lateral position, so it visibly "runs in" rather than appearing
+  // behind the player as a chase mechanic.
+  if(!monster){
+    for(const encounter of yetiEncounters){
+      if(encounter.activated)continue;
+      const screenY=encounter.worldY-scroll;
+      if(screenY<=H-12 && screenY>-TILE*2){
+        encounter.activated=true;
+        const b=boundsAtWorld(encounter.worldY);
+        const sideX=encounter.side==='left'?b.left-22:b.right+22;
+        monster={
+          worldY:encounter.worldY,
+          x:clamp(sideX,8,W-8),
+          side:encounter.side
+        };
+        break;
+      }
+    }
   }
 
   if(!monster)return;
 
-  // Yeti starts behind the player, follows their lateral movement, and is
-  // slightly faster than the base course speed. A boost can buy real distance.
+  // The yeti is deliberately a little slower downhill than the skier. It
+  // tracks the player's X position, creating an unnerving crossing obstacle,
+  // but the player naturally outruns it after the encounter.
   const targetX=player.x;
-  const turnSpeed=42+Math.min(34,m*.008);
-  monster.x+=clamp(targetX-monster.x,-turnSpeed*dt,turnSpeed*dt);
-  monster.worldY+=baseSpeed*(1.105+Math.min(.055,m/18000))*dt;
+  const lateralSpeed=58+Math.min(24,m*.01);
+  monster.x+=clamp(targetX-monster.x,-lateralSpeed*dt,lateralSpeed*dt);
+  monster.worldY+=baseSpeed*.88*dt;
+  monster.x=clamp(monster.x,8,W-8);
 
-  const b=boundsAtWorld(monster.worldY);
-  monster.x=clamp(monster.x,b.left+8,b.right-8);
+  // Once it has been passed and leaves through the top, clear it so a later
+  // encounter marker can introduce another yeti.
+  const screenY=monster.worldY-scroll;
+  if(screenY<-TILE*2){
+    monster=null;
+  }
 }
 
 function checkMonsterCollision(){
