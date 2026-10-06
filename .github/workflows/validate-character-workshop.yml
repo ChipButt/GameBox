@@ -18,45 +18,110 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+
       - name: Check JavaScript syntax
         run: |
           node --check character-playground/game.js
           node --check character-playground/character-catalog.js
           node --check character-playground/modular-parts.js
-      - name: Verify full character catalog
+
+      - name: Verify 52-source modular character system
         run: |
           python - <<'PY'
-          import pathlib, re
-
-          catalog_path = pathlib.Path("character-playground/character-catalog.js")
-          text = catalog_path.read_text()
-          ids = re.findall(r"id: '([^']+)'", text)
-          assert len(ids) == 52, f"Expected 52 catalog entries, found {len(ids)}"
-          assert len(set(ids)) == 52, "Duplicate character IDs in catalog"
+          import base64, hashlib, json, pathlib, re, struct
 
           root = pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
-          actual = sorted(p.stem for p in root.glob("*.gltf"))
-          expected = sorted(ids)
-          assert actual == expected, (
-              "Catalog/asset mismatch\n"
-              f"Missing from catalog: {sorted(set(actual)-set(expected))}\n"
-              f"Missing files: {sorted(set(expected)-set(actual))}"
-          )
-
+          catalog = pathlib.Path("character-playground/character-catalog.js").read_text()
+          modular = pathlib.Path("character-playground/modular-parts.js").read_text()
+          game = pathlib.Path("character-playground/game.js").read_text()
           html = pathlib.Path("character-playground/index.html").read_text()
           css = pathlib.Path("character-playground/style.css").read_text()
-          game = pathlib.Path("character-playground/game.js").read_text()
-          assert "Character Workshop" in html
-          modular = pathlib.Path("character-playground/modular-parts.js").read_text()
-          assert "character-catalog.js" in game
-          assert "modular-parts.js" in game
+
+          ids = re.findall(r"id: '([^']+)'", catalog)
+          assert len(ids) == 52, f"Expected 52 catalog entries, found {len(ids)}"
+          assert len(set(ids)) == 52, "Duplicate character IDs in catalog"
+          assert "universal" in catalog, "Catalog is not using the universal part rig"
+
+          actual = sorted(p.stem for p in root.glob("*.gltf"))
+          assert sorted(ids) == actual, (
+              f"Catalog/asset mismatch. Missing from catalog: {sorted(set(actual)-set(ids))}; "
+              f"Missing files: {sorted(set(ids)-set(actual))}"
+          )
+
+          def read_accessor(doc, accessor_index):
+              acc = doc["accessors"][accessor_index]
+              view = doc["bufferViews"][acc["bufferView"]]
+              buf = doc["buffers"][view["buffer"]]
+              uri = buf["uri"]
+              assert uri.startswith("data:"), "Character GLTF buffers must remain embedded"
+              raw = base64.b64decode(uri.split(",", 1)[1])
+              fmt, size = {5126:("f",4), 5125:("I",4), 5123:("H",2), 5121:("B",1)}[acc["componentType"]]
+              width = {"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4,"MAT4":16}[acc["type"]]
+              stride = view.get("byteStride", width * size)
+              start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+              return [
+                  struct.unpack_from("<" + fmt * width, raw, start + i * stride)
+                  for i in range(acc["count"])
+              ]
+
+          inverse_hashes = {}
+          mesh_transform_hashes = {}
+          joint_name_sets = {}
+
+          for path in sorted(root.glob("*.gltf")):
+              doc = json.loads(path.read_text())
+              assert len(doc.get("skins", [])) == 1, f"{path.name}: expected one skin"
+              skin = doc["skins"][0]
+              nodes = doc.get("nodes", [])
+              joints = [nodes[i].get("name", "") for i in skin.get("joints", [])]
+              assert len(joints) == 23, f"{path.name}: expected 23 joints, found {len(joints)}"
+              joint_name_sets[path.stem] = tuple(joints)
+
+              inverses = read_accessor(doc, skin["inverseBindMatrices"])
+              inv_hash = hashlib.sha256(
+                  json.dumps(inverses, separators=(",", ":")).encode()
+              ).hexdigest()
+              inverse_hashes[path.stem] = inv_hash
+
+              mesh_nodes = [{
+                  "mesh": n.get("mesh"),
+                  "skin": n.get("skin"),
+                  "translation": n.get("translation", [0,0,0]),
+                  "rotation": n.get("rotation", [0,0,0,1]),
+                  "scale": n.get("scale", [1,1,1]),
+                  "matrix": n.get("matrix")
+              } for n in nodes if "mesh" in n]
+              mesh_transform_hashes[path.stem] = hashlib.sha256(
+                  json.dumps(mesh_nodes, sort_keys=True, separators=(",", ":")).encode()
+              ).hexdigest()
+
+          assert len(set(joint_name_sets.values())) == 1, "Character joint names/order are no longer universal"
+          assert len(set(inverse_hashes.values())) == 1, "Inverse bind matrices are no longer universal"
+          assert len(set(mesh_transform_hashes.values())) == 1, "Skinned mesh transforms are no longer universal"
+
+          required_labels = [
+              "Head & face",
+              "Hair / facial hair",
+              "Hat / headwear",
+              "Top / torso",
+              "Arms / sleeves",
+              "Bottoms",
+              "Shoes / feet",
+              "Accessory",
+          ]
+          for label in required_labels:
+              assert label in modular, f"Missing modular part slot: {label}"
+
+          assert "PART_SOURCE_HINTS" in modular
+          assert "sourceEntriesForPart" in modular
           assert "createModularPartSystem" in modular
           assert "SkinnedMesh" in modular
-          assert "Head & face" in modular
-          assert "Shoes / feet" in modular
-          assert "partRows" in html
-          assert "RIG_GROUPS" in catalog_path.read_text()
+          assert "partChoiceSelect" in game
+          assert "partCandidates" in game
+          assert "52 compatible" in html
+          assert "partChoiceSelect" in css
           assert "UI Adventure Pack" in css
           assert "ultimate-nature" in game
-          print("Character Workshop validation passed: 52/52 assets + modular rigged part system.")
+
+          print("Character Workshop validation passed: 52/52 universal bind-compatible sources and 8 modular part slots.")
           PY
