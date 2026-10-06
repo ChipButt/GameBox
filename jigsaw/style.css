@@ -1,39 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@600;700;800&display=swap');
 
 :root{
-  --paper:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/pattern_grid_paper.png");
-  --board-surface:url("../assets/gamebox/kenney/ui/UI Adventure Pack/panelInset_beigeLight.png");
-  --worktop:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/pattern_diagonal_grey_large.png");
-  --wood-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_brown_detail.png");
-  --puzzle-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_brown_arrows_detail.png");
-  --metal-frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_grey_bolts_detail_a.png");
-  --banner:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/banner_hanging.png");
-  --title-banner:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/banner_modern.png");
-  --round-brown:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/round_brown.png");
-  --round-grey:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/round_grey.png");
-  --button-brown:url("../assets/gamebox/kenney/ui/UI Adventure Pack/buttonLong_brown.png");
-  --button-brown-pressed:url("../assets/gamebox/kenney/ui/UI Adventure Pack/buttonLong_brown_pressed.png");
-  --bar-back-left:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBack_horizontalLeft.png");
-  --bar-back-mid:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBack_horizontalMid.png");
-  --bar-back-right:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBack_horizontalRight.png");
-  --bar-blue-left:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBlue_horizontalLeft.png");
-  --bar-blue-mid:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBlue_horizontalBlue.png");
-  --bar-blue-right:url("../assets/gamebox/kenney/ui/UI Adventure Pack/barBlue_horizontalRight.png");
-  --ink:#4d3723;
-  --ink-soft:#765b3d;
-  --cream:#fff1c8;
-  --blue:#435f77;
+  --blue-rect:url("../assets/gamebox/kenney/ui/UI Pack/Blue/Double/button_rectangle_depth_gradient.png");
+  --blue-round:url("../assets/gamebox/kenney/ui/UI Pack/Blue/Double/button_round_depth_gradient.png");
+  --blue-square:url("../assets/gamebox/kenney/ui/UI Pack/Blue/Double/button_square_depth_gradient.png");
+  --grey-rect:url("../assets/gamebox/kenney/ui/UI Pack/Grey/Double/button_rectangle_depth_gradient.png");
+  --grey-round:url("../assets/gamebox/kenney/ui/UI Pack/Grey/Double/button_round_depth_gradient.png");
+  --grey-square:url("../assets/gamebox/kenney/ui/UI Pack/Grey/Double/button_square_depth_gradient.png");
+  --frame:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/panel_border_grey_detail.png");
+  --ink:#eef6ff;
+  --muted:#9eb3c6;
+  --deep:#111b24;
+  --panel:#182632;
+  --tray:#0e1821;
+  --board:#edf1f5;
 }
-
 *{box-sizing:border-box}
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#607b91;
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:var(--deep);
   color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   overscroll-behavior:none;
   touch-action:manipulation;
 }
@@ -43,105 +30,79 @@ button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
 img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 
 .app{
-  position:relative;
   height:100dvh;
-  min-height:0;
   display:grid;
   grid-template-rows:auto 1fr;
-  border:16px solid transparent;
-  border-image-source:var(--metal-frame);
-  border-image-slice:20;
-  border-image-width:16px;
-  border-image-repeat:stretch;
-  background-image:var(--worktop);
-  background-repeat:repeat;
-  background-size:48px 48px;
+  min-height:0;
+  background:var(--deep);
 }
-
 .hud{
-  position:relative;
-  z-index:5;
+  min-height:76px;
   display:grid;
-  grid-template-columns:52px minmax(0,1fr) 52px;
+  grid-template-columns:54px minmax(0,1fr) 54px;
   align-items:center;
-  gap:7px;
-  padding:max(6px,env(safe-area-inset-top)) 5px 4px;
+  gap:10px;
+  padding:max(8px,env(safe-area-inset-top)) 10px 7px;
+  background:#172431;
 }
-
-.roundControl{
+.roundAsset{
   appearance:none;
   border:0;
   padding:0;
   display:grid;
   place-items:center;
   background-color:transparent;
-  background-image:var(--round-grey);
-  background-position:center;
+  background-image:var(--blue-round);
   background-repeat:no-repeat;
+  background-position:center;
   background-size:100% 100%;
-  cursor:pointer;
   text-decoration:none;
+  cursor:pointer;
 }
-.roundControl:active{transform:scale(.96)}
-.hudControl{
-  width:50px;
-  height:50px;
-  align-self:start;
-  margin-top:5px;
-}
-.hudControl img{width:23px;height:23px;object-fit:contain}
-
+.roundAsset:active{transform:translateY(2px)}
+.hudButton{width:52px;height:52px}
+.hudButton img{width:22px;height:22px;object-fit:contain}
 .titleStack{
   min-width:0;
   display:grid;
-  grid-template-rows:auto auto;
   justify-items:center;
-  align-items:center;
-  gap:1px;
+  gap:2px;
 }
-.titleBanner{
-  width:min(100%,280px);
-  aspect-ratio:16 / 3;
+.titlePlaque{
+  width:min(100%,184px);
+  aspect-ratio:3/1;
   display:grid;
   place-items:center;
-  background-image:var(--title-banner);
-  background-size:100% 100%;
+  background-image:var(--blue-rect);
   background-repeat:no-repeat;
+  background-size:100% 100%;
   background-position:center;
-  color:#fff7df;
-  text-align:center;
 }
-.titleBanner span{
-  display:block;
-  transform:none;
-  font:800 clamp(13px,4vw,17px) Fredoka,sans-serif;
-  line-height:1;
-  letter-spacing:.12em;
+.titlePlaque span{
+  transform:translateY(-2px);
+  font:800 17px Fredoka,sans-serif;
+  letter-spacing:.13em;
+  color:#fff;
 }
 .puzzleName{
-  display:block;
   max-width:100%;
   overflow:hidden;
-  white-space:nowrap;
   text-overflow:ellipsis;
+  white-space:nowrap;
   font:700 10px Fredoka,sans-serif;
-  line-height:1;
-  color:#f8efd8;
-  letter-spacing:.02em;
+  letter-spacing:.04em;
+  color:var(--muted);
 }
 
 .stage{
   --board-x:20px;
-  --board-y:10px;
+  --board-y:20px;
   --board-size:300px;
-  --tray-top:330px;
+  --tray-top:350px;
   position:relative;
   min-height:0;
   overflow:hidden;
-  margin:0 5px 5px;
-  background-image:var(--worktop);
-  background-repeat:repeat;
-  background-size:48px 48px;
+  background:#16232d;
 }
 .stage canvas{
   position:absolute;
@@ -156,7 +117,6 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   cursor:grab;
 }
 .stage canvas:active{cursor:grabbing}
-
 .boardBackdrop{
   position:absolute;
   z-index:0;
@@ -164,373 +124,288 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   top:var(--board-y);
   width:var(--board-size);
   height:var(--board-size);
-  background-image:var(--board-surface);
-  background-repeat:no-repeat;
-  background-position:center;
-  background-size:100% 100%;
+  background:var(--board);
   pointer-events:none;
 }
 .trayBackdrop{
   position:absolute;
   z-index:0;
-  left:2px;
-  right:2px;
+  left:8px;
+  right:8px;
   top:var(--tray-top);
-  bottom:2px;
-  border:15px solid transparent;
-  border-image-source:var(--metal-frame);
-  border-image-slice:20;
-  border-image-width:15px;
+  bottom:8px;
+  border:10px solid transparent;
+  border-image-source:var(--frame);
+  border-image-slice:16;
+  border-image-width:10px;
   border-image-repeat:stretch;
-  background-image:var(--worktop);
-  background-repeat:repeat;
-  background-size:48px 48px;
+  background:var(--tray);
   pointer-events:none;
 }
-.trayLabel{
+.trayPlaque{
   position:absolute;
   z-index:4;
   left:50%;
-  top:calc(var(--tray-top) + 10px);
+  top:calc(var(--tray-top) + 8px);
   transform:translateX(-50%);
-  width:150px;
-  aspect-ratio:8 / 1;
+  width:126px;
+  aspect-ratio:3/1;
   display:grid;
   place-items:center;
-  background-image:var(--banner);
-  background-size:100% 100%;
+  background-image:var(--blue-rect);
   background-repeat:no-repeat;
-  color:#fff4dc;
-  font:800 8px Fredoka,sans-serif;
-  line-height:1;
-  letter-spacing:.13em;
+  background-size:100% 100%;
+  background-position:center;
+  font:800 10px Fredoka,sans-serif;
+  letter-spacing:.15em;
+  color:#fff;
   pointer-events:none;
 }
-.trayLabel{padding-bottom:1px}
+.trayPlaque{padding-bottom:2px}
 
 .sheet,.winOverlay{
   position:fixed;
   inset:0;
   z-index:30;
-  background:rgba(30,38,46,.82);
+  display:grid;
+  place-items:center;
+  padding:max(10px,env(safe-area-inset-top)) 8px max(10px,env(safe-area-inset-bottom));
+  background:rgba(5,10,15,.82);
   opacity:0;
   pointer-events:none;
-  transition:opacity .14s ease;
-}
-.sheet,.winOverlay{
-  display:grid;
-  place-items:center;
-  min-height:0;
-  padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));
-  overflow:hidden;
+  transition:opacity .12s ease;
 }
 .sheet.show,.winOverlay.show{opacity:1;pointer-events:auto}
-
-.optionsWrap,.winWrap{
+.optionsPanel,.completePanel{
   position:relative;
-  width:min(500px,calc(100vw - 16px));
-  min-width:0;
-  height:min(680px,calc(100dvh - 16px));
-  min-height:0;
-  max-height:none;
-  display:flex;
-  flex-direction:column;
-  padding-top:22px;
-}
-.optionsBoard,.winBoard{
-  position:relative;
-  flex:1 1 auto;
-  width:100%;
-  height:100%;
-  min-width:0;
-  min-height:0;
-  max-height:none;
-  overflow-x:hidden;
+  width:min(480px,calc(100vw - 16px));
+  max-height:calc(100dvh - 20px);
   overflow-y:auto;
-  overscroll-behavior:contain;
-  padding:23px 12px 12px;
-  border:18px solid transparent;
-  border-image-source:var(--wood-frame);
-  border-image-slice:20;
-  border-image-width:18px;
+  overflow-x:hidden;
+  border:12px solid transparent;
+  border-image-source:var(--frame);
+  border-image-slice:16;
+  border-image-width:12px;
   border-image-repeat:stretch;
-  background-image:var(--paper);
-  background-repeat:repeat;
-  background-size:28px 28px;
+  background:var(--panel);
+  padding:14px;
   scrollbar-width:thin;
 }
-.overlayBanner,.completeBanner{
-  position:absolute;
-  z-index:4;
-  top:0;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(82%,360px);
-  aspect-ratio:8 / 1;
+.panelTitle{
+  width:min(190px,65%);
+  aspect-ratio:3/1;
+  margin:0 auto 10px;
   display:grid;
   place-items:center;
-  background-image:var(--banner);
-  background-size:100% 100%;
+  background-image:var(--blue-rect);
   background-repeat:no-repeat;
+  background-size:100% 100%;
   background-position:center;
-  color:#fff5dd;
-  text-align:center;
-  font:800 clamp(14px,4.5vw,19px) Fredoka,sans-serif;
-  line-height:1;
-  letter-spacing:.07em;
-  white-space:nowrap;
 }
-.overlayBanner>span,.completeBanner>span{transform:translateY(-1px)}
-
-.closeControl{
+.panelTitle span{
+  transform:translateY(-2px);
+  font:800 17px Fredoka,sans-serif;
+  letter-spacing:.12em;
+  color:#fff;
+}
+.closeButton{
   position:absolute;
-  z-index:6;
   top:8px;
   right:8px;
-  width:52px;
-  height:39px;
-  appearance:none;
-  border:0;
-  padding:0;
-  background-color:transparent;
-  background-image:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/button_brown_close.png");
-  background-size:100% 100%;
-  background-repeat:no-repeat;
-  cursor:pointer;
+  width:46px;
+  height:46px;
 }
-.closeControl:active{transform:scale(.96)}
+.closeButton img{width:18px;height:18px}
 
-.difficultySection{
-  min-width:0;
-  padding:7px 8px 9px;
-  border:13px solid transparent;
-  border-image-source:var(--wood-frame);
-  border-image-slice:20;
-  border-image-width:13px;
-  border-image-repeat:stretch;
-  background-image:var(--paper);
-  background-repeat:repeat;
-  background-size:28px 28px;
-}
-.sectionHeading{
+.sectionLabel{
   display:flex;
   align-items:center;
   gap:9px;
-  margin:0 0 8px;
+  margin:2px 0 8px;
 }
-.sectionHeading>img{
-  width:36px;
-  height:36px;
-  padding:7px;
-  object-fit:contain;
-  background-image:var(--round-grey);
-  background-size:100% 100%;
-  background-repeat:no-repeat;
+.sectionLabel>img{
+  width:30px;height:30px;object-fit:contain;
 }
-.sectionHeading small{
+.sectionLabel small{
   display:block;
   font:800 8px Inter,sans-serif;
-  letter-spacing:.12em;
-  color:#806447;
+  letter-spacing:.13em;
+  color:#6fc8f2;
 }
-.sectionHeading strong{
+.sectionLabel strong{
   display:block;
-  margin-top:1px;
-  font:700 19px Fredoka,sans-serif;
-  color:#4b3724;
+  margin-top:2px;
+  font:700 17px Fredoka,sans-serif;
+  color:#fff;
 }
-
 .pieceChoices{
   display:grid;
-  min-width:0;
-  grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:5px;
 }
 .pieceChoices button{
   appearance:none;
   min-width:0;
-  height:52px;
+  aspect-ratio:1;
   border:0;
   padding:0;
   display:grid;
   place-items:center;
   background-color:transparent;
-  background-image:var(--round-brown);
-  background-size:52px 52px;
-  background-position:center;
+  background-image:var(--grey-square);
   background-repeat:no-repeat;
-  color:#573e27;
-  font:800 13px Fredoka,sans-serif;
+  background-size:100% 100%;
+  background-position:center;
   cursor:pointer;
+  color:#32475b;
+  font:800 13px Fredoka,sans-serif;
 }
 .pieceChoices button.selected{
-  background-image:var(--round-grey);
+  background-image:var(--blue-square);
   color:#fff;
 }
-.pieceChoices button:active{transform:scale(.96)}
+.pieceChoices button:active{transform:translateY(2px)}
 .pieceChoices button span{transform:translateY(-2px)}
 
 .optionRows{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:8px;
+  gap:6px;
+  margin-top:9px;
 }
-.optionRow{
+.settingButton{
   appearance:none;
-  min-height:56px;
   border:0;
-  padding:6px 10px;
+  padding:7px 10px;
+  aspect-ratio:3/1;
+  min-width:0;
   display:grid;
-  grid-template-columns:35px minmax(0,1fr) 29px;
+  grid-template-columns:28px minmax(0,1fr) 28px;
   align-items:center;
-  gap:7px;
+  gap:6px;
   background-color:transparent;
-  background-image:var(--button-brown);
-  background-size:100% 100%;
+  background-image:var(--grey-rect);
   background-repeat:no-repeat;
-  color:#fff7e4;
-  text-align:left;
+  background-size:100% 100%;
+  background-position:center;
   cursor:pointer;
+  color:#32475b;
+  text-align:left;
 }
-.optionRow:active{background-image:var(--button-brown-pressed)}
-.rowIcon{
-  width:32px;
-  height:32px;
-  display:grid;
-  place-items:center;
-  background-image:var(--round-grey);
+.settingButton:active{transform:translateY(2px)}
+.settingIcon{
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  background-image:var(--blue-round);
   background-size:100% 100%;
   background-repeat:no-repeat;
 }
-.rowIcon img{width:17px;height:17px;object-fit:contain}
-.rowCopy{min-width:0;transform:translateY(-2px)}
-.rowCopy small{
+.settingIcon img{width:14px;height:14px;object-fit:contain}
+.settingText{min-width:0}
+.settingText small{
   display:block;
   overflow:hidden;
   text-overflow:ellipsis;
-  font:800 7px Inter,sans-serif;
-  line-height:1;
-  letter-spacing:.09em;
-  color:#f5dfc4;
   white-space:nowrap;
+  font:800 6px Inter,sans-serif;
+  letter-spacing:.08em;
+  color:#547187;
 }
-.rowCopy strong{
+.settingText strong{
   display:block;
-  margin-top:3px;
-  font:700 16px Fredoka,sans-serif;
-  line-height:1;
-  white-space:nowrap;
+  margin-top:2px;
+  font:700 14px Fredoka,sans-serif;
+  color:#263b4c;
 }
-.stateCheck{width:27px;height:27px;object-fit:contain}
+.stateCheck{width:26px;height:26px;object-fit:contain}
 
-.actionGrid{
+.actionGrid,.winActions{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:7px;
+  gap:6px;
+  margin-top:8px;
 }
-.woodAction{
+.assetAction{
   appearance:none;
-  min-height:50px;
   border:0;
-  padding:6px 13px;
+  padding:7px 12px;
+  aspect-ratio:3/1;
+  min-width:0;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:8px;
   background-color:transparent;
-  background-image:var(--button-brown);
-  background-size:100% 100%;
   background-repeat:no-repeat;
-  color:#fff6e2;
+  background-position:center;
+  background-size:100% 100%;
   text-decoration:none;
-  font:800 13px Fredoka,sans-serif;
-  letter-spacing:.01em;
   cursor:pointer;
+  font:800 13px Fredoka,sans-serif;
 }
-.woodAction:active{background-image:var(--button-brown-pressed)}
-.woodAction img{width:22px;height:22px;object-fit:contain}
-.woodAction span{transform:translateY(-2px)}
-.homeAction{width:100%;margin-top:7px}
+.assetAction:active{transform:translateY(2px)}
+.assetAction img{width:20px;height:20px;object-fit:contain}
+.primaryAction{background-image:var(--blue-rect);color:#fff}
+.secondaryAction{background-image:var(--grey-rect);color:#2c4153}
+.secondaryAction img{filter:brightness(.38) saturate(.75)}
+.homeAction{
+  width:min(220px,65%);
+  margin:7px auto 0;
+}
 
-.winWrap{width:min(94%,430px);padding-top:26px}
-.winBoard{
-  overflow:visible;
-  max-height:none;
-  padding:36px 18px 17px;
+.completePanel{
+  width:min(390px,calc(100vw - 20px));
   text-align:center;
+  padding:22px 18px 17px;
 }
-.completeBanner{
-  width:min(86%,350px);
+.completeCheck{
+  width:68px;height:68px;
+  margin:0 auto 7px;
 }
-.starRow{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  margin-bottom:5px;
+.completeCheck img{width:100%;height:100%;object-fit:contain}
+.completePanel h1{
+  margin:0;
+  font:700 30px Fredoka,sans-serif;
+  color:#fff;
 }
-.starRow img{width:30px;height:30px;image-rendering:auto}
-.starRow .heroStar{width:44px;height:44px}
-.winBoard h1{
-  margin:3px 0 3px;
-  font:700 clamp(28px,8vw,36px) Fredoka,sans-serif;
-  color:#4b3724;
-}
-.winBoard p{
-  margin:0 auto 14px;
-  max-width:300px;
-  color:#73583c;
-  font-size:13px;
-  line-height:1.35;
+.completePanel p{
+  margin:4px 0 12px;
+  color:var(--muted);
   font-weight:700;
 }
-.winBoard p strong{color:#3f5870;font-size:16px}
-.winActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.completePanel p strong{color:#6fc8f2}
 
 @media(min-width:760px){
-  .app{
-    max-width:820px;
-    margin:0 auto;
-    border-width:18px;
-    border-image-width:18px;
-  }
-  .hud{padding-left:10px;padding-right:10px}
-  .stage{margin-left:1px;margin-right:1px}
+  .app{max-width:820px;margin:0 auto}
+  .hud{padding-left:18px;padding-right:18px}
 }
-@media(max-width:520px){
-  .pieceChoices{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-  .optionsBoard{padding-left:8px;padding-right:8px;border-width:14px;border-image-width:14px}
-  .difficultySection{padding-left:6px;padding-right:6px;border-width:10px;border-image-width:10px}
-  .optionRow{padding-left:7px;padding-right:7px;grid-template-columns:30px minmax(0,1fr) 24px;gap:5px}
-  .rowIcon{width:29px;height:29px}
-  .stateCheck{width:24px;height:24px}
+@media(max-width:380px){
+  .hud{grid-template-columns:48px minmax(0,1fr) 48px;gap:6px;padding-left:6px;padding-right:6px}
+  .hudButton{width:46px;height:46px}
+  .titlePlaque{width:min(100%,160px)}
+  .titlePlaque span{font-size:15px}
+  .optionsPanel{border-width:9px;border-image-width:9px;padding:10px}
+  .panelTitle{width:160px;margin-bottom:7px}
+  .closeButton{width:40px;height:40px}
+  .pieceChoices{gap:4px}
+  .optionRows{gap:4px}
+  .settingButton{padding:5px 6px;grid-template-columns:24px minmax(0,1fr) 23px;gap:3px}
+  .settingIcon{width:24px;height:24px}
+  .stateCheck{width:22px;height:22px}
+  .settingText strong{font-size:12px}
+  .assetAction{font-size:12px;padding:5px 7px}
 }
-@media(max-width:360px){
-  .sheet,.winOverlay{padding:4px}
-  .optionsWrap{width:calc(100vw - 8px);height:calc(100dvh - 8px);padding-top:18px}
-  .optionsBoard{border-width:11px;border-image-width:11px;padding:19px 6px 8px}
-  .difficultySection{border-width:9px;border-image-width:9px;padding:5px 5px 7px}
-  .pieceChoices{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
-  .pieceChoices button{height:46px;background-size:46px 46px;font-size:12px}
-  .optionRows{grid-template-columns:1fr 1fr;gap:4px}
-  .optionRow{min-height:50px;padding:4px 5px;grid-template-columns:26px minmax(0,1fr) 21px;gap:3px}
-  .rowIcon{width:25px;height:25px}.rowIcon img{width:14px;height:14px}
-  .stateCheck{width:21px;height:21px}
-  .rowCopy small{font-size:6px}.rowCopy strong{font-size:14px}
-  .actionGrid{gap:4px}.woodAction{min-height:46px;font-size:11px;padding:4px 7px}
+@media(max-height:610px){
+  .hud{min-height:66px;padding-top:5px;padding-bottom:4px}
+  .hudButton{width:44px;height:44px}
+  .titlePlaque{width:155px}
+  .puzzleName{font-size:9px}
+  .optionsPanel{padding-top:9px;padding-bottom:9px}
+  .panelTitle{width:150px;margin-bottom:5px}
+  .sectionLabel{margin-bottom:5px}
+  .pieceChoices{gap:3px}
+  .optionRows,.actionGrid{margin-top:5px}
   .homeAction{margin-top:4px}
-  .overlayBanner{font-size:14px}
-}
-@media(max-height:630px){
-  .optionsWrap{height:calc(100dvh - 8px);padding-top:18px}
-  .optionsBoard{padding-top:19px;padding-bottom:7px}
-  .difficultySection{padding-top:5px;padding-bottom:6px}
-  .pieceChoices button{height:44px;background-size:44px 44px}
-  .optionRow{min-height:48px}
-  .woodAction{min-height:45px;margin-top:4px}
-  .overlayBanner{width:min(72%,270px)}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001ms!important;transition-duration:.001ms!important}
