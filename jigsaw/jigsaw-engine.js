@@ -461,23 +461,12 @@
       if(!this.layout) return;
       const c=this.ctx,l=this.layout;
       c.clearRect(0,0,l.width,l.height);
-      const grd=c.createLinearGradient(0,0,0,l.height);
-      grd.addColorStop(0,'#102a4a');grd.addColorStop(1,'#06192d');
-      c.fillStyle=grd;c.fillRect(0,0,l.width,l.height);
 
-      c.save();
-      c.shadowColor='rgba(0,0,0,.34)';c.shadowBlur=16;c.shadowOffsetY=7;
-      c.fillStyle='#f7f0df';c.fillRect(l.boardX-5,l.boardY-5,l.boardSize+10,l.boardSize+10);
-      c.restore();
-      c.fillStyle='#e7dfcb';c.fillRect(l.boardX,l.boardY,l.boardSize,l.boardSize);
+      // The workshop, board and tray surfaces are real UI assets in the DOM.
+      // Canvas stays transparent and is responsible only for puzzle-specific drawing.
       if(this.image.complete&&this.image.naturalWidth&&this.options.guideOpacity>0){
         c.save();c.globalAlpha=this.options.guideOpacity;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
       }
-
-      c.save();
-      c.setLineDash([5,7]);c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=1;
-      c.strokeRect(8,l.trayTop-6,l.width-16,l.height-l.trayTop-2);
-      c.restore();
 
       const ordered=this.pieces.slice().sort((a,b)=>a.z-b.z);
       const held=this.dragging&&this.dragging.piece;
@@ -487,10 +476,6 @@
       if(this.completed&&this.completionStart&&now>=this.completionStart){
         const alpha=clamp((now-this.completionStart)/520,0,1);
         c.save();c.globalAlpha=alpha;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
-        const glow=clamp((now-this.completionStart-180)/500,0,1)*(1-clamp((now-this.completionStart-720)/350,0,1));
-        if(glow>0){
-          c.save();c.globalAlpha=glow*.48;c.strokeStyle='#fff7cc';c.lineWidth=8;c.shadowColor='#f7bd18';c.shadowBlur=24;c.strokeRect(l.boardX-3,l.boardY-3,l.boardSize+6,l.boardSize+6);c.restore();
-        }
       }
     }
 
