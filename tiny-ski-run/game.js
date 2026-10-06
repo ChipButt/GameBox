@@ -656,7 +656,7 @@ function checkBoostPads(){
 }
 
 function updateMonster(dt,m){
-  if(!monsterSpawned && m>=350){
+  if(!monsterSpawned && m>=180){
     monsterSpawned=true;
     const spawnWorldY=scroll+player.y-115;
     const spawnBounds=boundsAtWorld(spawnWorldY);
