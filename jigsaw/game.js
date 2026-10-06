@@ -24,9 +24,8 @@
   let objectUrl='';
 
   const ICON_BASE='../assets/gamebox/kenney/icons/Game Icons/White/2x/';
-  const CHECK_BASE='../assets/gamebox/kenney/ui/UI Pack - Adventure/';
-  const CHECK_EMPTY=CHECK_BASE+'checkbox_brown_empty.png';
-  const CHECK_ON=CHECK_BASE+'checkbox_brown_checked.png';
+  const CHECK_EMPTY='../assets/gamebox/kenney/ui/UI Pack/Grey/Double/check_square_grey.png';
+  const CHECK_ON='../assets/gamebox/kenney/ui/UI Pack/Blue/Double/check_square_color_checkmark.png';
 
   const puzzle=GameBoxJigsaw.create({
     canvas,
