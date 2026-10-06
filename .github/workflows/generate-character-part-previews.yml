@@ -1,0 +1,171 @@
+name: Generate Character Part Previews
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - character-playground/part-options.json
+      - .github/workflows/generate-character-part-previews.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-character-part-previews
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Generate distinct visual part thumbnails
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          import base64, json, math, pathlib, struct
+          from PIL import Image, ImageDraw
+
+          root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          manifest=json.loads(pathlib.Path("character-playground/part-options.json").read_text())
+          outroot=pathlib.Path("character-playground/previews")
+          outroot.mkdir(parents=True,exist_ok=True)
+
+          HEAD={'Head','Neck'}
+          TOP={'Torso','Abdomen'}
+          ARMS={'Shoulder.L','UpperArm.L','LowerArm.L','Fist.L','Shoulder.R','UpperArm.R','LowerArm.R','Fist.R'}
+          BOTTOM={'Hips','UpperLeg.L','LowerLeg.L','UpperLeg.R','LowerLeg.R'}
+          FEET={'Foot.L','Foot.R'}
+
+          def raw(uri):
+              return base64.b64decode(uri.split(",",1)[1])
+
+          def accessor(doc,idx):
+              acc=doc["accessors"][idx]; view=doc["bufferViews"][acc["bufferView"]]
+              data=raw(doc["buffers"][view["buffer"]]["uri"])
+              fmt,size={5126:("f",4),5125:("I",4),5123:("H",2),5121:("B",1),5122:("h",2),5120:("b",1)}[acc["componentType"]]
+              width={"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4}[acc["type"]]
+              stride=view.get("byteStride",width*size)
+              start=view.get("byteOffset",0)+acc.get("byteOffset",0)
+              return [struct.unpack_from("<"+fmt*width,data,start+i*stride) for i in range(acc["count"])]
+
+          def score(joints,weights,bones,verts,target):
+              total=0
+              for vi in verts:
+                  for j,w in zip(joints[vi],weights[vi]):
+                      if w>0 and bones[int(j)] in target: total+=float(w)
+              return total
+
+          def category(material_name,pos,joints,weights,bones,verts,ymin,yr):
+              n=(material_name or "").lower()
+              if any(k in n for k in ('helmet','horn','hood','crown','hat','cap')):return 'headwear'
+              if any(k in n for k in ('hair','beard','moustache','mustache')):return 'hair'
+              if any(k in n for k in ('belt','scarf','buckle','cape','strap','apron','glove','pouch','bag','band')):return 'accessory'
+              yn=((sum(pos[v][1] for v in verts)/3)-ymin)/yr if yr else .5
+              scores={
+                'head':score(joints,weights,bones,verts,HEAD),
+                'top':score(joints,weights,bones,verts,TOP),
+                'arms':score(joints,weights,bones,verts,ARMS),
+                'bottom':score(joints,weights,bones,verts,BOTTOM),
+                'shoes':score(joints,weights,bones,verts,FEET)
+              }
+              winner,w=max(scores.items(),key=lambda kv:kv[1])
+              if winner=='bottom' and yn<.16:return 'shoes'
+              if w>.01:return winner
+              if yn>.72:return 'head'
+              if yn<.14:return 'shoes'
+              if yn<.48:return 'bottom'
+              return 'top'
+
+          def material_color(mat):
+              c=mat.get("pbrMetallicRoughness",{}).get("baseColorFactor",[.7,.7,.7,1])
+              return tuple(max(0,min(255,round(float(v)*255))) for v in c[:3])
+
+          def shade(color,points):
+              a,b,c=points
+              ux,uy,uz=b[0]-a[0],b[1]-a[1],b[2]-a[2]
+              vx,vy,vz=c[0]-a[0],c[1]-a[1],c[2]-a[2]
+              nz=ux*vy-uy*vx
+              nx=uy*vz-uz*vy
+              ny=uz*vx-ux*vz
+              length=max(1e-9,math.sqrt(nx*nx+ny*ny+nz*nz))
+              light=.72+.28*abs(nz/length)
+              return tuple(max(0,min(255,round(v*light))) for v in color)
+
+          cache={}
+          def collect(source, wanted):
+              key=(source,wanted)
+              if key in cache:return cache[key]
+              doc=json.loads((root/(source+".gltf")).read_text())
+              nodes=doc.get("nodes",[]); skin=doc["skins"][0]
+              bones=[nodes[i].get("name","") for i in skin["joints"]]
+              tris=[]
+              for mesh in doc.get("meshes",[]):
+                  for prim in mesh.get("primitives",[]):
+                      attrs=prim.get("attributes",{})
+                      if not all(k in attrs for k in ("POSITION","JOINTS_0","WEIGHTS_0")):continue
+                      pos=accessor(doc,attrs["POSITION"]); joints=accessor(doc,attrs["JOINTS_0"]); weights=accessor(doc,attrs["WEIGHTS_0"])
+                      indices=[v[0] for v in accessor(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
+                      mat=doc.get("materials",[{}])[prim.get("material",0)] if doc.get("materials") else {}
+                      name=mat.get("name",""); color=material_color(mat)
+                      ymin=min(v[1] for v in pos); ymax=max(v[1] for v in pos); yr=max(1e-9,ymax-ymin)
+                      for i in range(0,len(indices)-2,3):
+                          verts=indices[i:i+3]
+                          if category(name,pos,joints,weights,bones,verts,ymin,yr)!=wanted:continue
+                          points=[pos[v] for v in verts]
+                          tris.append((sum(p[2] for p in points)/3,points,shade(color,points)))
+              cache[key]=tris
+              return tris
+
+          def render(tris,path):
+              if not tris:return
+              xs=[p[0] for _,pts,_ in tris for p in pts]; ys=[p[1] for _,pts,_ in tris for p in pts]
+              xmin,xmax=min(xs),max(xs); ymin,ymax=min(ys),max(ys)
+              w=max(1e-6,xmax-xmin); h=max(1e-6,ymax-ymin)
+              S=4; W=180*S; H=180*S; pad=14*S
+              scale=min((W-2*pad)/w,(H-2*pad)/h)
+              cx=(xmin+xmax)/2; cy=(ymin+ymax)/2
+              img=Image.new("RGBA",(W,H),(0,0,0,0)); draw=ImageDraw.Draw(img,"RGBA")
+              ordered=sorted(tris,key=lambda t:t[0])
+              for _,pts,color in ordered:
+                  poly=[]
+                  for x,y,z in pts:
+                      px=W/2+(x-cx)*scale
+                      py=H/2-(y-cy)*scale
+                      poly.append((px,py))
+                  outline=tuple(max(0,v-45) for v in color)+(130,)
+                  draw.polygon(poly,fill=color+(255,),outline=outline)
+              img=img.resize((180,180),Image.Resampling.LANCZOS)
+              path.parent.mkdir(parents=True,exist_ok=True)
+              img.save(path,optimize=True)
+
+          count=0
+          for cat,section in manifest["categories"].items():
+              for option in section["options"]:
+                  render(collect(option["sourceId"],cat), pathlib.Path("character-playground")/option["preview"])
+                  count+=1
+          print("generated",count,"part preview images")
+          PY
+
+      - name: Commit generated previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add character-playground/previews
+          if git diff --cached --quiet; then
+            echo "Part previews already up to date."
+            exit 0
+          fi
+          git commit -m "Generate visual Character Workshop part previews"
+          git pull --rebase origin main
+          git push origin main
