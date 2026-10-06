@@ -105,6 +105,11 @@
       this.ctx=this.canvas.getContext('2d');
       this.hitCanvas=document.createElement('canvas');
       this.hitCtx=this.hitCanvas.getContext('2d');
+      this.dragCache=document.createElement('canvas');
+      this.dragCacheCtx=this.dragCache.getContext('2d');
+      this.dragCacheReady=false;
+      this.dragFrame=0;
+      this.skipHeldRender=null;
       this.image=new Image();
       this.image.decoding='async';
       this.image.crossOrigin='anonymous';
@@ -174,6 +179,8 @@
       this.completed=false;
       this.completionStart=0;
       this.dragging=null;
+      this.dragCacheReady=false;
+      if(this.dragFrame){ cancelAnimationFrame(this.dragFrame); this.dragFrame=0; }
       this.pieces=[];
       this.makeEdges();
       if(this.image.complete&&this.image.naturalWidth){
@@ -226,6 +233,9 @@
       const loose=this.pieces.map(p=>({nx:p.x/oldW,ny:p.y/oldH,locked:p.locked}));
       this.canvas.width=Math.round(cssW*dpr);
       this.canvas.height=Math.round(cssH*dpr);
+      this.dragCache.width=this.canvas.width;
+      this.dragCache.height=this.canvas.height;
+      this.dragCacheReady=false;
       this.ctx.setTransform(dpr,0,0,dpr,0,0);
       this.dpr=dpr;
       this.layout=this.computeLayout(cssW,cssH);
@@ -304,6 +314,8 @@
       this.completed=false;
       this.completionStart=0;
       this.dragging=null;
+      this.dragCacheReady=false;
+      if(this.dragFrame){ cancelAnimationFrame(this.dragFrame); this.dragFrame=0; }
       if(!this.pieces.length&&this.image.complete&&this.image.naturalWidth) this.buildPieces();
       if(this.pieces.length) this.scatter();
       this.progressChanged();
@@ -335,7 +347,7 @@
       const maxZ=Math.max(0,...this.pieces.map(q=>q.z));
       p.z=maxZ+1;
       this.dragging={piece:p,pointerId:e.pointerId,grabX:pt.x-p.x,grabY:pt.y-p.y};
-      this.render();
+      this.buildDragCache(p);
     }
 
     pointerMove(e){
@@ -344,7 +356,12 @@
       const pt=this.pointerPos(e), p=this.dragging.piece;
       p.x=clamp(pt.x-this.dragging.grabX,-p.pad+4,this.layout.width-p.w+p.pad-4);
       p.y=clamp(pt.y-this.dragging.grabY,-p.pad+4,this.layout.height-p.h+p.pad-4);
-      this.render();
+      if(!this.dragFrame){
+        this.dragFrame=requestAnimationFrame(()=>{
+          this.dragFrame=0;
+          this.renderDragFrame();
+        });
+      }
     }
 
     pointerUp(e){
@@ -352,7 +369,9 @@
       e.preventDefault();
       const p=this.dragging.piece;
       try{ this.canvas.releasePointerCapture(e.pointerId); }catch(_){ }
+      if(this.dragFrame){ cancelAnimationFrame(this.dragFrame); this.dragFrame=0; }
       this.dragging=null;
+      this.dragCacheReady=false;
       const distance=Math.hypot(p.x-p.targetX,p.y-p.targetY);
       const threshold=Math.min(p.w,p.h)*this.options.snapTolerance;
       if(distance<=threshold) this.snapPiece(p);
@@ -362,6 +381,31 @@
     snapPiece(p){
       p.anim={fromX:p.x,fromY:p.y,start:performance.now(),duration:this.options.snapDuration};
       this.startLoop();
+    }
+
+    buildDragCache(piece){
+      if(!this.layout) return;
+      this.skipHeldRender=piece;
+      this.render();
+      this.skipHeldRender=null;
+      const dc=this.dragCacheCtx;
+      dc.setTransform(1,0,0,1,0,0);
+      dc.clearRect(0,0,this.dragCache.width,this.dragCache.height);
+      dc.drawImage(this.canvas,0,0);
+      this.dragCacheReady=true;
+      this.renderDragFrame();
+    }
+
+    renderDragFrame(){
+      if(!this.dragging||!this.dragCacheReady) return;
+      const c=this.ctx;
+      c.save();
+      c.setTransform(1,0,0,1,0,0);
+      c.clearRect(0,0,this.canvas.width,this.canvas.height);
+      c.drawImage(this.dragCache,0,0);
+      c.restore();
+      c.setTransform(this.dpr,0,0,this.dpr,0,0);
+      this.drawPiece(this.dragging.piece,true);
     }
 
     startLoop(){
@@ -438,7 +482,7 @@
       const ordered=this.pieces.slice().sort((a,b)=>a.z-b.z);
       const held=this.dragging&&this.dragging.piece;
       ordered.forEach(p=>{ if(p!==held) this.drawPiece(p,false); });
-      if(held) this.drawPiece(held,true);
+      if(held&&held!==this.skipHeldRender) this.drawPiece(held,true);
 
       if(this.completed&&this.completionStart&&now>=this.completionStart){
         const alpha=clamp((now-this.completionStart)/520,0,1);
@@ -465,6 +509,7 @@
 
     destroy(){
       if(this.frame) cancelAnimationFrame(this.frame);
+      if(this.dragFrame) cancelAnimationFrame(this.dragFrame);
       this.canvas.removeEventListener('pointerdown',this.boundDown);
       this.canvas.removeEventListener('pointermove',this.boundMove);
       this.canvas.removeEventListener('pointerup',this.boundUp);
