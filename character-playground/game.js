@@ -22,6 +22,8 @@ const presetSelect = $('presetSelect');
 const rigLabel = $('rigLabel');
 const partRows = $('partRows');
 const partCategoryRail = $('partCategoryRail');
+const partBrowser = $('partBrowser');
+const proportionPanel = $('proportionPanel');
 const activePartEyebrow = $('activePartEyebrow');
 const activePartTitle = $('activePartTitle');
 const activePartCount = $('activePartCount');
@@ -282,19 +284,26 @@ function partDefinition(category = activePartCategory) {
 
 function renderPartCategoryRail() {
   partCategoryRail.innerHTML = '';
-  for (const part of PART_DEFINITIONS) {
+  const categories = [
+    { id: 'body', label: 'Body', icon: '◇' },
+    ...PART_DEFINITIONS.map((part) => ({ id: part.id, label: PART_CATEGORY_LABELS[part.id] || part.label, icon: PART_ICONS[part.id] || '•' }))
+  ];
+
+  for (const category of categories) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'partCategoryBtn' + (part.id === activePartCategory ? ' active' : '');
-    button.dataset.part = part.id;
-    button.innerHTML = '<i>' + (PART_ICONS[part.id] || '•') + '</i><span>' + part.label.replace(' / ', '<br>') + '</span>';
-    button.setAttribute('aria-label', 'Customise ' + part.label);
-    button.addEventListener('click', () => selectPartCategory(part.id));
+    button.className = 'partCategoryBtn' + (category.id === activePartCategory ? ' active' : '');
+    button.dataset.part = category.id;
+    button.innerHTML = '<i>' + category.icon + '</i><span>' + category.label + '</span>';
+    button.setAttribute('aria-label', 'Customise ' + category.label);
+    button.title = category.label;
+    button.addEventListener('click', () => selectPartCategory(category.id));
     partCategoryRail.appendChild(button);
   }
 }
 
 function renderPartBrowser() {
+  if (activePartCategory === 'body') return;
   const part = partDefinition();
   const candidates = partCandidates(part.id);
   const selectedOptionId = activeParts[part.id]?.optionId || null;
@@ -349,11 +358,14 @@ function renderPartBrowser() {
 }
 
 function selectPartCategory(category) {
-  if (!PART_DEFINITIONS.some((part) => part.id === category)) return;
+  const isBody = category === 'body';
+  if (!isBody && !PART_DEFINITIONS.some((part) => part.id === category)) return;
   activePartCategory = category;
   setActiveTab('style');
+  partBrowser.hidden = isBody;
+  proportionPanel.hidden = !isBody;
   renderPartCategoryRail();
-  renderPartBrowser();
+  if (!isBody) renderPartBrowser();
 }
 
 function applyProportions() {
@@ -417,7 +429,14 @@ function updatePartRows() {
   compatibleCount.textContent = totalDistinct + ' distinct styles';
   rigLabel.textContent = 'Click the character or choose a category';
   renderPartCategoryRail();
-  renderPartBrowser();
+  if (activePartCategory === 'body') {
+    partBrowser.hidden = true;
+    proportionPanel.hidden = false;
+  } else {
+    partBrowser.hidden = false;
+    proportionPanel.hidden = true;
+    renderPartBrowser();
+  }
 }
 
 function currentMaterials() {
