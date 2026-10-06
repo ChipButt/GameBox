@@ -170,19 +170,16 @@ img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
   pointer-events:none;
 }
 .boardFrame{
-  /* Native 64x64 Kenney framed panel, 9-sliced so that the artwork's
-     corners and wooden edges stay clearly visible around the exact image. */
   position:absolute;
-  z-index:5;
-  left:calc(var(--board-x) - 16px);
-  top:calc(var(--board-y) - 16px);
-  width:calc(var(--board-size) + 32px);
-  height:calc(var(--board-size) + 32px);
-  border:16px solid transparent;
-  border-image-source:var(--wood-frame);
-  border-image-slice:14;
-  border-image-width:16px;
-  border-image-repeat:stretch;
+  z-index:6;
+  left:calc(var(--board-x) - 18px);
+  top:calc(var(--board-y) - 18px);
+  width:calc(var(--board-size) + 36px);
+  height:calc(var(--board-size) + 36px);
+  background-image:var(--wood-frame);
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:100% 100%;
   pointer-events:none;
 }
 .trayBackdrop{
