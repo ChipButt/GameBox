@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
-import { CHARACTER_CATALOG } from './character-catalog.js?v=2';
+import { CHARACTER_CATALOG } from './character-catalog.js?v=3';
 import { PART_DEFINITIONS, createModularPartSystem, sourceEntriesForPart } from './modular-parts.js?v=3';
 
 const $ = (id) => document.getElementById(id);
@@ -20,6 +20,20 @@ const compatibleCount = $('compatibleCount');
 const presetSelect = $('presetSelect');
 const rigLabel = $('rigLabel');
 const partRows = $('partRows');
+const partCategoryRail = $('partCategoryRail');
+const activePartEyebrow = $('activePartEyebrow');
+const activePartTitle = $('activePartTitle');
+const activePartCount = $('activePartCount');
+const partSourceGrid = $('partSourceGrid');
+const removePartBtn = $('removePartBtn');
+const partPrevBtn = $('partPrevBtn');
+const partNextBtn = $('partNextBtn');
+const heightSlider = $('heightSlider');
+const buildSlider = $('buildSlider');
+const headSizeSlider = $('headSizeSlider');
+const heightValue = $('heightValue');
+const buildValue = $('buildValue');
+const headSizeValue = $('headSizeValue');
 const materialCount = $('materialCount');
 const materialList = $('materialList');
 const clipCount = $('clipCount');
@@ -158,6 +172,21 @@ let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingPose = null;
 let pendingParts = null;
+let activePartCategory = 'head';
+let proportions = { height: 100, build: 100, headSize: 100 };
+let pointerStartedAt = null;
+let pointerDragged = false;
+
+const PART_ICONS = {
+  head: '◉',
+  hair: '≋',
+  headwear: '⌃',
+  top: '▣',
+  arms: '↔',
+  bottom: '▤',
+  shoes: '⌂',
+  accessory: '✦'
+};
 
 function randomName() {
   return nameStarts[Math.floor(Math.random() * nameStarts.length)] + ' ' + nameEnds[Math.floor(Math.random() * nameEnds.length)];
@@ -239,6 +268,110 @@ function compatibleEntries() {
 
 function partCandidates(category) {
   return sourceEntriesForPart(category, CHARACTER_CATALOG);
+}
+
+function partDefinition(category = activePartCategory) {
+  return PART_DEFINITIONS.find((part) => part.id === category) || PART_DEFINITIONS[0];
+}
+
+function renderPartCategoryRail() {
+  partCategoryRail.innerHTML = '';
+  for (const part of PART_DEFINITIONS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'partCategoryBtn' + (part.id === activePartCategory ? ' active' : '');
+    button.dataset.part = part.id;
+    button.innerHTML = '<i>' + (PART_ICONS[part.id] || '•') + '</i><span>' + part.label.replace(' / ', '<br>') + '</span>';
+    button.setAttribute('aria-label', 'Customise ' + part.label);
+    button.addEventListener('click', () => selectPartCategory(part.id));
+    partCategoryRail.appendChild(button);
+  }
+}
+
+function renderPartBrowser() {
+  const part = partDefinition();
+  const candidates = partCandidates(part.id);
+  const selectedId = activeParts[part.id]?.sourceId || null;
+
+  activePartEyebrow.textContent = part.optional ? 'OPTIONAL CHARACTER PART' : 'CHARACTER PART';
+  activePartTitle.textContent = part.label;
+  activePartCount.textContent = candidates.length + (candidates.length === 1 ? ' source' : ' sources');
+  removePartBtn.hidden = !part.optional;
+  removePartBtn.disabled = !selectedId;
+  partSourceGrid.innerHTML = '';
+
+  if (part.optional) {
+    const none = document.createElement('button');
+    none.type = 'button';
+    none.className = 'partSourceCard' + (!selectedId ? ' selected' : '');
+    none.innerHTML = '<strong>None</strong><small>Remove this part</small>';
+    none.addEventListener('click', async () => {
+      await setPart(part.id, null, { allowNone: true });
+      renderPartBrowser();
+    });
+    partSourceGrid.appendChild(none);
+  }
+
+  for (const entry of candidates) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'partSourceCard' + (selectedId === entry.id ? ' selected' : '');
+    card.dataset.source = entry.id;
+    card.innerHTML = '<strong>' + entry.label + '</strong><small>' + entry.variant + ' · ' + entry.group + '</small>';
+    card.addEventListener('click', async () => {
+      partSourceGrid.classList.add('loading');
+      const ok = await setPart(part.id, entry.id);
+      partSourceGrid.classList.remove('loading');
+      if (!ok) showToast('That source does not contain a usable ' + part.label.toLowerCase() + '.');
+      renderPartBrowser();
+    });
+    partSourceGrid.appendChild(card);
+  }
+
+  const selectedCard = partSourceGrid.querySelector('.partSourceCard.selected');
+  selectedCard?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+}
+
+function selectPartCategory(category) {
+  if (!PART_DEFINITIONS.some((part) => part.id === category)) return;
+  activePartCategory = category;
+  setActiveTab('style');
+  renderPartCategoryRail();
+  renderPartBrowser();
+}
+
+function applyProportions() {
+  const height = THREE.MathUtils.clamp(Number(proportions.height) || 100, 90, 110) / 100;
+  const build = THREE.MathUtils.clamp(Number(proportions.build) || 100, 90, 112) / 100;
+  const headSize = THREE.MathUtils.clamp(Number(proportions.headSize) || 100, 88, 116) / 100;
+
+  characterHolder.scale.set(build, height, build);
+  characterHolder.position.y = 0.31 - (0.31 * height);
+
+  const headBone = driverSkeleton?.getBoneByName?.('Head');
+  if (headBone) headBone.scale.setScalar(headSize);
+
+  heightSlider.value = String(Math.round(height * 100));
+  buildSlider.value = String(Math.round(build * 100));
+  headSizeSlider.value = String(Math.round(headSize * 100));
+  heightValue.textContent = Math.round(height * 100) + '%';
+  buildValue.textContent = Math.round(build * 100) + '%';
+  headSizeValue.textContent = Math.round(headSize * 100) + '%';
+}
+
+function readProportionControls() {
+  proportions = {
+    height: Number(heightSlider.value),
+    build: Number(buildSlider.value),
+    headSize: Number(headSizeSlider.value)
+  };
+  applyProportions();
+}
+
+function resetProportions() {
+  proportions = { height: 100, build: 100, headSize: 100 };
+  applyProportions();
+  updateSummary();
 }
 
 function renderPresetSelect() {
@@ -351,8 +484,10 @@ function updatePartRows() {
   }
 
   const count = compatibleEntries().length;
-  compatibleCount.textContent = count + ' compatible sources';
-  rigLabel.textContent = 'Universal 23-bone frame · ' + count + ' source styles';
+  compatibleCount.textContent = count + ' sources';
+  rigLabel.textContent = 'Click a body part to customise it';
+  renderPartCategoryRail();
+  renderPartBrowser();
 }
 
 function currentMaterials() {
@@ -709,7 +844,7 @@ function partSourceMap() {
 
 function buildPayload() {
   return {
-    version: 2,
+    version: 3,
     name: (characterName.value || 'Unnamed Character').trim().slice(0, 24),
     presetId: currentPreset.id,
     modelId: currentPreset.id,
@@ -721,6 +856,7 @@ function buildPayload() {
     pose: activeClipName || '',
     animationSpeed: Number(animSpeed.value),
     turntable: Boolean(turntableToggle.checked),
+    proportions: { ...proportions },
     source: 'GameBox Character Workshop',
     updatedAt: new Date().toISOString()
   };
@@ -868,6 +1004,8 @@ async function loadDriver(entryId, options = {}) {
           applyPalette(currentPalette);
         }
 
+        applyProportions();
+
         const desiredPose = pendingPose ? findClipByName(pendingPose) : null;
         pendingPose = null;
         playClip(desiredPose || findIdleClip(), false);
@@ -916,6 +1054,12 @@ async function loadSavedCharacter() {
   pendingSavedColors = saved.materialColors || null;
   pendingPose = saved.pose || null;
   pendingParts = saved.parts || null;
+  proportions = {
+    height: Number(saved.proportions?.height) || 100,
+    build: Number(saved.proportions?.build) || 100,
+    headSize: Number(saved.proportions?.headSize) || 100
+  };
+  applyProportions();
 
   await loadDriver(presetId, { parts: pendingParts });
   pendingParts = null;
@@ -975,13 +1119,44 @@ function resetView() {
 }
 
 const pointerMap = new Map();
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2();
 let lastSingleX = 0;
 let lastPinchDistance = 0;
+
+function categoryFromHit(object) {
+  let node = object;
+  while (node && node !== characterHolder) {
+    if (node.userData?.partCategory) return node.userData.partCategory;
+    node = node.parent;
+  }
+  return null;
+}
+
+function pickCharacterPart(clientX, clientY) {
+  if (!driverScene) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointerNdc, camera);
+  const hits = raycaster.intersectObject(characterHolder, true);
+  for (const hit of hits) {
+    const category = categoryFromHit(hit.object);
+    if (!category) continue;
+    selectPartCategory(category);
+    showToast('Editing ' + partDefinition(category).label + '.');
+    return;
+  }
+}
 
 renderer.domElement.addEventListener('pointerdown', (event) => {
   pointerMap.set(event.pointerId, { x: event.clientX, y: event.clientY });
   renderer.domElement.setPointerCapture(event.pointerId);
-  if (pointerMap.size === 1) lastSingleX = event.clientX;
+  if (pointerMap.size === 1) {
+    lastSingleX = event.clientX;
+    pointerStartedAt = { x: event.clientX, y: event.clientY };
+    pointerDragged = false;
+  }
   if (pointerMap.size === 2) {
     const values = Array.from(pointerMap.values());
     lastPinchDistance = Math.hypot(values[0].x - values[1].x, values[0].y - values[1].y);
@@ -993,6 +1168,9 @@ renderer.domElement.addEventListener('pointermove', (event) => {
   pointerMap.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
   if (pointerMap.size === 1) {
+    if (pointerStartedAt && Math.hypot(event.clientX - pointerStartedAt.x, event.clientY - pointerStartedAt.y) > 6) {
+      pointerDragged = true;
+    }
     characterHolder.rotation.y += (event.clientX - lastSingleX) * 0.012;
     lastSingleX = event.clientX;
     return;
@@ -1009,14 +1187,20 @@ renderer.domElement.addEventListener('pointermove', (event) => {
   }
 });
 
-function releasePointer(event) {
+function releasePointer(event, cancelled = false) {
+  const wasSingle = pointerMap.size === 1;
+  if (!cancelled && wasSingle && !pointerDragged) pickCharacterPart(event.clientX, event.clientY);
   pointerMap.delete(event.pointerId);
   try { renderer.domElement.releasePointerCapture(event.pointerId); } catch (_) {}
   if (pointerMap.size < 2) lastPinchDistance = 0;
   if (pointerMap.size === 1) lastSingleX = Array.from(pointerMap.values())[0].x;
+  if (!pointerMap.size) {
+    pointerStartedAt = null;
+    pointerDragged = false;
+  }
 }
-renderer.domElement.addEventListener('pointerup', releasePointer);
-renderer.domElement.addEventListener('pointercancel', releasePointer);
+renderer.domElement.addEventListener('pointerup', (event) => releasePointer(event, false));
+renderer.domElement.addEventListener('pointercancel', (event) => releasePointer(event, true));
 renderer.domElement.addEventListener('wheel', (event) => {
   event.preventDefault();
   viewDistance = THREE.MathUtils.clamp(viewDistance + event.deltaY * 0.0045, 3.35, 6.8);
@@ -1039,6 +1223,17 @@ $('resetViewBtn').addEventListener('click', resetView);
 $('applyPresetBtn').addEventListener('click', () => loadDriver(presetSelect.value));
 $('randomPartsBtn').addEventListener('click', randomiseParts);
 $('resetPartsBtn').addEventListener('click', resetPartsToPreset);
+partPrevBtn.addEventListener('click', () => cyclePart(activePartCategory, -1));
+partNextBtn.addEventListener('click', () => cyclePart(activePartCategory, 1));
+removePartBtn.addEventListener('click', async () => {
+  const part = partDefinition();
+  if (!part.optional) return;
+  await setPart(part.id, null, { allowNone: true });
+});
+heightSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
+buildSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
+headSizeSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
+$('resetProportionsBtn').addEventListener('click', resetProportions);
 
 animSpeed.addEventListener('input', () => {
   const value = Number(animSpeed.value) || 1;
@@ -1085,6 +1280,9 @@ function animate() {
 async function bootstrap() {
   renderPresetSelect();
   renderPartRows();
+  renderPartCategoryRail();
+  renderPartBrowser();
+  applyProportions();
   resize();
   buildWorkshopDecor();
 
@@ -1107,8 +1305,14 @@ async function bootstrap() {
     pendingSavedColors = saved.materialColors || null;
     pendingPose = saved.pose || null;
     pendingParts = saved.parts || null;
+    proportions = {
+      height: Number(saved.proportions?.height) || 100,
+      build: Number(saved.proportions?.build) || 100,
+      headSize: Number(saved.proportions?.headSize) || 100
+    };
   }
 
+  applyProportions();
   renderPresetSelect();
   updatePartRows();
   updateSummary();
