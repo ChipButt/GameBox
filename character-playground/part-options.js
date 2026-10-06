@@ -1664,13 +1664,11 @@ export function optionsForPart(category){
   const base = PART_OPTIONS[category] || [];
   return category === 'shoes' ? [...base, ...WEARABLE_OPTIONS] : base.slice();
 }
-
 export function canonicalOptionForSource(category, sourceId){
   const id = PART_SOURCE_TO_OPTION[category]?.[sourceId];
   if(!id) return null;
   return (PART_OPTIONS[category] || []).find(option => option.id === id) || null;
 }
-
 export function optionById(category, optionId){
   return optionsForPart(category).find(option => option.id === optionId) || null;
 }
