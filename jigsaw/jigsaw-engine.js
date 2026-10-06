@@ -45,26 +45,49 @@
   function addEdge(path,x0,y0,x1,y1,nx,ny,shape,depth){
     if(!shape){ path.lineTo(x1,y1); return; }
     const d=depth*shape;
-    const a=point(x0,y0,x1,y1,.34,nx,ny,0);
-    const b=point(x0,y0,x1,y1,.42,nx,ny,0);
-    const c=point(x0,y0,x1,y1,.58,nx,ny,0);
-    const e=point(x0,y0,x1,y1,.66,nx,ny,0);
-    const b1=point(x0,y0,x1,y1,.38,nx,ny,d*.16);
-    const b2=point(x0,y0,x1,y1,.42,nx,ny,d*.96);
-    const c1=point(x0,y0,x1,y1,.58,nx,ny,d*.96);
-    const c2=point(x0,y0,x1,y1,.62,nx,ny,d*.16);
-    path.lineTo(a.x,a.y);
-    path.bezierCurveTo(b1.x,b1.y,b2.x,b2.y,b.x,b.y);
-    const m1=point(x0,y0,x1,y1,.44,nx,ny,d);
-    const m2=point(x0,y0,x1,y1,.56,nx,ny,d);
-    path.bezierCurveTo(m1.x,m1.y,m2.x,m2.y,c.x,c.y);
-    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,e.x,e.y);
+
+    // Traditional cardboard-jigsaw profile:
+    // long straight shoulder, narrow neck, round bulb, narrow neck, straight shoulder.
+    const shoulderIn=point(x0,y0,x1,y1,.30,nx,ny,0);
+    const neckIn=point(x0,y0,x1,y1,.35,nx,ny,d*.22);
+    const headLeft=point(x0,y0,x1,y1,.46,nx,ny,d);
+    const headRight=point(x0,y0,x1,y1,.54,nx,ny,d);
+    const neckOut=point(x0,y0,x1,y1,.65,nx,ny,d*.22);
+    const shoulderOut=point(x0,y0,x1,y1,.70,nx,ny,0);
+
+    path.lineTo(shoulderIn.x,shoulderIn.y);
+
+    // Turn sharply into the narrow neck.
+    let c1=point(x0,y0,x1,y1,.335,nx,ny,0);
+    let c2=point(x0,y0,x1,y1,.35,nx,ny,d*.08);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,neckIn.x,neckIn.y);
+
+    // Flare outward into the rounded head.
+    c1=point(x0,y0,x1,y1,.35,nx,ny,d*.62);
+    c2=point(x0,y0,x1,y1,.395,nx,ny,d*.98);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,headLeft.x,headLeft.y);
+
+    // Rounded crown of the tab/socket.
+    c1=point(x0,y0,x1,y1,.485,nx,ny,d*1.05);
+    c2=point(x0,y0,x1,y1,.515,nx,ny,d*1.05);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,headRight.x,headRight.y);
+
+    // Mirror the flare back into the neck.
+    c1=point(x0,y0,x1,y1,.605,nx,ny,d*.98);
+    c2=point(x0,y0,x1,y1,.65,nx,ny,d*.62);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,neckOut.x,neckOut.y);
+
+    // Return cleanly to the straight edge.
+    c1=point(x0,y0,x1,y1,.65,nx,ny,d*.08);
+    c2=point(x0,y0,x1,y1,.665,nx,ny,0);
+    path.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,shoulderOut.x,shoulderOut.y);
+
     path.lineTo(x1,y1);
   }
 
   function piecePath(w,h,pad,edges){
     const p=new Path2D();
-    const depth=Math.min(w,h)*.185;
+    const depth=Math.min(w,h)*.21;
     p.moveTo(pad,pad);
     addEdge(p,pad,pad,pad+w,pad,0,-1,edges.top,depth);
     addEdge(p,pad+w,pad,pad+w,pad+h,1,0,edges.right,depth);
@@ -206,7 +229,7 @@
     buildPieces(){
       const rows=this.options.rows, cols=this.options.columns;
       const w=this.layout.boardSize/cols, h=this.layout.boardSize/rows;
-      const pad=Math.ceil(Math.min(w,h)*.22);
+      const pad=Math.ceil(Math.min(w,h)*.26;
       const old=this.pieces;
       const next=[];
       for(let r=0;r<rows;r++){
