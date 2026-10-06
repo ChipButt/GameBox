@@ -21,14 +21,16 @@ const startButton=document.getElementById('startButton');
 const soundButton=document.getElementById('soundButton');
 const soundIcon=document.getElementById('soundIcon');
 
-const ASSET_BASE='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/';
-const tileUrl=n=>ASSET_BASE+'tile_'+String(n).padStart(4,'0')+'.png';
+const BASE='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/';
+const tileUrl=n=>BASE+'tile_'+String(n).padStart(4,'0')+'.png';
+const TILE=16;
+const SEGMENT=224;
 
 const F={
   piste:[0,2,3,5],
-  offPiste:[1,4],
-  bankLeft:[12,14,50,61,72,77],
-  bankRight:[15,17,51,60,73,76],
+  powder:[1,4],
+  edgeLeft:[12,14,24,29,50,61,72,77],
+  edgeRight:[15,17,25,28,51,60,73,76],
   tree:[6,18,30],
   deadTree:[7,19],
   redFlag:[8,20],
@@ -40,7 +42,7 @@ const F={
   shrub:[31],
   liftTower:[42,66],
   cable:[43,44,45,46],
-  liftSeat:[47,57],
+  chair:[47,57],
   gondola:[55,56,67,68],
   tracks:[58],
   snowman:[69],
@@ -54,12 +56,12 @@ const images={};
 let W=360,H=720,dpr=1;
 let running=false,paused=false,crashing=false,gameOver=false,soundOn=true;
 let last=0,raf=0,audioCtx=null;
-let speed=155,distance=0,scrollTotal=0,gates=0,nearMisses=0,bonus=0;
-let spawnTravel=0,featureTravel=0,trackClock=0,courseTurn=0;
-let player=null,courseNodes=[],obstacles=[],scenery=[],gatesOnCourse=[],features=[],tracks=[],snowPuffs=[],feedback=[];
-let shake=0,crashClock=0;
+let speed=142,distance=0,scroll=0,gates=0,nearMisses=0,bonus=0;
+let player=null,tracks=[],puffs=[],feedback=[];
+let scenery=[],obstacles=[],courseGates=[],lifts=[];
+let nextSegment=0,trackClock=0,shake=0,crashClock=0,elapsed=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
-const BEST_KEY='gamebox.tinySkiRun.best.v3';
+const BEST_KEY='gamebox.tinySkiRun.best.v4';
 let best=Number(localStorage.getItem(BEST_KEY)||0)||0;
 
 bestEl.textContent=pad(best,4);
@@ -67,17 +69,18 @@ startBestEl.textContent=pad(best,4);
 
 function pad(v,n){return String(Math.max(0,Math.floor(v))).padStart(n,'0')}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function rand(a,b){return a+Math.random()*(b-a)}
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
-function hash2(a,b){let n=(a*73856093)^(b*19349663);n=(n^(n>>>13))*1274126177;return (n^(n>>>16))>>>0}
+function randRange(r,a,b){return a+r()*(b-a)}
+function pickR(r,arr){return arr[Math.floor(r()*arr.length)]}
 function metres(){return Math.floor(distance/18)}
+function mulberry32(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function hash2(a,b){let n=(a*73856093)^(b*19349663);n=(n^(n>>>13))*1274126177;return(n^(n>>>16))>>>0}
 
 function loadImage(frame){
   return new Promise((resolve,reject)=>{
     const img=new Image();
     img.decoding='async';
     img.onload=()=>{images[frame]=img;resolve()};
-    img.onerror=()=>reject(new Error('Failed Tiny Ski tile '+frame));
+    img.onerror=()=>reject(new Error('Tiny Ski tile failed: '+frame));
     img.src=tileUrl(frame);
   });
 }
@@ -99,66 +102,134 @@ function resizeCanvas(){
   W=360;
   H=clamp(Math.round(W*(r.height/r.width)),620,820);
   dpr=Math.min(2,window.devicePixelRatio||1);
-  canvas.width=Math.max(1,Math.round(r.width*dpr));
-  canvas.height=Math.max(1,Math.round(r.height*dpr));
-  if(player)player.y=H*.29;
-  if(courseNodes.length)ensureCourseCoverage();
+  canvas.width=Math.round(r.width*dpr);
+  canvas.height=Math.round(r.height*dpr);
+  if(player)player.y=Math.round(H*.48);
   render();
 }
 new ResizeObserver(resizeCanvas).observe(canvas);
 addEventListener('orientationchange',()=>setTimeout(resizeCanvas,60));
 resizeCanvas();
 
+function boundsAtWorld(worldY){
+  const center=180
+    +34*Math.sin(worldY/390+.35)
+    +13*Math.sin(worldY/173+1.2);
+  const width=190
+    +8*Math.sin(worldY/310+2.1)
+    +5*Math.sin(worldY/127+.6);
+  const safeCenter=clamp(center,102,258);
+  const safeWidth=clamp(width,176,202);
+  return {center:safeCenter,width:safeWidth,left:safeCenter-safeWidth/2,right:safeCenter+safeWidth/2};
+}
+function boundsAtScreen(y){return boundsAtWorld(scroll+y)}
+
 function resetWorld(){
-  speed=155;distance=0;scrollTotal=0;gates=0;nearMisses=0;bonus=0;
-  spawnTravel=105;featureTravel=0;trackClock=0;courseTurn=0;
-  crashing=false;gameOver=false;shake=0;crashClock=0;
-  obstacles=[];scenery=[];gatesOnCourse=[];features=[];tracks=[];snowPuffs=[];feedback=[];
-  player={x:W/2,y:H*.29,vx:0,angle:0,spin:0,slide:0};
-  initCourse();
-  for(let i=0;i<28;i++)spawnScenery(rand(-20,H+120),true);
-  for(let i=0;i<3;i++)spawnFeature(H*.58+i*235);
+  speed=142;distance=0;scroll=0;gates=0;nearMisses=0;bonus=0;elapsed=0;
+  tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];
+  nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
+  player={x:boundsAtWorld(H*.48).center,y:Math.round(H*.48),vx:0,angle:0,spin:0,slide:0};
+  ensureWorld(true);
   updateHud();
 }
 
-function initCourse(){
-  courseNodes=[];
-  let center=W/2,width=238,seedTurn=-.22;
-  for(let y=-96;y<=H+144;y+=48){
-    courseNodes.push(makeCourseNode(y,center,width));
-    seedTurn=clamp(seedTurn+rand(-.12,.12),-.42,.42);
-    center=clamp(center+seedTurn*14,112,W-112);
-    width=clamp(width+rand(-8,8),208,252);
+function ensureWorld(initial){
+  const ahead=scroll+H+SEGMENT;
+  while(nextSegment*SEGMENT<ahead){
+    generateSegment(nextSegment,initial&&nextSegment===0);
+    nextSegment++;
   }
-  courseTurn=seedTurn;
-}
-function makeCourseNode(y,center,width){
-  return {y,center,width,edgeL:pick(F.bankLeft),edgeR:pick(F.bankRight)};
-}
-function ensureCourseCoverage(){
-  while(courseNodes.length<3||courseNodes[courseNodes.length-1].y<H+150)appendCourseNode();
-}
-function appendCourseNode(){
-  const prev=courseNodes[courseNodes.length-1]||makeCourseNode(0,W/2,238);
-  courseTurn=clamp(courseTurn+rand(-.17,.17),-.58,.58);
-  if(Math.random()<.12)courseTurn*=.35;
-  const targetCenter=clamp(prev.center+courseTurn*20+rand(-5,5),112,W-112);
-  const m=metres();
-  const targetWidth=clamp(prev.width+rand(-15,15)-(m>650?2:0),184,258);
-  courseNodes.push(makeCourseNode(prev.y+48,targetCenter,targetWidth));
 }
 
-function boundsAt(y){
-  if(!courseNodes.length)return {left:60,right:300,center:180,width:240};
-  let a=courseNodes[0],b=courseNodes[courseNodes.length-1];
-  for(let i=0;i<courseNodes.length-1;i++){
-    if(y>=courseNodes[i].y&&y<=courseNodes[i+1].y){a=courseNodes[i];b=courseNodes[i+1];break}
+function generateSegment(index,isFirst){
+  const r=mulberry32(92731+index*7919);
+  const start=index*SEGMENT;
+
+  // Side scenery is generated in small composed clusters, not loose random noise.
+  const clusters=3+Math.floor(r()*3);
+  for(let c=0;c<clusters;c++){
+    const worldY=start+24+c*(SEGMENT/clusters)+randRange(r,-12,12);
+    const side=r()<.5?'left':'right';
+    const count=r()<.45?2:3;
+    for(let i=0;i<count;i++){
+      const rr=r();
+      let kind='tree',frame,size=16;
+      if(rr<.55){frame=pickR(r,F.tree);kind='tree'}
+      else if(rr<.68){frame=pickR(r,F.deadTree);kind='dead'}
+      else if(rr<.78){frame=F.rock[0];kind='rock'}
+      else if(rr<.87){frame=F.shrub[0];kind='shrub'}
+      else if(rr<.94){frame=F.snowman[0];kind='snowman'}
+      else{frame=pickR(r,side==='left'?F.signLeft:F.signRight);kind='sign'}
+      scenery.push({
+        worldY:worldY+i*randRange(r,9,19),
+        side,
+        offset:randRange(r,18,58)+i*6,
+        frame,
+        kind,
+        size
+      });
+    }
   }
-  const den=b.y-a.y||1;
-  const t=clamp((y-a.y)/den,0,1);
-  const center=a.center+(b.center-a.center)*t;
-  const width=a.width+(b.width-a.width)*t;
-  return {left:center-width/2,right:center+width/2,center,width};
+
+  // Nets/fencing sit at the piste edge like the reference.
+  if(index%3===1){
+    const y=start+randRange(r,72,150);
+    scenery.push({worldY:y,side:r()<.5?'left':'right',offset:12,frame:r()<.5?F.redNet[0]:F.blueNet[0],kind:'net',size:16});
+  }
+
+  // First screen deliberately contains a chairlift set-piece.
+  if(isFirst){
+    addLift(start+190,r);
+    addGate(start+72,index,0,r);
+    addGate(start+410,index,1,r);
+  }else{
+    if(index%5===0)addLift(start+96,r);
+    const gateCount=index%5===0?1:2;
+    for(let g=0;g<gateCount;g++)addGate(start+58+g*104,index,g,r);
+  }
+
+  // Keep the central piste visually open; hazards are sparse and readable.
+  if(index>0){
+    const hazardCount=index<4?1:(r()<.55?1:2);
+    for(let i=0;i<hazardCount;i++){
+      const worldY=start+110+i*72+randRange(r,-18,18);
+      const kind=r()<.52?'rock':r()<.74?'snowman':r()<.9?'tree':'skier';
+      const t=kind==='tree'?(r()<.5?randRange(r,.08,.18):randRange(r,.82,.92)):randRange(r,.2,.8);
+      addObstacle(worldY,t,kind,r);
+    }
+  }
+}
+
+function addGate(worldY,index,g,r){
+  const centerT=clamp(.5+Math.sin((index*2+g)*1.35)*.17,.28,.72);
+  const half=.12;
+  courseGates.push({worldY,leftT:centerT-half,rightT:centerT+half,redLeft:(index+g)%2===0,passed:false});
+}
+
+function addObstacle(worldY,t,kind,r){
+  let frame=F.rock[0],radius=5;
+  if(kind==='tree'){frame=pickR(r,F.tree);radius=6}
+  else if(kind==='snowman'){frame=F.snowman[0];radius=5}
+  else if(kind==='skier'){frame=pickR(r,F.skiers);radius=5}
+  obstacles.push({
+    worldY,t,baseT:t,kind,frame,radius,nearChecked:false,
+    phase:randRange(r,0,6.28),
+    weave:kind==='skier'?randRange(r,.025,.055):0,
+    weaveSpeed:kind==='skier'?randRange(r,1.1,1.7):0
+  });
+}
+
+function addLift(worldY,r){
+  lifts.push({
+    worldY,
+    cable:pickR(r,F.cable),
+    towerLeft:pickR(r,F.liftTower),
+    towerMid:pickR(r,F.liftTower),
+    towerRight:pickR(r,F.liftTower),
+    chairLeft:pickR(r,F.chair),
+    gondola:pickR(r,F.gondola),
+    chairRight:pickR(r,F.chair)
+  });
 }
 
 function startGame(){
@@ -183,190 +254,122 @@ function loop(now){
 }
 
 function update(dt){
+  elapsed+=dt;
   if(crashing){updateCrash(dt);return}
 
   distance+=speed*dt;
-  scrollTotal+=speed*dt;
+  scroll+=speed*dt;
   const m=metres();
-  speed=Math.min(345,155+m*.13);
-  spawnTravel+=speed*dt;
-  featureTravel+=speed*dt;
-
-  updateCourse(speed*dt);
+  speed=Math.min(300,142+m*.085);
+  ensureWorld(false);
+  pruneWorld();
 
   const steer=((input.left?-1:0)+(input.right?1:0))||input.analog;
-  const target=steer*(106+speed*.13);
-  player.vx+=(target-player.vx)*Math.min(1,dt*8.4);
+  const target=steer*(92+speed*.1);
+  player.vx+=(target-player.vx)*Math.min(1,dt*8.2);
   if(!steer)player.vx*=Math.pow(.1,dt);
   player.x+=player.vx*dt;
-  player.angle=clamp(player.vx/300,-.42,.42);
+  player.angle=clamp(player.vx/270,-.34,.34);
 
   trackClock-=dt;
   if(trackClock<=0){
-    tracks.push({x:player.x,y:player.y+16,a:player.angle,life:1});
-    if(tracks.length>68)tracks.shift();
-    trackClock=.06;
+    tracks.push({x:player.x,y:player.y+8,a:player.angle,life:1});
+    if(tracks.length>54)tracks.shift();
+    trackClock=.07;
   }
-  if(Math.abs(steer)>.2&&Math.random()<dt*13){
-    snowPuffs.push({x:player.x-rand(-8,8),y:player.y+17,vx:rand(-22,22)-steer*12,vy:rand(10,28),life:rand(.18,.32),size:pick([2,2,3])});
+  if(Math.abs(steer)>.25&&Math.random()<dt*10){
+    puffs.push({x:player.x+randRange(Math.random,-4,4),y:player.y+7,vx:randRange(Math.random,-15,15),vy:randRange(Math.random,5,18),life:.24,size:2});
   }
 
-  updateEntities(speed*dt,dt);
+  for(const o of obstacles){
+    if(o.kind==='skier'){
+      o.phase+=dt*o.weaveSpeed;
+      o.t=clamp(o.baseT+Math.sin(o.phase)*o.weave,.12,.88);
+    }
+  }
 
-  const spawnEvery=clamp(160-m*.028,108,160);
-  if(spawnTravel>spawnEvery){spawnTravel=0;spawnPattern(m)}
-  if(featureTravel>650){featureTravel=0;if(Math.random()<.68)spawnFeature(H+90)}
+  for(const t of tracks){t.y-=speed*dt;t.life-=dt*.2}
+  tracks=tracks.filter(t=>t.y>-20&&t.life>0);
+  for(const p of puffs){p.x+=p.vx*dt;p.y+=p.vy*dt-speed*dt*.18;p.life-=dt}
+  puffs=puffs.filter(p=>p.life>0);
 
-  checkCourseBoundary();
-  if(!crashing)checkObstacleCollisions();
+  checkBoundary();
+  if(!crashing)checkObstacles();
   if(!crashing)checkGates();
   updateFeedback(dt);
   updateHud();
 }
 
-function updateCourse(scroll){
-  for(const n of courseNodes)n.y-=scroll;
-  while(courseNodes.length>3&&courseNodes[1].y<-70)courseNodes.shift();
-  ensureCourseCoverage();
+function pruneWorld(){
+  const behind=scroll-100;
+  scenery=scenery.filter(x=>x.worldY>behind);
+  obstacles=obstacles.filter(x=>x.worldY>behind);
+  courseGates=courseGates.filter(x=>x.worldY>behind);
+  lifts=lifts.filter(x=>x.worldY>behind);
 }
 
-function updateEntities(scroll,dt){
-  for(let i=scenery.length-1;i>=0;i--){
-    const s=scenery[i];s.y-=scroll*s.rate;
-    if(s.y<-70){scenery.splice(i,1);spawnScenery(H+rand(30,150),false)}
-  }
-  for(let i=obstacles.length-1;i>=0;i--){
-    const o=obstacles[i];o.y-=scroll*(o.kind==='skier'?.82:1);
-    if(o.kind==='skier'){o.phase+=dt*o.weaveSpeed;o.t=clamp(o.baseT+Math.sin(o.phase)*o.weave,.12,.88)}
-    const b=boundsAt(o.y);o.x=b.left+b.width*o.t;
-    if(o.y<-70){obstacles.splice(i,1);continue}
-    if(!o.nearChecked&&o.y<player.y-18){
-      o.nearChecked=true;
-      const dx=Math.abs(o.x-player.x);
-      if(dx<o.radius+19&&dx>o.radius+7){nearMisses++;bonus+=25;addFeedback('NEAR +25','#1c668f');tone('near')}
-    }
-  }
-  for(let i=gatesOnCourse.length-1;i>=0;i--){
-    const g=gatesOnCourse[i];g.y-=scroll;
-    if(g.y<-70)gatesOnCourse.splice(i,1);
-  }
-  for(let i=features.length-1;i>=0;i--){
-    features[i].y-=scroll*.76;
-    if(features[i].y<-100)features.splice(i,1);
-  }
-  for(const t of tracks){t.y-=scroll;t.life-=dt*.18}
-  tracks=tracks.filter(t=>t.y>-40&&t.life>0);
-  for(const p of snowPuffs){p.x+=p.vx*dt;p.y+=p.vy*dt-scroll*.22;p.life-=dt}
-  snowPuffs=snowPuffs.filter(p=>p.life>0);
+function checkBoundary(){
+  const b=boundsAtWorld(scroll+player.y);
+  if(player.x<b.left+5||player.x>b.right-5)startCrash();
 }
 
-function spawnScenery(y,initial){
-  const side=Math.random()<.5?'left':'right';
-  const r=Math.random();
-  let frame;
-  if(r<.55)frame=pick([...F.tree,...F.deadTree]);
-  else if(r<.7)frame=pick(side==='left'?F.signLeft:F.signRight);
-  else if(r<.82)frame=F.shrub[0];
-  else if(r<.92)frame=F.snowman[0];
-  else frame=pick([...F.redNet,...F.blueNet]);
-  scenery.push({y:initial?y:y+rand(0,70),side,frame,rate:rand(.94,1.02),margin:rand(16,42)});
+function obstaclePosition(o){
+  const y=o.worldY-scroll;
+  const b=boundsAtWorld(o.worldY);
+  return {x:b.left+b.width*o.t,y};
 }
 
-function spawnFeature(y){
-  features.push({
-    y,
-    towerL:pick(F.liftTower),
-    towerR:pick(F.liftTower),
-    seat:pick(F.liftSeat),
-    gondola:pick(F.gondola),
-    cable:pick(F.cable)
-  });
-}
-
-function spawnPattern(m){
-  const y=H+70;
-  const roll=Math.random();
-
-  if(roll<.24){
-    addObstacle(rand(.2,.8),y,pick(['tree','tree','rock','snowman']));
-  }else if(roll<.44){
-    addObstacle(rand(.12,.3),y,pick(['tree','deadTree']));
-    addObstacle(rand(.7,.88),y,pick(['tree','deadTree']));
-  }else if(roll<.66){
-    addGate(y);
-  }else if(roll<.84){
-    const gapT=rand(.27,.73);
-    for(const t of [.14,.3,.46,.62,.78,.88]){
-      if(Math.abs(t-gapT)>.16)addObstacle(t,y+rand(-8,8),pick(['tree','deadTree','rock']));
-    }
-  }else{
-    addObstacle(.22,y,'tree');
-    addObstacle(.78,y+74,pick(['rock','snowman','deadTree']));
-    if(m>700)addObstacle(.5,y+146,pick(['tree','rock']));
-    if(m>1050&&Math.random()<.45)addOtherSkier(y+215);
-  }
-}
-
-function addObstacle(t,y,kind){
-  let frame,radius=10;
-  if(kind==='tree'){frame=pick(F.tree);radius=12}
-  else if(kind==='deadTree'){frame=pick(F.deadTree);radius=11}
-  else if(kind==='snowman'){frame=F.snowman[0];radius=10}
-  else{frame=F.rock[0];radius=10}
-  const b=boundsAt(y);
-  obstacles.push({t,x:b.left+b.width*t,y,kind,frame,radius,nearChecked:false,baseT:t,phase:0,weave:0,weaveSpeed:0});
-}
-function addOtherSkier(y){
-  const t=rand(.24,.76),b=boundsAt(y);
-  obstacles.push({t,baseT:t,x:b.left+b.width*t,y,kind:'skier',frame:pick(F.skiers),radius:9,nearChecked:false,phase:rand(0,6.2),weave:rand(.035,.075),weaveSpeed:rand(1.2,2)});
-}
-function addGate(y){
-  const centreT=rand(.42,.58);
-  const half=rand(.18,.22);
-  gatesOnCourse.push({y,leftT:centreT-half,rightT:centreT+half,passed:false,redLeft:Math.random()<.5});
-}
-
-function checkCourseBoundary(){
-  const b=boundsAt(player.y);
-  if(player.x<b.left+8||player.x>b.right-8)startCrash('bank');
-}
-function checkObstacleCollisions(){
+function checkObstacles(){
   for(const o of obstacles){
-    if(Math.hypot(player.x-o.x,player.y-o.y)<9+o.radius){startCrash(o.kind);return}
+    const p=obstaclePosition(o);
+    if(p.y<player.y-30||p.y>player.y+30)continue;
+    const d=Math.hypot(player.x-p.x,player.y-p.y);
+    if(d<5+o.radius){startCrash();return}
+    if(!o.nearChecked&&p.y<player.y-8){
+      o.nearChecked=true;
+      if(d<19&&d>11){nearMisses++;bonus+=25;addFeedback('NEAR +25','#1e638a');tone('near')}
+    }
   }
 }
+
 function checkGates(){
-  for(const g of gatesOnCourse){
-    if(g.passed||g.y>player.y+3)continue;
+  for(const g of courseGates){
+    const y=g.worldY-scroll;
+    if(g.passed||y>player.y+2)continue;
     g.passed=true;
-    const b=boundsAt(g.y);
+    const b=boundsAtWorld(g.worldY);
     const lx=b.left+b.width*g.leftT;
     const rx=b.left+b.width*g.rightT;
-    if(player.x>lx+5&&player.x<rx-5){
-      gates++;bonus+=75;addFeedback('GATE +75','#cf474d');tone('gate');vibrate(10);
+    if(player.x>lx+3&&player.x<rx-3){
+      gates++;bonus+=75;addFeedback('GATE +75','#cb424a');tone('gate');vibrate(8);
     }else{
-      addFeedback('MISSED GATE','#657c8b');tone('miss');
+      addFeedback('MISSED GATE','#687f8c');tone('miss');
     }
   }
 }
 
 function startCrash(){
   if(crashing||gameOver)return;
-  crashing=true;crashClock=0;shake=7;input.left=input.right=false;input.analog=0;input.pointerId=null;
-  vibrate([60,35,90]);tone('crash');
-  for(let i=0;i<18;i++)snowPuffs.push({x:player.x+rand(-7,7),y:player.y+rand(2,16),vx:rand(-70,70),vy:rand(-10,65),life:rand(.3,.65),size:pick([2,3,4])});
+  crashing=true;crashClock=0;shake=5;
+  input.left=input.right=false;input.analog=0;input.pointerId=null;
+  vibrate([55,30,80]);tone('crash');
+  for(let i=0;i<14;i++){
+    puffs.push({x:player.x+randRange(Math.random,-4,4),y:player.y+randRange(Math.random,1,8),vx:randRange(Math.random,-45,45),vy:randRange(Math.random,-6,42),life:randRange(Math.random,.28,.55),size:2});
+  }
 }
+
 function updateCrash(dt){
   crashClock+=dt;
-  player.spin+=dt*5;
-  player.slide+=dt*20;
-  player.x+=player.vx*dt*.25;
-  shake=Math.max(0,shake-dt*18);
-  for(const p of snowPuffs){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=18*dt;p.life-=dt}
-  snowPuffs=snowPuffs.filter(p=>p.life>0);
+  player.spin+=dt*4.8;
+  player.slide+=dt*14;
+  player.x+=player.vx*dt*.22;
+  shake=Math.max(0,shake-dt*16);
+  for(const p of puffs){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}
+  puffs=puffs.filter(p=>p.life>0);
   updateFeedback(dt);
-  if(crashClock>.68)finishRun();
+  if(crashClock>.62)finishRun();
 }
+
 function finishRun(){
   if(gameOver)return;
   gameOver=true;running=false;crashing=false;
@@ -376,87 +379,112 @@ function finishRun(){
   finalDistanceEl.textContent=m;
   runBreakdownEl.textContent=gates+' gate'+(gates===1?'':'s')+' · '+nearMisses+' near miss'+(nearMisses===1?'':'es');
   recordText.textContent=isBest?'NEW BEST!':'Best: '+best+'m';
-  bestEl.textContent=pad(best,4);startBestEl.textContent=pad(best,4);
+  bestEl.textContent=pad(best,4);
+  startBestEl.textContent=pad(best,4);
   render();
   gameOverOverlay.classList.add('show');
 }
 
-function addFeedback(textValue,color){feedback.push({x:player.x,y:player.y-30,text:textValue,color,life:1})}
-function updateFeedback(dt){for(const f of feedback){f.y-=20*dt;f.life-=dt*1.3}feedback=feedback.filter(f=>f.life>0)}
+function addFeedback(textValue,color){feedback.push({x:player.x,y:player.y-14,text:textValue,color,life:1})}
+function updateFeedback(dt){
+  for(const f of feedback){f.y-=16*dt;f.life-=dt*1.4}
+  feedback=feedback.filter(f=>f.life>0);
+}
 function updateHud(){
   distanceEl.textContent=pad(metres(),4);
   gatesEl.textContent=pad(gates,2);
   bestEl.textContent=pad(Math.max(best,metres()),4);
-  speedLabel.textContent=speed<205?'CRUISE':speed<255?'CARVING':speed<305?'FAST':'FLYING';
+  speedLabel.textContent=speed<175?'CRUISE':speed<215?'CARVING':speed<260?'FAST':'FLYING';
 }
 
-function drawSprite(frame,x,y,size,angle=0,alpha=1,flip=false){
+function drawSprite(frame,x,y,size=TILE,angle=0,alpha=1,flip=false){
   const img=images[frame];if(!img)return;
-  ctx.save();ctx.globalAlpha=alpha;ctx.translate(Math.round(x),Math.round(y));ctx.rotate(angle);ctx.scale(flip?-1:1,1);ctx.imageSmoothingEnabled=false;ctx.drawImage(img,-size/2,-size/2,size,size);ctx.restore();
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.translate(Math.round(x),Math.round(y));
+  ctx.rotate(angle);
+  ctx.scale(flip?-1:1,1);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(img,-size/2,-size/2,size,size);
+  ctx.restore();
 }
 
 function drawTileField(frames){
-  const size=32;
-  const firstWorldRow=Math.floor(scrollTotal/size)-1;
-  const yOffset=-(scrollTotal%size);
-  for(let sy=yOffset-size,row=firstWorldRow;sy<H+size;sy+=size,row++){
-    for(let x=0,col=0;x<W+size;x+=size,col++){
-      const h=hash2(col,row);
-      const frame=frames[h%frames.length];
+  const yOffset=-(scroll%TILE);
+  const firstRow=Math.floor(scroll/TILE)-1;
+  for(let sy=yOffset-TILE,row=firstRow;sy<H+TILE;sy+=TILE,row++){
+    for(let x=0,col=0;x<W+TILE;x+=TILE,col++){
+      const frame=frames[hash2(col,row)%frames.length];
       const img=images[frame];
-      if(img)ctx.drawImage(img,Math.round(x),Math.round(sy),size,size);
+      if(img)ctx.drawImage(img,x,Math.round(sy),TILE,TILE);
     }
   }
 }
 
-function pistePolygon(){
-  const left=[],right=[];
-  for(let y=-20;y<=H+20;y+=16){
-    const b=boundsAt(y);left.push([b.left,y]);right.push([b.right,y]);
-  }
-  return {left,right};
-}
-
 function drawPiste(){
-  drawTileField(F.offPiste);
-  const p=pistePolygon();
+  drawTileField(F.powder);
+
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(p.left[0][0],p.left[0][1]);
-  for(let i=1;i<p.left.length;i++)ctx.lineTo(p.left[i][0],p.left[i][1]);
-  for(let i=p.right.length-1;i>=0;i--)ctx.lineTo(p.right[i][0],p.right[i][1]);
-  ctx.closePath();ctx.clip();
+  for(let y=-16;y<=H+16;y+=8){
+    const b=boundsAtWorld(scroll+y);
+    if(y===-16)ctx.moveTo(b.left,y);else ctx.lineTo(b.left,y);
+  }
+  for(let y=H+16;y>=-16;y-=8){
+    const b=boundsAtWorld(scroll+y);
+    ctx.lineTo(b.right,y);
+  }
+  ctx.closePath();
+  ctx.clip();
   drawTileField(F.piste);
   ctx.restore();
 
-  const bankStep=24;
-  const firstBankRow=Math.floor(scrollTotal/bankStep)-1;
-  const bankOffset=-(scrollTotal%bankStep);
-  for(let y=bankOffset-bankStep,row=firstBankRow;y<H+bankStep;y+=bankStep,row++){
-    const b=boundsAt(y),next=boundsAt(y+12);
-    const leftFrame=F.bankLeft[hash2(17,row)%F.bankLeft.length];
-    const rightFrame=F.bankRight[hash2(29,row)%F.bankRight.length];
-    const leftAngle=Math.atan2(next.left-b.left,12)*-.28;
-    const rightAngle=Math.atan2(next.right-b.right,12)*-.28;
-    drawSprite(leftFrame,b.left,y,32,leftAngle);
-    drawSprite(rightFrame,b.right,y,32,rightAngle);
+  const yOffset=-(scroll%TILE);
+  const firstRow=Math.floor(scroll/TILE)-1;
+  for(let y=yOffset-TILE,row=firstRow;y<H+TILE;y+=TILE,row++){
+    const worldY=scroll+y;
+    const b=boundsAtWorld(worldY);
+    const next=boundsAtWorld(worldY+TILE);
+    const leftFrame=F.edgeLeft[hash2(13,row)%F.edgeLeft.length];
+    const rightFrame=F.edgeRight[hash2(31,row)%F.edgeRight.length];
+    const leftAngle=Math.atan2(next.left-b.left,TILE)*-.18;
+    const rightAngle=Math.atan2(next.right-b.right,TILE)*-.18;
+    drawSprite(leftFrame,b.left,y,TILE,leftAngle);
+    drawSprite(rightFrame,b.right,y,TILE,rightAngle);
   }
 }
 
-function sceneryX(s){
-  const b=boundsAt(s.y);
-  return s.side==='left'?b.left-s.margin:b.right+s.margin;
+function sceneryPosition(s){
+  const b=boundsAtWorld(s.worldY);
+  const raw=s.side==='left'?b.left-s.offset:b.right+s.offset;
+  return {x:clamp(raw,9,W-9),y:s.worldY-scroll};
 }
 
-function drawFeature(f){
-  const y=f.y;
-  const b=boundsAt(y);
-  const leftX=Math.max(20,b.left-36),rightX=Math.min(W-20,b.right+36);
-  for(let x=leftX+14;x<rightX-14;x+=28)drawSprite(f.cable,x,y,32);
-  drawSprite(f.towerL,leftX,y,32);
-  drawSprite(f.towerR,rightX,y,32);
-  drawSprite(f.seat,leftX+(rightX-leftX)*.35,y+4,32);
-  drawSprite(f.gondola,leftX+(rightX-leftX)*.7,y+4,32);
+function drawScenery(){
+  const visible=scenery
+    .filter(s=>{const y=s.worldY-scroll;return y>-24&&y<H+24})
+    .sort((a,b)=>a.worldY-b.worldY);
+  for(const s of visible){
+    const p=sceneryPosition(s);
+    drawSprite(s.frame,p.x,p.y,s.size);
+  }
+}
+
+function drawLift(lift){
+  const y=lift.worldY-scroll;
+  if(y<-30||y>H+30)return;
+  const b=boundsAtWorld(lift.worldY);
+  const leftTower=clamp(b.left-32,18,W-18);
+  const midTower=clamp(b.center,18,W-18);
+  const rightTower=clamp(b.right+32,18,W-18);
+
+  for(let x=0;x<=W;x+=TILE)drawSprite(lift.cable,x+TILE/2,y,TILE);
+  drawSprite(lift.towerLeft,leftTower,y,TILE);
+  drawSprite(lift.towerMid,midTower,y,TILE);
+  drawSprite(lift.towerRight,rightTower,y,TILE);
+  drawSprite(lift.chairLeft,(leftTower+midTower)/2,y+5,TILE);
+  drawSprite(lift.gondola,(midTower+rightTower)/2,y+5,TILE);
+  drawSprite(lift.chairRight,clamp(rightTower+34,8,W-8),y+5,TILE);
 }
 
 function render(){
@@ -464,52 +492,64 @@ function render(){
   ctx.save();
   ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
   ctx.imageSmoothingEnabled=false;
-  if(shake>0)ctx.translate(rand(-shake,shake),rand(-shake,shake));
+  if(shake>0)ctx.translate(randRange(Math.random,-shake,shake),randRange(Math.random,-shake,shake));
 
   drawPiste();
+  drawScenery();
 
-  const backScenery=[...scenery].sort((a,b)=>a.y-b.y);
-  for(const s of backScenery)drawSprite(s.frame,sceneryX(s),s.y,32);
-  for(const f of features)drawFeature(f);
+  for(const t of tracks)drawSprite(F.tracks[0],t.x,t.y,TILE,t.a,t.life*.55);
 
-  for(const t of tracks)drawSprite(F.tracks[0],t.x,t.y,32,t.a,t.life*.58);
-
-  for(const g of gatesOnCourse){
-    const b=boundsAt(g.y);
-    const lx=b.left+b.width*g.leftT,rx=b.left+b.width*g.rightT;
-    drawSprite(g.redLeft?F.redFlag[0]:F.blueFlag[0],lx,g.y,32);
-    drawSprite(g.redLeft?F.blueFlag[0]:F.redFlag[0],rx,g.y,32);
+  for(const g of courseGates){
+    const y=g.worldY-scroll;
+    if(y<-24||y>H+24)continue;
+    const b=boundsAtWorld(g.worldY);
+    const lx=b.left+b.width*g.leftT;
+    const rx=b.left+b.width*g.rightT;
+    drawSprite(g.redLeft?F.redFlag[0]:F.blueFlag[0],lx,y,TILE);
+    drawSprite(g.redLeft?F.blueFlag[0]:F.redFlag[0],rx,y,TILE);
   }
 
-  const sorted=[...obstacles].sort((a,b)=>a.y-b.y);
-  for(const o of sorted){
-    const angle=o.kind==='skier'?Math.sin(o.phase)*.18:0;
-    drawSprite(o.frame,o.x,o.y,32,angle);
+  for(const o of obstacles){
+    const p=obstaclePosition(o);
+    if(p.y<-24||p.y>H+24)continue;
+    drawSprite(o.frame,p.x,p.y,TILE,o.kind==='skier'?Math.sin(o.phase)*.12:0);
   }
 
-  for(const p of snowPuffs){
-    ctx.globalAlpha=clamp(p.life*2.2,0,1);ctx.fillStyle='#ffffff';
+  for(const p of puffs){
+    ctx.globalAlpha=clamp(p.life*3,0,1);
+    ctx.fillStyle='#fff';
     ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size,p.size);
   }
   ctx.globalAlpha=1;
 
   if(player){
-    ctx.fillStyle='rgba(57,95,116,.12)';ctx.beginPath();ctx.ellipse(player.x,player.y+15,13,4,0,0,Math.PI*2);ctx.fill();
-    drawSprite(F.player[0],player.x,player.y+player.slide,32,crashing?player.spin:player.angle);
+    drawSprite(F.player[0],player.x,player.y+player.slide,TILE,crashing?player.spin:player.angle);
   }
 
+  // The chairlift is overhead, so it is intentionally drawn over the skier.
+  for(const lift of lifts)drawLift(lift);
+
   for(const f of feedback){
-    ctx.save();ctx.globalAlpha=clamp(f.life,0,1);ctx.font='900 11px ui-rounded, Arial Rounded MT Bold, sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.strokeText(f.text,f.x,f.y);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);ctx.restore();
+    ctx.save();
+    ctx.globalAlpha=clamp(f.life,0,1);
+    ctx.font='900 10px ui-rounded, Arial Rounded MT Bold, sans-serif';
+    ctx.textAlign='center';
+    ctx.lineWidth=3;
+    ctx.strokeStyle='#fff';
+    ctx.strokeText(f.text,f.x,f.y);
+    ctx.fillStyle=f.color;
+    ctx.fillText(f.text,f.x,f.y);
+    ctx.restore();
   }
 
   ctx.restore();
 }
 
-function setDigital(side,on){input[side]=on;if(on&&running&&!paused&&!crashing)tone('carve')}
 canvas.addEventListener('pointerdown',e=>{
   if(!running||paused||crashing||gameOver)return;
   const r=canvas.getBoundingClientRect();
-  input.pointerId=e.pointerId;input.startX=e.clientX-r.left;
+  input.pointerId=e.pointerId;
+  input.startX=e.clientX-r.left;
   input.analog=input.startX<r.width/2?-1:1;
   canvas.setPointerCapture?.(e.pointerId);
   e.preventDefault();
@@ -517,12 +557,16 @@ canvas.addEventListener('pointerdown',e=>{
 canvas.addEventListener('pointermove',e=>{
   if(input.pointerId!==e.pointerId)return;
   const r=canvas.getBoundingClientRect();
-  const x=e.clientX-r.left,delta=x-input.startX;
-  input.analog=Math.abs(delta)>12?clamp(delta/(r.width*.2),-1,1):(x<r.width/2?-1:1);
+  const x=e.clientX-r.left;
+  const delta=x-input.startX;
+  input.analog=Math.abs(delta)>10?clamp(delta/(r.width*.18),-1,1):(x<r.width/2?-1:1);
   e.preventDefault();
 });
 function clearPointer(e){
-  if(input.pointerId===null||!e||input.pointerId===e.pointerId){input.pointerId=null;input.analog=0}
+  if(input.pointerId===null||!e||input.pointerId===e.pointerId){
+    input.pointerId=null;
+    input.analog=0;
+  }
 }
 canvas.addEventListener('pointerup',clearPointer);
 canvas.addEventListener('pointercancel',clearPointer);
@@ -531,8 +575,8 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dblclick',e=>e.preventDefault());
 
 addEventListener('keydown',e=>{
-  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){setDigital('left',true);e.preventDefault()}
-  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){setDigital('right',true);e.preventDefault()}
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){input.left=true;e.preventDefault()}
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){input.right=true;e.preventDefault()}
   if((e.key==='Escape'||e.key==='p'||e.key==='P')&&running){paused?resume():openPause();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
@@ -542,8 +586,10 @@ addEventListener('keyup',e=>{
 
 function openPause(){
   if(!running||gameOver||crashing)return;
-  paused=true;input.left=input.right=false;input.analog=0;input.pointerId=null;
-  pauseSheet.classList.add('open');pauseSheet.setAttribute('aria-hidden','false');
+  paused=true;
+  input.left=input.right=false;input.analog=0;input.pointerId=null;
+  pauseSheet.classList.add('open');
+  pauseSheet.setAttribute('aria-hidden','false');
 }
 function closePause(){pauseSheet.classList.remove('open');pauseSheet.setAttribute('aria-hidden','true')}
 function resume(){
@@ -569,17 +615,23 @@ soundButton.addEventListener('click',e=>{
 
 function getAudio(){
   if(!soundOn)return null;
-  try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(_){return null}
+  try{
+    audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    return audioCtx;
+  }catch(_){return null}
 }
 function tone(type){
   const a=getAudio();if(!a)return;
-  if(type==='carve'&&Math.random()>.28)return;
   const o=a.createOscillator(),g=a.createGain();
   o.type=type==='crash'?'square':'sine';
-  const freq=type==='gate'?650:type==='near'?510:type==='miss'?170:type==='crash'?100:type==='start'?340:145;
-  o.frequency.setValueAtTime(freq,a.currentTime);o.frequency.exponentialRampToValueAtTime(type==='crash'?50:freq*1.16,a.currentTime+.07);
-  g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(type==='crash'?.085:.02,a.currentTime+.006);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+(type==='crash'?.15:.05));
-  o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.17);
+  const f=type==='gate'?650:type==='near'?500:type==='miss'?165:type==='crash'?100:type==='start'?330:145;
+  o.frequency.setValueAtTime(f,a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(type==='crash'?50:f*1.14,a.currentTime+.06);
+  g.gain.setValueAtTime(.0001,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(type==='crash'?.08:.018,a.currentTime+.006);
+  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+(type==='crash'?.14:.05));
+  o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.16);
 }
 function vibrate(pattern){if(navigator.vibrate)navigator.vibrate(pattern)}
 
