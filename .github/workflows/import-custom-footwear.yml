@@ -1,0 +1,62 @@
+name: Import GameBox Custom Footwear
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/import-custom-footwear.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: import-custom-footwear
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch validated footwear from ToolBox
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/gamebox/wearables/footwear/traditional-elf-shoes
+          mkdir -p assets/gamebox/wearables/footwear/regular-shoes
+
+          base="https://raw.githubusercontent.com/ChipButt/ToolBox"
+
+          for file in preview.png traditional-elf-shoes.glb traditional-elf-shoes.json; do
+            curl -fL --retry 3 "$base/57942a32f9e5d2aa307e9d59a81aef36f1638e7f/assets/gamebox/wearables/footwear/traditional-elf-shoes/$file"               -o "assets/gamebox/wearables/footwear/traditional-elf-shoes/$file"
+          done
+
+          for file in preview.png regular-shoes.glb regular-shoes.json; do
+            curl -fL --retry 3 "$base/254950cf59c89728ae035c8df6750b8b177da4dd/assets/gamebox/wearables/footwear/regular-shoes/$file"               -o "assets/gamebox/wearables/footwear/regular-shoes/$file"
+          done
+
+          test "$(head -c 4 assets/gamebox/wearables/footwear/traditional-elf-shoes/traditional-elf-shoes.glb)" = "glTF"
+          test "$(head -c 4 assets/gamebox/wearables/footwear/regular-shoes/regular-shoes.glb)" = "glTF"
+          grep -q '"slot": "footwear"' assets/gamebox/wearables/footwear/traditional-elf-shoes/traditional-elf-shoes.json
+          grep -q '"slot": "footwear"' assets/gamebox/wearables/footwear/regular-shoes/regular-shoes.json
+
+      - name: Commit footwear library
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/gamebox/wearables/footwear
+          if git diff --cached --quiet; then
+            echo "Footwear already imported."
+            exit 0
+          fi
+          git commit -m "Import reusable GameBox footwear assets"
+          git pull --rebase origin main
+          git push origin main
