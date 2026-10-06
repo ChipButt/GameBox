@@ -27,33 +27,119 @@ jobs:
           node --check character-playground/modular-parts.js
           node --check character-playground/part-options.js
 
-      - name: Inspect Quaternius source labels
+      - name: Inspect labelled modular regions
         shell: bash
         run: |
           python - <<'PY'
-          import json, pathlib
+          import base64, hashlib, json, pathlib, re, struct
           root = pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+
+          COMPONENT = {
+              5126: ("f",4), 5125:("I",4), 5123:("H",2),
+              5122:("h",2), 5121:("B",1), 5120:("b",1)
+          }
+          WIDTH = {"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4,"MAT4":16}
+
+          def read_accessor(doc, idx):
+              a=doc["accessors"][idx]; v=doc["bufferViews"][a["bufferView"]]
+              raw=base64.b64decode(doc["buffers"][v["buffer"]]["uri"].split(",",1)[1])
+              fmt,size=COMPONENT[a["componentType"]]; width=WIDTH[a["type"]]
+              stride=v.get("byteStride",width*size)
+              start=v.get("byteOffset",0)+a.get("byteOffset",0)
+              vals=[struct.unpack_from("<"+fmt*width,raw,start+i*stride) for i in range(a["count"])]
+              if a.get("normalized") and a["componentType"] != 5126:
+                  if a["componentType"] in (5121,5123,5125):
+                      maxv={5121:255,5123:65535,5125:4294967295}[a["componentType"]]
+                      vals=[tuple(x/maxv for x in row) for row in vals]
+                  else:
+                      maxv={5120:127,5122:32767}[a["componentType"]]
+                      vals=[tuple(max(-1,x/maxv) for x in row) for row in vals]
+              return vals
+
+          HEAD={"Head","Neck"}
+          TOP={"Torso","Abdomen","Shoulder.L","UpperArm.L","LowerArm.L","Fist.L","Shoulder.R","UpperArm.R","LowerArm.R","Fist.R"}
+          BOTTOM={"Hips","UpperLeg.L","LowerLeg.L","UpperLeg.R","LowerLeg.R"}
+          FOOT={"Foot.L","Foot.R"}
+          HAIR=re.compile(r"hair|beard|moustache|mustache",re.I)
+          HEADWEAR=re.compile(r"hat|helmet|horn|hood|crown|cap",re.I)
+          ACCESSORY=re.compile(r"belt|scarf|band|cape|strap|apron|glove|pouch|bag",re.I)
+
+          def rgb_hex(material):
+              f=material.get("pbrMetallicRoughness",{}).get("baseColorFactor",[1,1,1,1])
+              return "#"+"".join(f"{max(0,min(255,round(c*255))):02x}" for c in f[:3])
+
+          def dominant_region(joints,weights,bone_names,tri):
+              scores={"head":0.0,"top":0.0,"bottom":0.0,"foot":0.0}
+              sets={"head":HEAD,"top":TOP,"bottom":BOTTOM,"foot":FOOT}
+              for vi in tri:
+                  for ji,w in zip(joints[vi],weights[vi]):
+                      if w <= 0: continue
+                      name=bone_names[int(ji)] if int(ji)<len(bone_names) else ""
+                      for key,names in sets.items():
+                          if name in names: scores[key]+=float(w)
+              return max(scores,key=scores.get),scores
+
+          per_cat={k:{} for k in ("head","hair","headwear","top","bottom","accessory")}
           for path in sorted(root.glob("*.gltf")):
-              doc = json.loads(path.read_text())
-              materials = [m.get("name","") for m in doc.get("materials",[])]
-              meshes = [m.get("name","") for m in doc.get("meshes",[])]
-              nodes = [n.get("name","") for n in doc.get("nodes",[]) if n.get("name")]
-              primitives = []
-              for mi, mesh in enumerate(doc.get("meshes",[])):
-                  for pi, prim in enumerate(mesh.get("primitives",[])):
-                      mat_i = prim.get("material")
-                      primitives.append({
-                          "mesh": meshes[mi] if mi < len(meshes) else "",
-                          "primitive": pi,
-                          "material": materials[mat_i] if isinstance(mat_i,int) and mat_i < len(materials) else ""
-                      })
-              print("ASSET_META " + json.dumps({
-                  "id": path.stem,
-                  "materials": materials,
-                  "meshes": meshes,
-                  "nodes": nodes,
-                  "primitives": primitives
-              }, separators=(",",":")))
+              doc=json.loads(path.read_text())
+              skin=doc["skins"][0]; nodes=doc.get("nodes",[])
+              bone_names=[nodes[i].get("name","") for i in skin["joints"]]
+              mats=doc.get("materials",[])
+              buckets={k:[] for k in per_cat}
+              colors={k:{} for k in per_cat}
+              material_sets={k:set() for k in per_cat}
+
+              for mesh in doc.get("meshes",[]):
+                  for prim in mesh.get("primitives",[]):
+                      attrs=prim.get("attributes",{})
+                      if not all(k in attrs for k in ("POSITION","JOINTS_0","WEIGHTS_0")): continue
+                      pos=read_accessor(doc,attrs["POSITION"])
+                      joints=read_accessor(doc,attrs["JOINTS_0"])
+                      weights=read_accessor(doc,attrs["WEIGHTS_0"])
+                      idx=[int(v[0]) for v in read_accessor(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
+                      mi=prim.get("material",-1)
+                      mat=mats[mi] if 0<=mi<len(mats) else {}
+                      mname=mat.get("name","Material")
+                      forced=None
+                      if HEADWEAR.search(mname): forced="headwear"
+                      elif HAIR.search(mname): forced="hair"
+                      elif ACCESSORY.search(mname): forced="accessory"
+
+                      for t in range(0,len(idx)-2,3):
+                          tri=idx[t:t+3]
+                          cat=forced
+                          if cat is None:
+                              region,scores=dominant_region(joints,weights,bone_names,tri)
+                              if region=="head": cat="head"
+                              elif region=="top": cat="top"
+                              elif region=="bottom": cat="bottom"
+                              elif region=="foot": continue
+                              else: continue
+                          for vi in tri:
+                              buckets[cat].append(tuple(round(float(x),5) for x in pos[vi][:3]))
+                          material_sets[cat].add(mname)
+                          colors[cat][mname]=rgb_hex(mat)
+
+              for cat,verts in buckets.items():
+                  if not verts: continue
+                  h=hashlib.sha256(json.dumps(verts,separators=(",",":")).encode()).hexdigest()[:16]
+                  rec=per_cat[cat].setdefault(h,{"sources":[],"materials":set(),"colors":{}})
+                  rec["sources"].append(path.stem)
+                  rec["materials"].update(material_sets[cat])
+                  rec["colors"].update(colors[cat])
+
+          for cat,groups in per_cat.items():
+              clean=[]
+              for h,rec in groups.items():
+                  clean.append({
+                      "hash":h,
+                      "representative":rec["sources"][0],
+                      "sources":rec["sources"],
+                      "materials":sorted(rec["materials"]),
+                      "colors":rec["colors"]
+                  })
+              clean.sort(key=lambda x:x["representative"])
+              print("MODULAR_META "+json.dumps({"category":cat,"count":len(clean),"options":clean},separators=(",",":")))
           PY
 
       - name: Verify Character Workshop asset and UI system
