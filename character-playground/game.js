@@ -243,7 +243,7 @@ function clearActiveParts() {
     const state = activeParts[part.id];
     if (state?.group?.parent) state.group.parent.remove(state.group);
     disposeGroup(state?.group);
-    activeParts[part.id] = { sourceId: null, group: null };
+    activeParts[part.id] = { optionId: null, kind: null, sourceId: null, wearableId: null, group: null };
   }
   materialRecords = [];
 }
@@ -442,14 +442,15 @@ function currentMaterials() {
       for (const material of mats) {
         if (!material?.color) continue;
         const name = node.userData.sourceMaterialName || material.name || ('Material ' + (localIndex + 1));
-        const key = part.id + '::' + (state.sourceId || 'none') + '::' + name + '::' + localIndex;
+        const key = part.id + '::' + (state.optionId || 'none') + '::' + name + '::' + localIndex;
         records.push({
           part: part.id,
+          optionId: state.optionId,
           sourceId: state.sourceId,
           material,
           name,
           key: key.toLowerCase(),
-          originalColor: node.userData.originalColor || ('#' + material.color.getHexString())
+          originalColor: material.userData?.originalColor || node.userData.originalColor || ('#' + material.color.getHexString())
         });
         localIndex += 1;
       }
@@ -543,8 +544,7 @@ function renderMaterialControls() {
     const title = document.createElement('strong');
     title.textContent = record.name;
     const subtitle = document.createElement('small');
-    const source = entryById.get(record.sourceId);
-    subtitle.textContent = PART_DEFINITIONS.find((part) => part.id === record.part)?.label + ' · ' + (source?.label || 'Source');
+    subtitle.textContent = PART_CATEGORY_LABELS[record.part] || PART_DEFINITIONS.find((part) => part.id === record.part)?.label || 'Character part';
     text.append(title, subtitle);
 
     const input = document.createElement('input');
@@ -576,38 +576,141 @@ function renderMaterialControls() {
   }
 }
 
-async function setPart(category, sourceId, options = {}) {
+function cloneWearableMaterials(node) {
+  if (!node.material) return;
+  const materials = (Array.isArray(node.material) ? node.material : [node.material]).map((material) => {
+    const clone = material.clone();
+    if (clone.color) clone.userData.originalColor = '#' + clone.color.getHexString();
+    return clone;
+  });
+  node.material = Array.isArray(node.material) ? materials : materials[0];
+}
+
+async function instantiateWearable(option, category) {
+  return new Promise((resolve, reject) => {
+    gltfLoader.load(
+      option.path + '?wearable=2',
+      (gltf) => {
+        try {
+          const group = gltf.scene;
+          group.name = 'Wearable:' + option.id;
+          group.userData.partCategory = category;
+          group.userData.optionId = option.id;
+          group.userData.attachToDriverRoot = true;
+
+          const wearableBones = new Map();
+          group.traverse((node) => {
+            if (node.isBone && node.name) wearableBones.set(node.name, node);
+            if (!node.isMesh) return;
+            node.castShadow = true;
+            node.receiveShadow = true;
+            cloneWearableMaterials(node);
+            node.userData.partCategory = category;
+          });
+
+          const syncPairs = [];
+          for (const targetBone of driverSkeleton?.bones || []) {
+            const wearableBone = wearableBones.get(targetBone.name);
+            if (wearableBone) syncPairs.push([wearableBone, targetBone]);
+          }
+          group.userData.wearableSync = syncPairs;
+          resolve(group);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      undefined,
+      reject
+    );
+  });
+}
+
+function syncWearableSkeletons() {
+  for (const part of PART_DEFINITIONS) {
+    const group = activeParts[part.id]?.group;
+    const pairs = group?.userData?.wearableSync;
+    if (!pairs) continue;
+    for (const [wearableBone, driverBone] of pairs) {
+      wearableBone.position.copy(driverBone.position);
+      wearableBone.quaternion.copy(driverBone.quaternion);
+      wearableBone.scale.copy(driverBone.scale);
+    }
+    group.updateMatrixWorld(true);
+  }
+}
+
+async function applyPartOption(category, option, options = {}) {
+  return setPart(category, option, options);
+}
+
+async function setPart(category, selection, options = {}) {
   if (!driverSkeleton || !driverParent) return false;
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
   if (!partDef) return false;
+
+  let option = null;
+  if (selection && typeof selection === 'object') {
+    option = selection;
+  } else if (typeof selection === 'string') {
+    option = optionById(category, selection) || canonicalOptionForSource(category, selection);
+    if (!option && entryById.has(selection)) option = canonicalOptionForSource(category, selection);
+  }
+
+  if (!option && selection && typeof selection === 'string' && entryById.has(selection)) {
+    option = { id: null, kind: 'source', sourceId: selection, label: 'Legacy part' };
+  }
+
+  if (!option && selection && typeof selection !== 'object') selection = null;
+  if (!option && !partDef.optional && selection == null) return false;
 
   const token = ++partTokens[category];
   setPartRowLoading(category, true);
 
   try {
     let newGroup = null;
-    if (sourceId) {
+    let sourceId = null;
+    let wearableId = null;
+    let kind = option?.kind || null;
+
+    if (option?.kind === 'wearable') {
+      wearableId = option.wearableId;
+      newGroup = await instantiateWearable(option, category);
+    } else if (option?.kind === 'source') {
+      sourceId = option.sourceId;
       const source = entryById.get(sourceId);
       if (!source || source.rig !== activeRig) return false;
       newGroup = await partSystem.instantiate(sourceId, category, driverSkeleton);
-      if (token !== partTokens[category]) {
-        disposeGroup(newGroup);
-        return false;
-      }
-      if (!newGroup) {
-        if (options.allowNone && partDef.optional) sourceId = null;
-        else return false;
-      }
-    } else if (!partDef.optional) {
+    } else if (option == null && partDef.optional) {
+      newGroup = null;
+    }
+
+    if (token !== partTokens[category]) {
+      disposeGroup(newGroup);
       return false;
+    }
+
+    if (option && !newGroup) {
+      if (options.allowNone && partDef.optional) option = null;
+      else return false;
     }
 
     const previous = activeParts[category];
     if (previous?.group?.parent) previous.group.parent.remove(previous.group);
     disposeGroup(previous?.group);
 
-    if (newGroup) driverParent.add(newGroup);
-    activeParts[category] = { sourceId: sourceId || null, group: newGroup };
+    if (newGroup) {
+      if (newGroup.userData.attachToDriverRoot) driverScene.add(newGroup);
+      else driverParent.add(newGroup);
+    }
+
+    activeParts[category] = {
+      optionId: option?.id || null,
+      kind: option?.kind || null,
+      sourceId: sourceId || null,
+      wearableId: wearableId || null,
+      group: newGroup
+    };
+
     refreshMaterialRecords();
     updatePartRows();
     return true;
@@ -623,45 +726,25 @@ async function cyclePart(category, direction) {
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
   if (!partDef) return;
 
-  const entries = partCandidates(category);
-  const candidates = partDef.optional ? [null, ...entries] : entries;
+  const options = partCandidates(category);
+  const candidates = partDef.optional ? [null, ...options] : options;
   if (!candidates.length) return;
 
-  const currentId = activeParts[category]?.sourceId || null;
+  const currentId = activeParts[category]?.optionId || null;
   let index = candidates.findIndex((candidate) => (candidate?.id || null) === currentId);
   if (index < 0) index = 0;
 
-  setPartRowLoading(category, true);
-  for (let attempt = 1; attempt <= candidates.length; attempt += 1) {
-    const nextIndex = (index + direction * attempt + candidates.length * 4) % candidates.length;
-    const candidate = candidates[nextIndex];
-
-    if (!candidate) {
-      await setPart(category, null);
-      return;
-    }
-
-    try {
-      if (!(await partSystem.hasPart(candidate.id, category))) continue;
-      if (await setPart(category, candidate.id)) return;
-    } catch (error) {
-      console.warn('Skipping incompatible part candidate', candidate.id, category, error);
-    }
-  }
-  setPartRowLoading(category, false);
-  showToast('No other compatible ' + partDef.label.toLowerCase() + ' found.');
+  const nextIndex = (index + direction + candidates.length) % candidates.length;
+  const candidate = candidates[nextIndex];
+  await applyPartOption(category, candidate, { allowNone: true });
 }
+
 
 async function findRandomPart(category) {
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
-  const entries = partCandidates(category).slice().sort(() => Math.random() - 0.5);
+  const options = partCandidates(category);
   if (partDef.optional && Math.random() < 0.22) return null;
-  for (const entry of entries) {
-    try {
-      if (await partSystem.hasPart(entry.id, category)) return entry.id;
-    } catch (_) {}
-  }
-  return partDef.optional ? null : currentPreset.id;
+  return options[Math.floor(Math.random() * options.length)] || null;
 }
 
 async function randomiseParts() {
@@ -669,8 +752,8 @@ async function randomiseParts() {
   modelLoading.textContent = 'MIXING PARTS…';
   try {
     for (const part of PART_DEFINITIONS) {
-      const sourceId = await findRandomPart(part.id);
-      await setPart(part.id, sourceId, { allowNone: true });
+      const option = await findRandomPart(part.id);
+      await applyPartOption(part.id, option, { allowNone: true });
     }
     characterName.value = randomName();
     updateSummary();
@@ -686,11 +769,12 @@ async function resetPartsToPreset() {
   modelLoading.textContent = 'RESETTING PARTS…';
   try {
     for (const part of PART_DEFINITIONS) {
-      const sourceHasPart = await partSystem.hasPart(currentPreset.id, part.id);
-      if (sourceHasPart) await setPart(part.id, currentPreset.id);
-      else if (part.optional) await setPart(part.id, null);
+      const option = canonicalOptionForSource(part.id, currentPreset.id);
+      if (option) await applyPartOption(part.id, option);
+      else if (part.optional) await applyPartOption(part.id, null, { allowNone: true });
+      else await applyPartOption(part.id, partCandidates(part.id)[0] || null);
     }
-    showToast('Parts reset to ' + currentPreset.label + '.');
+    showToast('Character reset to the starting look.');
   } finally {
     modelLoading.hidden = true;
     modelLoading.textContent = 'LOADING STYLE…';
