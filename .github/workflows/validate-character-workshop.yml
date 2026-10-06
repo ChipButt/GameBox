@@ -63,6 +63,7 @@ jobs:
           HAIR=re.compile(r"hair|beard|moustache|mustache",re.I)
           HEADWEAR=re.compile(r"hat|helmet|horn|hood|crown|cap",re.I)
           ACCESSORY=re.compile(r"belt|scarf|band|cape|strap|apron|glove|pouch|bag",re.I)
+          HEAD_BASE=re.compile(r"^(skin|face|teeth|brain|black_head|white|pink|beige|brown)$",re.I)
 
           def rgb_hex(material):
               f=material.get("pbrMetallicRoughness",{}).get("baseColorFactor",[1,1,1,1])
@@ -110,7 +111,8 @@ jobs:
                           cat=forced
                           if cat is None:
                               region,scores=dominant_region(joints,weights,bone_names,tri)
-                              if region=="head": cat="head"
+                              if region=="head":
+                                  cat="head" if HEAD_BASE.search(mname) else "headwear"
                               elif region=="top": cat="top"
                               elif region=="bottom": cat="bottom"
                               elif region=="foot": continue
