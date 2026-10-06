@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#10263a">
   <title>Character Workshop · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=12">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -54,29 +54,71 @@
       <div class="tabView active" data-view="style">
         <div class="sectionTitle">
           <div>
-            <span>BUILD IT PIECE BY PIECE</span>
-            <strong>Character parts</strong>
+            <span>TAP THE CHARACTER OR PICK A CATEGORY</span>
+            <strong>Create your character</strong>
           </div>
-          <b id="compatibleCount">52 compatible</b>
+          <b id="compatibleCount">52 sources</b>
         </div>
 
-        <div class="presetPicker">
-          <label for="presetSelect">STARTING PRESET</label>
-          <select id="presetSelect" aria-label="Starting character preset"></select>
-          <button id="applyPresetBtn" type="button">LOAD PRESET</button>
+        <div class="casTip">
+          <strong id="rigLabel">Click a body part to customise it</strong>
+          <span id="rigHelp">Head, torso, arms, legs and feet can be selected directly on the 3D character.</span>
         </div>
 
-        <div class="compatibilityNote">
-          <strong id="rigLabel">Universal 23-bone frame · 52 source styles</strong>
-          <span id="rigHelp">Use the arrows to cycle or open each selector to jump directly to any compatible source.</span>
-        </div>
+        <nav class="partCategoryRail" id="partCategoryRail" aria-label="Character part categories"></nav>
 
-        <div class="partRows" id="partRows"></div>
+        <section class="partBrowser">
+          <header class="partBrowserHeader">
+            <div>
+              <span id="activePartEyebrow">CHARACTER PART</span>
+              <strong id="activePartTitle">Head & face</strong>
+            </div>
+            <div class="partBrowserNav">
+              <button id="partPrevBtn" type="button" aria-label="Previous option">‹</button>
+              <button id="partNextBtn" type="button" aria-label="Next option">›</button>
+            </div>
+          </header>
+          <div class="partBrowserMeta">
+            <span id="activePartCount">52 choices</span>
+            <button id="removePartBtn" type="button" hidden>REMOVE</button>
+          </div>
+          <div class="partSourceGrid" id="partSourceGrid"></div>
+        </section>
+
+        <section class="proportionPanel">
+          <div class="proportionTitle">
+            <span>BODY</span>
+            <strong>Proportions</strong>
+            <button id="resetProportionsBtn" type="button">RESET</button>
+          </div>
+          <label class="proportionControl">
+            <span>Height <b id="heightValue">100%</b></span>
+            <input id="heightSlider" type="range" min="90" max="110" step="1" value="100">
+          </label>
+          <label class="proportionControl">
+            <span>Build <b id="buildValue">100%</b></span>
+            <input id="buildSlider" type="range" min="90" max="112" step="1" value="100">
+          </label>
+          <label class="proportionControl">
+            <span>Head size <b id="headSizeValue">100%</b></span>
+            <input id="headSizeSlider" type="range" min="88" max="116" step="1" value="100">
+          </label>
+        </section>
+
+        <details class="presetDrawer">
+          <summary>START FROM A COMPLETE PRESET</summary>
+          <div class="presetPicker">
+            <select id="presetSelect" aria-label="Starting character preset"></select>
+            <button id="applyPresetBtn" type="button">LOAD PRESET</button>
+          </div>
+        </details>
 
         <div class="buildActions">
-          <button id="randomPartsBtn" type="button">RANDOMISE PARTS</button>
+          <button id="randomPartsBtn" type="button">RANDOMISE CHARACTER</button>
           <button id="resetPartsBtn" type="button">RESET TO PRESET</button>
         </div>
+
+        <div class="partRows legacyPartRows" id="partRows" hidden></div>
       </div>
 
       <div class="tabView" data-view="colours">
@@ -163,6 +205,6 @@
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=21"></script>
+  <script type="module" src="game.js?v=22"></script>
 </body>
 </html>
