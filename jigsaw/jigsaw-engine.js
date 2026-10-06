@@ -229,7 +229,7 @@
     buildPieces(){
       const rows=this.options.rows, cols=this.options.columns;
       const w=this.layout.boardSize/cols, h=this.layout.boardSize/rows;
-      const pad=Math.ceil(Math.min(w,h)*.26;
+      const pad=Math.ceil(Math.min(w,h)*.26);
       const old=this.pieces;
       const next=[];
       for(let r=0;r<rows;r++){
