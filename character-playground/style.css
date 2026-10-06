@@ -172,11 +172,10 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .partRowLabel small{display:block;margin-top:2px;color:#8a9aa5;font-size:6px;text-transform:uppercase;letter-spacing:.08em}
 .partCycleBtn{width:36px;height:36px;border:0;background-color:transparent;background-image:var(--ui-square);background-size:100% 100%;background-repeat:no-repeat;color:#fff;font-size:16px;font-weight:1000;text-shadow:0 1px 1px rgba(0,0,0,.4)}
 .partCycleBtn:active{background-image:var(--ui-square-pressed);transform:translateY(1px)}
-.partChoice{min-width:0;text-align:center;padding:5px 4px;border-radius:6px;background:rgba(39,75,99,.07)}
-.partChoice strong{display:block;color:#1e4561;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.partChoice small{display:block;margin-top:2px;color:#78909f;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.partRow.loading .partChoice{opacity:.55}
-.partRow.loading .partCycleBtn{pointer-events:none;opacity:.5}
+.partChoiceSelect{min-width:0;width:100%;height:36px;border:1px solid rgba(45,74,92,.20);border-radius:6px;padding:0 25px 0 8px;background:rgba(245,250,251,.92);color:#1e4561;font-size:8px;font-weight:850;outline:none}
+.partChoiceSelect:focus{border-color:#2f6f9e;box-shadow:0 0 0 2px rgba(47,111,158,.13)}
+.partRow.loading .partChoiceSelect{opacity:.55}
+.partRow.loading .partCycleBtn,.partRow.loading .partChoiceSelect{pointer-events:none;opacity:.5}
 .buildActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;padding-bottom:4px}
 .buildActions button{height:38px;font-size:7px}
 .buildActions button:last-child{background-image:var(--ui-brown)}
