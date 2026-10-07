@@ -209,7 +209,7 @@ function fitDriver(model) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
-  if (fitDimension > 0) model.scale.setScalar(1.56 / fitDimension);
+  if (fitDimension > 0) model.scale.setScalar(1.46 / fitDimension);
   model.updateMatrixWorld(true);
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
@@ -1414,10 +1414,13 @@ function buildWorkshopDecor() {
 
 function applyCameraPose() {
   const mobile = window.innerWidth <= 980;
-  const cameraY = mobile ? 1.46 : 1.64;
-  const targetY = mobile ? 1.05 : 1.16;
-  camera.position.set(previewRoot.position.x, cameraY, viewDistance);
-  camera.lookAt(previewRoot.position.x, targetY, 0);
+  if (mobile) {
+    camera.position.set(0, 1.42, viewDistance);
+    camera.lookAt(0, 0.98, 0);
+    return;
+  }
+  camera.position.set(previewRoot.position.x, 1.64, viewDistance);
+  camera.lookAt(previewRoot.position.x, 1.16, 0);
 }
 
 function visibleCharacterArea() {
@@ -1433,75 +1436,23 @@ function visibleCharacterArea() {
   }
 
   const builderBox = $('builder')?.getBoundingClientRect?.();
-  const top = canvas.top + 56;
   const selectorTop = builderBox?.top ?? canvas.bottom;
-  const bottom = Math.min(canvas.bottom - 36, selectorTop - 78);
   return {
-    top,
-    bottom: Math.max(top + 180, bottom),
-    left: canvas.left + 24,
-    right: canvas.right - 24
+    top: canvas.top + 52,
+    bottom: Math.min(canvas.bottom - 24, selectorTop - 28),
+    left: canvas.left + 20,
+    right: canvas.right - 20
   };
 }
 
+// Mobile deliberately uses a fixed Create-a-Sim style full-body composition.
+// No iterative fit, centring or post-fit clamps: those were fighting each other
+// and making the character jump/crop unpredictably between part changes.
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
-  const area = visibleCharacterArea();
-  const canvas = renderer.domElement.getBoundingClientRect();
-  if (area.bottom <= area.top || canvas.height <= 0) return;
-
-  if (force) {
-    viewDistance = 6.55;
-    previewRoot.position.y = 0;
-  }
-
+  if (force) viewDistance = 6.65;
+  previewRoot.position.set(0, 0.48, 0);
   applyCameraPose();
-
-  for (let pass = 0; pass < 4; pass += 1) {
-    let bounds = characterScreenBounds();
-    if (!bounds) return;
-
-    const visibleHeight = Math.max(1, area.bottom - area.top);
-    const visibleWidth = Math.max(1, area.right - area.left);
-    const characterHeight = Math.max(1, bounds.bottom - bounds.top);
-    const characterWidth = Math.max(1, bounds.right - bounds.left);
-    const fitRatio = Math.max(
-      characterHeight / (visibleHeight * 0.70),
-      characterWidth / (visibleWidth * 0.74),
-      1
-    );
-
-    if (fitRatio > 1.002) {
-      viewDistance = THREE.MathUtils.clamp(viewDistance * fitRatio * 1.035, 5.2, 9.5);
-      applyCameraPose();
-      bounds = characterScreenBounds();
-      if (!bounds) return;
-    }
-
-    // Keep the model visibly above the selector. Biasing the target upward gives
-    // the feet a clear visual gap rather than merely keeping their bounds legal.
-    const targetCenter = area.top + (area.bottom - area.top) * 0.36;
-    const currentCenter = (bounds.top + bounds.bottom) * 0.5;
-    const deltaPixels = targetCenter - currentCenter;
-    const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
-    const worldPerPixel = verticalWorld / Math.max(1, canvas.height);
-    previewRoot.position.y -= deltaPixels * worldPerPixel;
-    applyCameraPose();
-  }
-
-  // Final hard clamp for the exact problem seen on small phones: the feet must
-  // sit clearly inside the safe stage, not merely near the selector boundary.
-  let finalBounds = characterScreenBounds();
-  if (finalBounds) {
-    const desiredBottom = area.bottom - 14;
-    if (finalBounds.bottom > desiredBottom) {
-      const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
-      const worldPerPixel = verticalWorld / Math.max(1, canvas.height);
-      previewRoot.position.y += (finalBounds.bottom - desiredBottom) * worldPerPixel;
-      applyCameraPose();
-      finalBounds = characterScreenBounds();
-    }
-  }
 }
 
 let characterFrameRaf = 0;
@@ -1515,18 +1466,23 @@ function resize() {
   const height = Math.max(1, window.innerHeight);
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
-  camera.fov = width <= 980 ? 40 : 35;
+  camera.fov = width <= 980 ? 38 : 35;
   camera.updateProjectionMatrix();
+
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
-  if (!mobile) previewRoot.position.y = 0;
+  if (mobile) {
+    previewRoot.position.y = 0.48;
+  } else {
+    previewRoot.position.y = 0;
+  }
   applyCameraPose();
 }
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = 6.55;
-  previewRoot.position.y = 0;
+  viewDistance = window.innerWidth <= 980 ? 6.65 : 6.55;
+  previewRoot.position.y = window.innerWidth <= 980 ? 0.48 : 0;
   resize();
   scheduleCharacterFrame(true);
 }
