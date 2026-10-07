@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#10263a">
   <title>Character Workshop · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -35,8 +35,6 @@
       <div class="stageHint">DRAG TO TURN · WHEEL / PINCH TO ZOOM</div>
     </div>
 
-    <nav class="partCategoryRail stageCategoryRail" id="partCategoryRail" aria-label="Character customisation categories"></nav>
-
     <aside class="builder" id="builder">
       <section class="identityStrip">
         <label for="characterName">CHARACTER NAME</label>
@@ -56,22 +54,24 @@
       <div class="tabView active" data-view="style">
         <div class="sectionTitle">
           <div>
-            <span>TAP THE CHARACTER OR PICK A CATEGORY</span>
+            <span>8 CHARACTER COMPONENTS</span>
             <strong>Create your character</strong>
           </div>
-          <b id="compatibleCount">159 styles</b>
+          <b id="compatibleCount">97 styles</b>
         </div>
+
+        <nav class="partCategoryRail categoryTileGrid" id="partCategoryRail" aria-label="Character customisation categories"></nav>
 
         <div class="casTip">
           <strong id="rigLabel">Click a body part to customise it</strong>
-          <span id="rigHelp">Head, torso, arms, legs and feet can be selected directly on the 3D character.</span>
+          <span id="rigHelp">Choose one of the eight components, then choose its style and edit that component's colours.</span>
         </div>
 
         <section class="partBrowser" id="partBrowser">
           <header class="partBrowserHeader">
             <div>
               <span id="activePartEyebrow">CHARACTER PART</span>
-              <strong id="activePartTitle">Head & face</strong>
+              <strong id="activePartTitle">Face</strong>
             </div>
             <div class="partBrowserNav">
               <button id="partPrevBtn" type="button" aria-label="Previous option">‹</button>
@@ -83,9 +83,19 @@
             <button id="removePartBtn" type="button" hidden>REMOVE</button>
           </div>
           <div class="partSourceGrid" id="partSourceGrid"></div>
+          <section class="componentColourPanel" id="componentColourPanel">
+            <header>
+              <div>
+                <span>EDIT THIS COMPONENT</span>
+                <strong id="componentColourTitle">Face colours</strong>
+              </div>
+              <small>Tap a visible material on the character to focus it here.</small>
+            </header>
+            <div class="componentColourList" id="componentColourList"></div>
+          </section>
         </section>
 
-        <section class="proportionPanel" id="proportionPanel" hidden>
+        <section class="proportionPanel" id="proportionPanel">
           <div class="proportionTitle">
             <span>BODY</span>
             <strong>Proportions</strong>
@@ -205,6 +215,6 @@
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=33"></script>
+  <script type="module" src="game.js?v=34"></script>
 </body>
 </html>
