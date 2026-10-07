@@ -45,6 +45,14 @@ function generate(seed,p,n){
  }
  sourcePort={cell:path[0],side:"W"};targetPort={cell:path[path.length-1],side:"E"};
  let links=Array.from({length:cells},()=>[]);
+ for(let i=0;i<path.length;i++){
+   let idx=path[i],rr=Math.floor(idx/size),cc=idx%size;
+   if(i===0)links[idx].push("W");if(i===path.length-1)links[idx].push("E");
+   if(i){let z=path[i-1],zr=Math.floor(z/size),zc=z%size;links[idx].push(rr<zr?"S":rr>zr?"N":cc<zc?"E":"W")}
+   if(i<path.length-1){let z=path[i+1],zr=Math.floor(z/size),zc=z%size;links[idx].push(rr<zr?"S":rr>zr?"N":cc<zc?"E":"W")}
+ }
+ let set=new Set(path),simple=[["N","S"],["E","W"],["N","E"],["E","S"],["S","W"],["W","N"],["N"],["E"],["S"],["W"]],busy=simple.concat([["N","E","S"],["E","S","W"],["S","W","N"],["W","N","E"]]);
+ tiles=[];
  for(let i=0;i<cells;i++){
    let on=set.has(i),pool=p.mode==="classic"?simple:busy,base=on?Array.from(new Set(links[i])):pool[Math.floor(R()*pool.length)].slice(),locked=false,rn=Math.floor(R()*4);
    if(p.mode==="locked"&&on&&R()<.18){rn=0;locked=true}
