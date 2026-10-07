@@ -73,8 +73,21 @@ jobs:
           assert(rowTops.length===2,'Desktop component cards should form two rows, found '+rowTops.length+'.');
           const firstRow=initialTiles.filter(r=>Math.abs(r.top-initialTiles[0].top)<30);
           assert(firstRow.length===4,'Desktop component cards should form four columns.');
-          const initialFrame=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().characterScreenBounds);
-          assert(initialFrame && (initialFrame.left+initialFrame.right)/2 > 1280*0.58,'Character is not positioned on the right like the supplied reference.');
+          const initialSnapshot=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+          const initialFrame=initialSnapshot.characterScreenBounds;
+          const initialVisible=initialSnapshot.visibleCharacterArea;
+          assert(initialFrame && (initialFrame.left+initialFrame.right)/2 > 1280*0.62,'Character is not positioned prominently on the right like the supplied reference.');
+          assert(initialFrame.bottom <= initialVisible.bottom + 2,'Desktop character feet are outside the safe visible area.');
+          assert(initialFrame.top >= initialVisible.top - 4,'Desktop character head is cropped.');
+          assert((initialFrame.bottom-initialFrame.top) > 900*0.42,'Desktop character is technically visible but too small to be the prominent reference character.');
+          for(let i=0;i<initialTiles.length;i++){
+            for(let j=i+1;j<initialTiles.length;j++){
+              const a=initialTiles[i],b=initialTiles[j];
+              const overlaps=!(a.right<=b.left+1 || b.right<=a.left+1 || a.bottom<=b.top+1 || b.bottom<=a.top+1);
+              assert(!overlaps,'Desktop category cards overlap.');
+            }
+          }
+          await page.screenshot({path:'character-workshop-desktop.png',fullPage:true});
 
           assert(await page.locator('.partCategoryBtn').count()===8,'Builder must expose exactly eight customisation category tiles.');
           assert(await page.locator('.partCategoryBtn[data-part="body"]').count()===0,'Body must not be a ninth category tile.');
@@ -131,15 +144,39 @@ jobs:
           const teethEntries=Object.entries(goblinHidden).filter(([name])=>/teeth/i.test(name));
           assert(teethEntries.length>=1 && teethEntries.every(([,visible])=>visible===false),'Goblin Teeth were not fully hidden.');
 
+          const hiddenPayload=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.buildPayload());
+          const payloadTeeth=Object.entries(hiddenPayload.materialVisibility||{}).filter(([key])=>/head::.*teeth/i.test(key));
+          assert(payloadTeeth.length>=1 && payloadTeeth.every(([,visible])=>visible===false),'Hidden Teeth state is missing from exported build JSON.');
+
+          await page.evaluate(()=>document.getElementById('saveBtn').click());
+          await teethToggle.click();
+          let goblinShown=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head.materialVisibility);
+          assert(Object.entries(goblinShown).filter(([name])=>/teeth/i.test(name)).every(([,visible])=>visible===true),'Goblin Teeth did not restore before save/load test.');
+          await page.evaluate(()=>document.getElementById('loadBtn').click());
+          await page.waitForFunction(()=>{
+            const snap=window.__GAMEBOX_CHARACTER_WORKSHOP__?.snapshot?.();
+            if(snap?.parts?.head?.optionId!=='head-08') return false;
+            const teeth=Object.entries(snap.parts.head.materialVisibility||{}).filter(([name])=>/teeth/i.test(name));
+            return teeth.length>0 && teeth.every(([,visible])=>visible===false);
+          },{timeout:120000});
 
           await category('headwear');
           await page.click('[data-option="headwear-elf"]');
           await waitForSelected('headwear-elf');
           const wizardHatDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.headwear);
+          assert(wizardHatDiag.sourceId==='Wizard','Elf/Wizard headwear is not loading the Wizard donor for its real hat band.');
           assert(wizardHatDiag.materialNames.includes('Hat'),'Elf/Wizard headwear is missing Hat geometry.');
-          assert(wizardHatDiag.materialNames.includes('Belt'),'Elf/Wizard hat band/Belt geometry is missing from Headwear.');
+          assert(wizardHatDiag.materialNames.some(name=>/^(Belt|Band)$/i.test(name)),'Wizard hat band Belt/Band geometry is missing from Headwear: '+JSON.stringify(wizardHatDiag.materialNames));
           assert(!wizardHatDiag.materialNames.includes('Skin'),'Skin geometry leaked into the Elf/Wizard hat.');
-          assert(await page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Hat band/i}).count()>=1,'Wizard hat band does not have its own colour control.');
+          const bandRow=page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Hat band/i}).first();
+          assert(await bandRow.count()===1,'Wizard hat band does not have its own colour control.');
+          const faceColoursBefore=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head.materialColors);
+          await bandRow.locator('input[type="color"]').evaluate(el=>{el.value='#123456';el.dispatchEvent(new Event('input',{bubbles:true}));});
+          const afterBandColour=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+          const bandColour=Object.entries(afterBandColour.parts.headwear.materialColors||{}).find(([name])=>/^(Belt|Band)$/i.test(name))?.[1];
+          assert(bandColour==='#123456','Wizard hat band colour control did not recolour the actual band independently.');
+          assert(JSON.stringify(afterBandColour.parts.head.materialColors)===JSON.stringify(faceColoursBefore),'Changing Wizard hat band colour also changed the face/skin.');
+          await page.screenshot({path:'character-workshop-wizard.png',fullPage:true});
           await page.locator('#partSourceGrid .noneCard').click();
           await page.waitForTimeout(120);
           const clearedHat=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.headwear);
@@ -233,6 +270,14 @@ jobs:
           for (const viewport of mobileViewports) {
             await page.setViewportSize(viewport);
             await page.waitForTimeout(320);
+            if(viewport.width===390 && viewport.height===844){
+              const back=page.locator('#backToCategoriesBtn:visible');
+              if(await back.count()) {
+                await back.click();
+                await page.waitForTimeout(120);
+              }
+              await page.screenshot({path:'character-workshop-mobile.png',fullPage:true});
+            }
             await category('top');
             await page.waitForTimeout(100);
 
@@ -264,5 +309,17 @@ jobs:
           JS
 
           node .character-workshop-smoke.mjs
+
+      - name: Upload Character Workshop screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-workshop-screenshots
+          path: |
+            character-workshop-desktop.png
+            character-workshop-wizard.png
+            character-workshop-mobile.png
+          if-no-files-found: warn
+          retention-days: 7
 
 # current-feature-rerun
