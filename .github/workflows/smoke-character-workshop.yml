@@ -170,6 +170,8 @@ jobs:
           assert(JSON.stringify(bonesA)!==JSON.stringify(bonesB),'Walk animation did not move any bone that actually weights the custom footwear.');
           assert(animatedDiag.shoes.directSkeletonBinding && animatedDiag.shoes.usesDriverSkeleton,'Custom footwear lost its live skeleton binding during animation.');
 
+          await page.click('.tabBtn[data-tab="style"]');
+          await page.waitForTimeout(100);
           assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion controls should remain available without becoming a ninth category.');
           await page.click('.partCategoryBtn[data-part="head"]');
           await page.waitForTimeout(100);
