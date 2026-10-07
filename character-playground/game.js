@@ -839,6 +839,7 @@ async function setPart(category, selection, options = {}) {
 
     refreshMaterialRecords();
     updatePartRows();
+    scheduleCharacterFrame(false);
     return true;
   } catch (error) {
     showLoadError(error);
@@ -1185,7 +1186,11 @@ function characterScreenBounds() {
 }
 
 window.__GAMEBOX_CHARACTER_WORKSHOP__ = Object.freeze({
-  snapshot: () => ({ ...workshopDiagnosticSnapshot(), characterScreenBounds: characterScreenBounds() })
+  snapshot: () => ({
+    ...workshopDiagnosticSnapshot(),
+    characterScreenBounds: characterScreenBounds(),
+    visibleCharacterArea: visibleCharacterArea()
+  })
 });
 
 async function loadDriver(entryId, options = {}) {
@@ -1297,6 +1302,7 @@ async function loadDriver(entryId, options = {}) {
         finishInitialLoad();
         updatePartRows();
         updateSummary();
+        scheduleCharacterFrame(true);
         resolve(true);
       },
       updateLoadingProgress,
@@ -1379,6 +1385,88 @@ function buildWorkshopDecor() {
   loadDecorAsset('../shared/asset-pool/quaternius/ultimate-nature/WoodLog_Moss.fbx', 2.6, -1.1, 0.55, -0.55);
 }
 
+function applyCameraPose() {
+  const mobile = window.innerWidth <= 980;
+  const cameraY = mobile ? 1.16 : 1.64;
+  const targetY = 1.16;
+  camera.position.set(previewRoot.position.x, cameraY, viewDistance);
+  camera.lookAt(previewRoot.position.x, targetY, 0);
+}
+
+function visibleCharacterArea() {
+  const canvas = renderer.domElement.getBoundingClientRect();
+  const mobile = window.innerWidth <= 980;
+  if (!mobile) {
+    return {
+      top: canvas.top + 56,
+      bottom: canvas.bottom - 32,
+      left: canvas.left + 36,
+      right: canvas.right - 36
+    };
+  }
+
+  const builderBox = $('builder')?.getBoundingClientRect?.();
+  const top = canvas.top + 64;
+  const selectorTop = builderBox?.top ?? canvas.bottom;
+  const bottom = Math.min(canvas.bottom - 20, selectorTop - 22);
+  return {
+    top,
+    bottom: Math.max(top + 180, bottom),
+    left: canvas.left + 24,
+    right: canvas.right - 24
+  };
+}
+
+function frameCharacterToVisibleArea(force = false) {
+  if (!driverScene || window.innerWidth > 980) return;
+  const area = visibleCharacterArea();
+  const canvas = renderer.domElement.getBoundingClientRect();
+  if (area.bottom <= area.top || canvas.height <= 0) return;
+
+  if (force) {
+    viewDistance = 6.15;
+    previewRoot.position.y = 0;
+  }
+
+  applyCameraPose();
+
+  for (let pass = 0; pass < 4; pass += 1) {
+    let bounds = characterScreenBounds();
+    if (!bounds) return;
+
+    const visibleHeight = Math.max(1, area.bottom - area.top);
+    const visibleWidth = Math.max(1, area.right - area.left);
+    const characterHeight = Math.max(1, bounds.bottom - bounds.top);
+    const characterWidth = Math.max(1, bounds.right - bounds.left);
+    const fitRatio = Math.max(
+      characterHeight / (visibleHeight * 0.84),
+      characterWidth / (visibleWidth * 0.82),
+      1
+    );
+
+    if (fitRatio > 1.002) {
+      viewDistance = THREE.MathUtils.clamp(viewDistance * fitRatio * 1.035, 5.2, 9.5);
+      applyCameraPose();
+      bounds = characterScreenBounds();
+      if (!bounds) return;
+    }
+
+    const targetCenter = (area.top + area.bottom) * 0.5;
+    const currentCenter = (bounds.top + bounds.bottom) * 0.5;
+    const deltaPixels = targetCenter - currentCenter;
+    const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
+    const worldPerPixel = verticalWorld / Math.max(1, canvas.height);
+    previewRoot.position.y -= deltaPixels * worldPerPixel;
+    applyCameraPose();
+  }
+}
+
+let characterFrameRaf = 0;
+function scheduleCharacterFrame(force = false) {
+  cancelAnimationFrame(characterFrameRaf);
+  characterFrameRaf = requestAnimationFrame(() => frameCharacterToVisibleArea(force));
+}
+
 function resize() {
   const width = Math.max(1, window.innerWidth);
   const height = Math.max(1, window.innerHeight);
@@ -1388,15 +1476,16 @@ function resize() {
   camera.updateProjectionMatrix();
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
-  previewRoot.position.y = mobile ? 1.42 : 0;
-  camera.position.set(previewRoot.position.x, mobile ? 2.55 : 1.64, viewDistance);
-  camera.lookAt(previewRoot.position.x, mobile ? 1.78 : 1.16, 0);
+  if (!mobile) previewRoot.position.y = 0;
+  applyCameraPose();
 }
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
   viewDistance = 6.15;
+  previewRoot.position.y = 0;
   resize();
+  scheduleCharacterFrame(true);
 }
 
 const pointerMap = new Map();
@@ -1511,9 +1600,9 @@ removePartBtn.addEventListener('click', async () => {
   if (!part.optional) return;
   await setPart(part.id, null, { allowNone: true });
 });
-heightSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
-buildSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
-headSizeSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); });
+heightSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); scheduleCharacterFrame(false); });
+buildSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); scheduleCharacterFrame(false); });
+headSizeSlider.addEventListener('input', () => { readProportionControls(); updateSummary(); scheduleCharacterFrame(false); });
 $('resetProportionsBtn').addEventListener('click', resetProportions);
 
 animSpeed.addEventListener('input', () => {
@@ -1540,8 +1629,14 @@ $('randomBtn').addEventListener('click', async () => {
   showToast('New modular character created.');
 });
 
-window.addEventListener('resize', resize);
-window.visualViewport?.addEventListener('resize', resize);
+window.addEventListener('resize', () => {
+  resize();
+  scheduleCharacterFrame(false);
+});
+window.visualViewport?.addEventListener('resize', () => {
+  resize();
+  scheduleCharacterFrame(false);
+});
 
 function animate() {
   requestAnimationFrame(animate);
