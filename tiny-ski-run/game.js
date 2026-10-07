@@ -693,36 +693,40 @@ function updateMonster(dt,m){
 
   if(!monster)return;
 
-  // Home continuously on the NORTH/top-centre of the skier. Do not clamp
-  // the yeti to the piste at its own row: it is allowed to tear through the
-  // treeline/off-piste to get directly onto the skier's tail.
+  // Exact target: NORTH/top-centre of the 16px skier sprite.
   const targetX=player.x;
-  const dx=targetX-monster.x;
-  const lateralSpeed=110+Math.min(55,Math.abs(dx)*.55)+Math.min(25,m*.01);
-  monster.x+=clamp(dx,-lateralSpeed*dt,lateralSpeed*dt);
-
-  // The actual rear anchor is the NORTH-most edge of the skier sprite.
   const rearY=player.y-TILE/2;
 
-  // The yeti has its own downhill speed and NEVER inherits the player's boost.
-  // Before the skier passes it, it runs at 60% of normal skier speed.
-  // Once passed, it accelerates to 90% so it still feels like it is pursuing,
-  // but the skier continues to pull away.
-  const yetiSpeedFactor=monster.phase==='rush'?.60:.90;
-  const yetiDownhillSpeed=baseSpeed*yetiSpeedFactor;
+  if(monster.phase==='rush'){
+    // Before the player passes it, the yeti actively HOMES toward that rear
+    // anchor on BOTH axes at 60% of base skier speed. This is not camera
+    // drift: every frame it is deliberately trying to reduce X and Y error.
+    const homeSpeed=baseSpeed*.60;
+    const dx=targetX-monster.x;
+    const dy=rearY-monster.screenY;
+    monster.x+=clamp(dx,-homeSpeed*dt,homeSpeed*dt);
+    monster.screenY+=clamp(dy,-homeSpeed*dt,homeSpeed*dt);
 
-  // Camera-relative motion is simply the difference between player speed and
-  // yeti speed. Because player speed includes boosts and yeti speed does not,
-  // a boost can only increase the rate at which the player catches / escapes it.
-  const relativeScreenSpeed=speed-yetiDownhillSpeed;
-  monster.screenY-=relativeScreenSpeed*dt;
+    // The player has passed the yeti once it reaches/crosses the north/rear
+    // plane. From this point it accelerates to 90% downhill speed.
+    if(monster.screenY<=rearY){
+      monster.screenY=rearY;
+      monster.phase='trailing';
+    }
+  }else{
+    // It is still trying to get back onto the player's tail: keep homing X
+    // toward the skier. Vertically, though, it only skis at 90% of base speed,
+    // so the faster player steadily leaves it further north/behind.
+    const lateralHomeSpeed=baseSpeed*.90;
+    const dx=targetX-monster.x;
+    monster.x+=clamp(dx,-lateralHomeSpeed*dt,lateralHomeSpeed*dt);
 
-  if(monster.phase==='rush' && monster.screenY<=rearY){
-    monster.screenY=rearY;
-    monster.phase='trailing';
+    const yetiDownhillSpeed=baseSpeed*.90;
+    const relativeScreenSpeed=speed-yetiDownhillSpeed;
+    monster.screenY-=relativeScreenSpeed*dt;
   }
 
-  // Keep tracking the skier even off-piste. Only the viewport itself limits X.
+  // The yeti can cut through treeline/off-piste; only the viewport limits X.
   monster.x=clamp(monster.x,6,W-6);
 
   // Once sufficiently far behind/off the north of the screen, this encounter
