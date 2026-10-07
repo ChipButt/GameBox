@@ -195,7 +195,7 @@ function buildPathData(points){
     const dx=b[0]-a[0],dy=b[1]-a[1];
     const len=Math.hypot(dx,dy);
     let row=0;
-    if(Math.abs(dx)>Math.abs(dy))row=dx>0?1:2;
+    if(Math.abs(dx)>Math.abs(dy))row=dx>0?2:1;
     else row=dy>0?0:3;
     segments.push({a,b,dx,dy,len,start:total,row});
     total+=len;
