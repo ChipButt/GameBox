@@ -552,7 +552,7 @@ export const PART_OPTIONS = {
       "label": "Elf / Wizard Hat",
       "kind": "source",
       "category": "headwear",
-      "sourceId": "Elf",
+      "sourceId": "Wizard",
       "sourceIds": [
         "Elf",
         "Wizard"
