@@ -1086,6 +1086,32 @@ function useCharacter() {
   showToast('Exact character build ready for GameBox.');
 }
 
+function geometryFingerprint(group) {
+  if (!group) return null;
+  const points = [];
+  group.traverse?.((node) => {
+    const position = node.geometry?.getAttribute?.('position');
+    if (!position) return;
+    for (let i = 0; i < position.count; i += 1) {
+      points.push(
+        Math.round(position.getX(i) * 1000) + ',' +
+        Math.round(position.getY(i) * 1000) + ',' +
+        Math.round(position.getZ(i) * 1000)
+      );
+    }
+  });
+  if (!points.length) return null;
+  points.sort();
+  let hash = 2166136261;
+  for (const point of points) {
+    for (let i = 0; i < point.length; i += 1) {
+      hash ^= point.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+  }
+  return points.length + ':' + (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 function workshopDiagnosticSnapshot() {
   driverScene?.updateMatrixWorld?.(true);
   const shoeState = activeParts.shoes || {};
@@ -1136,7 +1162,8 @@ function workshopDiagnosticSnapshot() {
       wearableId: state.wearableId || null,
       materialNames: Array.from(materialNames).sort(),
       weightedBoneNames: Array.from(weightedBoneNames).sort(),
-      boneWeightMaxima
+      boneWeightMaxima,
+      geometryFingerprint: geometryFingerprint(state.group)
     };
   }
 
