@@ -568,7 +568,10 @@ function update(dt){
       worldY:scroll+player.y+7,
       x:player.x,
       frame:tracks.length%2?F.tracksA:F.tracksB,
-      angle:player.angle,
+      // Trail is behind the skier: for a vertical mark sprite the canvas
+      // rotation must be the inverse of the skier's lean/velocity direction.
+      // Left carve -> trail leans left through the snow; right carve -> right.
+      angle:-player.angle,
       life:1
     });
     if(tracks.length>70)tracks.shift();
