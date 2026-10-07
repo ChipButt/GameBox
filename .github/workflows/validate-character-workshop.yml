@@ -169,6 +169,14 @@ jobs:
           assert "PART_DEFINITIONS.map" not in game.split("function renderPartCategoryRail()",1)[1].split("}",1)[0] or True
           assert "facialHair" in game, "Facial Hair UI category missing"
           assert "updateHairHeadwearCompatibility" in game, "Headwear/hair compatibility behaviour missing"
+
+          assert "materialVisibility" in game and "material.visible" in game, "Per-feature visibility controls are missing"
+          assert "snapshotMaterialVisibility" in game and "applySavedVisibility" in game, "Feature visibility is not persisted"
+          assert "Band / Gold trim" in game, "Wizard/Elf hat band is not exposed as its own colour region"
+          assert "Quaternius' Elf/Wizard hat trim" in modular, "Wizard/Elf Gold trim routing rule missing"
+          assert "sourceId = ''" in modular and "return 'headwear'" in modular, "Wizard/Elf hat trim is not routed by source/position"
+          assert "backToCategoriesBtn" in html, "Reference-style component drill-down navigation missing"
+          assert "CHARACTER CUSTOMIZATION" in html, "Reference heading missing"
           assert "parts," in game and "materialNames" in game, "Browser part-separation diagnostics missing"
 
           assert "Christmas Elf" not in html
