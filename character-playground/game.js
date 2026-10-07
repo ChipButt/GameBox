@@ -209,7 +209,7 @@ function fitDriver(model) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
-  if (fitDimension > 0) model.scale.setScalar(1.46 / fitDimension);
+  if (fitDimension > 0) model.scale.setScalar(1.34 / fitDimension);
   model.updateMatrixWorld(true);
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
@@ -1415,8 +1415,8 @@ function buildWorkshopDecor() {
 function applyCameraPose() {
   const mobile = window.innerWidth <= 980;
   if (mobile) {
-    camera.position.set(0, 1.42, viewDistance);
-    camera.lookAt(0, 0.98, 0);
+    camera.position.set(0, 1.40, viewDistance);
+    camera.lookAt(0, 0.72, 0);
     return;
   }
   camera.position.set(previewRoot.position.x, 1.64, viewDistance);
@@ -1450,8 +1450,8 @@ function visibleCharacterArea() {
 // and making the character jump/crop unpredictably between part changes.
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
-  if (force) viewDistance = 6.65;
-  previewRoot.position.set(0, 0.48, 0);
+  if (force) viewDistance = 6.85;
+  previewRoot.position.set(0, 0.76, 0);
   applyCameraPose();
 }
 
@@ -1472,7 +1472,7 @@ function resize() {
   const mobile = width <= 980;
   previewRoot.position.x = mobile ? 0 : -0.78;
   if (mobile) {
-    previewRoot.position.y = 0.48;
+    previewRoot.position.y = 0.76;
   } else {
     previewRoot.position.y = 0;
   }
@@ -1481,8 +1481,8 @@ function resize() {
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = window.innerWidth <= 980 ? 6.65 : 6.55;
-  previewRoot.position.y = window.innerWidth <= 980 ? 0.48 : 0;
+  viewDistance = window.innerWidth <= 980 ? 6.85 : 6.55;
+  previewRoot.position.y = window.innerWidth <= 980 ? 0.76 : 0;
   resize();
   scheduleCharacterFrame(true);
 }
