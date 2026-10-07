@@ -14,7 +14,7 @@ export const PART_OPTIONS = {
   "head": [
     {
       "id": "head-01",
-      "label": "Standard Human Head",
+      "label": "Human Head",
       "sourceId": "BaseCharacter",
       "sourceIds": [
         "BaseCharacter",
@@ -27,87 +27,40 @@ export const PART_OPTIONS = {
         "Casual_Bald",
         "Casual_Female",
         "Casual_Male",
-        "Chef_Hat",
-        "Kimono_Male",
-        "OldClassy_Female",
-        "OldClassy_Male",
-        "Soldier_Female",
-        "Soldier_Male",
-        "Worker_Female",
-        "Worker_Male"
-      ],
-      "geometryHash": "676a20c4ccc461d6cd00",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-02",
-      "label": "Soft Human Head",
-      "sourceId": "Chef_Female",
-      "sourceIds": [
         "Chef_Female",
+        "Chef_Hat",
         "Chef_Male",
-        "Kimono_Female"
-      ],
-      "geometryHash": "45e11f852d0cd55f3b99",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-03",
-      "label": "Cow Head",
-      "sourceId": "Cow",
-      "sourceIds": [
-        "Cow"
-      ],
-      "geometryHash": "9f4c1486c25ae8302f98",
-      "baseColors": {
-        "White": "#dddddd",
-        "Black": "#252525",
-        "Pink": "#d66a73"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-04",
-      "label": "Defined Human Head",
-      "sourceId": "Cowboy_Female",
-      "sourceIds": [
         "Cowboy_Female",
         "Cowboy_Hair",
         "Cowboy_Male",
-        "Ninja_Female",
-        "Ninja_Male_Hair",
-        "Ninja_Sand_Female"
-      ],
-      "geometryHash": "629646cfd3e0a7bc5d31",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-05",
-      "label": "Mature Human Head",
-      "sourceId": "Doctor_Female_Old",
-      "sourceIds": [
         "Doctor_Female_Old",
         "Doctor_Female_Young",
         "Doctor_Male_Old",
-        "Doctor_Male_Young"
+        "Doctor_Male_Young",
+        "Kimono_Female",
+        "Kimono_Male",
+        "Knight_Golden_Female",
+        "Knight_Golden_Male",
+        "Knight_Male",
+        "Ninja_Female",
+        "Ninja_Male",
+        "Ninja_Male_Hair",
+        "Ninja_Sand",
+        "Ninja_Sand_Female",
+        "OldClassy_Female",
+        "OldClassy_Male",
+        "Pirate_Female",
+        "Pirate_Male",
+        "Soldier_Female",
+        "Soldier_Male",
+        "Suit_Female",
+        "Suit_Male",
+        "VikingHelmet",
+        "Viking_Female",
+        "Viking_Male",
+        "Worker_Female",
+        "Worker_Male"
       ],
-      "geometryHash": "4dd9c5686ff92642e00f",
       "baseColors": {
         "Skin": "#d6a67d",
         "Face": "#f2dfc2"
@@ -124,7 +77,6 @@ export const PART_OPTIONS = {
         "Witch",
         "Wizard"
       ],
-      "geometryHash": "d20d7211921f3fcabfbf",
       "baseColors": {
         "Skin": "#d6a67d",
         "Face": "#f2dfc2"
@@ -139,7 +91,6 @@ export const PART_OPTIONS = {
       "sourceIds": [
         "Goblin_Female"
       ],
-      "geometryHash": "da7cba23a37f52dbe9e0",
       "baseColors": {
         "Skin": "#74813f",
         "Face": "#4d542a"
@@ -154,7 +105,6 @@ export const PART_OPTIONS = {
       "sourceIds": [
         "Goblin_Male"
       ],
-      "geometryHash": "9c82ffc50825f7a2b459",
       "baseColors": {
         "Skin": "#74813f",
         "Face": "#4d542a",
@@ -164,75 +114,16 @@ export const PART_OPTIONS = {
       "category": "head"
     },
     {
-      "id": "head-09",
-      "label": "Golden Knight Head",
-      "sourceId": "Knight_Golden_Female",
+      "id": "head-03",
+      "label": "Cow Head",
+      "sourceId": "Cow",
       "sourceIds": [
-        "Knight_Golden_Female",
-        "Knight_Golden_Male"
+        "Cow"
       ],
-      "geometryHash": "c46ac14829d80d71202c",
       "baseColors": {
-        "Skin": "#d6a67d"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-10",
-      "label": "Knight Head",
-      "sourceId": "Knight_Male",
-      "sourceIds": [
-        "Knight_Male"
-      ],
-      "geometryHash": "ae6b58bdb7dae772b776",
-      "baseColors": {
-        "Skin": "#d6a67d"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-11",
-      "label": "Ninja Head",
-      "sourceId": "Ninja_Male",
-      "sourceIds": [
-        "Ninja_Male"
-      ],
-      "geometryHash": "2c549be76f330ce8ced4",
-      "baseColors": {
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-12",
-      "label": "Sand Ninja Head",
-      "sourceId": "Ninja_Sand",
-      "sourceIds": [
-        "Ninja_Sand"
-      ],
-      "geometryHash": "770ad1376d16228e678d",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-13",
-      "label": "Pirate Head",
-      "sourceId": "Pirate_Female",
-      "sourceIds": [
-        "Pirate_Female",
-        "Pirate_Male"
-      ],
-      "geometryHash": "1f8a23fcaa9cdeb7507d",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
+        "White": "#dddddd",
+        "Black": "#252525",
+        "Pink": "#d66a73"
       },
       "kind": "source",
       "category": "head"
@@ -244,43 +135,9 @@ export const PART_OPTIONS = {
       "sourceIds": [
         "Pug"
       ],
-      "geometryHash": "d199400ba65874538a3a",
       "baseColors": {
         "Beige": "#c9a06d",
         "Brown": "#5d3b2a"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-15",
-      "label": "Refined Human Head",
-      "sourceId": "Suit_Female",
-      "sourceIds": [
-        "Suit_Female",
-        "Suit_Male"
-      ],
-      "geometryHash": "94a7dd8c53cb8fe0fa8a",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
-      "id": "head-16",
-      "label": "Viking Head",
-      "sourceId": "Viking_Female",
-      "sourceIds": [
-        "VikingHelmet",
-        "Viking_Female",
-        "Viking_Male"
-      ],
-      "geometryHash": "0a16cc05ef0c6737f722",
-      "baseColors": {
-        "Skin": "#d6a67d",
-        "Face": "#f2dfc2"
       },
       "kind": "source",
       "category": "head"
@@ -292,7 +149,6 @@ export const PART_OPTIONS = {
       "sourceIds": [
         "Zombie_Female"
       ],
-      "geometryHash": "6acb1ba0b412402430fc",
       "baseColors": {
         "Skin": "#74836a",
         "Face": "#485247"
@@ -307,7 +163,6 @@ export const PART_OPTIONS = {
       "sourceIds": [
         "Zombie_Male"
       ],
-      "geometryHash": "158ba69195ebc4d2912b",
       "baseColors": {
         "Skin": "#74836a",
         "Face": "#485247",
@@ -317,7 +172,7 @@ export const PART_OPTIONS = {
       "category": "head"
     }
   ],
-    "hair": [
+  "hair": [
     {
       "id": "hair-soldier-f",
       "label": "Soldier Hair",
