@@ -155,34 +155,137 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   return 'top';
 }
 
+function triangleVertices(geometry, start) {
+  const index = geometry.getIndex?.();
+  if (index) return [index.getX(start), index.getX(start + 1), index.getX(start + 2)];
+  return [start, start + 1, start + 2];
+}
+
+function vertexRegionWeight(skinIndex, skinWeight, boneNames, vertexIndex, names) {
+  if (!skinIndex || !skinWeight) return 0;
+  let total = 0;
+  for (let slot = 0; slot < 4; slot += 1) {
+    const jointIndex = skinIndex.array[vertexIndex * skinIndex.itemSize + slot];
+    const weight = skinWeight.array[vertexIndex * skinWeight.itemSize + slot] || 0;
+    if (weight > 0 && names.has(boneNames[jointIndex])) total += weight;
+  }
+  return total;
+}
+
+function connectedHeadTriangleStarts(geometry, mesh, group) {
+  const material = materialAt(mesh, group.materialIndex || 0);
+  const materialName = String(material?.name || '');
+  if (!HEAD_BASE_RE.test(materialName)) return new Set();
+
+  const position = geometry.getAttribute('position');
+  const skinIndex = geometry.getAttribute('skinIndex');
+  const skinWeight = geometry.getAttribute('skinWeight');
+  const boneNames = mesh.skeleton?.bones?.map((bone) => bone.name) || [];
+  if (!position || !skinIndex || !skinWeight || !boneNames.length) return new Set();
+
+  const elementCount = geometry.getIndex?.()?.count || position.count;
+  const end = Math.min(group.start + group.count, elementCount);
+  const triangles = [];
+  const vertexToTriangles = new Map();
+
+  for (let start = group.start; start + 2 < end; start += 3) {
+    const vertices = triangleVertices(geometry, start);
+    const triangleIndex = triangles.length;
+    triangles.push({ start, vertices });
+    for (const vertexIndex of vertices) {
+      if (!vertexToTriangles.has(vertexIndex)) vertexToTriangles.set(vertexIndex, []);
+      vertexToTriangles.get(vertexIndex).push(triangleIndex);
+    }
+  }
+
+  const components = [];
+  const seen = new Set();
+  for (let startIndex = 0; startIndex < triangles.length; startIndex += 1) {
+    if (seen.has(startIndex)) continue;
+    const stack = [startIndex];
+    seen.add(startIndex);
+    const triangleIndices = [];
+    const vertexIndices = new Set();
+
+    while (stack.length) {
+      const triangleIndex = stack.pop();
+      triangleIndices.push(triangleIndex);
+      for (const vertexIndex of triangles[triangleIndex].vertices) {
+        vertexIndices.add(vertexIndex);
+        for (const neighbour of vertexToTriangles.get(vertexIndex) || []) {
+          if (seen.has(neighbour)) continue;
+          seen.add(neighbour);
+          stack.push(neighbour);
+        }
+      }
+    }
+
+    let headWeight = 0;
+    let maxHeadWeight = 0;
+    let maxArmWeight = 0;
+    for (const vertexIndex of vertexIndices) {
+      const head = vertexRegionWeight(skinIndex, skinWeight, boneNames, vertexIndex, HEAD_BONES);
+      const arm = vertexRegionWeight(skinIndex, skinWeight, boneNames, vertexIndex, ARM_BONES);
+      headWeight += head;
+      maxHeadWeight = Math.max(maxHeadWeight, head);
+      maxArmWeight = Math.max(maxArmWeight, arm);
+    }
+
+    components.push({ triangleIndices, headWeight, maxHeadWeight, maxArmWeight });
+  }
+
+  const bestHeadWeight = Math.max(0, ...components.map((component) => component.headWeight));
+  const selected = new Set();
+  for (const component of components) {
+    const clearlyHeadConnected = component.maxHeadWeight >= 0.45
+      && component.headWeight >= Math.max(0.9, bestHeadWeight * 0.08);
+    const armFree = component.maxArmWeight < 0.08;
+    if (!clearlyHeadConnected || !armFree) continue;
+    for (const triangleIndex of component.triangleIndices) {
+      selected.add(triangles[triangleIndex].start);
+    }
+  }
+  return selected;
+}
+
 function splitMeshIntoTemplates(THREE, mesh) {
-  const sourceGeometry = mesh.geometry?.index ? mesh.geometry.toNonIndexed() : mesh.geometry?.clone();
+  const sourceGeometry = mesh.geometry;
   if (!sourceGeometry?.getAttribute('position')) return {};
 
   sourceGeometry.computeBoundingBox();
   const bbox = sourceGeometry.boundingBox;
   const yMin = bbox?.min?.y ?? 0;
   const yRange = Math.max(1e-6, (bbox?.max?.y ?? 1) - yMin);
+  const elementCount = sourceGeometry.getIndex?.()?.count || sourceGeometry.getAttribute('position').count;
 
   const groups = sourceGeometry.groups?.length
     ? sourceGeometry.groups
-    : [{ start: 0, count: sourceGeometry.getAttribute('position').count, materialIndex: 0 }];
+    : [{ start: 0, count: elementCount, materialIndex: 0 }];
 
   const buckets = new Map();
 
   for (const group of groups) {
-    const end = Math.min(group.start + group.count, sourceGeometry.getAttribute('position').count);
+    const headTriangleStarts = connectedHeadTriangleStarts(sourceGeometry, mesh, group);
+    const end = Math.min(group.start + group.count, elementCount);
+
     for (let start = group.start; start + 2 < end; start += 3) {
-      const vertices = [start, start + 1, start + 2];
-      const category = classifyTriangle(
-        sourceGeometry,
-        mesh,
-        vertices,
-        group.materialIndex || 0,
-        yMin,
-        yRange
-      );
+      const vertices = triangleVertices(sourceGeometry, start);
+      let category = headTriangleStarts.has(start)
+        ? 'head'
+        : classifyTriangle(
+            sourceGeometry,
+            mesh,
+            vertices,
+            group.materialIndex || 0,
+            yMin,
+            yRange
+          );
+
+      // Head geometry is decided by connected components above. A triangle rejected
+      // by that pass belongs with the body instead of becoming an isolated head shard.
+      if (category === 'head' && !headTriangleStarts.has(start)) category = 'top';
       if (!category) continue;
+
       const key = category + '::' + (group.materialIndex || 0);
       if (!buckets.has(key)) {
         buckets.set(key, {
@@ -214,7 +317,6 @@ function splitMeshIntoTemplates(THREE, mesh) {
     (templates[bucket.category] ||= []).push(template);
   }
 
-  if (sourceGeometry !== mesh.geometry) sourceGeometry.dispose();
   return templates;
 }
 
@@ -237,7 +339,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
     const promise = new Promise((resolve, reject) => {
       loader.load(
-        entry.path + '?parts=4',
+        entry.path + '?parts=5',
         (gltf) => {
           try {
             const combined = {
