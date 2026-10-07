@@ -83,7 +83,7 @@ const SLOPE_ANGLE=Math.atan((.25*S)/(2*S));
 const FLOOR_CLEARANCE=BALL_R+.045;
 
 let renderer,scene,camera,loader;
-let slantAsset,helixAsset,marbleAsset,bannerAsset,supportBottom,supportMiddle,supportTop;
+let slantAsset,helixAsset,marbleAsset,bannerAsset;
 let marbles=[];
 let gate=null;
 let raceActive=false;
@@ -130,29 +130,6 @@ function buildSlant(centerX,centerY){
  return g;
 }
 
-function buildSupportColumn(x,z,targetY,scale=1){
- const baseY=-.82;
- const bottomH=.5*scale;
- const midH=.5*scale;
- const topH=.7*scale;
- const available=Math.max(0,targetY-baseY-bottomH-topH);
- const mids=Math.max(0,Math.floor(available/midH));
-
- const b=cloneAsset(supportBottom,scale);
- b.position.set(x,baseY,z);
- scene.add(b);
-
- for(let i=0;i<mids;i++){
-  const m=cloneAsset(supportMiddle,scale);
-  m.position.set(x,baseY+bottomH+i*midH,z);
-  scene.add(m);
- }
-
- const t=cloneAsset(supportTop,scale);
- t.position.set(x,targetY-topH,z);
- scene.add(t);
-}
-
 function buildCourse(){
  buildSlant(5*S,8.125);
  buildSlant(3*S,7.8125);
@@ -167,11 +144,8 @@ function buildCourse(){
  buildSlant(-1*S,-.3125);
  buildSlant(-3*S,-.625);
 
- buildSupportColumn(0,0,8.05,1);
  buildSupportColumn(5*S,R,7.75,.9);
- buildSupportColumn(3*S,R,7.45,.9);
  buildSupportColumn(1*S,R,7.15,.9);
- buildSupportColumn(-1*S,R,.05,.9);
  buildSupportColumn(-3*S,R,-.25,.9);
 
  const startArch=cloneAsset(bannerAsset,1.9);
@@ -453,8 +427,13 @@ function resize(){
  camera.updateProjectionMatrix();
 
  const portrait=camera.aspect<.9;
- camera.position.set(portrait?12:10,portrait?7.8:7.2,portrait?23:19);
- camera.lookAt(new THREE.Vector3(1.0,3.85,.4));
+ // High three-quarter view so the open channel and all spiral levels remain visible.
+ camera.position.set(
+  portrait?11.5:10.5,
+  portrait?21.0:18.0,
+  portrait?19.5:17.0
+ );
+ camera.lookAt(new THREE.Vector3(.8,3.55,0));
 }
 
 function animate(t){
@@ -486,9 +465,9 @@ async function init(){
 
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0xc5dce7);
-  scene.fog=new THREE.Fog(0xc5dce7,19,38);
+  scene.fog=new THREE.Fog(0xc5dce7,24,46);
 
-  camera=new THREE.PerspectiveCamera(42,1,.1,100);
+  camera=new THREE.PerspectiveCamera(44,1,.1,100);
   loader=new GLTFLoader();
 
   scene.add(new THREE.HemisphereLight(0xf8fcff,0x5f7158,2.2));
@@ -507,18 +486,12 @@ async function init(){
    slantAsset,
    helixAsset,
    marbleAsset,
-   bannerAsset,
-   supportBottom,
-   supportMiddle,
-   supportTop
+   bannerAsset
   ]=await Promise.all([
    load(base+'slant-long-a.glb'),
    load(base+'helix-large-left.glb'),
    load(base+'marble-high.glb'),
-   load(base+'banner-double-high.glb'),
-   load(base+'support-four-bottom.glb'),
-   load(base+'support-four-middle.glb'),
-   load(base+'support-four-top-double.glb')
+   load(base+'banner-double-high.glb')
   ]);
 
   buildCourse();
