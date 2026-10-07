@@ -3,43 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11191e">
-<title>Block Breaker · 12 Days Level Review</title>
+<title>Block Breaker · Reference Match Review</title>
 <style>
-html,body{margin:0;background:#11191e;color:#fff;font-family:Arial,sans-serif}body{padding:18px}
-h1{margin:0 0 6px;font-size:24px}p{margin:0 0 18px;color:#9fb0ba}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.card{background:#18252d;border:1px solid #3c505c;border-radius:12px;overflow:hidden}
-.card h2{font-size:14px;margin:0;padding:10px 12px;background:#0f171c}
-canvas{display:block;width:100%;height:auto;background:#111a20}
+html,body{margin:0;background:#10181d;color:#fff;font-family:Arial,sans-serif}body{padding:16px}
+h1{margin:0 0 5px;font-size:23px}p{margin:0 0 16px;color:#a9b7bf}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:#17242b;border:1px solid #40535e;border-radius:10px;overflow:hidden}
+.card h2{font-size:14px;margin:0;padding:9px 11px;background:#0c1419}
+canvas{display:block;width:100%;height:auto}
 </style>
-</head>
-<body>
-<h1>Block Breaker · 12 Days of Christmas</h1>
-<p>These are rendered from the exact 16×16 masks used by the live game.</p>
+</head><body>
+<h1>Block Breaker · 12 Reference-Matched Levels</h1>
+<p>This page reads the same level-art-v9.js masks as the live game.</p>
 <div id="grid" class="grid"></div>
+<script src="level-art-v9.js"></script>
 <script>
-const MASKS={"santa":["......RRRR......",".....RRRRRR.....","....RRRRRRRR....","...RRRRRRRRRR...","..WWWWWWWWWWWW..","..WOOOOOOOOOOW..","..WOOKOOOOKOOW..","..WOOOOOOOOOOW..","...WWOOOOOOWW...","...WWWOOOOWWW...","....WWOOOOWW....",".....WWOOWW.....","......WWWW......",".......WW.......","................","................"],"candycane":[".....RRRWWW.....","...RRRWWWWWWW...","..RRRWW....WWWW.","..RRWW......WWW.","..RWW........WW.","...WWW..........","...RRR..........","...WWW..........","...RRR..........","...WWW..........","...RRR..........","...WWW..........","...RRR..........","...WWW..........","...RRR..........","...WWW.........."],"present":["...YYY..YYY.....","..YY.YYYY.YY....",".YY..YYYY..YY...","..YY.YYYY.YY....","...YYYYYYYY.....","....YY..YY......","...YY....YY.....","..RRRRRYYRRRRR..","..RRRRRYYRRRRR..","..RRRRRYYRRRRR..","..YYYYYYYYYYYY..","..RRRRRYYRRRRR..","..RRRRRYYRRRRR..","..RRRRRYYRRRRR..","..RRRRRYYRRRRR..","..RRRRRRRRRRRR.."],"bauble":["......YYYY......","......YYYY......","....RRRRRRRR....","...RRRRRRRRRR...","..RRRRYYRRRRRR..",".RRRRYYRRRRRRRR.",".RRRYYRRRRRRRRR.","RRRYYRRRRRRRRRRR","RRYYRRRRRRRRRRRR",".RRRRRRRRRRRRRR.",".RRRRRRRRRRRRRR.","..RRRRRRRRRRRR..","...RRRRRRRRRR...","....RRRRRRRR....","......RRRR......","................"],"stocking":["...WWWWWWWWW....","...WWWWWWWWW....","...RRRRRRR......","...RRRRRRR......","...RRRRRRR......","...RRRRRRR......","...RRRRRRR......","...RRRRRRRR.....","...RRRRRRRRR....","...RRRRRRRRRR...","..RRRRRRRRRRRR..",".RRRRRRRRRRRRRR.",".RRRRRRRRRRRRRR.","..RRRRRRRRRRRR..","....RRRRRRRR....","......RRRR......"],"tree":[".......YY.......","......YYYY......",".......GG.......","......GGGG......",".....GGGGGG.....","....GGGGRGGG....","...GGGGGGGGGG...",".....GGGGGG.....","....GGGYGGGG....","...GGGGGGGGGG...","..GGGGRGGGGGGG..",".GGGGGGGGGGGGGG.","......OOOO......","......OOOO......","......OOOO......","................"],"snowglobe":[".....BBBBBB.....","...BBBBBBBBBB...","..BBBWWWWWWBBB..",".BBBWWGGGGWWBBB.",".BBWWGGGGGGWWBB.","BBWWGGYGGGGGWWBB","BBWWGGGGGGGGWWBB","BBWWWGGGGGGWWWBB",".BBWWWWWWWWWWBB.",".BBBWWWWWWWWBBB.","..BBBBWWWWBBBB..","...BBBBBBBBBB...","....RRRRRRRR....","...RRRRRRRRRR...","..RRRRYYYYRRRR..","................"],"snowman":["....KKKKKK......","....KKKKKK......","...WWWWWWWW.....","..WWKWWWWKWW....","..WWWWOWWWWW....","...WWWWWWWW.....","....RRRRRR......","...RRRRRRRR.....","..WWWWWWWWWW....",".WWWWWWWWWWWW...",".WWWWKWWKWWWW...",".WWWWWWWWWWWW...","..WWWWWWWWWW....","...WWWWWWWW.....","....WWWWWW......","................"],"mitten":[".....RRRRR......","....RRRRRRR.....","...RRRRRRRRR....","..RRRRRRRRRR....","..RRRRRRRRRR....","RRRRRRRRRRRR....","RRRRRRRRRRRR....",".RRRRRRRRRRR....","..RRRRRRRRRR....","...RRRRRRRRR....","...RRRRRRRRR....","...RRRRRRRRR....","...WWWWWWWWW....","...WWWWWWWWW....","....WWWWWWW.....","................"],"elf":[".......GG.......","......GGGG......",".....GGGGGG.....","....GGGGGGGG....","...GGGGGGGGGG...","..GGGGGGGGGGGG..","..WWWWWWWWWWWW..",".OOOWOOOOOOWOOO.",".OOOOKOOOOKOOOO.","..OOOOOOOOOOOO..","...OOOOOOOOOO...","...ROOOOOOOOR...","....OOOOOOOO....",".....OOOOOO.....","......OOOO......","................"],"reindeer":["YY..........YY..",".YY........YY...","..YY......YY....","...YY....YY.....","..Y.OO..OO.Y....","...OOOOOOOO.....","..OOOOOOOOOO....",".OOOOKOOOOKOO...",".OOOOOOOOOOOO...","..OOOOOROOOO....","...OOOOOOOO.....","...OOO..OOO.....","..OOO....OOO....","..OO......OO....",".KK........KK...","................"],"poinsettia":["....GG....GG....","...GGG....GGG...","..GGG......GGG..","...GRR....RRG...","....RRR..RRR....","..RRRRR..RRRRR..","...RRRRRRRRRR...","....RRRYYRRR....","....RRYYYYRR....","....RRRYYRRR....","...RRRRRRRRRR...","..RRRRR..RRRRR..","....RRR..RRR....","...GRR....RRG...","..GGG......GGG..","....GG....GG...."]};
-const NAMES=["Santa Claus","Candy Cane","Wrapped Present","Christmas Bauble","Christmas Stocking","Christmas Tree","Snow Globe","Snowman","Winter Mitten","Christmas Elf","Reindeer","Poinsettia"];
-const COLORS={R:'#e95b6f',G:'#49d29d',Y:'#ffcd46',W:'#ecf8ff',B:'#4cb8eb',O:'#df8f44',K:'#173a56'};
+const T={R:[220,36,62,.60],G:[46,142,114,.58],Y:[254,172,62,.58],W:[242,241,246,.25],B:[82,188,239,.58],O:[205,108,15,.58],K:[15,22,38,.80],N:[255,228,209,.58],P:[248,110,127,.58]};
 const grid=document.getElementById('grid');
-Object.keys(MASKS).forEach((key,i)=>{
-  const card=document.createElement('section');card.className='card';
-  const h=document.createElement('h2');h.textContent='Day '+(i+1)+' · '+NAMES[i];card.appendChild(h);
-  const c=document.createElement('canvas');c.width=390;c.height=360;card.appendChild(c);grid.appendChild(card);
-  const x=c.getContext('2d');x.fillStyle='#111a20';x.fillRect(0,0,c.width,c.height);
-  const rows=MASKS[key],bw=19,bh=12,gap=3,total=16*bw+15*gap,ox=(390-total)/2,oy=42;
-  rows.forEach((row,r)=>row.split('').forEach((ch,col)=>{
-    if(ch==='.')return;
-    const px=ox+col*(bw+gap),py=oy+r*(bh+gap);
-    const grad=x.createLinearGradient(px,py,px,py+bh);
-    grad.addColorStop(0,'rgba(255,255,255,.95)');grad.addColorStop(.35,COLORS[ch]);grad.addColorStop(1,'rgba(156,205,228,.78)');
-    x.fillStyle=grad;x.strokeStyle='rgba(225,249,255,.78)';x.lineWidth=1;
-    x.beginPath();x.roundRect(px,py,bw,bh,3);x.fill();x.stroke();
-  }));
-  x.fillStyle='#eef8ff';x.beginPath();x.arc(195,318,8,0,Math.PI*2);x.fill();
-  x.fillStyle='#d74249';x.beginPath();x.roundRect(147,336,96,12,6);x.fill();
+(window.BLOCK_BREAKER_LEVEL_ART||[]).forEach(function(level,i){
+ const card=document.createElement('section');card.className='card';
+ const h=document.createElement('h2');h.textContent=(i+1)+'. '+level.name;card.appendChild(h);
+ const c=document.createElement('canvas');c.width=390;c.height=360;card.appendChild(c);grid.appendChild(card);
+ const x=c.getContext('2d');x.fillStyle='#111a20';x.fillRect(0,0,c.width,c.height);
+ const bw=17,bh=11,g=3,total=18*bw+17*g,ox=(390-total)/2,oy=38;
+ level.rows.forEach(function(row,r){row.split('').forEach(function(ch,col){
+   if(ch==='.')return; const q=T[ch]||T.B,px=ox+col*(bw+g),py=oy+r*(bh+g);
+   x.fillStyle='rgba('+q[0]+','+q[1]+','+q[2]+','+q[3]+')';
+   x.strokeStyle='rgba(225,248,255,.82)';x.lineWidth=1;
+   x.beginPath();x.roundRect(px,py,bw,bh,3);x.fill();x.stroke();
+   x.fillStyle='rgba(255,255,255,.34)';x.fillRect(px+2,py+1,bw-4,1);
+ });
+ });
+ x.fillStyle='#eef8ff';x.beginPath();x.arc(195,316,8,0,Math.PI*2);x.fill();
+ x.fillStyle='#d6e0e5';x.beginPath();x.roundRect(154,337,82,11,5);x.fill();
 });
-</script>
-</body>
-</html>
+</script></body></html>
