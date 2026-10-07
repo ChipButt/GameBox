@@ -110,7 +110,7 @@ function maxRegionWeight(skinIndex, skinWeight, boneNames, vertices, names) {
   return maxWeight;
 }
 
-function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, yRange) {
+function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, yRange, sourceId = '') {
   const material = materialAt(mesh, groupMaterialIndex);
   const materialName = String(material?.name || '');
   if (HEADWEAR_RE.test(materialName)) return 'headwear';
@@ -135,6 +135,14 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
     bottom: scoreRegion(skinIndex, skinWeight, boneNames, vertices, BOTTOM_BONES),
     shoes: scoreRegion(skinIndex, skinWeight, boneNames, vertices, FOOT_BONES)
   };
+
+  // Quaternius' Elf/Wizard hat trim is named "Gold", not "Band".
+  // Only the high, Head/Neck-driven Gold triangles belong to the hat; lower Gold
+  // details remain with clothing/accessories.
+  if (/^gold$/i.test(materialName) && /^(Elf|Wizard)$/.test(sourceId)) {
+    const otherBodyScore = Math.max(scores.top, scores.bottom, scores.shoes);
+    if (yNorm > 0.68 && scores.head >= 1.0 && scores.head > otherBodyScore * 1.1) return 'headwear';
+  }
 
   const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const [winner, winnerScore] = ranked[0] || ['top', 0];
@@ -251,7 +259,7 @@ function connectedHeadTriangleStarts(geometry, mesh, group) {
   return selected;
 }
 
-function splitMeshIntoTemplates(THREE, mesh) {
+function splitMeshIntoTemplates(THREE, mesh, sourceId = '') {
   const sourceGeometry = mesh.geometry;
   if (!sourceGeometry?.getAttribute('position')) return {};
 
@@ -281,7 +289,8 @@ function splitMeshIntoTemplates(THREE, mesh) {
             vertices,
             group.materialIndex || 0,
             yMin,
-            yRange
+            yRange,
+            sourceId
           );
 
       // Head geometry is decided by connected components above. A triangle rejected
@@ -342,7 +351,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
     const promise = new Promise((resolve, reject) => {
       loader.load(
-        entry.path + '?parts=5',
+        entry.path + '?parts=6',
         (gltf) => {
           try {
             const combined = {
@@ -353,7 +362,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
             gltf.scene.traverse((node) => {
               if (!node.isSkinnedMesh) return;
-              const templates = splitMeshIntoTemplates(THREE, node);
+              const templates = splitMeshIntoTemplates(THREE, node, entryId);
               for (const [category, items] of Object.entries(templates)) {
                 combined.categories[category].push(...items);
               }
