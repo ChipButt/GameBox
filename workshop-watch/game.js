@@ -306,36 +306,39 @@ function maskHas(mask,col,row){
   return row>=0&&row<mask.length&&col>=0&&col<mask[0].length&&mask[row][col];
 }
 
-function pathFloorRole(mask,col,row){
-  const up=maskHas(mask,col,row-1),down=maskHas(mask,col,row+1);
-  const left=maskHas(mask,col-1,row),right=maskHas(mask,col+1,row);
+function terrainBorderTile(mask,col,row){
+  if(maskHas(mask,col,row))return null;
 
-  if(!up&&!left)return 'top_left_corner';
-  if(!up&&!right)return 'top_right_corner';
-  if(!down&&!left)return 'bottom_left_corner';
-  if(!down&&!right)return 'bottom_right_corner';
-  if(!up)return 'top_edge';
-  if(!down)return 'bottom_edge';
-  if(!left)return 'left_edge';
-  if(!right)return 'right_edge';
-  return 'centre';
-}
+  const up=maskHas(mask,col,row-1);
+  const down=maskHas(mask,col,row+1);
+  const left=maskHas(mask,col-1,row);
+  const right=maskHas(mask,col+1,row);
 
-function turnSnowCornerRole(prev,turn,next){
-  const sign=v=>v===0?0:(v>0?1:-1);
-  const towardPrev=[sign(prev[0]-turn[0]),sign(prev[1]-turn[1])];
-  const towardNext=[sign(next[0]-turn[0]),sign(next[1]-turn[1])];
+  // A snow cell touching path on two perpendicular sides is a concave/inside
+  // corner. The snow-floor sheet is specifically the inverse transition set.
+  if(up&&left)return {set:'snowFloor',role:'top_left_corner'};
+  if(up&&right)return {set:'snowFloor',role:'top_right_corner'};
+  if(down&&left)return {set:'snowFloor',role:'bottom_left_corner'};
+  if(down&&right)return {set:'snowFloor',role:'bottom_right_corner'};
 
-  // The missing inside quadrant is opposite the two path arms.
-  const missing=[
-    -(towardPrev[0]+towardNext[0]),
-    -(towardPrev[1]+towardNext[1])
-  ];
+  // Straight path borders live in the snow cell outside the brown centre fill.
+  if(down)return {set:'pathFloor',role:'top_edge'};
+  if(up)return {set:'pathFloor',role:'bottom_edge'};
+  if(right)return {set:'pathFloor',role:'left_edge'};
+  if(left)return {set:'pathFloor',role:'right_edge'};
 
-  if(missing[0]===1&&missing[1]===1)return 'top_left_corner';
-  if(missing[0]===-1&&missing[1]===1)return 'top_right_corner';
-  if(missing[0]===1&&missing[1]===-1)return 'bottom_left_corner';
-  if(missing[0]===-1&&missing[1]===-1)return 'bottom_right_corner';
+  // Convex/outside corners are diagonal neighbours of the path with no
+  // cardinal contact.
+  const upLeft=maskHas(mask,col-1,row-1);
+  const upRight=maskHas(mask,col+1,row-1);
+  const downLeft=maskHas(mask,col-1,row+1);
+  const downRight=maskHas(mask,col+1,row+1);
+
+  if(downRight)return {set:'pathFloor',role:'top_left_corner'};
+  if(downLeft)return {set:'pathFloor',role:'top_right_corner'};
+  if(upRight)return {set:'pathFloor',role:'bottom_left_corner'};
+  if(upLeft)return {set:'pathFloor',role:'bottom_right_corner'};
+
   return null;
 }
 
@@ -734,24 +737,25 @@ function drawSnowGround(){
 function drawRoute(){
   const mask=activeTerrainMask();
 
-  // Normal path cells: centre, straight edges and outside corners.
+  // The organiser's path sheet is centred around one full brown floor tile.
+  // Fill the whole route with that centre tile first.
   for(let row=0;row<mask.length;row++){
     for(let col=0;col<mask[row].length;col++){
-      if(!mask[row][col])continue;
-      const role=pathFloorRole(mask,col,row);
-      drawMappedTile(GHERWIT.pathFloor[role],col*TILE,row*TILE,1);
+      if(mask[row][col]){
+        drawMappedTile(GHERWIT.pathFloor.centre,col*TILE,row*TILE,1);
+      }
     }
   }
 
-  // The inverse snow corner belongs on the turn cell itself, not on the
-  // neighbouring snow cell. One overlay per waypoint gives a clean concave bend.
-  const grid=activeRouteGrid();
-  for(let i=1;i<grid.length-1;i++){
-    const role=turnSnowCornerRole(grid[i-1],grid[i],grid[i+1]);
-    if(!role)continue;
-    const [col,row]=grid[i];
-    if(row<0||row>=mask.length||col<0||col>=mask[0].length)continue;
-    drawMappedTile(GHERWIT.snowFloor[role],col*TILE,row*TILE,1);
+  // Then draw the eight surrounding transition pieces in the neighbouring
+  // snow cells. Concave bends use the inverse snow-floor corner pieces.
+  for(let row=0;row<mask.length;row++){
+    for(let col=0;col<mask[row].length;col++){
+      if(mask[row][col])continue;
+      const border=terrainBorderTile(mask,col,row);
+      if(!border)continue;
+      drawMappedTile(GHERWIT[border.set][border.role],col*TILE,row*TILE,1);
+    }
   }
 }
 
