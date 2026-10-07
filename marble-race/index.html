@@ -3,29 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#16212b">
+<meta name="theme-color" content="#14212a">
 <title>Marble Race · GameBox</title>
 <style>
-:root{font-family:Inter,ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f7fbff;background:#16212b;--panel:#1d2a35;--line:#314553;--gold:#f1bd54}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#284152 0,#182630 38%,#101920 100%);overflow:hidden}body{min-height:100dvh}.app{position:relative;min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto;padding:max(10px,env(safe-area-inset-top)) 10px max(12px,env(safe-area-inset-bottom));gap:8px}.hud{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;z-index:5}.home,.sound{width:44px;height:44px;border:1px solid #496171;background:linear-gradient(#2d4251,#1e2e3a);color:white;border-radius:12px;font-size:20px;box-shadow:0 4px 0 #0b1116;display:grid;place-items:center;text-decoration:none}.home:active,.sound:active{transform:translateY(3px);box-shadow:0 1px 0 #0b1116}.title{text-align:center;min-width:0}.title strong{display:block;font-size:clamp(18px,5vw,24px);letter-spacing:.02em}.title small{display:block;color:#a9becb;font-size:11px;font-weight:800;letter-spacing:.16em}.stageWrap{position:relative;min-height:0;border:1px solid #405665;border-radius:18px;overflow:hidden;background:linear-gradient(#dce8ee,#b7cbd5);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22),0 8px 22px rgba(0,0,0,.28)}#stage{display:block;width:100%;height:100%;min-height:420px}.standings{position:absolute;left:8px;right:8px;top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;z-index:3;pointer-events:none}.racerChip{min-width:0;background:rgba(13,23,30,.84);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:5px 4px;text-align:center;backdrop-filter:blur(5px)}.racerChip b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-2px;border:2px solid rgba(255,255,255,.75)}.rank{font-size:10px;color:#b8cad4;font-weight:900}.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:4;pointer-events:none;font-size:clamp(64px,24vw,118px);font-weight:1000;color:white;text-shadow:0 6px 0 rgba(0,0,0,.25),0 0 25px rgba(255,255,255,.7);opacity:0;transform:scale(.65)}.countdown.show{animation:count .72s ease both}@keyframes count{0%{opacity:0;transform:scale(.5)}35%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1.35)}}.winner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.85);width:min(86%,320px);padding:18px;border:2px solid rgba(255,255,255,.82);border-radius:18px;background:rgba(15,25,33,.94);text-align:center;z-index:6;opacity:0;pointer-events:none;box-shadow:0 14px 35px rgba(0,0,0,.35)}.winner.show{animation:pop .25s ease forwards}@keyframes pop{to{opacity:1;transform:translate(-50%,-50%) scale(1)}}.winnerBall{width:56px;height:56px;border-radius:50%;margin:0 auto 8px;border:4px solid rgba(255,255,255,.88);box-shadow:inset -10px -10px 0 rgba(0,0,0,.12),0 5px 12px rgba(0,0,0,.32)}.winner small{display:block;color:#afc2cf;font-weight:900;letter-spacing:.15em}.winner strong{display:block;font-size:30px;line-height:1.05;margin-top:3px}.controls{display:grid;grid-template-columns:1fr;gap:7px;z-index:5}.primary{min-height:58px;border:1px solid #f6d487;border-radius:15px;background:linear-gradient(#ffd874,#e9ad3c);color:#2d210b;font-size:19px;font-weight:1000;letter-spacing:.04em;box-shadow:0 6px 0 #96651a,0 9px 16px rgba(0,0,0,.22)}.primary:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 #96651a}.primary:disabled{filter:saturate(.35);color:#6d6251}.status{text-align:center;color:#a9becb;font-size:11px;font-weight:800;min-height:14px}.error{position:absolute;inset:0;display:none;place-items:center;padding:28px;text-align:center;background:#17242d;color:white;z-index:8}.error.show{display:grid}.error strong{display:block;font-size:20px;margin-bottom:5px}@media (max-height:650px){#stage{min-height:340px}.primary{min-height:50px}.hud{grid-template-columns:40px 1fr 40px}.home,.sound{width:40px;height:40px}}@media (prefers-reduced-motion:reduce){.countdown.show,.winner.show{animation:none;opacity:1;transform:translate(-50%,-50%) scale(1)}.countdown.show{transform:none}}
+:root{font-family:Inter,ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f7fbff;background:#14212a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#294554 0,#172832 42%,#0d171d 100%);overflow:hidden}body{min-height:100dvh}.app{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto;gap:8px;padding:max(10px,env(safe-area-inset-top)) 10px max(12px,env(safe-area-inset-bottom))}
+.hud{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:center}.iconBtn{width:44px;height:44px;border:1px solid #4b6574;border-radius:13px;background:linear-gradient(#304a59,#1e303b);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:1000;text-decoration:none;box-shadow:0 4px 0 #081015}.iconBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #081015}.gameTitle{text-align:center;min-width:0}.gameTitle strong{display:block;font-size:clamp(20px,5vw,26px);line-height:1}.gameTitle small{display:block;margin-top:4px;color:#a9bfcb;font-size:10px;font-weight:1000;letter-spacing:.15em}
+.stageWrap{position:relative;min-height:0;overflow:hidden;border:1px solid #405765;border-radius:19px;background:#c7dbe5;box-shadow:inset 0 0 0 2px rgba(255,255,255,.24),0 10px 26px rgba(0,0,0,.28)}#stage{display:block;width:100%;height:100%;min-height:445px;touch-action:none}
+.standings{position:absolute;left:8px;right:8px;top:8px;z-index:4;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;pointer-events:none}.racerChip{min-width:0;padding:6px 3px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:rgba(12,22,28,.84);text-align:center;backdrop-filter:blur(5px)}.racerChip b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rank{display:block;margin-top:2px;color:#b7c8d2;font-size:10px;font-weight:1000}.dot{display:inline-block;width:12px;height:12px;margin-right:4px;border:2px solid rgba(255,255,255,.85);border-radius:50%;vertical-align:-2px}
+.countdown{position:absolute;inset:0;z-index:6;display:grid;place-items:center;pointer-events:none;font-size:clamp(70px,25vw,124px);font-weight:1000;color:#fff;text-shadow:0 7px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.7);opacity:0}.countdown.show{animation:count .7s ease both}@keyframes count{0%{opacity:0;transform:scale(.55)}35%{opacity:1;transform:scale(1.06)}100%{opacity:0;transform:scale(1.28)}}
+.winner{position:absolute;left:50%;top:54%;z-index:7;transform:translate(-50%,-50%) scale(.88);width:min(84%,320px);padding:18px;border:2px solid rgba(255,255,255,.88);border-radius:19px;background:rgba(13,23,30,.96);text-align:center;opacity:0;pointer-events:none;box-shadow:0 16px 40px rgba(0,0,0,.38)}.winner.show{animation:pop .23s ease forwards}@keyframes pop{to{opacity:1;transform:translate(-50%,-50%) scale(1)}}.winnerBall{width:62px;height:62px;margin:0 auto 8px;border:4px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:inset -11px -11px 0 rgba(0,0,0,.14),0 6px 14px rgba(0,0,0,.32)}.winner small{display:block;color:#afc2ce;font-size:11px;font-weight:1000;letter-spacing:.16em}.winner strong{display:block;margin-top:3px;font-size:30px;line-height:1.05}
+.controls{display:grid;gap:7px}.primary{min-height:58px;border:1px solid #f7d785;border-radius:15px;background:linear-gradient(#ffdb7a,#e7ab3d);color:#2c210d;font-size:19px;font-weight:1000;letter-spacing:.04em;box-shadow:0 6px 0 #936219,0 9px 18px rgba(0,0,0,.2)}.primary:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 #936219}.primary:disabled{filter:saturate(.35);color:#716653}.status{text-align:center;color:#a9bdc9;font-size:11px;font-weight:900;min-height:14px}.error{position:absolute;inset:0;z-index:9;display:none;place-items:center;padding:30px;background:#17252e;text-align:center}.error.show{display:grid}.error strong{display:block;font-size:20px;margin-bottom:5px}
+@media(max-height:650px){#stage{min-height:355px}.primary{min-height:50px}.hud{grid-template-columns:40px 1fr 40px}.iconBtn{width:40px;height:40px}}
+@media(prefers-reduced-motion:reduce){.countdown.show,.winner.show{animation:none;opacity:1}.winner.show{transform:translate(-50%,-50%) scale(1)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
 <main class="app">
-<header class="hud"><a class="home" href="../" aria-label="Back to GameBox">←</a><div class="title"><strong>Marble Race</strong><small>4 MARBLES · 1 WINNER</small></div><button class="sound" id="sound" type="button" aria-label="Toggle sound">♪</button></header>
-<section class="stageWrap" id="stageWrap" aria-label="Marble race track">
-<canvas id="stage"></canvas>
+<header class="hud">
+<a class="iconBtn" href="../" aria-label="Back to GameBox">←</a>
+<div class="gameTitle"><strong>Marble Race</strong><small>4 MARBLES · 1 WINNER</small></div>
+<button class="iconBtn" id="sound" type="button" aria-label="Toggle sound">♪</button>
+</header>
+<section class="stageWrap" id="stageWrap">
+<canvas id="stage" aria-label="Four-colour marble race simulation"></canvas>
 <div class="standings" id="standings" aria-live="polite"></div>
 <div class="countdown" id="countdown"></div>
-<div class="winner" id="winner"><div class="winnerBall" id="winnerBall"></div><small>WINNER</small><strong id="winnerText">BLUE!</strong></div>
-<div class="error" id="error"><div><strong>Couldn’t start the race.</strong><span>Refresh and try again.</span></div></div>
+<div class="winner" id="winner"><div class="winnerBall" id="winnerBall"></div><small>WINNER</small><strong id="winnerText"></strong></div>
+<div class="error" id="error"><div><strong>Track failed to load.</strong><span>Refresh and try again.</span></div></div>
 </section>
-<footer class="controls"><button class="primary" id="start" type="button" disabled>Loading track…</button><div class="status" id="status">Continuous Kenney Marble Kit run</div></footer>
+<footer class="controls">
+<button class="primary" id="start" type="button" disabled>Loading marble run…</button>
+<div class="status" id="status">Kenney Marble Kit course</div>
+</footer>
 </main>
+
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
 
 const canvas=document.getElementById('stage');
 const wrap=document.getElementById('stageWrap');
@@ -39,19 +56,42 @@ const winnerText=document.getElementById('winnerText');
 const soundBtn=document.getElementById('sound');
 const errorEl=document.getElementById('error');
 
-const racers=[
- {name:'Red',hex:0xe94c54,css:'#e94c54'},
- {name:'Blue',hex:0x3d82e7,css:'#3d82e7'},
- {name:'Green',hex:0x4db66a,css:'#4db66a'},
- {name:'Yellow',hex:0xf1c94b,css:'#f1c94b'}
+const RACERS=[
+ {name:'Red',hex:0xe54852,css:'#e54852'},
+ {name:'Blue',hex:0x397fe5,css:'#397fe5'},
+ {name:'Green',hex:0x45b467,css:'#45b467'},
+ {name:'Yellow',hex:0xf0c643,css:'#f0c643'}
 ];
 
-let renderer,scene,camera,loader,curve,marbleSource;
-let marbles=[],raceActive=false,raceFinished=false,last=0;
+const TRACK_SCALE=1.35;
+const SEGMENTS=22;
+const SEG_LEN=1*TRACK_SCALE;
+const TRACK_WIDTH=1.7*TRACK_SCALE;
+const SLOPE=THREE.MathUtils.degToRad(10);
+const START_Z=-13.7;
+const START_Y=6.25;
+const MARBLE_R=.205;
+const FLOOR_THICK=.09;
+const RAIL_THICK=.075;
+const RAIL_H=.43;
+const trackDir=new THREE.Vector3(0,-Math.sin(SLOPE),Math.cos(SLOPE));
+const trackNormal=new THREE.Vector3(0,Math.cos(SLOPE),Math.sin(SLOPE));
+const trackQuat3=new THREE.Quaternion().setFromEuler(new THREE.Euler(SLOPE,0,0));
+const trackQuatC=new CANNON.Quaternion();
+trackQuatC.setFromEuler(SLOPE,0,0,'XYZ');
+
+let renderer,scene,camera,loader,world;
+let straightAsset,marbleAsset,bannerAsset,fanAsset,supportBottom,supportMiddle,supportTop;
+let trackMaterial,marbleMaterial,obstacleMaterial;
+let marbles=[];
+let fans=[];
+let gateBody=null,gateMesh=null;
+let raceActive=false,raceFinished=false;
+let last=0;
+let finishOrder=[];
 let soundOn=true,audioCtx=null;
-let cameraTarget=new THREE.Vector3(0,5,0);
-let cameraPos=new THREE.Vector3(7,8,15);
-const up=new THREE.Vector3(0,1,0);
+let cameraFocusZ=START_Z+2;
+let cameraFocusY=START_Y-.3;
 
 function beep(freq,dur,vol){
  if(!soundOn)return;
@@ -72,185 +112,338 @@ function showCount(v){
  countdownEl.classList.add('show');
  beep(v==='GO!'?760:440,.11,.07);
 }
-function rankLabel(n){return n===0?'1ST':n===1?'2ND':n===2?'3RD':'4TH'}
-function updateStandings(){
- const order=marbles.map((m,i)=>({i,p:m.progress})).sort((a,b)=>b.p-a.p);
- standingsEl.innerHTML='';
- order.forEach((o,rank)=>{
-  const r=racers[o.i],d=document.createElement('div');
-  d.className='racerChip';
-  d.innerHTML='<b><span class="dot" style="background:'+r.css+'"></span>'+r.name+'</b><span class="rank">'+rankLabel(rank)+'</span>';
-  standingsEl.appendChild(d);
- });
+function rankText(n){return n===0?'1ST':n===1?'2ND':n===2?'3RD':'4TH'}
+
+function trackPoint(index){
+ return new THREE.Vector3(0,START_Y,START_Z).addScaledVector(trackDir,index*SEG_LEN);
 }
-function cloneMarble(color){
- const g=marbleSource.clone(true);
- g.traverse(n=>{
-  if(n.isMesh){
-   n.material=new THREE.MeshStandardMaterial({color,roughness:.18,metalness:.2});
-   n.castShadow=true;
-  }
- });
- const box=new THREE.Box3().setFromObject(g),size=new THREE.Vector3();
- box.getSize(size);
- g.scale.setScalar(.5/Math.max(size.x,size.y,size.z));
- return g;
+function trackYAtZ(z){
+ const dz=z-START_Z;
+ return START_Y-dz*Math.tan(SLOPE);
 }
-function trackClone(source,scale=1){
+function localToWorld(base,x,y,z){
+ const v=new THREE.Vector3(x,y,z).applyQuaternion(trackQuat3);
+ return base.clone().add(v);
+}
+function cannonVec(v){return new CANNON.Vec3(v.x,v.y,v.z)}
+
+function cloneAsset(source,scale=1){
  const g=source.clone(true);
  g.scale.setScalar(scale);
  g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
  return g;
 }
-function fitSegment(source,width,length){
- const g=source.clone(true);
- g.updateMatrixWorld(true);
- const box=new THREE.Box3().setFromObject(g),size=new THREE.Vector3();
- box.getSize(size);
- const sx=width/Math.max(size.x,.01),sz=length/Math.max(size.z,.01);
- const sy=(sx+sz)*.5;
- g.scale.set(sx,sy,sz);
- g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
- return g;
-}
-function orientAlong(obj,tangent){
- obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent.clone().normalize());
-}
-function placeSpecial(source,t,scale=1,offset=new THREE.Vector3()){
- const g=trackClone(source,scale),p=curve.getPointAt(t),tan=curve.getTangentAt(t);
- g.position.copy(p).add(offset);
- orientAlong(g,tan);
- scene.add(g);
- return g;
-}
-function buildTrack(models){
- const [straight,curveLarge,sCurve,helix,tunnel,funnel,banner,endPiece]=models;
 
- curve=new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-2.8,8.6,0),
-  new THREE.Vector3(-1.3,8.1,-.2),
-  new THREE.Vector3(.7,7.2,-.3),
-  new THREE.Vector3(2.5,6.1,.3),
-  new THREE.Vector3(3.2,5.0,1.2),
-  new THREE.Vector3(2.5,3.9,2.0),
-  new THREE.Vector3(.8,3.0,1.4),
-  new THREE.Vector3(-1.3,2.0,.2),
-  new THREE.Vector3(-2.6,1.0,-1.3),
-  new THREE.Vector3(-2.0,.0,-2.5),
-  new THREE.Vector3(-.2,-.8,-2.8),
-  new THREE.Vector3(1.7,-1.5,-1.7),
-  new THREE.Vector3(2.0,-2.3,.5),
-  new THREE.Vector3(.7,-3.1,2.0),
-  new THREE.Vector3(-1.2,-3.8,1.6),
-  new THREE.Vector3(-2.0,-4.5,.2),
-  new THREE.Vector3(-1.2,-5.2,-1.0),
-  new THREE.Vector3(.2,-5.8,-1.2),
-  new THREE.Vector3(1.5,-6.4,-.4),
-  new THREE.Vector3(.8,-7.0,.4),
-  new THREE.Vector3(0,-8.2,0)
- ],false,'centripetal',.35);
+function makeTrackBody(center){
+ const body=new CANNON.Body({mass:0,material:trackMaterial,position:cannonVec(center)});
+ body.quaternion.copy(trackQuatC);
 
- const count=44;
- for(let i=0;i<count;i++){
-  const t=(i+.5)/count;
-  if((t>.44&&t<.59)||(t>.86&&t<.94))continue;
-  const p=curve.getPointAt(t),tan=curve.getTangentAt(t);
-  const next=curve.getPointAt(Math.min(1,t+1/count));
-  const len=Math.max(.7,p.distanceTo(next)*1.75);
-  const seg=fitSegment(straight,2.0,len);
-  seg.position.copy(p);
-  orientAlong(seg,tan);
-  scene.add(seg);
+ body.addShape(
+  new CANNON.Box(new CANNON.Vec3(TRACK_WIDTH/2,FLOOR_THICK/2,SEG_LEN/2+.015)),
+  new CANNON.Vec3(0,FLOOR_THICK/2,0)
+ );
+
+ const railHalf=new CANNON.Vec3(RAIL_THICK/2,RAIL_H/2,SEG_LEN/2+.02);
+ body.addShape(railHalf?new CANNON.Box(railHalf):null,new CANNON.Vec3(-TRACK_WIDTH/2+RAIL_THICK/2,RAIL_H/2,0));
+ body.addShape(new CANNON.Box(railHalf),new CANNON.Vec3(TRACK_WIDTH/2-RAIL_THICK/2,RAIL_H/2,0));
+ world.addBody(body);
+ return body;
+}
+
+function addSupportStack(segmentIndex){
+ const center=trackPoint(segmentIndex+.5);
+ const underside=center.y-.08;
+ const stackScale=TRACK_SCALE;
+ const unit=.5*stackScale;
+ const topH=.7*stackScale;
+ const xs=[-.62,.62];
+
+ xs.forEach(x=>{
+  const maxBodyHeight=Math.max(.6,underside-.08);
+  const middleCount=Math.max(0,Math.floor((maxBodyHeight-topH-unit)/unit));
+  let y=0;
+
+  const b=cloneAsset(supportBottom,stackScale);
+  b.position.set(x,unit/2,center.z);
+  scene.add(b);
+  y+=unit;
+
+  for(let i=0;i<middleCount;i++){
+   const m=cloneAsset(supportMiddle,stackScale);
+   m.position.set(x,y+unit/2,center.z);
+   scene.add(m);
+   y+=unit;
+  }
+
+  const t=cloneAsset(supportTop,stackScale);
+  t.position.set(x,Math.min(underside-topH/2,y+topH/2),center.z);
+  scene.add(t);
+ });
+}
+
+function addTrack(){
+ for(let i=0;i<SEGMENTS;i++){
+  const c=trackPoint(i+.5);
+  const visual=cloneAsset(straightAsset,TRACK_SCALE);
+  visual.position.copy(c);
+  visual.quaternion.copy(trackQuat3);
+  scene.add(visual);
+  makeTrackBody(c);
  }
 
- const cv=placeSpecial(curveLarge,.23,.72);cv.position.add(new THREE.Vector3(.15,.03,0));
- const sc=placeSpecial(sCurve,.37,.46);sc.position.add(new THREE.Vector3(-.1,.02,0));
+ [1,5,9,13,17,21].forEach(addSupportStack);
 
- const hx=trackClone(helix,.62);
- hx.position.copy(curve.getPointAt(.52));
- hx.position.y-=.75;
- scene.add(hx);
-
- const tn=placeSpecial(tunnel,.76,1.35);tn.position.y+=.08;
- const fn=placeSpecial(funnel,.91,1.65);fn.position.y+=.04;
- const en=placeSpecial(endPiece,.988,1.7);en.position.y-=.03;
-
- const bn=trackClone(banner,1.25);
- bn.position.copy(curve.getPointAt(.985)).add(new THREE.Vector3(0,.6,-.3));
- bn.rotation.y=Math.PI/2;
- scene.add(bn);
-
- const floor=new THREE.Mesh(
-  new THREE.PlaneGeometry(18,18),
-  new THREE.MeshStandardMaterial({color:0x93b780,roughness:1})
+ const ground=new THREE.Mesh(
+  new THREE.PlaneGeometry(18,42),
+  new THREE.MeshStandardMaterial({color:0x8aac78,roughness:1})
  );
- floor.rotation.x=-Math.PI/2;
- floor.position.y=-9;
- floor.receiveShadow=true;
- scene.add(floor);
+ ground.rotation.x=-Math.PI/2;
+ ground.position.set(0,0,START_Z+SEG_LEN*SEGMENTS/2);
+ ground.receiveShadow=true;
+ scene.add(ground);
+
+ const groundBody=new CANNON.Body({mass:0,shape:new CANNON.Plane(),material:trackMaterial});
+ groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
+ world.addBody(groundBody);
+
+ addStartArch();
+ addFinishArch();
+ addFan(6,.58);
+ addFan(13,-.72);
 }
+
+function addStartArch(){
+ const p=trackPoint(.15);
+ const arch=cloneAsset(bannerAsset,2.65);
+ arch.position.copy(p).add(new THREE.Vector3(0,.15,0));
+ arch.rotation.y=Math.PI/2;
+ scene.add(arch);
+
+ const gateCenter=localToWorld(p,0,.34,.34);
+ gateBody=new CANNON.Body({mass:0,material:obstacleMaterial,position:cannonVec(gateCenter)});
+ gateBody.quaternion.copy(trackQuatC);
+ gateBody.addShape(new CANNON.Box(new CANNON.Vec3(TRACK_WIDTH/2-.08,.07,.055)));
+ world.addBody(gateBody);
+
+ gateMesh=new THREE.Mesh(
+  new THREE.BoxGeometry(TRACK_WIDTH-.16,.14,.11),
+  new THREE.MeshStandardMaterial({color:0xe9b63e,roughness:.42,metalness:.08})
+ );
+ gateMesh.position.copy(gateCenter);
+ gateMesh.quaternion.copy(trackQuat3);
+ gateMesh.castShadow=true;
+ scene.add(gateMesh);
+}
+
+function addFinishArch(){
+ const p=trackPoint(SEGMENTS-.35);
+ const arch=cloneAsset(bannerAsset,2.65);
+ arch.position.copy(p).add(new THREE.Vector3(0,.16,0));
+ arch.rotation.y=Math.PI/2;
+ scene.add(arch);
+
+ const line=new THREE.Group();
+ const tileW=TRACK_WIDTH/8;
+ for(let i=0;i<8;i++){
+  const tile=new THREE.Mesh(
+   new THREE.BoxGeometry(tileW,.012,.23),
+   new THREE.MeshBasicMaterial({color:i%2?0xffffff:0x101010})
+  );
+  tile.position.x=-TRACK_WIDTH/2+tileW/2+i*tileW;
+  line.add(tile);
+ }
+ line.position.copy(localToWorld(p,0,.07,0));
+ line.quaternion.copy(trackQuat3);
+ scene.add(line);
+}
+
+function addFan(segmentIndex,speed){
+ const base=trackPoint(segmentIndex+.5);
+ const pivot=new THREE.Group();
+ pivot.position.copy(localToWorld(base,0,.115,0));
+ pivot.quaternion.copy(trackQuat3);
+
+ const model=cloneAsset(fanAsset,1.18*TRACK_SCALE);
+ model.position.y=.03;
+ pivot.add(model);
+ scene.add(pivot);
+
+ const body=new CANNON.Body({
+  mass:0,
+  type:CANNON.Body.KINEMATIC,
+  material:obstacleMaterial,
+  position:cannonVec(pivot.position)
+ });
+ const barL=.61*TRACK_SCALE;
+ const barW=.07*TRACK_SCALE;
+ const barH=.09*TRACK_SCALE;
+ body.addShape(new CANNON.Box(new CANNON.Vec3(barL,barH,barW)));
+ body.addShape(new CANNON.Box(new CANNON.Vec3(barW,barH,barL)));
+ world.addBody(body);
+
+ fans.push({pivot,body,angle:Math.random()*Math.PI*2,speed,baseQuat3:trackQuat3.clone(),baseQuatC:trackQuatC.clone()});
+}
+
+function createMarbleVisual(color){
+ const g=marbleAsset.clone(true);
+ g.traverse(n=>{
+  if(n.isMesh){
+   n.material=new THREE.MeshPhysicalMaterial({
+    color,
+    roughness:.12,
+    metalness:.04,
+    transmission:.08,
+    thickness:.35,
+    clearcoat:.75,
+    clearcoatRoughness:.08
+   });
+   n.castShadow=true;
+  }
+ });
+ const box=new THREE.Box3().setFromObject(g),size=new THREE.Vector3();
+ box.getSize(size);
+ g.scale.setScalar((MARBLE_R*2)/Math.max(size.x,size.y,size.z));
+ return g;
+}
+
 function resetRace(){
- marbles.forEach(m=>scene.remove(m.mesh));
+ marbles.forEach(m=>{world.removeBody(m.body);scene.remove(m.mesh)});
  marbles=[];
- winnerEl.classList.remove('show');
+ finishOrder=[];
  raceFinished=false;
  raceActive=false;
+ winnerEl.classList.remove('show');
 
- racers.forEach((r,i)=>{
-  const mesh=cloneMarble(r.hex);
-  scene.add(mesh);
-  marbles.push({
-   mesh,
-   progress:0,
-   speed:.042+Math.random()*.005,
-   lane:(i-1.5)*.12,
-   phase:Math.random()*10
+ if(!gateBody)addStartGateAgain();
+
+ const laneX=[-.72,-.24,.24,.72];
+ const shuffled=[0,1,2,3].sort(()=>Math.random()-.5);
+
+ shuffled.forEach((racerIndex,lane)=>{
+  const r=RACERS[racerIndex];
+  const start=trackPoint(.55);
+  const pos=localToWorld(start,laneX[lane],MARBLE_R+.11,-.12);
+
+  const body=new CANNON.Body({
+   mass:1,
+   material:marbleMaterial,
+   shape:new CANNON.Sphere(MARBLE_R),
+   position:cannonVec(pos),
+   linearDamping:.018,
+   angularDamping:.012
   });
+  body.allowSleep=false;
+  world.addBody(body);
+
+  const mesh=createMarbleVisual(r.hex);
+  mesh.position.copy(pos);
+  scene.add(mesh);
+
+  marbles.push({racerIndex,body,mesh,finished:false,finishTime:0,lastSafeZ:pos.z});
  });
- updateMarbles(0);
+
+ cameraFocusZ=START_Z+2;
+ cameraFocusY=START_Y-.25;
  updateStandings();
  startBtn.disabled=false;
  startBtn.textContent='START RACE';
- statusEl.textContent='One continuous Kenney marble run.';
+ statusEl.textContent='Same physics for every marble. Lane positions shuffle each race.';
 }
-function updateMarbles(dt){
- if(raceActive&&!raceFinished){
-  for(const m of marbles){
-   const wobble=Math.sin(performance.now()*.0015+m.phase)*.0035;
-   const sectionDrag=(m.progress>.45&&m.progress<.60)?-.0045:(m.progress>.86&&m.progress<.94)?-.003:0;
-   m.speed=THREE.MathUtils.clamp(m.speed+(Math.random()-.5)*.0024+sectionDrag*dt,.034,.058);
-   m.progress=Math.min(1,m.progress+(m.speed+wobble)*dt);
-   if(m.progress>=1&&!raceFinished){
-    raceFinished=true;
-    finishRace(marbles.indexOf(m));
-   }
-  }
- }
 
- for(const m of marbles){
-  const t=Math.min(.999,m.progress);
-  const p=curve.getPointAt(t),tan=curve.getTangentAt(t).normalize();
-  const side=new THREE.Vector3().crossVectors(up,tan).normalize();
-  const lateral=m.lane+Math.sin(m.progress*24+m.phase)*.05;
-  m.mesh.position.copy(p).add(side.multiplyScalar(lateral)).add(new THREE.Vector3(0,.28,0));
-  m.mesh.rotation.x+=dt*8;
-  m.mesh.rotation.z+=dt*6;
- }
+function addStartGateAgain(){
+ const p=trackPoint(.15);
+ const gateCenter=localToWorld(p,0,.34,.34);
+
+ gateBody=new CANNON.Body({mass:0,material:obstacleMaterial,position:cannonVec(gateCenter)});
+ gateBody.quaternion.copy(trackQuatC);
+ gateBody.addShape(new CANNON.Box(new CANNON.Vec3(TRACK_WIDTH/2-.08,.07,.055)));
+ world.addBody(gateBody);
+
+ gateMesh=new THREE.Mesh(
+  new THREE.BoxGeometry(TRACK_WIDTH-.16,.14,.11),
+  new THREE.MeshStandardMaterial({color:0xe9b63e,roughness:.42,metalness:.08})
+ );
+ gateMesh.position.copy(gateCenter);
+ gateMesh.quaternion.copy(trackQuat3);
+ gateMesh.castShadow=true;
+ scene.add(gateMesh);
 }
-function finishRace(index){
- const r=racers[index];
- winnerBall.style.background=r.css;
+
+function releaseGate(){
+ if(gateBody){world.removeBody(gateBody);gateBody=null}
+ if(gateMesh){
+  const m=gateMesh;
+  gateMesh=null;
+  let t=0;
+  const animateGate=()=>{
+   t+=.12;
+   m.position.y+=.045;
+   m.rotation.z+=.08;
+   if(t<1)requestAnimationFrame(animateGate);else scene.remove(m);
+  };
+  animateGate();
+ }
+ marbles.forEach(m=>{
+  m.body.velocity.x+=(Math.random()-.5)*.035;
+  m.body.angularVelocity.set((Math.random()-.5)*.4,(Math.random()-.5)*.4,(Math.random()-.5)*.4);
+ });
+}
+
+function racerProgress(m){
+ return THREE.MathUtils.clamp((m.body.position.z-START_Z)/(SEGMENTS*SEG_LEN*Math.cos(SLOPE)),0,1.2);
+}
+function updateStandings(){
+ const order=marbles.map((m,i)=>({m,i,p:m.finished?2-m.finishTime/100000:racerProgress(m)})).sort((a,b)=>b.p-a.p);
+ standingsEl.innerHTML='';
+ order.forEach((o,rank)=>{
+  const r=RACERS[o.m.racerIndex];
+  const d=document.createElement('div');
+  d.className='racerChip';
+  d.innerHTML='<b><span class="dot" style="background:'+r.css+'"></span>'+r.name+'</b><span class="rank">'+(o.m.finished?'FINISHED':rankText(rank))+'</span>';
+  standingsEl.appendChild(d);
+ });
+}
+
+function handleRaceState(now){
+ if(!raceActive)return;
+ const finishZ=trackPoint(SEGMENTS-.25).z;
+
+ marbles.forEach(m=>{
+  if(!m.finished&&m.body.position.z>=finishZ){
+   m.finished=true;
+   m.finishTime=now;
+   finishOrder.push(m);
+   if(finishOrder.length===1)declareWinner(m);
+  }
+
+  const expectedY=trackYAtZ(m.body.position.z);
+  if(m.body.position.y>expectedY-.55&&m.body.position.y<expectedY+1.2)m.lastSafeZ=m.body.position.z;
+
+  if(!m.finished&&m.body.position.y<expectedY-1.8){
+   const rescueZ=Math.max(START_Z+.5,m.lastSafeZ-.45);
+   const rescueY=trackYAtZ(rescueZ);
+   m.body.position.set((Math.random()-.5)*.55,rescueY+.55,rescueZ);
+   m.body.velocity.set(0,0,.25);
+   m.body.angularVelocity.set(0,0,0);
+  }
+ });
+}
+
+function declareWinner(m){
+ raceFinished=true;
+ const r=RACERS[m.racerIndex];
+ winnerBall.style.background='radial-gradient(circle at 32% 28%,#ffffff 0 8%,'+r.css+' 25%,#17212a 140%)';
  winnerText.textContent=r.name.toUpperCase()+' WINS!';
  winnerEl.classList.add('show');
- beep(980,.35,.12);
- startBtn.disabled=true;
- statusEl.textContent='Winner confirmed';
+ beep(980,.34,.13);
+ statusEl.textContent='First marble across the line';
  setTimeout(()=>{
   raceActive=false;
   startBtn.disabled=false;
   startBtn.textContent='RACE AGAIN';
- },1500);
+ },1700);
 }
+
 async function startRace(){
  if(raceActive)return;
  resetRace();
@@ -261,75 +454,141 @@ async function startRace(){
  showCount('2');await wait(650);
  showCount('1');await wait(650);
  showCount('GO!');await wait(180);
+ releaseGate();
  raceActive=true;
  beep(820,.18,.09);
 }
-function updateCamera(dt){
- let lead=0;
- for(const m of marbles)lead=Math.max(lead,m.progress);
- const center=curve.getPointAt(Math.min(.97,lead+.035));
- const target=center.clone().add(new THREE.Vector3(0,.2,0));
- const pos=center.clone().add(new THREE.Vector3(7.2,4.7,14.2));
- cameraTarget.lerp(target,1-Math.pow(.001,dt));
- cameraPos.lerp(pos,1-Math.pow(.001,dt));
- camera.position.copy(cameraPos);
- camera.lookAt(cameraTarget);
+
+function updateFans(dt){
+ const axis3=new THREE.Vector3(0,1,0);
+ const axisC=new CANNON.Vec3(0,1,0);
+ fans.forEach(f=>{
+  f.angle+=f.speed*dt;
+  f.pivot.quaternion.copy(f.baseQuat3).multiply(new THREE.Quaternion().setFromAxisAngle(axis3,f.angle));
+
+  const local=new CANNON.Quaternion();
+  local.setFromAxisAngle(axisC,f.angle);
+  f.baseQuatC.mult(local,f.body.quaternion);
+
+  const normal=new CANNON.Vec3(0,Math.cos(SLOPE),Math.sin(SLOPE));
+  f.body.angularVelocity.set(normal.x*f.speed,normal.y*f.speed,normal.z*f.speed);
+ });
 }
+
+function updateCamera(dt){
+ if(!marbles.length)return;
+
+ const active=marbles.filter(m=>!m.finished);
+ const pool=active.length?active:marbles;
+ let avgZ=0;
+ pool.forEach(m=>avgZ+=m.body.position.z);
+ avgZ/=pool.length;
+
+ const minZ=START_Z+1.8;
+ const maxZ=trackPoint(SEGMENTS-2).z;
+ const targetZ=THREE.MathUtils.clamp(avgZ,minZ,maxZ);
+ const targetY=trackYAtZ(targetZ);
+
+ const k=1-Math.pow(.002,dt);
+ cameraFocusZ=THREE.MathUtils.lerp(cameraFocusZ,targetZ,k);
+ cameraFocusY=THREE.MathUtils.lerp(cameraFocusY,targetY,k);
+
+ const target=new THREE.Vector3(0,cameraFocusY+.18,cameraFocusZ+2.6);
+ const pos=new THREE.Vector3(4.8,cameraFocusY+4.25,cameraFocusZ-6.0);
+ camera.position.lerp(pos,k);
+ camera.lookAt(target);
+}
+
 function resize(){
  const w=Math.max(1,wrap.clientWidth),h=Math.max(1,wrap.clientHeight);
  renderer.setSize(w,h,false);
  camera.aspect=w/h;
  camera.updateProjectionMatrix();
 }
+
 function animate(t){
  requestAnimationFrame(animate);
  const dt=Math.min((t-last)/1000||1/60,.033);
  last=t;
- if(curve){
-  updateMarbles(dt);
+
+ if(world){
+  updateFans(dt);
+  world.step(1/60,dt,3);
+
+  marbles.forEach(m=>{
+   m.mesh.position.set(m.body.position.x,m.body.position.y,m.body.position.z);
+   m.mesh.quaternion.set(m.body.quaternion.x,m.body.quaternion.y,m.body.quaternion.z,m.body.quaternion.w);
+  });
+
+  handleRaceState(t);
   updateCamera(dt);
-  if(Math.floor(t/180)%2===0)updateStandings();
+  if(Math.floor(t/170)%2===0)updateStandings();
  }
+
  renderer.render(scene,camera);
 }
+
 async function load(path){
  return new Promise((resolve,reject)=>loader.load(path,g=>resolve(g.scene),undefined,reject));
 }
+
 async function init(){
  try{
-  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
 
   scene=new THREE.Scene();
-  scene.fog=new THREE.Fog(0xcbdde6,14,34);
-  camera=new THREE.PerspectiveCamera(43,1,.1,100);
+  scene.background=new THREE.Color(0xbfd8e4);
+  scene.fog=new THREE.Fog(0xbfd8e4,16,38);
+
+  camera=new THREE.PerspectiveCamera(46,1,.1,100);
+  camera.position.set(4.8,10.3,START_Z-4);
+
   loader=new GLTFLoader();
 
-  scene.add(new THREE.HemisphereLight(0xf5fbff,0x617261,2.25));
-  const sun=new THREE.DirectionalLight(0xffffff,3.1);
-  sun.position.set(-6,12,9);
+  scene.add(new THREE.HemisphereLight(0xf8fcff,0x586a54,2.15));
+  const sun=new THREE.DirectionalLight(0xffffff,3.05);
+  sun.position.set(-7,13,-5);
   sun.castShadow=true;
   sun.shadow.mapSize.set(1024,1024);
+  sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=18;sun.shadow.camera.bottom=-18;
   scene.add(sun);
 
+  world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
+  world.broadphase=new CANNON.SAPBroadphase(world);
+  world.allowSleep=false;
+
+  trackMaterial=new CANNON.Material('track');
+  marbleMaterial=new CANNON.Material('marble');
+  obstacleMaterial=new CANNON.Material('obstacle');
+
+  world.addContactMaterial(new CANNON.ContactMaterial(marbleMaterial,trackMaterial,{friction:.22,restitution:.06,contactEquationStiffness:1e7}));
+  world.addContactMaterial(new CANNON.ContactMaterial(marbleMaterial,marbleMaterial,{friction:.035,restitution:.18}));
+  world.addContactMaterial(new CANNON.ContactMaterial(marbleMaterial,obstacleMaterial,{friction:.08,restitution:.22}));
+
   const base='assets/kenney-marble/';
-  const [straight,curveLarge,sCurve,helix,tunnel,funnel,banner,endPiece,marble]=await Promise.all([
+  [
+   straightAsset,
+   marbleAsset,
+   bannerAsset,
+   fanAsset,
+   supportBottom,
+   supportMiddle,
+   supportTop
+  ]=await Promise.all([
    load(base+'straight-wide.glb'),
-   load(base+'curve-large.glb'),
-   load(base+'s-curve-left-large.glb'),
-   load(base+'helix-large-left.glb'),
-   load(base+'tunnel.glb'),
-   load(base+'funnel.glb'),
+   load(base+'marble-high.glb'),
    load(base+'banner-double-high.glb'),
-   load(base+'end-rounded.glb'),
-   load(base+'marble-high.glb')
+   load(base+'fan-four.glb'),
+   load(base+'support-four-bottom.glb'),
+   load(base+'support-four-middle.glb'),
+   load(base+'support-four-top-double.glb')
   ]);
 
-  marbleSource=marble;
-  buildTrack([straight,curveLarge,sCurve,helix,tunnel,funnel,banner,endPiece]);
+  addTrack();
   resetRace();
   resize();
   window.addEventListener('resize',resize);
