@@ -108,7 +108,10 @@ jobs:
 
           assert "const HEAD_BASE_RE" in modular, "Head anatomy filter missing"
           assert "if (SHOE_RE.test(materialName)) return null" in modular, "Source shoes are still being extracted"
-          assert "return HEAD_BASE_RE.test(materialName) ? 'head' : 'top'" in modular, "Head garments are not kept out of Heads"
+          assert "if (!HEAD_BASE_RE.test(materialName)) return 'top'" in modular, "Head garments are not kept out of Heads"
+          assert "const clearlyHeadDriven = scores.head >= 1.20" in modular, "Geometry-audited head weighting rule missing"
+          assert "const noMeaningfulArmInfluence = armWeight < 0.08" in modular, "Arm exclusion rule missing"
+          assert "function runtimeBoneSet" in modular, "Sanitised runtime bone aliases are not handled"
           assert "{ id: 'arms'" not in modular, "Duplicate Arms selector returned"
           for label in ("Head & face","Hair / facial hair","Hat / headwear","Top / body","Bottoms / legs","Shoes","Accessory"):
               assert label in modular, f"Missing modular category: {label}"
