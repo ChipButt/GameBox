@@ -137,7 +137,7 @@ const LEVELS=[
 
 const images={};
 let terrainMaskCache={level:0,mask:null};
-let money=190,lives=8,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
+let money=190,lives=10,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
 let waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let buildType=null,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
@@ -346,7 +346,7 @@ function canPlaceTower(x,y){
 }
 
 function resetGame(){
-  money=levelStartMoney(1);lives=8;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
+  money=levelStartMoney(1);lives=10;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
   terrainMaskCache={level:0,mask:null};
   waveActive=false;paused=false;gameEnded=false;buildType=null;selectedTower=-1;
   enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];
