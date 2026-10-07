@@ -101,4 +101,5 @@ EOF
           git add workshop-watch/assets/vendor/gherwit/city workshop-watch/assets/CREDITS.md
           git rm .github/workflows/import-workshop-watch-objective.yml
           git commit -m "Import Gherwit objective art for Workshop Watch"
+          git pull --rebase origin main
           git push origin main
