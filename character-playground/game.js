@@ -1754,7 +1754,7 @@ function visibleCharacterArea() {
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
   if (force) viewDistance = 7.35;
-  previewRoot.position.set(0, 0.76, 0);
+  previewRoot.position.set(0, 0.88, 0);
   applyCameraPose();
 }
 
@@ -1779,7 +1779,7 @@ function resize() {
   }
   previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.70 : -0.78);
   if (mobile) {
-    previewRoot.position.y = 0.76;
+    previewRoot.position.y = 0.88;
   } else {
     previewRoot.position.y = 0;
   }
@@ -1789,7 +1789,7 @@ function resize() {
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
   viewDistance = window.innerWidth <= 980 ? 7.35 : 6.55;
-  previewRoot.position.y = window.innerWidth <= 980 ? 0.76 : 0;
+  previewRoot.position.y = window.innerWidth <= 980 ? 0.88 : 0;
   resize();
   scheduleCharacterFrame(true);
 }
