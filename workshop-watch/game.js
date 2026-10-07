@@ -549,10 +549,15 @@ function drawNutcrackerHat(x,y){
 
 function drawPresentCannon(t){
   const a=t.aimAngle||-Math.PI/2;
+
   ctx.save();ctx.translate(t.x,t.y+3);
-  ctx.fillStyle='#334d5d';ctx.beginPath();ctx.arc(-12,13,7,0,Math.PI*2);ctx.arc(12,13,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#334d5d';
+  ctx.beginPath();ctx.arc(-12,13,7,0,Math.PI*2);ctx.arc(12,13,7,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
   drawImageKey('giftPairA',t.x,t.y+5,42);
-  ctx.translate(0,-5);ctx.rotate(a);
+
+  ctx.save();ctx.translate(t.x,t.y-2);ctx.rotate(a);
   ctx.fillStyle='#d75250';ctx.strokeStyle='#184b66';ctx.lineWidth=2;
   ctx.fillRect(0,-6,31,12);ctx.strokeRect(0,-6,31,12);
   ctx.fillStyle='#f3c15a';ctx.fillRect(4,-6,5,12);
