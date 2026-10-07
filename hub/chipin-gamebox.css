@@ -343,11 +343,18 @@
   box-shadow:0 5px 10px rgba(18,61,85,.16);
   image-rendering:pixelated;image-rendering:crisp-edges
 }
-.wwHomePathV,.wwHomePathH{
-  position:absolute;background:#94543f;box-shadow:inset 0 0 0 2px rgba(80,47,41,.22)
+.wwHomePathTile{
+  position:absolute;z-index:1;width:24px;height:24px;
+  background-image:url("../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png");
+  background-repeat:no-repeat;background-size:336px 288px;background-position:-240px -48px;
+  image-rendering:pixelated;image-rendering:crisp-edges
 }
-.wwHomePathV{left:49px;top:0;width:24px;height:86px}
-.wwHomePathH{left:49px;top:42px;width:55px;height:24px}
+.wwHomePath1{left:44px;top:0}
+.wwHomePath2{left:44px;top:24px}
+.wwHomePath3{left:44px;top:48px}
+.wwHomePath4{left:44px;top:72px}
+.wwHomePath5{left:68px;top:48px}
+.wwHomePath6{left:92px;top:48px}
 .wwHomeWorkshopGate{
   position:absolute;z-index:3;left:32px;top:-8px;width:48px;height:48px;
   background-image:url("../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png");
@@ -379,8 +386,9 @@
 }
 @media(max-width:560px){
   .workshopWatchHomeScene{width:102px;height:79px}
-  .wwHomePathV{left:44px;height:79px}
-  .wwHomePathH{left:44px;top:38px;width:50px}
+  .wwHomePath1,.wwHomePath2,.wwHomePath3,.wwHomePath4{left:39px}
+  .wwHomePath5{left:63px}
+  .wwHomePath6{left:87px}
   .wwHomeWorkshopGate{left:27px;top:-9px}
   .wwHomeSnowman{left:4px;bottom:4px}
   .wwHomeGingerbread{right:0}
