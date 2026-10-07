@@ -1078,6 +1078,19 @@ function clipScore(name) {
   return index < 0 ? 100 : index;
 }
 
+function inPlacePreviewClip(clip) {
+  const clone = clip.clone();
+  clone.tracks = clone.tracks.filter((track) => {
+    const name = String(track.name || '');
+    // The Quaternius clips animate the skeleton root "Bone" position. That is
+    // useful for world movement, but a character customiser must preview Walk/
+    // Run/etc. in place or the model can literally leave the camera.
+    return !/(^|[\\/.])Bone\.position$/i.test(name)
+      && !/(^|[\\/.])CharacterArmature\.position$/i.test(name);
+  });
+  return clone;
+}
+
 function findIdleClip() {
   return clips.find((clip) => /^idle$/i.test(clip.name))
     || clips.find((clip) => /idle/i.test(clip.name))
@@ -1365,9 +1378,11 @@ function workshopDiagnosticSnapshot() {
     };
   }
 
+  const rootBone = driverSkeleton?.getBoneByName?.('Bone') || null;
   return {
     presetId: currentPreset?.id || null,
     pose: activeClipName || '',
+    rootBonePosition: rootBone ? rootBone.position.toArray() : null,
     parts,
     shoes: {
       optionId: shoeState.optionId || null,
@@ -1519,7 +1534,7 @@ async function loadDriver(entryId, options = {}) {
         driverMesh = frameMesh;
         driverSkeleton = frameMesh.skeleton;
         driverParent = frameMesh.parent || driverScene;
-        clips = gltf.animations || [];
+        clips = (gltf.animations || []).map(inPlacePreviewClip);
         mixer = new THREE.AnimationMixer(driverScene);
         mixer.timeScale = Number(animSpeed.value) || 1;
         activeAction = null;
