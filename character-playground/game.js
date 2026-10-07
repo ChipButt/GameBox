@@ -1488,6 +1488,20 @@ function frameCharacterToVisibleArea(force = false) {
     previewRoot.position.y -= deltaPixels * worldPerPixel;
     applyCameraPose();
   }
+
+  // Final hard clamp for the exact problem seen on small phones: the feet must
+  // sit clearly inside the safe stage, not merely near the selector boundary.
+  let finalBounds = characterScreenBounds();
+  if (finalBounds) {
+    const desiredBottom = area.bottom - 14;
+    if (finalBounds.bottom > desiredBottom) {
+      const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
+      const worldPerPixel = verticalWorld / Math.max(1, canvas.height);
+      previewRoot.position.y += (finalBounds.bottom - desiredBottom) * worldPerPixel;
+      applyCameraPose();
+      finalBounds = characterScreenBounds();
+    }
+  }
 }
 
 let characterFrameRaf = 0;
