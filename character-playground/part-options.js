@@ -1,11 +1,12 @@
 // Curated Character Workshop catalogue built from the Quaternius pack's labelled regions.
 // The 52 source characters are donors; this list exposes only meaningful modular choices.
 export const PART_CATEGORY_LABELS = {
-  "head": "Heads",
-  "hair": "Hair & Facial Hair",
-  "headwear": "Hats & Headwear",
-  "top": "Tops & Bodies",
-  "bottom": "Bottoms & Legs",
+  "head": "Face",
+  "hair": "Hair",
+  "facialHair": "Facial Hair",
+  "headwear": "Headwear",
+  "top": "Top",
+  "bottom": "Bottom",
   "shoes": "Shoes",
   "accessory": "Accessories"
 };
@@ -276,19 +277,6 @@ export const PART_OPTIONS = {
       }
     },
     {
-      "id": "hair-moustache",
-      "label": "Moustache",
-      "kind": "source",
-      "category": "hair",
-      "sourceId": "Chef_Hat",
-      "sourceIds": [
-        "Chef_Hat"
-      ],
-      "baseColors": {
-        "Hair": "#d7c6ad"
-      }
-    },
-    {
       "id": "hair-chef-m",
       "label": "Chef Hair",
       "kind": "source",
@@ -432,19 +420,6 @@ export const PART_OPTIONS = {
       }
     },
     {
-      "id": "hair-viking-helmet",
-      "label": "Viking Hair · Helmet",
-      "kind": "source",
-      "category": "hair",
-      "sourceId": "VikingHelmet",
-      "sourceIds": [
-        "VikingHelmet"
-      ],
-      "baseColors": {
-        "Hair": "#4f241b"
-      }
-    },
-    {
       "id": "hair-viking-f",
       "label": "Viking Hair · Feminine",
       "kind": "source",
@@ -510,6 +485,21 @@ export const PART_OPTIONS = {
       }
     }
   ],
+  "facialHair": [
+    {
+      "id": "facialhair-moustache",
+      "label": "Moustache",
+      "kind": "source",
+      "category": "facialHair",
+      "sourceId": "Chef_Hat",
+      "sourceIds": [
+        "Chef_Hat"
+      ],
+      "baseColors": {
+        "Facial Hair": "#d7c6ad"
+      }
+    }
+  ],
   "headwear": [
     {
       "id": "headwear-soldier",
@@ -523,7 +513,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Helmet": "#35402f"
-      }
+      },
+      "hairMode": "hide"
     },
     {
       "id": "headwear-chef",
@@ -536,7 +527,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#e9e7d6"
-      }
+      },
+      "hairMode": "hide"
     },
     {
       "id": "headwear-cowboy",
@@ -552,7 +544,8 @@ export const PART_OPTIONS = {
       "baseColors": {
         "Hat": "#7a472d",
         "Band": "#c7774e"
-      }
+      },
+      "hairMode": "overlay"
     },
     {
       "id": "headwear-elf",
@@ -566,7 +559,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#24405e"
-      }
+      },
+      "hairMode": "hide"
     },
     {
       "id": "headwear-classic",
@@ -580,7 +574,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#34332f"
-      }
+      },
+      "hairMode": "overlay"
     },
     {
       "id": "headwear-viking",
@@ -594,7 +589,8 @@ export const PART_OPTIONS = {
       "baseColors": {
         "Helmet": "#555555",
         "Horns": "#9e895f"
-      }
+      },
+      "hairMode": "hide"
     },
     {
       "id": "headwear-witch",
@@ -607,7 +603,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#28324b"
-      }
+      },
+      "hairMode": "overlay"
     },
     {
       "id": "headwear-worker",
@@ -621,7 +618,8 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#8a7931"
-      }
+      },
+      "hairMode": "hide"
     }
   ],
   "top": [
