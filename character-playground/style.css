@@ -1403,3 +1403,105 @@ body[data-builder-tab="style"] #stage{background:#11add8}
   body[data-builder-tab="style"] .categoryTileLabel{font-size:7px}
   body[data-builder-tab="style"] .categoryCycle{width:26px;height:26px;font-size:18px}
 }
+
+
+/* === TILE INTERACTION + LIVE PREVIEWS V26 === */
+body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileGrid{
+  column-gap:22px;
+  row-gap:20px;
+}
+body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileWrap{
+  position:relative;
+  isolation:isolate;
+  min-width:0;
+  min-height:0;
+}
+body[data-builder-tab="style"][data-component-editor="closed"] .categoryTile{
+  position:relative;
+  z-index:1;
+  overflow:hidden;
+}
+body[data-builder-tab="style"] .categoryTilePreview{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+body[data-builder-tab="style"] .categoryTilePreviewCanvas{
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  object-fit:cover;
+  pointer-events:none;
+}
+body[data-builder-tab="style"] .categoryTilePreviewFallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  color:rgba(23,109,144,.72);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.06em;
+  pointer-events:none;
+}
+body[data-builder-tab="style"] .categoryCycle{
+  z-index:12;
+  top:50%;
+  width:44px;
+  height:44px;
+  transform:translateY(-50%);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+body[data-builder-tab="style"] .categoryCycle::before{
+  content:"";
+  position:absolute;
+  inset:-5px;
+}
+body[data-builder-tab="style"] .categoryCyclePrev{left:4px}
+body[data-builder-tab="style"] .categoryCycleNext{right:4px}
+
+@media (max-width:980px){
+  body[data-builder-tab="style"] .stageHud{
+    width:44vw;
+  }
+  body[data-builder-tab="style"] .builder{
+    width:56vw;
+  }
+  body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileGrid{
+    column-gap:14px;
+    row-gap:14px;
+  }
+  body[data-builder-tab="style"] .categoryCycle{
+    width:38px;
+    height:38px;
+    font-size:24px;
+    border-width:3px;
+  }
+  body[data-builder-tab="style"] .categoryCyclePrev{left:2px}
+  body[data-builder-tab="style"] .categoryCycleNext{right:2px}
+  body[data-builder-tab="style"] .categoryTilePreviewCanvas{
+    width:100%;
+    height:100%;
+  }
+}
+
+@media (max-width:430px){
+  body[data-builder-tab="style"] .builder{width:56vw}
+  body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileGrid{
+    column-gap:11px;
+    row-gap:12px;
+  }
+  body[data-builder-tab="style"] .categoryCycle{
+    width:36px;
+    height:36px;
+    font-size:22px;
+  }
+}
