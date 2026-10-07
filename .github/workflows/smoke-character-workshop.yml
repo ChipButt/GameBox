@@ -49,11 +49,6 @@ jobs:
           await page.waitForSelector('#partSourceGrid .partSourceCard',{timeout:120000});
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
 
-          assert(await page.locator('.partCategoryBtn').count()===8,'Builder must expose exactly eight customisation category tiles.');
-          assert(await page.locator('.partCategoryBtn[data-part="body"]').count()===0,'Body must not be a ninth category tile.');
-          const categoryLabels=await page.locator('.categoryTileLabel').allTextContents();
-          assert(JSON.stringify(categoryLabels)===JSON.stringify(['FACE','HAIR','FACIAL HAIR','HEADWEAR','TOP','BOTTOM','SHOES','ACCESSORIES']),'Category tile order/labels are wrong: '+JSON.stringify(categoryLabels));
-
           const category = async (id) => {
             await page.click('.partCategoryBtn[data-part="'+id+'"]');
             await page.waitForTimeout(250);
@@ -61,6 +56,11 @@ jobs:
           };
 
           const assert = (value,message) => { if(!value) throw new Error(message); };
+
+          assert(await page.locator('.partCategoryBtn').count()===8,'Builder must expose exactly eight customisation category tiles.');
+          assert(await page.locator('.partCategoryBtn[data-part="body"]').count()===0,'Body must not be a ninth category tile.');
+          const categoryLabels=await page.locator('.categoryTileLabel').allTextContents();
+          assert(JSON.stringify(categoryLabels)===JSON.stringify(['FACE','HAIR','FACIAL HAIR','HEADWEAR','TOP','BOTTOM','SHOES','ACCESSORIES']),'Category tile order/labels are wrong: '+JSON.stringify(categoryLabels));
           const waitForSelected = async (optionId) => {
             await page.waitForFunction((id) => {
               const selected=document.querySelector('[data-option="'+id+'"].selected');
