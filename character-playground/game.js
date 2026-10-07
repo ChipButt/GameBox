@@ -1749,7 +1749,7 @@ function visibleCharacterArea() {
 // and making the character jump/crop unpredictably between part changes.
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
-  if (force) viewDistance = 7.0;
+  if (force) viewDistance = 7.35;
   previewRoot.position.set(0, 0.76, 0);
   applyCameraPose();
 }
@@ -1780,7 +1780,7 @@ function resize() {
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = window.innerWidth <= 980 ? 7.0 : 6.55;
+  viewDistance = window.innerWidth <= 980 ? 7.35 : 6.55;
   previewRoot.position.y = window.innerWidth <= 980 ? 0.76 : 0;
   resize();
   scheduleCharacterFrame(true);
@@ -1858,7 +1858,7 @@ renderer.domElement.addEventListener('pointermove', (event) => {
     const values = Array.from(pointerMap.values());
     const distance = Math.hypot(values[0].x - values[1].x, values[0].y - values[1].y);
     if (lastPinchDistance) {
-      viewDistance = THREE.MathUtils.clamp(viewDistance - (distance - lastPinchDistance) * 0.012, 3.35, 6.8);
+      viewDistance = THREE.MathUtils.clamp(viewDistance - (distance - lastPinchDistance) * 0.012, 3.35, 8.4);
       resize();
     }
     lastPinchDistance = distance;
@@ -1881,7 +1881,7 @@ renderer.domElement.addEventListener('pointerup', (event) => releasePointer(even
 renderer.domElement.addEventListener('pointercancel', (event) => releasePointer(event, true));
 renderer.domElement.addEventListener('wheel', (event) => {
   event.preventDefault();
-  viewDistance = THREE.MathUtils.clamp(viewDistance + event.deltaY * 0.0045, 3.35, 6.8);
+  viewDistance = THREE.MathUtils.clamp(viewDistance + event.deltaY * 0.0045, 3.35, 8.4);
   resize();
 }, { passive: false });
 
