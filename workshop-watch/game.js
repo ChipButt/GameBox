@@ -108,11 +108,11 @@ const TOWERS={
 };
 
 const ENEMIES={
-  ginger:{asset:'ginger',hp:42,speed:37,reward:8,leak:1,draw:128},
-  slime:{asset:'slime',hp:26,speed:58,reward:7,leak:1,draw:128},
-  rabbit:{asset:'rabbit',hp:20,speed:73,reward:9,leak:1,draw:144},
-  devil:{asset:'devil',hp:112,speed:30,reward:15,leak:1,draw:136},
-  boss:{asset:'devil',hp:460,speed:22,reward:60,leak:2,draw:190,boss:true}
+  ginger:{asset:'ginger',hp:50,speed:39,reward:7,leak:1,draw:128},
+  slime:{asset:'slime',hp:34,speed:62,reward:6,leak:1,draw:128},
+  rabbit:{asset:'rabbit',hp:26,speed:78,reward:7,leak:1,draw:144},
+  devil:{asset:'devil',hp:135,speed:32,reward:13,leak:1,draw:136},
+  boss:{asset:'devil',hp:520,speed:24,reward:45,leak:2,draw:190,boss:true}
 };
 
 const TOTAL_LEVELS=12;
@@ -121,23 +121,23 @@ const WAVES_PER_LEVEL=5;
 // Twelve fixed orthogonal tracks. Each stage changes the route instead of exposing a
 // player-facing left/right route toggle.
 const LEVELS=[
-  {name:'FROST GATE',route:[[168,496],[168,416],[80,416],[80,336],[256,336],[256,240],[112,240],[112,144],[168,144],[168,64]]},
-  {name:'SNOWDRIFT BEND',route:[[168,496],[168,416],[256,416],[256,352],[96,352],[96,272],[240,272],[240,176],[168,176],[168,64]]},
-  {name:'ICICLE RUN',route:[[168,496],[168,448],[64,448],[64,368],[272,368],[272,288],[80,288],[80,208],[256,208],[256,128],[168,128],[168,64]]},
-  {name:'TINSEL TURN',route:[[168,496],[168,432],[112,432],[112,368],[224,368],[224,304],[128,304],[128,240],[208,240],[208,176],[144,176],[144,112],[168,112],[168,64]]},
-  {name:'NORTH LOOP',route:[[168,496],[168,448],[48,448],[48,352],[288,352],[288,256],[64,256],[64,160],[272,160],[272,96],[168,96],[168,64]]},
-  {name:'SLEIGH SWITCHBACK',route:[[168,496],[168,432],[288,432],[288,368],[48,368],[48,304],[272,304],[272,240],[64,240],[64,176],[240,176],[240,112],[168,112],[168,64]]},
-  {name:'HOLLY STEPS',route:[[168,496],[168,432],[96,432],[96,384],[240,384],[240,336],[112,336],[112,288],[224,288],[224,240],[128,240],[128,192],[208,192],[208,144],[168,144],[168,64]]},
-  {name:'POLAR DETOUR',route:[[168,496],[168,448],[272,448],[272,320],[112,320],[112,400],[64,400],[64,240],[224,240],[224,160],[168,160],[168,64]]},
-  {name:'MISTLETOE MAZE',route:[[168,496],[168,448],[48,448],[48,352],[144,352],[144,400],[288,400],[288,288],[192,288],[192,336],[80,336],[80,224],[240,224],[240,144],[168,144],[168,64]]},
-  {name:'BLIZZARD SNAKE',route:[[168,496],[168,432],[280,432],[280,368],[56,368],[56,304],[248,304],[248,240],[88,240],[88,176],[216,176],[216,112],[168,112],[168,64]]},
-  {name:'ELF PASS',route:[[168,496],[168,448],[88,448],[88,400],[248,400],[248,320],[72,320],[72,272],[264,272],[264,192],[104,192],[104,128],[168,128],[168,64]]},
-  {name:'WORKSHOP GAUNTLET',route:[[168,496],[168,448],[48,448],[48,400],[288,400],[288,336],[64,336],[64,288],[272,288],[272,224],[80,224],[80,176],[256,176],[256,112],[168,112],[168,64]]}
-];
+  {name:'FROST GATE',pressure:1.00,route:[[168,472],[168,424],[88,424],[88,344],[248,344],[248,264],[120,264],[120,184],[216,184],[216,120],[168,120],[168,72]]},
+  {name:'CANDY CANE',pressure:1.02,route:[[168,472],[280,472],[280,360],[216,360],[216,232],[72,232],[72,120],[168,120],[168,72]]},
+  {name:'ICICLE RUN',pressure:1.04,route:[[168,472],[56,472],[56,392],[136,392],[136,296],[296,296],[296,184],[200,184],[200,104],[168,104],[168,72]]},
+  {name:'TINSEL STEPS',pressure:1.06,route:[[168,472],[104,472],[104,424],[232,424],[232,376],[120,376],[120,328],[248,328],[248,280],[136,280],[136,232],[216,232],[216,184],[152,184],[152,136],[168,136],[168,72]]},
+  {name:'NORTH LOOP',pressure:1.08,route:[[168,472],[40,472],[40,104],[120,104],[120,376],[280,376],[280,152],[200,152],[200,312],[152,312],[152,120],[168,120],[168,72]]},
+  {name:'SLEIGH SPIRAL',pressure:1.10,route:[[168,472],[296,472],[296,88],[56,88],[56,408],[248,408],[248,152],[104,152],[104,344],[200,344],[200,216],[152,216],[152,120],[168,120],[168,72]]},
+  {name:'HOLLY HOURGLASS',pressure:1.12,route:[[168,472],[56,472],[56,424],[280,424],[280,360],[88,360],[88,296],[248,296],[248,232],[120,232],[120,168],[216,168],[216,104],[168,104],[168,72]]},
+  {name:'POLAR DETOUR',pressure:1.14,route:[[168,472],[168,424],[296,424],[296,264],[200,264],[200,344],[72,344],[72,184],[136,184],[136,104],[168,104],[168,72]]},
+  {name:'MISTLETOE BOXES',pressure:1.16,route:[[168,472],[72,472],[72,392],[264,392],[264,136],[104,136],[104,312],[216,312],[216,200],[152,200],[152,104],[168,104],[168,72]]},
+  {name:'BLIZZARD SERPENT',pressure:1.18,route:[[168,472],[296,472],[296,408],[40,408],[40,344],[280,344],[280,280],[56,280],[56,216],[264,216],[264,152],[88,152],[88,104],[168,104],[168,72]]},
+  {name:'ELF PASS',pressure:1.20,route:[[168,472],[120,472],[120,408],[216,408],[216,344],[136,344],[136,280],[200,280],[200,216],[152,216],[152,152],[184,152],[184,104],[168,104],[168,72]]},
+  {name:'WORKSHOP GAUNTLET',pressure:1.24,route:[[168,472],[40,472],[40,424],[296,424],[296,376],[56,376],[56,328],[280,328],[280,280],[72,280],[72,232],[264,232],[264,184],[88,184],[88,136],[248,136],[248,104],[168,104],[168,72]]}
+]
 
 const images={};
 let terrainMaskCache={level:0,mask:null};
-let money=220,lives=10,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
+let money=190,lives=8,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
 let waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let buildType=null,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
@@ -153,19 +153,19 @@ function pad(v,n=4){return String(Math.max(0,Math.floor(v))).padStart(n,'0')}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function pointDist(x1,y1,x2,y2){return Math.hypot(x1-x2,y1-y2)}
 function currentLevel(){return LEVELS[level-1]}
-function levelStartMoney(n){return 220+(n-1)*25}
+function levelStartMoney(n){return 190+(n-1)*7}
 function towerCost(type){
   const base=TOWERS[type].cost;
-  const scaled=base*(1+(level-1)*.07);
+  const scaled=base*(1+(level-1)*.08);
   return Math.ceil(scaled/5)*5;
 }
 function levelWaveGroups(levelNo,waveNo){
   const l=levelNo;
-  if(waveNo===1)return [['ginger',5+l*2],['slime',Math.max(0,Math.floor((l-1)/2))]];
-  if(waveNo===2)return [['slime',4+l],['rabbit',2+l]];
-  if(waveNo===3)return [['ginger',5+l],['rabbit',4+l],['devil',1+Math.floor(l/3)]];
-  if(waveNo===4)return [['slime',5+l],['devil',2+Math.ceil(l/2)],['rabbit',3+l]];
-  return [['ginger',6+l],['rabbit',5+l],['devil',3+l],['boss',1+Math.floor((l-1)/4)]];
+  if(waveNo===1)return [['ginger',7+l*2],['slime',Math.max(0,Math.floor(l/2))]];
+  if(waveNo===2)return [['slime',6+l],['rabbit',3+Math.ceil(l*.75)]];
+  if(waveNo===3)return [['ginger',7+l],['rabbit',5+l],['devil',1+Math.ceil(l/3)]];
+  if(waveNo===4)return [['ginger',4+Math.floor(l/2)],['slime',7+l],['devil',3+Math.ceil(l/2)],['rabbit',5+l]];
+  return [['ginger',8+l],['rabbit',7+l],['devil',3+Math.ceil(l/2)],['boss',1+Math.floor((l-1)/4)]];
 }
 
 function loadAssets(){
@@ -346,7 +346,7 @@ function canPlaceTower(x,y){
 }
 
 function resetGame(){
-  money=levelStartMoney(1);lives=10;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
+  money=levelStartMoney(1);lives=8;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
   terrainMaskCache={level:0,mask:null};
   waveActive=false;paused=false;gameEnded=false;buildType=null;selectedTower=-1;
   enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];
@@ -392,13 +392,14 @@ function startWave(){
 
 function spawnEnemy(kind){
   const def=ENEMIES[kind];
-  const hpScale=1+(level-1)*.34+(wave-1)*.13;
-  const speedScale=1+(level-1)*.025+(wave-1)*.012;
+  const pressure=currentLevel().pressure||1;
+  const hpScale=(1+(level-1)*.42+(wave-1)*.16)*pressure;
+  const speedScale=(1+(level-1)*.035+(wave-1)*.018)*(1+(pressure-1)*.45);
   enemies.push({
     kind,levelIndex:level-1,travel:0,
     hp:def.hp*hpScale,maxHp:def.hp*hpScale,
     speed:def.speed*speedScale,
-    reward:Math.ceil(def.reward*(1+(level-1)*.04)),
+    reward:Math.ceil(def.reward*(1+(level-1)*.025)),
     leak:def.leak,
     slow:0,flash:0,x:168,y:H+16,row:3,
     progress:0,dead:false,seed:Math.floor(Math.random()*6)
@@ -428,11 +429,11 @@ function finishWave(){
   const perfect=leaksThisWave===0;
   const waveBonus=90+level*28+wave*16;
   score+=waveBonus;
-  money+=18+level*4+wave*2;
+  money+=14+level*3+wave*2;
   if(perfect){
     perfectWaves++;
     score+=75+level*5;
-    money+=10;
+    money+=6;
     showBanner('PERFECT WAVE');
   }else showBanner('WAVE CLEAR');
 
@@ -679,7 +680,7 @@ function updateSpawning(dt){
     spawnClock-=dt;
     if(spawnClock<=0){
       spawnEnemy(spawnQueue.shift());
-      spawnClock=Math.max(.22,.72-level*.025-wave*.025);
+      spawnClock=Math.max(.16,.62-level*.026-wave*.035);
     }
   }else if(enemies.length===0&&projectiles.length===0)finishWave();
 }
