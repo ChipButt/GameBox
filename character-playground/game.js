@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=10';
-import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=8';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=11';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=9';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -31,6 +31,7 @@ const partSourceGrid = $('partSourceGrid');
 const removePartBtn = $('removePartBtn');
 const partPrevBtn = $('partPrevBtn');
 const partNextBtn = $('partNextBtn');
+const backToCategoriesBtn = $('backToCategoriesBtn');
 const heightSlider = $('heightSlider');
 const buildSlider = $('buildSlider');
 const headSizeSlider = $('headSizeSlider');
@@ -165,9 +166,14 @@ let initialLoad = true;
 let viewDistance = 6.55;
 let toastTimer = 0;
 let pendingSavedColors = null;
+let pendingSavedVisibility = null;
 let pendingPose = null;
 let pendingParts = null;
 let activePartCategory = 'head';
+let componentEditorOpen = false;
+let activeBuilderTab = 'style';
+document.body.dataset.builderTab = 'style';
+document.body.dataset.componentEditor = 'closed';
 let proportions = { height: 100, build: 100, headSize: 100 };
 let pointerStartedAt = null;
 let pointerDragged = false;
@@ -284,9 +290,12 @@ function renderPartCategoryRail() {
       icon: PART_ICONS[part.id] || '•'
     };
     const selected = currentPartOption(part.id);
+    const wrap = document.createElement('div');
+    wrap.className = 'categoryTileWrap';
+
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'partCategoryBtn categoryTile' + (category.id === activePartCategory ? ' active' : '');
+    button.className = 'partCategoryBtn categoryTile' + (category.id === activePartCategory && componentEditorOpen ? ' active' : '');
     button.dataset.part = category.id;
     button.setAttribute('aria-label', 'Customise ' + category.label);
     button.title = category.label;
@@ -320,7 +329,31 @@ function renderPartCategoryRail() {
 
     button.append(preview, label, choice);
     button.addEventListener('click', () => selectPartCategory(category.id));
-    partCategoryRail.appendChild(button);
+
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'categoryCycle categoryCyclePrev';
+    prev.textContent = '‹';
+    prev.setAttribute('aria-label', 'Previous ' + category.label);
+    prev.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      await cyclePart(category.id, -1);
+      renderPartCategoryRail();
+    });
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'categoryCycle categoryCycleNext';
+    next.textContent = '›';
+    next.setAttribute('aria-label', 'Next ' + category.label);
+    next.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      await cyclePart(category.id, 1);
+      renderPartCategoryRail();
+    });
+
+    wrap.append(button, prev, next);
+    partCategoryRail.appendChild(wrap);
   }
 }
 
@@ -410,12 +443,24 @@ function renderPartBrowser() {
   renderActivePartColours();
 }
 
+function showAllComponents() {
+  componentEditorOpen = false;
+  document.body.dataset.componentEditor = 'closed';
+  partCategoryRail.hidden = false;
+  partBrowser.hidden = true;
+  proportionPanel.hidden = true;
+  renderPartCategoryRail();
+}
+
 function selectPartCategory(category) {
   if (!PART_DEFINITIONS.some((part) => part.id === category)) return;
   activePartCategory = category;
+  componentEditorOpen = true;
+  document.body.dataset.componentEditor = 'open';
   setActiveTab('style');
+  partCategoryRail.hidden = true;
   partBrowser.hidden = false;
-  proportionPanel.hidden = false;
+  proportionPanel.hidden = category !== 'head';
   renderPartCategoryRail();
   renderPartBrowser();
   renderActivePartColours();
@@ -482,10 +527,17 @@ function updatePartRows() {
   compatibleCount.textContent = totalDistinct + ' swappable styles';
   rigLabel.textContent = 'Choose one of the eight components';
   renderPartCategoryRail();
-  partBrowser.hidden = false;
-  proportionPanel.hidden = false;
-  renderPartBrowser();
-  renderActivePartColours();
+  if (componentEditorOpen) {
+    partCategoryRail.hidden = true;
+    partBrowser.hidden = false;
+    proportionPanel.hidden = activePartCategory !== 'head';
+    renderPartBrowser();
+    renderActivePartColours();
+  } else {
+    partCategoryRail.hidden = false;
+    partBrowser.hidden = true;
+    proportionPanel.hidden = true;
+  }
 }
 
 const CATEGORY_COLOUR_LABELS = {
@@ -658,6 +710,26 @@ function buildMaterialRow(group, compact = false) {
     : (PART_CATEGORY_LABELS[group.part] || PART_DEFINITIONS.find((part) => part.id === group.part)?.label || 'Character part');
   text.append(title, subtitle);
 
+  const visibility = document.createElement('button');
+  visibility.type = 'button';
+  visibility.className = 'materialVisibility';
+  const updateVisibilityButton = () => {
+    const shown = group.records.some((record) => record.material.visible !== false);
+    visibility.textContent = shown ? '◉' : '○';
+    visibility.classList.toggle('off', !shown);
+    visibility.setAttribute('aria-label', (shown ? 'Hide ' : 'Show ') + group.name);
+    row.classList.toggle('materialHidden', !shown);
+    if (subtitle) subtitle.textContent = shown
+      ? (compact ? 'Colour or hide this feature' : (PART_CATEGORY_LABELS[group.part] || 'Character part'))
+      : 'Hidden from character';
+  };
+  visibility.addEventListener('click', () => {
+    const nextVisible = !group.records.some((record) => record.material.visible !== false);
+    for (const record of group.records) record.material.visible = nextVisible;
+    updateVisibilityButton();
+    updateSummary();
+  });
+
   const input = document.createElement('input');
   input.type = 'color';
   input.value = '#' + group.records[0].material.color.getHexString();
@@ -683,7 +755,8 @@ function buildMaterialRow(group, compact = false) {
     updateSummary();
   });
 
-  row.append(text, input, reset);
+  row.append(text, visibility, input, reset);
+  updateVisibilityButton();
   return row;
 }
 
@@ -1060,6 +1133,27 @@ function snapshotMaterialColors() {
   return colors;
 }
 
+function snapshotMaterialVisibility() {
+  const visibility = {};
+  for (const record of materialRecords) visibility[record.key] = record.material.visible !== false;
+  return visibility;
+}
+
+function applySavedVisibility(visibility) {
+  if (!visibility || typeof visibility !== 'object') return false;
+  let applied = 0;
+  for (const record of materialRecords) {
+    if (typeof visibility[record.key] !== 'boolean') continue;
+    record.material.visible = visibility[record.key];
+    applied += 1;
+  }
+  if (applied) {
+    renderMaterialControls();
+    renderActivePartColours();
+  }
+  return Boolean(applied);
+}
+
 function partSelectionMap() {
   const result = {};
   for (const part of PART_DEFINITIONS) {
@@ -1084,7 +1178,7 @@ function partSelectionMap() {
 
 function buildPayload() {
   return {
-    version: 4,
+    version: 5,
     name: (characterName.value || 'Unnamed Character').trim().slice(0, 24),
     presetId: currentPreset.id,
     modelId: currentPreset.id,
@@ -1093,6 +1187,7 @@ function buildPayload() {
     parts: partSelectionMap(),
     palette: currentPalette,
     materialColors: snapshotMaterialColors(),
+    materialVisibility: snapshotMaterialVisibility(),
     pose: activeClipName || '',
     animationSpeed: Number(animSpeed.value),
     turntable: Boolean(turntableToggle.checked),
@@ -1227,6 +1322,13 @@ function workshopDiagnosticSnapshot() {
         boneWeightMaxima[name] = Math.max(boneWeightMaxima[name] || 0, weight);
       }
     });
+    const materialVisibility = {};
+    state.group?.traverse?.((node) => {
+      const raw = node.userData?.sourceMaterialName || node.material?.name || '';
+      if (!raw || !node.material) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      materialVisibility[raw] = mats.some((material) => material?.visible !== false);
+    });
     parts[part.id] = {
       optionId: state.optionId || null,
       sourceId: state.sourceId || null,
@@ -1235,7 +1337,8 @@ function workshopDiagnosticSnapshot() {
       weightedBoneNames: Array.from(weightedBoneNames).sort(),
       boneWeightMaxima,
       geometryFingerprint: geometryFingerprint(state.group),
-      visible: Boolean(state.group?.visible)
+      visible: Boolean(state.group?.visible),
+      materialVisibility
     };
   }
 
@@ -1440,6 +1543,10 @@ async function loadDriver(entryId, options = {}) {
         } else if (currentPalette !== 'custom') {
           applyPalette(currentPalette);
         }
+        if (pendingSavedVisibility) {
+          applySavedVisibility(pendingSavedVisibility);
+          pendingSavedVisibility = null;
+        }
 
         applyProportions();
 
@@ -1490,6 +1597,7 @@ async function loadSavedCharacter() {
   turntableToggle.checked = Boolean(saved.turntable);
   currentPalette = saved.palette || 'original';
   pendingSavedColors = saved.materialColors || null;
+  pendingSavedVisibility = saved.materialVisibility || null;
   pendingPose = saved.pose || null;
   pendingParts = saved.parts || null;
   proportions = {
@@ -1506,8 +1614,21 @@ async function loadSavedCharacter() {
 }
 
 function setActiveTab(name) {
+  activeBuilderTab = name;
+  document.body.dataset.builderTab = name;
   document.querySelectorAll('.tabBtn').forEach((button) => button.classList.toggle('active', button.dataset.tab === name));
   document.querySelectorAll('.tabView').forEach((view) => view.classList.toggle('active', view.dataset.view === name));
+
+  const buildMode = name === 'style';
+  scene.background.set(buildMode ? 0x10a9d6 : 0xdbe8ed);
+  if (scene.fog) scene.fog.color.set(buildMode ? 0x10a9d6 : 0xdbe8ed);
+  decorRoot.visible = !buildMode;
+  platformBase.visible = !buildMode;
+  platformTop.visible = !buildMode;
+  platformRing.visible = !buildMode;
+  studioFloor.visible = !buildMode;
+  if (buildMode && !componentEditorOpen) showAllComponents();
+  resize();
 }
 
 function loadDecorAsset(path, x, z, targetHeight, rotation = 0) {
@@ -1541,6 +1662,11 @@ function applyCameraPose() {
   if (mobile) {
     camera.position.set(0, 1.40, viewDistance);
     camera.lookAt(0, 0.72, 0);
+    return;
+  }
+  if (activeBuilderTab === 'style') {
+    camera.position.set(0, 1.52, 6.55);
+    camera.lookAt(0.55, 1.02, 0);
     return;
   }
   camera.position.set(previewRoot.position.x, 1.64, viewDistance);
@@ -1594,7 +1720,7 @@ function resize() {
   camera.updateProjectionMatrix();
 
   const mobile = width <= 980;
-  previewRoot.position.x = mobile ? 0 : -0.78;
+  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.72 : -0.78);
   if (mobile) {
     previewRoot.position.y = 0.76;
   } else {
@@ -1726,6 +1852,7 @@ $('resetViewBtn').addEventListener('click', resetView);
 $('applyPresetBtn').addEventListener('click', () => loadDriver(presetSelect.value));
 $('randomPartsBtn').addEventListener('click', randomiseParts);
 $('resetPartsBtn').addEventListener('click', resetPartsToPreset);
+backToCategoriesBtn.addEventListener('click', showAllComponents);
 partPrevBtn.addEventListener('click', () => cyclePart(activePartCategory, -1));
 partNextBtn.addEventListener('click', () => cyclePart(activePartCategory, 1));
 removePartBtn.addEventListener('click', async () => {
@@ -1781,10 +1908,14 @@ function animate() {
 }
 
 async function bootstrap() {
+  setActiveTab('style');
+  componentEditorOpen = false;
+  document.body.dataset.componentEditor = 'closed';
   renderPresetSelect();
   renderPartRows();
   renderPartCategoryRail();
-  renderPartBrowser();
+  partBrowser.hidden = true;
+  proportionPanel.hidden = true;
   applyProportions();
   resize();
   buildWorkshopDecor();
@@ -1806,6 +1937,7 @@ async function bootstrap() {
     turntableToggle.checked = Boolean(saved.turntable);
     currentPalette = saved.palette || 'original';
     pendingSavedColors = saved.materialColors || null;
+    pendingSavedVisibility = saved.materialVisibility || null;
     pendingPose = saved.pose || null;
     pendingParts = saved.parts || null;
     proportions = {
