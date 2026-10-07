@@ -1,0 +1,35 @@
+name: Audit Wizard Hat
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-wizard-hat.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Wizard materials
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character/Wizard.gltf")
+          doc=json.loads(p.read_text())
+          mats=doc.get("materials",[])
+          print("WIZARD_MATERIALS")
+          for i,m in enumerate(mats):
+              print(i, m.get("name"), m.get("pbrMetallicRoughness",{}).get("baseColorFactor"))
+          print("WIZARD_PRIMITIVES")
+          for mi,mesh in enumerate(doc.get("meshes",[])):
+              print("MESH",mi,mesh.get("name"))
+              for pi,prim in enumerate(mesh.get("primitives",[])):
+                  idx=prim.get("material")
+                  print("PRIM",pi,"material",idx,mats[idx].get("name") if isinstance(idx,int) and idx < len(mats) else None,"attrs",sorted((prim.get("attributes") or {}).keys()))
+          PY
