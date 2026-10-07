@@ -461,7 +461,7 @@ function updateParticles(dt){
 function loseLife(now){
   lives--;combo=0;powerups=[];lasers=[];
   if(lives<=0){finishRun(false);return;}
-  tone(230,.28,'sawtooth',.035,115);vibrate([25,40,25]);message='LIFE LOST · '+lives+' LEFT';messageUntil=now+1100;resetServe();
+  tone(230,.28,'sawtooth',.035,115);vibrate([25,40,25]);resetServe();message='LIFE LOST · '+lives+' LEFT';messageUntil=now+1100;
 }
 function finishRun(victory){
   state=victory?'victory':'gameOver';paused=true;saveHighScore();
@@ -624,5 +624,6 @@ howToSheet.addEventListener('click',function(e){if(e.target===howToSheet)closeHo
 document.addEventListener('visibilitychange',function(){if(document.hidden&&!resultSheet.classList.contains('show'))openSettings();});
 
 settingsHighScore.textContent=String(highScore);updateSoundUi();
-loadAssets().then(function(){newRun();paused=true;pausedAt=performance.now();lastTime=performance.now();requestAnimationFrame(loop);}).catch(function(){newRun();paused=true;pausedAt=performance.now();requestAnimationFrame(loop);});
+newRun();paused=true;pausedAt=performance.now();lastTime=performance.now();requestAnimationFrame(loop);
+loadAssets().then(function(){assetsReady=true;}).catch(function(){assetsReady=false;});
 })();
