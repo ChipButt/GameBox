@@ -128,9 +128,10 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   if (HAIR_RE.test(materialName)) return 'hair';
   if (SHOE_RE.test(materialName)) return null;
 
-  // The Elf/Wizard hat band is stored in the generic "Belt" material together
-  // with the waist belt. Only the high ring belongs to Headwear.
-  if (/^belt$/i.test(materialName) && /^(Elf|Wizard)$/.test(sourceId) && yNorm > 0.62) {
+  // Elf/Wizard donor files use a generic Belt/ Band material for both waist trim
+  // and the hat ring. Geometry height is what separates the real hat band from the
+  // waist belt; keep the high ring with Headwear so it cannot inherit skin/body colour.
+  if (/^(belt|band)$/i.test(materialName) && /^(Elf|Wizard)$/.test(sourceId) && yNorm > 0.62) {
     return 'headwear';
   }
   if (ACCESSORY_RE.test(materialName)) return 'accessory';
