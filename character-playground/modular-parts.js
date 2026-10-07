@@ -113,12 +113,6 @@ function maxRegionWeight(skinIndex, skinWeight, boneNames, vertices, names) {
 function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, yRange, sourceId = '') {
   const material = materialAt(mesh, groupMaterialIndex);
   const materialName = String(material?.name || '');
-  if (HEADWEAR_RE.test(materialName)) return 'headwear';
-  if (FACIAL_HAIR_RE.test(materialName)) return 'facialHair';
-  if (HAIR_RE.test(materialName)) return 'hair';
-  if (SHOE_RE.test(materialName)) return null;
-  if (ACCESSORY_RE.test(materialName)) return 'accessory';
-
   const position = nonIndexed.getAttribute('position');
   const skinIndex = nonIndexed.getAttribute('skinIndex');
   const skinWeight = nonIndexed.getAttribute('skinWeight');
@@ -129,20 +123,24 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   meanY /= vertices.length;
   const yNorm = yRange > 1e-6 ? (meanY - yMin) / yRange : 0.5;
 
+  if (HEADWEAR_RE.test(materialName)) return 'headwear';
+  if (FACIAL_HAIR_RE.test(materialName)) return 'facialHair';
+  if (HAIR_RE.test(materialName)) return 'hair';
+  if (SHOE_RE.test(materialName)) return null;
+
+  // The Elf/Wizard hat band is stored in the generic "Belt" material together
+  // with the waist belt. Only the high ring belongs to Headwear.
+  if (/^belt$/i.test(materialName) && /^(Elf|Wizard)$/.test(sourceId) && yNorm > 0.62) {
+    return 'headwear';
+  }
+  if (ACCESSORY_RE.test(materialName)) return 'accessory';
+
   const scores = {
     head: scoreRegion(skinIndex, skinWeight, boneNames, vertices, HEAD_BONES),
     top: scoreRegion(skinIndex, skinWeight, boneNames, vertices, TOP_BONES),
     bottom: scoreRegion(skinIndex, skinWeight, boneNames, vertices, BOTTOM_BONES),
     shoes: scoreRegion(skinIndex, skinWeight, boneNames, vertices, FOOT_BONES)
   };
-
-  // Quaternius' Elf/Wizard hat trim is named "Gold", not "Band".
-  // Only the high, Head/Neck-driven Gold triangles belong to the hat; lower Gold
-  // details remain with clothing/accessories.
-  if (/^gold$/i.test(materialName) && /^(Elf|Wizard)$/.test(sourceId)) {
-    const otherBodyScore = Math.max(scores.top, scores.bottom, scores.shoes);
-    if (yNorm > 0.68 && scores.head >= 1.0 && scores.head > otherBodyScore * 1.1) return 'headwear';
-  }
 
   const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const [winner, winnerScore] = ranked[0] || ['top', 0];
@@ -351,7 +349,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
     const promise = new Promise((resolve, reject) => {
       loader.load(
-        entry.path + '?parts=6',
+        entry.path + '?parts=7',
         (gltf) => {
           try {
             const combined = {
