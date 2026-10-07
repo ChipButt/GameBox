@@ -1082,11 +1082,12 @@ function inPlacePreviewClip(clip) {
   const clone = clip.clone();
   clone.tracks = clone.tracks.filter((track) => {
     const name = String(track.name || '');
-    // The Quaternius clips animate the skeleton root "Bone" position. That is
-    // useful for world movement, but a character customiser must preview Walk/
-    // Run/etc. in place or the model can literally leave the camera.
-    return !/(^|[\\/.])Bone\.position$/i.test(name)
-      && !/(^|[\\/.])CharacterArmature\.position$/i.test(name);
+    // Quaternius clips animate position, rotation and scale on the skeleton
+    // root "Bone". Those tracks are useful for world-space movement, but a
+    // character customiser must keep the root anchored while child bones move.
+    const rootBoneTransform = /(^|[\\/.])Bone\.(position|quaternion|scale)$/i.test(name);
+    const armatureTransform = /(^|[\\/.])CharacterArmature\.(position|quaternion|scale)$/i.test(name);
+    return !rootBoneTransform && !armatureTransform;
   });
   return clone;
 }
@@ -1383,6 +1384,8 @@ function workshopDiagnosticSnapshot() {
     presetId: currentPreset?.id || null,
     pose: activeClipName || '',
     rootBonePosition: rootBone ? rootBone.position.toArray() : null,
+    rootBoneQuaternion: rootBone ? rootBone.quaternion.toArray() : null,
+    rootBoneScale: rootBone ? rootBone.scale.toArray() : null,
     parts,
     shoes: {
       optionId: shoeState.optionId || null,
