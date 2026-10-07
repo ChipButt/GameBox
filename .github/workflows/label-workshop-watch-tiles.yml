@@ -1,0 +1,49 @@
+name: Label Workshop Watch Winter Tiles
+
+on:
+  push:
+    paths:
+      - '.github/workflows/label-workshop-watch-tiles.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build labelled atlas
+        run: |
+          python3 -m pip install pillow >/dev/null
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          src=Image.open("workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png").convert("RGBA")
+          cell=16
+          scale=5
+          cols=src.width//cell
+          rows=src.height//cell
+          margin=18
+          out=Image.new("RGBA",(cols*cell*scale,(rows*cell*scale)+margin*rows),(32,39,44,255))
+          draw=ImageDraw.Draw(out)
+          font=ImageFont.load_default()
+          for r in range(rows):
+              for c in range(cols):
+                  tile=src.crop((c*cell,r*cell,(c+1)*cell,(r+1)*cell)).resize((cell*scale,cell*scale),Image.Resampling.NEAREST)
+                  x=c*cell*scale
+                  y=r*(cell*scale+margin)
+                  out.alpha_composite(tile,(x,y))
+                  draw.rectangle((x,y,x+cell*scale-1,y+cell*scale-1),outline=(90,100,110,255),width=1)
+                  label=f"{c},{r}"
+                  draw.rectangle((x,y+cell*scale,x+30,y+cell*scale+11),fill=(0,0,0,210))
+                  draw.text((x+2,y+cell*scale+1),label,fill=(255,255,255,255),font=font)
+          out.save("workshop-watch/assets/winter-atlas-labelled.png")
+          print(src.size, cols, rows)
+          PY
+      - name: Commit labelled atlas
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add workshop-watch/assets/winter-atlas-labelled.png
+          git commit -m "Add labelled Workshop Watch winter atlas"
+          git push
