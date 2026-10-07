@@ -303,23 +303,25 @@ function renderPartCategoryRail() {
 
     const preview = document.createElement('span');
     preview.className = 'categoryTilePreview';
-    if (selected?.preview) {
+    const activeGroup = activeParts[part.id]?.group;
+    if (activeGroup) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'categoryTilePreviewCanvas';
+      canvas.width = 180;
+      canvas.height = 128;
+      canvas.dataset.part = part.id;
+      canvas.setAttribute('aria-hidden', 'true');
+      preview.appendChild(canvas);
+    } else if (selected?.preview) {
       const img = document.createElement('img');
       img.src = selected.preview;
       img.alt = '';
       preview.appendChild(img);
     } else {
-      const icon = document.createElement('i');
-      icon.textContent = category.icon;
-      preview.appendChild(icon);
-      const swatches = document.createElement('span');
-      swatches.className = 'categoryTileSwatches';
-      for (const colour of Object.values(selected?.baseColors || {}).slice(0, 4)) {
-        const dot = document.createElement('b');
-        dot.style.backgroundColor = colour;
-        swatches.appendChild(dot);
-      }
-      preview.appendChild(swatches);
+      const fallback = document.createElement('span');
+      fallback.className = 'categoryTilePreviewFallback';
+      fallback.textContent = selected ? 'LOADING…' : 'NONE';
+      preview.appendChild(fallback);
     }
 
     const label = document.createElement('span');
@@ -356,6 +358,8 @@ function renderPartCategoryRail() {
     wrap.append(button, prev, next);
     partCategoryRail.appendChild(wrap);
   }
+
+  categoryPreviewDirty = true;
 }
 
 function renderPartBrowser() {
@@ -921,6 +925,67 @@ async function instantiateWearable(option, category) {
   return group;
 }
 
+const CATEGORY_STARTING_COLOURS = {
+  head: '#d6a67d',
+  hair: '#6b4a32',
+  facialHair: '#6b4a32',
+  headwear: '#3e6f91',
+  top: '#4f7fa8',
+  bottom: '#5e5b70',
+  shoes: '#6b5143',
+  accessory: '#b07a3a'
+};
+
+function normaliseMaterialLabel(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function isNearUnpaintedBlack(material) {
+  if (!material?.color) return false;
+  return Math.max(material.color.r, material.color.g, material.color.b) < 0.14;
+}
+
+function optionStartingColour(option, category, rawName, index, material) {
+  const colours = Object.entries(option?.baseColors || {});
+  if (!colours.length) return isNearUnpaintedBlack(material) ? CATEGORY_STARTING_COLOURS[category] : null;
+
+  const rawKey = normaliseMaterialLabel(rawName);
+  const friendlyKey = normaliseMaterialLabel(friendlyMaterialName(category, rawName, index));
+  for (const [label, colour] of colours) {
+    const key = normaliseMaterialLabel(label);
+    if (key === rawKey || key === friendlyKey) return colour;
+  }
+
+  // A single curated colour is intentionally the default for the whole component.
+  if (colours.length === 1) return colours[0][1];
+
+  // Do not leave source-pack placeholder black on an otherwise curated component.
+  if (isNearUnpaintedBlack(material)) return CATEGORY_STARTING_COLOURS[category] || colours[0][1];
+  return null;
+}
+
+function applyOptionStartingColours(group, option, category) {
+  if (!group || !option) return;
+  let localIndex = 0;
+  group.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!material?.color) continue;
+      const rawName = node.userData.sourceMaterialName || material.name || ('Material ' + (localIndex + 1));
+      const colour = optionStartingColour(option, category, rawName, localIndex, material);
+      if (colour) {
+        material.color.set(colour);
+        const painted = '#' + material.color.getHexString();
+        material.userData = { ...(material.userData || {}), originalColor: painted };
+        node.userData.originalColor = painted;
+        material.needsUpdate = true;
+      }
+      localIndex += 1;
+    }
+  });
+}
+
 async function applyPartOption(category, option, options = {}) {
   return setPart(category, option, options);
 }
@@ -977,6 +1042,8 @@ async function setPart(category, selection, options = {}) {
       disposeGroup(newGroup);
       return false;
     }
+
+    if (newGroup && option) applyOptionStartingColours(newGroup, option, category);
 
     if (option && !newGroup) {
       if (options.allowNone && partDef.optional) option = null;
@@ -1454,6 +1521,61 @@ function partScreenBounds(category) {
     top: Math.min(...points.map((p) => p.y)),
     bottom: Math.max(...points.map((p) => p.y))
   };
+}
+
+let categoryPreviewDirty = true;
+
+function updateCategoryTilePreviews() {
+  const source = renderer.domElement;
+  const sourceRect = source.getBoundingClientRect();
+  if (!sourceRect.width || !sourceRect.height || !source.width || !source.height) return;
+
+  const scaleX = source.width / sourceRect.width;
+  const scaleY = source.height / sourceRect.height;
+  const canvases = document.querySelectorAll('.categoryTilePreviewCanvas[data-part]');
+
+  for (const canvas of canvases) {
+    const category = canvas.dataset.part;
+    const bounds = partScreenBounds(category);
+    const group = activeParts[category]?.group;
+    if (!bounds || !group || group.visible === false) {
+      const context = canvas.getContext('2d');
+      context?.clearRect(0, 0, canvas.width, canvas.height);
+      continue;
+    }
+
+    const centerX = (bounds.left + bounds.right) / 2;
+    const centerY = (bounds.top + bounds.bottom) / 2;
+    let cropWidth = Math.max(bounds.right - bounds.left, sourceRect.width * 0.10);
+    let cropHeight = Math.max(bounds.bottom - bounds.top, sourceRect.height * 0.12);
+
+    const margin = category === 'shoes' ? 1.55 : category === 'facialHair' ? 2.25 : 1.72;
+    cropWidth *= margin;
+    cropHeight *= margin;
+
+    const targetAspect = canvas.width / canvas.height;
+    if (cropWidth / cropHeight < targetAspect) cropWidth = cropHeight * targetAspect;
+    else cropHeight = cropWidth / targetAspect;
+
+    let left = centerX - cropWidth / 2;
+    let top = centerY - cropHeight / 2;
+    left = Math.max(sourceRect.left, Math.min(left, sourceRect.right - cropWidth));
+    top = Math.max(sourceRect.top, Math.min(top, sourceRect.bottom - cropHeight));
+    cropWidth = Math.min(cropWidth, sourceRect.right - left);
+    cropHeight = Math.min(cropHeight, sourceRect.bottom - top);
+
+    const sx = (left - sourceRect.left) * scaleX;
+    const sy = (top - sourceRect.top) * scaleY;
+    const sw = Math.max(1, cropWidth * scaleX);
+    const sh = Math.max(1, cropHeight * scaleY);
+
+    const context = canvas.getContext('2d');
+    if (!context) continue;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(source, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  }
 }
 
 function prepareVisualAudit(category = 'head') {
@@ -1962,6 +2084,10 @@ function animate() {
   if (turntableToggle.checked) characterHolder.rotation.y += dt * 0.38;
 
   renderer.render(scene, camera);
+  if (categoryPreviewDirty) {
+    categoryPreviewDirty = false;
+    updateCategoryTilePreviews();
+  }
 }
 
 async function bootstrap() {
