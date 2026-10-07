@@ -6,7 +6,7 @@ const ctx=canvas.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 
 const W=336,H=480,TILE=16;
-const PATH_WIDTH=32;
+const PATH_WIDTH=48;
 
 const waveHud=document.getElementById('waveHud');
 const moneyHud=document.getElementById('moneyHud');
@@ -66,6 +66,37 @@ const ASSETS={
   rabbit:RABBIT+'Rabbit_Horned_Move.png'
 };
 
+// Exact labels/coordinates exported by the Workshop Watch Asset Organiser.
+// pathFloor supplies the normal 9-slice. snowFloor supplies inverse/inside corners.
+const GHERWIT={
+  snowGround:{col:12,row:1},
+  snowDetailSmall:{col:1,row:1},
+  snowDetailLarge:{col:0,row:1},
+  pathFloor:{
+    top_left_corner:{col:6,row:0},top_edge:{col:7,row:0},top_right_corner:{col:8,row:0},
+    left_edge:{col:6,row:1},centre:{col:7,row:1},right_edge:{col:8,row:1},
+    bottom_left_corner:{col:6,row:2},bottom_edge:{col:7,row:2},bottom_right_corner:{col:8,row:2}
+  },
+  snowFloor:{
+    top_left_corner:{col:9,row:0},top_edge:{col:7,row:2},top_right_corner:{col:10,row:0},
+    left_edge:{col:8,row:1},centre:{col:12,row:1},right_edge:{col:6,row:1},
+    bottom_left_corner:{col:9,row:1},bottom_edge:{col:7,row:0},bottom_right_corner:{col:10,row:1}
+  },
+  tree:{
+    tiles:[
+      {col:9,row:6,x:0,y:0},{col:10,row:6,x:1,y:0},{col:11,row:6,x:2,y:0},
+      {col:9,row:7,x:0,y:1},{col:10,row:7,x:1,y:1},{col:11,row:7,x:2,y:1},
+      {col:9,row:8,x:0,y:2},{col:10,row:8,x:1,y:2},{col:11,row:8,x:2,y:2}
+    ]
+  },
+  workshopGate:{
+    tiles:[
+      {col:6,row:0,x:0,y:0},{col:7,row:0,x:1,y:0},{col:8,row:0,x:2,y:0},
+      {col:3,row:5,x:0,y:1},{col:1,row:5,x:1,y:1},{col:5,row:5,x:2,y:1}
+    ]
+  }
+};
+
 const TOWERS={
   snowA:{name:'SNOWBALLER',asset:'snowA',cost:65,range:88,damage:10,rate:.55,shotSpeed:240,kind:'snow',slow:0,splash:0},
   // DOUBLE TOSS deliberately uses the former green-hat Cheer snowman artwork.
@@ -105,7 +136,7 @@ const LEVELS=[
 ];
 
 const images={};
-let pathPattern=null;
+let terrainMaskCache={level:0,mask:null};
 let money=220,lives=10,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
 let waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let buildType=null,selectedTower=-1;
@@ -146,7 +177,6 @@ function loadAssets(){
     im.onerror=reject;
     im.src=url;
   }))).then(()=>{
-    makeTerrainPatterns();
     playButton.disabled=false;
     playButton.textContent='DEFEND THE WORKSHOP';
     draw();
@@ -156,22 +186,6 @@ function loadAssets(){
     playButton.textContent='RETRY / PLAY';
     showBanner('ASSET LOAD ERROR');
   });
-}
-
-function makeAtlasTile(col,row){
-  const off=document.createElement('canvas');
-  off.width=TILE;off.height=TILE;
-  const oc=off.getContext('2d');
-  oc.imageSmoothingEnabled=false;
-  oc.drawImage(images.winter,col*TILE,row*TILE,TILE,TILE,0,0,TILE,TILE);
-  return off;
-}
-
-function makeTerrainPatterns(){
-  // The source is one unlabeled atlas. Cell 10,2 is the actual brown path texture.
-  // Snow itself is a white ground field with small atlas details layered over it;
-  // the previous build incorrectly repeated a transparent atlas cell as "snow".
-  pathPattern=ctx.createPattern(makeAtlasTile(10,2),'repeat');
 }
 
 function tone(kind){
@@ -253,6 +267,69 @@ function distanceToActivePath(x,y){
   return best;
 }
 
+function routeGridIndex(v){
+  return Math.round((v-TILE/2)/TILE);
+}
+
+function activeTerrainMask(){
+  if(terrainMaskCache.level===level&&terrainMaskCache.mask)return terrainMaskCache.mask;
+  const cols=W/TILE,rows=H/TILE;
+  const mask=Array.from({length:rows},()=>Array(cols).fill(false));
+  const grid=currentLevel().route.map(([x,y])=>[routeGridIndex(x),routeGridIndex(y)]);
+
+  const mark=(col,row)=>{
+    if(col>=0&&col<cols&&row>=0&&row<rows)mask[row][col]=true;
+  };
+
+  for(let i=0;i<grid.length-1;i++){
+    const [c1,r1]=grid[i],[c2,r2]=grid[i+1];
+    if(c1===c2){
+      for(let row=Math.min(r1,r2);row<=Math.max(r1,r2);row++){
+        for(let dc=-1;dc<=1;dc++)mark(c1+dc,row);
+      }
+    }else if(r1===r2){
+      for(let col=Math.min(c1,c2);col<=Math.max(c1,c2);col++){
+        for(let dr=-1;dr<=1;dr++)mark(col,r1+dr);
+      }
+    }
+  }
+
+  terrainMaskCache={level,mask};
+  return mask;
+}
+
+function maskHas(mask,col,row){
+  return row>=0&&row<mask.length&&col>=0&&col<mask[0].length&&mask[row][col];
+}
+
+function pathFloorRole(mask,col,row){
+  const up=maskHas(mask,col,row-1),down=maskHas(mask,col,row+1);
+  const left=maskHas(mask,col-1,row),right=maskHas(mask,col+1,row);
+
+  if(!up&&!left)return 'top_left_corner';
+  if(!up&&!right)return 'top_right_corner';
+  if(!down&&!left)return 'bottom_left_corner';
+  if(!down&&!right)return 'bottom_right_corner';
+  if(!up)return 'top_edge';
+  if(!down)return 'bottom_edge';
+  if(!left)return 'left_edge';
+  if(!right)return 'right_edge';
+  return 'centre';
+}
+
+function inverseSnowCornerRole(mask,col,row){
+  if(maskHas(mask,col,row))return null;
+  const up=maskHas(mask,col,row-1),down=maskHas(mask,col,row+1);
+  const left=maskHas(mask,col-1,row),right=maskHas(mask,col+1,row);
+
+  // These are the four inverse corner pieces from the user's snow_floor_tiles sheet.
+  if(up&&left)return 'top_left_corner';
+  if(up&&right)return 'top_right_corner';
+  if(down&&left)return 'bottom_left_corner';
+  if(down&&right)return 'bottom_right_corner';
+  return null;
+}
+
 function canPlaceTower(x,y){
   if(x<22||x>W-22||y<82||y>H-24)return false;
   if(distanceToActivePath(x,y)<PATH_WIDTH/2+13)return false;
@@ -262,6 +339,7 @@ function canPlaceTower(x,y){
 
 function resetGame(){
   money=levelStartMoney(1);lives=10;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
+  terrainMaskCache={level:0,mask:null};
   waveActive=false;paused=false;gameEnded=false;buildType=null;selectedTower=-1;
   enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];
   spawnClock=0;leaksThisWave=0;animClock=0;objectiveHit=0;
@@ -324,6 +402,7 @@ function advanceLevel(){
   score+=250+level*70;
   level++;
   wave=1;
+  terrainMaskCache={level:0,mask:null};
   waveActive=false;
   buildType=null;selectedTower=-1;
   enemies=[];projectiles=[];particles=[];spawnQueue=[];towers=[];
@@ -626,85 +705,87 @@ function drawAtlasCell(col,row,x,y,scale=1){
   ctx.drawImage(im,col*TILE,row*TILE,TILE,TILE,Math.round(x),Math.round(y),s,s);
 }
 
-function drawAtlasRegion(col,row,wTiles,hTiles,x,y,scale=1){
-  const im=images.winter;if(!im)return;
-  ctx.drawImage(
-    im,col*TILE,row*TILE,wTiles*TILE,hTiles*TILE,
-    Math.round(x),Math.round(y),wTiles*TILE*scale,hTiles*TILE*scale
-  );
+function drawMappedTile(tile,x,y,scale=1){
+  if(tile)drawAtlasCell(tile.col,tile.row,x,y,scale);
 }
 
-function drawRoute(points){
-  ctx.save();
-  ctx.lineCap='square';ctx.lineJoin='miter';
-  ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
-  for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);
-
-  ctx.strokeStyle='rgba(39,31,38,.28)';
-  ctx.lineWidth=PATH_WIDTH+4;ctx.stroke();
-
-  ctx.strokeStyle=pathPattern||'#94543f';
-  ctx.lineWidth=PATH_WIDTH;ctx.stroke();
-  ctx.restore();
+function drawMappedComposite(asset,x,y,scale=1){
+  if(!asset)return;
+  for(const tile of asset.tiles){
+    drawAtlasCell(tile.col,tile.row,x+tile.x*TILE*scale,y+tile.y*TILE*scale,scale);
+  }
 }
 
-function drawPine(x,y,variant=0,scale=1){
-  // The atlas stores complete 3x4 pine sprites starting at col 0 and col 6.
-  // Keeping the full source rectangle intact avoids the chopped/mixed-tree look.
-  drawAtlasRegion(variant?6:0,6,3,4,x,y,scale);
+function drawSnowGround(){
+  for(let y=0;y<H;y+=TILE){
+    for(let x=0;x<W;x+=TILE)drawMappedTile(GHERWIT.snowGround,x,y,1);
+  }
+}
+
+function drawRoute(){
+  const mask=activeTerrainMask();
+
+  // Normal path cells: centre, straight edges and outside corners.
+  for(let row=0;row<mask.length;row++){
+    for(let col=0;col<mask[row].length;col++){
+      if(!mask[row][col])continue;
+      const role=pathFloorRole(mask,col,row);
+      drawMappedTile(GHERWIT.pathFloor[role],col*TILE,row*TILE,1);
+    }
+  }
+
+  // Inside corners of bends are the inverse pieces from snow_floor_tiles.
+  for(let row=0;row<mask.length;row++){
+    for(let col=0;col<mask[row].length;col++){
+      const role=inverseSnowCornerRole(mask,col,row);
+      if(role)drawMappedTile(GHERWIT.snowFloor[role],col*TILE,row*TILE,1);
+    }
+  }
 }
 
 function drawObjective(){
-  drawPine(104,-7,0,.95);
-  drawPine(188,-7,1,.95);
-  drawAtlasCell(0,2,144,5,3);
+  // Exact 3x2 gate assembled in the organiser. Its bottom aligns with the route's top edge.
+  const x=144,y=32;
+  drawMappedComposite(GHERWIT.workshopGate,x,y,1);
 
   ctx.save();
   ctx.imageSmoothingEnabled=false;
   ctx.fillStyle=objectiveHit>0?'#8f3037':'#202934';
-  ctx.fillRect(132,47,72,14);
+  ctx.fillRect(132,10,72,14);
   ctx.fillStyle='#f7fbff';
   ctx.font='700 7px monospace';
   ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('WORKSHOP GATE',168,54);
-  ctx.strokeStyle=objectiveHit>0?'#f5c45a':'rgba(32,41,52,.55)';
-  ctx.lineWidth=objectiveHit>0?3:1;
-  ctx.strokeRect(150,61,36,8);
+  ctx.fillText('WORKSHOP GATE',168,17);
+  if(objectiveHit>0){
+    ctx.strokeStyle='#f5c45a';ctx.lineWidth=2;
+    ctx.strokeRect(x-2,y-2,52,36);
+  }
   ctx.restore();
 }
 
-function drawSnowDetail(col,row,x,y,scale=1){
-  drawAtlasCell(col,row,x,y,scale);
-}
-
 function drawTerrain(){
-  // Snow in this pack is a white ground field with small surface-detail sprites.
-  // The previous code repeated a transparent atlas cell, which is why it looked broken.
-  ctx.fillStyle='#f7fbff';
-  ctx.fillRect(0,0,W,H);
+  drawSnowGround();
+  drawRoute();
 
-  const offset=(level-1)%4;
   const details=[
-    [0,0,20+offset*3,96],[1,0,292-offset*2,128],[2,0,28,264],
-    [0,0,286,246],[1,0,44,452],[2,0,276,438],[0,0,152,286]
+    [GHERWIT.snowDetailLarge,24,104],[GHERWIT.snowDetailSmall,296,136],
+    [GHERWIT.snowDetailSmall,32,272],[GHERWIT.snowDetailLarge,288,256],
+    [GHERWIT.snowDetailSmall,48,448],[GHERWIT.snowDetailLarge,272,432]
   ];
-  details.forEach(d=>drawSnowDetail(d[0],d[1],d[2],d[3],1));
+  for(const [tile,x,y] of details){
+    if(distanceToActivePath(x+8,y+8)>PATH_WIDTH/2+12)drawMappedTile(tile,x,y,1);
+  }
 
-  drawRoute(currentLevel().route);
-
-  // Whole, uncut pine sprites, placed only where the current level's route is clear.
-  // This prevents later track layouts from slicing straight through a tree.
+  // Exact 3x3 tree assembled in the organiser.
   const candidates=[
-    [8,88,32,120],[280,88,304,120],
-    [8,200,32,232],[280,200,304,232],
-    [8,312,32,344],[280,312,304,344],
-    [8,402,32,434],[280,402,304,434]
+    [8,88],[280,96],[8,208],[280,216],
+    [8,320],[280,328],[8,416],[280,416]
   ];
   let drawn=0;
   for(let i=0;i<candidates.length&&drawn<4;i++){
-    const [x,y,cx,cy]=candidates[(i+level)%candidates.length];
-    if(distanceToActivePath(cx,cy)<48)continue;
-    drawPine(x,y,(level+drawn)%2,1);
+    const [x,y]=candidates[(i+level)%candidates.length];
+    if(distanceToActivePath(x+24,y+24)<PATH_WIDTH/2+32)continue;
+    drawMappedComposite(GHERWIT.tree,x,y,1);
     drawn++;
   }
 
@@ -797,7 +878,7 @@ function drawProjectile(p){
 function drawPlacementGhost(){
   if(!buildType||!pointer.inside)return;
   const def=TOWERS[buildType];
-  const valid=money>=def.cost&&canPlaceTower(pointer.x,pointer.y);
+  const valid=money>=towerCost(buildType)&&canPlaceTower(pointer.x,pointer.y);
 
   ctx.save();
   ctx.globalAlpha=.18;
