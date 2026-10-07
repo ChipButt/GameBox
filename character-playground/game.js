@@ -1466,8 +1466,8 @@ function frameCharacterToVisibleArea(force = false) {
     const characterHeight = Math.max(1, bounds.bottom - bounds.top);
     const characterWidth = Math.max(1, bounds.right - bounds.left);
     const fitRatio = Math.max(
-      characterHeight / (visibleHeight * 0.76),
-      characterWidth / (visibleWidth * 0.78),
+      characterHeight / (visibleHeight * 0.70),
+      characterWidth / (visibleWidth * 0.74),
       1
     );
 
@@ -1480,7 +1480,7 @@ function frameCharacterToVisibleArea(force = false) {
 
     // Keep the model visibly above the selector. Biasing the target upward gives
     // the feet a clear visual gap rather than merely keeping their bounds legal.
-    const targetCenter = area.top + (area.bottom - area.top) * 0.44;
+    const targetCenter = area.top + (area.bottom - area.top) * 0.36;
     const currentCenter = (bounds.top + bounds.bottom) * 0.5;
     const deltaPixels = targetCenter - currentCenter;
     const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
