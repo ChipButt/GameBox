@@ -15,71 +15,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect Elf and Wizard Skin components
+      - name: Compare Elf/Wizard material bounds
         shell: bash
         run: |
           python - <<'PY'
-          import base64, json, pathlib, struct
+          import base64,json,pathlib,struct
           COMP={5126:("f",4),5125:("I",4),5123:("H",2),5122:("h",2),5121:("B",1),5120:("b",1)}
           WIDTH={"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4}
-          HEAD={"Head","Neck"}
-          ARM={"Shoulder.L","UpperArm.L","LowerArm.L","Fist.L","Shoulder.R","UpperArm.R","LowerArm.R","Fist.R"}
-
-          def accessor(doc,idx):
-              a=doc["accessors"][idx]; v=doc["bufferViews"][a["bufferView"]]
+          def acc(doc,idx):
+              a=doc["accessors"][idx];v=doc["bufferViews"][a["bufferView"]]
               raw=base64.b64decode(doc["buffers"][v["buffer"]]["uri"].split(",",1)[1])
-              fmt,size=COMP[a["componentType"]]; width=WIDTH[a["type"]]
-              stride=v.get("byteStride",width*size); start=v.get("byteOffset",0)+a.get("byteOffset",0)
-              return [struct.unpack_from("<"+fmt*width,raw,start+i*stride) for i in range(a["count"])]
-
-          for donor in ("Elf","Wizard"):
-              p=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")/(donor+".gltf")
-              doc=json.loads(p.read_text())
-              mats=doc.get("materials",[]); nodes=doc.get("nodes",[])
-              bones=[nodes[i].get("name","") for i in doc["skins"][0]["joints"]]
+              fmt,size=COMP[a["componentType"]];n=WIDTH[a["type"]]
+              stride=v.get("byteStride",n*size);start=v.get("byteOffset",0)+a.get("byteOffset",0)
+              return [struct.unpack_from("<"+fmt*n,raw,start+i*stride) for i in range(a["count"])]
+          for donor in ("BaseCharacter","Elf","Wizard","Witch"):
+              doc=json.loads((pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")/(donor+".gltf")).read_text())
+              mats=doc.get("materials",[])
               print("DONOR",donor)
+              by={}
               for mesh in doc.get("meshes",[]):
                   for prim in mesh.get("primitives",[]):
-                      mi=prim.get("material",-1)
-                      name=mats[mi].get("name","") if 0<=mi<len(mats) else ""
-                      if name!="Skin": continue
-                      pos=accessor(doc,prim["attributes"]["POSITION"])
-                      joints=accessor(doc,prim["attributes"]["JOINTS_0"])
-                      weights=accessor(doc,prim["attributes"]["WEIGHTS_0"])
-                      idx=[int(x[0]) for x in accessor(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
-                      tris=[idx[t:t+3] for t in range(0,len(idx)-2,3)]
-                      v2t={}
-                      for ti,tri in enumerate(tris):
-                          for v in tri: v2t.setdefault(v,[]).append(ti)
-                      seen=set(); comps=[]
-                      for seed in range(len(tris)):
-                          if seed in seen: continue
-                          stack=[seed]; seen.add(seed); tis=[]; vs=set()
-                          while stack:
-                              ti=stack.pop(); tis.append(ti)
-                              for v in tris[ti]:
-                                  vs.add(v)
-                                  for n in v2t.get(v,[]):
-                                      if n not in seen: seen.add(n); stack.append(n)
-                          xs=[pos[v][0] for v in vs]; ys=[pos[v][1] for v in vs]; zs=[pos[v][2] for v in vs]
-                          maxHead=maxArm=0; sumHead=0
-                          boneTotals={}
-                          for v in vs:
-                              vh=va=0
-                              for ji,w in zip(joints[v],weights[v]):
-                                  bn=bones[int(ji)]; w=float(w)
-                                  boneTotals[bn]=boneTotals.get(bn,0)+w
-                                  if bn in HEAD: vh+=w
-                                  if bn in ARM: va+=w
-                              maxHead=max(maxHead,vh); maxArm=max(maxArm,va); sumHead+=vh
-                          topBones=sorted(boneTotals.items(),key=lambda kv:-kv[1])[:5]
-                          comps.append({
-                              "triangles":len(tis),"vertices":len(vs),
-                              "bounds":[round(min(xs),3),round(max(xs),3),round(min(ys),3),round(max(ys),3),round(min(zs),3),round(max(zs),3)],
-                              "maxHead":round(maxHead,3),"sumHead":round(sumHead,3),"maxArm":round(maxArm,3),
-                              "bones":[(b,round(w,2)) for b,w in topBones]
-                          })
-                      comps.sort(key=lambda c:(-c["bounds"][3],-c["triangles"]))
-                      for i,c in enumerate(comps):
-                          print("SKIN_COMPONENT",i,json.dumps(c,separators=(",",":")))
+                      mi=prim.get("material",-1);name=mats[mi].get("name","") if 0<=mi<len(mats) else ""
+                      pos=acc(doc,prim["attributes"]["POSITION"])
+                      idx=[int(x[0]) for x in acc(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
+                      pts=[pos[v] for v in set(idx)]
+                      if not pts:continue
+                      xs=[p[0] for p in pts];ys=[p[1] for p in pts];zs=[p[2] for p in pts]
+                      rec=by.setdefault(name,{"tri":0,"minx":1e9,"maxx":-1e9,"miny":1e9,"maxy":-1e9,"minz":1e9,"maxz":-1e9})
+                      rec["tri"]+=len(idx)//3
+                      rec["minx"]=min(rec["minx"],min(xs));rec["maxx"]=max(rec["maxx"],max(xs))
+                      rec["miny"]=min(rec["miny"],min(ys));rec["maxy"]=max(rec["maxy"],max(ys))
+                      rec["minz"]=min(rec["minz"],min(zs));rec["maxz"]=max(rec["maxz"],max(zs))
+              for name,rec in by.items():
+                  print("BOUNDS",name,"tri",rec["tri"],"xyz",[round(rec[k],3) for k in ("minx","maxx","miny","maxy","minz","maxz")])
           PY
