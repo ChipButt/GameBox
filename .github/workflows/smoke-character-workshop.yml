@@ -216,9 +216,9 @@ jobs:
 
           await page.click('.tabBtn[data-tab="style"]');
           await page.waitForTimeout(100);
-          assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion controls should remain available without becoming a ninth category.');
           await category('head');
           await page.waitForTimeout(100);
+          assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion controls should live inside Face without becoming a ninth category.');
           assert(await page.locator('#componentColourList .componentMaterialRow').count()>=1,'Face component did not expose its local colour editor.');
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
