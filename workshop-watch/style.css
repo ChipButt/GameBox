@@ -31,21 +31,24 @@ button{cursor:pointer}
 .routeButton{background:#397b9a}.routeButton span,.routeButton small{display:block}.routeButton span{font-size:8px}.routeButton small{font-size:7px;opacity:.78;margin-top:1px}
 .startWave{background:#d75150;font-size:10px}
 .routeButton:disabled,.startWave:disabled{opacity:.45;cursor:default}
-.towerChoices{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.towerChoice{min-width:0;height:49px;border:2px solid #a9d2df;border-radius:9px;background:#fff;padding:2px;color:var(--ink);box-shadow:0 2px 0 #b5d8e3;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.towerChoices{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.towerChoice{min-width:0;height:49px;border:2px solid #a9d2df;border-radius:8px;background:#fff;padding:1px;color:var(--ink);box-shadow:0 2px 0 #b5d8e3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden}
 .towerChoice.selected{border-color:#f1b943;background:#fff9e8;transform:translateY(1px);box-shadow:0 1px 0 #d8b04f}
 .towerChoice:disabled{opacity:.38}
-.towerChoice>span:not(.towerSpriteThumb){display:flex;flex-direction:column;font-size:7px;line-height:1.05;white-space:nowrap}
-.towerChoice small{font-size:9px;color:#a56b00;margin-top:2px}
+.towerChoice>span:not(.towerSpriteThumb){display:flex;flex-direction:column;font-size:6px;line-height:1;white-space:nowrap;letter-spacing:-.1px}
+.towerChoice small{font-size:8px;color:#a56b00;margin-top:1px}
 .towerChoice .towerSpriteThumb{
-  display:block;flex:0 0 38px;width:38px;height:40px;
-  background-repeat:no-repeat;background-size:768px 768px;background-position:-77px -76px;
+  display:block;flex:0 0 30px;width:30px;height:30px;
+  background-repeat:no-repeat;background-size:768px 768px;background-position:-82px -84px;
   image-rendering:pixelated;image-rendering:crisp-edges
 }
 .snowAThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_A_Idle.png")}
+.snowBThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_B_Idle.png")}
 .snowCThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png")}
 .snowDThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_D_Idle.png")}
 .snowEThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_E_Idle.png")}
+.snowFThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_F_Idle.png")}
+.snowGThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_G_Idle.png")}
 .buildHint{text-align:center;margin:4px 0 0;color:var(--muted);font-size:7px;min-height:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .overlay{position:absolute;inset:0;background:rgba(15,53,73,.34);display:none;align-items:center;justify-content:center;padding:12px;z-index:40;backdrop-filter:blur(3px)}
 .overlay.show{display:flex}
@@ -104,13 +107,13 @@ h1,h2{margin:0;color:#123d55;line-height:.95}h1{font-size:30px}h1 em{font-style:
   .hudIcon{width:32px;height:32px;padding:6px}
   .hudStat span{font-size:6px}.hudStat strong{font-size:10px}
   .buildBar{padding-left:5px;padding-right:5px}
-  .towerChoice>span:not(.towerSpriteThumb){font-size:6px}
-  .towerChoice small{font-size:8px}
-  .towerChoice .towerSpriteThumb{flex-basis:33px;width:33px}
+  .towerChoice>span:not(.towerSpriteThumb){font-size:5.5px}
+  .towerChoice small{font-size:7px}
+  .towerChoice .towerSpriteThumb{flex-basis:28px;width:28px;height:28px}
 }
 @media(max-height:700px){
   .gameFrame{grid-template-rows:48px minmax(0,1fr) 100px}
   .hud{height:48px}.buildBar{height:100px}.towerChoice{height:44px}
-  .towerChoice .towerSpriteThumb{height:36px}
+  .towerChoice .towerSpriteThumb{height:27px;flex-basis:27px}
   .buildHint{display:none}.menuCard{transform:scale(.92)}
 }
