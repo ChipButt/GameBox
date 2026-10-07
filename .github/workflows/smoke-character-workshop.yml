@@ -140,6 +140,10 @@ jobs:
           assert(wizardHatDiag.materialNames.includes('Belt'),'Elf/Wizard hat band/Belt geometry is missing from Headwear.');
           assert(!wizardHatDiag.materialNames.includes('Skin'),'Skin geometry leaked into the Elf/Wizard hat.');
           assert(await page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Hat band/i}).count()>=1,'Wizard hat band does not have its own colour control.');
+          await page.locator('#partSourceGrid .noneCard').click();
+          await page.waitForTimeout(120);
+          const clearedHat=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.headwear);
+          assert(clearedHat.optionId===null,'Elf/Wizard hat did not clear before independent hair/facial-hair test.');
 
           const hairCount=await category('hair');
           assert(hairCount===24,'Hair should contain 23 head-hair styles plus None.');
