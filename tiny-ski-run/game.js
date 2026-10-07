@@ -9,7 +9,7 @@ const distanceEl=document.getElementById('distance');
 const gatesEl=document.getElementById('gates');
 const bestEl=document.getElementById('best');
 const startBestEl=document.getElementById('startBest');
-const finalDistanceEl=document.getElementById('finalDistance');
+const finalScoreEl=document.getElementById('finalScore');
 const runBreakdownEl=document.getElementById('runBreakdown');
 const recordText=document.getElementById('recordText');
 const speedLabel=document.getElementById('speedLabel');
@@ -25,6 +25,7 @@ const BASE='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20S
 const tileUrl=n=>BASE+'tile_'+String(n).padStart(4,'0')+'.png';
 const TILE=16;
 const SEGMENT=224;
+const GATE_BONUS=25;
 
 const F={
   // Ground: the pack uses the first six columns of each terrain row as the piste/autotile family.
@@ -132,9 +133,10 @@ let scenery=[],obstacles=[],courseGates=[],lifts=[],boostPads=[],yetiEncounters=
 let monster=null,yetiSpawnCount=0,boostTimer=0,animClock=0,baseSpeed=100;
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
-const BEST_KEY='gamebox.tinySkiRun.best.v5';
+const BEST_KEY='gamebox.tinySkiRun.bestScore.v6';
 let best=Number(
   localStorage.getItem(BEST_KEY)||
+  localStorage.getItem('gamebox.tinySkiRun.best.v5')||
   localStorage.getItem('gamebox.tinySkiRun.best.v4')||
   localStorage.getItem('gamebox.tinySkiRun.best.v3')||
   localStorage.getItem('gamebox.tinySkiRun.best')||
@@ -149,6 +151,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function randRange(r,a,b){return a+r()*(b-a)}
 function pickR(r,arr){return arr[Math.floor(r()*arr.length)]}
 function metres(){return Math.floor(distance/15)}
+function score(){return metres()+gates*GATE_BONUS}
 function mulberry32(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function hash2(a,b){let n=(a*73856093)^(b*19349663);n=(n^(n>>>13))*1274126177;return(n^(n>>>16))>>>0}
 
@@ -819,11 +822,13 @@ function finishRun(){
   if(gameOver)return;
   gameOver=true;running=false;crashing=false;
   const m=metres();
-  const isBest=m>best;
-  if(isBest){best=m;localStorage.setItem(BEST_KEY,String(best))}
-  finalDistanceEl.textContent=m;
-  runBreakdownEl.textContent=gates+' gate'+(gates===1?'':'s')+' · '+nearMisses+' near miss'+(nearMisses===1?'':'es');
-  recordText.textContent=isBest?'NEW BEST!':'Best: '+best+'m';
+  const gatePoints=gates*GATE_BONUS;
+  const finalScore=m+gatePoints;
+  const isBest=finalScore>best;
+  if(isBest){best=finalScore;localStorage.setItem(BEST_KEY,String(best))}
+  finalScoreEl.textContent=finalScore;
+  runBreakdownEl.textContent=m+' distance + '+gates+' gate'+(gates===1?'':'s')+' × '+GATE_BONUS+' = +'+gatePoints+' · '+nearMisses+' near miss'+(nearMisses===1?'':'es');
+  recordText.textContent=isBest?'NEW BEST SCORE!':'Best score: '+best;
   bestEl.textContent=pad(best,4);
   startBestEl.textContent=pad(best,4);
   render();
@@ -838,7 +843,7 @@ function updateFeedback(dt){
 function updateHud(){
   distanceEl.textContent=pad(metres(),4);
   gatesEl.textContent=pad(gates,2);
-  bestEl.textContent=pad(Math.max(best,metres()),4);
+  bestEl.textContent=pad(Math.max(best,score()),4);
   speedLabel.textContent=speed<135?'CRUISE':speed<190?'CARVING':speed<255?'FAST':'FLYING';
 }
 
