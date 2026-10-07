@@ -26,24 +26,24 @@ button{cursor:pointer}
 .towerPanel button.muted{background:#698797}
 .towerPanel button:disabled{opacity:.45}
 .buildBar{height:108px;padding:5px 7px 6px;background:#f7fcff;overflow:hidden}
-.buildHeader{display:grid;grid-template-columns:.8fr 1.2fr;gap:6px;margin-bottom:5px}
-.routeButton,.startWave{min-height:32px;border:0;border-radius:8px;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);font-weight:900}
-.routeButton{background:#397b9a}.routeButton span,.routeButton small{display:block}.routeButton span{font-size:8px}.routeButton small{font-size:7px;opacity:.78;margin-top:1px}
-.startWave{background:#d75150;font-size:10px}
-.routeButton:disabled,.startWave:disabled{opacity:.45;cursor:default}
-.towerChoices{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
-.towerChoice{min-width:0;height:49px;border:2px solid #a9d2df;border-radius:8px;background:#fff;padding:1px;color:var(--ink);box-shadow:0 2px 0 #b5d8e3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden}
+.buildHeader{display:grid;grid-template-columns:.9fr 1.1fr;gap:6px;margin-bottom:5px}
+.levelCard,.startWave{min-height:32px;border-radius:8px;font-weight:900}
+.levelCard{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#397b9a;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.levelCard span,.levelCard small{display:block}.levelCard span{font-size:8px}.levelCard small{font-size:7px;opacity:.82;margin-top:1px;white-space:nowrap}
+.startWave{border:0;background:#d75150;color:#fff;font-size:10px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.startWave:disabled{opacity:.45;cursor:default}
+.towerChoices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.towerChoice{min-width:0;height:52px;border:2px solid #a9d2df;border-radius:9px;background:#fff;padding:1px 2px;color:var(--ink);box-shadow:0 2px 0 #b5d8e3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden}
 .towerChoice.selected{border-color:#f1b943;background:#fff9e8;transform:translateY(1px);box-shadow:0 1px 0 #d8b04f}
 .towerChoice:disabled{opacity:.38}
-.towerChoice>span:not(.towerSpriteThumb){display:flex;flex-direction:column;font-size:6px;line-height:1;white-space:nowrap;letter-spacing:-.1px}
-.towerChoice small{font-size:8px;color:#a56b00;margin-top:1px}
+.towerChoice>span:not(.towerSpriteThumb){display:flex;flex-direction:column;font-size:6.5px;line-height:1;white-space:nowrap;letter-spacing:-.1px}
+.towerChoice small{font-size:8.5px;color:#a56b00;margin-top:1px}
 .towerChoice .towerSpriteThumb{
-  display:block;flex:0 0 30px;width:30px;height:30px;
-  background-repeat:no-repeat;background-size:768px 768px;background-position:-82px -84px;
+  display:block;flex:0 0 34px;width:34px;height:34px;
+  background-repeat:no-repeat;background-size:768px 768px;background-position:-80px -81px;
   image-rendering:pixelated;image-rendering:crisp-edges
 }
 .snowAThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_A_Idle.png")}
-.snowBThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_B_Idle.png")}
 .snowCThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png")}
 .snowDThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_D_Idle.png")}
 .snowEThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_E_Idle.png")}
@@ -107,13 +107,13 @@ h1,h2{margin:0;color:#123d55;line-height:.95}h1{font-size:30px}h1 em{font-style:
   .hudIcon{width:32px;height:32px;padding:6px}
   .hudStat span{font-size:6px}.hudStat strong{font-size:10px}
   .buildBar{padding-left:5px;padding-right:5px}
-  .towerChoice>span:not(.towerSpriteThumb){font-size:5.5px}
-  .towerChoice small{font-size:7px}
-  .towerChoice .towerSpriteThumb{flex-basis:28px;width:28px;height:28px}
+  .towerChoice>span:not(.towerSpriteThumb){font-size:6px}
+  .towerChoice small{font-size:8px}
+  .towerChoice .towerSpriteThumb{flex-basis:32px;width:32px;height:32px}
 }
 @media(max-height:700px){
   .gameFrame{grid-template-rows:48px minmax(0,1fr) 100px}
-  .hud{height:48px}.buildBar{height:100px}.towerChoice{height:44px}
-  .towerChoice .towerSpriteThumb{height:27px;flex-basis:27px}
+  .hud{height:48px}.buildBar{height:100px}.towerChoice{height:46px}
+  .towerChoice .towerSpriteThumb{height:29px;flex-basis:29px}
   .buildHint{display:none}.menuCard{transform:scale(.92)}
 }
