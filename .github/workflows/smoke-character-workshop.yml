@@ -38,6 +38,7 @@ jobs:
 
           cat > .character-workshop-smoke.mjs <<'JS'
           import { chromium } from 'playwright';
+          import { statSync } from 'node:fs';
 
           const browser = await chromium.launch({headless:true});
           const page = await browser.newPage({viewport:{width:1280,height:900}});
@@ -290,7 +291,7 @@ jobs:
                 await back.click();
                 await page.waitForTimeout(120);
               }
-              await page.screenshot({path:'character-workshop-mobile.png',fullPage:true});
+              await page.screenshot({path:'character-workshop-mobile-resize.png',fullPage:true});
             }
             await category('top');
             await page.waitForTimeout(100);
@@ -318,6 +319,31 @@ jobs:
           }
 
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
+
+          // A real phone arrives at mobile dimensions from first paint; do not
+          // use a desktop WebGL page that has been repeatedly resized as the
+          // visual proof for the mobile experience.
+          const mobileContext=await browser.newContext({viewport:{width:390,height:844}});
+          const mobilePage=await mobileContext.newPage();
+          const mobileErrors=[];
+          mobilePage.on('pageerror',e=>mobileErrors.push(String(e)));
+          mobilePage.on('console',m=>{ if(m.type()==='error') mobileErrors.push(m.text()); });
+          await mobilePage.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
+          await mobilePage.waitForSelector('.partCategoryBtn[data-part="head"]',{timeout:120000});
+          await mobilePage.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
+          await mobilePage.waitForTimeout(500);
+          const freshMobile=await mobilePage.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+          assert(freshMobile.characterScreenBounds && freshMobile.visibleCharacterArea,'Fresh mobile load has no measurable character.');
+          assert(freshMobile.characterScreenBounds.bottom<=freshMobile.visibleCharacterArea.bottom+2,'Fresh mobile load crops the character feet.');
+          assert(freshMobile.characterScreenBounds.top>=freshMobile.visibleCharacterArea.top-8,'Fresh mobile load crops the character head.');
+          assert(await mobilePage.locator('.partCategoryBtn').count()===8,'Fresh mobile load does not show all eight component tiles.');
+          await mobilePage.locator('#stage canvas').screenshot({path:'character-workshop-mobile-canvas.png'});
+          const canvasBytes=statSync('character-workshop-mobile-canvas.png').size;
+          assert(canvasBytes>6000,'Fresh mobile WebGL canvas appears visually blank: '+canvasBytes+' byte PNG.');
+          await mobilePage.screenshot({path:'character-workshop-mobile.png',fullPage:true});
+          if(mobileErrors.length) throw new Error('Fresh mobile browser errors: '+mobileErrors.join(' | '));
+          await mobileContext.close();
+
           await browser.close();
           console.log('Character Workshop browser smoke test passed.');
           JS
@@ -333,6 +359,8 @@ jobs:
             character-workshop-desktop.png
             character-workshop-wizard.png
             character-workshop-mobile.png
+            character-workshop-mobile-canvas.png
+            character-workshop-mobile-resize.png
           if-no-files-found: warn
           retention-days: 7
 
