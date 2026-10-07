@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=9';
-import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=7';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=10';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=8';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -39,6 +39,9 @@ const buildValue = $('buildValue');
 const headSizeValue = $('headSizeValue');
 const materialCount = $('materialCount');
 const materialList = $('materialList');
+const componentColourPanel = $('componentColourPanel');
+const componentColourTitle = $('componentColourTitle');
+const componentColourList = $('componentColourList');
 const clipCount = $('clipCount');
 const poseGrid = $('poseGrid');
 const animSpeed = $('animSpeed');
@@ -172,6 +175,7 @@ let pointerDragged = false;
 const PART_ICONS = {
   head: '◉',
   hair: '≋',
+  facialHair: '〰',
   headwear: '⌃',
   top: '▣',
   bottom: '▤',
@@ -272,26 +276,55 @@ function partDefinition(category = activePartCategory) {
 
 function renderPartCategoryRail() {
   partCategoryRail.innerHTML = '';
-  const categories = [
-    { id: 'body', label: 'Body', icon: '◇' },
-    ...PART_DEFINITIONS.map((part) => ({ id: part.id, label: PART_CATEGORY_LABELS[part.id] || part.label, icon: PART_ICONS[part.id] || '•' }))
-  ];
 
-  for (const category of categories) {
+  for (const part of PART_DEFINITIONS) {
+    const category = {
+      id: part.id,
+      label: PART_CATEGORY_LABELS[part.id] || part.label,
+      icon: PART_ICONS[part.id] || '•'
+    };
+    const selected = currentPartOption(part.id);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'partCategoryBtn' + (category.id === activePartCategory ? ' active' : '');
+    button.className = 'partCategoryBtn categoryTile' + (category.id === activePartCategory ? ' active' : '');
     button.dataset.part = category.id;
-    button.innerHTML = '<i>' + category.icon + '</i><span>' + category.label + '</span>';
     button.setAttribute('aria-label', 'Customise ' + category.label);
     button.title = category.label;
+
+    const preview = document.createElement('span');
+    preview.className = 'categoryTilePreview';
+    if (selected?.preview) {
+      const img = document.createElement('img');
+      img.src = selected.preview;
+      img.alt = '';
+      preview.appendChild(img);
+    } else {
+      const icon = document.createElement('i');
+      icon.textContent = category.icon;
+      preview.appendChild(icon);
+      const swatches = document.createElement('span');
+      swatches.className = 'categoryTileSwatches';
+      for (const colour of Object.values(selected?.baseColors || {}).slice(0, 4)) {
+        const dot = document.createElement('b');
+        dot.style.backgroundColor = colour;
+        swatches.appendChild(dot);
+      }
+      preview.appendChild(swatches);
+    }
+
+    const label = document.createElement('span');
+    label.className = 'categoryTileLabel';
+    label.textContent = category.label.toUpperCase();
+    const choice = document.createElement('small');
+    choice.textContent = selected?.label || (part.optional ? 'None' : 'Choose style');
+
+    button.append(preview, label, choice);
     button.addEventListener('click', () => selectPartCategory(category.id));
     partCategoryRail.appendChild(button);
   }
 }
 
 function renderPartBrowser() {
-  if (activePartCategory === 'body') return;
   const part = partDefinition();
   const candidates = partCandidates(part.id);
   const selectedOptionId = activeParts[part.id]?.optionId || null;
@@ -374,17 +407,18 @@ function renderPartBrowser() {
 
   const selectedCard = partSourceGrid.querySelector('.partSourceCard.selected');
   selectedCard?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  renderActivePartColours();
 }
 
 function selectPartCategory(category) {
-  const isBody = category === 'body';
-  if (!isBody && !PART_DEFINITIONS.some((part) => part.id === category)) return;
+  if (!PART_DEFINITIONS.some((part) => part.id === category)) return;
   activePartCategory = category;
   setActiveTab('style');
-  partBrowser.hidden = isBody;
-  proportionPanel.hidden = !isBody;
+  partBrowser.hidden = false;
+  proportionPanel.hidden = false;
   renderPartCategoryRail();
-  if (!isBody) renderPartBrowser();
+  renderPartBrowser();
+  renderActivePartColours();
 }
 
 function applyProportions() {
@@ -445,34 +479,33 @@ function setPartRowLoading(category, loadingNow) {
 
 function updatePartRows() {
   const totalDistinct = PART_DEFINITIONS.reduce((sum, part) => sum + partCandidates(part.id).length, 0);
-  compatibleCount.textContent = totalDistinct + ' distinct styles';
-  rigLabel.textContent = 'Click the character or choose a category';
+  compatibleCount.textContent = totalDistinct + ' swappable styles';
+  rigLabel.textContent = 'Choose one of the eight components';
   renderPartCategoryRail();
-  if (activePartCategory === 'body') {
-    partBrowser.hidden = true;
-    proportionPanel.hidden = false;
-  } else {
-    partBrowser.hidden = false;
-    proportionPanel.hidden = true;
-    renderPartBrowser();
-  }
+  partBrowser.hidden = false;
+  proportionPanel.hidden = false;
+  renderPartBrowser();
+  renderActivePartColours();
 }
 
 const CATEGORY_COLOUR_LABELS = {
-  head: 'Head',
+  head: 'Face',
   hair: 'Hair',
+  facialHair: 'Facial Hair',
   headwear: 'Headwear',
   top: 'Top',
-  bottom: 'Bottoms',
+  bottom: 'Bottom',
   shoes: 'Shoes',
-  accessory: 'Accessory'
+  accessory: 'Accessories'
 };
 
 function friendlyMaterialName(partId, rawName, index) {
   const raw = String(rawName || '').trim();
   const lower = raw.toLowerCase();
-  if (/skin|face|flesh/.test(lower)) return 'Skin';
-  if (/hair|beard|moustache|mustache|brow/.test(lower)) return 'Hair';
+  if (partId === 'head' && /^face$/i.test(raw)) return 'Eyes & face details';
+  if (/skin|flesh/.test(lower)) return 'Skin';
+  if (partId === 'facialHair' || /beard|moustache|mustache/.test(lower)) return 'Facial Hair';
+  if (/hair|brow/.test(lower)) return 'Hair';
   if (/eye|pupil|iris/.test(lower)) return 'Eyes';
   if (/shoe|boot|foot/.test(lower)) return 'Shoes';
   if (/hat|helmet|hood|crown|cap/.test(lower)) return 'Headwear';
@@ -541,6 +574,7 @@ function refreshMaterialRecords() {
   materialRecords = currentMaterials();
   if (currentPalette !== 'custom') applyPalette(currentPalette, false);
   renderMaterialControls();
+  renderActivePartColours();
   updateSummary();
 }
 
@@ -564,7 +598,10 @@ function applyPalette(name, render = true) {
     }
   }
   refreshPaletteButtons();
-  if (render) renderMaterialControls();
+  if (render) {
+    renderMaterialControls();
+    renderActivePartColours();
+  }
   updateSummary();
 }
 
@@ -582,27 +619,90 @@ function applySavedColors(colors) {
     currentPalette = 'custom';
     refreshPaletteButtons();
     renderMaterialControls();
+    renderActivePartColours();
     updateSummary();
     return true;
   }
   return false;
 }
 
-function renderMaterialControls() {
-  materialList.innerHTML = '';
-
+function materialGroupsForPart(partId = null) {
   const grouped = [];
   const groupedByKey = new Map();
   for (const record of materialRecords) {
+    if (partId && record.part !== partId) continue;
     const key = [record.part, record.name.toLowerCase(), record.originalColor.toLowerCase()].join('::');
     let group = groupedByKey.get(key);
     if (!group) {
-      group = { part: record.part, name: record.name, records: [] };
+      group = { part: record.part, name: record.name, rawNames: new Set(), records: [] };
       groupedByKey.set(key, group);
       grouped.push(group);
     }
     group.records.push(record);
+    group.rawNames.add(record.rawName);
   }
+  return grouped;
+}
+
+function buildMaterialRow(group, compact = false) {
+  const row = document.createElement('div');
+  row.className = 'materialRow' + (compact ? ' componentMaterialRow' : '');
+  row.dataset.materialNames = Array.from(group.rawNames || []).join('|').toLowerCase();
+
+  const text = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = group.name;
+  const subtitle = document.createElement('small');
+  subtitle.textContent = compact
+    ? 'Tap the colour to edit this region'
+    : (PART_CATEGORY_LABELS[group.part] || PART_DEFINITIONS.find((part) => part.id === group.part)?.label || 'Character part');
+  text.append(title, subtitle);
+
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.value = '#' + group.records[0].material.color.getHexString();
+  input.setAttribute('aria-label', 'Colour for ' + group.name);
+  input.addEventListener('input', () => {
+    for (const record of group.records) record.material.color.set(input.value);
+    currentPalette = 'custom';
+    refreshPaletteButtons();
+    updateSummary();
+    renderPartCategoryRail();
+  });
+
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'materialReset';
+  reset.textContent = '↺';
+  reset.setAttribute('aria-label', 'Reset ' + group.name);
+  reset.addEventListener('click', () => {
+    for (const record of group.records) record.material.color.set(record.originalColor);
+    input.value = group.records[0].originalColor;
+    currentPalette = 'custom';
+    refreshPaletteButtons();
+    updateSummary();
+  });
+
+  row.append(text, input, reset);
+  return row;
+}
+
+function renderActivePartColours() {
+  if (!componentColourList || !componentColourTitle) return;
+  const part = partDefinition();
+  componentColourTitle.textContent = (PART_CATEGORY_LABELS[part.id] || part.label) + ' colours';
+  componentColourList.innerHTML = '';
+  const groups = materialGroupsForPart(part.id);
+  if (!groups.length) {
+    componentColourList.innerHTML = '<p class="helperCopy">Choose a style for this component to edit its available colour regions.</p>';
+    return;
+  }
+  for (const group of groups) componentColourList.appendChild(buildMaterialRow(group, true));
+}
+
+function renderMaterialControls() {
+  materialList.innerHTML = '';
+  const grouped = materialGroupsForPart();
 
   materialCount.textContent = grouped.length + (grouped.length === 1 ? ' colour control' : ' colour controls');
 
@@ -611,44 +711,7 @@ function renderMaterialControls() {
     return;
   }
 
-  for (const group of grouped) {
-    const row = document.createElement('div');
-    row.className = 'materialRow';
-
-    const text = document.createElement('div');
-    const title = document.createElement('strong');
-    title.textContent = group.name;
-    const subtitle = document.createElement('small');
-    subtitle.textContent = PART_CATEGORY_LABELS[group.part] || PART_DEFINITIONS.find((part) => part.id === group.part)?.label || 'Character part';
-    text.append(title, subtitle);
-
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = '#' + group.records[0].material.color.getHexString();
-    input.setAttribute('aria-label', 'Colour for ' + group.name);
-    input.addEventListener('input', () => {
-      for (const record of group.records) record.material.color.set(input.value);
-      currentPalette = 'custom';
-      refreshPaletteButtons();
-      updateSummary();
-    });
-
-    const reset = document.createElement('button');
-    reset.type = 'button';
-    reset.className = 'materialReset';
-    reset.textContent = '↺';
-    reset.setAttribute('aria-label', 'Reset ' + group.name);
-    reset.addEventListener('click', () => {
-      for (const record of group.records) record.material.color.set(record.originalColor);
-      input.value = group.records[0].originalColor;
-      currentPalette = 'custom';
-      refreshPaletteButtons();
-      updateSummary();
-    });
-
-    row.append(text, input, reset);
-    materialList.appendChild(row);
-  }
+  for (const group of grouped) materialList.appendChild(buildMaterialRow(group, false));
 }
 
 function cloneWearableMaterials(node) {
@@ -769,6 +832,13 @@ async function applyPartOption(category, option, options = {}) {
   return setPart(category, option, options);
 }
 
+function updateHairHeadwearCompatibility() {
+  const hairGroup = activeParts.hair?.group;
+  if (!hairGroup) return;
+  const headwear = currentPartOption('headwear');
+  hairGroup.visible = headwear?.hairMode !== 'hide';
+}
+
 async function setPart(category, selection, options = {}) {
   if (!driverSkeleton || !driverParent) return false;
   const partDef = PART_DEFINITIONS.find((part) => part.id === category);
@@ -837,6 +907,7 @@ async function setPart(category, selection, options = {}) {
       group: newGroup
     };
 
+    if (category === 'hair' || category === 'headwear') updateHairHeadwearCompatibility();
     refreshMaterialRecords();
     updatePartRows();
     scheduleCharacterFrame(false);
@@ -1163,7 +1234,8 @@ function workshopDiagnosticSnapshot() {
       materialNames: Array.from(materialNames).sort(),
       weightedBoneNames: Array.from(weightedBoneNames).sort(),
       boneWeightMaxima,
-      geometryFingerprint: geometryFingerprint(state.group)
+      geometryFingerprint: geometryFingerprint(state.group),
+      visible: Boolean(state.group?.visible)
     };
   }
 
@@ -1564,7 +1636,17 @@ function pickCharacterPart(clientX, clientY) {
   for (const hit of hits) {
     const category = categoryFromHit(hit.object);
     if (!category) continue;
+    const rawMaterial = String(hit.object.userData?.sourceMaterialName || hit.object.material?.name || '').toLowerCase();
     selectPartCategory(category);
+    requestAnimationFrame(() => {
+      if (!rawMaterial) return;
+      const rows = Array.from(componentColourList?.querySelectorAll?.('.componentMaterialRow') || []);
+      const row = rows.find((candidate) => String(candidate.dataset.materialNames || '').split('|').includes(rawMaterial));
+      if (!row) return;
+      row.classList.add('focused');
+      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      setTimeout(() => row.classList.remove('focused'), 1200);
+    });
     showToast('Editing ' + partDefinition(category).label + '.');
     return;
   }
