@@ -159,7 +159,7 @@ let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { 
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
 let loadGeneration = 0;
 let initialLoad = true;
-let viewDistance = 6.15;
+let viewDistance = 6.55;
 let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingPose = null;
@@ -209,7 +209,7 @@ function fitDriver(model) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const fitDimension = Math.max(size.y, size.x * 0.92, size.z * 0.92);
-  if (fitDimension > 0) model.scale.setScalar(1.68 / fitDimension);
+  if (fitDimension > 0) model.scale.setScalar(1.56 / fitDimension);
   model.updateMatrixWorld(true);
   const fitted = new THREE.Box3().setFromObject(model);
   const center = new THREE.Vector3();
@@ -1414,8 +1414,8 @@ function buildWorkshopDecor() {
 
 function applyCameraPose() {
   const mobile = window.innerWidth <= 980;
-  const cameraY = mobile ? 1.16 : 1.64;
-  const targetY = 1.16;
+  const cameraY = mobile ? 1.46 : 1.64;
+  const targetY = mobile ? 1.05 : 1.16;
   camera.position.set(previewRoot.position.x, cameraY, viewDistance);
   camera.lookAt(previewRoot.position.x, targetY, 0);
 }
@@ -1433,9 +1433,9 @@ function visibleCharacterArea() {
   }
 
   const builderBox = $('builder')?.getBoundingClientRect?.();
-  const top = canvas.top + 64;
+  const top = canvas.top + 56;
   const selectorTop = builderBox?.top ?? canvas.bottom;
-  const bottom = Math.min(canvas.bottom - 20, selectorTop - 22);
+  const bottom = Math.min(canvas.bottom - 36, selectorTop - 78);
   return {
     top,
     bottom: Math.max(top + 180, bottom),
@@ -1451,7 +1451,7 @@ function frameCharacterToVisibleArea(force = false) {
   if (area.bottom <= area.top || canvas.height <= 0) return;
 
   if (force) {
-    viewDistance = 6.15;
+    viewDistance = 6.55;
     previewRoot.position.y = 0;
   }
 
@@ -1466,8 +1466,8 @@ function frameCharacterToVisibleArea(force = false) {
     const characterHeight = Math.max(1, bounds.bottom - bounds.top);
     const characterWidth = Math.max(1, bounds.right - bounds.left);
     const fitRatio = Math.max(
-      characterHeight / (visibleHeight * 0.84),
-      characterWidth / (visibleWidth * 0.82),
+      characterHeight / (visibleHeight * 0.76),
+      characterWidth / (visibleWidth * 0.78),
       1
     );
 
@@ -1478,7 +1478,9 @@ function frameCharacterToVisibleArea(force = false) {
       if (!bounds) return;
     }
 
-    const targetCenter = (area.top + area.bottom) * 0.5;
+    // Keep the model visibly above the selector. Biasing the target upward gives
+    // the feet a clear visual gap rather than merely keeping their bounds legal.
+    const targetCenter = area.top + (area.bottom - area.top) * 0.44;
     const currentCenter = (bounds.top + bounds.bottom) * 0.5;
     const deltaPixels = targetCenter - currentCenter;
     const verticalWorld = 2 * viewDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
@@ -1509,7 +1511,7 @@ function resize() {
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = 6.15;
+  viewDistance = 6.55;
   previewRoot.position.y = 0;
   resize();
   scheduleCharacterFrame(true);
