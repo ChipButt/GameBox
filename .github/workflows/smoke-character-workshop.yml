@@ -46,8 +46,9 @@ jobs:
           page.on('console',m=>{ if(m.type()==='error') errors.push(m.text()); });
 
           await page.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
-          await page.waitForSelector('#partSourceGrid .partSourceCard',{timeout:120000});
+          await page.waitForSelector('.partCategoryBtn[data-part="head"]',{timeout:120000});
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
+          assert(await page.locator('#partBrowser[hidden]').count()===1,'Initial Build screen should show the eight components, not an open component editor.');
 
           const category = async (id) => {
             const back=page.locator('#backToCategoriesBtn:visible');
