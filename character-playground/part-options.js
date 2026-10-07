@@ -559,7 +559,7 @@ export const PART_OPTIONS = {
       ],
       "baseColors": {
         "Hat": "#24405e",
-        "Band / Gold trim": "#d4aa43"
+        "Hat band": "#6b3d24"
       },
       "hairMode": "hide"
     },
