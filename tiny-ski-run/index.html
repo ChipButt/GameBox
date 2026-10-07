@@ -18,7 +18,7 @@
       </a>
       <div class="hudBox"><span>DISTANCE</span><strong><b id="distance">0000</b>m</strong></div>
       <div class="hudBox compact"><span>GATES</span><strong id="gates">00</strong></div>
-      <div class="hudBox"><span>BEST</span><strong><b id="best">0000</b>m</strong></div>
+      <div class="hudBox"><span>BEST SCORE</span><strong><b id="best">0000</b></strong></div>
       <button id="pauseButton" class="hudIcon" type="button" aria-label="Pause">
         <img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/gear.png" alt="">
       </button>
@@ -42,7 +42,7 @@
         <h1>TINY SKI <em>RUN</em></h1>
         <p class="tagline">Stay on the piste. Thread the gates. Dodge the mountain.</p>
         <button id="startButton" class="kenneyButton" type="button" disabled>HIT THE SLOPE</button>
-        <div class="startStats">BEST <strong><span id="startBest">0000</span>m</strong></div>
+        <div class="startStats">BEST SCORE <strong><span id="startBest">0000</span></strong></div>
         <div class="controlStrip" aria-label="Controls">
           <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/ui/Mobile%20Controls/Sprites/Style%20C/direction_left.png" alt="">
           <span>HOLD LEFT / RIGHT SIDE<br>OR DRAG TO CARVE</span>
@@ -60,9 +60,10 @@
           <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Tiny%20Ski/Tiles/tile_0081.png" alt="">
         </div>
         <p class="eyebrow danger">WIPEOUT</p>
-        <h2><span id="finalDistance">0</span>m</h2>
-        <p id="runBreakdown">0 gates · 0 near misses</p>
-        <p id="recordText">Best: 0m</p>
+        <p class="eyebrow">FINAL SCORE</p>
+        <h2><span id="finalScore">0</span></h2>
+        <p id="runBreakdown">0 distance + 0 gates × 25 = +0 · 0 near misses</p>
+        <p id="recordText">Best score: 0</p>
         <button id="againButton" class="kenneyButton" type="button">SKI AGAIN</button>
         <a class="kenneyButton mutedButton" href="../">GAMEBOX</a>
       </div>
@@ -92,6 +93,6 @@
   </section>
 </div>
 
-<script src="game.js?v=23"></script>
+<script src="game.js?v=24"></script>
 </body>
 </html>
