@@ -129,7 +129,7 @@ let speed=100,distance=0,scroll=0,viewScroll=0,gates=0,nearMisses=0;
 let player=null,tracks=[],puffs=[],feedback=[];
 let startLineWorldY=0;
 let scenery=[],obstacles=[],courseGates=[],lifts=[],boostPads=[],yetiEncounters=[];
-let monster=null,boostTimer=0,animClock=0,baseSpeed=100;
+let monster=null,yetiSpawnCount=0,boostTimer=0,animClock=0,baseSpeed=100;
 let nextSegment=0,trackClock=0,shake=0,crashClock=0;
 const input={left:false,right:false,pointerId:null,startX:0,analog:0};
 const BEST_KEY='gamebox.tinySkiRun.best.v5';
@@ -306,7 +306,7 @@ function boundsAtWorld(worldY){
 function resetWorld(){
   speed=100;baseSpeed=100;distance=0;scroll=0;viewScroll=0;gates=0;nearMisses=0;
   tracks=[];puffs=[];feedback=[];scenery=[];obstacles=[];courseGates=[];lifts=[];boostPads=[];yetiEncounters=[];
-  monster=null;boostTimer=0;animClock=0;
+  monster=null;yetiSpawnCount=0;boostTimer=0;animClock=0;
   nextSegment=0;trackClock=0;shake=0;crashClock=0;crashing=false;gameOver=false;
   rebuildCourseRows();
   ensureCourseRows(Math.ceil((H+SEGMENT*2)/TILE)+2);
@@ -679,11 +679,14 @@ function updateMonster(dt,m){
         const spawnWorldY=scroll+H-10;
         const b=boundsAtWorld(spawnWorldY);
         const sideX=encounter.side==='left'?b.left-18:b.right+18;
+        const initialSpeedFactor=Math.min(.90,.60+yetiSpawnCount*.05);
+        yetiSpawnCount++;
         monster={
           x:clamp(sideX,8,W-8),
           worldY:spawnWorldY,
           side:encounter.side,
           phase:'rush',
+          initialSpeedFactor,
           dangerousThisFrame:true
         };
         break;
@@ -705,9 +708,10 @@ function updateMonster(dt,m){
   monster.dangerousThisFrame=monster.phase==='rush';
 
   if(dist>.001){
-    // Before the skier passes: 60% speed, running straight at the rear target.
-    // After the skier passes: 90%, still running straight at that SAME target.
-    const seekSpeed=baseSpeed*(monster.phase==='rush'?.60:.90);
+    // Each successive yeti in the same run starts 5% faster:
+    // 60%, 65%, 70%, 75%, 80%, 85%, then 90% (capped).
+    // Once the skier passes it, pursuit speed is always 90%.
+    const seekSpeed=baseSpeed*(monster.phase==='rush'?monster.initialSpeedFactor:.90);
     const step=Math.min(dist,seekSpeed*dt);
     monster.x+=dx/dist*step;
     monster.worldY+=dy/dist*step;
