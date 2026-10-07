@@ -1,11 +1,12 @@
 export const PART_DEFINITIONS = [
-  { id: 'head', label: 'Head & face', optional: false },
-  { id: 'hair', label: 'Hair / facial hair', optional: true },
-  { id: 'headwear', label: 'Hat / headwear', optional: true },
-  { id: 'top', label: 'Top / body', optional: false },
-  { id: 'bottom', label: 'Bottoms / legs', optional: false },
+  { id: 'head', label: 'Face', optional: false },
+  { id: 'hair', label: 'Hair', optional: true },
+  { id: 'facialHair', label: 'Facial Hair', optional: true },
+  { id: 'headwear', label: 'Headwear', optional: true },
+  { id: 'top', label: 'Top', optional: false },
+  { id: 'bottom', label: 'Bottom', optional: false },
   { id: 'shoes', label: 'Shoes', optional: false },
-  { id: 'accessory', label: 'Accessory', optional: true }
+  { id: 'accessory', label: 'Accessories', optional: true }
 ];
 
 export const PART_SOURCE_HINTS = {
@@ -43,7 +44,8 @@ const TOP_BONES = runtimeBoneSet([
 const BOTTOM_BONES = runtimeBoneSet(['Hips', 'UpperLeg.L', 'LowerLeg.L', 'UpperLeg.R', 'LowerLeg.R']);
 const FOOT_BONES = runtimeBoneSet(['Foot.L', 'Foot.R']);
 
-const HAIR_RE = /(hair|beard|moustache|mustache)/i;
+const FACIAL_HAIR_RE = /(beard|moustache|mustache)/i;
+const HAIR_RE = /hair/i;
 const HEADWEAR_RE = /(hat|helmet|horn|hood|crown|cap)/i;
 const SHOE_RE = /(shoe|boot)/i;
 const ACCESSORY_RE = /(belt|scarf|buckle|cape|strap|apron|glove|pouch|bag|band)/i;
@@ -112,6 +114,7 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   const material = materialAt(mesh, groupMaterialIndex);
   const materialName = String(material?.name || '');
   if (HEADWEAR_RE.test(materialName)) return 'headwear';
+  if (FACIAL_HAIR_RE.test(materialName)) return 'facialHair';
   if (HAIR_RE.test(materialName)) return 'hair';
   if (SHOE_RE.test(materialName)) return null;
   if (ACCESSORY_RE.test(materialName)) return 'accessory';
