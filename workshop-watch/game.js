@@ -55,9 +55,12 @@ const WINTER='assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png';
 const ASSETS={
   winter:WINTER,
   snowA:P82+'Christmas_Snowman_A_Idle.png',
+  snowB:P82+'Christmas_Snowman_B_Idle.png',
   snowC:P82+'Christmas_Snowman_C_Idle.png',
   snowD:P82+'Christmas_Snowman_D_Idle.png',
   snowE:P82+'Christmas_Snowman_E_Idle.png',
+  snowF:P82+'Christmas_Snowman_F_Idle.png',
+  snowG:P82+'Christmas_Snowman_G_Idle.png',
   ginger:P85+'Gingerbread/Christmas_Gingerbread_Move.png',
   slime:P85+'Slime/Christmas_Slime_Move.png',
   devil:P85+'Devil/Christmas_Devil_Move.png',
@@ -65,10 +68,13 @@ const ASSETS={
 };
 
 const TOWERS={
-  snowA:{name:'SNOWBALLER',asset:'snowA',cost:60,range:88,damage:10,rate:.52,shotSpeed:235,kind:'snow',slow:0,splash:0},
-  snowC:{name:'RAPID SNOW',asset:'snowC',cost:80,range:82,damage:6,rate:.25,shotSpeed:270,kind:'rapid',slow:0,splash:0},
+  snowA:{name:'SNOWBALLER',asset:'snowA',cost:55,range:88,damage:10,rate:.55,shotSpeed:240,kind:'snow',slow:0,splash:0},
+  snowB:{name:'DOUBLE TOSS',asset:'snowB',cost:75,range:86,damage:7,rate:.66,shotSpeed:250,kind:'double',slow:0,splash:0,shots:2},
+  snowC:{name:'RAPID SNOW',asset:'snowC',cost:85,range:82,damage:6,rate:.25,shotSpeed:275,kind:'rapid',slow:0,splash:0},
   snowD:{name:'FROST THROW',asset:'snowD',cost:95,range:98,damage:8,rate:.72,shotSpeed:230,kind:'frost',slow:.42,splash:0},
-  snowE:{name:'HEAVY SNOW',asset:'snowE',cost:120,range:112,damage:30,rate:1.22,shotSpeed:190,kind:'heavy',slow:0,splash:30}
+  snowE:{name:'HEAVY SNOW',asset:'snowE',cost:125,range:112,damage:30,rate:1.22,shotSpeed:190,kind:'heavy',slow:0,splash:30},
+  snowF:{name:'LONG SHOT',asset:'snowF',cost:110,range:142,damage:22,rate:1.02,shotSpeed:340,kind:'long',slow:0,splash:0},
+  snowG:{name:'SNOW CHEER',asset:'snowG',cost:105,range:80,damage:0,rate:0,shotSpeed:0,kind:'support',slow:0,splash:0,support:true,damageBuff:1.16,rateBuff:1.20}
 };
 
 const ENEMIES={
@@ -386,8 +392,13 @@ function selectTower(index){
 
 function towerStatText(t){
   const def=TOWERS[t.type];
-  const damage=Math.round(def.damage*(1+(t.level-1)*.4));
   const range=Math.round(def.range*(1+(t.level-1)*.08));
+  if(def.support){
+    const damagePct=Math.round((supportStrength(t).damage-1)*100);
+    const ratePct=Math.round((supportStrength(t).rate-1)*100);
+    return '+'+damagePct+'% DMG · +'+ratePct+'% SPEED · '+range+' AURA';
+  }
+  const damage=Math.round(def.damage*(1+(t.level-1)*.4));
   return damage+' DMG · '+range+' RANGE';
 }
 function upgradeCost(t){return Math.round(TOWERS[t.type].cost*(.65+t.level*.38))}
@@ -413,8 +424,33 @@ function sellSelected(){
   tone('sell');updateUI();
 }
 
+function supportStrength(t){
+  const def=TOWERS[t.type];
+  const levelScale=1+(t.level-1)*.35;
+  return{
+    damage:1+(def.damageBuff-1)*levelScale,
+    rate:1+(def.rateBuff-1)*levelScale
+  };
+}
+
+function supportBonusesFor(t){
+  let damage=1,rate=1;
+  for(const s of towers){
+    if(s===t)continue;
+    const def=TOWERS[s.type];
+    if(!def.support)continue;
+    const aura=def.range*(1+(s.level-1)*.08);
+    if(pointDist(t.x,t.y,s.x,s.y)>aura)continue;
+    const strength=supportStrength(s);
+    damage=Math.max(damage,strength.damage);
+    rate=Math.max(rate,strength.rate);
+  }
+  return{damage,rate};
+}
+
 function targetForTower(t){
   const def=TOWERS[t.type];
+  if(def.support)return null;
   const range=def.range*(1+(t.level-1)*.08);
   let target=null,best=-1;
   for(const e of enemies){
@@ -433,18 +469,38 @@ function rowForVector(dx,dy){
 
 function fireTower(t,target){
   const def=TOWERS[t.type];
+  if(def.support)return;
   const levelScale=1+(t.level-1)*.4;
+  const buffs=supportBonusesFor(t);
+  const range=def.range*(1+(t.level-1)*.08);
   t.row=rowForVector(target.x-t.x,target.y-t.y);
-  projectiles.push({
-    x:t.x,y:t.y,target,
-    damage:def.damage*levelScale,
-    speed:def.shotSpeed,
-    kind:def.kind,
-    slow:def.slow,
-    splash:def.splash+(def.splash?5*(t.level-1):0),
-    dead:false
+
+  const targets=[target];
+  if((def.shots||1)>1){
+    let second=null,best=-1;
+    for(const e of enemies){
+      if(e===target||e.dead)continue;
+      if(pointDist(t.x,t.y,e.x,e.y)<=range&&e.progress>best){
+        second=e;best=e.progress;
+      }
+    }
+    targets.push(second||target);
+  }
+
+  targets.forEach((shotTarget,i)=>{
+    projectiles.push({
+      x:t.x+(i===0?-2:2),y:t.y,
+      target:shotTarget,
+      damage:def.damage*levelScale*buffs.damage,
+      speed:def.shotSpeed,
+      kind:def.kind,
+      slow:def.slow,
+      splash:def.splash+(def.splash?5*(t.level-1):0),
+      dead:false
+    });
   });
-  t.cooldown=def.rate/(1+(t.level-1)*.15);
+
+  t.cooldown=def.rate/((1+(t.level-1)*.15)*buffs.rate);
   t.pulse=.12;
   tone(def.kind==='heavy'?'heavy':'shot');
 }
@@ -452,6 +508,8 @@ function fireTower(t,target){
 function updateTowers(dt){
   for(const t of towers){
     t.cooldown-=dt;t.pulse=Math.max(0,t.pulse-dt);
+    const def=TOWERS[t.type];
+    if(def.support)continue;
     const target=targetForTower(t);
     if(target)t.row=rowForVector(target.x-t.x,target.y-t.y);
     if(t.cooldown<=0&&target)fireTower(t,target);
@@ -630,6 +688,16 @@ function drawSheetFrame(key,cols,row,frame,x,y,dest=128,alpha=1){
 
 function drawTower(t,index){
   const def=TOWERS[t.type];
+
+  if(def.support){
+    const aura=def.range*(1+(t.level-1)*.08);
+    ctx.save();
+    ctx.beginPath();ctx.arc(t.x,t.y,aura,0,Math.PI*2);
+    ctx.fillStyle='rgba(245,196,90,.055)';ctx.fill();
+    ctx.strokeStyle='rgba(214,160,47,.36)';ctx.lineWidth=1;
+    ctx.setLineDash([2,4]);ctx.stroke();ctx.restore();
+  }
+
   if(selectedTower===index){
     const range=def.range*(1+(t.level-1)*.08);
     ctx.save();
@@ -685,6 +753,9 @@ function drawProjectile(p){
   }else if(p.kind==='heavy'){
     ctx.fillStyle='#a4d4e5';ctx.fillRect(x-5,y-5,10,10);
     ctx.fillStyle='#fff';ctx.fillRect(x-4,y-4,7,7);
+  }else if(p.kind==='long'){
+    ctx.fillStyle='#79bdd7';ctx.fillRect(x-5,y-2,10,4);
+    ctx.fillStyle='#effcff';ctx.fillRect(x-3,y-1,7,2);
   }else{
     ctx.fillStyle='#9dcadd';ctx.fillRect(x-3,y-3,7,7);
     ctx.fillStyle='#fff';ctx.fillRect(x-2,y-2,5,5);
