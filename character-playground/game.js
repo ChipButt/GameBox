@@ -1734,7 +1734,7 @@ function visibleCharacterArea() {
 // and making the character jump/crop unpredictably between part changes.
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
-  if (force) viewDistance = 6.85;
+  if (force) viewDistance = 7.0;
   previewRoot.position.set(0, 0.76, 0);
   applyCameraPose();
 }
@@ -1754,7 +1754,7 @@ function resize() {
   camera.updateProjectionMatrix();
 
   const mobile = width <= 980;
-  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.48 : -0.78);
+  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.70 : -0.78);
   if (mobile) {
     previewRoot.position.y = 0.76;
   } else {
@@ -1765,7 +1765,7 @@ function resize() {
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = window.innerWidth <= 980 ? 6.85 : 6.55;
+  viewDistance = window.innerWidth <= 980 ? 7.0 : 6.55;
   previewRoot.position.y = window.innerWidth <= 980 ? 0.76 : 0;
   resize();
   scheduleCharacterFrame(true);
