@@ -50,6 +50,11 @@ jobs:
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
 
           const category = async (id) => {
+            const back=page.locator('#backToCategoriesBtn:visible');
+            if(await back.count()) {
+              await back.click();
+              await page.waitForTimeout(80);
+            }
             await page.click('.partCategoryBtn[data-part="'+id+'"]');
             await page.waitForTimeout(250);
             return await page.locator('#partSourceGrid .partSourceCard').count();
@@ -90,7 +95,7 @@ jobs:
             : [];
           const headFingerprints=[];
           for (const optionId of headOptionIds) {
-            await page.click('.partCategoryBtn[data-part="head"]');
+            await category('head');
             await page.click('[data-option="'+optionId+'"]');
             await waitForSelected(optionId);
             const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
@@ -100,6 +105,27 @@ jobs:
             headFingerprints.push([optionId,diag.geometryFingerprint]);
           }
           assert(new Set(headFingerprints.map(([,fingerprint])=>fingerprint)).size===8,'Two or more retained head buttons still load identical geometry: '+JSON.stringify(headFingerprints));
+
+          await category('head');
+          await page.click('[data-option="head-08"]');
+          await waitForSelected('head-08');
+          const teethRow=page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Teeth/i});
+          assert(await teethRow.count()>=1,'Goblin head does not expose Teeth as a removable feature.');
+          const teethToggle=teethRow.first().locator('.materialVisibility');
+          await teethToggle.click();
+          let goblinHidden=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head.materialVisibility);
+          const teethEntries=Object.entries(goblinHidden).filter(([name])=>/teeth/i.test(name));
+          assert(teethEntries.length>=1 && teethEntries.every(([,visible])=>visible===false),'Goblin Teeth were not fully hidden.');
+
+
+          await category('headwear');
+          await page.click('[data-option="headwear-elf"]');
+          await waitForSelected('headwear-elf');
+          const wizardHatDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.headwear);
+          assert(wizardHatDiag.materialNames.includes('Hat'),'Elf/Wizard headwear is missing Hat geometry.');
+          assert(wizardHatDiag.materialNames.includes('Gold'),'Elf/Wizard hat band/Gold trim is missing from Headwear.');
+          assert(!wizardHatDiag.materialNames.includes('Skin'),'Skin geometry leaked into the Elf/Wizard hat.');
+          assert(await page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Band \/ Gold trim/i}).count()>=1,'Wizard hat band does not have its own colour control.');
 
           const hairCount=await category('hair');
           assert(hairCount===24,'Hair should contain 23 head-hair styles plus None.');
@@ -173,7 +199,7 @@ jobs:
           await page.click('.tabBtn[data-tab="style"]');
           await page.waitForTimeout(100);
           assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion controls should remain available without becoming a ninth category.');
-          await page.click('.partCategoryBtn[data-part="head"]');
+          await category('head');
           await page.waitForTimeout(100);
           assert(await page.locator('#componentColourList .componentMaterialRow').count()>=1,'Face component did not expose its local colour editor.');
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
@@ -189,7 +215,7 @@ jobs:
           for (const viewport of mobileViewports) {
             await page.setViewportSize(viewport);
             await page.waitForTimeout(320);
-            await page.click('.partCategoryBtn[data-part="top"]');
+            await category('top');
             await page.waitForTimeout(100);
 
             const cardRects=await page.locator('#partSourceGrid .partSourceCard').evaluateAll(cards=>cards.slice(0,9).map(card=>{
