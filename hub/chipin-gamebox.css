@@ -318,8 +318,8 @@
   border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/Double/panel_border_grey_detail.png");
   border-image-slice:32;border-image-width:7px;border-image-repeat:stretch;background:#111a20;
 }
-.bbHomeGarland{position:absolute;z-index:2;left:50%;top:-4px;width:88px;height:14px;transform:translateX(-50%);object-fit:fill}
-.bbHomeBricks{position:absolute;left:8px;right:8px;top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+
+.bbHomeChristmasMark{position:absolute;z-index:2;right:3px;top:2px;width:27px;height:27px;object-fit:contain;opacity:.82}.bbHomeBricks{position:absolute;left:8px;right:8px;top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
 .bbHomeBricks img{display:block;width:100%;height:13px;object-fit:fill}
 .bbHomeBall{position:absolute;left:51px;top:49px;width:13px;height:13px;object-fit:contain}
 .bbHomePaddle{position:absolute;left:34px;bottom:6px;width:45px;height:10px;object-fit:fill}

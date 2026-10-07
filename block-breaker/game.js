@@ -36,6 +36,17 @@ const ASSET={
   particle2:'../assets/gamebox/kenney/2d/Rolling Ball Assets/Retina/particle_2.png',
   particle3:'../assets/gamebox/kenney/2d/Rolling Ball Assets/Retina/particle_3.png',
   paddle:'../assets/gamebox/kenney/ui/UI Pack/Grey/Double/button_rectangle_depth_gradient.png',
+  wood:'../assets/gamebox/kenney/2d/Retro Textures Fantasy/floor_wood_planks_wide.png',
+  treeSnow:'../assets/gamebox/kenney/2d/Background Elements Remastered/treePineSnow.png',
+  holidayCluster:'../assets/gamebox/kenney/2d/Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png',
+  giftRed:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png',
+  giftGreen:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png',
+  giftBlue:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_blue.png',
+  giftYellow:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_yellow.png',
+  giftOrange:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_orange.png',
+  giftIce:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_lightBlue.png',
+  baublesBlue:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/balls_blue.png',
+  baubleIce:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/ball_lightBlue.png',
   larger:'../assets/gamebox/kenney/icons/Game Icons/White/2x/larger.png',
   smaller:'../assets/gamebox/kenney/icons/Game Icons/White/2x/smaller.png',
   fast:'../assets/gamebox/kenney/icons/Game Icons/White/2x/fastForward.png',
@@ -45,39 +56,39 @@ const ASSET={
 };
 const img={};
 const POWER={
-  multi:{label:'MULTIBALL',color:'#2f9fe8',icon:'multi'},
-  wide:{label:'WIDE PADDLE',color:'#2bc989',icon:'larger'},
-  slow:{label:'SLOW BALL',color:'#879aa6',icon:'smaller'},
-  boost:{label:'SPEED x2',color:'#f3bd29',icon:'fast'},
-  life:{label:'EXTRA LIFE',color:'#f04d6c',icon:'plus'},
-  fire:{label:'FIREBALL',color:'#f07a3f',icon:'power'},
-  laser:{label:'LASER',color:'#e82e5a',icon:'laser'},
-  catch:{label:'CATCH',color:'#36bcae',icon:'target'}
+  multi:{label:'MULTIBALL',pickup:'baublesBlue',icon:null},
+  wide:{label:'WIDE PADDLE',pickup:'giftGreen',icon:'larger'},
+  slow:{label:'SLOW BALL',pickup:'baubleIce',icon:'smaller'},
+  boost:{label:'SPEED x2',pickup:'giftYellow',icon:'fast'},
+  life:{label:'EXTRA LIFE',pickup:'giftRed',icon:'plus'},
+  fire:{label:'FIREBALL',pickup:'giftOrange',icon:'power'},
+  laser:{label:'LASER',pickup:'giftBlue',icon:'laser'},
+  catch:{label:'CATCH',pickup:'giftIce',icon:'target'}
 };
 const POWER_KEYS=Object.keys(POWER);
 const COLORS=['blue','green','red','yellow'];
 
 const LEVELS=[
- {name:'First Bounce',pattern:'rows',speed:245,armor:0,solid:0,bombs:1,powers:2},
- {name:'Candy Rows',pattern:'candy',speed:250,armor:2,solid:0,bombs:1,powers:2},
- {name:'Checker Workshop',pattern:'checker',speed:255,armor:3,solid:0,bombs:1,powers:2},
- {name:'Chimney Stack',pattern:'stairs',speed:260,armor:4,solid:1,bombs:1,powers:2},
- {name:'Wrapped Gift',pattern:'gift',speed:265,armor:4,solid:0,bombs:2,powers:3},
- {name:'Snow Diamond',pattern:'diamond',speed:270,armor:5,solid:1,bombs:2,powers:2},
- {name:'Split Shift',pattern:'split',speed:275,armor:5,solid:2,bombs:2,powers:3},
- {name:'Twin Towers',pattern:'pillars',speed:280,armor:6,solid:2,bombs:2,powers:3},
- {name:'Holly Ring',pattern:'ring',speed:285,armor:6,solid:2,bombs:3,powers:3},
- {name:'Workshop Wall',pattern:'wall',speed:290,armor:7,solid:3,bombs:3,powers:3},
- {name:'Christmas Tree',pattern:'tree',speed:295,armor:6,solid:2,bombs:3,powers:4},
- {name:'Crossfire',pattern:'cross',speed:300,armor:7,solid:3,bombs:3,powers:4},
- {name:'Sleigh Tracks',pattern:'wave',speed:305,armor:8,solid:3,bombs:3,powers:4},
- {name:'Ornament',pattern:'orb',speed:310,armor:8,solid:3,bombs:4,powers:4},
- {name:'Frostbite',pattern:'snowflake',speed:315,armor:9,solid:4,bombs:4,powers:4},
- {name:'Gift Storm',pattern:'presents',speed:320,armor:9,solid:3,bombs:5,powers:5},
- {name:'Fortress',pattern:'fortress',speed:325,armor:10,solid:5,bombs:4,powers:5},
- {name:'Starburst',pattern:'starburst',speed:330,armor:10,solid:4,bombs:5,powers:5},
- {name:'Black Ice',pattern:'blackice',speed:340,armor:11,solid:7,bombs:5,powers:5},
- {name:'Final Workshop',pattern:'final',speed:350,armor:12,solid:6,bombs:6,powers:6}
+ {name:'Christmas Tree',pattern:'tree',speed:245,armor:0,solid:0,bombs:0,powers:1},
+ {name:'Wrapped Present',pattern:'present',speed:250,armor:1,solid:0,bombs:0,powers:2},
+ {name:'Candy Cane',pattern:'candycane',speed:255,armor:2,solid:0,bombs:1,powers:2},
+ {name:'Christmas Stocking',pattern:'stocking',speed:260,armor:2,solid:0,bombs:1,powers:2},
+ {name:'Jingle Bell',pattern:'bell',speed:265,armor:3,solid:0,bombs:1,powers:2},
+ {name:'Christmas Bauble',pattern:'bauble',speed:270,armor:3,solid:0,bombs:1,powers:3},
+ {name:'Christmas Wreath',pattern:'wreath',speed:275,armor:4,solid:1,bombs:1,powers:3},
+ {name:'Snowflake',pattern:'snowflake',speed:280,armor:4,solid:1,bombs:2,powers:3},
+ {name:'Christmas Star',pattern:'star',speed:285,armor:5,solid:1,bombs:2,powers:3},
+ {name:'Christmas Cracker',pattern:'cracker',speed:290,armor:5,solid:1,bombs:2,powers:3},
+ {name:'Snowman',pattern:'snowman',speed:295,armor:6,solid:2,bombs:2,powers:4},
+ {name:'Winter Mitten',pattern:'mitten',speed:300,armor:6,solid:2,bombs:2,powers:4},
+ {name:'Holly Sprig',pattern:'holly',speed:305,armor:7,solid:2,bombs:3,powers:4},
+ {name:'Candlelight',pattern:'candle',speed:310,armor:7,solid:2,bombs:3,powers:4},
+ {name:'Santa Hat',pattern:'hat',speed:315,armor:8,solid:3,bombs:3,powers:4},
+ {name:'Gingerbread Man',pattern:'gingerbread',speed:320,armor:8,solid:3,bombs:4,powers:5},
+ {name:'Sleigh Ride',pattern:'sleigh',speed:325,armor:9,solid:3,bombs:4,powers:5},
+ {name:'Reindeer',pattern:'reindeer',speed:330,armor:9,solid:4,bombs:4,powers:5},
+ {name:'Snowy House',pattern:'house',speed:340,armor:10,solid:4,bombs:5,powers:5},
+ {name:'Christmas Finale',pattern:'finale',speed:350,armor:11,solid:4,bombs:5,powers:6}
 ];
 
 let assetsReady=false,audioCtx=null,sound=true,paused=true,pausedAt=0,lastTime=performance.now();
@@ -87,7 +98,7 @@ let pointerId=null,keyLeft=false,keyRight=false,lastLaserShot=0,levelTransitionA
 let speedFactorApplied=1;
 const paddle={x:W/2,y:602,baseWidth:82,height:18,vx:0,lastX:W/2};
 const effects={wide:0,slow:0,boost:0,fire:0,laser:0,catch:0};
-const snowDots=makeSnowDots();
+let woodPattern=null;
 
 function readHighScore(){
   try{return Math.max(0,Number(localStorage.getItem('gamebox-block-breaker-high'))||0);}catch(_){return 0;}
@@ -107,11 +118,6 @@ function roundRectPath(c,x,y,w,h,r){
 function seeded(seed){
   let a=seed>>>0;
   return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};
-}
-function makeSnowDots(){
-  const r=seeded(20261224),out=[];
-  for(let i=0;i<42;i++)out.push({x:10+r()*(W-20),y:58+r()*(H-78),s:.5+r()*1.6,a:.08+r()*.16});
-  return out;
 }
 function loadAssets(){
   return Promise.all(Object.keys(ASSET).map(function(key){
@@ -158,62 +164,34 @@ function buzz(){
 }
 function vibrate(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern);}catch(_){}}
 
-function blankPattern(){return Array.from({length:ROWS},function(){return Array(COLS).fill(null);});}
-function addCell(m,r,c,color){
-  if(r>=0&&r<ROWS&&c>=0&&c<COLS)m[r][c]={color:color||null};
-}
+const PATTERN_MASKS={
+  tree:["....y....","...ggg...","..ggrgg..",".ggggggg.","ggggrgggg","..ggggg..",".ggggggg.","....r....","...rrr..."],
+  present:["...y.y...","..yyyyy..",".rrrrrrr.",".rrryrrr.",".yyyyyyy.",".rrryrrr.",".rrryrrr.",".rrrrrrr.","........."],
+  candycane:["..rrww...",".rrwwrr..",".rrww....",".wwrr....",".rrww....",".wwrr....",".rrww....",".wwrr....",".rrww...."],
+  stocking:[".wwww....",".rrrr....",".rrrr....","..rrr....","..rrrr...","..rrrrrr.","..rrrrrrr",".rrrrrrr.","........."],
+  bell:["...yyy...","..yyyyy..",".yyyyyyy.",".yyyyyyy.",".yyyyyyy.","..yyyyy..","...yyy...","...rrr...","....r...."],
+  bauble:["....y....","...yyy...","..rrrrr..",".rrrgrrr.",".rrrgrrr.",".rrrrrrr.",".rrrgrrr.","..rrrrr..","...rrr..."],
+  wreath:["...ggg...",".gg...gg.","gg.....gg","gg.....gg","gg.....gg",".gg...gg.","...ggg...","...rrr...","..rrrrr.."],
+  snowflake:["w...w...w",".w..w..w.","..w.w.w..","...www...","wwwwwwwww","...www...","..w.w.w..",".w..w..w.","w...w...w"],
+  star:["....y....","...yyy...","..yyyyy..","yyyyyyyyy",".yyyyyyy.","..yyyyy..","..yy.yy..",".yy...yy.","y.......y"],
+  cracker:["rr.....rr",".rr...rr.","..rrrrr..","..ryyyr..","..ryyyr..","..ryyyr..","..rrrrr..",".rr...rr.","rr.....rr"],
+  snowman:["...www...","..wwwww..","..wrwww..","...rrr...","..wwwww..",".wwbwbww.",".wwwwwww.","..wwwww..","...w.w..."],
+  mitten:["...rrrr..","..rrrrrr.",".rrrrrrrr",".rrrrrrrr",".rrrrr...","..rrrr...","...rrr...","..yyyy...","..yyyy..."],
+  holly:["gg.....gg","ggg...ggg",".gg...gg.","...rrr...","..rrrrr..","...rrr...",".gg...gg.","ggg...ggg","gg.....gg"],
+  candle:["...yyy...","..yyyyy..","...yyy...","...rrr...","...rrr...","...www...","...www...","...www...","..wwwww.."],
+  hat:[".......ww","......wrr",".....rrrr","....rrrrr","...rrrrrr","..rrrrrrr",".rrrrrrrr","wwwwwwwww","........."],
+  gingerbread:["...yyy...","..ywywy..","...yyy...",".yy.y.yy.","..yyyyy..","...ywy...","..y.y.y..",".yy...yy.","y.......y"],
+  sleigh:[".........","rrr......","rrrrr....","rrrrrr...",".rrrrrr..","..rrrrrr.","..rrrrrr.",".yyyyyyy.","yyyyyyyyy"],
+  reindeer:["..y...y..",".yy...yy.","..y...y..","...yyy...","..yyyyy..",".yy.y.yy.","...yyy...","...y.y...","..y...y.."],
+  house:["...www...","..wwwww..",".wwwwwww.","rrrrrrrrr","rgggrgggr","rgggrgggr","rrrgrrrrr","rrrgrrrrr","rrrrrrrrr"],
+  finale:["....y....","...ggg...","..ggggg..",".ggggggg.","ggggggggg","...grg...","..rr.rr..",".yyy.yyy.","rrr...rrr"]
+};
+const COLOR_CODE={r:'red',g:'green',y:'yellow',w:'white',b:'blue'};
 function makePattern(type){
-  const m=blankPattern(),mid=4;
-  let r,c;
-  if(type==='rows'){
-    for(r=0;r<5;r++)for(c=0;c<COLS;c++)addCell(m,r,c);
-  }else if(type==='candy'){
-    for(r=0;r<6;r++)for(c=0;c<COLS;c++)addCell(m,r,c,((r+c)%4<2)?'red':'white');
-  }else if(type==='checker'){
-    for(r=0;r<7;r++)for(c=0;c<COLS;c++)if((r+c)%2===0)addCell(m,r,c);
-  }else if(type==='stairs'){
-    for(r=0;r<7;r++)for(c=0;c<COLS;c++)if(c<=r+2||c>=COLS-r-3)addCell(m,r,c);
-  }else if(type==='gift'){
-    for(r=0;r<7;r++)for(c=1;c<COLS-1;c++)addCell(m,r,c,(c===mid||r===3)?'yellow':null);
-  }else if(type==='diamond'){
-    for(r=0;r<9;r++)for(c=0;c<9;c++)if(Math.abs(r-mid)+Math.abs(c-mid)<=4)addCell(m,r,c);
-  }else if(type==='split'){
-    for(r=0;r<7;r++)for(c=0;c<COLS;c++)if(c<3||c>5||r===0||r===6)addCell(m,r,c);
-  }else if(type==='pillars'){
-    for(r=0;r<7;r++)for(c=0;c<COLS;c++)if(c===0||c===1||c===3||c===4||c===5||c===7||c===8)addCell(m,r,c);
-  }else if(type==='ring'){
-    for(r=1;r<8;r++)for(c=1;c<8;c++)if(r===1||r===7||c===1||c===7||(r>=3&&r<=5&&c>=3&&c<=5&&(r===3||r===5||c===3||c===5)))addCell(m,r,c);
-  }else if(type==='wall'){
-    for(r=0;r<7;r++)for(c=0;c<COLS;c++)if(!(r%2===1&&c===mid))addCell(m,r,c);
-  }else if(type==='tree'){
-    addCell(m,0,mid,'yellow');
-    for(r=1;r<=5;r++){const half=Math.min(4,r);for(c=mid-half;c<=mid+half;c++)addCell(m,r,c,'green');}
-    addCell(m,6,mid,'red');addCell(m,7,mid,'red');
-  }else if(type==='cross'){
-    for(r=0;r<9;r++)for(c=0;c<9;c++)if(r===mid||c===mid||r===c||r+c===8)addCell(m,r,c);
-  }else if(type==='wave'){
-    for(c=0;c<COLS;c++){const base=2+Math.round(Math.sin(c*.9)*1.5);for(r=base;r<base+3;r++)addCell(m,r,c);}
-  }else if(type==='orb'){
-    for(r=0;r<8;r++)for(c=0;c<9;c++){const dx=(c-mid)/4,dy=(r-3.5)/3.5;if(dx*dx+dy*dy<=1)addCell(m,r,c);}
-    addCell(m,8,mid,'yellow');
-  }else if(type==='snowflake'){
-    for(r=0;r<9;r++)for(c=0;c<9;c++)if(r===mid||c===mid||Math.abs(r-mid)===Math.abs(c-mid))addCell(m,r,c,(r+c)%2?'white':'blue');
-  }else if(type==='presents'){
-    for(r=1;r<=3;r++)for(c=0;c<=2;c++)addCell(m,r,c,c===1?'yellow':'red');
-    for(r=0;r<=3;r++)for(c=3;c<=5;c++)addCell(m,r,c,c===4?'yellow':'green');
-    for(r=2;r<=6;r++)for(c=6;c<=8;c++)addCell(m,r,c,c===7?'yellow':'blue');
-    for(r=5;r<=7;r++)for(c=1;c<=4;c++)addCell(m,r,c,(c===2||r===6)?'yellow':null);
-  }else if(type==='fortress'){
-    for(r=0;r<7;r++)for(c=0;c<9;c++)if(r>=2||c===0||c===1||c===4||c===7||c===8)addCell(m,r,c);
-    m[6][4]=null;m[5][4]=null;
-  }else if(type==='starburst'){
-    for(r=0;r<9;r++)for(c=0;c<9;c++){const dr=Math.abs(r-mid),dc=Math.abs(c-mid);if(r===mid||c===mid||dr===dc||(dr<=1&&dc<=3)||(dc<=1&&dr<=3))addCell(m,r,c);}
-  }else if(type==='blackice'){
-    for(r=0;r<7;r++)for(c=0;c<9;c++)if((r+c)%3!==1||r===0)addCell(m,r,c);
-  }else{
-    for(r=0;r<8;r++)for(c=0;c<9;c++)addCell(m,r,c);
-  }
-  return m;
+  const rows=PATTERN_MASKS[type]||PATTERN_MASKS.tree;
+  return rows.map(function(row){
+    return row.split('').map(function(ch){return ch==='.'?null:{color:COLOR_CODE[ch]||COLORS[(row.indexOf(ch)+levelIndex)%COLORS.length]};});
+  });
 }
 function shuffledIndices(n,seed){
   const a=[];for(let i=0;i<n;i++)a.push(i);
@@ -318,7 +296,7 @@ function spawnParticles(x,y,count){
 function maybeDropPower(b,forced){
   if(!forced&&Math.random()>.13)return;
   const type=POWER_KEYS[Math.floor(Math.random()*POWER_KEYS.length)];
-  powerups.push({type:type,x:b.x+b.w/2,y:b.y+b.h/2,vy:105,size:28,spin:Math.random()*6.28});
+  powerups.push({type:type,x:b.x+b.w/2,y:b.y+b.h/2,vy:102,size:type==='multi'?34:32,spin:Math.random()*6.28,phase:Math.random()*6.28});
 }
 function destroyBrick(b,now,fromBlast){
   if(!b.alive||b.unbreakable)return;
@@ -433,7 +411,7 @@ function updateBall(ball,dt,now){
 function updatePowerups(dt,now){
   const pw=currentPaddleWidth(now),left=paddle.x-pw/2,right=paddle.x+pw/2;
   powerups=powerups.filter(function(p){
-    p.y+=p.vy*dt;p.spin+=dt*2;
+    p.y+=p.vy*dt;p.spin+=dt*3.2;p.x+=Math.sin(p.phase+p.spin)*7*dt;p.x=clamp(p.x,18,W-18);
     if(p.y+p.size/2>=paddle.y&&p.y-p.size/2<=paddle.y+paddle.height&&p.x>=left-8&&p.x<=right+8){applyPower(p.type,now);return false;}
     return p.y<H+35;
   });
@@ -487,9 +465,25 @@ function update(dt,now){
 }
 
 function drawBackground(){
-  const g=ctx.createLinearGradient(0,58,0,H);g.addColorStop(0,'#18262e');g.addColorStop(1,'#0b1217');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(255,255,255,.025)';for(let x=20;x<W;x+=44)ctx.fillRect(x,58,1,H-58);
-  snowDots.forEach(function(d){ctx.globalAlpha=d.a;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(d.x,d.y,d.s,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+  ctx.fillStyle='#30231c';ctx.fillRect(0,0,W,H);
+  const wood=img.wood;
+  if(wood&&wood.complete&&wood.naturalWidth){
+    if(!woodPattern)woodPattern=ctx.createPattern(wood,'repeat');
+    ctx.fillStyle=woodPattern;ctx.fillRect(0,58,W,H-58);
+  }
+  const wash=ctx.createLinearGradient(0,58,0,H);
+  wash.addColorStop(0,'rgba(7,48,36,.70)');wash.addColorStop(.48,'rgba(14,31,28,.63)');wash.addColorStop(1,'rgba(52,17,24,.68)');
+  ctx.fillStyle=wash;ctx.fillRect(0,58,W,H-58);
+
+  // Real Christmas scenery, deliberately subdued so the ball and bricks stay readable.
+  drawImg('treeSnow',-22,82,92,188,.16);
+  ctx.save();ctx.translate(W,0);ctx.scale(-1,1);drawImg('treeSnow',-22,108,82,168,.12);ctx.restore();
+  drawImg('holidayCluster',10,H-112,76,76,.18);
+  drawImg('holidayCluster',W-78,H-96,66,66,.14);
+
+  const centre=ctx.createRadialGradient(W/2,330,30,W/2,330,260);
+  centre.addColorStop(0,'rgba(9,18,18,.02)');centre.addColorStop(1,'rgba(3,8,9,.42)');
+  ctx.fillStyle=centre;ctx.fillRect(0,58,W,H-58);
 }
 function drawHud(now){
   ctx.fillStyle='rgba(7,14,18,.94)';ctx.fillRect(0,0,W,58);
@@ -544,11 +538,21 @@ function drawBalls(now){
   });
 }
 function drawPowerIcon(p){
-  const def=POWER[p.type],s=p.size,x=p.x-s/2,y=p.y-s/2;
-  ctx.save();ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=5;roundRectPath(ctx,x,y,s,s,8);ctx.fillStyle=def.color;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1.2;ctx.stroke();ctx.restore();
-  if(def.icon==='multi'){drawImg('ball',p.x-8,p.y-7,9,9);drawImg('ball',p.x-1,p.y-3,9,9);drawImg('ball',p.x-5,p.y+3,9,9);}
-  else if(def.icon==='laser'){drawImg('laser',p.x-3,p.y-9,6,18);}
-  else drawImg(def.icon,p.x-8,p.y-8,16,16);
+  const def=POWER[p.type],s=p.size,asset=img[def.pickup];
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(Math.sin(p.spin)*.07);
+  ctx.shadowColor='rgba(0,0,0,.42)';ctx.shadowBlur=7;ctx.shadowOffsetY=3;
+  if(asset&&asset.complete&&asset.naturalWidth)ctx.drawImage(asset,-s/2,-s/2,s,s);
+  else{ctx.fillStyle='#d94b43';roundRectPath(ctx,-s/2,-s/2,s,s,6);ctx.fill();}
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  if(def.icon){
+    ctx.globalAlpha=.92;
+    if(def.icon==='laser')drawImg('laser',-2,-7,4,14);
+    else drawImg(def.icon,-6,0,12,12);
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
 }
 function drawPowerups(){powerups.forEach(drawPowerIcon);}
 function drawLasers(){lasers.forEach(function(l){drawImg('laser',l.x-3,l.y,6,19);});}
