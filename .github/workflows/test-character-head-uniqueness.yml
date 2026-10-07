@@ -1,0 +1,65 @@
+name: Test Character Workshop Head Uniqueness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - character-playground/game.js
+      - character-playground/modular-parts.js
+      - character-playground/part-options.js
+      - .github/workflows/test-character-head-uniqueness.yml
+
+permissions:
+  contents: read
+
+jobs:
+  heads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser test tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm install --silent playwright@1.56.1
+          npx playwright install chromium --with-deps >/dev/null
+      - name: Verify 18 unique loaded heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 >/tmp/gamebox-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+
+          cat > .head-test.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:1280,height:900}});
+          await page.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
+          await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
+          const ids=["head-01","head-02","head-03","head-04","head-05","head-06","head-07","head-08","head-09","head-10","head-11","head-12","head-13","head-14","head-15","head-16","head-17","head-18"];
+          await page.click('.partCategoryBtn[data-part="head"]');
+          const cards=await page.locator('#partSourceGrid .partSourceCard:not(.noneCard)').count();
+          if(cards!==18) throw new Error('Expected 18 head cards, found '+cards);
+          const fingerprints=[];
+          for(const id of ids){
+            await page.click('.partCategoryBtn[data-part="head"]');
+            await page.click('[data-option="'+id+'"]');
+            await page.waitForFunction(id=>document.querySelector('[data-option="'+id+'"].selected'),id,{timeout:20000});
+            const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
+            if(!diag?.geometryFingerprint) throw new Error(id+' loaded no measurable head geometry');
+            const armWeights=Object.entries(diag.boneWeightMaxima||{}).filter(([name,weight])=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name)&&weight>=0.08);
+            if(armWeights.length) throw new Error(id+' includes arm/hand geometry: '+JSON.stringify(armWeights));
+            fingerprints.push([id,diag.geometryFingerprint]);
+          }
+          const unique=new Set(fingerprints.map(([,fp])=>fp));
+          if(unique.size!==18) throw new Error('Loaded head duplicates remain: '+JSON.stringify(fingerprints));
+          console.log('HEADS_OK '+JSON.stringify(fingerprints));
+          await browser.close();
+          JS
+
+          node .head-test.mjs
