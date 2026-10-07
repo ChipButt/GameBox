@@ -1,0 +1,152 @@
+name: Import Workshop Watch Assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-workshop-watch-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download free itch.io packs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ww-downloads /tmp/ww-unpack
+          cd /tmp
+          npm init -y >/dev/null 2>&1
+          npm install itchio-downloader >/dev/null 2>&1
+
+          cat > /tmp/download-assets.cjs <<'NODE'
+          const path=require('path');
+          const {downloadGame}=require('/tmp/node_modules/itchio-downloader');
+
+          const jobs=[
+            ['https://admurin.itch.io/monster-pack-82','monster-pack-82'],
+            ['https://admurin.itch.io/monster-pack-85','monster-pack-85'],
+            ['https://admurin.itch.io/monster-pack','monster-pack-free'],
+            ['https://gherwit.itch.io/winter-tiles','winter-tiles']
+          ];
+
+          (async()=>{
+            for(const [url,name] of jobs){
+              console.log('Downloading',url);
+              const r=await downloadGame({
+                itchGameUrl:url,
+                downloadDirectory:'/tmp/ww-downloads',
+                desiredFileName:name,
+                writeMetaData:false,
+                retries:2
+              });
+              console.log(JSON.stringify(r,null,2));
+              if(!r.status) throw new Error('Download failed: '+url+' '+(r.message||''));
+            }
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+
+          node /tmp/download-assets.cjs
+
+          echo "Downloaded files:"
+          find /tmp/ww-downloads -maxdepth 2 -type f -print
+
+      - name: Extract only project assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workshop-watch/assets/vendor/admurin/pack82
+          mkdir -p workshop-watch/assets/vendor/admurin/pack85
+          mkdir -p workshop-watch/assets/vendor/admurin/rabbits
+          mkdir -p workshop-watch/assets/vendor/gherwit/winter
+
+          python3 - <<'PY'
+          import os, zipfile, shutil, glob
+
+          roots=[
+            ('monster-pack-82','workshop-watch/assets/vendor/admurin/pack82'),
+            ('monster-pack-85','workshop-watch/assets/vendor/admurin/pack85'),
+            ('monster-pack-free','workshop-watch/assets/vendor/admurin/rabbits'),
+            ('winter-tiles','workshop-watch/assets/vendor/gherwit/winter'),
+          ]
+
+          for prefix,dest in roots:
+              matches=[p for p in glob.glob('/tmp/ww-downloads/**/*',recursive=True)
+                       if os.path.isfile(p) and prefix in os.path.basename(p).lower()]
+              if not matches:
+                  # downloader may preserve original upload filename
+                  if prefix=='monster-pack-82':
+                      matches=glob.glob('/tmp/ww-downloads/**/*82*.zip',recursive=True)
+                  elif prefix=='monster-pack-85':
+                      matches=glob.glob('/tmp/ww-downloads/**/*85*.zip',recursive=True)
+                  elif prefix=='monster-pack-free':
+                      matches=glob.glob('/tmp/ww-downloads/**/*Free*.zip',recursive=True)+glob.glob('/tmp/ww-downloads/**/*free*.zip',recursive=True)
+                  elif prefix=='winter-tiles':
+                      matches=glob.glob('/tmp/ww-downloads/**/*Winter*.zip',recursive=True)+glob.glob('/tmp/ww-downloads/**/*winter*.zip',recursive=True)
+
+              zips=[p for p in matches if p.lower().endswith('.zip')]
+              if not zips:
+                  raise SystemExit(f'No zip found for {prefix}; found {matches}')
+
+              z=zips[0]
+              print('Extracting',z,'->',dest)
+              with zipfile.ZipFile(z) as zh:
+                  for info in zh.infolist():
+                      if info.is_dir():
+                          continue
+                      low=info.filename.lower()
+                      if not low.endswith(('.png','.gif','.jpg','.jpeg','.txt','.md','.json')):
+                          continue
+                      # flatten only unsafe parent traversal; otherwise preserve useful names/folders
+                      rel=os.path.normpath(info.filename).replace('\\','/')
+                      while rel.startswith('../'):
+                          rel=rel[3:]
+                      out=os.path.join(dest,rel)
+                      os.makedirs(os.path.dirname(out),exist_ok=True)
+                      with zh.open(info) as src, open(out,'wb') as dst:
+                          shutil.copyfileobj(src,dst)
+          PY
+
+          cat > workshop-watch/assets/CREDITS.md <<'EOF'
+          # Workshop Watch asset credits
+
+          ## Admurin
+          - Monster Pack 82 (snowmen / defenders): https://admurin.itch.io/monster-pack-82
+          - Monster Pack 85 (Christmas monsters): https://admurin.itch.io/monster-pack-85
+          - FREE Monster Pack (horned rabbit): https://admurin.itch.io/monster-pack
+
+          Used as part of Workshop Watch. Original pack terms permit personal/commercial game use and modification; raw assets must not be resold as an asset pack.
+
+          ## Gherwit
+          - WINTER TILES: https://gherwit.itch.io/winter-tiles
+
+          Used for the snowy ground/path environment. Original pack terms permit personal/commercial game use and modification; raw assets must not be resold/redistributed as a standalone asset pack.
+          EOF
+
+          echo "Imported file list:"
+          find workshop-watch/assets/vendor -type f -print | sort
+
+      - name: Commit imported assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add workshop-watch/assets
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit"
+            exit 0
+          fi
+          git commit -m "Import Workshop Watch pixel art asset packs"
+          git push
