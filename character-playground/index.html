@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#10263a">
   <title>Character Workshop · GameBox</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -16,7 +16,7 @@
       <a class="backBtn artButton" href="../" aria-label="Back to GameBox">GAME BOX</a>
       <div class="brandPlate">
         <span>GAMEBOX CHARACTER SYSTEM</span>
-        <strong>Character Workshop</strong>
+        <strong>CHARACTER CUSTOMIZATION</strong>
         <small id="modelMeta">159 visual part styles available</small>
       </div>
       <button id="randomBtn" class="topAction artButton" type="button">RANDOM</button>
@@ -69,6 +69,7 @@
 
         <section class="partBrowser" id="partBrowser">
           <header class="partBrowserHeader">
+            <button id="backToCategoriesBtn" class="backToCategoriesBtn" type="button">‹ ALL COMPONENTS</button>
             <div>
               <span id="activePartEyebrow">CHARACTER PART</span>
               <strong id="activePartTitle">Face</strong>
@@ -215,6 +216,6 @@
     <div class="loadError" id="loadError" hidden></div>
   </main>
 
-  <script type="module" src="game.js?v=34"></script>
+  <script type="module" src="game.js?v=35"></script>
 </body>
 </html>
