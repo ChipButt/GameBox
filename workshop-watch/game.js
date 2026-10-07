@@ -43,43 +43,66 @@ const howSheet=document.getElementById('howSheet');
 const closeHow=document.getElementById('closeHow');
 const closeHowButton=document.getElementById('closeHowButton');
 
-const BASE='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/';
+const HOLIDAY='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/';
+const TOON='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Toon%20Characters/';
+const BUILD='https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Platformer%20Assets%20Buildings/';
+
 const ASSETS={
-  snowA:'RTSobject_01.png',snowB:'RTSobject_02.png',
-  treeSmall:'RTSobject_03.png',tree:'RTSobject_04.png',candy:'RTSobject_05.png',
-  giftGreen:'RTSobject_06.png',giftGreen2:'RTSobject_07.png',giftOrange:'RTSobject_08.png',giftRed:'RTSobject_09.png',
-  candyAlt:'RTSobject_10.png',giftPairA:'RTSobject_11.png',giftPairB:'RTSobject_12.png',
-  baubleRed:'RTSobject_13.png',baubleGreen:'RTSobject_14.png',workshopMark:'RTSobject_15.png',
-  garland:'RTSobject_17.png',lamp:'RTSobject_18.png'
+  snowA:HOLIDAY+'RTSobject_01.png',snowB:HOLIDAY+'RTSobject_02.png',
+  treeSmall:HOLIDAY+'RTSobject_03.png',tree:HOLIDAY+'RTSobject_04.png',candy:HOLIDAY+'RTSobject_05.png',
+  giftGreen:HOLIDAY+'RTSobject_06.png',giftGreen2:HOLIDAY+'RTSobject_07.png',giftOrange:HOLIDAY+'RTSobject_08.png',giftRed:HOLIDAY+'RTSobject_09.png',
+  candyAlt:HOLIDAY+'RTSobject_10.png',giftPairA:HOLIDAY+'RTSobject_11.png',giftPairB:HOLIDAY+'RTSobject_12.png',
+  garland:HOLIDAY+'RTSobject_17.png',
+
+  snowElfIdle:TOON+'Male%20adventurer/Poses%20HD/character_maleAdventurer_idle.png',
+  snowElfAttack:TOON+'Male%20adventurer/Poses%20HD/character_maleAdventurer_attack0.png',
+  frostElfIdle:TOON+'Female%20adventurer/Poses%20HD/character_femaleAdventurer_idle.png',
+  frostElfAttack:TOON+'Female%20adventurer/Poses%20HD/character_femaleAdventurer_attack0.png',
+  guardIdle:TOON+'Male%20person/Poses%20HD/character_malePerson_idle.png',
+  guardAttack:TOON+'Male%20person/Poses%20HD/character_malePerson_attack0.png',
+
+  grump0:TOON+'Zombie/Poses%20HD/character_zombie_walk0.png',
+  grump1:TOON+'Zombie/Poses%20HD/character_zombie_walk1.png',
+  brute0:TOON+'Zombie/Poses%20HD/character_zombie_attack0.png',
+  brute1:TOON+'Zombie/Poses%20HD/character_zombie_attack1.png',
+  toy0:TOON+'Robot/Poses%20HD/character_robot_walk0.png',
+  toy1:TOON+'Robot/Poses%20HD/character_robot_walk1.png',
+
+  workshopWall:BUILD+'houseDark.png',
+  workshopRoof:BUILD+'roofRedMid.png',
+  workshopDoor:BUILD+'doorOpen.png',
+  workshopDoorTop:BUILD+'doorTop.png',
+  workshopWindow:BUILD+'windowCheckered.png',
+  workshopChimney:BUILD+'chimney.png'
 };
 const images={};
 let assetsReady=false;
 
 const TOWERS={
-  tree:{name:'TREE BLASTER',asset:'tree',cost:50,range:92,damage:10,rate:.52,shotSpeed:240,kind:'rapid'},
-  candy:{name:'CANDY CANNON',asset:'candy',cost:70,range:105,damage:24,rate:1.1,shotSpeed:205,kind:'splash'},
-  frost:{name:'FROST LAMP',asset:'lamp',cost:80,range:88,damage:4,rate:.72,shotSpeed:250,kind:'slow'},
-  gift:{name:'PRESENT POPPER',asset:'giftPairA',cost:100,range:122,damage:42,rate:1.65,shotSpeed:185,kind:'heavy'}
+  snowElf:{name:'SNOWBALL ELF',idle:'snowElfIdle',attack:'snowElfAttack',cost:50,range:96,damage:11,rate:.48,shotSpeed:255,kind:'snow'},
+  frostElf:{name:'FROST ELF',idle:'frostElfIdle',attack:'frostElfAttack',cost:75,range:98,damage:7,rate:.72,shotSpeed:245,kind:'frost'},
+  guard:{name:'NUTCRACKER GUARD',idle:'guardIdle',attack:'guardAttack',cost:90,range:112,damage:14,rate:.38,shotSpeed:290,kind:'candyBolt'},
+  cannon:{name:'PRESENT CANNON',asset:'giftPairA',cost:110,range:126,damage:36,rate:1.35,shotSpeed:205,kind:'present'}
 };
 
 const ENEMIES={
-  parcel:{asset:'giftRed',hp:34,speed:38,reward:7,size:28,leak:1},
-  runner:{asset:'baubleGreen',hp:24,speed:58,reward:8,size:27,leak:1},
-  double:{asset:'giftPairB',hp:82,speed:31,reward:12,size:34,leak:1},
-  boss:{asset:'workshopMark',hp:300,speed:25,reward:40,size:48,leak:3}
+  grump:{assets:['grump0','grump1'],hp:36,speed:38,reward:7,size:30,leak:1},
+  toybot:{assets:['toy0','toy1'],hp:25,speed:59,reward:8,size:29,leak:1},
+  brute:{assets:['brute0','brute1'],hp:92,speed:30,reward:13,size:39,leak:1},
+  boss:{assets:['brute0','brute1'],hp:330,speed:24,reward:45,size:54,leak:3,boss:true}
 };
 
 const WAVES=[
-  [['parcel',8]],
-  [['parcel',8],['runner',4]],
-  [['parcel',10],['double',3]],
-  [['runner',9],['parcel',7]],
-  [['double',6],['runner',6]],
-  [['parcel',12],['double',6],['runner',6]],
-  [['runner',14],['double',7]],
-  [['double',10],['parcel',12]],
-  [['runner',12],['double',10],['parcel',10]],
-  [['parcel',10],['runner',10],['double',8],['boss',1]]
+  [['grump',8]],
+  [['grump',8],['toybot',4]],
+  [['grump',10],['brute',3]],
+  [['toybot',9],['grump',7]],
+  [['brute',6],['toybot',6]],
+  [['grump',12],['brute',6],['toybot',6]],
+  [['toybot',14],['brute',7]],
+  [['brute',10],['grump',12]],
+  [['toybot',12],['brute',10],['grump',10]],
+  [['grump',10],['toybot',10],['brute',8],['boss',1]]
 ];
 
 const ROUTES={
@@ -99,17 +122,17 @@ const pads=[
 ];
 
 const decor=[
-  {asset:'treeSmall',x:28,y:85,s:48},{asset:'tree',x:355,y:85,s:58},
-  {asset:'giftGreen',x:34,y:205,s:34},{asset:'giftOrange',x:358,y:213,s:34},
-  {asset:'candyAlt',x:27,y:330,s:44},{asset:'treeSmall',x:362,y:330,s:46},
-  {asset:'giftPairA',x:38,y:523,s:40},{asset:'candy',x:355,y:518,s:42}
-];
+  {asset:'treeSmall',x:28,y:96,s:46},{asset:'tree',x:357,y:102,s:55},
+  {asset:'candyAlt',x:28,y:226,s:40},{asset:'treeSmall',x:362,y:230,s:43},
+  {asset:'tree',x:28,y:344,s:52},{asset:'candy',x:360,y:350,s:40},
+  {asset:'giftGreen',x:28,y:505,s:30},{asset:'giftOrange',x:360,y:505,s:30}
+]
 
 let money=160,lives=10,score=0,wave=1,perfectWaves=0;
 let routeKey='left',waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let selectedPad=-1,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
-let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null,howFromPause=false;
+let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null,howFromPause=false,animClock=0;
 const BEST_KEY='gamebox.workshopWatch.best.v1';
 let best=Number(localStorage.getItem(BEST_KEY)||0)||0;
 bestStart.textContent=pad(best,4);
@@ -122,18 +145,18 @@ function pointDist(x1,y1,x2,y2){return Math.hypot(x1-x2,y1-y2)}
 
 function loadAssets(){
   const entries=Object.entries(ASSETS);
-  Promise.all(entries.map(([key,file])=>new Promise((resolve,reject)=>{
+  Promise.all(entries.map(([key,url])=>new Promise((resolve,reject)=>{
     const im=new Image();im.decoding='async';
     im.onload=()=>{images[key]=im;resolve()};
-    im.onerror=reject;im.src=BASE+file;
+    im.onerror=reject;im.src=url;
   }))).then(()=>{
     assetsReady=true;
     playButton.disabled=false;
-    playButton.textContent='DEFEND THE WORKSHOP';
+    playButton.textContent='DEFEND THE PRESENTS';
     draw();
   }).catch(()=>{
     playButton.disabled=false;
-    playButton.textContent='DEFEND THE WORKSHOP';
+    playButton.textContent='DEFEND THE PRESENTS';
     draw();
   });
 }
@@ -186,7 +209,7 @@ function pathPosition(path,travel){
 function resetGame(){
   money=160;lives=10;score=0;wave=1;perfectWaves=0;routeKey='left';
   waveActive=false;paused=false;gameEnded=false;selectedPad=-1;selectedTower=-1;
-  enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];spawnClock=0;leaksThisWave=0;
+  enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];spawnClock=0;leaksThisWave=0;animClock=0;
   gameOverOverlay.classList.remove('show');pauseSheet.classList.remove('show');howSheet.classList.remove('show');
   towerPanel.classList.remove('show');
   updateUI();draw();
@@ -198,7 +221,7 @@ function startGame(){
   last=performance.now();
   if(raf)cancelAnimationFrame(raf);
   raf=requestAnimationFrame(loop);
-  showBanner('BUILD YOUR DEFENCES');
+  showBanner('DEPLOY YOUR DEFENDERS');
 }
 
 function makeWaveQueue(index){
@@ -259,7 +282,7 @@ function endGame(victory){
   resultEyebrow.classList.toggle('danger',!victory);
   resultTitle.textContent=victory?'CHRISTMAS SAVED!':'RUN OVER';
   finalScoreEl.textContent=final;
-  finalBreakdown.textContent=Math.min(wave,10)+' waves · '+perfectWaves+' perfect · '+lives+' workshop health · +'+healthBonus+' health bonus';
+  finalBreakdown.textContent=Math.min(wave,10)+' waves · '+perfectWaves+' perfect · '+lives+' presents safe · +'+healthBonus+' protection bonus';
   recordText.textContent=isBest?'NEW BEST SCORE '+best:'Best score: '+best;
   bestStart.textContent=pad(best,4);
   gameOverOverlay.classList.add('show');
@@ -285,7 +308,7 @@ function selectTower(index){
   upgradeButton.textContent=t.level>=3?'MAX LEVEL':'UPGRADE '+cost;
   sellButton.textContent='SELL '+sell;
   towerPanel.classList.add('show');
-  buildHint.textContent='Tower selected.';
+  buildHint.textContent='Defender selected.';
 }
 
 function towerStatText(t){
@@ -301,9 +324,9 @@ function buildTower(type){
   if(money<def.cost){showBanner('NOT ENOUGH BAUBLES');return}
   if(towers.some(t=>t.pad===selectedPad))return;
   money-=def.cost;
-  towers.push({type,pad:selectedPad,x:pads[selectedPad].x,y:pads[selectedPad].y,level:1,cooldown:0,spent:def.cost,pulse:0});
+  towers.push({type,pad:selectedPad,x:pads[selectedPad].x,y:pads[selectedPad].y,level:1,cooldown:0,spent:def.cost,pulse:0,aimAngle:-Math.PI/2});
   tone('build');selectedPad=-1;
-  buildHint.textContent='Defence built. Tap another pad or start the wave.';
+  buildHint.textContent='Defender deployed. Tap another pad or start the wave.';
   towerChoices.forEach(b=>b.classList.remove('selected'));
   updateUI();draw();
 }
@@ -321,7 +344,7 @@ function sellSelected(){
   const t=towers[selectedTower];if(!t)return;
   const value=sellValue(t);money+=value;
   towers.splice(selectedTower,1);selectedTower=-1;towerPanel.classList.remove('show');
-  buildHint.textContent='Tower sold. Build pad is free again.';tone('sell');updateUI();draw();
+  buildHint.textContent='Defender sold. Build pad is free again.';tone('sell');updateUI();draw();
 }
 
 function targetForTower(t){
@@ -338,13 +361,16 @@ function targetForTower(t){
 function fireTower(t,target){
   const def=TOWERS[t.type];
   const levelScale=1+(t.level-1)*.35;
+  t.aimAngle=Math.atan2(target.y-t.y,target.x-t.x);
   projectiles.push({
     x:t.x,y:t.y,target,damage:def.damage*levelScale,speed:def.shotSpeed,
-    kind:def.kind,splash:def.kind==='splash'?34+(t.level-1)*5:def.kind==='heavy'?26:0,
-    slow:def.kind==='slow'?.32:0,dead:false
+    kind:def.kind,
+    splash:def.kind==='present'?34+(t.level-1)*5:0,
+    slow:def.kind==='frost'?.34:0,
+    dead:false
   });
   t.cooldown=def.rate/(1+(t.level-1)*.13);
-  t.pulse=.14;tone('shot');
+  t.pulse=.16;tone('shot');
 }
 
 function updateTowers(dt){
@@ -427,6 +453,7 @@ function updateParticles(dt){
 
 function update(dt){
   if(paused||gameEnded)return;
+  animClock+=dt;
   if(bannerTimer>0){bannerTimer-=dt;if(bannerTimer<=0)waveBanner.classList.remove('show')}
   updateSpawning(dt);
   updateEnemies(dt);
@@ -439,6 +466,18 @@ function update(dt){
 function drawImageKey(key,x,y,size,alpha=1){
   const im=img(key);if(!im)return;
   ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(im,x-size/2,y-size/2,size,size);ctx.restore();
+}
+
+function drawImageRect(key,x,y,w,h,alpha=1){
+  const im=img(key);if(!im)return;
+  ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(im,x,y,w,h);ctx.restore();
+}
+
+function drawAssetBottom(key,x,bottomY,maxW,maxH,alpha=1){
+  const im=img(key);if(!im)return;
+  const scale=Math.min(maxW/im.width,maxH/im.height);
+  const w=im.width*scale,h=im.height*scale;
+  ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(im,x-w/2,bottomY-h,w,h);ctx.restore();
 }
 
 function drawRoute(points,active){
@@ -454,16 +493,28 @@ function drawRoute(points,active){
 }
 
 function drawWorkshop(){
+  // Proper asset-built workshop facade: textured wall, roof, windows, door,
+  // chimney, garland and protected present stacks.
+  const x=195;
+  drawImageRect('workshopWall',139,10,112,47);
+  drawImageRect('workshopRoof',132,-1,126,20);
+  drawImageRect('workshopChimney',224,-8,18,30);
+  drawImageRect('workshopWindow',150,24,23,23);
+  drawImageRect('workshopWindow',217,24,23,23);
+  drawImageRect('workshopDoor',184,25,22,34);
+  drawImageRect('workshopDoorTop',184,17,22,22);
+  drawImageRect('garland',150,12,90,15);
+
   ctx.save();
-  ctx.translate(195,37);
-  ctx.fillStyle='#d85351';ctx.beginPath();ctx.moveTo(-35,5);ctx.lineTo(0,-22);ctx.lineTo(35,5);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#fff';ctx.fillRect(-28,4,56,34);
-  ctx.fillStyle='#2c8b5a';ctx.fillRect(-9,18,18,20);
-  ctx.fillStyle='#f3c15a';ctx.fillRect(12,11,9,9);
-  ctx.strokeStyle='#184b66';ctx.lineWidth=3;ctx.strokeRect(-28,4,56,34);
-  ctx.fillStyle='#184b66';ctx.font='900 8px Arial Rounded MT Bold,Arial';ctx.textAlign='center';ctx.fillText('WORKSHOP',0,52);
-  ctx.restore();
-  drawImageKey('treeSmall',145,42,40);drawImageKey('giftGreen',245,41,30);
+  ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#184b66';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(159,51,72,16,6);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#184b66';ctx.font='900 8px Arial Rounded MT Bold,Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('WORKSHOP',x,59);ctx.restore();
+
+  drawImageKey('giftPairA',126,49,36);
+  drawImageKey('giftPairB',265,49,36);
+  drawImageKey('treeSmall',107,37,38);
+  drawImageKey('treeSmall',283,37,38);
 }
 
 function drawPad(p,index){
@@ -478,34 +529,95 @@ function drawPad(p,index){
   ctx.restore();
 }
 
+function drawElfHat(x,y,color){
+  ctx.save();
+  ctx.fillStyle=color;ctx.strokeStyle='#184b66';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x-14,y+4);ctx.lineTo(x+12,y+4);ctx.lineTo(x+4,y-18);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(x,y+5,15,4,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+4,y-18,4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function drawNutcrackerHat(x,y){
+  ctx.save();
+  ctx.fillStyle='#172f3c';ctx.strokeStyle='#184b66';ctx.lineWidth=1.5;
+  ctx.fillRect(x-11,y-18,22,18);ctx.strokeRect(x-11,y-18,22,18);
+  ctx.fillStyle='#d75250';ctx.fillRect(x-12,y-4,24,5);
+  ctx.fillStyle='#f3c15a';ctx.fillRect(x-4,y-17,8,4);
+  ctx.restore();
+}
+
+function drawPresentCannon(t){
+  const a=t.aimAngle||-Math.PI/2;
+  ctx.save();ctx.translate(t.x,t.y+3);
+  ctx.fillStyle='#334d5d';ctx.beginPath();ctx.arc(-12,13,7,0,Math.PI*2);ctx.arc(12,13,7,0,Math.PI*2);ctx.fill();
+  drawImageKey('giftPairA',t.x,t.y+5,42);
+  ctx.translate(0,-5);ctx.rotate(a);
+  ctx.fillStyle='#d75250';ctx.strokeStyle='#184b66';ctx.lineWidth=2;
+  ctx.fillRect(0,-6,31,12);ctx.strokeRect(0,-6,31,12);
+  ctx.fillStyle='#f3c15a';ctx.fillRect(4,-6,5,12);
+  ctx.restore();
+}
+
 function drawTower(t,index){
   const def=TOWERS[t.type];
   ctx.save();
-  if(selectedTower===index){ctx.beginPath();ctx.arc(t.x,t.y,def.range*(1+(t.level-1)*.08),0,Math.PI*2);ctx.fillStyle='rgba(74,158,190,.09)';ctx.fill();ctx.strokeStyle='rgba(74,158,190,.4)';ctx.lineWidth=1.5;ctx.stroke()}
-  const pulse=t.pulse>0?1.08:1;
-  drawImageKey(def.asset,t.x,t.y,46*pulse);
-  ctx.fillStyle='#184b66';ctx.beginPath();ctx.arc(t.x+14,t.y+14,8,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='900 8px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.level,t.x+14,t.y+14);
+  if(selectedTower===index){
+    ctx.beginPath();ctx.arc(t.x,t.y,def.range*(1+(t.level-1)*.08),0,Math.PI*2);
+    ctx.fillStyle='rgba(74,158,190,.09)';ctx.fill();
+    ctx.strokeStyle='rgba(74,158,190,.4)';ctx.lineWidth=1.5;ctx.stroke();
+  }
+
+  if(t.type==='cannon'){
+    drawPresentCannon(t);
+  }else{
+    const key=t.pulse>.04?def.attack:def.idle;
+    drawAssetBottom(key,t.x,t.y+19,45,59);
+    if(t.type==='snowElf')drawElfHat(t.x,t.y-28,'#2f9a63');
+    else if(t.type==='frostElf')drawElfHat(t.x,t.y-28,'#4a9fc4');
+    else if(t.type==='guard')drawNutcrackerHat(t.x,t.y-25);
+  }
+
+  ctx.fillStyle='#184b66';ctx.beginPath();ctx.arc(t.x+15,t.y+15,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='900 8px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.level,t.x+15,t.y+15);
   ctx.restore();
 }
 
 function drawEnemy(e){
-  ctx.save();
-  if(e.flash>0)ctx.globalAlpha=.55;
-  drawImageKey(ENEMIES[e.kind].asset,e.x,e.y,e.size);
-  const w=Math.max(18,e.size*.8),ratio=clamp(e.hp/e.maxHp,0,1);
-  ctx.fillStyle='rgba(17,61,85,.22)';ctx.fillRect(e.x-w/2,e.y-e.size*.55-7,w,4);
-  ctx.fillStyle=ratio>.5?'#35a56a':ratio>.25?'#f1b94d':'#d95452';ctx.fillRect(e.x-w/2,e.y-e.size*.55-7,w*ratio,4);
-  if(e.slow>0){ctx.strokeStyle='#76cbe7';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.size*.42,0,Math.PI*2);ctx.stroke()}
-  ctx.restore();
+  const def=ENEMIES[e.kind];
+  const frame=def.assets[(Math.floor(animClock*6)+Math.floor(e.travel/18))&1];
+  const alpha=e.flash>0?.55:1;
+  drawAssetBottom(frame,e.x,e.y+e.size*.48,e.size,e.size*1.48,alpha);
+
+  if(def.boss){
+    ctx.save();
+    ctx.fillStyle='#472b2b';ctx.strokeStyle='#184b66';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(e.x-18,e.y-e.size*.55);ctx.lineTo(e.x-29,e.y-e.size*.83);ctx.lineTo(e.x-10,e.y-e.size*.70);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(e.x+18,e.y-e.size*.55);ctx.lineTo(e.x+29,e.y-e.size*.83);ctx.lineTo(e.x+10,e.y-e.size*.70);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.restore();
+  }
+
+  const w=Math.max(20,e.size*.9),ratio=clamp(e.hp/e.maxHp,0,1);
+  const barY=e.y-e.size*.8-9;
+  ctx.fillStyle='rgba(17,61,85,.22)';ctx.fillRect(e.x-w/2,barY,w,4);
+  ctx.fillStyle=ratio>.5?'#35a56a':ratio>.25?'#f1b94d':'#d95452';ctx.fillRect(e.x-w/2,barY,w*ratio,4);
+  if(e.slow>0){ctx.strokeStyle='#76cbe7';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.size*.55,0,Math.PI*2);ctx.stroke()}
 }
 
 function drawProjectile(p){
   ctx.save();
-  if(p.kind==='splash'){ctx.fillStyle='#d95553';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}
-  else if(p.kind==='slow'){ctx.fillStyle='#80d5ee';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill()}
-  else if(p.kind==='heavy'){ctx.fillStyle='#f3c15a';ctx.fillRect(p.x-4,p.y-4,8,8)}
-  else{ctx.fillStyle='#fff';ctx.strokeStyle='#9fd1e3';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();ctx.stroke()}
+  if(p.kind==='present'){
+    ctx.translate(p.x,p.y);ctx.rotate(animClock*5);
+    ctx.fillStyle='#d95553';ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.fillRect(-5,-5,10,10);ctx.strokeRect(-5,-5,10,10);
+    ctx.fillStyle='#2f9a63';ctx.fillRect(-1,-5,2,10);ctx.fillRect(-5,-1,10,2);
+  }else if(p.kind==='frost'){
+    ctx.fillStyle='#bdefff';ctx.strokeStyle='#70bfdc';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+  }else if(p.kind==='candyBolt'){
+    ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);
+    ctx.fillStyle='#fff';ctx.strokeStyle='#d75250';ctx.lineWidth=2;ctx.fillRect(-5,-2,10,4);ctx.strokeRect(-5,-2,10,4);
+  }else{
+    ctx.fillStyle='#fff';ctx.strokeStyle='#9fd1e3';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -574,7 +686,7 @@ function handleCanvasPointer(e){
     const d=pointDist(x,y,p.x,p.y);if(d<bestD){bestD=d;nearestPad=i}
   });
   if(nearestPad>=0)selectPad(nearestPad);
-  else{selectedPad=-1;selectedTower=-1;towerPanel.classList.remove('show');buildHint.textContent='Tap a glowing build pad, then choose a defence.'}
+  else{selectedPad=-1;selectedTower=-1;towerPanel.classList.remove('show');buildHint.textContent='Tap a glowing build pad, then choose a defender.'}
   updateUI();draw();
 }
 
