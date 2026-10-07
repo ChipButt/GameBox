@@ -68,11 +68,11 @@ jobs:
           };
 
           const headCount=await category('head');
-          assert(headCount===14,'Head catalogue should contain only the 14 complete, deduplicated heads.');
-          assert(await page.locator('#partSourceGrid .partColourSwatches b').count()>=14,'Head options are missing authored base-colour swatches.');
+          assert(headCount===18,'Head catalogue should contain exactly the 18 geometry-unique heads from the donor audit.');
+          assert(await page.locator('#partSourceGrid .partColourSwatches b').count()>=18,'Head options are missing authored base-colour swatches.');
 
-          await page.click('[data-option="head-elf"]');
-          await waitForSelected('head-elf');
+          await page.click('[data-option="head-06"]');
+          await waitForSelected('head-06');
           const headDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
           assert(headDiag?.sourceId==='Elf','Elf head did not load from the Elf donor.');
           assert(headDiag.materialNames.includes('Skin') && headDiag.materialNames.includes('Face'),'Elf head is missing real head/face materials.');
@@ -81,7 +81,7 @@ jobs:
           assert(headArmWeights.length===0,'Meaningful arm/hand weights leaked into the Head slot: '+JSON.stringify(headArmWeights));
 
           const headOptionIds=await page.locator('.partCategoryBtn[data-part="head"]').count()
-            ? ['head-human','head-defined','head-mature','head-elf','head-goblin-f','head-goblin-m','head-ninja','head-pirate','head-suit','head-viking','head-zombie-f','head-zombie-m','head-cow','head-pug']
+            ? ["head-01","head-02","head-03","head-04","head-05","head-06","head-07","head-08","head-09","head-10","head-11","head-12","head-13","head-14","head-15","head-16","head-17","head-18"]
             : [];
           for (const optionId of headOptionIds) {
             await page.click('.partCategoryBtn[data-part="head"]');
