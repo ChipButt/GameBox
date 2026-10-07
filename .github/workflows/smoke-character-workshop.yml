@@ -49,6 +49,11 @@ jobs:
           await page.waitForSelector('#partSourceGrid .partSourceCard',{timeout:120000});
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
 
+          assert(await page.locator('.partCategoryBtn').count()===8,'Builder must expose exactly eight customisation category tiles.');
+          assert(await page.locator('.partCategoryBtn[data-part="body"]').count()===0,'Body must not be a ninth category tile.');
+          const categoryLabels=await page.locator('.categoryTileLabel').allTextContents();
+          assert(JSON.stringify(categoryLabels)===JSON.stringify(['FACE','HAIR','FACIAL HAIR','HEADWEAR','TOP','BOTTOM','SHOES','ACCESSORIES']),'Category tile order/labels are wrong: '+JSON.stringify(categoryLabels));
+
           const category = async (id) => {
             await page.click('.partCategoryBtn[data-part="'+id+'"]');
             await page.waitForTimeout(250);
@@ -97,10 +102,35 @@ jobs:
           assert(new Set(headFingerprints.map(([,fingerprint])=>fingerprint)).size===8,'Two or more retained head buttons still load identical geometry: '+JSON.stringify(headFingerprints));
 
           const hairCount=await category('hair');
-          assert(hairCount===26,'Hair catalogue should contain 25 labelled styles plus None.');
+          assert(hairCount===24,'Hair should contain 23 head-hair styles plus None.');
+          assert(await page.locator('[data-option="hair-moustache"]').count()===0,'Moustache is still incorrectly in Hair.');
+          assert((await page.locator('#partSourceGrid .partSourceCard strong').allTextContents()).every(label=>!label.includes('Viking Hair · Helmet')),'Viking helmet hair is still exposed as a hairstyle.');
+
+          await page.click('[data-option="hair-casual-f"]');
+          await waitForSelected('hair-casual-f');
+
+          const facialHairCount=await category('facialHair');
+          assert(facialHairCount===2,'Facial Hair should contain Moustache plus None.');
+          assert(await page.locator('[data-option="facialhair-moustache"]').count()===1,'Moustache is missing from Facial Hair.');
+          await page.click('[data-option="facialhair-moustache"]');
+          await waitForSelected('facialhair-moustache');
+          let simultaneous=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts);
+          assert(simultaneous.hair.optionId==='hair-casual-f' && simultaneous.hair.visible,'Head hair was lost when facial hair was selected.');
+          assert(simultaneous.facialHair.optionId==='facialhair-moustache' && simultaneous.facialHair.visible,'Facial hair was not active alongside head hair.');
 
           const headwearCount=await category('headwear');
           assert(headwearCount===9,'Headwear should contain 8 actual styles plus None.');
+          await page.click('[data-option="headwear-viking"]');
+          await waitForSelected('headwear-viking');
+          let withHelmet=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts);
+          assert(withHelmet.hair.optionId==='hair-casual-f','Helmet changed the saved hairstyle instead of preserving it.');
+          assert(withHelmet.hair.visible===false,'Viking Helmet should temporarily hide incompatible hair.');
+          assert(withHelmet.facialHair.optionId==='facialhair-moustache' && withHelmet.facialHair.visible,'Helmet incorrectly removed facial hair.');
+          await page.locator('#partSourceGrid .noneCard').click();
+          await page.waitForTimeout(150);
+          let withoutHelmet=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts);
+          assert(withoutHelmet.headwear.optionId===null,'Headwear None did not remove the helmet.');
+          assert(withoutHelmet.hair.optionId==='hair-casual-f' && withoutHelmet.hair.visible===true,'Removing headwear did not restore the previously selected hairstyle.');
 
           const topCount=await category('top');
           assert(topCount===22,'Top/body catalogue should contain 22 curated clothing/body options.');
@@ -140,9 +170,10 @@ jobs:
           assert(JSON.stringify(bonesA)!==JSON.stringify(bonesB),'Walk animation did not move any bone that actually weights the custom footwear.');
           assert(animatedDiag.shoes.directSkeletonBinding && animatedDiag.shoes.usesDriverSkeleton,'Custom footwear lost its live skeleton binding during animation.');
 
-          await page.click('.partCategoryBtn[data-part="body"]');
-          await page.waitForTimeout(150);
-          assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion panel did not open.');
+          assert(await page.locator('#proportionPanel:not([hidden])').count()===1,'Body proportion controls should remain available without becoming a ninth category.');
+          await page.click('.partCategoryBtn[data-part="head"]');
+          await page.waitForTimeout(100);
+          assert(await page.locator('#componentColourList .componentMaterialRow').count()>=1,'Face component did not expose its local colour editor.');
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
 
