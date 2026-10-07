@@ -67,8 +67,8 @@ renderer.toneMappingExposure = 1.08;
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xdbe8ed);
-scene.fog = new THREE.Fog(0xdbe8ed, 9, 20);
+scene.background = new THREE.Color(0x10a9d6);
+scene.fog = new THREE.Fog(0x10a9d6, 10, 23);
 
 const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 50);
 const previewRoot = new THREE.Group();
@@ -164,7 +164,7 @@ let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0])
 let loadGeneration = 0;
 let initialLoad = true;
 let mobileLayout = window.innerWidth <= 980;
-let viewDistance = mobileLayout ? 7.35 : 6.55;
+let viewDistance = mobileLayout ? 7.55 : 7.05;
 let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingSavedVisibility = null;
@@ -1753,7 +1753,7 @@ function visibleCharacterArea() {
 // and making the character jump/crop unpredictably between part changes.
 function frameCharacterToVisibleArea(force = false) {
   if (!driverScene || window.innerWidth > 980) return;
-  if (force) viewDistance = 7.35;
+  if (force) viewDistance = 7.55;
   previewRoot.position.set(0, 0.88, 0);
   applyCameraPose();
 }
@@ -1774,10 +1774,10 @@ function resize() {
 
   const mobile = width <= 980;
   if (mobile !== mobileLayout) {
-    viewDistance = mobile ? 7.35 : 6.55;
+    viewDistance = mobile ? 7.55 : 7.05;
     mobileLayout = mobile;
   }
-  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.70 : -0.78);
+  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 2.45 : -0.78);
   if (mobile) {
     previewRoot.position.y = 0.88;
   } else {
@@ -1788,7 +1788,7 @@ function resize() {
 
 function resetView() {
   characterHolder.rotation.set(0, 0, 0);
-  viewDistance = window.innerWidth <= 980 ? 7.35 : 6.55;
+  viewDistance = window.innerWidth <= 980 ? 7.55 : 7.05;
   previewRoot.position.y = window.innerWidth <= 980 ? 0.88 : 0;
   resize();
   scheduleCharacterFrame(true);
