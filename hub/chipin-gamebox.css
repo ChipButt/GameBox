@@ -348,6 +348,12 @@
 }
 .wwHomePathV{left:49px;top:0;width:24px;height:86px}
 .wwHomePathH{left:49px;top:42px;width:55px;height:24px}
+.wwHomeWorkshopGate{
+  position:absolute;z-index:3;left:32px;top:-8px;width:48px;height:48px;
+  background-image:url("../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png");
+  background-repeat:no-repeat;background-size:672px 576px;background-position:0 -96px;
+  image-rendering:pixelated;image-rendering:crisp-edges
+}
 .wwHomeSnowman,.wwHomeGingerbread,.wwHomeSlime{
   position:absolute;display:block;background-repeat:no-repeat;z-index:2;
   image-rendering:pixelated;image-rendering:crisp-edges
@@ -375,6 +381,7 @@
   .workshopWatchHomeScene{width:102px;height:79px}
   .wwHomePathV{left:44px;height:79px}
   .wwHomePathH{left:44px;top:38px;width:50px}
+  .wwHomeWorkshopGate{left:27px;top:-9px}
   .wwHomeSnowman{left:4px;bottom:4px}
   .wwHomeGingerbread{right:0}
 }
