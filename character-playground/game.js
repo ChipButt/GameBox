@@ -555,6 +555,7 @@ function friendlyMaterialName(partId, rawName, index) {
   const raw = String(rawName || '').trim();
   const lower = raw.toLowerCase();
   if (partId === 'head' && /^face$/i.test(raw)) return 'Eyes & face details';
+  if (partId === 'headwear' && /^gold$/i.test(raw)) return 'Band / Gold trim';
   if (/skin|flesh/.test(lower)) return 'Skin';
   if (partId === 'facialHair' || /beard|moustache|mustache/.test(lower)) return 'Facial Hair';
   if (/hair|brow/.test(lower)) return 'Hair';
