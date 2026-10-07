@@ -48,6 +48,8 @@ jobs:
           const fingerprints=[];
           const crops=[];
           for(const id of ids){
+            const back=page.locator('#backToCategoriesBtn:visible');
+            if(await back.count()) await back.click();
             await page.click('.partCategoryBtn[data-part="head"]');
             await page.click('[data-option="'+id+'"]');
             await page.waitForFunction(id=>document.querySelector('[data-option="'+id+'"].selected'),id,{timeout:20000});
