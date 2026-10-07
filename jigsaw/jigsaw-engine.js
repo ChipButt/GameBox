@@ -479,27 +479,17 @@
       const c=this.ctx,l=this.layout;
       c.clearRect(0,0,l.width,l.height);
 
-      // The workshop, board and tray surfaces are real UI assets in the DOM.
-      // Canvas stays transparent and is responsible only for puzzle-specific drawing.
-      if(this.image.complete&&this.image.naturalWidth&&this.options.guideOpacity>0){
-        c.save();c.globalAlpha=this.options.guideOpacity;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
-      }
-
-      const ordered=this.pieces.slice().sort((a,b)=>a.z-b.z);
-      const held=this.dragging&&this.dragging.piece;
-      ordered.forEach(p=>{ if(p!==held) this.drawPiece(p,false); });
-      if(held&&held!==this.skipHeldRender) this.drawPiece(held,true);
-
-      if(this.completed&&this.completionStart&&now>=this.completionStart){
-        const alpha=clamp((now-this.completionStart)/520,0,1);
-        c.save();c.globalAlpha=alpha;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
-      }
-
+      // Draw the physical frame first. Puzzle artwork and pieces must always sit
+      // above the inner lip so edge pieces never look tucked underneath it.
       if(this.frameImage.complete&&this.frameImage.naturalWidth){
         const img=this.frameImage;
         const sw=img.naturalWidth;
         const sh=img.naturalHeight;
-        const src=Math.max(8,Math.round(Math.min(sw,sh)*.25));
+
+        // The 2x frame has transparent centre padding inside the old 25% slice.
+        // Cropping closer to the painted border makes the inner frame edge land
+        // exactly on the puzzle boundary instead of leaving a visible inset.
+        const src=Math.max(8,Math.round(Math.min(sw,sh)*.1875));
         const dst=l.frameOutset||16;
         const x=l.boardX-dst;
         const y=l.boardY-dst;
@@ -525,6 +515,22 @@
         c.drawImage(img,sw-src,src,src,midSH,x+w-dst,y+dst,dst,midDH);
 
         c.restore();
+      }
+
+      // The guide sits inside the exact puzzle opening, above the frame but
+      // below every draggable/placed piece.
+      if(this.image.complete&&this.image.naturalWidth&&this.options.guideOpacity>0){
+        c.save();c.globalAlpha=this.options.guideOpacity;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
+      }
+
+      const ordered=this.pieces.slice().sort((a,b)=>a.z-b.z);
+      const held=this.dragging&&this.dragging.piece;
+      ordered.forEach(p=>{ if(p!==held) this.drawPiece(p,false); });
+      if(held&&held!==this.skipHeldRender) this.drawPiece(held,true);
+
+      if(this.completed&&this.completionStart&&now>=this.completionStart){
+        const alpha=clamp((now-this.completionStart)/520,0,1);
+        c.save();c.globalAlpha=alpha;c.drawImage(this.image,l.boardX,l.boardY,l.boardSize,l.boardSize);c.restore();
       }
     }
 
