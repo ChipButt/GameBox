@@ -3,51 +3,105 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#0b2530">
+<meta name="theme-color" content="#07131a">
 <title>Pipeworks · GameBox</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="app">
   <section id="home" class="view active">
-    <header class="top"><a class="round" href="../" aria-label="Back to GameBox">←</a><div class="logo">PIPE<span>WORKS</span></div><div class="coins">● <b data-coins>0</b></div></header>
-    <main class="hero">
-      <div class="mark"><i></i><i></i><i></i></div>
-      <h1>Connect the <em>flow.</em></h1>
-      <p>Turn the pipes. Join the valve to the tank. Keep the water moving.</p>
-      <button id="continue" class="primary">Play Level 1</button>
-      <div class="stats"><div><small>LEVEL</small><b id="statLevel">1</b></div><div><small>XP</small><b id="statXp">0</b></div><div><small>STARS</small><b id="statStars">0</b></div></div>
+    <header class="top">
+      <a class="round backButton" href="../" aria-label="Back to GameBox">←</a>
+      <div class="brand"><div class="logo">PIPE<span>WORKS</span></div><small>MAINTENANCE BAY</small></div>
+      <div class="coins"><span class="coinDot" aria-hidden="true"></span><b data-coins>0</b></div>
+    </header>
+
+    <main class="homeMachine">
+      <div class="machinePipe machinePipeTop" aria-hidden="true"></div>
+      <div class="machinePipe machinePipeSide" aria-hidden="true"></div>
+      <img class="heroValve" src="assets/karsiori/pump.png" alt="" aria-hidden="true">
+      <div class="heroGauge" aria-hidden="true"><i></i><b>FLOW</b></div>
+      <div class="heroCopy">
+        <small class="eyebrow">WATER GRID // ONLINE</small>
+        <h1>Get the line<br><span>flowing.</span></h1>
+        <p>Rotate the modular pipework and connect inlet to outlet.</p>
+      </div>
+      <button id="continue" class="primary">PLAY LEVEL 1</button>
+      <div class="stats" aria-label="Progress">
+        <div><small>LEVEL</small><b id="statLevel">1</b></div>
+        <div><small>XP</small><b id="statXp">0</b></div>
+        <div><small>STARS</small><b id="statStars">0</b></div>
+      </div>
     </main>
+
     <div class="featureRow">
-      <button id="daily" class="feature daily"><b>Daily Challenge</b><small>A new puzzle every day. Earn 75 coins.</small></button>
-      <button id="reward" class="feature reward"><b>Daily Reward</b><small id="rewardText">Claim 50 coins today.</small></button>
+      <button id="daily" class="feature daily"><span class="featureIcon">24H</span><span><b>Daily Challenge</b><small>One fresh pressure test. +75 coins.</small></span></button>
+      <button id="reward" class="feature reward"><span class="featureIcon">+</span><span><b>Daily Reward</b><small id="rewardText">Claim 50 coins today.</small></span></button>
     </div>
-    <h2>Puzzle Packs</h2><div id="packs" class="packs"></div>
-    <footer><span>Progress saves on this device.</span><button id="sound">Sound: On</button></footer>
+
+    <div class="sectionTitle"><span>Puzzle packs</span><i></i></div>
+    <div id="packs" class="packs"></div>
+    <footer><span>Progress saves on this device.</span><button id="sound">SOUND: ON</button></footer>
   </section>
 
   <section id="pack" class="view">
-    <header class="top"><button class="round" data-home>←</button><div class="logo">PIPE<span>WORKS</span></div><div class="coins">● <b data-coins>0</b></div></header>
-    <div id="packBanner" class="packBanner"></div><div id="levels" class="levels"></div>
+    <header class="top">
+      <button class="round" data-home aria-label="Back">←</button>
+      <div class="brand"><div class="logo">PIPE<span>WORKS</span></div><small>LEVEL SELECT</small></div>
+      <div class="coins"><span class="coinDot" aria-hidden="true"></span><b data-coins>0</b></div>
+    </header>
+    <div id="packBanner" class="packBanner"></div>
+    <div id="levels" class="levels"></div>
   </section>
 
-  <section id="game" class="view">
-    <header class="gameTop"><button id="gameBack" class="round">←</button><div><b id="gamePack">Classic Pipes</b><small id="gameLevel">Level 1</small></div><div class="coins">● <b data-coins>0</b></div></header>
-    <div class="boardCard">
-      <div class="meta"><span>Turns <b id="turns">0</b></span><span id="timerBox" hidden>Time <b id="timer">0</b></span><span>Gold inlet → blue outlet</span></div>
-      <div class="boardFrame">
-        <div id="sourcePort" class="edgePort sourcePort" aria-hidden="true"></div>
-        <div id="board" class="board"></div>
-        <div id="targetPort" class="edgePort targetPort" aria-hidden="true"></div>
+  <section id="game" class="view gameView">
+    <header class="gameTop">
+      <button id="gameBack" class="round" aria-label="Back to levels">←</button>
+      <div class="gameIdentity"><b id="gamePack">Classic Pipes</b><small id="gameLevel">Level 1</small></div>
+      <div class="coins"><span class="coinDot" aria-hidden="true"></span><b data-coins>0</b></div>
+    </header>
+
+    <main class="gameMachine">
+      <div class="statusStrip">
+        <div class="hudStat turnsStat"><small>TURNS</small><b id="turns">0</b></div>
+        <div class="pressure" aria-label="Flow pressure"><div class="pressureLabel"><span>FLOW PRESSURE</span><b id="pressureText">READY</b></div><div class="pressureTrack"><i id="pressureFill"></i></div></div>
+        <div id="timerBox" class="hudStat timerStat" hidden><small>TIME</small><b id="timer">0</b></div>
       </div>
-      <div class="tools"><button id="hint">Hint<small>25 coins · fix one</small></button><button id="fix3">Fix 3<small>50 coins · fix three</small></button></div>
-    </div>
-    <p class="tip">Tap a pipe to rotate it. Water passes only where neighbouring pipe ends meet.</p>
+
+      <div class="plantPanel">
+        <span class="panelBolt b1"></span><span class="panelBolt b2"></span><span class="panelBolt b3"></span><span class="panelBolt b4"></span>
+        <div class="cable cableA" aria-hidden="true"></div>
+        <div class="cable cableB" aria-hidden="true"></div>
+        <img class="brokenPipeDecal" src="assets/karsiori/broken-pipe.png" alt="" aria-hidden="true">
+
+        <div class="boardFrame" id="boardFrame">
+          <div id="sourcePort" class="edgePort sourcePort" aria-hidden="true"><img src="assets/karsiori/pump.png" alt=""></div>
+          <div id="board" class="board" aria-label="Pipe puzzle"></div>
+          <div id="targetPort" class="edgePort targetPort" aria-hidden="true"><span class="tankWindow"></span></div>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button id="hint"><span class="toolGlyph">1</span><span>HINT<small>25 COINS · FIX ONE</small></span></button>
+        <button id="fix3"><span class="toolGlyph">3</span><span>FIX THREE<small>50 COINS · ALIGN 3</small></span></button>
+      </div>
+      <p class="firstHint" id="firstHint">TAP A PIPE TO ROTATE</p>
+    </main>
   </section>
 </div>
 
-<div id="win" class="overlay"><div class="winCard"><div class="drop">💧</div><h2>Water flowing!</h2><div id="winStars" class="winStars"></div><p><b>+<span id="wonCoins">0</span></b> coins &nbsp; <b>+<span id="wonXp">0</span></b> XP</p><button id="next" class="primary">Next Level</button><button id="levelSelect" class="secondary">Level Select</button></div></div>
+<div id="win" class="overlay">
+  <div class="winCard">
+    <div class="winPipe" aria-hidden="true"><i></i></div>
+    <small class="eyebrow">SYSTEM RESTORED</small>
+    <h2>Water flowing!</h2>
+    <div id="winStars" class="winStars"></div>
+    <p><b>+<span id="wonCoins">0</span></b> coins &nbsp; <b>+<span id="wonXp">0</span></b> XP</p>
+    <button id="next" class="primary">NEXT LEVEL</button>
+    <button id="levelSelect" class="secondary">LEVEL SELECT</button>
+  </div>
+</div>
 <div id="toast" class="toast"></div>
-<script src="game.js?v=3"></script>
+<script src="game.js?v=4"></script>
 </body>
 </html>
