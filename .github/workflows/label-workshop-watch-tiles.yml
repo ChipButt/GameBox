@@ -38,12 +38,36 @@ jobs:
                   draw.rectangle((x,y+cell*scale,x+30,y+cell*scale+11),fill=(0,0,0,210))
                   draw.text((x+2,y+cell*scale+1),label,fill=(255,255,255,255),font=font)
           out.save("workshop-watch/assets/winter-atlas-labelled.png")
+
+          # Focus sheet: cols 6-13, rows 0-5 on a checkerboard so transparency is obvious.
+          focus_cols=range(6,14)
+          focus_rows=range(0,6)
+          tile_px=16*9
+          label_h=18
+          focus=Image.new("RGBA",(len(focus_cols)*tile_px,len(focus_rows)*(tile_px+label_h)),(35,40,45,255))
+          fd=ImageDraw.Draw(focus)
+          for rr,r in enumerate(focus_rows):
+              for cc,c in enumerate(focus_cols):
+                  x=cc*tile_px
+                  y=rr*(tile_px+label_h)
+                  # checker
+                  q=18
+                  for yy in range(0,tile_px,q):
+                      for xx in range(0,tile_px,q):
+                          shade=170 if ((xx//q+yy//q)&1) else 215
+                          fd.rectangle((x+xx,y+yy,x+xx+q-1,y+yy+q-1),fill=(shade,shade,shade,255))
+                  tile=src.crop((c*cell,r*cell,(c+1)*cell,(r+1)*cell)).resize((tile_px,tile_px),Image.Resampling.NEAREST)
+                  focus.alpha_composite(tile,(x,y))
+                  fd.rectangle((x,y,x+tile_px-1,y+tile_px-1),outline=(70,80,90,255),width=2)
+                  fd.rectangle((x,y+tile_px,x+tile_px-1,y+tile_px+label_h-1),fill=(0,0,0,235))
+                  fd.text((x+4,y+tile_px+3),f"col {c}, row {r}",fill=(255,255,255,255),font=font)
+          focus.save("workshop-watch/assets/winter-focus-labelled.png")
           print(src.size, cols, rows)
           PY
       - name: Commit labelled atlas
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add workshop-watch/assets/winter-atlas-labelled.png
+          git add workshop-watch/assets/winter-atlas-labelled.png workshop-watch/assets/winter-focus-labelled.png
           git commit -m "Add labelled Workshop Watch winter atlas"
           git push
