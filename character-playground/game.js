@@ -163,7 +163,8 @@ let activeParts = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, { 
 let partTokens = Object.fromEntries(PART_DEFINITIONS.map((part) => [part.id, 0]));
 let loadGeneration = 0;
 let initialLoad = true;
-let viewDistance = 6.55;
+let mobileLayout = window.innerWidth <= 980;
+let viewDistance = mobileLayout ? 7.35 : 6.55;
 let toastTimer = 0;
 let pendingSavedColors = null;
 let pendingSavedVisibility = null;
@@ -1772,6 +1773,10 @@ function resize() {
   camera.updateProjectionMatrix();
 
   const mobile = width <= 980;
+  if (mobile !== mobileLayout) {
+    viewDistance = mobile ? 7.35 : 6.55;
+    mobileLayout = mobile;
+  }
   previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.70 : -0.78);
   if (mobile) {
     previewRoot.position.y = 0.76;
