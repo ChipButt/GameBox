@@ -62,7 +62,7 @@ jobs:
           assert m, "Could not parse PART_OPTIONS"
           part_options = json.loads(m.group(1))
           expected = {
-              "head": 14,
+              "head": 18,
               "hair": 25,
               "headwear": 8,
               "top": 22,
@@ -97,6 +97,12 @@ jobs:
                   covered.update(option["sourceIds"])
               assert covered == set(ids), f"{category}: not every source character is represented"
 
+          head_hashes = [o.get("geometryHash") for o in part_options["head"]]
+          assert len(head_hashes) == 18 and len(set(head_hashes)) == 18, "Head catalogue must contain 18 unique audited geometry hashes"
+          covered_heads = set()
+          for option in part_options["head"]:
+              covered_heads.update(option.get("sourceIds", []))
+          assert covered_heads == set(ids), "Every one of the 52 donor characters must map to exactly one audited head geometry"
           head_labels = " ".join(o["label"] for o in part_options["head"]).lower()
           assert "hat" not in head_labels and "helmet" not in head_labels, "Head catalogue still contains headwear"
 
