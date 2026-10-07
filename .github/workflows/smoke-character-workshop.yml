@@ -244,16 +244,26 @@ jobs:
           await page.waitForTimeout(120);
           const firstWalkDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
           const bonesA=firstWalkDiag.shoes.weightedBoneMatrices;
-          const rootA=firstWalkDiag.rootBonePosition;
+          const rootA={
+            position:firstWalkDiag.rootBonePosition,
+            quaternion:firstWalkDiag.rootBoneQuaternion,
+            scale:firstWalkDiag.rootBoneScale
+          };
           await page.waitForTimeout(520);
           const animatedDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
           const bonesB=animatedDiag.shoes.weightedBoneMatrices;
-          const rootB=animatedDiag.rootBonePosition;
+          const rootB={
+            position:animatedDiag.rootBonePosition,
+            quaternion:animatedDiag.rootBoneQuaternion,
+            scale:animatedDiag.rootBoneScale
+          };
           assert(/walk/i.test(animatedDiag.pose),'Walk animation did not become active.');
           assert(Object.keys(bonesA).length>0,'Custom footwear exposes no weighted driver bones.');
           assert(JSON.stringify(bonesA)!==JSON.stringify(bonesB),'Walk animation did not move any bone that actually weights the custom footwear.');
           assert(animatedDiag.shoes.directSkeletonBinding && animatedDiag.shoes.usesDriverSkeleton,'Custom footwear lost its live skeleton binding during animation.');
-          assert(rootA && rootB && rootA.every((value,index)=>Math.abs(value-rootB[index])<0.0001),'Walk preview still contains root motion and can leave the Character Workshop camera.');
+          for(const key of ['position','quaternion','scale']){
+            assert(rootA[key] && rootB[key] && rootA[key].every((value,index)=>Math.abs(value-rootB[key][index])<0.0001),'Walk preview still animates root '+key+' and can leave the Character Workshop camera.');
+          }
 
           await page.click('.tabBtn[data-tab="style"]');
           await page.waitForTimeout(100);
