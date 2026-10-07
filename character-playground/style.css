@@ -870,3 +870,33 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   body[data-builder-tab="style"] .categoryTileLabel{background:#f32383;border-radius:999px}
   body[data-builder-tab="style"] .partBrowser{background:#75c9e8;border:0}
 }
+
+
+@media (min-width:981px){
+  body[data-builder-tab="style"][data-component-editor="open"] .partBrowser{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);
+    grid-template-areas:
+      "header header"
+      "meta meta"
+      "styles colours";
+    gap:10px 14px;
+    align-items:start;
+    overflow:hidden;
+  }
+  body[data-builder-tab="style"][data-component-editor="open"] .partBrowserHeader{grid-area:header;margin:0}
+  body[data-builder-tab="style"][data-component-editor="open"] .partBrowserMeta{grid-area:meta;margin:0}
+  body[data-builder-tab="style"][data-component-editor="open"] .partSourceGrid{
+    grid-area:styles;
+    max-height:470px;
+    overflow:auto;
+    align-content:start;
+  }
+  body[data-builder-tab="style"][data-component-editor="open"] .componentColourPanel{
+    grid-area:colours;
+    margin:0;
+    max-height:470px;
+    overflow:auto;
+    align-self:start;
+  }
+}
