@@ -8,7 +8,7 @@ body{overscroll-behavior:none}
 button,a{font:inherit}
 button{cursor:pointer}
 .wwApp{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;padding:0;overflow:hidden}
-.gameFrame{position:relative;width:min(100vw,430px);height:100vh;height:100dvh;max-height:760px;background:linear-gradient(#eaf8fc,#c9e8f2);overflow:hidden;display:grid;grid-template-rows:52px minmax(0,1fr) 108px}
+.gameFrame{position:relative;width:min(100vw,430px);height:100vh;height:100dvh;max-height:760px;background:linear-gradient(#eaf8fc,#c9e8f2);overflow:hidden;display:grid;grid-template-rows:52px minmax(0,1fr) 114px}
 .hud{height:52px;display:grid;grid-template-columns:38px repeat(4,minmax(0,1fr)) 38px;gap:3px;align-items:center;padding:5px 4px;background:#184b66;border-bottom:3px solid #0e3549;color:#fff;position:relative;z-index:20}
 .hudIcon{width:36px;height:36px;border:0;border-radius:9px;background:#2f7697;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);display:grid;place-items:center;padding:7px;text-decoration:none}
 .hudIcon img{width:100%;height:100%;object-fit:contain}
@@ -25,7 +25,7 @@ button{cursor:pointer}
 .towerPanel button{border:0;border-radius:8px;padding:7px 8px;background:var(--green);color:#fff;font-size:8px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
 .towerPanel button.muted{background:#698797}
 .towerPanel button:disabled{opacity:.45}
-.buildBar{height:108px;padding:5px 7px 6px;background:#f7fcff;overflow:hidden}
+.buildBar{height:114px;padding:5px 7px 6px;background:#f7fcff;overflow:hidden}
 .buildHeader{display:grid;grid-template-columns:.9fr 1.1fr;gap:6px;margin-bottom:5px}
 .levelCard,.startWave{min-height:32px;border-radius:8px;font-weight:900}
 .levelCard{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#397b9a;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
