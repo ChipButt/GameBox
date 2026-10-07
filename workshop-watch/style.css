@@ -15,8 +15,8 @@ button{cursor:pointer}
 .hudStat{min-width:0;text-align:center;line-height:1}
 .hudStat span{display:block;font-size:7px;letter-spacing:.35px;opacity:.78;margin-bottom:4px;white-space:nowrap}
 .hudStat strong{display:block;font-size:11px;white-space:nowrap}
-.boardWrap{position:relative;min-height:0;background:#eefaff;border-bottom:3px solid #a7d1de;overflow:hidden}
-#gameCanvas{display:block;width:100%;height:100%;touch-action:none;background:#effaff;image-rendering:auto}
+.boardWrap{position:relative;min-height:0;background:#d8e8ee;border-bottom:3px solid #a7d1de;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#gameCanvas{display:block;width:100%;height:auto;max-height:100%;touch-action:none;background:#f8fbff;image-rendering:pixelated;image-rendering:crisp-edges}
 .waveBanner{position:absolute;left:50%;top:16px;transform:translate(-50%,-12px);opacity:0;pointer-events:none;background:#fff;border:3px solid #184b66;border-radius:14px;padding:8px 14px;font-size:12px;font-weight:900;box-shadow:0 5px 0 rgba(19,61,85,.16);transition:.18s ease;z-index:5;white-space:nowrap}
 .waveBanner.show{opacity:1;transform:translate(-50%,0)}
 .towerPanel{position:absolute;left:8px;right:8px;bottom:7px;display:none;grid-template-columns:1fr auto auto;gap:5px;align-items:center;background:rgba(255,255,255,.96);border:2px solid #184b66;border-radius:11px;padding:6px;box-shadow:0 4px 0 rgba(19,61,85,.14);z-index:8}
@@ -35,20 +35,52 @@ button{cursor:pointer}
 .towerChoice{min-width:0;height:49px;border:2px solid #a9d2df;border-radius:9px;background:#fff;padding:2px;color:var(--ink);box-shadow:0 2px 0 #b5d8e3;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
 .towerChoice.selected{border-color:#f1b943;background:#fff9e8;transform:translateY(1px);box-shadow:0 1px 0 #d8b04f}
 .towerChoice:disabled{opacity:.38}
-.towerChoice img{width:30px;height:39px;object-fit:contain;object-position:center bottom}
-.towerChoice span{display:flex;flex-direction:column;font-size:7px;line-height:1.05;white-space:nowrap}.towerChoice small{font-size:9px;color:#a56b00;margin-top:2px}
+.towerChoice>span:not(.towerSpriteThumb){display:flex;flex-direction:column;font-size:7px;line-height:1.05;white-space:nowrap}
+.towerChoice small{font-size:9px;color:#a56b00;margin-top:2px}
+.towerChoice .towerSpriteThumb{
+  display:block;flex:0 0 38px;width:38px;height:40px;
+  background-repeat:no-repeat;background-size:768px 768px;background-position:-77px -76px;
+  image-rendering:pixelated;image-rendering:crisp-edges
+}
+.snowAThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_A_Idle.png")}
+.snowCThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png")}
+.snowDThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_D_Idle.png")}
+.snowEThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_E_Idle.png")}
 .buildHint{text-align:center;margin:4px 0 0;color:var(--muted);font-size:7px;min-height:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .overlay{position:absolute;inset:0;background:rgba(15,53,73,.34);display:none;align-items:center;justify-content:center;padding:12px;z-index:40;backdrop-filter:blur(3px)}
 .overlay.show{display:flex}
 .menuCard{width:min(100%,330px);background:#fff;border:4px solid #184b66;border-radius:18px;padding:13px;box-shadow:0 7px 0 rgba(15,53,73,.22);text-align:center}
-.heroScene{height:112px;border:3px solid #b4dce8;border-radius:14px;position:relative;overflow:hidden;background:#eaf9fe;margin-bottom:10px}
-.heroSnow{position:absolute;inset:0;background:radial-gradient(circle at 12px 14px,#fff 0 3px,transparent 3.5px) 0 0/32px 32px}
-.heroPath{position:absolute;width:58px;height:190px;background:#d0edf7;left:142px;top:-25px;transform:rotate(24deg);border-left:5px solid #b3dce8;border-right:5px solid #b3dce8}
-.heroScene img{position:absolute;object-fit:contain;object-position:center bottom}
-.heroElf{width:68px;height:86px;left:28px;bottom:-7px}
-.heroMonster{width:64px;height:82px;right:26px;bottom:-7px}
-.heroGift{width:52px;height:52px;right:10px;top:3px}
-.heroSnowball{position:absolute;left:153px;top:50px;width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid #9fd3e4;box-shadow:0 0 0 3px rgba(255,255,255,.45)}
+.heroScene{height:112px;border:3px solid #172f3c;border-radius:8px;position:relative;overflow:hidden;background:#f7fbff;margin-bottom:10px;image-rendering:pixelated}
+.pixelHero:before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:42px;
+  background:#94543f;border-top:4px solid #6c3d31
+}
+.pixelHero:after{
+  content:"";position:absolute;left:50%;top:0;bottom:0;width:38px;transform:translateX(-50%);
+  background:rgba(255,255,255,.66);border-left:3px solid #d5e4eb;border-right:3px solid #d5e4eb
+}
+.heroSnowman,.heroGingerbread,.heroSlime{
+  position:absolute;z-index:2;display:block;background-repeat:no-repeat;image-rendering:pixelated;image-rendering:crisp-edges
+}
+.heroSnowman{
+  width:62px;height:72px;left:35px;bottom:7px;
+  background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png");
+  background-size:1024px 1024px;background-position:-97px -92px
+}
+.heroGingerbread{
+  width:68px;height:76px;right:28px;bottom:4px;
+  background-image:url("assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png");
+  background-size:1152px 768px;background-position:-62px -65px
+}
+.heroSlime{
+  width:48px;height:48px;right:88px;top:6px;
+  background-image:url("assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png");
+  background-size:1152px 768px;background-position:-72px -75px
+}
+.heroSnowball{
+  position:absolute;z-index:3;left:148px;top:52px;width:9px;height:9px;background:#fff;
+  border:2px solid #8ec5d9;box-shadow:3px 2px 0 rgba(126,177,196,.5)
+}
 .eyebrow{font-size:9px;letter-spacing:1.4px;color:#43809d;font-weight:900;margin:4px 0 5px}.eyebrow.danger{color:#c84f4c}
 h1,h2{margin:0;color:#123d55;line-height:.95}h1{font-size:30px}h1 em{font-style:normal;color:#d85653}h2{font-size:27px}
 .tagline{font-size:11px;line-height:1.4;color:var(--muted);margin:11px auto 13px;max-width:280px}
@@ -56,10 +88,29 @@ h1,h2{margin:0;color:#123d55;line-height:.95}h1{font-size:30px}h1 em{font-style:
 .kenneyButton.primary{background:#2f9a63;color:#fff}.kenneyButton.secondary{background:#d8edf4;color:#184b66}
 .kenneyButton:disabled{opacity:.5}
 .bestLine{margin-top:12px;font-size:9px;color:var(--muted)}.bestLine strong{color:#184b66;font-size:14px;margin-left:5px}
-.resultMark{width:108px;height:108px;object-fit:contain;margin:-2px auto 4px}.finalScore{margin:13px 0 7px;background:#eaf8fc;border-radius:13px;padding:9px}.finalScore span{display:block;font-size:9px;color:#5a7a8b}.finalScore strong{font-size:30px;color:#d65150}
+.resultSprite{
+  display:block;width:78px;height:78px;margin:-4px auto 2px;
+  background-repeat:no-repeat;background-size:1024px 1024px;background-position:-89px -89px;
+  image-rendering:pixelated;image-rendering:crisp-edges
+}
+.resultSprite.snowEThumb{background-image:url("assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_E_Idle.png")}
+.finalScore{margin:13px 0 7px;background:#eaf8fc;border-radius:13px;padding:9px}.finalScore span{display:block;font-size:9px;color:#5a7a8b}.finalScore strong{font-size:30px;color:#d65150}
 #finalBreakdown,#recordText{font-size:10px;color:var(--muted);line-height:1.45}
 .sheet{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:80}.sheet.show{display:flex}.sheetBackdrop{position:absolute;inset:0;background:rgba(12,45,62,.48);backdrop-filter:blur(3px)}.sheet .menuCard{position:relative;z-index:2}
 .sheetTitle{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #d8edf4;padding-bottom:9px;margin-bottom:8px}.sheetTitle strong{font-size:13px}.sheetTitle .hudIcon{width:38px;height:38px}
 .howGrid{display:grid;gap:8px;text-align:left}.howGrid>div{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:center;background:#eef8fb;border-radius:11px;padding:8px}.howGrid b{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#2f9a63;color:#fff}.howGrid p{margin:0}.howGrid p strong,.howGrid p span{display:block}.howGrid p strong{font-size:10px}.howGrid p span{font-size:9px;line-height:1.35;color:var(--muted);margin-top:2px}.howFooter{font-size:9px;line-height:1.4;color:var(--muted)}
-@media(max-width:390px){.hud{grid-template-columns:34px repeat(4,minmax(0,1fr)) 34px;padding-left:3px;padding-right:3px}.hudIcon{width:32px;height:32px;padding:6px}.hudStat span{font-size:6px}.hudStat strong{font-size:10px}.towerChoice img{width:27px;height:35px}.buildBar{padding-left:5px;padding-right:5px}.towerChoice span{font-size:6px}.towerChoice small{font-size:8px}}
-@media(max-height:700px){.gameFrame{grid-template-rows:48px minmax(0,1fr) 100px}.hud{height:48px}.buildBar{height:100px}.towerChoice{height:44px}.towerChoice img{height:34px}.buildHint{display:none}.menuCard{transform:scale(.92)}}
+@media(max-width:390px){
+  .hud{grid-template-columns:34px repeat(4,minmax(0,1fr)) 34px;padding-left:3px;padding-right:3px}
+  .hudIcon{width:32px;height:32px;padding:6px}
+  .hudStat span{font-size:6px}.hudStat strong{font-size:10px}
+  .buildBar{padding-left:5px;padding-right:5px}
+  .towerChoice>span:not(.towerSpriteThumb){font-size:6px}
+  .towerChoice small{font-size:8px}
+  .towerChoice .towerSpriteThumb{flex-basis:33px;width:33px}
+}
+@media(max-height:700px){
+  .gameFrame{grid-template-rows:48px minmax(0,1fr) 100px}
+  .hud{height:48px}.buildBar{height:100px}.towerChoice{height:44px}
+  .towerChoice .towerSpriteThumb{height:36px}
+  .buildHint{display:none}.menuCard{transform:scale(.92)}
+}
