@@ -782,7 +782,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   body[data-builder-tab="style"] .builder{
     top:132px;left:4.5vw;right:auto;bottom:68px;
-    width:min(63vw,900px);height:auto;
+    width:min(60vw,860px);height:auto;
     padding:0;overflow:visible;color:#fff;
     background:none;background-image:none;border-radius:0;
     filter:none;box-shadow:none;
@@ -812,6 +812,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   body[data-builder-tab="style"] .tabView[data-view="style"]{
     display:block;height:100%;overflow:visible;padding:0 4px 6px;
   }
+  body[data-builder-tab="style"] #partCategoryRail[hidden]{display:none!important}
   body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileGrid{
     display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
     gap:26px 24px;margin:10px 0 0;
@@ -937,7 +938,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 }
 
 @media (max-width:1180px) and (min-width:981px){
-  body[data-builder-tab="style"] .builder{width:64vw}
+  body[data-builder-tab="style"] .builder{width:61vw}
   body[data-builder-tab="style"][data-component-editor="closed"] .categoryTileGrid{gap:20px 16px}
   body[data-builder-tab="style"] .categoryTileGrid .categoryTile{height:174px;min-height:174px;grid-template-rows:114px 36px 22px}
   body[data-builder-tab="style"] .categoryTileWrap{min-height:174px}
