@@ -14,8 +14,8 @@ const livesHud=document.getElementById('livesHud');
 const scoreHud=document.getElementById('scoreHud');
 const bestStart=document.getElementById('bestStart');
 const waveBanner=document.getElementById('waveBanner');
-const shiftRouteButton=document.getElementById('shiftRouteButton');
-const routeLabel=document.getElementById('routeLabel');
+const levelLabel=document.getElementById('levelLabel');
+const levelName=document.getElementById('levelName');
 const startWaveButton=document.getElementById('startWaveButton');
 const towerChoices=[...document.querySelectorAll('.towerChoice')];
 const buildHint=document.getElementById('buildHint');
@@ -55,7 +55,6 @@ const WINTER='assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png';
 const ASSETS={
   winter:WINTER,
   snowA:P82+'Christmas_Snowman_A_Idle.png',
-  snowB:P82+'Christmas_Snowman_B_Idle.png',
   snowC:P82+'Christmas_Snowman_C_Idle.png',
   snowD:P82+'Christmas_Snowman_D_Idle.png',
   snowE:P82+'Christmas_Snowman_E_Idle.png',
@@ -68,13 +67,13 @@ const ASSETS={
 };
 
 const TOWERS={
-  snowA:{name:'SNOWBALLER',asset:'snowA',cost:55,range:88,damage:10,rate:.55,shotSpeed:240,kind:'snow',slow:0,splash:0},
-  snowB:{name:'DOUBLE TOSS',asset:'snowB',cost:75,range:86,damage:7,rate:.66,shotSpeed:250,kind:'double',slow:0,splash:0,shots:2},
-  snowC:{name:'RAPID SNOW',asset:'snowC',cost:85,range:82,damage:6,rate:.25,shotSpeed:275,kind:'rapid',slow:0,splash:0},
-  snowD:{name:'FROST THROW',asset:'snowD',cost:95,range:98,damage:8,rate:.72,shotSpeed:230,kind:'frost',slow:.42,splash:0},
-  snowE:{name:'HEAVY SNOW',asset:'snowE',cost:125,range:112,damage:30,rate:1.22,shotSpeed:190,kind:'heavy',slow:0,splash:30},
-  snowF:{name:'LONG SHOT',asset:'snowF',cost:110,range:142,damage:22,rate:1.02,shotSpeed:340,kind:'long',slow:0,splash:0},
-  snowG:{name:'SNOW CHEER',asset:'snowG',cost:105,range:80,damage:0,rate:0,shotSpeed:0,kind:'support',slow:0,splash:0,support:true,damageBuff:1.16,rateBuff:1.20}
+  snowA:{name:'SNOWBALLER',asset:'snowA',cost:65,range:88,damage:10,rate:.55,shotSpeed:240,kind:'snow',slow:0,splash:0},
+  // DOUBLE TOSS deliberately uses the former green-hat Cheer snowman artwork.
+  snowB:{name:'DOUBLE TOSS',asset:'snowG',cost:90,range:88,damage:8,rate:.62,shotSpeed:255,kind:'double',slow:0,splash:0,shots:2},
+  snowC:{name:'RAPID SNOW',asset:'snowC',cost:95,range:82,damage:6,rate:.25,shotSpeed:275,kind:'rapid',slow:0,splash:0},
+  snowD:{name:'FROST THROW',asset:'snowD',cost:110,range:98,damage:8,rate:.72,shotSpeed:230,kind:'frost',slow:.42,splash:0},
+  snowE:{name:'HEAVY SNOW',asset:'snowE',cost:145,range:112,damage:30,rate:1.22,shotSpeed:190,kind:'heavy',slow:0,splash:30},
+  snowF:{name:'LONG SHOT',asset:'snowF',cost:130,range:142,damage:22,rate:1.02,shotSpeed:340,kind:'long',slow:0,splash:0}
 };
 
 const ENEMIES={
@@ -82,51 +81,61 @@ const ENEMIES={
   slime:{asset:'slime',hp:26,speed:58,reward:7,leak:1,draw:128},
   rabbit:{asset:'rabbit',hp:20,speed:73,reward:9,leak:1,draw:144},
   devil:{asset:'devil',hp:112,speed:30,reward:15,leak:1,draw:136},
-  boss:{asset:'devil',hp:460,speed:22,reward:60,leak:3,draw:190,boss:true}
+  boss:{asset:'devil',hp:460,speed:22,reward:60,leak:2,draw:190,boss:true}
 };
 
-const WAVES=[
-  [['ginger',8]],
-  [['ginger',8],['slime',5]],
-  [['ginger',9],['rabbit',6]],
-  [['slime',9],['ginger',7]],
-  [['devil',4],['rabbit',8]],
-  [['ginger',12],['devil',5],['slime',7]],
-  [['rabbit',13],['devil',7]],
-  [['devil',9],['ginger',12]],
-  [['rabbit',12],['devil',9],['slime',10]],
-  [['ginger',10],['rabbit',10],['devil',8],['boss',1]]
+const TOTAL_LEVELS=12;
+const WAVES_PER_LEVEL=5;
+
+// Twelve fixed orthogonal tracks. Each stage changes the route instead of exposing a
+// player-facing left/right route toggle.
+const LEVELS=[
+  {name:'FROST GATE',route:[[168,496],[168,416],[80,416],[80,336],[256,336],[256,240],[112,240],[112,144],[168,144],[168,64]]},
+  {name:'SNOWDRIFT BEND',route:[[168,496],[168,416],[256,416],[256,352],[96,352],[96,272],[240,272],[240,176],[168,176],[168,64]]},
+  {name:'ICICLE RUN',route:[[168,496],[168,448],[64,448],[64,368],[272,368],[272,288],[80,288],[80,208],[256,208],[256,128],[168,128],[168,64]]},
+  {name:'TINSEL TURN',route:[[168,496],[168,432],[112,432],[112,368],[224,368],[224,304],[128,304],[128,240],[208,240],[208,176],[144,176],[144,112],[168,112],[168,64]]},
+  {name:'NORTH LOOP',route:[[168,496],[168,448],[48,448],[48,352],[288,352],[288,256],[64,256],[64,160],[272,160],[272,96],[168,96],[168,64]]},
+  {name:'SLEIGH SWITCHBACK',route:[[168,496],[168,432],[288,432],[288,368],[48,368],[48,304],[272,304],[272,240],[64,240],[64,176],[240,176],[240,112],[168,112],[168,64]]},
+  {name:'HOLLY STEPS',route:[[168,496],[168,432],[96,432],[96,384],[240,384],[240,336],[112,336],[112,288],[224,288],[224,240],[128,240],[128,192],[208,192],[208,144],[168,144],[168,64]]},
+  {name:'POLAR DETOUR',route:[[168,496],[168,448],[272,448],[272,320],[112,320],[112,400],[64,400],[64,240],[224,240],[224,160],[168,160],[168,64]]},
+  {name:'MISTLETOE MAZE',route:[[168,496],[168,448],[48,448],[48,352],[144,352],[144,400],[288,400],[288,288],[192,288],[192,336],[80,336],[80,224],[240,224],[240,144],[168,144],[168,64]]},
+  {name:'BLIZZARD SNAKE',route:[[168,496],[168,432],[280,432],[280,368],[56,368],[56,304],[248,304],[248,240],[88,240],[88,176],[216,176],[216,112],[168,112],[168,64]]},
+  {name:'ELF PASS',route:[[168,496],[168,448],[88,448],[88,400],[248,400],[248,320],[72,320],[72,272],[264,272],[264,192],[104,192],[104,128],[168,128],[168,64]]},
+  {name:'WORKSHOP GAUNTLET',route:[[168,496],[168,448],[48,448],[48,400],[288,400],[288,336],[64,336],[64,288],[272,288],[272,224],[80,224],[80,176],[256,176],[256,112],[168,112],[168,64]]}
 ];
 
-// Square, orthogonal routes only. No diagonal track pieces are required.
-const ROUTES={
-  left:[
-    [168,496],[168,416],[72,416],[72,336],[240,336],[240,240],
-    [112,240],[112,144],[168,144],[168,64]
-  ],
-  right:[
-    [168,496],[168,416],[264,416],[264,336],[96,336],[96,240],
-    [224,240],[224,144],[168,144],[168,64]
-  ]
-};
-
 const images={};
-let snowPattern=null,pathPattern=null;
-let money=180,lives=10,score=0,wave=1,perfectWaves=0;
-let routeKey='left',waveActive=false,paused=false,gameEnded=false,soundOn=true;
+let pathPattern=null;
+let money=220,lives=10,score=0,level=1,wave=1,levelsCleared=0,perfectWaves=0;
+let waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let buildType=null,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
 let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null,howFromPause=false,animClock=0;
 let objectiveHit=0;
 let pointer={x:-99,y:-99,inside:false};
 
-const BEST_KEY='gamebox.workshopWatch.best.pixel.v2';
+const BEST_KEY='gamebox.workshopWatch.best.levels.v3';
 let best=Number(localStorage.getItem(BEST_KEY)||0)||0;
 bestStart.textContent=pad(best,4);
 
 function pad(v,n=4){return String(Math.max(0,Math.floor(v))).padStart(n,'0')}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function pointDist(x1,y1,x2,y2){return Math.hypot(x1-x2,y1-y2)}
+function currentLevel(){return LEVELS[level-1]}
+function levelStartMoney(n){return 220+(n-1)*25}
+function towerCost(type){
+  const base=TOWERS[type].cost;
+  const scaled=base*(1+(level-1)*.07);
+  return Math.ceil(scaled/5)*5;
+}
+function levelWaveGroups(levelNo,waveNo){
+  const l=levelNo;
+  if(waveNo===1)return [['ginger',5+l*2],['slime',Math.max(0,Math.floor((l-1)/2))]];
+  if(waveNo===2)return [['slime',4+l],['rabbit',2+l]];
+  if(waveNo===3)return [['ginger',5+l],['rabbit',4+l],['devil',1+Math.floor(l/3)]];
+  if(waveNo===4)return [['slime',5+l],['devil',2+Math.ceil(l/2)],['rabbit',3+l]];
+  return [['ginger',6+l],['rabbit',5+l],['devil',3+l],['boss',1+Math.floor((l-1)/4)]];
+}
 
 function loadAssets(){
   const entries=Object.entries(ASSETS);
@@ -159,8 +168,9 @@ function makeAtlasTile(col,row){
 }
 
 function makeTerrainPatterns(){
-  // Gherwit WINTER TILES: clean snow cell (6,2), textured dirt/path cell (10,2).
-  snowPattern=ctx.createPattern(makeAtlasTile(6,2),'repeat');
+  // The source is one unlabeled atlas. Cell 10,2 is the actual brown path texture.
+  // Snow itself is a white ground field with small atlas details layered over it;
+  // the previous build incorrectly repeated a transparent atlas cell as "snow".
   pathPattern=ctx.createPattern(makeAtlasTile(10,2),'repeat');
 }
 
@@ -202,7 +212,7 @@ function buildPathData(points){
   }
   return {points,segments,total};
 }
-const pathData={left:buildPathData(ROUTES.left),right:buildPathData(ROUTES.right)};
+const pathData=LEVELS.map(entry=>buildPathData(entry.route));
 
 function pathPosition(path,travel){
   if(travel<=0){
@@ -238,7 +248,7 @@ function distanceToSegment(px,py,a,b){
 
 function distanceToActivePath(x,y){
   let best=Infinity;
-  const pts=ROUTES[routeKey];
+  const pts=currentLevel().route;
   for(let i=0;i<pts.length-1;i++)best=Math.min(best,distanceToSegment(x,y,pts[i],pts[i+1]));
   return best;
 }
@@ -251,7 +261,7 @@ function canPlaceTower(x,y){
 }
 
 function resetGame(){
-  money=180;lives=10;score=0;wave=1;perfectWaves=0;routeKey='left';
+  money=levelStartMoney(1);lives=10;score=0;level=1;wave=1;levelsCleared=0;perfectWaves=0;
   waveActive=false;paused=false;gameEnded=false;buildType=null;selectedTower=-1;
   enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];
   spawnClock=0;leaksThisWave=0;animClock=0;objectiveHit=0;
@@ -261,7 +271,7 @@ function resetGame(){
   howSheet.classList.remove('show');
   towerPanel.classList.remove('show');
   towerChoices.forEach(b=>b.classList.remove('selected'));
-  buildHint.textContent='Choose a snowman, then tap any clear snow to place it.';
+  buildHint.textContent='Choose a snowman, then tap clear snow to place it.';
   updateUI();draw();
 }
 
@@ -271,55 +281,79 @@ function startGame(){
   last=performance.now();
   if(raf)cancelAnimationFrame(raf);
   raf=requestAnimationFrame(loop);
-  showBanner('CHOOSE A SNOWMAN TO BUILD');
+  showBanner('LEVEL 1 · '+currentLevel().name);
 }
 
-function makeWaveQueue(index){
+function makeWaveQueue(){
   const q=[];
-  for(const [kind,count] of (WAVES[index-1]||[])){
+  for(const [kind,count] of levelWaveGroups(level,wave)){
     for(let i=0;i<count;i++)q.push(kind);
   }
   return q;
 }
 
 function startWave(){
-  if(waveActive||gameEnded||wave>10)return;
+  if(waveActive||gameEnded||wave>WAVES_PER_LEVEL)return;
   selectedTower=-1;
   towerPanel.classList.remove('show');
   waveActive=true;leaksThisWave=0;
-  spawnQueue=makeWaveQueue(wave);
-  spawnClock=.15;
-  showBanner('WAVE '+wave);
+  spawnQueue=makeWaveQueue();
+  spawnClock=.12;
+  showBanner('LEVEL '+level+' · WAVE '+wave);
   tone('wave');
   updateUI();
 }
 
 function spawnEnemy(kind){
   const def=ENEMIES[kind];
-  const hpScale=1+(wave-1)*.13;
+  const hpScale=1+(level-1)*.34+(wave-1)*.13;
+  const speedScale=1+(level-1)*.025+(wave-1)*.012;
   enemies.push({
-    kind,routeKey,travel:0,
+    kind,levelIndex:level-1,travel:0,
     hp:def.hp*hpScale,maxHp:def.hp*hpScale,
-    speed:def.speed*(1+(wave-1)*.017),
-    reward:def.reward,leak:def.leak,
+    speed:def.speed*speedScale,
+    reward:Math.ceil(def.reward*(1+(level-1)*.04)),
+    leak:def.leak,
     slow:0,flash:0,x:168,y:H+16,row:3,
     progress:0,dead:false,seed:Math.floor(Math.random()*6)
   });
 }
 
+function advanceLevel(){
+  levelsCleared=level;
+  score+=250+level*70;
+  level++;
+  wave=1;
+  waveActive=false;
+  buildType=null;selectedTower=-1;
+  enemies=[];projectiles=[];particles=[];spawnQueue=[];towers=[];
+  money=levelStartMoney(level);
+  towerPanel.classList.remove('show');
+  towerChoices.forEach(b=>b.classList.remove('selected'));
+  buildHint.textContent='New track: rebuild your defence for '+currentLevel().name+'.';
+  showBanner('LEVEL '+level+' · '+currentLevel().name);
+  tone('wave');
+  updateUI();draw();
+}
+
 function finishWave(){
   waveActive=false;
   const perfect=leaksThisWave===0;
-  const waveBonus=100+wave*18;
+  const waveBonus=90+level*28+wave*16;
   score+=waveBonus;
-  money+=22+wave*3;
+  money+=18+level*4+wave*2;
   if(perfect){
     perfectWaves++;
-    score+=100;money+=18;
-    showBanner('PERFECT WAVE +100');
-  }else showBanner('WAVE CLEAR +'+waveBonus);
+    score+=75+level*5;
+    money+=10;
+    showBanner('PERFECT WAVE');
+  }else showBanner('WAVE CLEAR');
 
-  if(wave>=10){endGame(true);return}
+  if(wave>=WAVES_PER_LEVEL){
+    if(level>=TOTAL_LEVELS){levelsCleared=TOTAL_LEVELS;endGame(true);return}
+    advanceLevel();
+    return;
+  }
   wave++;
   updateUI();
 }
@@ -327,15 +361,16 @@ function finishWave(){
 function endGame(victory){
   if(gameEnded)return;
   gameEnded=true;waveActive=false;buildType=null;
-  const protectionBonus=lives*50;
+  const protectionBonus=lives*75;
   const final=score+protectionBonus;
   const isBest=final>best;
   if(isBest){best=final;localStorage.setItem(BEST_KEY,String(best))}
-  resultEyebrow.textContent=victory?'WORKSHOP SAFE':'PRESENTS STOLEN';
+  resultEyebrow.textContent=victory?'ALL 12 TRACKS SAFE':'PRESENTS STOLEN';
   resultEyebrow.classList.toggle('danger',!victory);
   resultTitle.textContent=victory?'CHRISTMAS SAVED!':'RUN OVER';
   finalScoreEl.textContent=final;
-  finalBreakdown.textContent=Math.min(wave,10)+' waves · '+perfectWaves+' perfect · '+lives+' presents safe · +'+protectionBonus+' protection bonus';
+  const cleared=victory?TOTAL_LEVELS:Math.max(levelsCleared,level-1);
+  finalBreakdown.textContent=cleared+' levels cleared · '+perfectWaves+' perfect waves · '+lives+' presents safe · +'+protectionBonus+' protection bonus';
   recordText.textContent=isBest?'NEW BEST SCORE '+best:'Best score: '+best;
   bestStart.textContent=pad(best,4);
   gameOverOverlay.classList.add('show');
@@ -345,7 +380,8 @@ function endGame(victory){
 function chooseBuildType(type){
   if(gameEnded)return;
   const def=TOWERS[type];
-  if(!def||money<def.cost){showBanner('NOT ENOUGH BAUBLES');return}
+  const cost=towerCost(type);
+  if(!def||money<cost){showBanner('NOT ENOUGH BAUBLES');return}
   buildType=buildType===type?null:type;
   selectedTower=-1;towerPanel.classList.remove('show');
   towerChoices.forEach(b=>b.classList.toggle('selected',b.dataset.tower===buildType));
@@ -358,17 +394,18 @@ function chooseBuildType(type){
 function placeTower(x,y){
   if(!buildType)return false;
   const def=TOWERS[buildType];
-  if(money<def.cost){showBanner('NOT ENOUGH BAUBLES');buildType=null;updateUI();return false}
+  const cost=towerCost(buildType);
+  if(money<cost){showBanner('NOT ENOUGH BAUBLES');buildType=null;updateUI();return false}
   if(!canPlaceTower(x,y)){showBanner('PLACE ON CLEAR SNOW');return false}
 
   const gx=Math.round(x/4)*4,gy=Math.round(y/4)*4;
-  money-=def.cost;
+  money-=cost;
   towers.push({
     type:buildType,x:gx,y:gy,level:1,cooldown:.15,
-    spent:def.cost,pulse:0,row:0,seed:Math.floor(Math.random()*4)
+    spent:cost,pulse:0,row:0,seed:Math.floor(Math.random()*4)
   });
   tone('build');
-  if(money<def.cost){
+  if(money<towerCost(buildType)){
     buildType=null;
     towerChoices.forEach(b=>b.classList.remove('selected'));
   }
@@ -393,16 +430,13 @@ function selectTower(index){
 
 function towerStatText(t){
   const def=TOWERS[t.type];
-  const range=Math.round(def.range*(1+(t.level-1)*.08));
-  if(def.support){
-    const damagePct=Math.round((supportStrength(t).damage-1)*100);
-    const ratePct=Math.round((supportStrength(t).rate-1)*100);
-    return '+'+damagePct+'% DMG · +'+ratePct+'% SPEED · '+range+' AURA';
-  }
   const damage=Math.round(def.damage*(1+(t.level-1)*.4));
+  const range=Math.round(def.range*(1+(t.level-1)*.08));
   return damage+' DMG · '+range+' RANGE';
 }
-function upgradeCost(t){return Math.round(TOWERS[t.type].cost*(.65+t.level*.38))}
+function upgradeCost(t){
+  return Math.ceil((towerCost(t.type)*(.68+t.level*.42))/5)*5;
+}
 function sellValue(t){return Math.round(t.spent*.65)}
 
 function upgradeSelected(){
@@ -425,33 +459,8 @@ function sellSelected(){
   tone('sell');updateUI();
 }
 
-function supportStrength(t){
-  const def=TOWERS[t.type];
-  const levelScale=1+(t.level-1)*.35;
-  return{
-    damage:1+(def.damageBuff-1)*levelScale,
-    rate:1+(def.rateBuff-1)*levelScale
-  };
-}
-
-function supportBonusesFor(t){
-  let damage=1,rate=1;
-  for(const s of towers){
-    if(s===t)continue;
-    const def=TOWERS[s.type];
-    if(!def.support)continue;
-    const aura=def.range*(1+(s.level-1)*.08);
-    if(pointDist(t.x,t.y,s.x,s.y)>aura)continue;
-    const strength=supportStrength(s);
-    damage=Math.max(damage,strength.damage);
-    rate=Math.max(rate,strength.rate);
-  }
-  return{damage,rate};
-}
-
 function targetForTower(t){
   const def=TOWERS[t.type];
-  if(def.support)return null;
   const range=def.range*(1+(t.level-1)*.08);
   let target=null,best=-1;
   for(const e of enemies){
@@ -470,9 +479,7 @@ function rowForVector(dx,dy){
 
 function fireTower(t,target){
   const def=TOWERS[t.type];
-  if(def.support)return;
   const levelScale=1+(t.level-1)*.4;
-  const buffs=supportBonusesFor(t);
   const range=def.range*(1+(t.level-1)*.08);
   t.row=rowForVector(target.x-t.x,target.y-t.y);
 
@@ -492,7 +499,7 @@ function fireTower(t,target){
     projectiles.push({
       x:t.x+(i===0?-2:2),y:t.y,
       target:shotTarget,
-      damage:def.damage*levelScale*buffs.damage,
+      damage:def.damage*levelScale,
       speed:def.shotSpeed,
       kind:def.kind,
       slow:def.slow,
@@ -501,7 +508,7 @@ function fireTower(t,target){
     });
   });
 
-  t.cooldown=def.rate/((1+(t.level-1)*.15)*buffs.rate);
+  t.cooldown=def.rate/(1+(t.level-1)*.15);
   t.pulse=.12;
   tone(def.kind==='heavy'?'heavy':'shot');
 }
@@ -509,8 +516,6 @@ function fireTower(t,target){
 function updateTowers(dt){
   for(const t of towers){
     t.cooldown-=dt;t.pulse=Math.max(0,t.pulse-dt);
-    const def=TOWERS[t.type];
-    if(def.support)continue;
     const target=targetForTower(t);
     if(target)t.row=rowForVector(target.x-t.x,target.y-t.y);
     if(t.cooldown<=0&&target)fireTower(t,target);
@@ -553,7 +558,7 @@ function updateProjectiles(dt){
 
 function killEnemy(e){
   if(e.dead)return;
-  e.dead=true;money+=e.reward;score+=10+wave*2;
+  e.dead=true;money+=e.reward;score+=12+level*3+wave*2;
   for(let i=0;i<8;i++)particles.push({
     x:e.x,y:e.y,vx:(Math.random()-.5)*65,vy:(Math.random()-.5)*65,
     life:.4,size:2+Math.random()*2
@@ -564,7 +569,7 @@ function updateEnemies(dt){
   for(const e of enemies){
     e.slow=Math.max(0,e.slow-dt);e.flash=Math.max(0,e.flash-dt);
     e.travel+=e.speed*(e.slow>0?.57:1)*dt;
-    const p=pathPosition(pathData[e.routeKey],e.travel);
+    const p=pathPosition(pathData[e.levelIndex],e.travel);
     e.x=p.x;e.y=p.y;e.progress=p.progress;e.row=p.row;
 
     if(e.hp<=0){killEnemy(e);continue}
@@ -587,7 +592,7 @@ function updateSpawning(dt){
     spawnClock-=dt;
     if(spawnClock<=0){
       spawnEnemy(spawnQueue.shift());
-      spawnClock=Math.max(.38,.82-wave*.032);
+      spawnClock=Math.max(.22,.72-level*.025-wave*.025);
     }
   }else if(enemies.length===0&&projectiles.length===0)finishWave();
 }
@@ -643,50 +648,56 @@ function drawRoute(points){
   ctx.restore();
 }
 
+function drawPine(x,y,variant=0,scale=1){
+  // The atlas stores complete 3x4 pine sprites starting at col 0 and col 6.
+  // Keeping the full source rectangle intact avoids the chopped/mixed-tree look.
+  drawAtlasRegion(variant?6:0,6,3,4,x,y,scale);
+}
+
 function drawObjective(){
-  // Build the protected Workshop Gate only from the same Gherwit winter atlas:
-  // matching pine clusters, snow piles and the pack's snowy sign sprite.
-  drawAtlasRegion(3,6,3,4,101,-19,.95);
-  drawAtlasRegion(0,6,3,4,190,-19,.95);
-  drawAtlasCell(0,0,128,44,1);
-  drawAtlasCell(1,0,192,44,1);
+  drawPine(104,-7,0,.95);
+  drawPine(188,-7,1,.95);
   drawAtlasCell(0,2,144,5,3);
 
   ctx.save();
   ctx.imageSmoothingEnabled=false;
-
-  // The label is gameplay UI over the real Gherwit objective asset, not replacement artwork.
   ctx.fillStyle=objectiveHit>0?'#8f3037':'#202934';
   ctx.fillRect(132,47,72,14);
   ctx.fillStyle='#f7fbff';
   ctx.font='700 7px monospace';
   ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText('WORKSHOP GATE',168,54);
-
-  // Make the route destination unmistakable and flash it when a present is lost.
   ctx.strokeStyle=objectiveHit>0?'#f5c45a':'rgba(32,41,52,.55)';
   ctx.lineWidth=objectiveHit>0?3:1;
   ctx.strokeRect(150,61,36,8);
   ctx.restore();
 }
 
+function drawSnowDetail(col,row,x,y,scale=1){
+  drawAtlasCell(col,row,x,y,scale);
+}
+
 function drawTerrain(){
-  ctx.fillStyle=snowPattern||'#f8fbff';
+  // Snow in this pack is a white ground field with small surface-detail sprites.
+  // The previous code repeated a transparent atlas cell, which is why it looked broken.
+  ctx.fillStyle='#f7fbff';
   ctx.fillRect(0,0,W,H);
 
-  // Same Gherwit sheet, larger multi-tile pine sprites framing the board.
-  drawAtlasRegion(3,6,3,4,-5,76,1);
-  drawAtlasRegion(0,6,3,4,W-43,78,1);
-  drawAtlasRegion(0,6,3,4,-8,302,1);
-  drawAtlasRegion(3,6,3,4,W-42,304,1);
+  const offset=(level-1)%4;
+  const details=[
+    [0,0,20+offset*3,96],[1,0,292-offset*2,128],[2,0,28,264],
+    [0,0,286,246],[1,0,44,452],[2,0,276,438],[0,0,152,286]
+  ];
+  details.forEach(d=>drawSnowDetail(d[0],d[1],d[2],d[3],1));
 
-  // Small snow piles from the same sheet.
-  drawAtlasCell(0,0,24,250,1);
-  drawAtlasCell(1,0,W-43,190,1);
-  drawAtlasCell(0,0,W-50,444,1);
-  drawAtlasCell(1,0,18,444,1);
+  // Whole, uncut pine sprites from the Gherwit atlas.
+  const flip=level%2;
+  drawPine(8,88,flip,1);
+  drawPine(280,104,1-flip,1);
+  drawPine(8,300,1-flip,1);
+  drawPine(280,316,flip,1);
 
-  drawRoute(ROUTES[routeKey]);
+  drawRoute(currentLevel().route);
   drawObjective();
 }
 
@@ -707,15 +718,6 @@ function drawSheetFrame(key,cols,row,frame,x,y,dest=128,alpha=1){
 
 function drawTower(t,index){
   const def=TOWERS[t.type];
-
-  if(def.support){
-    const aura=def.range*(1+(t.level-1)*.08);
-    ctx.save();
-    ctx.beginPath();ctx.arc(t.x,t.y,aura,0,Math.PI*2);
-    ctx.fillStyle='rgba(245,196,90,.055)';ctx.fill();
-    ctx.strokeStyle='rgba(214,160,47,.36)';ctx.lineWidth=1;
-    ctx.setLineDash([2,4]);ctx.stroke();ctx.restore();
-  }
 
   if(selectedTower===index){
     const range=def.range*(1+(t.level-1)*.08);
@@ -824,25 +826,32 @@ function draw(){
     ctx.fillStyle='rgba(20,50,66,.85)';
     ctx.fillRect(91,H-18,154,13);
     ctx.fillStyle='#fff';ctx.font='700 7px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('ROUTE '+(routeKey==='left'?'A':'B')+' · SHIFT BETWEEN WAVES',168,H-11);
+    ctx.fillText('LEVEL '+level+'/'+TOTAL_LEVELS+' · WAVE '+wave+'/'+WAVES_PER_LEVEL,168,H-11);
     ctx.restore();
   }
 }
 
 function updateUI(){
-  waveHud.textContent=pad(Math.min(wave,10),2)+'/10';
+  waveHud.textContent=pad(level,2)+' · '+wave+'/'+WAVES_PER_LEVEL;
   moneyHud.textContent=money;
   livesHud.textContent=lives;
   scoreHud.textContent=pad(score,4);
-  routeLabel.textContent=routeKey==='left'?'LEFT LOOP':'RIGHT LOOP';
-  startWaveButton.textContent=waveActive?'WAVE '+wave+' IN PROGRESS':'START WAVE '+Math.min(wave,10);
-  shiftRouteButton.disabled=waveActive||gameEnded;
+  levelLabel.textContent='LEVEL '+level+'/'+TOTAL_LEVELS;
+  levelName.textContent=currentLevel().name;
+  startWaveButton.textContent=waveActive
+    ? 'WAVE '+wave+'/'+WAVES_PER_LEVEL+' IN PROGRESS'
+    : 'START WAVE '+wave+'/'+WAVES_PER_LEVEL;
   startWaveButton.disabled=waveActive||gameEnded;
 
   for(const b of towerChoices){
-    const def=TOWERS[b.dataset.tower];
-    b.disabled=gameEnded||money<def.cost;
-    b.classList.toggle('selected',b.dataset.tower===buildType);
+    const type=b.dataset.tower;
+    const def=TOWERS[type];
+    if(!def)continue;
+    const cost=towerCost(type);
+    const costEl=b.querySelector('small');
+    if(costEl)costEl.textContent=cost;
+    b.disabled=gameEnded||money<cost;
+    b.classList.toggle('selected',type===buildType);
   }
 
   if(selectedTower>=0&&towers[selectedTower]){
@@ -882,26 +891,6 @@ function handleCanvasPointer(e){
   selectedTower=-1;towerPanel.classList.remove('show');
   buildHint.textContent='Choose a snowman, then tap any clear snow to place it.';
   draw();
-}
-
-function toggleRoute(){
-  if(waveActive||gameEnded)return;
-  routeKey=routeKey==='left'?'right':'left';
-
-  // Any tower now too close to the newly shifted route is automatically refunded.
-  const keep=[];
-  let refunded=0;
-  for(const t of towers){
-    if(distanceToActivePath(t.x,t.y)<PATH_WIDTH/2+10){
-      refunded+=sellValue(t);
-    }else keep.push(t);
-  }
-  towers=keep;
-  if(refunded){money+=refunded;showBanner('ROUTE SHIFT · '+refunded+' REFUNDED')}
-  else showBanner(routeKey==='left'?'ROUTE SHIFTED LEFT':'ROUTE SHIFTED RIGHT');
-
-  selectedTower=-1;towerPanel.classList.remove('show');
-  tone('build');updateUI();draw();
 }
 
 function openPause(){
@@ -944,7 +933,6 @@ canvas.addEventListener('pointermove',e=>{
 });
 canvas.addEventListener('pointerleave',()=>{pointer.inside=false;if(buildType)draw()});
 
-shiftRouteButton.addEventListener('click',toggleRoute);
 startWaveButton.addEventListener('click',startWave);
 towerChoices.forEach(b=>b.addEventListener('click',()=>chooseBuildType(b.dataset.tower)));
 upgradeButton.addEventListener('click',upgradeSelected);
