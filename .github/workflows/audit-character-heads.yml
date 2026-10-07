@@ -1,0 +1,149 @@
+name: Audit Character Workshop Heads
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-character-heads.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Derive head geometry clusters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64, hashlib, json, pathlib, re, struct
+          root=pathlib.Path("shared/asset-pool/quaternius/ultimate-animated-character")
+          COMP={5126:("f",4),5125:("I",4),5123:("H",2),5122:("h",2),5121:("B",1),5120:("b",1)}
+          WIDTH={"SCALAR":1,"VEC2":2,"VEC3":3,"VEC4":4,"MAT4":16}
+          HEAD_MAT=re.compile(r"^(skin|face|teeth|brain|black_head|white|pink|beige|brown)$",re.I)
+          HEAD_BONES={"Head","Neck"}
+          ARM_BONES={"Shoulder.L","UpperArm.L","LowerArm.L","Fist.L","Shoulder.R","UpperArm.R","LowerArm.R","Fist.R"}
+
+          def accessor(doc,idx):
+              a=doc["accessors"][idx]; v=doc["bufferViews"][a["bufferView"]]
+              raw=base64.b64decode(doc["buffers"][v["buffer"]]["uri"].split(",",1)[1])
+              fmt,size=COMP[a["componentType"]]; width=WIDTH[a["type"]]
+              stride=v.get("byteStride",width*size); start=v.get("byteOffset",0)+a.get("byteOffset",0)
+              rows=[struct.unpack_from("<"+fmt*width,raw,start+i*stride) for i in range(a["count"])]
+              if a.get("normalized") and a["componentType"]!=5126:
+                  if a["componentType"] in (5121,5123,5125):
+                      mx={5121:255,5123:65535,5125:4294967295}[a["componentType"]]
+                      rows=[tuple(x/mx for x in row) for row in rows]
+                  else:
+                      mx={5120:127,5122:32767}[a["componentType"]]
+                      rows=[tuple(max(-1,x/mx) for x in row) for row in rows]
+              return rows
+
+          def bone_weight(js,ws,bones,vertex,names):
+              total=0.0
+              for ji,w in zip(js[vertex],ws[vertex]):
+                  if bones[int(ji)] in names: total+=float(w)
+              return total
+
+          def primitive_head_components(doc,prim,bones):
+              attrs=prim.get("attributes",{})
+              if not all(k in attrs for k in ("POSITION","JOINTS_0","WEIGHTS_0")): return []
+              pos=accessor(doc,attrs["POSITION"]); js=accessor(doc,attrs["JOINTS_0"]); ws=accessor(doc,attrs["WEIGHTS_0"])
+              indices=[int(x[0]) for x in accessor(doc,prim["indices"])] if "indices" in prim else list(range(len(pos)))
+              tris=[tuple(indices[i:i+3]) for i in range(0,len(indices)-2,3)]
+
+              # Triangle connectivity by shared vertex IDs.
+              vert_to_tris={}
+              for ti,tri in enumerate(tris):
+                  for vi in tri: vert_to_tris.setdefault(vi,[]).append(ti)
+              seen=set(); components=[]
+              for start in range(len(tris)):
+                  if start in seen: continue
+                  stack=[start]; seen.add(start); tri_ids=[]
+                  while stack:
+                      ti=stack.pop(); tri_ids.append(ti)
+                      for vi in tris[ti]:
+                          for other in vert_to_tris.get(vi,()):
+                              if other not in seen:
+                                  seen.add(other); stack.append(other)
+                  verts=sorted({vi for ti in tri_ids for vi in tris[ti]})
+                  head=sum(bone_weight(js,ws,bones,vi,HEAD_BONES) for vi in verts)
+                  arm=sum(bone_weight(js,ws,bones,vi,ARM_BONES) for vi in verts)
+                  max_head=max([0.0]+[bone_weight(js,ws,bones,vi,HEAD_BONES) for vi in verts])
+                  ys=[float(pos[vi][1]) for vi in verts]
+                  components.append({
+                      "tri_ids":tri_ids,"verts":verts,"head":head,"arm":arm,"max_head":max_head,
+                      "mean_y":sum(ys)/len(ys) if ys else 0,
+                      "positions":pos
+                  })
+              if not components: return []
+              # Head components are disconnected islands with clear Head/Neck influence.
+              # Use relative ranking per primitive rather than a hard body-height threshold.
+              best_head=max(c["head"] for c in components)
+              chosen=[]
+              for c in components:
+                  if c["max_head"] < 0.45: continue
+                  if c["head"] < max(0.9,best_head*0.08): continue
+                  if c["arm"] > c["head"]*0.35: continue
+                  chosen.append(c)
+              return [(tris,c) for c in chosen]
+
+          records=[]
+          for path in sorted(root.glob("*.gltf")):
+              doc=json.loads(path.read_text()); nodes=doc.get("nodes",[]); skin=doc["skins"][0]
+              bones=[nodes[i].get("name","") for i in skin["joints"]]
+              mats=doc.get("materials",[])
+              canonical_tris=[]; materials=set()
+              component_debug=[]
+              for mesh in doc.get("meshes",[]):
+                  for prim in mesh.get("primitives",[]):
+                      mi=prim.get("material",-1); mat=mats[mi] if 0<=mi<len(mats) else {}; name=mat.get("name","")
+                      if not HEAD_MAT.search(name): continue
+                      for tris,c in primitive_head_components(doc,prim,bones):
+                          pos=c["positions"]
+                          for ti in c["tri_ids"]:
+                              pts=[tuple(round(float(x),5) for x in pos[vi][:3]) for vi in tris[ti]]
+                              canonical_tris.append(tuple(sorted(pts)))
+                          materials.add(name)
+                          component_debug.append({
+                              "material":name,"triangles":len(c["tri_ids"]),
+                              "head":round(c["head"],3),"arm":round(c["arm"],3),"meanY":round(c["mean_y"],4)
+                          })
+              canonical_tris.sort()
+              sig=hashlib.sha256(json.dumps(canonical_tris,separators=(",",":")).encode()).hexdigest()[:20]
+              tolerant=[]
+              for tri in canonical_tris:
+                  tolerant.append(tuple(sorted(tuple(round(v,3) for v in p) for p in tri)))
+              tolerant.sort()
+              tol=hashlib.sha256(json.dumps(tolerant,separators=(",",":")).encode()).hexdigest()[:20]
+              records.append({
+                  "id":path.stem,"triangles":len(canonical_tris),"sig":sig,"tol":tol,
+                  "materials":sorted(materials),"components":component_debug
+              })
+
+          clusters={}
+          for r in records:
+              if r["triangles"]>0: clusters.setdefault(r["tol"],[]).append(r)
+          payload={
+              "sources":len(records),
+              "nonempty":sum(r["triangles"]>0 for r in records),
+              "unique":len(clusters),
+              "empty":[r["id"] for r in records if r["triangles"]==0],
+              "clusters":[
+                  {
+                      "hash":h,
+                      "sources":[r["id"] for r in rs],
+                      "triangles":rs[0]["triangles"],
+                      "materials":rs[0]["materials"],
+                      "components":rs[0]["components"]
+                  }
+                  for h,rs in sorted(clusters.items(),key=lambda kv:kv[1][0]["id"])
+              ]
+          }
+          print("HEAD_AUDIT "+json.dumps(payload,separators=(",",":")))
+          PY
