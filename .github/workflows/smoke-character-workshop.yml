@@ -142,29 +142,40 @@ jobs:
           await page.locator('#heightSlider').evaluate(el=>{el.value='106';el.dispatchEvent(new Event('input',{bubbles:true}));});
           assert((await page.textContent('#heightValue')).includes('106'),'Height slider did not update.');
 
-          await page.setViewportSize({width:390,height:844});
-          await page.waitForTimeout(250);
-          await page.click('.partCategoryBtn[data-part="top"]');
-          await page.waitForTimeout(100);
+          const mobileViewports=[
+            {width:360,height:740},
+            {width:375,height:812},
+            {width:390,height:844},
+            {width:393,height:852},
+            {width:430,height:932}
+          ];
+          for (const viewport of mobileViewports) {
+            await page.setViewportSize(viewport);
+            await page.waitForTimeout(320);
+            await page.click('.partCategoryBtn[data-part="top"]');
+            await page.waitForTimeout(100);
 
-          const cardRects=await page.locator('#partSourceGrid .partSourceCard').evaluateAll(cards=>cards.slice(0,9).map(card=>{
-            const r=card.getBoundingClientRect();
-            return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};
-          }));
-          assert(cardRects.length>=9,'Mobile selector did not render enough top/body option cards.');
-          for(let i=0;i<cardRects.length;i++){
-            assert(cardRects[i].width>70 && cardRects[i].height>80,'Mobile selector card collapsed.');
-            for(let j=i+1;j<cardRects.length;j++){
-              const a=cardRects[i],b=cardRects[j];
-              const overlaps=!(a.right<=b.left+1 || b.right<=a.left+1 || a.bottom<=b.top+1 || b.bottom<=a.top+1);
-              assert(!overlaps,'Selector cards overlap on mobile.');
+            const cardRects=await page.locator('#partSourceGrid .partSourceCard').evaluateAll(cards=>cards.slice(0,9).map(card=>{
+              const r=card.getBoundingClientRect();
+              return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};
+            }));
+            assert(cardRects.length>=9,'Mobile selector did not render enough top/body option cards at '+viewport.width+'x'+viewport.height+'.');
+            for(let i=0;i<cardRects.length;i++){
+              assert(cardRects[i].width>70 && cardRects[i].height>80,'Mobile selector card collapsed at '+viewport.width+'x'+viewport.height+'.');
+              for(let j=i+1;j<cardRects.length;j++){
+                const a=cardRects[i],b=cardRects[j];
+                const overlaps=!(a.right<=b.left+1 || b.right<=a.left+1 || a.bottom<=b.top+1 || b.bottom<=a.top+1);
+                assert(!overlaps,'Selector cards overlap at '+viewport.width+'x'+viewport.height+'.');
+              }
             }
-          }
 
-          const layout=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().characterScreenBounds);
-          const builderBox=await page.locator('#builder').boundingBox();
-          assert(layout && builderBox,'Could not measure mobile Character Workshop layout.');
-          assert(layout.bottom <= builderBox.y - 8,'Character legs or feet are hidden behind the mobile selector. characterBottom='+layout.bottom.toFixed(1)+' selectorTop='+builderBox.y.toFixed(1));
+            const framing=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot());
+            const layout=framing.characterScreenBounds;
+            const visible=framing.visibleCharacterArea;
+            assert(layout && visible,'Could not measure adaptive character framing at '+viewport.width+'x'+viewport.height+'.');
+            assert(layout.bottom <= visible.bottom + 2,'Character feet are below the safe visible area at '+viewport.width+'x'+viewport.height+'. bottom='+layout.bottom.toFixed(1)+' safeBottom='+visible.bottom.toFixed(1));
+            assert(layout.top >= visible.top - 8,'Character head is cropped above the safe visible area at '+viewport.width+'x'+viewport.height+'. top='+layout.top.toFixed(1)+' safeTop='+visible.top.toFixed(1));
+          }
 
           if(errors.length) throw new Error('Browser errors: '+errors.join(' | '));
           await browser.close();
