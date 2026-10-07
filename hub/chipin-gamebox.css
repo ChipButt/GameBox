@@ -280,17 +280,24 @@
   image-rendering:pixelated;
   image-rendering:crisp-edges
 }
-.tinySkiHomeTreeA{left:7px;top:7px}
-.tinySkiHomeTreeB{right:7px;bottom:5px}
-.tinySkiHomeFlagA{left:39px;top:8px}
-.tinySkiHomeFlagB{right:37px;bottom:8px}
-.tinySkiHomeSkier{left:42px;top:34px}
-.tinySkiHomeRock{right:8px;top:8px}
+/* Keep scenery outside the piste and assemble the 6-over-18 tree correctly. */
+.tinySkiHomeTreeA{left:5px;top:8px}
+.tinySkiHomeTreeB{right:5px;bottom:4px}
+.tinySkiHomeTreeTopB{right:5px;bottom:24px}
+
+/* 8/9 form a readable gate at the two piste edges, not a flag in mid-track. */
+.tinySkiHomeFlagA{left:21px;top:19px}
+.tinySkiHomeFlagB{right:21px;top:19px}
+.tinySkiHomeSkier{left:42px;top:42px}
+.tinySkiHomeRock{right:7px;top:7px}
 @media(max-width:560px){
   .tinySkiHomeScene{width:94px;height:68px}
   .tinySkiHomePiste{left:27px;width:40px}
   .tinySkiHomeScene img{width:18px;height:18px}
-  .tinySkiHomeFlagA{left:35px}
-  .tinySkiHomeFlagB{right:34px}
-  .tinySkiHomeSkier{left:38px;top:31px}
+  .tinySkiHomeTreeA{left:5px;top:7px}
+  .tinySkiHomeTreeB{right:5px;bottom:4px}
+  .tinySkiHomeTreeTopB{right:5px;bottom:22px}
+  .tinySkiHomeFlagA{left:20px;top:17px}
+  .tinySkiHomeFlagB{right:20px;top:17px}
+  .tinySkiHomeSkier{left:38px;top:38px}
 }
