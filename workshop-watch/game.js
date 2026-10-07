@@ -690,14 +690,24 @@ function drawTerrain(){
   ];
   details.forEach(d=>drawSnowDetail(d[0],d[1],d[2],d[3],1));
 
-  // Whole, uncut pine sprites from the Gherwit atlas.
-  const flip=level%2;
-  drawPine(8,88,flip,1);
-  drawPine(280,104,1-flip,1);
-  drawPine(8,300,1-flip,1);
-  drawPine(280,316,flip,1);
-
   drawRoute(currentLevel().route);
+
+  // Whole, uncut pine sprites, placed only where the current level's route is clear.
+  // This prevents later track layouts from slicing straight through a tree.
+  const candidates=[
+    [8,88,32,120],[280,88,304,120],
+    [8,200,32,232],[280,200,304,232],
+    [8,312,32,344],[280,312,304,344],
+    [8,402,32,434],[280,402,304,434]
+  ];
+  let drawn=0;
+  for(let i=0;i<candidates.length&&drawn<4;i++){
+    const [x,y,cx,cy]=candidates[(i+level)%candidates.length];
+    if(distanceToActivePath(cx,cy)<48)continue;
+    drawPine(x,y,(level+drawn)%2,1);
+    drawn++;
+  }
+
   drawObjective();
 }
 
