@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+<meta name="theme-color" content="#eaf7fb">
+<title>Workshop Watch · GameBox</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<main class="wwApp">
+  <section class="gameFrame" aria-label="Workshop Watch Christmas tower defence">
+    <header class="hud">
+      <a class="hudIcon" href="../" aria-label="GameBox home"><img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/home.png" alt=""></a>
+      <div class="hudStat"><span>WAVE</span><strong id="waveHud">01/10</strong></div>
+      <div class="hudStat"><span>BAUBLES</span><strong id="moneyHud">160</strong></div>
+      <div class="hudStat"><span>WORKSHOP</span><strong id="livesHud">10</strong></div>
+      <div class="hudStat"><span>SCORE</span><strong id="scoreHud">0000</strong></div>
+      <button id="pauseButton" class="hudIcon" type="button" aria-label="Pause"><img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/gear.png" alt=""></button>
+    </header>
+
+    <section class="boardWrap">
+      <canvas id="gameCanvas" width="390" height="540" aria-label="Snowy tower defence map"></canvas>
+      <div id="waveBanner" class="waveBanner" aria-live="polite"></div>
+      <div id="towerPanel" class="towerPanel" aria-live="polite">
+        <div>
+          <strong id="towerPanelName">TREE BLASTER</strong>
+          <small id="towerPanelStats">LEVEL 1</small>
+        </div>
+        <button id="upgradeButton" type="button">UPGRADE <span id="upgradeCost">0</span></button>
+        <button id="sellButton" class="muted" type="button">SELL <span id="sellValue">0</span></button>
+      </div>
+    </section>
+
+    <section class="buildBar" aria-label="Defence controls">
+      <div class="buildHeader">
+        <button id="shiftRouteButton" class="routeButton" type="button">
+          <span>SHIFT ROUTE</span>
+          <small id="routeLabel">LEFT LOOP</small>
+        </button>
+        <button id="startWaveButton" class="startWave" type="button">START WAVE 1</button>
+      </div>
+
+      <div class="towerChoices" id="towerChoices">
+        <button class="towerChoice" type="button" data-tower="tree">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_04.png" alt="">
+          <span>TREE<small>50</small></span>
+        </button>
+        <button class="towerChoice" type="button" data-tower="candy">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_05.png" alt="">
+          <span>CANDY<small>70</small></span>
+        </button>
+        <button class="towerChoice" type="button" data-tower="frost">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_18.png" alt="">
+          <span>FROST<small>80</small></span>
+        </button>
+        <button class="towerChoice" type="button" data-tower="gift">
+          <img src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_11.png" alt="">
+          <span>GIFT<small>100</small></span>
+        </button>
+      </div>
+      <p id="buildHint" class="buildHint">Tap a glowing build pad, then choose a defence.</p>
+    </section>
+
+    <section id="startOverlay" class="overlay show" aria-label="Start Workshop Watch">
+      <div class="menuCard introCard">
+        <div class="heroScene" aria-hidden="true">
+          <span class="heroSnow"></span>
+          <span class="heroPath"></span>
+          <img class="heroTree" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_04.png" alt="">
+          <img class="heroCandy" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_05.png" alt="">
+          <img class="heroGift" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_11.png" alt="">
+          <img class="heroTarget" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_09.png" alt="">
+        </div>
+        <p class="eyebrow">GAMEBOX CHRISTMAS</p>
+        <h1>WORKSHOP <em>WATCH</em></h1>
+        <p class="tagline">Build festive defences. Shift the snowy route. Keep the presents safe.</p>
+        <button id="playButton" class="kenneyButton primary" type="button" disabled>LOADING CHRISTMAS…</button>
+        <button id="introHowButton" class="kenneyButton secondary" type="button">HOW TO PLAY</button>
+        <div class="bestLine">BEST SCORE <strong id="bestStart">0000</strong></div>
+      </div>
+    </section>
+
+    <section id="gameOverOverlay" class="overlay" aria-label="Workshop Watch result">
+      <div class="menuCard resultCard">
+        <img class="resultMark" src="https://chipbutt.github.io/ToolBox/assets/gamebox/kenney/2d/Holiday%20Pack%202016/RTS%20pack/Retina/RTSobject_15.png" alt="">
+        <p id="resultEyebrow" class="eyebrow danger">WORKSHOP BREACHED</p>
+        <h2 id="resultTitle">RUN OVER</h2>
+        <div class="finalScore"><span>FINAL SCORE</span><strong id="finalScore">0</strong></div>
+        <p id="finalBreakdown">0 waves · 0 perfect · 0 workshop health</p>
+        <p id="recordText">Best score: 0</p>
+        <button id="againButton" class="kenneyButton primary" type="button">PLAY AGAIN</button>
+        <a class="kenneyButton secondary" href="../">GAMEBOX</a>
+      </div>
+    </section>
+  </section>
+</main>
+
+<div id="pauseSheet" class="sheet" aria-hidden="true">
+  <div class="sheetBackdrop"></div>
+  <section class="menuCard pauseCard" role="dialog" aria-modal="true" aria-label="Pause menu">
+    <div class="sheetTitle"><strong>WORKSHOP PAUSED</strong><button id="closePause" class="hudIcon" type="button" aria-label="Resume"><img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/cross.png" alt=""></button></div>
+    <button id="resumeButton" class="kenneyButton primary" type="button">RESUME</button>
+    <button id="pauseHowButton" class="kenneyButton secondary" type="button">HOW TO PLAY</button>
+    <button id="restartButton" class="kenneyButton secondary" type="button">RESTART</button>
+    <button id="soundButton" class="kenneyButton secondary" type="button">SOUND ON</button>
+    <a class="kenneyButton secondary" href="../">GAMEBOX</a>
+  </section>
+</div>
+
+<div id="howSheet" class="sheet" aria-hidden="true">
+  <div class="sheetBackdrop"></div>
+  <section class="menuCard howCard" role="dialog" aria-modal="true" aria-label="How to play Workshop Watch">
+    <div class="sheetTitle"><strong>HOW TO PLAY</strong><button id="closeHow" class="hudIcon" type="button" aria-label="Close"><img src="../assets/gamebox/kenney/icons/Game%20Icons/White/2x/cross.png" alt=""></button></div>
+    <div class="howGrid">
+      <div><b>1</b><p><strong>BUILD</strong><span>Tap a glowing pad, then pick a festive defence.</span></p></div>
+      <div><b>2</b><p><strong>DEFEND</strong><span>Towers fire automatically as troublemakers follow the snow route.</span></p></div>
+      <div><b>3</b><p><strong>SHIFT</strong><span>Between waves, swap the centre route to change the enemies' journey.</span></p></div>
+      <div><b>4</b><p><strong>UPGRADE</strong><span>Tap a tower to improve it or sell it and rebuild elsewhere.</span></p></div>
+    </div>
+    <p class="howFooter">Survive all 10 waves. Perfect waves and remaining Workshop health add bonus score.</p>
+    <button id="closeHowButton" class="kenneyButton primary" type="button">GOT IT</button>
+  </section>
+</div>
+
+<script src="game.js?v=1"></script>
+</body>
+</html>
