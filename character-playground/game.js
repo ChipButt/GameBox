@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=12';
-import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=9';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=13';
+import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -555,7 +555,7 @@ function friendlyMaterialName(partId, rawName, index) {
   const raw = String(rawName || '').trim();
   const lower = raw.toLowerCase();
   if (partId === 'head' && /^face$/i.test(raw)) return 'Eyes & face details';
-  if (partId === 'headwear' && /^belt$/i.test(raw)) return 'Hat band';
+  if (partId === 'headwear' && /^(belt|band)$/i.test(raw)) return 'Hat band';
   if (/skin|flesh/.test(lower)) return 'Skin';
   if (partId === 'facialHair' || /beard|moustache|mustache/.test(lower)) return 'Facial Hair';
   if (/hair|brow/.test(lower)) return 'Hair';
@@ -697,6 +697,16 @@ function materialGroupsForPart(partId = null) {
   return grouped;
 }
 
+const OPTIONAL_COMPONENTS = new Set(['hair', 'facialHair', 'headwear', 'accessory']);
+const REMOVABLE_FEATURE_RE = /(teeth|brain|eye|pupil|iris|brow|scar|patch|band|trim|horn|button|buckle|belt|pouch|bag|strap|cape|collar|sleeve|lace|sole|metal|detail|ornament|badge|gem|feather|glove|apron)/i;
+
+function canToggleMaterialGroup(group) {
+  if (!group) return false;
+  if (OPTIONAL_COMPONENTS.has(group.part)) return true;
+  const names = [group.name, ...Array.from(group.rawNames || [])].join(' ');
+  return REMOVABLE_FEATURE_RE.test(names);
+}
+
 function buildMaterialRow(group, compact = false) {
   const row = document.createElement('div');
   row.className = 'materialRow' + (compact ? ' componentMaterialRow' : '');
@@ -714,6 +724,7 @@ function buildMaterialRow(group, compact = false) {
   const visibility = document.createElement('button');
   visibility.type = 'button';
   visibility.className = 'materialVisibility';
+  const visibilityAllowed = canToggleMaterialGroup(group);
   const updateVisibilityButton = () => {
     const shown = group.records.some((record) => record.material.visible !== false);
     visibility.textContent = shown ? '◉' : '○';
@@ -724,12 +735,19 @@ function buildMaterialRow(group, compact = false) {
       ? (compact ? 'Colour or hide this feature' : (PART_CATEGORY_LABELS[group.part] || 'Character part'))
       : 'Hidden from character';
   };
-  visibility.addEventListener('click', () => {
-    const nextVisible = !group.records.some((record) => record.material.visible !== false);
-    for (const record of group.records) record.material.visible = nextVisible;
-    updateVisibilityButton();
-    updateSummary();
-  });
+  if (visibilityAllowed) {
+    visibility.addEventListener('click', () => {
+      const nextVisible = !group.records.some((record) => record.material.visible !== false);
+      for (const record of group.records) record.material.visible = nextVisible;
+      updateVisibilityButton();
+      updateSummary();
+    });
+  } else {
+    visibility.disabled = true;
+    visibility.tabIndex = -1;
+    visibility.style.visibility = 'hidden';
+    visibility.setAttribute('aria-hidden', 'true');
+  }
 
   const input = document.createElement('input');
   input.type = 'color';
@@ -757,7 +775,7 @@ function buildMaterialRow(group, compact = false) {
   });
 
   row.append(text, visibility, input, reset);
-  updateVisibilityButton();
+  if (visibilityAllowed) updateVisibilityButton();
   return row;
 }
 
@@ -1324,11 +1342,14 @@ function workshopDiagnosticSnapshot() {
       }
     });
     const materialVisibility = {};
+    const materialColors = {};
     state.group?.traverse?.((node) => {
       const raw = node.userData?.sourceMaterialName || node.material?.name || '';
       if (!raw || !node.material) return;
       const mats = Array.isArray(node.material) ? node.material : [node.material];
       materialVisibility[raw] = mats.some((material) => material?.visible !== false);
+      const colourMaterial = mats.find((material) => material?.color);
+      if (colourMaterial?.color) materialColors[raw] = '#' + colourMaterial.color.getHexString();
     });
     parts[part.id] = {
       optionId: state.optionId || null,
@@ -1339,7 +1360,8 @@ function workshopDiagnosticSnapshot() {
       boneWeightMaxima,
       geometryFingerprint: geometryFingerprint(state.group),
       visible: Boolean(state.group?.visible),
-      materialVisibility
+      materialVisibility,
+      materialColors
     };
   }
 
@@ -1444,6 +1466,7 @@ window.__GAMEBOX_CHARACTER_WORKSHOP__ = Object.freeze({
     characterScreenBounds: characterScreenBounds(),
     visibleCharacterArea: visibleCharacterArea()
   }),
+  buildPayload: () => buildPayload(),
   partScreenBounds,
   prepareVisualAudit
 });
@@ -1666,8 +1689,10 @@ function applyCameraPose() {
     return;
   }
   if (activeBuilderTab === 'style') {
-    camera.position.set(0, 1.52, 6.55);
-    camera.lookAt(0.55, 1.02, 0);
+    // One predictable reference-style composition: controls on the left,
+    // full-body character framed prominently on the right.
+    camera.position.set(0, 1.43, 3.95);
+    camera.lookAt(0.62, 0.98, 0);
     return;
   }
   camera.position.set(previewRoot.position.x, 1.64, viewDistance);
@@ -1678,6 +1703,14 @@ function visibleCharacterArea() {
   const canvas = renderer.domElement.getBoundingClientRect();
   const mobile = window.innerWidth <= 980;
   if (!mobile) {
+    if (activeBuilderTab === 'style') {
+      return {
+        top: canvas.top + 72,
+        bottom: canvas.bottom - 34,
+        left: canvas.left + canvas.width * 0.58,
+        right: canvas.right - 24
+      };
+    }
     return {
       top: canvas.top + 56,
       bottom: canvas.bottom - 32,
@@ -1721,7 +1754,7 @@ function resize() {
   camera.updateProjectionMatrix();
 
   const mobile = width <= 980;
-  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.72 : -0.78);
+  previewRoot.position.x = mobile ? 0 : (activeBuilderTab === 'style' ? 1.48 : -0.78);
   if (mobile) {
     previewRoot.position.y = 0.76;
   } else {
