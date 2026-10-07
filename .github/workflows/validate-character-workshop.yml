@@ -58,6 +58,14 @@ jobs:
           for required in ("Skin","Face","Hair","Hat","Pants","Shirt"):
               assert required in material_names, f"Pack material label missing: {required}"
 
+          wizard_doc = json.loads((root / "Wizard.gltf").read_text())
+          wizard_material_names = {m.get("name","") for m in wizard_doc.get("materials",[])}
+          print("Wizard materials:", sorted(wizard_material_names))
+          assert "Hat" in wizard_material_names, "Wizard donor no longer exposes its Hat material"
+          assert wizard_material_names & {"Belt","Band"}, (
+              "Wizard hat trim material is not labelled Belt/Band: " + repr(sorted(wizard_material_names))
+          )
+
           m = re.search(r'export const PART_OPTIONS = (\{.*?\});\n\nexport const WEARABLE_OPTIONS', options_text, re.S)
           assert m, "Could not parse PART_OPTIONS"
           part_options = json.loads(m.group(1))
@@ -125,6 +133,8 @@ jobs:
           assert "Viking Hair · Helmet" not in hair_labels, "Viking helmet donor is still exposed as a hairstyle"
           assert {o.get("hairMode") for o in part_options["headwear"]} <= {"hide","overlay"}, "Invalid headwear hair behaviour"
           assert any(o.get("hairMode") == "hide" for o in part_options["headwear"]), "No close-fitting headwear hides incompatible hair"
+          fantasy_hat = next(o for o in part_options["headwear"] if o["id"] == "headwear-elf")
+          assert fantasy_hat["sourceId"] == "Wizard", "Shared Elf/Wizard hat must use the Wizard donor so its real band is audited"
 
           assert "const HEAD_BASE_RE" in modular, "Head anatomy filter missing"
           assert "if (SHOE_RE.test(materialName)) return null" in modular, "Source shoes are still being extracted"
@@ -172,12 +182,15 @@ jobs:
 
           assert "materialVisibility" in game and "material.visible" in game, "Per-feature visibility controls are missing"
           assert "snapshotMaterialVisibility" in game and "applySavedVisibility" in game, "Feature visibility is not persisted"
+          assert "canToggleMaterialGroup" in game and "REMOVABLE_FEATURE_RE" in game, "Visibility is not limited to meaningful feature regions"
           assert "Hat band" in game, "Wizard/Elf hat band is not exposed as its own colour region"
-          assert 'hat band is stored in the generic "Belt" material' in modular, "Wizard/Elf Belt band routing rule missing"
+          assert "/^(belt|band)$/i.test(materialName)" in modular, "Wizard/Elf Belt/Band routing rule missing"
           assert "sourceId = ''" in modular and "return 'headwear'" in modular, "Wizard/Elf hat trim is not routed by source/position"
           assert "backToCategoriesBtn" in html, "Reference-style component drill-down navigation missing"
           assert "CHARACTER CUSTOMIZATION" in html, "Reference heading missing"
-          assert "parts," in game and "materialNames" in game, "Browser part-separation diagnostics missing"
+          assert "parts," in game and "materialNames" in game and "materialColors" in game, "Browser part/material diagnostics missing"
+          assert 'grid-template-columns:repeat(4,minmax(0,1fr))' in css, "Reference 4-column category grid missing"
+          assert 'body[data-builder-tab="style"] .presetDrawer' in css and 'body[data-builder-tab="style"] .buildActions' in css, "Old editor chrome is not explicitly removed from BUILD"
 
           assert "Christmas Elf" not in html
           assert 'value="New Character"' in html
