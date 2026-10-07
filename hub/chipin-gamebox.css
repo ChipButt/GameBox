@@ -325,3 +325,32 @@
 .bbHomePaddle{position:absolute;left:34px;bottom:6px;width:45px;height:10px;object-fit:fill}
 .toyGameBlockBreaker .gameTile strong{color:#fff}.toyGameBlockBreaker .gameTile small{color:#ffd86a}
 @media(max-width:560px){.blockBreakerHomeScene{width:102px;height:79px}.bbHomeBricks img{height:12px}.bbHomeBall{left:47px;top:45px}.bbHomePaddle{left:31px;width:41px}}
+
+
+/* Workshop Watch home box */
+.toyGameWorkshopWatch .gameTile{
+  background:linear-gradient(145deg,#edfaff,#b8deea);
+  border-color:#f7fdff
+}
+.toyGameWorkshopWatch .gameTile strong{color:#123d55;text-shadow:0 2px 0 rgba(255,255,255,.75)}
+.toyGameWorkshopWatch .gameTile small{color:#2f6c87;text-shadow:none}
+.workshopWatchHomeTile{justify-content:center;overflow:hidden}
+.workshopWatchHomeScene{
+  position:relative;z-index:1;width:112px;height:86px;flex:0 0 auto;overflow:hidden;
+  border:3px solid #fff;border-radius:8px;background:#eaf9fe;
+  box-shadow:0 5px 10px rgba(18,61,85,.16)
+}
+.wwHomeSnow{position:absolute;inset:0;background:radial-gradient(circle at 9px 11px,#fff 0 2px,transparent 2.4px) 0 0/22px 22px}
+.wwHomePath{position:absolute;left:46px;top:-10px;width:32px;height:108px;background:#d1edf7;border-left:3px solid #acd5e3;border-right:3px solid #acd5e3;transform:rotate(18deg)}
+.workshopWatchHomeScene img{position:absolute;object-fit:contain}
+.wwHomeTree{width:42px;height:42px;left:4px;top:8px}
+.wwHomeCandy{width:34px;height:34px;right:3px;bottom:4px}
+.wwHomeGift{width:24px;height:24px;left:46px;bottom:8px}
+.wwHomeWorkshop{width:43px;height:43px;right:2px;top:2px}
+@media(max-width:560px){
+  .workshopWatchHomeScene{width:102px;height:79px}
+  .wwHomePath{left:42px;width:30px}
+  .wwHomeTree{width:38px;height:38px}
+  .wwHomeWorkshop{width:39px;height:39px}
+  .wwHomeGift{left:42px}
+}
