@@ -684,7 +684,6 @@ function updateMonster(dt,m){
           worldY:spawnWorldY,
           side:encounter.side,
           phase:'rush',
-          angle:Math.PI,
           dangerousThisFrame:true
         };
         break;
@@ -713,9 +712,6 @@ function updateMonster(dt,m){
     monster.x+=dx/dist*step;
     monster.worldY+=dy/dist*step;
 
-    // Tiny Ski yeti art faces screen-down at zero rotation. Rotate its body so
-    // it visibly faces the exact point it is chasing as well as moving there.
-    monster.angle=Math.atan2(dy,dx)-Math.PI/2;
   }
 
   // "Passed" is now a world-space event: the skier's NORTH edge has moved
@@ -1103,7 +1099,7 @@ function render(){
       const rearY=player.y-TILE/2;
       const close=monster.phase==='rush' && Math.hypot(monster.x-player.x,my-rearY)<24;
       const mFrame=close?F.yetiAttack:(F.yetiA+(Math.floor(animClock*7)&1));
-      drawSprite(mFrame,monster.x,my,TILE,monster.angle||0);
+      drawSprite(mFrame,monster.x,my,TILE,0);
     }
   }
 
