@@ -393,3 +393,34 @@
   .wwHomeSnowman{left:4px;bottom:4px}
   .wwHomeGingerbread{right:0}
 }
+/* Festive Blocks home box */
+.toyGameFestiveBlocks .gameTile{
+  background:linear-gradient(145deg,#dff5fc,#87cae5);
+  border-color:#f8fdff
+}
+.toyGameFestiveBlocks .gameTile strong{color:#174d69;text-shadow:0 2px 0 rgba(255,255,255,.72)}
+.toyGameFestiveBlocks .gameTile small{color:#b9324f;text-shadow:none}
+.festiveBlocksHomeTile{justify-content:center;overflow:hidden}
+.festiveBlocksHomeScene{
+  position:relative;z-index:1;width:112px;height:86px;flex:0 0 auto;overflow:hidden;
+  border:7px solid transparent;
+  border-image-source:url("../assets/gamebox/kenney/ui/UI Pack - Adventure/Double/panel_border_grey_detail.png");
+  border-image-slice:32;border-image-width:7px;border-image-repeat:stretch;
+  background:linear-gradient(#70c5e6,#d9f5fb)
+}
+.fbHomeCloud{position:absolute;object-fit:contain;opacity:.82}
+.fbHomeCloudA{left:-15px;top:2px;width:58px;height:23px}
+.fbHomeCloudB{right:-17px;bottom:0;width:64px;height:24px}
+.fbHomeBoard{
+  position:absolute;left:27px;top:9px;width:58px;height:58px;border:2px solid rgba(255,255,255,.9);border-radius:6px;
+  background-color:rgba(239,251,255,.88);
+  background-image:linear-gradient(rgba(61,146,180,.17) 1px,transparent 1px),linear-gradient(90deg,rgba(61,146,180,.17) 1px,transparent 1px);
+  background-size:11px 11px;box-shadow:0 4px 8px rgba(28,90,115,.18)
+}
+.fbHomeBlock{position:absolute;width:11px;height:11px;object-fit:contain}
+.fbBlock1{left:31px;top:13px}.fbBlock2{left:42px;top:13px}.fbBlock3{left:42px;top:24px}.fbBlock4{left:64px;top:35px}.fbBlock5{left:53px;top:46px}
+.fbHomeCandyBar{
+  position:absolute;left:19px;right:19px;bottom:7px;height:6px;border-radius:5px;border:1px solid rgba(255,255,255,.9);
+  background:repeating-linear-gradient(45deg,#fff 0 7px,#dc6085 7px 14px)
+}
+@media(max-width:560px){.festiveBlocksHomeScene{width:102px;height:79px}.fbHomeBoard{left:24px;top:8px;width:54px;height:54px}.fbHomeBlock{width:10px;height:10px}.fbBlock1{left:28px;top:12px}.fbBlock2{left:38px;top:12px}.fbBlock3{left:38px;top:22px}.fbBlock4{left:58px;top:32px}.fbBlock5{left:48px;top:42px}}
