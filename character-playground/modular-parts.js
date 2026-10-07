@@ -139,12 +139,11 @@ function classifyTriangle(nonIndexed, mesh, vertices, groupMaterialIndex, yMin, 
   if (winner === 'shoes') return null;
   if (winner === 'head') {
     if (!HEAD_BASE_RE.test(materialName)) return 'top';
-    const runnerUpScore = ranked[1]?.[1] || 0;
     const armWeight = maxRegionWeight(skinIndex, skinWeight, boneNames, vertices, ARM_BONES);
-    const stronglyHeadWeighted = scores.head >= 1.65 && scores.head > runnerUpScore * 1.35;
-    const physicallyInHeadZone = yNorm >= 0.68;
+    const otherBodyScore = Math.max(scores.top, scores.bottom, scores.shoes);
+    const clearlyHeadDriven = scores.head >= 1.20 && scores.head > otherBodyScore * 1.15;
     const noMeaningfulArmInfluence = armWeight < 0.08;
-    return stronglyHeadWeighted && physicallyInHeadZone && noMeaningfulArmInfluence ? 'head' : 'top';
+    return clearlyHeadDriven && noMeaningfulArmInfluence ? 'head' : 'top';
   }
   if (winnerScore > 0.01) return winner;
 
@@ -238,7 +237,7 @@ export function createModularPartSystem(THREE, loader, catalog) {
 
     const promise = new Promise((resolve, reject) => {
       loader.load(
-        entry.path + '?parts=3',
+        entry.path + '?parts=4',
         (gltf) => {
           try {
             const combined = {
