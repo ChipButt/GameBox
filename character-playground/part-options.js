@@ -144,25 +144,12 @@ export const PART_OPTIONS = {
       "category": "head"
     },
     {
-      "id": "head-17",
-      "label": "Zombie Head · Feminine",
-      "sourceId": "Zombie_Female",
-      "sourceIds": [
-        "Zombie_Female"
-      ],
-      "baseColors": {
-        "Skin": "#74836a",
-        "Face": "#485247"
-      },
-      "kind": "source",
-      "category": "head"
-    },
-    {
       "id": "head-18",
-      "label": "Zombie Head · Masculine",
+      "label": "Zombie Head",
       "sourceId": "Zombie_Male",
       "sourceIds": [
-        "Zombie_Male"
+        "Zombie_Male",
+        "Zombie_Female"
       ],
       "baseColors": {
         "Skin": "#74836a",
