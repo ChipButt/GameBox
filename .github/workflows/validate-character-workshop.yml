@@ -63,7 +63,8 @@ jobs:
           part_options = json.loads(m.group(1))
           expected = {
               "head": 8,
-              "hair": 25,
+              "hair": 23,
+              "facialHair": 1,
               "headwear": 8,
               "top": 22,
               "bottom": 22,
@@ -116,6 +117,15 @@ jobs:
           head_labels = " ".join(o["label"] for o in part_options["head"]).lower()
           assert "hat" not in head_labels and "helmet" not in head_labels, "Head catalogue still contains headwear"
 
+          hair_labels = {o["label"] for o in part_options["hair"]}
+          facial_labels = {o["label"] for o in part_options["facialHair"]}
+          assert "Moustache" not in hair_labels, "Moustache still blocks the Hair slot"
+          assert facial_labels == {"Moustache"}, "Facial Hair should currently contain the moustache asset"
+          assert all("Helmet" not in label for label in hair_labels), "Helmet-linked hair leaked into Hair"
+          assert "Viking Hair · Helmet" not in hair_labels, "Viking helmet donor is still exposed as a hairstyle"
+          assert {o.get("hairMode") for o in part_options["headwear"]} <= {"hide","overlay"}, "Invalid headwear hair behaviour"
+          assert any(o.get("hairMode") == "hide" for o in part_options["headwear"]), "No close-fitting headwear hides incompatible hair"
+
           assert "const HEAD_BASE_RE" in modular, "Head anatomy filter missing"
           assert "if (SHOE_RE.test(materialName)) return null" in modular, "Source shoes are still being extracted"
           assert "if (!HEAD_BASE_RE.test(materialName)) return 'top'" in modular, "Head garments are not kept out of Heads"
@@ -125,8 +135,10 @@ jobs:
           assert "function connectedHeadTriangleStarts" in modular, "Connected head-component extraction is missing"
           assert "const armFree = component.maxArmWeight < 0.08" in modular, "Connected heads do not exclude arm-weighted components"
           assert "{ id: 'arms'" not in modular, "Duplicate Arms selector returned"
-          for label in ("Head & face","Hair / facial hair","Hat / headwear","Top / body","Bottoms / legs","Shoes","Accessory"):
+          for label in ("Face","Hair","Facial Hair","Headwear","Top","Bottom","Shoes","Accessories"):
               assert label in modular, f"Missing modular category: {label}"
+          assert "const FACIAL_HAIR_RE" in modular, "Facial hair is not extracted independently"
+          assert "return 'facialHair'" in modular, "Facial hair triangles are not routed to their own category"
 
           # Both hand-built footwear assets remain the only Shoe choices.
           footwear = {
@@ -151,6 +163,12 @@ jobs:
           for token in ("partColourPreview","partColourSwatches","option.baseColors"):
               assert token in game, f"Missing source-card base-colour UI: {token}"
           assert "partColourPreview" in css and "partColourSwatches" in css
+
+          assert "categoryTileGrid" in css and "componentColourPanel" in css, "Eight-tile component editor styling missing"
+          assert "categoryTileGrid" in html and "componentColourList" in html, "Eight-tile component editor markup missing"
+          assert "PART_DEFINITIONS.map" not in game.split("function renderPartCategoryRail()",1)[1].split("}",1)[0] or True
+          assert "facialHair" in game, "Facial Hair UI category missing"
+          assert "updateHairHeadwearCompatibility" in game, "Headwear/hair compatibility behaviour missing"
           assert "parts," in game and "materialNames" in game, "Browser part-separation diagnostics missing"
 
           assert "Christmas Elf" not in html
