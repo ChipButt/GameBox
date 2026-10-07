@@ -6,7 +6,7 @@ const ctx=canvas.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 
 const W=336,H=480,TILE=16;
-const PATH_WIDTH=48;
+const PATH_WIDTH=32;
 
 const waveHud=document.getElementById('waveHud');
 const moneyHud=document.getElementById('moneyHud');
@@ -288,13 +288,9 @@ function activeTerrainMask(){
   for(let i=0;i<grid.length-1;i++){
     const [c1,r1]=grid[i],[c2,r2]=grid[i+1];
     if(c1===c2){
-      for(let row=Math.min(r1,r2);row<=Math.max(r1,r2);row++){
-        for(let dc=-1;dc<=1;dc++)mark(c1+dc,row);
-      }
+      for(let row=Math.min(r1,r2);row<=Math.max(r1,r2);row++)mark(c1,row);
     }else if(r1===r2){
-      for(let col=Math.min(c1,c2);col<=Math.max(c1,c2);col++){
-        for(let dr=-1;dr<=1;dr++)mark(col,r1+dr);
-      }
+      for(let col=Math.min(c1,c2);col<=Math.max(c1,c2);col++)mark(col,r1);
     }
   }
 
@@ -737,8 +733,9 @@ function drawSnowGround(){
 function drawRoute(){
   const mask=activeTerrainMask();
 
-  // The organiser's path sheet is centred around one full brown floor tile.
-  // Fill the whole route with that centre tile first.
+  // The organiser's path sheet describes ONE route tile plus its eight
+  // surrounding transition cells. The route mask must therefore stay one tile
+  // wide: centre tile on the route, edging in the neighbouring snow cells.
   for(let row=0;row<mask.length;row++){
     for(let col=0;col<mask[row].length;col++){
       if(mask[row][col]){
