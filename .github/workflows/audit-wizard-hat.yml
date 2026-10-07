@@ -49,3 +49,5 @@ jobs:
               for name,rec in by.items():
                   print("BOUNDS",name,"tri",rec["tri"],"xyz",[round(rec[k],3) for k in ("minx","maxx","miny","maxy","minz","maxz")])
           PY
+
+# rerun marker
