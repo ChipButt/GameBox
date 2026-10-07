@@ -669,8 +669,7 @@ function checkBoostPads(){
 
 function updateMonster(dt,m){
   // Trigger as soon as the encounter tile reaches the bottom of the viewport.
-  // It tears out of the treeline low on the screen and aims for the skier's
-  // BACK: the NORTH / TOP edge of the 16px player sprite.
+  // Spawn in WORLD coordinates so the pursuit is not faked by camera-space Y.
   if(!monster){
     for(const encounter of yetiEncounters){
       if(encounter.activated)continue;
@@ -682,9 +681,11 @@ function updateMonster(dt,m){
         const sideX=encounter.side==='left'?b.left-18:b.right+18;
         monster={
           x:clamp(sideX,8,W-8),
-          screenY:H-10,
+          worldY:spawnWorldY,
           side:encounter.side,
-          phase:'rush'
+          phase:'rush',
+          angle:Math.PI,
+          dangerousThisFrame:true
         };
         break;
       }
@@ -693,60 +694,50 @@ function updateMonster(dt,m){
 
   if(!monster)return;
 
-  // Exact target: NORTH/top-centre of the 16px skier sprite.
+  // ONE pursuit target only: the NORTH/top-centre of the skier sprite.
   const targetX=player.x;
-  const rearY=player.y-TILE/2;
+  const rearScreenY=player.y-TILE/2;
+  const targetWorldY=scroll+rearScreenY;
 
-  if(monster.phase==='rush'){
-    // Before the player passes it, the yeti actively HOMES toward that rear
-    // anchor on BOTH axes at 60% of base skier speed. This is not camera
-    // drift: every frame it is deliberately trying to reduce X and Y error.
-    const homeSpeed=baseSpeed*.60;
-    const dx=targetX-monster.x;
-    const dy=rearY-monster.screenY;
-    monster.x+=clamp(dx,-homeSpeed*dt,homeSpeed*dt);
-    monster.screenY+=clamp(dy,-homeSpeed*dt,homeSpeed*dt);
+  let dx=targetX-monster.x;
+  let dy=targetWorldY-monster.worldY;
+  let dist=Math.hypot(dx,dy);
 
-    // The player has passed the yeti once it reaches/crosses the north/rear
-    // plane. From this point it accelerates to 90% downhill speed.
-    if(monster.screenY<=rearY){
-      monster.screenY=rearY;
-      monster.phase='trailing';
-    }
-  }else{
-    // It is still trying to get back onto the player's tail: keep homing X
-    // toward the skier. Vertically, though, it only skis at 90% of base speed,
-    // so the faster player steadily leaves it further north/behind.
-    const lateralHomeSpeed=baseSpeed*.90;
-    const dx=targetX-monster.x;
-    monster.x+=clamp(dx,-lateralHomeSpeed*dt,lateralHomeSpeed*dt);
+  monster.dangerousThisFrame=monster.phase==='rush';
 
-    const yetiDownhillSpeed=baseSpeed*.90;
-    const relativeScreenSpeed=speed-yetiDownhillSpeed;
-    monster.screenY-=relativeScreenSpeed*dt;
+  if(dist>.001){
+    // Before the skier passes: 60% speed, running straight at the rear target.
+    // After the skier passes: 90%, still running straight at that SAME target.
+    const seekSpeed=baseSpeed*(monster.phase==='rush'?.60:.90);
+    const step=Math.min(dist,seekSpeed*dt);
+    monster.x+=dx/dist*step;
+    monster.worldY+=dy/dist*step;
+
+    // Tiny Ski yeti art faces screen-down at zero rotation. Rotate its body so
+    // it visibly faces the exact point it is chasing as well as moving there.
+    monster.angle=Math.atan2(dy,dx)-Math.PI/2;
   }
 
-  // The yeti can cut through treeline/off-piste; only the viewport limits X.
+  // "Passed" is now a world-space event: the skier's NORTH edge has moved
+  // downhill beyond the yeti. From here it turns and pursues at 90%, but the
+  // faster skier continues opening the gap (especially under boost).
+  if(monster.phase==='rush' && targetWorldY>=monster.worldY+2){
+    monster.phase='trailing';
+  }
+
   monster.x=clamp(monster.x,6,W-6);
 
-  // Once sufficiently far behind/off the north of the screen, this encounter
-  // is finished and a later yeti can appear.
-  if(monster.screenY<-TILE*2){
+  const screenY=monster.worldY-scroll;
+  if(monster.phase==='trailing' && screenY<-TILE*2){
     monster=null;
   }
 }
 
 function checkMonsterCollision(){
-  if(!monster || monster.phase!=='rush')return;
+  if(!monster || !monster.dangerousThisFrame)return;
 
-  // Collision is evaluated against the skier's NORTH/rear anchor, not its
-  // southern/front edge. That gives the yeti one genuine chance to catch the
-  // tail while still allowing the skier to dodge it.
-  const rearY=player.y-TILE/2;
-  if(
-    monster.screenY<=rearY+10 &&
-    Math.hypot(monster.x-player.x,monster.screenY-rearY)<9
-  ){
+  const rearWorldY=scroll+player.y-TILE/2;
+  if(Math.hypot(monster.x-player.x,monster.worldY-rearWorldY)<9){
     startCrash();
   }
 }
@@ -1107,12 +1098,12 @@ function render(){
   ctx.globalAlpha=1;
 
   if(monster){
-    const my=monster.screenY;
+    const my=monster.worldY-viewScroll;
     if(my>-TILE*2&&my<H+TILE*2){
       const rearY=player.y-TILE/2;
       const close=monster.phase==='rush' && Math.hypot(monster.x-player.x,my-rearY)<24;
       const mFrame=close?F.yetiAttack:(F.yetiA+(Math.floor(animClock*7)&1));
-      drawSprite(mFrame,monster.x,my,TILE,0);
+      drawSprite(mFrame,monster.x,my,TILE,monster.angle||0);
     }
   }
 
