@@ -331,7 +331,13 @@ function renderPartCategoryRail() {
     choice.textContent = selected?.label || (part.optional ? 'None' : 'Choose style');
 
     button.append(preview, label, choice);
-    button.addEventListener('click', () => selectPartCategory(category.id));
+    button.addEventListener('click', (event) => {
+      const rect = button.getBoundingClientRect();
+      const edgeGuard = Math.min(50, rect.width * 0.34);
+      const x = event.clientX - rect.left;
+      if (x < edgeGuard || x > rect.width - edgeGuard) return;
+      selectPartCategory(category.id);
+    });
 
     const prev = document.createElement('button');
     prev.type = 'button';
