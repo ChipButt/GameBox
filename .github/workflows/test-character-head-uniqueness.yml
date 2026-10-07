@@ -26,7 +26,7 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm install --silent playwright@1.56.1 pngjs@7.0.0
           npx playwright install chromium --with-deps >/dev/null
-      - name: Verify 18 unique loaded heads
+      - name: Verify 8 visually distinct loaded heads
         shell: bash
         run: |
           set -euo pipefail
@@ -41,10 +41,10 @@ jobs:
           const page=await browser.newPage({viewport:{width:1280,height:900}});
           await page.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
-          const ids=["head-01","head-02","head-03","head-04","head-05","head-06","head-07","head-08","head-09","head-10","head-11","head-12","head-13","head-14","head-15","head-16","head-17","head-18"];
+          const ids=["head-01","head-06","head-07","head-08","head-03","head-14","head-17","head-18"];
           await page.click('.partCategoryBtn[data-part="head"]');
           const cards=await page.locator('#partSourceGrid .partSourceCard:not(.noneCard)').count();
-          if(cards!==18) throw new Error('Expected 18 head cards, found '+cards);
+          if(cards!==8) throw new Error('Expected 8 visually meaningful head cards, found '+cards);
           const fingerprints=[];
           const crops=[];
           for(const id of ids){
@@ -85,7 +85,9 @@ jobs:
             }
           }
           pairs.sort((x,y)=>x.meanAbs-y.meanAbs||x.changedPct-y.changedPct);
-          console.log('VISUAL_CLOSEST '+JSON.stringify(pairs.slice(0,45)));
+          console.log('VISUAL_CLOSEST '+JSON.stringify(pairs.slice(0,28)));
+          const duplicatePairs=pairs.filter(p=>p.meanAbs===0 && p.changedPct===0);
+          if(duplicatePairs.length) throw new Error('Exact rendered head duplicates remain: '+JSON.stringify(duplicatePairs));
           JS
 
           node .head-test.mjs
