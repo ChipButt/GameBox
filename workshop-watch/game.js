@@ -109,7 +109,7 @@ let money=160,lives=10,score=0,wave=1,perfectWaves=0;
 let routeKey='left',waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let selectedPad=-1,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
-let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null;
+let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null,howFromPause=false;
 const BEST_KEY='gamebox.workshopWatch.best.v1';
 let best=Number(localStorage.getItem(BEST_KEY)||0)||0;
 bestStart.textContent=pad(best,4);
@@ -253,13 +253,14 @@ function endGame(victory){
   gameEnded=true;waveActive=false;
   const healthBonus=lives*50;
   const final=score+healthBonus;
-  if(final>best){best=final;localStorage.setItem(BEST_KEY,String(best))}
+  const isBest=final>best;
+  if(isBest){best=final;localStorage.setItem(BEST_KEY,String(best))}
   resultEyebrow.textContent=victory?'WORKSHOP SAFE':'WORKSHOP BREACHED';
   resultEyebrow.classList.toggle('danger',!victory);
   resultTitle.textContent=victory?'CHRISTMAS SAVED!':'RUN OVER';
   finalScoreEl.textContent=final;
   finalBreakdown.textContent=Math.min(wave,10)+' waves · '+perfectWaves+' perfect · '+lives+' workshop health · +'+healthBonus+' health bonus';
-  recordText.textContent=final>=best?'BEST SCORE '+best:'Best score: '+best;
+  recordText.textContent=isBest?'NEW BEST SCORE '+best:'Best score: '+best;
   bestStart.textContent=pad(best,4);
   gameOverOverlay.classList.add('show');
   tone(victory?'win':'leak');
@@ -590,11 +591,16 @@ function openPause(){
 function closePauseSheet(){
   pauseSheet.classList.remove('show');pauseSheet.setAttribute('aria-hidden','true');paused=false;last=performance.now();
 }
-function openHow(){
+function openHow(fromPause=false){
+  howFromPause=fromPause;
   howSheet.classList.add('show');howSheet.setAttribute('aria-hidden','false');
 }
 function closeHowSheet(){
   howSheet.classList.remove('show');howSheet.setAttribute('aria-hidden','true');
+  if(howFromPause){
+    howFromPause=false;
+    pauseSheet.classList.add('show');pauseSheet.setAttribute('aria-hidden','false');
+  }
 }
 
 function loop(now){
@@ -616,8 +622,8 @@ closePause.addEventListener('click',closePauseSheet);
 resumeButton.addEventListener('click',closePauseSheet);
 restartButton.addEventListener('click',()=>{closePauseSheet();startGame()});
 soundButton.addEventListener('click',()=>{soundOn=!soundOn;soundButton.textContent=soundOn?'SOUND ON':'SOUND OFF'});
-introHowButton.addEventListener('click',openHow);
-pauseHowButton.addEventListener('click',()=>{pauseSheet.classList.remove('show');openHow()});
+introHowButton.addEventListener('click',()=>openHow(false));
+pauseHowButton.addEventListener('click',()=>{pauseSheet.classList.remove('show');pauseSheet.setAttribute('aria-hidden','true');openHow(true)});
 closeHow.addEventListener('click',closeHowSheet);
 closeHowButton.addEventListener('click',closeHowSheet);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!gameEnded&&!startOverlay.classList.contains('show'))openPause()});
