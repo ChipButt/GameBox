@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/FBXLoader.js';
 import { CHARACTER_CATALOG } from './character-catalog.js?v=4';
-import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=11';
+import { PART_DEFINITIONS, createModularPartSystem } from './modular-parts.js?v=12';
 import { optionsForPart, canonicalOptionForSource, optionById, PART_CATEGORY_LABELS } from './part-options.js?v=9';
 
 const $ = (id) => document.getElementById(id);
@@ -555,7 +555,7 @@ function friendlyMaterialName(partId, rawName, index) {
   const raw = String(rawName || '').trim();
   const lower = raw.toLowerCase();
   if (partId === 'head' && /^face$/i.test(raw)) return 'Eyes & face details';
-  if (partId === 'headwear' && /^gold$/i.test(raw)) return 'Band / Gold trim';
+  if (partId === 'headwear' && /^belt$/i.test(raw)) return 'Hat band';
   if (/skin|flesh/.test(lower)) return 'Skin';
   if (partId === 'facialHair' || /beard|moustache|mustache/.test(lower)) return 'Facial Hair';
   if (/hair|brow/.test(lower)) return 'Hair';
