@@ -271,11 +271,15 @@ function routeGridIndex(v){
   return Math.round((v-TILE/2)/TILE);
 }
 
+function activeRouteGrid(){
+  return currentLevel().route.map(([x,y])=>[routeGridIndex(x),routeGridIndex(y)]);
+}
+
 function activeTerrainMask(){
   if(terrainMaskCache.level===level&&terrainMaskCache.mask)return terrainMaskCache.mask;
   const cols=W/TILE,rows=H/TILE;
   const mask=Array.from({length:rows},()=>Array(cols).fill(false));
-  const grid=currentLevel().route.map(([x,y])=>[routeGridIndex(x),routeGridIndex(y)]);
+  const grid=activeRouteGrid();
 
   const mark=(col,row)=>{
     if(col>=0&&col<cols&&row>=0&&row<rows)mask[row][col]=true;
@@ -317,16 +321,21 @@ function pathFloorRole(mask,col,row){
   return 'centre';
 }
 
-function inverseSnowCornerRole(mask,col,row){
-  if(maskHas(mask,col,row))return null;
-  const up=maskHas(mask,col,row-1),down=maskHas(mask,col,row+1);
-  const left=maskHas(mask,col-1,row),right=maskHas(mask,col+1,row);
+function turnSnowCornerRole(prev,turn,next){
+  const sign=v=>v===0?0:(v>0?1:-1);
+  const towardPrev=[sign(prev[0]-turn[0]),sign(prev[1]-turn[1])];
+  const towardNext=[sign(next[0]-turn[0]),sign(next[1]-turn[1])];
 
-  // These are the four inverse corner pieces from the user's snow_floor_tiles sheet.
-  if(up&&left)return 'top_left_corner';
-  if(up&&right)return 'top_right_corner';
-  if(down&&left)return 'bottom_left_corner';
-  if(down&&right)return 'bottom_right_corner';
+  // The missing inside quadrant is opposite the two path arms.
+  const missing=[
+    -(towardPrev[0]+towardNext[0]),
+    -(towardPrev[1]+towardNext[1])
+  ];
+
+  if(missing[0]===1&&missing[1]===1)return 'top_left_corner';
+  if(missing[0]===-1&&missing[1]===1)return 'top_right_corner';
+  if(missing[0]===1&&missing[1]===-1)return 'bottom_left_corner';
+  if(missing[0]===-1&&missing[1]===-1)return 'bottom_right_corner';
   return null;
 }
 
@@ -734,12 +743,15 @@ function drawRoute(){
     }
   }
 
-  // Inside corners of bends are the inverse pieces from snow_floor_tiles.
-  for(let row=0;row<mask.length;row++){
-    for(let col=0;col<mask[row].length;col++){
-      const role=inverseSnowCornerRole(mask,col,row);
-      if(role)drawMappedTile(GHERWIT.snowFloor[role],col*TILE,row*TILE,1);
-    }
+  // The inverse snow corner belongs on the turn cell itself, not on the
+  // neighbouring snow cell. One overlay per waypoint gives a clean concave bend.
+  const grid=activeRouteGrid();
+  for(let i=1;i<grid.length-1;i++){
+    const role=turnSnowCornerRole(grid[i-1],grid[i],grid[i+1]);
+    if(!role)continue;
+    const [col,row]=grid[i];
+    if(row<0||row>=mask.length||col<0||col>=mask[0].length)continue;
+    drawMappedTile(GHERWIT.snowFloor[role],col*TILE,row*TILE,1);
   }
 }
 
