@@ -117,6 +117,7 @@ let routeKey='left',waveActive=false,paused=false,gameEnded=false,soundOn=true;
 let buildType=null,selectedTower=-1;
 let enemies=[],towers=[],projectiles=[],particles=[],spawnQueue=[];
 let spawnClock=0,leaksThisWave=0,last=0,raf=0,bannerTimer=0,audioCtx=null,howFromPause=false,animClock=0;
+let objectiveHit=0;
 let pointer={x:-99,y:-99,inside:false};
 
 const BEST_KEY='gamebox.workshopWatch.best.pixel.v2';
@@ -253,7 +254,7 @@ function resetGame(){
   money=180;lives=10;score=0;wave=1;perfectWaves=0;routeKey='left';
   waveActive=false;paused=false;gameEnded=false;buildType=null;selectedTower=-1;
   enemies=[];towers=[];projectiles=[];particles=[];spawnQueue=[];
-  spawnClock=0;leaksThisWave=0;animClock=0;
+  spawnClock=0;leaksThisWave=0;animClock=0;objectiveHit=0;
   pointer={x:-99,y:-99,inside:false};
   gameOverOverlay.classList.remove('show');
   pauseSheet.classList.remove('show');
@@ -571,6 +572,7 @@ function updateEnemies(dt){
       e.dead=true;
       lives=Math.max(0,lives-e.leak);
       leaksThisWave+=e.leak;
+      objectiveHit=.42;
       showBanner('-'+e.leak+' PRESENT'+(e.leak===1?'':'S'));
       tone('leak');
       if(lives<=0){endGame(false);return}
@@ -600,6 +602,7 @@ function updateParticles(dt){
 function update(dt){
   if(paused||gameEnded)return;
   animClock+=dt;
+  objectiveHit=Math.max(0,objectiveHit-dt);
   if(bannerTimer>0){
     bannerTimer-=dt;
     if(bannerTimer<=0)waveBanner.classList.remove('show');
@@ -640,6 +643,33 @@ function drawRoute(points){
   ctx.restore();
 }
 
+function drawObjective(){
+  // Build the protected Workshop Gate only from the same Gherwit winter atlas:
+  // matching pine clusters, snow piles and the pack's snowy sign sprite.
+  drawAtlasRegion(3,6,3,4,101,-19,.95);
+  drawAtlasRegion(0,6,3,4,190,-19,.95);
+  drawAtlasCell(0,0,128,44,1);
+  drawAtlasCell(1,0,192,44,1);
+  drawAtlasCell(0,2,144,5,3);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled=false;
+
+  // The label is gameplay UI over the real Gherwit objective asset, not replacement artwork.
+  ctx.fillStyle=objectiveHit>0?'#8f3037':'#202934';
+  ctx.fillRect(132,47,72,14);
+  ctx.fillStyle='#f7fbff';
+  ctx.font='700 7px monospace';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('WORKSHOP GATE',168,54);
+
+  // Make the route destination unmistakable and flash it when a present is lost.
+  ctx.strokeStyle=objectiveHit>0?'#f5c45a':'rgba(32,41,52,.55)';
+  ctx.lineWidth=objectiveHit>0?3:1;
+  ctx.strokeRect(150,61,36,8);
+  ctx.restore();
+}
+
 function drawTerrain(){
   ctx.fillStyle=snowPattern||'#f8fbff';
   ctx.fillRect(0,0,W,H);
@@ -657,18 +687,7 @@ function drawTerrain(){
   drawAtlasCell(1,0,18,444,1);
 
   drawRoute(ROUTES[routeKey]);
-
-  // The route ends at an actual Gherwit snowy sign rather than a mismatched building.
-  drawAtlasCell(0,2,144,7,3);
-  ctx.save();
-  ctx.imageSmoothingEnabled=false;
-  ctx.fillStyle='#202934';
-  ctx.fillRect(137,48,62,13);
-  ctx.fillStyle='#f7fbff';
-  ctx.font='700 8px monospace';
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('WORKSHOP',168,54);
-  ctx.restore();
+  drawObjective();
 }
 
 function drawSheetFrame(key,cols,row,frame,x,y,dest=128,alpha=1){
