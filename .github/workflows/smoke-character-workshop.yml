@@ -48,7 +48,6 @@ jobs:
           await page.goto('http://127.0.0.1:4173/character-playground/',{waitUntil:'networkidle',timeout:120000});
           await page.waitForSelector('.partCategoryBtn[data-part="head"]',{timeout:120000});
           await page.waitForFunction(()=>document.querySelector('#loading')?.style.display==='none',{timeout:120000});
-          assert(await page.locator('#partBrowser[hidden]').count()===1,'Initial Build screen should show the eight components, not an open component editor.');
 
           const category = async (id) => {
             const back=page.locator('#backToCategoriesBtn:visible');
@@ -62,6 +61,20 @@ jobs:
           };
 
           const assert = (value,message) => { if(!value) throw new Error(message); };
+
+          assert(await page.locator('#partBrowser[hidden]').count()===1,'Initial Build screen should show the eight components, not an open component editor.');
+          assert((await page.textContent('.brandPlate strong')).trim()==='CHARACTER CUSTOMIZATION','Reference title is missing.');
+          const initialTiles=await page.locator('.categoryTileWrap').evaluateAll(nodes=>nodes.map(node=>{
+            const r=node.getBoundingClientRect();
+            return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};
+          }));
+          assert(initialTiles.length===8,'Initial reference screen should have eight large component cards.');
+          const rowTops=[...new Set(initialTiles.map(r=>Math.round(r.top/20)*20))];
+          assert(rowTops.length===2,'Desktop component cards should form two rows, found '+rowTops.length+'.');
+          const firstRow=initialTiles.filter(r=>Math.abs(r.top-initialTiles[0].top)<30);
+          assert(firstRow.length===4,'Desktop component cards should form four columns.');
+          const initialFrame=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().characterScreenBounds);
+          assert(initialFrame && (initialFrame.left+initialFrame.right)/2 > 1280*0.58,'Character is not positioned on the right like the supplied reference.');
 
           assert(await page.locator('.partCategoryBtn').count()===8,'Builder must expose exactly eight customisation category tiles.');
           assert(await page.locator('.partCategoryBtn[data-part="body"]').count()===0,'Body must not be a ninth category tile.');
