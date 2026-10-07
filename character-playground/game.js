@@ -1212,12 +1212,64 @@ function characterScreenBounds() {
   };
 }
 
+function partScreenBounds(category) {
+  const group = activeParts[category]?.group;
+  if (!group) return null;
+  group.updateWorldMatrix(true, true);
+  const box = new THREE.Box3().setFromObject(group);
+  if (box.isEmpty()) return null;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const points = [];
+  for (const x of [box.min.x, box.max.x]) {
+    for (const y of [box.min.y, box.max.y]) {
+      for (const z of [box.min.z, box.max.z]) {
+        const point = new THREE.Vector3(x, y, z).project(camera);
+        points.push({
+          x: rect.left + (point.x * 0.5 + 0.5) * rect.width,
+          y: rect.top + (-point.y * 0.5 + 0.5) * rect.height
+        });
+      }
+    }
+  }
+  return {
+    left: Math.min(...points.map((p) => p.x)),
+    right: Math.max(...points.map((p) => p.x)),
+    top: Math.min(...points.map((p) => p.y)),
+    bottom: Math.max(...points.map((p) => p.y))
+  };
+}
+
+function prepareVisualAudit(category = 'head') {
+  mixer?.stopAllAction?.();
+  mixer?.setTime?.(0);
+  characterHolder.rotation.set(0, 0, 0);
+  for (const part of PART_DEFINITIONS) {
+    const group = activeParts[part.id]?.group;
+    if (group) group.visible = part.id === category;
+  }
+  const group = activeParts[category]?.group;
+  group?.traverse?.((node) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (material.color) material.color.setHex(0xb8b8b8);
+      if ('roughness' in material) material.roughness = 0.92;
+      if ('metalness' in material) material.metalness = 0;
+      material.needsUpdate = true;
+    }
+  });
+  renderer.render(scene, camera);
+  return partScreenBounds(category);
+}
+
 window.__GAMEBOX_CHARACTER_WORKSHOP__ = Object.freeze({
   snapshot: () => ({
     ...workshopDiagnosticSnapshot(),
     characterScreenBounds: characterScreenBounds(),
     visibleCharacterArea: visibleCharacterArea()
-  })
+  }),
+  partScreenBounds,
+  prepareVisualAudit
 });
 
 async function loadDriver(entryId, options = {}) {
