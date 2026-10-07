@@ -693,9 +693,13 @@ function updateMonster(dt,m){
 
   if(!monster)return;
 
+  // Home continuously on the NORTH/top-centre of the skier. Do not clamp
+  // the yeti to the piste at its own row: it is allowed to tear through the
+  // treeline/off-piste to get directly onto the skier's tail.
   const targetX=player.x;
-  const lateralSpeed=68+Math.min(28,m*.012);
-  monster.x+=clamp(targetX-monster.x,-lateralSpeed*dt,lateralSpeed*dt);
+  const dx=targetX-monster.x;
+  const lateralSpeed=110+Math.min(55,Math.abs(dx)*.55)+Math.min(25,m*.01);
+  monster.x+=clamp(dx,-lateralSpeed*dt,lateralSpeed*dt);
 
   // The actual rear anchor is the NORTH-most edge of the skier sprite.
   const rearY=player.y-TILE/2;
@@ -718,10 +722,8 @@ function updateMonster(dt,m){
     monster.phase='trailing';
   }
 
-  // It still visibly tracks the skier's line while falling further behind.
-  const worldY=scroll+monster.screenY;
-  const b=boundsAtWorld(worldY);
-  monster.x=clamp(monster.x,b.left-22,b.right+22);
+  // Keep tracking the skier even off-piste. Only the viewport itself limits X.
+  monster.x=clamp(monster.x,6,W-6);
 
   // Once sufficiently far behind/off the north of the screen, this encounter
   // is finished and a later yeti can appear.
