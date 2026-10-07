@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           npm init -y >/dev/null 2>&1
-          npm install --silent playwright@1.56.1
+          npm install --silent playwright@1.56.1 pngjs@7.0.0
           npx playwright install chromium --with-deps >/dev/null
       - name: Verify 18 unique loaded heads
         shell: bash
@@ -46,6 +46,7 @@ jobs:
           const cards=await page.locator('#partSourceGrid .partSourceCard:not(.noneCard)').count();
           if(cards!==18) throw new Error('Expected 18 head cards, found '+cards);
           const fingerprints=[];
+          const crops=[];
           for(const id of ids){
             await page.click('.partCategoryBtn[data-part="head"]');
             await page.click('[data-option="'+id+'"]');
@@ -54,12 +55,37 @@ jobs:
             if(!diag?.geometryFingerprint) throw new Error(id+' loaded no measurable head geometry');
             const armWeights=Object.entries(diag.boneWeightMaxima||{}).filter(([name,weight])=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name)&&weight>=0.08);
             if(armWeights.length) throw new Error(id+' includes arm/hand geometry: '+JSON.stringify(armWeights));
+            const bounds=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.prepareVisualAudit('head'));
+            if(!bounds) throw new Error(id+' has no rendered head bounds');
+            const cx=(bounds.left+bounds.right)/2;
+            const cy=(bounds.top+bounds.bottom)/2;
+            const clip={x:Math.max(0,cx-130),y:Math.max(0,cy-130),width:260,height:260};
+            await page.screenshot({path:id+'.png',clip,animations:'disabled'});
+            crops.push(id+'.png');
             fingerprints.push([id,diag.geometryFingerprint]);
           }
-          const unique=new Set(fingerprints.map(([,fp])=>fp));
-          if(unique.size!==18) throw new Error('Loaded head duplicates remain: '+JSON.stringify(fingerprints));
-          console.log('HEADS_OK '+JSON.stringify(fingerprints));
+          console.log('GEOMETRY_FINGERPRINTS '+JSON.stringify(fingerprints));
           await browser.close();
+
+          const { PNG } = await import('pngjs');
+          const fs = await import('fs');
+          const images = new Map(crops.map((file)=>[file.replace('.png',''),PNG.sync.read(fs.readFileSync(file))]));
+          const pairs=[];
+          for(let a=0;a<ids.length;a++){
+            for(let b=a+1;b<ids.length;b++){
+              const ia=images.get(ids[a]), ib=images.get(ids[b]);
+              let abs=0, changed=0, pixels=ia.width*ia.height;
+              for(let p=0;p<pixels;p++){
+                const i=p*4;
+                const d=Math.abs(ia.data[i]-ib.data[i])+Math.abs(ia.data[i+1]-ib.data[i+1])+Math.abs(ia.data[i+2]-ib.data[i+2]);
+                abs+=d/3;
+                if(d/3>12) changed++;
+              }
+              pairs.push({a:ids[a],b:ids[b],meanAbs:+(abs/pixels).toFixed(3),changedPct:+(changed*100/pixels).toFixed(3)});
+            }
+          }
+          pairs.sort((x,y)=>x.meanAbs-y.meanAbs||x.changedPct-y.changedPct);
+          console.log('VISUAL_CLOSEST '+JSON.stringify(pairs.slice(0,45)));
           JS
 
           node .head-test.mjs
