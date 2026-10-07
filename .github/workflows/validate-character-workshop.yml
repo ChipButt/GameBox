@@ -62,7 +62,7 @@ jobs:
           assert m, "Could not parse PART_OPTIONS"
           part_options = json.loads(m.group(1))
           expected = {
-              "head": 18,
+              "head": 8,
               "hair": 25,
               "headwear": 8,
               "top": 22,
@@ -97,8 +97,18 @@ jobs:
                   covered.update(option["sourceIds"])
               assert covered == set(ids), f"{category}: not every source character is represented"
 
-          head_hashes = [o.get("geometryHash") for o in part_options["head"]]
-          assert len(head_hashes) == 18 and len(set(head_hashes)) == 18, "Head catalogue must contain 18 unique audited geometry hashes"
+          expected_head_labels = {
+              "Human Head",
+              "Elf Head",
+              "Goblin Head · Feminine",
+              "Goblin Head · Masculine",
+              "Cow Head",
+              "Pug Head",
+              "Zombie Head · Feminine",
+              "Zombie Head · Masculine",
+          }
+          assert {o["label"] for o in part_options["head"]} == expected_head_labels, "Head selector contains role-based or duplicate human heads"
+          assert len(part_options["head"][0].get("sourceIds", [])) == 43, "All ordinary human donors must collapse to the single Human Head"
           covered_heads = set()
           for option in part_options["head"]:
               covered_heads.update(option.get("sourceIds", []))
