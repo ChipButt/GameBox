@@ -558,7 +558,8 @@ export const PART_OPTIONS = {
         "Wizard"
       ],
       "baseColors": {
-        "Hat": "#24405e"
+        "Hat": "#24405e",
+        "Band / Gold trim": "#d4aa43"
       },
       "hairMode": "hide"
     },
