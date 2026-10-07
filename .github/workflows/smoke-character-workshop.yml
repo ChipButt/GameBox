@@ -83,6 +83,7 @@ jobs:
           const headOptionIds=await page.locator('.partCategoryBtn[data-part="head"]').count()
             ? ["head-01","head-02","head-03","head-04","head-05","head-06","head-07","head-08","head-09","head-10","head-11","head-12","head-13","head-14","head-15","head-16","head-17","head-18"]
             : [];
+          const headFingerprints=[];
           for (const optionId of headOptionIds) {
             await page.click('.partCategoryBtn[data-part="head"]');
             await page.click('[data-option="'+optionId+'"]');
@@ -90,7 +91,10 @@ jobs:
             const diag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.head);
             const armWeights=Object.entries(diag.boneWeightMaxima).filter(([name,weight])=>/Shoulder|UpperArm|LowerArm|Fist/i.test(name) && weight>=0.08);
             assert(armWeights.length===0,optionId+' contains meaningful arm/hand weighted geometry: '+JSON.stringify(armWeights));
+            assert(diag.geometryFingerprint,optionId+' loaded no measurable head geometry.');
+            headFingerprints.push([optionId,diag.geometryFingerprint]);
           }
+          assert(new Set(headFingerprints.map(([,fingerprint])=>fingerprint)).size===18,'Two or more head buttons load visually identical geometry: '+JSON.stringify(headFingerprints));
 
           const hairCount=await category('hair');
           assert(hairCount===26,'Hair catalogue should contain 25 labelled styles plus None.');
