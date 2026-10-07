@@ -137,9 +137,9 @@ jobs:
           await waitForSelected('headwear-elf');
           const wizardHatDiag=await page.evaluate(()=>window.__GAMEBOX_CHARACTER_WORKSHOP__.snapshot().parts.headwear);
           assert(wizardHatDiag.materialNames.includes('Hat'),'Elf/Wizard headwear is missing Hat geometry.');
-          assert(wizardHatDiag.materialNames.includes('Gold'),'Elf/Wizard hat band/Gold trim is missing from Headwear.');
+          assert(wizardHatDiag.materialNames.includes('Belt'),'Elf/Wizard hat band/Belt geometry is missing from Headwear.');
           assert(!wizardHatDiag.materialNames.includes('Skin'),'Skin geometry leaked into the Elf/Wizard hat.');
-          assert(await page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Band \/ Gold trim/i}).count()>=1,'Wizard hat band does not have its own colour control.');
+          assert(await page.locator('#componentColourList .componentMaterialRow').filter({hasText:/Hat band/i}).count()>=1,'Wizard hat band does not have its own colour control.');
 
           const hairCount=await category('hair');
           assert(hairCount===24,'Hair should contain 23 head-hair styles plus None.');
