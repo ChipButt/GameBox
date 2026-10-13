@@ -67,38 +67,32 @@ function sprite(key,col,row,x,y,dim=128,alpha=1){
   ctx.drawImage(img,c*cell,r*cell,cell,cell,Math.round(x-dim/2),Math.round(y-dim/2),dim,dim);
   ctx.restore();
 }
-function tile(c,r,x,y,scale=1){
+function tile(c,r,x,y,scale=1,target=ctx){
   const im=images.ground;if(!im||!im.complete||!im.naturalWidth)return;
   const s=TILE*scale;
-  ctx.drawImage(im,c*TILE,r*TILE,TILE,TILE,Math.round(x),Math.round(y),s,s);
+  target.drawImage(im,c*TILE,r*TILE,TILE,TILE,Math.round(x),Math.round(y),s,s);
 }
-function tree(x,y){
-  for(let row=0;row<3;row++)for(let col=0;col<3;col++)tile(9+col,6+row,x+col*TILE,y+row*TILE);
+function tree(x,y,target=ctx){
+  for(let row=0;row<3;row++)for(let col=0;col<3;col++)
+    tile(9+col,6+row,x+col*TILE,y+row*TILE,1,target);
 }
-function createBackground(){
-  // The same 16×16 Gherwit snow terrain used in Workshop Watch.
-  // Decorative 3×3 pine composites sit outside the active enemy columns.
-  const c=document.createElement("canvas");c.width=W;c.height=H;
-  const pen=ctx; // background is baked once to the actual canvas, then snapshotted.
-  ctx.save();
-  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)tile(12,1,x,y);
-  for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])tree(x,y);
-  for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y);
-  // Workshop gate assembled from the labelled winter 16px tiles.
-  for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
-    tile(col,row,156+tx*16,H-73+ty*16);
-  ctx.restore();
-  return c;
-}
+let backdrop=null;
 function background(){
-  // Static terrain is shared with Workshop Watch. Sprite and projectile art is
-  // drawn above it in one unsmoothed canvas, never as overlapping CSS shapes.
-  ctx.fillStyle="#f0faff";ctx.fillRect(0,0,W,H);
-  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)tile(12,1,x,y);
-  for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])tree(x,y);
-  for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y);
-  for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
-    tile(col,row,156+tx*16,H-73+ty*16);
+  if(!ready){ctx.fillStyle="#eaf8fc";ctx.fillRect(0,0,W,H);return;}
+  if(!backdrop){
+    // Cache the entire static winter scene ONCE. Rebuilding ~850 terrain tiles
+    // every animation frame is not acceptable on a phone.
+    backdrop=document.createElement("canvas");backdrop.width=W;backdrop.height=H;
+    const g=backdrop.getContext("2d");g.imageSmoothingEnabled=false;
+    g.fillStyle="#effaff";g.fillRect(0,0,W,H);
+    for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)tile(12,1,x,y,1,g);
+    for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])
+      tree(x,y,g);
+    for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y,1,g);
+    for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
+      tile(col,row,156+tx*16,H-73+ty*16,1,g);
+  }
+  ctx.drawImage(backdrop,0,0);
 }
 function projectile(x,y,enemy=false){
   ctx.fillStyle=enemy?"#a64448":"#72b4c9";ctx.fillRect(Math.round(x-4),Math.round(y-4),9,9);
@@ -119,10 +113,13 @@ function makeForts(){
 function fort(f){
   if(f.hp<=0)return;
   ctx.save();ctx.imageSmoothingEnabled=false;
-  // Each undamaged block is an original Gherwit snow tile, not a CSS imitation.
+  // Gherwit snow tile with distinct cold-blue raised ice edging.
+  ctx.fillStyle="#3c8fb3";ctx.fillRect(f.x-1,f.y-1,15,15);
   tile(12,1,f.x,f.y,.8);
+  ctx.fillStyle="#c8eefa";ctx.fillRect(f.x+1,f.y+1,11,2);
+  ctx.fillStyle="#7bbbd2";ctx.fillRect(f.x+1,f.y+11,11,2);
   if(f.hp<3){
-    ctx.strokeStyle="#457c9b";ctx.lineWidth=1;ctx.beginPath();
+    ctx.strokeStyle="#356d8b";ctx.lineWidth=1;ctx.beginPath();
     ctx.moveTo(f.x+4,f.y+2);ctx.lineTo(f.x+7,f.y+6);ctx.lineTo(f.x+5,f.y+9);
     if(f.hp===1){ctx.moveTo(f.x+7,f.y+6);ctx.lineTo(f.x+12,f.y+8);ctx.lineTo(f.x+11,f.y+12);}
     ctx.stroke();
