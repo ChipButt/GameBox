@@ -67,7 +67,7 @@ function makeHarness(){
   const window={addEventListener(){}};
   const sandbox={window,document,Image,localStorage,requestAnimationFrame:fn=>frames.push(fn),
     console:{error(...args){sandbox.errors.push(args.map(String).join(' '))}},errors:[],Math,Promise,Number,String,Set,Array};
-  vm.runInNewContext(script,sandbox,{filename:'santa-invaders/game.js',timeout:1500});
+  vm.runInNewContext(script,sandbox,{filename:'loaded-game-script',timeout:1500});
   const qa=window.__qa;
   function event(type,arg={}){for(const fn of events.get(type)||[])fn(arg)}
   return {qa,element,event,frames,seen,store,sandbox};
