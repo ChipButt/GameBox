@@ -88,7 +88,7 @@ test('all artwork is present, valid PNG, and sprite-sheet frames have correct gr
     const {width,height}=pngDimensions(filepath);
     if(key==='ground')assert.deepEqual({width,height},{width:224,height:192},'Gherwit tiles atlas changed');
     else {
-      assert.equal(height,384,key+' needs 3 rows of 128px frames');
+      assert.ok(height===384||height===512,key+' needs three or four 128px direction rows (got '+height+')');
       const frames=(key==='defenderIdle'||key==='boss')?4:6;
       assert.equal(width,frames*128,key+' animation columns are wrong');
     }
