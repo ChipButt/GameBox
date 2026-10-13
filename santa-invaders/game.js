@@ -10,7 +10,7 @@
     overlay:$("overlay"), title:$("overlayTitle"), text:$("overlayText"),
     primary:$("primaryButton"), secondary:$("secondaryButton"),
     result:$("resultStrip"), endScore:$("endScore"), endBest:$("endBest"),
-    hint:$("controlsHint"), announce:$("announce") };
+    hint:$("controlsHint"), sound:$("soundButton"), announce:$("announce") };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const rand=(a,b)=>a+Math.random()*(b-a);
   const sprites = {};
@@ -143,6 +143,7 @@
     game.phase=which;
     ui.overlay.classList.add("show");ui.overlay.setAttribute("aria-hidden","false");
     ui.result.hidden=which!=="over";ui.hint.hidden=which==="over";
+    ui.sound.hidden=which==="over"||which==="help";ui.sound.textContent=soundEnabled?"SOUND ON":"SOUND OFF";
     ui.secondary.hidden=false;
     if(which==="ready"){
       ui.title.innerHTML="SANTA <em>INVADERS</em>";
@@ -416,6 +417,12 @@
   $("menuButton").addEventListener("click",()=>{
     if(game.phase==="playing"||game.phase==="between")pause();
     else if(game.phase==="paused")resume();
+  });
+  ui.sound.addEventListener("click",()=>{
+    soundEnabled=!soundEnabled;
+    try{localStorage.setItem("gamebox-santa-invaders-sound",soundEnabled?"on":"off");}catch(e){}
+    ui.sound.textContent=soundEnabled?"SOUND ON":"SOUND OFF";
+    if(soundEnabled)chime(680,.11,"triangle");
   });
   ui.primary.addEventListener("click",()=>{
     if(game.phase==="ready"||game.phase==="over")reset();
