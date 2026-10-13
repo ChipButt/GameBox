@@ -31,13 +31,7 @@ button{font:inherit;cursor:pointer}
 .overlay.show{display:flex}
 .menuCard{width:min(100%,340px);max-height:calc(100dvh - 30px);overflow-y:auto;background:#fff;border:4px solid #184b66;border-radius:18px;padding:13px 15px 14px;text-align:center;box-shadow:0 7px 0 rgba(15,53,73,.24)}
 .heroScene{height:120px;position:relative;margin-bottom:11px;border:3px solid #173b4d;border-radius:9px;overflow:hidden;background:linear-gradient(#d8f3fc,#ecf9ff);image-rendering:pixelated}
-.heroScene:after{content:"";position:absolute;left:0;right:0;bottom:0;height:31px;background:#f4fbfd;border-top:4px solid #abd5e1}
-.heroScene>span:not(.sceneSnow){position:absolute;z-index:2;display:block;background-repeat:no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
-.sceneSnow{position:absolute;inset:0;background:linear-gradient(90deg,transparent 0 8%,#d5eef7 8% 9%,transparent 9% 91%,#d5eef7 91% 92%,transparent 92%)}
-.sceneDefender{width:65px;height:71px;left:15%;bottom:12px;background-image:url("../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png");background-size:1024px 1024px;background-position:-95px -92px}
-.sceneGinger{width:70px;height:76px;left:45%;bottom:15px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png");background-size:1152px 768px;background-position:-62px -65px}
-.sceneSlime{width:50px;height:53px;right:7%;bottom:27px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png");background-size:1152px 768px;background-position:-72px -75px}
-.sceneDevil{width:46px;height:55px;left:65%;top:2px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png");background-size:768px 768px;background-position:-64px -72px}
+.heroScene canvas{display:block;width:100%;height:100%;object-fit:fill;image-rendering:pixelated;image-rendering:crisp-edges}
 .eyebrow{color:#43809d;font-weight:900;letter-spacing:1.4px;font-size:9px;margin:4px 0 6px}
 h1{font-size:30px;line-height:1.04;margin:0;color:#123d55}h1 em{font-style:normal;color:var(--red)}
 .tagline{max-width:285px;margin:10px auto 11px;color:var(--muted);font-size:11px;line-height:1.45}
