@@ -31,7 +31,7 @@ function difficultyFor(wave){
   const n=Math.max(0,wave-1);
   return {
     speed:Math.min(60,12+n*4),
-    volleyTime:Math.max(.86,3.4-n*.27),
+    volleyTime:Math.max(.65,3.4-n*.27),
     projectileSpeed:Math.min(255,112+n*14),
     drop:Math.min(16,9+Math.floor(n/2)),
     grace:Math.max(1.2,3.0-n*.18)
