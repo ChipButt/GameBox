@@ -1,513 +1,418 @@
-/* Santa Invaders — original Christmas arcade game for GameBox. No external libraries. */
-(() => {
-  "use strict";
-  const W = 360, H = 600, ROWS = 4, COLS = 8;
-  const $ = id => document.getElementById(id);
-  const canvas = $("game"), ctx = canvas.getContext("2d", { alpha: false });
-  if (!ctx) return;
-  ctx.imageSmoothingEnabled = false;
-  const ui = { score:$("score"), wave:$("wave"), lives:$("lives"), banner:$("waveBanner"),
-    overlay:$("overlay"), title:$("overlayTitle"), text:$("overlayText"),
-    primary:$("primaryButton"), secondary:$("secondaryButton"),
-    result:$("resultStrip"), endScore:$("endScore"), endBest:$("endBest"),
-    hint:$("controlsHint"), sound:$("soundButton"), announce:$("announce") };
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  const rand=(a,b)=>a+Math.random()*(b-a);
-  const sprites = {};
-  const colours = { X:"#213147", K:"#304158", W:"#f7fcff", w:"#b6d6e4",
-    R:"#d84c54",r:"#973649",G:"#3c9a67",g:"#84d28d",Y:"#ffe28a",
-    B:"#a56943",b:"#deaa6a",S:"#ffceb0",O:"#f9a65a",T:"#81cadb",t:"#35799d" };
-  const patterns = {
-    sleigh:[
-      "...........KKK...................","..........KKKKK..................","..........RRRRR..................",
-      "..........SSXSS..................",".........WRRRRRWW................",".........RRRRRRRR..YY............",
-      ".....RRRRRRRRRRRRYYYYYY..........","...RRRRRRRRRRRRRRRRRYYYYY........","..RRRRRRRRRRRRRRRRRRRRRYYYY......",
-      "..RRRRRRRRRRRRRRRRRRRRRRRRRRR....","...RRRRRRRRRRRRRRRRRRRRRRRRR.....",
-      "...XXXXXXXXXXXXXXXRRRRRRRR......","....YYYYYYYYYYYYYYYYYYYYY.......",".....YYYYYYYYYYYYYYYYYYY........",
-      ".......YY...............YY......"],
-    bonus:[
-      "......YYYYYYY.................","....YYWWWWYYYY...............","...YYWSSWWYYYY......YY.......",
-      "...YRWXXWRRRYYYY...YYYY......","...RRRRRRRRRYYYYYYYYYYYY.....",
-      ".RRRRRRRRRRRRRYYYYYYYYYYYYY..","RRRRRRRRRRRRRRRRRRRRRRRRRRR..","RRRRRRRRRRRRRRRRRRRRRRRRRRR..",
-      ".XXXXXXXXXXXXRRRRRRRRRRRRR...","..YYYYYYYYYYYYYYYYYYYYYYY....","....YYYYYYYYYYYYYYYYYYYY....."]
-  };
-  for (const [name,rows] of Object.entries(patterns)) {
-    const c=document.createElement("canvas");
-    c.width=Math.max(...rows.map(r=>r.length));c.height=rows.length;
-    const g=c.getContext("2d");g.imageSmoothingEnabled=false;
-    rows.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ink=colours[row[x]];if(ink){g.fillStyle=ink;g.fillRect(x,y,1,1);}}});
-    sprites[name]=c;
+/* Santa Invaders: GameBox / Workshop Watch Christmas pixel-art family.
+   Real frames: Admurin Monster Pack 82 + 85, rabbit pack; terrain: Gherwit winter atlas.
+   Every gameplay character is loaded from its existing licensed pack, never generated. */
+(()=>{
+"use strict";
+const W=360,H=600,TILE=16,ROWS=4,COLS=8;
+const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+const ui={score:$("score"),wave:$("wave"),lives:$("lives"),banner:$("waveBanner"),asset:$("assetStatus"),
+  overlay:$("overlay"),title:$("overlayTitle"),text:$("overlayText"),primary:$("primaryButton"),
+  secondary:$("secondaryButton"),sound:$("soundButton"),result:$("resultStrip"),
+  endScore:$("endScore"),endBest:$("endBest"),hint:$("controlsHint"),announce:$("announce")};
+const root="../workshop-watch/assets/vendor/";
+const A82=root+"admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/";
+const A85=root+"admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/";
+const RABBIT=root+"admurin/rabbits/Monster%20Pack%20(Free)/Spritesheets/Updated%20Rabbit%20Horned/";
+const ASSETS={
+  ground:root+"gherwit/winter/Winter-Download/Winter-tiles.png",
+  defenderIdle:A82+"Christmas_Snowman_C_Idle.png",
+  defenderMove:A82+"Christmas_Snowman_C_Move.png",
+  ginger:A85+"Gingerbread/Christmas_Gingerbread_Move.png",
+  slime:A85+"Slime/Christmas_Slime_Move.png",
+  devil:A85+"Devil/Christmas_Devil_Move.png",
+  boss:A85+"Devil/Christmas_Devil_Idle.png",
+  rabbit:RABBIT+"Rabbit_Horned_Move.png"};
+const images={},clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),rand=(a,b)=>a+Math.random()*(b-a);
+let ready=false,failed=false,audio=null,soundOn=true;
+try{soundOn=localStorage.getItem("gamebox-santa-invaders-sound")!=="off"}catch(e){}
+let best=0;try{best=Number(localStorage.getItem("gamebox-santa-invaders-best")||0)||0}catch(e){}
+const held={left:false,right:false,fire:false};
+const player={x:W/2,y:H-79,hurt:0,rapid:0,fireCooldown:0,moveAnimation:0};
+const game={state:"ready",returnTo:"ready",score:0,lives:3,wave:1,time:0,
+  fx:[],shots:[],enemyShots:[],invaders:[],forts:[],special:null,
+  direction:1,gridX:20,gridY:84,fireClock:1.7,specialClock:14,
+  grace:0,transition:0,flash:0,shake:0,bannerTimer:0};
+function tone(freq=520,length=.055,type="square",vol=.022){
+  if(!soundOn)return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    if(!audio)audio=new AC();
+    if(audio.state==="suspended")audio.resume();
+    const o=audio.createOscillator(),g=audio.createGain(),now=audio.currentTime;
+    o.type=type;o.frequency.setValueAtTime(freq,now);
+    o.frequency.exponentialRampToValueAtTime(Math.max(80,freq*.7),now+length);
+    g.gain.setValueAtTime(vol,now);g.gain.exponentialRampToValueAtTime(.001,now+length);
+    o.connect(g);g.connect(audio.destination);o.start(now);o.stop(now+length+.01);
+  }catch(e){}
+}
+function announce(message){ui.announce.textContent=message}
+function showBanner(message){
+  ui.banner.textContent=message;ui.banner.classList.add("on");game.bannerTimer=1.45;announce(message);
+}
+function saveBest(){
+  if(game.score<=best)return;best=game.score;
+  try{localStorage.setItem("gamebox-santa-invaders-best",String(best))}catch(e){}
+}
+function hud(){
+  ui.score.textContent=String(game.score).padStart(6,"0");
+  ui.wave.textContent=String(game.wave).padStart(2,"0");
+  ui.lives.textContent="♥ ".repeat(game.lives).trim()||"—";
+}
+function sprite(key,col,row,x,y,dim=128,alpha=1){
+  const img=images[key];if(!img||!img.complete||!img.naturalWidth)return;
+  const cols=key==="defenderIdle"||key==="boss"?4:6,cell=128;
+  const c=((col%cols)+cols)%cols,r=clamp(row|0,0,3);
+  ctx.save();ctx.globalAlpha=alpha;ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(img,c*cell,r*cell,cell,cell,Math.round(x-dim/2),Math.round(y-dim/2),dim,dim);
+  ctx.restore();
+}
+function tile(c,r,x,y,scale=1){
+  const im=images.ground;if(!im||!im.complete||!im.naturalWidth)return;
+  const s=TILE*scale;
+  ctx.drawImage(im,c*TILE,r*TILE,TILE,TILE,Math.round(x),Math.round(y),s,s);
+}
+function tree(x,y){
+  for(let row=0;row<3;row++)for(let col=0;col<3;col++)tile(9+col,6+row,x+col*TILE,y+row*TILE);
+}
+function createBackground(){
+  // The same 16×16 Gherwit snow terrain used in Workshop Watch.
+  // Decorative 3×3 pine composites sit outside the active enemy columns.
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  const pen=ctx; // background is baked once to the actual canvas, then snapshotted.
+  ctx.save();
+  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)tile(12,1,x,y);
+  for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])tree(x,y);
+  for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y);
+  // Workshop gate assembled from the labelled winter 16px tiles.
+  for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
+    tile(col,row,156+tx*16,H-73+ty*16);
+  ctx.restore();
+  return c;
+}
+function background(){
+  // Static terrain is shared with Workshop Watch. Sprite and projectile art is
+  // drawn above it in one unsmoothed canvas, never as overlapping CSS shapes.
+  ctx.fillStyle="#f0faff";ctx.fillRect(0,0,W,H);
+  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)tile(12,1,x,y);
+  for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])tree(x,y);
+  for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y);
+  for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
+    tile(col,row,156+tx*16,H-73+ty*16);
+}
+function projectile(x,y,enemy=false){
+  ctx.fillStyle=enemy?"#a64448":"#72b4c9";ctx.fillRect(Math.round(x-4),Math.round(y-4),9,9);
+  ctx.fillStyle=enemy?"#f4a0a3":"#fff";ctx.fillRect(Math.round(x-3),Math.round(y-3),6,6);
+  ctx.fillStyle=enemy?"#fff8ec":"#cce9f3";ctx.fillRect(Math.round(x-2),Math.round(y-3),3,2);
+}
+function particle(x,y,color,count=11){
+  for(let n=0;n<count;n++)game.fx.push({x,y,vx:rand(-95,95),vy:rand(-110,50),
+    left:rand(.17,.52),color,sz:rand(1.8,4)});
+}
+function makeForts(){
+  game.forts=[];
+  for(let base=0;base<4;base++)for(let row=0;row<2;row++)for(let col=0;col<3;col++){
+    if(row===1&&col===1)continue;
+    game.forts.push({x:30+base*84+col*13,y:H-172+row*13,hp:3});
   }
-
-  // Reuse original Christmas monster art already committed for Workshop Watch.
-  // Source sheets: Admurin Monster Pack 82/85, 128x128 cells, 4 idle frames.
-  // Trim transparent margins once at load time so each monster is legible in the
-  // tight Space Invaders formation. Cache the 28x28 cut-outs for cheap draw calls.
-  const WORKSHOP="../workshop-watch/assets/vendor/admurin/";
-  const CHRISTMAS_SPRITES={
-    defender:WORKSHOP+"pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_A_Idle.png",
-    snowman:WORKSHOP+"pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png",
-    ginger:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Idle.png",
-    slime:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Idle.png",
-    devil:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png"
-  };
-  const animationFrames={};
-  let winterSheet=null;
-  let artworkReady=false,artworkLoading=false;
-  function trimFrame(img,index){
-    const cell=128,raw=document.createElement("canvas");
-    raw.width=raw.height=cell;
-    const g=raw.getContext("2d",{willReadFrequently:true});
-    g.clearRect(0,0,cell,cell);
-    g.drawImage(img,index*cell,0,cell,cell,0,0,cell,cell);
-    const pixels=g.getImageData(0,0,cell,cell).data;
-    let left=cell,top=cell,right=-1,bottom=-1;
-    for(let y=0;y<cell;y++)for(let x=0;x<cell;x++){
-      if(pixels[(y*cell+x)*4+3]<20)continue;
-      left=Math.min(left,x);right=Math.max(right,x);
-      top=Math.min(top,y);bottom=Math.max(bottom,y);
+}
+function fort(f){
+  if(f.hp<=0)return;
+  ctx.save();ctx.imageSmoothingEnabled=false;
+  // Each undamaged block is an original Gherwit snow tile, not a CSS imitation.
+  tile(12,1,f.x,f.y,.8);
+  if(f.hp<3){
+    ctx.strokeStyle="#457c9b";ctx.lineWidth=1;ctx.beginPath();
+    ctx.moveTo(f.x+4,f.y+2);ctx.lineTo(f.x+7,f.y+6);ctx.lineTo(f.x+5,f.y+9);
+    if(f.hp===1){ctx.moveTo(f.x+7,f.y+6);ctx.lineTo(f.x+12,f.y+8);ctx.lineTo(f.x+11,f.y+12);}
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function spawnWave(){
+  game.invaders=[];
+  game.gridX=20;game.gridY=82;game.direction=1;game.fireClock=1.65;
+  game.specialClock=rand(12,20);game.special=null;
+  game.shots=[];game.enemyShots=[];game.grace=1.5;
+  const types=["devil","ginger","slime","rabbit"];
+  for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++)
+    game.invaders.push({type:types[row],row,col,alive:true,points:[40,30,20,10][row],variant:(row+col)%6});
+  makeForts();hud();
+}
+function xy(e){return{x:game.gridX+e.col*40,y:game.gridY+e.row*39}}
+function openPanel(state){
+  game.state=state;ui.overlay.classList.add("show");ui.overlay.setAttribute("aria-hidden","false");
+  ui.result.hidden=state!=="over";ui.sound.hidden=state==="over"||state==="help";
+  ui.hint.hidden=state==="over";ui.sound.textContent=soundOn?"SOUND ON":"SOUND OFF";
+  ui.secondary.hidden=state==="help"||state==="over";
+  if(state==="ready"){
+    ui.title.innerHTML="SANTA <em>INVADERS</em>";
+    ui.text.textContent="Snowman defenders versus a marching monster invasion. Hold the line and save the workshop.";
+    ui.primary.textContent=ready?"DEFEND THE WORKSHOP":failed?"RETRY ASSETS":"LOADING CHRISTMAS…";
+    ui.primary.disabled=!ready&&!failed;ui.secondary.textContent="HOW TO PLAY";
+  }else if(state==="paused"){
+    ui.title.innerHTML="GAME <em>PAUSED</em>";
+    ui.text.textContent="One snowman. A whole army of Christmas monsters.";
+    ui.primary.textContent="RESUME";ui.primary.disabled=false;ui.secondary.textContent="RESTART RUN";
+  }else if(state==="help"){
+    ui.title.innerHTML="HOW TO <em>PLAY</em>";
+    ui.text.textContent="Hold the arrow buttons (or A / D) to move. Hold FIRE (or SPACE) to throw snowballs. Defeat all invaders before they reach the defender. Hide behind the snow forts to block incoming shots. Hit the rare golden-glow monster for bonus points and rapid fire.";
+    ui.primary.textContent="GOT IT";ui.primary.disabled=false;
+  }else if(state==="over"){
+    ui.title.innerHTML="WORKSHOP <em>OVERRUN</em>";
+    ui.text.textContent="The monsters broke through. Fancy another go?";
+    ui.primary.textContent="PLAY AGAIN";ui.primary.disabled=false;
+    ui.endScore.textContent=game.score.toLocaleString();ui.endBest.textContent=best.toLocaleString();
+  }
+}
+function closePanel(){ui.overlay.classList.remove("show");ui.overlay.setAttribute("aria-hidden","true")}
+function release(){
+  held.left=false;held.right=false;held.fire=false;
+  for(const el of document.querySelectorAll(".control"))el.classList.remove("down");
+}
+function begin(){
+  if(!ready)return;game.score=0;game.wave=1;game.lives=3;game.time=0;game.fx=[];
+  player.x=W/2;player.hurt=0;player.rapid=0;player.fireCooldown=0;
+  spawnWave();game.state="playing";closePanel();showBanner("WAVE 01");
+  tone(660,.1,"triangle",.05);
+}
+function pause(){
+  if(game.state!=="playing"&&game.state!=="between")return;
+  game.returnTo=game.state;release();openPanel("paused");
+}
+function resume(){game.state=game.returnTo;closePanel()}
+function end(){
+  release();saveBest();openPanel("over");announce("Run over. Score: "+game.score);
+  tone(210,.2,"sawtooth",.05);
+}
+function damagePlayer(){
+  if(player.hurt>0)return;
+  game.lives--;player.hurt=1.55;game.shake=4;game.flash=.17;
+  particle(player.x,player.y,"#d55a5d",18);hud();tone(165,.15,"sawtooth",.055);
+  if(game.lives<=0)end();
+}
+function addScore(n){game.score+=n;hud()}
+function fire(){
+  if(game.state!=="playing"||player.fireCooldown>0)return;
+  game.shots.push({x:player.x,y:player.y-23,vy:-490,r:4});
+  player.fireCooldown=player.rapid>0?.105:.24;
+  tone(player.rapid>0?850:720,.025,"triangle",.024);
+}
+function enemyFire(){
+  const choices=[];
+  for(let col=0;col<COLS;col++){
+    const line=game.invaders.filter(e=>e.alive&&e.col===col);
+    if(line.length)choices.push(line[line.length-1]);
+  }
+  if(!choices.length)return;
+  const e=choices[Math.floor(Math.random()*choices.length)],p=xy(e);
+  game.enemyShots.push({x:p.x+12,y:p.y+12,vy:151+game.wave*14,r:4});
+}
+function hit(b,x,y,w,h){return b.x+b.r>x&&b.x-b.r<x+w&&b.y+b.r>y&&b.y-b.r<y+h}
+function nextWave(){
+  addScore(100+game.wave*30);game.wave++;spawnWave();
+  game.transition=1.6;game.state="between";
+  showBanner("WAVE "+String(game.wave).padStart(2,"0"));tone(920,.15,"triangle",.05);
+}
+function move(dt){
+  game.time+=dt;
+  player.hurt=Math.max(0,player.hurt-dt);
+  player.rapid=Math.max(0,player.rapid-dt);
+  player.fireCooldown=Math.max(0,player.fireCooldown-dt);
+  game.shake=Math.max(0,game.shake-35*dt);
+  game.flash=Math.max(0,game.flash-dt);
+  game.grace=Math.max(0,game.grace-dt);
+  if(game.bannerTimer>0){game.bannerTimer-=dt;if(game.bannerTimer<=0)ui.banner.classList.remove("on")}
+  for(let i=game.fx.length-1;i>=0;i--){
+    const p=game.fx[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.left-=dt;
+    if(p.left<=0)game.fx.splice(i,1);
+  }
+  if(game.state==="between"){game.transition-=dt;if(game.transition<=0)game.state="playing";return}
+  if(game.state!=="playing")return;
+  const dir=Number(held.right)-Number(held.left);
+  player.x=clamp(player.x+dir*240*dt,25,W-25);
+  player.moveAnimation+=dt*(dir?8:5);
+  if(held.fire)fire();
+  const live=game.invaders.filter(e=>e.alive);
+  const speed=(20+Math.min(70,game.wave*5))*(1+(1-live.length/(ROWS*COLS))*1.65);
+  game.gridX+=game.direction*speed*dt;
+  if(live.length){
+    const xs=live.map(xy),left=Math.min(...xs.map(p=>p.x)),right=Math.max(...xs.map(p=>p.x+24));
+    if((game.direction>0&&right>W-14)||(game.direction<0&&left<14)){
+      game.gridX+=game.direction>0?W-14-right:14-left;
+      game.direction*=-1;game.gridY+=13;
+      tone(180,.025,"square",.01);
     }
-    if(right<left)throw Error("Christmas sprite frame is empty");
-    const out=document.createElement("canvas");out.width=out.height=32;
-    const o=out.getContext("2d");o.imageSmoothingEnabled=false;
-    const w=right-left+1,h=bottom-top+1;
-    const scale=Math.min(28/w,28/h,2.2);
-    const dw=Math.round(w*scale),dh=Math.round(h*scale);
-    o.drawImage(raw,left,top,w,h,Math.round((32-dw)/2),Math.round((32-dh)/2),dw,dh);
-    return out;
+    if(xs.some(p=>p.y+18>=player.y-16)){end();return}
   }
-  function loadArtwork(){
-    if(artworkLoading)return;
-    artworkLoading=true;artworkReady=false;
-    ui.primary.disabled=true;ui.primary.textContent="LOADING CHRISTMAS ART…";
-    Promise.all(Object.entries(CHRISTMAS_SPRITES).map(([key,src])=>new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>{
-        try{
-          if(img.naturalWidth<512||img.naturalHeight<128)throw Error("Invalid Christmas sprite sheet");
-          animationFrames[key]=[0,1,2,3].map(i=>trimFrame(img,i));
-          resolve();
-        }catch(error){reject(error);}
-      };
-      img.onerror=()=>reject(Error("Artwork could not load: "+key));
-      img.src=src;
-    })).concat([new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>{winterSheet=img;drawWinterScenery(img);resolve();};
-      img.onerror=()=>reject(Error("Winter scenery could not load"));
-      img.src="../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png";
-    })])).then(()=>{
-      artworkReady=true;artworkLoading=false;
-      if(game.phase==="ready"){
-        ui.primary.disabled=false;
-        ui.primary.textContent="DEFEND THE NORTH POLE";
+  game.fireClock-=dt;
+  if(game.fireClock<=0&&game.grace<=0){
+    enemyFire();game.fireClock=rand(.7,1.35)*Math.max(.42,1-(game.wave-1)*.055);
+  }
+  game.specialClock-=dt;
+  if(game.specialClock<=0&&!game.special){
+    game.special={x:-35,y:35,vx:rand(60,85)};
+    game.specialClock=rand(17,23);
+  }
+  if(game.special){game.special.x+=game.special.vx*dt;if(game.special.x>W+42)game.special=null}
+  for(let i=game.shots.length-1;i>=0;i--){
+    const b=game.shots[i];b.y+=b.vy*dt;
+    if(b.y<-8){game.shots.splice(i,1);continue}
+    let used=false;
+    if(game.special&&hit(b,game.special.x-17,game.special.y-14,34,30)){
+      particle(game.special.x,game.special.y,"#ffd57a",20);
+      game.special=null;addScore(175);player.rapid=7;showBanner("RAPID FIRE!");
+      tone(1050,.14,"triangle",.07);used=true;
+    }
+    if(!used)for(const e of game.invaders){
+      if(!e.alive)continue;const p=xy(e);
+      if(hit(b,p.x,p.y,24,25)){
+        e.alive=false;used=true;addScore(e.points);
+        particle(p.x+12,p.y+12,"#d9a764",12);tone(500+e.points*6,.06,"triangle",.04);
+        break;
       }
-    }).catch(error=>{
-      console.error("Santa Invaders: existing Christmas asset failed",error);
-      artworkLoading=false;
-      ui.primary.disabled=false;
-      ui.primary.textContent="RETRY ARTWORK";
-      ui.text.textContent="Christmas artwork could not load. Check the connection and try again.";
-    });
-  }
-  function drawChristmasSprite(kind,x,y,w=28,h=28,offset=0){
-    const frames=animationFrames[kind];
-    if(!frames)return;
-    const frame=frames[Math.floor(game.elapsed*5+offset)%frames.length];
-    ctx.drawImage(frame,Math.round(x),Math.round(y),w,h);
-  }
-  const artImage=src=>{const i=new Image();i.src=src;return i;};
-  const snowball=artImage("../assets/gamebox/kenney/2d/Platformer Assets Holiday/ball_lightBlue.png");
-  const giftImages={
-    rapid:artImage("../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_yellow.png"),
-    triple:artImage("../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png"),
-    fort:artImage("../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_blue.png")};
-  let audio=null,soundEnabled=true;
-  try { soundEnabled=localStorage.getItem("gamebox-santa-invaders-sound")!=="off"; }catch(e){}
-  function chime(frequency=460,duration=.06,kind="sine",level=.055){
-    if(!soundEnabled)return;
-    try {
-      const AC=window.AudioContext||window.webkitAudioContext;
-      if(!AC)return;
-      if(!audio)audio=new AC();
-      if(audio.state==="suspended")audio.resume();
-      const oscillator=audio.createOscillator(), gain=audio.createGain(), now=audio.currentTime;
-      oscillator.type=kind;oscillator.frequency.setValueAtTime(frequency,now);
-      oscillator.frequency.exponentialRampToValueAtTime(Math.max(70,frequency*.68),now+duration);
-      gain.gain.setValueAtTime(level,now);gain.gain.exponentialRampToValueAtTime(.001,now+duration);
-      oscillator.connect(gain);gain.connect(audio.destination);
-      oscillator.start(now);oscillator.stop(now+duration+.01);
-    } catch(e){}
-  }
-  let high=0;
-  try {high=+(localStorage.getItem("gamebox-santa-invaders-best")||0)||0;}catch(e){}
-  const held={left:false,right:false,fire:false};
-  const player={x:W/2,y:H-75,invuln:0,rapid:0,triple:0};
-  const game={phase:"ready",wave:1,score:0,lives:3,elapsed:0,shake:0,whiteout:0,
-    formationX:26,formationY:65,dir:1,fireClock:0,bonusClock:0,bonus:null,
-    enemies:[],bullets:[],enemyShots:[],particles:[],forts:[],gifts:[],
-    fireWait:0,transition:0,toastClock:0};
-  const starfield=Array.from({length:82},(_,i)=>({x:(i*127+29)%W,y:(i*71+13)%(H-100),size:i%8===0?2:1,t:i*.41}));
-  const flakes=Array.from({length:45},()=>({x:rand(0,W),y:rand(0,H),speed:rand(8,25),size:Math.random()>.78?2:1}));
-  const ground=document.createElement("canvas");ground.width=W;ground.height=H;
-  const bg=ground.getContext("2d");bg.imageSmoothingEnabled=false;
-  const sky=bg.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,"#0b1c35");sky.addColorStop(.55,"#1e4265");sky.addColorStop(1,"#34657f");
-  bg.fillStyle=sky;bg.fillRect(0,0,W,H);
-  bg.fillStyle="#bddbea";bg.beginPath();bg.arc(300,75,21,0,Math.PI*2);bg.fill();
-  bg.fillStyle="#c9e6f2";bg.fillRect(0,H-35,W,35);
-  bg.fillStyle="#93becd";bg.fillRect(0,H-34,W,2);
-  function fir(x,top,s,height){
-    bg.fillStyle="#142f41";bg.fillRect(x-2,top+height-3,4,10);
-    for(let i=0;i<3;i++){
-      const y=top+i*height*.24, width=(11+i*5)*s;
-      bg.fillStyle=i===0?"#20556a":"#174356";
-      bg.beginPath();bg.moveTo(x,y);bg.lineTo(x-width,y+height*.36);bg.lineTo(x+width,y+height*.36);bg.fill();
-      bg.fillStyle="#c7e8f2";bg.fillRect(x-width*.65,y+height*.25,width*.95,2);
     }
-  }
-  for(let i=0;i<11;i++){const x=i*38+(i%2)*7;fir(x,H-65-(i%3)*14,.6+i%3*.15,30+i%3*11);}
-  // Distant lit toy workshop, with a snowy pitched roof.
-  bg.fillStyle="#14384b";bg.fillRect(133,H-71,94,41);bg.fillStyle="#eefaff";
-  for(let i=0;i<7;i++)bg.fillRect(125+i*15,H-72-Math.min(i,6-i)*5,19,5);
-  bg.fillStyle="#214359";bg.fillRect(144,H-53,18,17);bg.fillRect(170,H-53,18,17);bg.fillRect(196,H-53,18,17);
-  bg.fillStyle="#ffc56c";bg.fillRect(147,H-50,12,10);bg.fillRect(173,H-50,12,10);bg.fillRect(199,H-50,12,10);
-  bg.fillStyle="#e8f7ff";bg.fillRect(0,H-21,W,21);
-  function drawWinterScenery(im){
-    // Gherwit Winter tiles: 14 columns x 12 rows, each source tile 16x16.
-    bg.save();bg.imageSmoothingEnabled=false;
-    for(let y=H-27;y<H;y+=16)for(let x=0;x<W;x+=16)
-      bg.drawImage(im,12*16,1*16,16,16,x,y,16,16);
-    for(const x of [9,W-60])bg.drawImage(im,9*16,6*16,48,48,x,H-95,48,48);
-    bg.restore();
-  }
-  const alive=()=>game.enemies.filter(e=>e.alive);
-  const coord=e=>({x:game.formationX+e.col*39,y:game.formationY+e.row*35});
-  function announce(s){ui.announce.textContent=s;}
-  function refreshHUD(){
-    ui.score.textContent=String(game.score).padStart(6,"0");
-    ui.wave.textContent=String(game.wave).padStart(2,"0");
-    ui.lives.textContent=Array.from({length:game.lives},()=> "♥").join(" ")||"—";
-  }
-  function newForts(){
-    game.forts=[];
-    for(let bank=0;bank<4;bank++)for(let row=0;row<2;row++)for(let col=0;col<3;col++){
-      if(row===1&&col===1)continue;
-      game.forts.push({x:24+bank*86+col*15,y:H-175+row*15,hp:3});
+    if(!used)for(const f of game.forts){
+      if(f.hp<=0)continue;
+      if(hit(b,f.x,f.y,13,13)){f.hp--;used=true;particle(b.x,b.y,"#b1dae7",4);break}
     }
+    if(used)game.shots.splice(i,1);
   }
-  function buildWave(){
-    game.formationX=25;game.formationY=76;game.dir=1;game.fireClock=1.1;
-    game.bonusClock=11;game.bonus=null;game.bullets=[];game.enemyShots=[];game.gifts=[];
-    game.enemies=[];
-    for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++)
-      game.enemies.push({row,col,kind:["devil","ginger","snowman","slime"][row],
-        points:[40,30,20,10][row],alive:true,step:Math.random()*6});
-    newForts();refreshHUD();
-  }
-  function setOverlay(which){
-    game.phase=which;
-    ui.overlay.classList.add("show");ui.overlay.setAttribute("aria-hidden","false");
-    ui.result.hidden=which!=="over";ui.hint.hidden=which==="over";
-    ui.sound.hidden=which==="over"||which==="help";ui.sound.textContent=soundEnabled?"SOUND ON":"SOUND OFF";
-    ui.secondary.hidden=false;
-    if(which==="ready"){
-      ui.title.innerHTML="SANTA <em>INVADERS</em>";
-      ui.text.textContent="The toy workshop is under attack! Fire snowballs, protect the snow forts and hold the line.";
-      ui.primary.textContent="DEFEND THE NORTH POLE";ui.secondary.textContent="HOW TO PLAY";
-    }else if(which==="paused"){
-      ui.title.innerHTML="GAME <em>PAUSED</em>";
-      ui.text.textContent="The North Pole is counting on you.";
-      ui.primary.textContent="RESUME GAME";ui.secondary.textContent="RESTART RUN";
-    }else if(which==="help"){
-      ui.title.innerHTML="HOW TO <em>PLAY</em>";
-      ui.text.textContent="Shoot the approaching toys before they reach Santa. Avoid the returning candy-cane shots. Catch falling presents for rapid fire, triple shots or snow-fort repairs. Clear all enemies to reach the next wave.";
-      ui.primary.textContent="GOT IT";ui.secondary.hidden=true;
-    }else if(which==="over"){
-      ui.title.innerHTML="NORTH POLE <em>OVERRUN</em>";
-      ui.text.textContent="The workshop needs another hero. Try again!";
-      ui.endScore.textContent=game.score.toLocaleString();
-      ui.endBest.textContent=high.toLocaleString();
-      ui.primary.textContent="PLAY AGAIN";ui.secondary.hidden=true;
+  for(let i=game.enemyShots.length-1;i>=0;i--){
+    const b=game.enemyShots[i];b.y+=b.vy*dt;
+    if(b.y>H+8){game.enemyShots.splice(i,1);continue}
+    let used=false;
+    for(const f of game.forts){
+      if(f.hp<=0)continue;
+      if(hit(b,f.x,f.y,13,13)){f.hp--;used=true;particle(b.x,b.y,"#b1dae7",4);break}
     }
-  }
-  let helpFrom="ready";
-  function hideOverlay(){ui.overlay.classList.remove("show");ui.overlay.setAttribute("aria-hidden","true");}
-  function reset(){
-    if(!artworkReady){loadArtwork();return;}
-    game.wave=1;game.score=0;game.lives=3;game.elapsed=0;game.shake=0;game.whiteout=0;
-    game.particles=[];game.fireWait=0;player.x=W/2;player.invuln=1.3;player.rapid=0;player.triple=0;
-    buildWave();hideOverlay();game.phase="playing";flashBanner("WAVE 01");announce("Wave one started");
-    chime(625,.13,"triangle",.09);
-  }
-  function pause(){if(game.phase!=="playing"&&game.phase!=="between")return;game.lastPhase=game.phase;setOverlay("paused");releaseControls();}
-  function resume(){hideOverlay();game.phase=game.lastPhase==="between"?"between":"playing";}
-  function gameOver(){
-    game.phase="over";releaseControls();
-    if(game.score>high){high=game.score;try{localStorage.setItem("gamebox-santa-invaders-best",String(high));}catch(e){}}
-    setOverlay("over");announce("Game over. Final score "+game.score);
-    chime(245,.28,"sawtooth",.035);
-  }
-  function flashBanner(message){ui.banner.textContent=message;ui.banner.classList.add("on");game.toastClock=1.65;}
-  function spark(x,y,colour,count=9){
-    for(let i=0;i<count;i++)game.particles.push({x,y,vx:rand(-95,95),vy:rand(-100,55),life:rand(.22,.65),max:.65,colour,sz:rand(1.5,4)});
-  }
-  function shoot(){
-    const boost=player.rapid>0;
-    if(game.fireWait>0)return;
-    game.fireWait=boost?.115:.26;
-    const spread=player.triple>0?[-80,0,80]:[0];
-    for(const vx of spread)game.bullets.push({x:player.x,y:player.y-21,vx,vy:-455,r:5});
-    chime(boost?780:670,.045,"triangle",.045);
-  }
-  function enemyAttack(){
-    const candidates=[];
-    for(let col=0;col<COLS;col++){
-      const column=game.enemies.filter(e=>e.alive&&e.col===col);
-      if(column.length)candidates.push(column[column.length-1]);
+    if(!used&&player.hurt<=0&&hit(b,player.x-15,player.y-15,30,31)){
+      damagePlayer();used=true;
     }
-    if(!candidates.length)return;
-    const e=candidates[Math.floor(Math.random()*candidates.length)],p=coord(e);
-    game.enemyShots.push({x:p.x+12,y:p.y+22,vy:142+game.wave*13,r:5});
+    if(used)game.enemyShots.splice(i,1);
   }
-  function hitRect(b,r){return b.x+b.r>r.x&&b.x-b.r<r.x+r.w&&b.y+b.r>r.y&&b.y-b.r<r.y+r.h;}
-  function award(points){game.score+=points;refreshHUD();}
-  function nextWave(){
-    game.wave++;buildWave();game.phase="between";game.transition=1.65;
-    flashBanner("WAVE "+String(game.wave).padStart(2,"0"));
-    announce("Wave "+game.wave);chime(880,.16,"sine",.1);
+  if(game.state==="playing"&&!game.invaders.some(e=>e.alive))nextWave();
+}
+function draw(){
+  ctx.save();ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,W,H);
+  if(game.shake)ctx.translate(Math.round(rand(-game.shake,game.shake)),Math.round(rand(-game.shake,game.shake)));
+  background();
+  // Subtle lane markers, drawn beneath all characters.
+  ctx.fillStyle="rgba(81,147,174,.35)";
+  for(let y=26;y<H-42;y+=12){ctx.fillRect(9,y,2,4);ctx.fillRect(W-11,y,2,4);}
+  for(const f of game.forts)fort(f);
+  if(game.special){
+    sprite("boss",Math.floor(game.time*5)%4,2,game.special.x,game.special.y,158);
+    ctx.fillStyle="#f2bc4e";ctx.fillRect(Math.round(game.special.x-11),Math.round(game.special.y-24),22,3);
   }
-  function damagePlayer(){
-    if(player.invuln>0)return;
-    game.lives--;player.invuln=1.7;game.shake=8;game.whiteout=.23;
-    spark(player.x,player.y,"#ff9e90",22);refreshHUD();chime(160,.18,"sawtooth",.06);
-    if(game.lives<=0)gameOver();
+  for(const e of game.invaders){
+    if(!e.alive)continue;const p=xy(e);
+    const animation=(Math.floor(game.time*6)+e.variant)%6;
+    sprite(e.type,animation,game.direction>0?2:1,p.x+12,p.y+12,128);
   }
-  function maybeGift(x,y){
-    if(Math.random()>.09)return;
-    const options=["rapid","triple","fort"];
-    game.gifts.push({x,y,vy:52,kind:options[Math.floor(Math.random()*3)]});
+  for(const b of game.shots)projectile(b.x,b.y);
+  for(const b of game.enemyShots)projectile(b.x,b.y,true);
+  const blinking=player.hurt>0&&Math.floor(player.hurt*12)%2===0;
+  if(!blinking){
+    sprite(Number(held.left)||Number(held.right)?"defenderMove":"defenderIdle",
+      Math.floor(player.moveAnimation)%4,
+      held.left?1:held.right?2:0,player.x,player.y,168);
   }
-  function collectGift(g){
-    if(g.kind==="rapid")player.rapid=8;
-    if(g.kind==="triple")player.triple=8;
-    if(g.kind==="fort")game.forts.forEach(f=>f.hp=Math.min(3,f.hp+2));
-    flashBanner(g.kind==="rapid"?"RAPID SNOW!":g.kind==="triple"?"TRIPLE SHOT!":"FORTS REPAIRED!");
-    chime(950,.14,"sine",.09);
-  }
-  function update(dt){
-    game.elapsed+=dt;game.shake=Math.max(0,game.shake-dt*35);
-    game.whiteout=Math.max(0,game.whiteout-dt);player.invuln=Math.max(0,player.invuln-dt);
-    player.rapid=Math.max(0,player.rapid-dt);player.triple=Math.max(0,player.triple-dt);
-    game.fireWait=Math.max(0,game.fireWait-dt);
-    for(const f of flakes){f.y+=f.speed*dt;f.x+=Math.sin(game.elapsed+f.y*.014)*dt*5;if(f.y>H){f.y=0;f.x=rand(0,W);} }
-    for(let i=game.particles.length-1;i>=0;i--){
-      const p=game.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=140*dt;p.life-=dt;
-      if(p.life<=0)game.particles.splice(i,1);
-    }
-    if(game.toastClock>0){game.toastClock-=dt;if(game.toastClock<=0)ui.banner.classList.remove("on");}
-    if(game.phase==="between"){
-      game.transition-=dt;if(game.transition<=0)game.phase="playing";
-      return;
-    }
-    if(game.phase!=="playing")return;
-    const motion=Number(held.right)-Number(held.left);
-    player.x=clamp(player.x+motion*260*dt,24,W-24);
-    if(held.fire)shoot();
-    const remaining=alive(),fraction=remaining.length/(ROWS*COLS);
-    const speed=(23+Math.min(90,game.wave*6))*(1+(1-fraction)*1.9);
-    game.formationX+=game.dir*speed*dt;
-    const pts=remaining.map(coord);
-    if(pts.length){
-      const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x+24));
-      if((game.dir>0&&maxX>W-12)||(game.dir<0&&minX<12)){
-        game.formationX+=game.dir>0?W-12-maxX:12-minX;
-        game.dir*=-1;game.formationY+=14;
-        chime(120,.02,"square",.013);
-      }
-      if(pts.some(p=>p.y+23>player.y-16)){gameOver();return;}
-    }
-    game.fireClock-=dt;
-    if(game.fireClock<=0){enemyAttack();game.fireClock=rand(.75,1.42)*Math.max(.38,1-(game.wave-1)*.055);}
-    game.bonusClock-=dt;
-    if(game.bonusClock<=0&&!game.bonus){
-      game.bonus={x:-45,y:33,vx:80+game.wave*4};
-      game.bonusClock=rand(15,22);
-    }
-    if(game.bonus){
-      game.bonus.x+=game.bonus.vx*dt;
-      if(game.bonus.x>W+50)game.bonus=null;
-    }
-    for(let i=game.bullets.length-1;i>=0;i--){
-      const b=game.bullets[i];b.y+=b.vy*dt;b.x+=b.vx*dt;
-      if(b.y<-12||b.x<-10||b.x>W+10){game.bullets.splice(i,1);continue;}
-      let hit=false;
-      if(game.bonus&&hitRect(b,{x:game.bonus.x,y:game.bonus.y,w:44,h:24})){
-        spark(b.x,b.y,"#ffdb8e",14);award(150);game.bonus=null;hit=true;chime(1050,.12);
-      }
-      if(!hit)for(const e of game.enemies){
-        if(!e.alive)continue;
-        const p=coord(e);
-        if(hitRect(b,{x:p.x,y:p.y,w:24,h:24})){
-          e.alive=false;award(e.points);spark(p.x+12,p.y+12,"#ffe3a2",12);maybeGift(p.x+12,p.y);
-          chime(470+e.points*5,.07,"triangle",.06);hit=true;break;
-        }
-      }
-      if(hit)game.bullets.splice(i,1);
-    }
-    for(let i=game.enemyShots.length-1;i>=0;i--){
-      const b=game.enemyShots[i];b.y+=b.vy*dt;
-      if(b.y>H+15){game.enemyShots.splice(i,1);continue;}
-      let hit=false;
-      for(const f of game.forts){
-        if(f.hp<=0)continue;
-        if(hitRect(b,{x:f.x,y:f.y,w:14,h:14})){
-          f.hp--;spark(b.x,b.y,"#c7eafa",5);hit=true;break;
-        }
-      }
-      if(!hit&&player.invuln<=0&&hitRect(b,{x:player.x-19,y:player.y-12,w:38,h:25})){damagePlayer();hit=true;}
-      if(hit)game.enemyShots.splice(i,1);
-    }
-    for(let i=game.gifts.length-1;i>=0;i--){
-      const g=game.gifts[i];g.y+=g.vy*dt;
-      if(g.y>H){game.gifts.splice(i,1);continue;}
-      if(Math.abs(g.x-player.x)<22&&Math.abs(g.y-player.y)<22){collectGift(g);game.gifts.splice(i,1);}
-    }
-    if(game.phase==="playing"&&!game.enemies.some(e=>e.alive))nextWave();
-  }
-  function image(name,x,y,w,h){const img=sprites[name];ctx.drawImage(img,Math.round(x),Math.round(y),w,h);}
-  function snow(x,y,r){ctx.fillStyle="#173b5f";ctx.beginPath();ctx.arc(x+1,y+2,r+1,0,7);ctx.fill();
-    if(snowball.complete&&snowball.naturalWidth)ctx.drawImage(snowball,x-r,y-r,2*r,2*r);
-    else {ctx.fillStyle="#e5fbff";ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(x-r/2,y-r/2,r,1);}
-  }
-  function drawFort(f){
-    if(f.hp<=0)return;
-    ctx.fillStyle="#24475a";ctx.fillRect(f.x,f.y+2,14,12);
-    ctx.fillStyle=f.hp===1?"#6da0bf":f.hp===2?"#86bbd2":"#a5dcf0";
-    ctx.fillRect(f.x+1,f.y+3,12,10);
-    if(winterSheet)ctx.drawImage(winterSheet,12*16,1*16,16,16,f.x+1,f.y+3,12,10);
-    ctx.fillStyle="#effaff";ctx.fillRect(f.x+1,f.y,12,4);
-    ctx.fillStyle="#fff";ctx.fillRect(f.x+3,f.y,5,2);
-    if(f.hp<3){ctx.fillStyle="#2e5f7d";ctx.fillRect(f.x+7,f.y+5,2,6);ctx.fillRect(f.x+9,f.y+8,3,2);}
-    if(f.hp===1){ctx.fillStyle="#213f5a";ctx.fillRect(f.x+2,f.y+8,4,5);}
-  }
-  function draw(){
-    ctx.save();ctx.clearRect(0,0,W,H);
-    if(game.shake){ctx.translate(Math.round(rand(-game.shake,game.shake)),Math.round(rand(-game.shake,game.shake)));}
-    ctx.drawImage(ground,0,0);
-    for(const s of starfield){
-      const pulse=Math.sin(game.elapsed*1.3+s.t)>-.2;
-      ctx.fillStyle=pulse?"#d3f1fc":"#527d9b";ctx.fillRect(s.x,s.y,s.size,s.size);
-    }
-    for(const f of flakes){ctx.fillStyle="#d3f0f6";ctx.globalAlpha=.55;ctx.fillRect(f.x|0,f.y|0,f.size,f.size);}
-    ctx.globalAlpha=1;
-    ctx.strokeStyle="#5b9eb9";ctx.lineWidth=1;ctx.setLineDash([2,5]);
-    ctx.beginPath();ctx.moveTo(9,38);ctx.lineTo(9,H-40);ctx.moveTo(W-9,38);ctx.lineTo(W-9,H-40);ctx.stroke();ctx.setLineDash([]);
-    for(const fort of game.forts)drawFort(fort);
-    if(game.bonus){image("bonus",game.bonus.x,game.bonus.y,46,24);}
-    for(const e of game.enemies){
-      if(!e.alive)continue;
-      const p=coord(e);
-      const bob=Math.sin(game.elapsed*5+e.step)*1.2;
-      drawChristmasSprite(e.kind,p.x-3,p.y-4+bob,30,30,e.col*.3);
-    }
-    for(const b of game.bullets){snow(b.x,b.y,b.r);}
-    for(const b of game.enemyShots){
-      ctx.fillStyle="#621b3a";ctx.fillRect(b.x-3,b.y-5,7,12);
-      ctx.fillStyle="#e6525b";ctx.fillRect(b.x-2,b.y-6,5,11);
-      ctx.fillStyle="#fff5ec";ctx.fillRect(b.x-2,b.y-2,5,3);ctx.fillRect(b.x-2,b.y+4,5,2);
-    }
-    for(const g of game.gifts){
-      const sprite=giftImages[g.kind];
-      if(sprite.complete&&sprite.naturalWidth)ctx.drawImage(sprite,g.x-11,g.y-12,22,22);
-      else image("present",g.x-9,g.y-10,20,20);
-    }
-    if(player.invuln<=0||Math.floor(game.elapsed*12)%2===0||game.phase==="ready"){
-      ctx.fillStyle="rgba(9,30,49,.4)";ctx.fillRect(player.x-21,player.y+16,42,4);
-      image("sleigh",player.x-24,player.y-19,48,34);
-      drawChristmasSprite("defender",player.x-15,player.y-30,30,30);
-      ctx.fillStyle="#fff";ctx.fillRect(player.x-22,player.y+7,2,2);
-    }
-    if(player.triple>0||player.rapid>0){
-      ctx.strokeStyle=player.triple>0?"#97e8bf":"#ffe58f";ctx.lineWidth=2;
-      ctx.strokeRect(player.x-24,player.y-22,48,38);
-    }
-    for(const p of game.particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.colour;ctx.fillRect(p.x,p.y,p.sz,p.sz);}
-    ctx.globalAlpha=1;
-    if(game.whiteout){ctx.fillStyle="rgba(255,142,154,"+(game.whiteout*1.5)+")";ctx.fillRect(0,0,W,H);}
-    ctx.restore();
-  }
-  function releaseControls(){
-    held.left=false;held.right=false;held.fire=false;
-    for(const b of document.querySelectorAll(".control"))b.classList.remove("down");
-  }
-  for(const [id,key] of [["moveLeft","left"],["moveRight","right"],["fire","fire"]]){
-    const el=$(id);
-    el.addEventListener("pointerdown",e=>{
-      e.preventDefault();if(game.phase!=="playing")return;
-      el.setPointerCapture(e.pointerId);held[key]=true;el.classList.add("down");
-      if(key==="fire")shoot();
-    });
-    const up=()=>{held[key]=false;el.classList.remove("down");};
-    el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);el.addEventListener("lostpointercapture",up);
-  }
-  document.addEventListener("keydown",e=>{
-    const k=e.key.toLowerCase();
-    if(["arrowleft","arrowright"," ","arrowup","a","d","escape","p"].includes(k))e.preventDefault();
-    if(k==="arrowleft"||k==="a")held.left=true;
-    if(k==="arrowright"||k==="d")held.right=true;
-    if(k===" ")held.fire=true;
-    if((k==="p"||k==="escape")&&!e.repeat){
-      if(game.phase==="paused")resume();
-      else if(game.phase==="playing"||game.phase==="between")pause();
-    }
-    if(k==="enter"&&game.phase==="ready")reset();
+  if(player.rapid>0){ctx.strokeStyle="#e2af35";ctx.lineWidth=2;ctx.strokeRect(player.x-17,player.y-22,34,37);}
+  for(const p of game.fx){ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.sz,p.sz)}
+  if(game.flash){ctx.fillStyle="rgba(244,78,78,.2)";ctx.fillRect(0,0,W,H)}
+  ctx.restore();
+}
+function load(){
+  failed=false;ready=false;ui.asset.hidden=false;ui.asset.textContent="Loading Christmas sprites…";
+  ui.primary.disabled=true;ui.primary.textContent="LOADING CHRISTMAS…";
+  const entries=Object.entries(ASSETS);
+  Promise.all(entries.map(([name,url])=>new Promise((resolve,reject)=>{
+    const img=new Image();img.decoding="async";
+    img.onload=()=>{
+      // Prevent an apparently working game from silently using blank art.
+      if(img.naturalWidth<128||img.naturalHeight<128)return reject(new Error(name+" invalid dimensions"));
+      images[name]=img;resolve();
+    };
+    img.onerror=()=>reject(new Error(name+" failed to load"));
+    img.src=url;
+  }))).then(()=>{
+    ready=true;failed=false;ui.asset.hidden=true;openPanel("ready");draw();
+  }).catch(error=>{
+    failed=true;ready=false;ui.asset.textContent="Asset load failed — retry in menu";
+    console.error("Santa Invaders: required game art did not load",error);
+    openPanel("ready");
   });
-  document.addEventListener("keyup",e=>{
-    const k=e.key.toLowerCase();
-    if(k==="arrowleft"||k==="a")held.left=false;
-    if(k==="arrowright"||k==="d")held.right=false;
-    if(k===" ")held.fire=false;
+}
+function bindHeld(id,key){
+  const el=$(id);
+  el.addEventListener("pointerdown",e=>{
+    e.preventDefault();if(game.state!=="playing")return;
+    el.setPointerCapture(e.pointerId);held[key]=true;el.classList.add("down");if(key==="fire")fire();
   });
-  window.addEventListener("blur",()=>{releaseControls();pause();});
-  document.addEventListener("visibilitychange",()=>{if(document.hidden){releaseControls();pause();}});
-  let drag=null;
-  canvas.addEventListener("pointerdown",e=>{
-    if(game.phase!=="playing")return;
-    drag={id:e.pointerId,x:e.clientX,start:player.x};
-    canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener("pointermove",e=>{
-    if(!drag||e.pointerId!==drag.id||game.phase!=="playing")return;
-    const rect=canvas.getBoundingClientRect(),scale=Math.min(rect.width/W,rect.height/H);
-    player.x=clamp(drag.start+(e.clientX-drag.x)/Math.max(.1,scale),24,W-24);
-  });
-  for(const evt of ["pointerup","pointercancel","lostpointercapture"])canvas.addEventListener(evt,()=>drag=null);
-  $("menuButton").addEventListener("click",()=>{
-    if(game.phase==="playing"||game.phase==="between")pause();
-    else if(game.phase==="paused")resume();
-  });
-  ui.sound.addEventListener("click",()=>{
-    soundEnabled=!soundEnabled;
-    try{localStorage.setItem("gamebox-santa-invaders-sound",soundEnabled?"on":"off");}catch(e){}
-    ui.sound.textContent=soundEnabled?"SOUND ON":"SOUND OFF";
-    if(soundEnabled)chime(680,.11,"triangle");
-  });
-  ui.primary.addEventListener("click",()=>{
-    if(game.phase==="ready"||game.phase==="over")reset();
-    else if(game.phase==="paused")resume();
-    else if(game.phase==="help")setOverlay(helpFrom);
-  });
-  ui.secondary.addEventListener("click",()=>{
-    if(game.phase==="ready"){helpFrom="ready";setOverlay("help");}
-    else if(game.phase==="paused")reset();
-  });
-  buildWave();setOverlay("ready");loadArtwork();
-  let last=0;
-  function tick(now){
-    const dt=last?Math.min(.034,(now-last)/1000):0;last=now;
-    if(game.phase==="playing"||game.phase==="between")update(dt);
-    draw();requestAnimationFrame(tick);
+  for(const type of ["pointerup","pointercancel","lostpointercapture"])
+    el.addEventListener(type,()=>{held[key]=false;el.classList.remove("down")});
+}
+bindHeld("moveLeft","left");bindHeld("moveRight","right");bindHeld("fire","fire");
+document.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if(["arrowleft","arrowright","a","d"," ","enter","p","escape"].includes(k))e.preventDefault();
+  if(k==="arrowleft"||k==="a")held.left=true;
+  if(k==="arrowright"||k==="d")held.right=true;
+  if(k===" ")held.fire=true;
+  if(!e.repeat&&(k==="escape"||k==="p")){
+    if(game.state==="paused")resume();
+    else if(game.state==="playing"||game.state==="between")pause();
   }
-  requestAnimationFrame(tick);
+  if(k==="enter"&&game.state==="ready"&&ready)begin();
+});
+document.addEventListener("keyup",e=>{
+  const k=e.key.toLowerCase();
+  if(k==="arrowleft"||k==="a")held.left=false;
+  if(k==="arrowright"||k==="d")held.right=false;
+  if(k===" ")held.fire=false;
+});
+window.addEventListener("blur",()=>{release();pause()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){release();pause()}});
+let drag=null;
+canvas.addEventListener("pointerdown",e=>{
+  if(game.state!=="playing")return;
+  drag={id:e.pointerId,start:e.clientX,original:player.x};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!drag||e.pointerId!==drag.id||game.state!=="playing")return;
+  const rect=canvas.getBoundingClientRect(),scale=Math.min(rect.width/W,rect.height/H);
+  player.x=clamp(drag.original+(e.clientX-drag.start)/Math.max(.1,scale),25,W-25);
+});
+for(const type of ["pointerup","pointercancel","lostpointercapture"])
+  canvas.addEventListener(type,()=>drag=null);
+$("menuButton").addEventListener("click",()=>{
+  if(game.state==="playing"||game.state==="between")pause();
+  else if(game.state==="paused")resume();
+});
+ui.primary.addEventListener("click",()=>{
+  if(game.state==="ready"){if(ready)begin();else if(failed)load()}
+  else if(game.state==="over")begin();
+  else if(game.state==="paused")resume();
+  else if(game.state==="help")openPanel(game.returnTo);
+});
+ui.secondary.addEventListener("click",()=>{
+  if(game.state==="ready"){game.returnTo="ready";openPanel("help")}
+  else if(game.state==="paused")begin();
+});
+ui.sound.addEventListener("click",()=>{
+  soundOn=!soundOn;
+  try{localStorage.setItem("gamebox-santa-invaders-sound",soundOn?"on":"off")}catch(e){}
+  ui.sound.textContent=soundOn?"SOUND ON":"SOUND OFF";
+  if(soundOn)tone(660,.09,"triangle");
+});
+spawnWave();openPanel("ready");load();
+let previous=0;
+function frame(now){
+  const dt=previous?Math.min(.033,(now-previous)/1000):0;previous=now;
+  if(game.state==="playing"||game.state==="between")move(dt);
+  draw();requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 })();
