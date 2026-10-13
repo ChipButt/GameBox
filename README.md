@@ -37,10 +37,12 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 ## Included games
 
 ### Santa Invaders
-- Festive arcade shooter featuring Christmas pixel-art invaders, snowball firing and increasingly difficult waves
-- Destructible snow forts, bonus sleighs, falling presents and power-ups
-- Keyboard, mobile touch buttons, drag steering, pause controls, sound effects and local best score
-- Play at `santa-invaders/`
+- Space Invaders-style Christmas arcade shooter, visually matched to Workshop Watch.
+- Real animated Christmas sprites from the bundled Admurin Snowmen (Pack 82), Gingerbread/Slime/Devil (Pack 85), and Horned Rabbit pack; Gherwit 16×16 winter atlas for snow scenery and fort blocks.
+- Snowman defender, four descending rows of monsters, destructible snow forts, counterfire, score/lives, difficulty escalation and periodic bonus enemy with temporary rapid-fire reward.
+- Canvas-rendered cached terrain, keyboard/mobile hold controls, drag steering, pause/restart, sound toggle, asset-loading gate and locally saved best score.
+- **No generated character silhouettes, emoji game sprites, cross-pack high-resolution gift icons or fake sprite placeholders.**
+- Play at `santa-invaders/`.
 
 ### Sweet Truck Fever
 - Mobile-first colour-sorting and parking puzzle game
