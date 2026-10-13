@@ -36,6 +36,12 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+### Santa Invaders
+- Festive arcade shooter featuring Christmas pixel-art invaders, snowball firing and increasingly difficult waves
+- Destructible snow forts, bonus sleighs, falling presents and power-ups
+- Keyboard, mobile touch buttons, drag steering, pause controls, sound effects and local best score
+- Play at `santa-invaders/`
+
 ### Sweet Truck Fever
 - Mobile-first colour-sorting and parking puzzle game
 - Tap clear trucks to send them into loading spaces
