@@ -78,7 +78,7 @@ test('all eight existing art assets load, game runs, and full arcade loop works'
   t.click('primaryButton');
   const {game,player,move,damagePlayer}=t.window.testAccess;
   assert.equal(game.state,'playing');
-  assert.equal(game.invaders.length,6,'First wave should be a small beginner formation');
+  assert.equal(game.invaders.length,7,'First wave should be a small bauble formation');
   assert.equal(game.forts.length,20);
   t.key('keydown',' ');t.frames(650);t.key('keyup',' ');
   assert.ok(game.score>0,'Shooting hits invaders and awards points');
