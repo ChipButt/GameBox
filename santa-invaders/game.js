@@ -7,7 +7,7 @@ const W=360,H=600,TILE=16,ROWS=4,COLS=8;
 const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("2d");
 ctx.imageSmoothingEnabled=false;
 const ui={score:$("score"),wave:$("wave"),lives:$("lives"),banner:$("waveBanner"),asset:$("assetStatus"),
-  overlay:$("overlay"),title:$("overlayTitle"),text:$("overlayText"),primary:$("primaryButton"),
+  hero:$("heroCanvas"),overlay:$("overlay"),title:$("overlayTitle"),text:$("overlayText"),primary:$("primaryButton"),
   secondary:$("secondaryButton"),sound:$("soundButton"),result:$("resultStrip"),
   endScore:$("endScore"),endBest:$("endBest"),hint:$("controlsHint"),announce:$("announce")};
 const root="../workshop-watch/assets/vendor/";
@@ -93,6 +93,30 @@ function background(){
       tile(col,row,156+tx*16,H-73+ty*16,1,g);
   }
   ctx.drawImage(backdrop,0,0);
+}
+function renderHeroPreview(){
+  // Draw directly from the approved source sprites and tiles; no CSS frame-cropping.
+  if(!ready||!ui.hero)return;
+  const g=ui.hero.getContext("2d");if(!g)return;
+  const w=ui.hero.width,h=ui.hero.height;
+  g.imageSmoothingEnabled=false;g.clearRect(0,0,w,h);
+  for(let y=0;y<h;y+=16)for(let x=0;x<w;x+=16)tile(12,1,x,y,1,g);
+  tree(-18,6,g);tree(w-29,2,g);
+  for(const [x,y] of [[30,74],[110,33],[229,77],[277,34]])tile(1,1,x,y,1,g);
+  const char=(name,frame,row,x,y,dim,cols)=>{
+    const im=images[name];if(!im)return;
+    g.drawImage(im,frame*128,row*128,128,128,
+      Math.round(x-dim/2),Math.round(y-dim/2),dim,dim);
+  };
+  char("defenderIdle",1,0,61,73,154,4);
+  char("ginger",0,2,153,53,134,6);
+  char("slime",1,2,211,67,122,6);
+  char("devil",0,2,268,48,138,6);
+  // Gameplay-like projectile trail belongs to the preview, not to faux enemy art.
+  for(const [x,y] of [[93,66],[105,48],[116,30]]){
+    g.fillStyle="#448eac";g.fillRect(x-3,y-3,7,7);
+    g.fillStyle="#f7feff";g.fillRect(x-2,y-2,5,5);
+  }
 }
 function projectile(x,y,enemy=false){
   ctx.fillStyle=enemy?"#a64448":"#72b4c9";ctx.fillRect(Math.round(x-4),Math.round(y-4),9,9);
@@ -334,7 +358,7 @@ function load(){
     img.onerror=()=>reject(new Error(name+" failed to load"));
     img.src=url;
   }))).then(()=>{
-    ready=true;failed=false;ui.asset.hidden=true;openPanel("ready");draw();
+    ready=true;failed=false;ui.asset.hidden=true;renderHeroPreview();openPanel("ready");draw();
   }).catch(error=>{
     failed=true;ready=false;ui.asset.textContent="Asset load failed — retry in menu";
     console.error("Santa Invaders: required game art did not load",error);
