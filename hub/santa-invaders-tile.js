@@ -4,19 +4,20 @@
   "use strict";
   const canvases=[...document.querySelectorAll(".siCanvas")];
   if(!canvases.length)return;
-  const root="workshop-watch/assets/vendor/";
+  // Paths are resolved relative to this script, not whichever GameBox entry page loaded it.
+  const scriptBase=new URL(".",document.currentScript.src);
   const urls={
-    winter:root+"gherwit/winter/Winter-Download/Winter-tiles.png",
-    snow:root+"admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png",
-    ginger:root+"admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png",
-    slime:root+"admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png",
-    devil:root+"admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png"
+    winter:"../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png",
+    snow:"../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png",
+    ginger:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png",
+    slime:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png",
+    devil:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png"
   };
   const images={};
   const load=([name,url])=>new Promise((resolve,reject)=>{
     const img=new Image();
     img.onload=()=>{if(img.naturalWidth<128||img.naturalHeight<128){reject(new Error("Invalid "+name));return;}images[name]=img;resolve();};
-    img.onerror=()=>reject(new Error("Cannot load "+name));img.src=url;
+    img.onerror=()=>reject(new Error("Cannot load "+name));img.src=new URL(url,scriptBase).href;
   });
   Promise.all(Object.entries(urls).map(load)).then(()=>{
     for(const canvas of canvases){
