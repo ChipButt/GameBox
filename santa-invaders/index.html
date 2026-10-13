@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142b43">
+<title>Santa Invaders · GameBox</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<main class="arcade" aria-label="Santa Invaders">
+  <header class="hud">
+    <a class="iconButton" href="../" aria-label="Back to GameBox"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/home.png" alt=""></a>
+    <div class="hudStat"><span>SCORE</span><strong id="score">000000</strong></div>
+    <div class="hudStat hudWave"><span>WAVE</span><strong id="wave">01</strong></div>
+    <div class="hudStat hudLives"><span>LIVES</span><strong id="lives">♥ ♥ ♥</strong></div>
+    <button type="button" class="iconButton" id="menuButton" aria-label="Pause and settings"><img src="../assets/gamebox/kenney/icons/Game Icons/White/2x/gear.png" alt=""></button>
+  </header>
+
+  <section class="playfield" aria-label="Arcade playfield">
+    <canvas id="game" width="360" height="600" aria-label="Move Santa's sleigh left and right. Shoot snowballs to clear the Christmas invaders."></canvas>
+    <div class="waveBanner" id="waveBanner" aria-live="polite"></div>
+  </section>
+
+  <nav class="controls" aria-label="Game controls">
+    <button type="button" class="control move" id="moveLeft" aria-label="Move left"><span aria-hidden="true">◀</span></button>
+    <button type="button" class="control move" id="moveRight" aria-label="Move right"><span aria-hidden="true">▶</span></button>
+    <button type="button" class="control fire" id="fire" aria-label="Fire snowballs"><img src="../assets/gamebox/kenney/2d/Platformer Assets Holiday/ball_lightBlue.png" alt=""><span>FIRE</span></button>
+  </nav>
+
+  <div id="overlay" class="overlay show" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
+    <div class="overlayShade"></div>
+    <section class="overlayPanel">
+      <div class="brandRibbon">NORTH POLE ARCADE</div>
+      <div class="invaderLine" aria-hidden="true">
+        <img src="../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png" alt="">
+        <img src="../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png" alt="">
+        <img src="../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_blue.png" alt="">
+      </div>
+      <h1 id="overlayTitle">SANTA <em>INVADERS</em></h1>
+      <p id="overlayText">The toy workshop is under attack! Fire snowballs, protect the snow forts and hold the line.</p>
+      <div class="resultStrip" id="resultStrip" hidden><div>YOUR SCORE<strong id="endScore">0</strong></div><div>BEST<strong id="endBest">0</strong></div></div>
+      <button type="button" id="primaryButton" class="pixelButton">DEFEND THE NORTH POLE</button>
+      <button type="button" id="secondaryButton" class="pixelButton secondary" hidden>HOW TO PLAY</button>
+      <p id="controlsHint" class="controlHint">← → / A D to move · SPACE to fire<br>On phones: hold the arrows and snowball button</p>
+      <a href="../" id="homeLink" class="homeLink">← GameBox</a>
+    </section>
+  </div>
+  <div id="announce" class="srOnly" aria-live="polite"></div>
+</main>
+<script src="game.js?v=1"></script>
+</body>
+</html>
