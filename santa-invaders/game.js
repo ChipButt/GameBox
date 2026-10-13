@@ -54,7 +54,7 @@ function saveBest(){
 function hud(){
   ui.score.textContent=String(game.score).padStart(6,"0");
   ui.wave.textContent=String(game.wave).padStart(2,"0");
-  ui.lives.textContent="♥ ".repeat(game.lives).trim()||"—";
+  ui.lives.textContent="♥ ".repeat(Math.max(0,game.lives)).trim()||"—";
 }
 function sprite(key,col,row,x,y,dim=128,alpha=1){
   const img=images[key];if(!img||!img.complete||!img.naturalWidth)return;
@@ -204,8 +204,8 @@ function end(){
   tone(210,.2,"sawtooth",.05);
 }
 function damagePlayer(){
-  if(player.hurt>0)return;
-  game.lives--;player.hurt=1.55;game.shake=4;game.flash=.17;
+  if(game.state!=="playing"||player.hurt>0||game.lives<=0)return;
+  game.lives=Math.max(0,game.lives-1);player.hurt=1.55;game.shake=4;game.flash=.17;
   particle(player.x,player.y,"#d55a5d",18);hud();tone(165,.15,"sawtooth",.055);
   if(game.lives<=0)end();
 }
