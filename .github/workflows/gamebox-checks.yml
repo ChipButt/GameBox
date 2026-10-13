@@ -24,6 +24,7 @@ jobs:
           node --check unfinished-business/characters.js
           node --test unfinished-business/world.test.mjs
           node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
+          node --check hub/santa-invaders-tile.js
           node --check santa-invaders/game.js
           node --test santa-invaders/game.test.mjs
           node --test santa-invaders/qa.test.mjs
@@ -37,6 +38,7 @@ jobs:
           node --check race-manager/track-ui.js
       - name: Check required files
         run: |
+          test -f hub/santa-invaders-tile.js
           test -f santa-invaders/index.html
           test -f santa-invaders/style.css
           test -f santa-invaders/game.js
