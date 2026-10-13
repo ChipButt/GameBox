@@ -3,25 +3,29 @@
    Every gameplay character is loaded from its existing licensed pack, never generated. */
 (()=>{
 "use strict";
-const W=360,H=600,TILE=16,COLS=8;
+const W=360,H=600,TILE=16,COLS=9,STEP_X=32,STEP_Y=32;
 const ICE_LINE_Y=H-112, INVADER_W=24,INVADER_H=25;
-// Each silhouette is authored on the same eight-column grid so collisions,
-// animations, and left/right edge movement stay aligned with visible invaders.
+// Each wave uses an actual Christmas silhouette, authored on a 9-column
+// pixel grid. Empty cells remain empty: no filler rows or generic swarms.
 const FORMATIONS=[
-  {name:"SCOUTS",     rows:["...XX...","..XXXX.."]},
-  {name:"CHEVRON",    rows:["..X..X..",".X.XX.X.","..XXXX.."]},
-  {name:"DIAMOND",    rows:["...XX...","..XXXX..",".XXXXXX."]},
-  {name:"TWIN LANES", rows:[".XX..XX.",".XX..XX.",".XX..XX.",".XX..XX."]},
-  {name:"STAIRCASE",  rows:["XX......","XXXX....","..XXXX..","....XXXX"]},
-  {name:"TREE",       rows:["....X...","...XXX..","..XXXXX.",".XXXXXXX"]},
-  {name:"ARCH",       rows:[".XXXXXX.","XX....XX","XX....XX","XXXXXXXX"]},
-  {name:"FULL SWARM", rows:["XXXXXXXX",".XXXXXX.","XXXXXXXX","XXXXXXXX"]}
+  {name:"BAUBLE",rows:["....X....","...XXX...","...X.X...","....X...."]} ,
+  {name:"CANDY CANE",rows:["...XXXX..","..XX..XX.","......XX.",".....XX..",".....XX..",".....XX..",".....XX.."]} ,
+  {name:"CHRISTMAS TREE",rows:["....X....","...XXX...","...XXX...","..XXXXX..",".XXXXXXX.","....X....","....X...."]} ,
+  {name:"STOCKING",rows:["..XXXXX..","..XX.....","..XX.....","..XX.....","..XXXXXX.","..XXXXXXX","...XXXXX."]} ,
+  {name:"SNOWMAN",rows:["...XXX...","..XXXXX..","...XXX...","..XXXXX..",".XXXXXXX.",".XXXXXXX.","..XXXXX.."]} ,
+  {name:"STAR",rows:["....X....","...XXX...","XXXXXXXXX",".XXXXXXX.","..XXXXX..","...X.X...","..X...X.."]} ,
+  {name:"PRESENT",rows:["...X.X...","...XXX...","..XXXXX..",".XXXXXXX.",".XX.X.XX.",".XX.X.XX.",".XXXXXXX."]} ,
+  {name:"WREATH",rows:["...XXX...","..X...X..",".X.....X.",".X.....X.",".X.....X.","..X...X..","...XXX..."]} ,
+  {name:"BELL",rows:["....X....","...XXX...","..XXXXX..","..XXXXX..",".XXXXXXX.",".XXXXXXX.","XXXXXXXXX","....X...."]} ,
+  {name:"SANTA HAT",rows:[".....X...","....XX...","...XXX...","..XXXX...","..XXXXX..",".XXXXXXX.","XXXXXXXXX"]} ,
+  {name:"SNOWFLAKE",rows:["..X.X.X..","...XXX...","XXXXXXXXX","..XXXXX..","XXXXXXXXX","...XXX...","..X.X.X.."]} ,
+  {name:"GINGERBREAD",rows:["...XXX...","...XXX...",".X.XXX.X.","XXXXXXXXX","...XXX...","..XX.XX..","..XX.XX.."]} 
 ];
 function formationFor(wave){
   const pattern=FORMATIONS[(wave-1)%FORMATIONS.length];
-  // Repeat only after all eight distinct shapes; mirror alternating cycles.
-  const mirror=Math.floor((wave-1)/FORMATIONS.length)%2===1;
-  return {name:pattern.name,rows:mirror?pattern.rows.map(row=>[...row].reverse().join("")):pattern.rows};
+  // Preserve the orientation of recognisable holiday icons (especially candy canes).
+  // After all twelve shapes, replay them at higher difficulty.
+  return {name:pattern.name,rows:pattern.rows};
 }
 function difficultyFor(wave){
   const n=Math.max(0,wave-1);
@@ -120,8 +124,6 @@ function drawIceLine(target){
       target.fillStyle="#7ebbd5";target.fillRect(x+9,y+1,2,3);
     }
   }
-  target.fillStyle="#195c78";target.font="bold 8px monospace";
-  target.fillText("ICE LINE",W-56,y-10);
 }
 let backdrop=null;
 function background(){
@@ -202,7 +204,14 @@ function spawnWave(){
   game.rules=difficultyFor(game.wave);
   const formation=formationFor(game.wave);
   game.formationName=formation.name;
-  game.gridX=20;game.gridY=82;game.direction=1;
+  game.gridY=70;game.direction=1;
+  // Centre the occupied columns, not the unused cells at the edges, so a
+  // small bauble or candy cane appears centred instead of to one side.
+  const used=[];
+  for(let row=0;row<formation.rows.length;row++)
+    for(let col=0;col<COLS;col++)if(formation.rows[row][col]==="X")used.push(col);
+  const first=Math.min(...used),last=Math.max(...used);
+  game.gridX=(W-((last-first)*STEP_X+INVADER_W))/2-first*STEP_X;
   game.fireClock=game.rules.volleyTime;
   game.specialClock=rand(12,20);game.special=null;
   game.shots=[];game.enemyShots=[];game.grace=game.rules.grace;
@@ -211,13 +220,13 @@ function spawnWave(){
     for(let col=0;col<COLS;col++){
       if(formation.rows[row][col]!=="X")continue;
       game.invaders.push({type:types[(row+game.wave-1)%types.length],
-        row,col,alive:true,points:[40,30,20,10][row],variant:(row+col)%6});
+        row,col,alive:true,points:Math.max(10,40-row*5),variant:(row+col)%6});
     }
   }
   game.startCount=game.invaders.length;
   makeForts();hud();
 }
-function xy(e){return{x:game.gridX+e.col*40,y:game.gridY+e.row*39}}
+function xy(e){return{x:game.gridX+e.col*STEP_X,y:game.gridY+e.row*STEP_Y}}
 function overlap(ax,ay,aw,ah,bx,by,bw,bh){
   return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;
 }
@@ -413,7 +422,7 @@ function draw(){
   for(const e of game.invaders){
     if(!e.alive)continue;const p=xy(e);
     const animation=(Math.floor(game.time*6)+e.variant)%6;
-    sprite(e.type,animation,game.direction>0?2:1,p.x+12,p.y+12,128);
+    sprite(e.type,animation,game.direction>0?2:1,p.x+INVADER_W/2,p.y+INVADER_H/2,104);
   }
   for(const b of game.shots)projectile(b.x,b.y);
   for(const b of game.enemyShots)projectile(b.x,b.y,true);
