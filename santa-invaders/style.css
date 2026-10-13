@@ -47,3 +47,5 @@ button{font:inherit;cursor:pointer}
 @media(max-height:600px){.hud{min-height:45px;padding-top:3px;padding-bottom:3px}.controls{min-height:58px;padding:5px 13px calc(5px + env(safe-area-inset-bottom))}.control{min-height:43px}.overlayPanel{padding-top:16px;padding-bottom:12px}.invaderLine{height:41px}.invaderLine img{height:37px;width:37px}.brandRibbon{margin-bottom:7px}.overlayPanel p{margin:7px auto 9px}}
 @media(max-width:340px){.hud{grid-template-columns:40px minmax(0,1.25fr) minmax(0,.7fr) minmax(0,.95fr) 40px;gap:3px;padding-left:4px;padding-right:4px}.iconButton{min-height:40px;min-width:40px}.hudStat strong{font-size:12px}.hudStat span{font-size:7px}.controls{gap:6px;padding-left:10px;padding-right:10px}}
 @media(prefers-reduced-motion:reduce){.overlay,.waveBanner{transition:none}}
+.soundToggle{display:block;margin:11px auto 0;border:2px solid #90b5c6;border-radius:999px;background:#e2f2f7;color:#1d5370;min-height:30px;min-width:112px;font-size:10px;font-weight:1000}
+.soundToggle[hidden]{display:none}
