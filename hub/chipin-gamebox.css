@@ -424,3 +424,16 @@
   background:repeating-linear-gradient(45deg,#fff 0 7px,#dc6085 7px 14px)
 }
 @media(max-width:560px){.festiveBlocksHomeScene{width:102px;height:79px}.fbHomeBoard{left:24px;top:8px;width:54px;height:54px}.fbHomeBlock{width:10px;height:10px}.fbBlock1{left:28px;top:12px}.fbBlock2{left:38px;top:12px}.fbBlock3{left:38px;top:22px}.fbBlock4{left:58px;top:32px}.fbBlock5{left:48px;top:42px}}
+
+/* Santa Invaders — Christmas arcade tile */
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile{background:linear-gradient(145deg,#153958,#0b203a 78%);border-color:#dfedf7}
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile strong{color:#fff7e2;text-shadow:0 2px 0 #07182c}
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile small{color:#addce9;text-shadow:none}
+.santaInvadersHomeScene{position:relative;z-index:1;width:108px;height:77px;flex:0 0 auto;overflow:hidden;border:2px solid #6cb5d0;border-radius:5px;background:linear-gradient(#112944,#205075);box-shadow:0 5px 0 rgba(2,10,23,.42)}
+.santaInvadersHomeScene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:#b5deea}
+.siStar{position:absolute;width:2px;height:2px;background:#dcf5ff}
+.siStarA{top:8px;left:9px}.siStarB{top:17px;right:15px}.siStarC{top:28px;left:51px}
+.santaInvadersHomeScene .siFoe{position:absolute;top:8px;width:28px;height:28px;object-fit:contain;image-rendering:pixelated}
+.siFoeA{left:8px}.siFoeB{left:39px}.siFoeC{left:70px}
+.santaInvadersHomeScene .siShot{position:absolute;left:53px;top:40px;width:11px;height:11px;object-fit:contain;image-rendering:pixelated}
+.santaInvadersHomeScene .siSleigh{position:absolute;left:32px;bottom:4px;width:48px;height:27px;filter:drop-shadow(0 2px 0 #101923)}
