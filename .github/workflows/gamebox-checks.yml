@@ -26,6 +26,7 @@ jobs:
           node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
           node --check santa-invaders/game.js
           node --test santa-invaders/game.test.mjs
+          node --test santa-invaders/qa.test.mjs
           node --check core-empires/game.js
           node --check shared/lan-core.js
           node --check hub/gamebox-v4.js
