@@ -425,15 +425,15 @@
 }
 @media(max-width:560px){.festiveBlocksHomeScene{width:102px;height:79px}.fbHomeBoard{left:24px;top:8px;width:54px;height:54px}.fbHomeBlock{width:10px;height:10px}.fbBlock1{left:28px;top:12px}.fbBlock2{left:38px;top:12px}.fbBlock3{left:38px;top:22px}.fbBlock4{left:58px;top:32px}.fbBlock5{left:48px;top:42px}}
 
-/* Santa Invaders — Christmas arcade tile */
-.toyBox .toyGameSantaInvaders .santaInvadersHomeTile{background:linear-gradient(145deg,#153958,#0b203a 78%);border-color:#dfedf7}
-.toyBox .toyGameSantaInvaders .santaInvadersHomeTile strong{color:#fff7e2;text-shadow:0 2px 0 #07182c}
-.toyBox .toyGameSantaInvaders .santaInvadersHomeTile small{color:#addce9;text-shadow:none}
-.santaInvadersHomeScene{position:relative;z-index:1;width:108px;height:77px;flex:0 0 auto;overflow:hidden;border:2px solid #6cb5d0;border-radius:5px;background:linear-gradient(#112944,#205075);box-shadow:0 5px 0 rgba(2,10,23,.42)}
-.santaInvadersHomeScene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:#b5deea}
-.siStar{position:absolute;width:2px;height:2px;background:#dcf5ff}
-.siStarA{top:8px;left:9px}.siStarB{top:17px;right:15px}.siStarC{top:28px;left:51px}
-.santaInvadersHomeScene .siFoe{position:absolute;top:8px;width:28px;height:28px;object-fit:contain;image-rendering:pixelated}
-.siFoeA{left:8px}.siFoeB{left:39px}.siFoeC{left:70px}
-.santaInvadersHomeScene .siShot{position:absolute;left:53px;top:40px;width:11px;height:11px;object-fit:contain;image-rendering:pixelated}
-.santaInvadersHomeScene .siSleigh{position:absolute;left:32px;bottom:4px;width:48px;height:27px;filter:drop-shadow(0 2px 0 #101923)}
+/* Santa Invaders shares Workshop Watch's Admurin Christmas sprites and icy palette. */
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile{background:linear-gradient(145deg,#eaf8fc,#b7dfec);border-color:#fafdff}
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile strong{color:#123d55;text-shadow:0 2px 0 #fff}
+.toyBox .toyGameSantaInvaders .santaInvadersHomeTile small{color:#427b96;text-shadow:none}
+.santaInvadersHomeScene{position:relative;z-index:1;width:108px;height:77px;flex:0 0 auto;overflow:hidden;border:2px solid #184b66;border-radius:6px;background:linear-gradient(#d8f1fa,#f3fbff);box-shadow:0 4px 0 rgba(24,75,102,.22)}
+.santaInvadersHomeScene:after{position:absolute;bottom:0;left:0;right:0;height:7px;background:#e6f5fc;border-top:2px solid #a9d6e4;content:"";z-index:0}
+.santaInvadersHomeScene>span{position:absolute;display:block;z-index:1;image-rendering:pixelated;image-rendering:crisp-edges;background-repeat:no-repeat}
+.santaInvadersHomeScene .siHero{width:33px;height:36px;left:34px;bottom:4px;background-image:url("../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png");background-size:512px 512px;background-position:-48px -46px}
+.santaInvadersHomeScene .siGinger{width:34px;height:38px;left:9px;top:2px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png");background-size:576px 384px;background-position:-31px -32px}
+.santaInvadersHomeScene .siSlime{width:26px;height:28px;right:12px;top:14px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png");background-size:576px 384px;background-position:-36px -37px}
+.santaInvadersHomeScene .siDevil{width:23px;height:28px;right:34px;top:0;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png");background-size:384px 384px;background-position:-32px -36px}
+.santaInvadersHomeScene .siShot{width:7px;height:7px;left:54px;top:36px;border:2px solid #93c7dc;border-radius:50%;background:#fff}
