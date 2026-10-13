@@ -10,19 +10,16 @@ const ui={score:$("score"),wave:$("wave"),lives:$("lives"),banner:$("waveBanner"
   hero:$("heroCanvas"),overlay:$("overlay"),title:$("overlayTitle"),text:$("overlayText"),primary:$("primaryButton"),
   secondary:$("secondaryButton"),sound:$("soundButton"),result:$("resultStrip"),
   endScore:$("endScore"),endBest:$("endBest"),hint:$("controlsHint"),announce:$("announce")};
-const root="../workshop-watch/assets/vendor/";
-const A82=root+"admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/";
-const A85=root+"admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/";
-const RABBIT=root+"admurin/rabbits/Monster%20Pack%20(Free)/Spritesheets/Updated%20Rabbit%20Horned/";
 const ASSETS={
-  ground:root+"gherwit/winter/Winter-Download/Winter-tiles.png",
-  defenderIdle:A82+"Christmas_Snowman_C_Idle.png",
-  defenderMove:A82+"Christmas_Snowman_C_Move.png",
-  ginger:A85+"Gingerbread/Christmas_Gingerbread_Move.png",
-  slime:A85+"Slime/Christmas_Slime_Move.png",
-  devil:A85+"Devil/Christmas_Devil_Move.png",
-  boss:A85+"Devil/Christmas_Devil_Idle.png",
-  rabbit:RABBIT+"Rabbit_Horned_Move.png"};
+  ground:"../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png",
+  defenderIdle:"../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png",
+  defenderMove:"../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Move.png",
+  ginger:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png",
+  slime:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png",
+  devil:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Move.png",
+  boss:"../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png",
+  rabbit:"../workshop-watch/assets/vendor/admurin/rabbits/Monster%20Pack%20(Free)/Spritesheets/Updated%20Rabbit%20Horned/Rabbit_Horned_Move.png"
+};
 const images={},clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),rand=(a,b)=>a+Math.random()*(b-a);
 let ready=false,failed=false,audio=null,soundOn=true;
 try{soundOn=localStorage.getItem("gamebox-santa-invaders-sound")!=="off"}catch(e){}
