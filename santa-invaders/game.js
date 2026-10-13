@@ -52,6 +52,7 @@
     devil:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png"
   };
   const animationFrames={};
+  let winterSheet=null;
   let artworkReady=false,artworkLoading=false;
   function trimFrame(img,index){
     const cell=128,raw=document.createElement("canvas");
@@ -90,7 +91,12 @@
       };
       img.onerror=()=>reject(Error("Artwork could not load: "+key));
       img.src=src;
-    }))).then(()=>{
+    })).concat([new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>{winterSheet=img;drawWinterScenery(img);resolve();};
+      img.onerror=()=>reject(Error("Winter scenery could not load"));
+      img.src="../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png";
+    })])).then(()=>{
       artworkReady=true;artworkLoading=false;
       if(game.phase==="ready"){
         ui.primary.disabled=false;
@@ -167,6 +173,14 @@
   bg.fillStyle="#214359";bg.fillRect(144,H-53,18,17);bg.fillRect(170,H-53,18,17);bg.fillRect(196,H-53,18,17);
   bg.fillStyle="#ffc56c";bg.fillRect(147,H-50,12,10);bg.fillRect(173,H-50,12,10);bg.fillRect(199,H-50,12,10);
   bg.fillStyle="#e8f7ff";bg.fillRect(0,H-21,W,21);
+  function drawWinterScenery(im){
+    // Gherwit Winter tiles: 14 columns x 12 rows, each source tile 16x16.
+    bg.save();bg.imageSmoothingEnabled=false;
+    for(let y=H-27;y<H;y+=16)for(let x=0;x<W;x+=16)
+      bg.drawImage(im,12*16,1*16,16,16,x,y,16,16);
+    for(const x of [9,W-60])bg.drawImage(im,9*16,6*16,48,48,x,H-95,48,48);
+    bg.restore();
+  }
   const alive=()=>game.enemies.filter(e=>e.alive);
   const coord=e=>({x:game.formationX+e.col*39,y:game.formationY+e.row*35});
   function announce(s){ui.announce.textContent=s;}
@@ -371,6 +385,7 @@
     ctx.fillStyle="#24475a";ctx.fillRect(f.x,f.y+2,14,12);
     ctx.fillStyle=f.hp===1?"#6da0bf":f.hp===2?"#86bbd2":"#a5dcf0";
     ctx.fillRect(f.x+1,f.y+3,12,10);
+    if(winterSheet)ctx.drawImage(winterSheet,12*16,1*16,16,16,f.x+1,f.y+3,12,10);
     ctx.fillStyle="#effaff";ctx.fillRect(f.x+1,f.y,12,4);
     ctx.fillStyle="#fff";ctx.fillRect(f.x+3,f.y,5,2);
     if(f.hp<3){ctx.fillStyle="#2e5f7d";ctx.fillRect(f.x+7,f.y+5,2,6);ctx.fillRect(f.x+9,f.y+8,3,2);}
