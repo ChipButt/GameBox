@@ -19,7 +19,7 @@ function boot({ failAsset=false }={}){
   const canvasContext={
     imageSmoothingEnabled:false,
     drawImage(){canvasCalls++},clearRect(){},fillRect(){},save(){},restore(){},
-    translate(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},strokeRect(){},fill(){}
+    translate(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},strokeRect(){},fill(){},fillText(){}
   };
   function element(id){
     if(!el.has(id))el.set(id,{
@@ -78,7 +78,7 @@ test('all eight existing art assets load, game runs, and full arcade loop works'
   t.click('primaryButton');
   const {game,player,move,damagePlayer}=t.window.testAccess;
   assert.equal(game.state,'playing');
-  assert.equal(game.invaders.length,32);
+  assert.equal(game.invaders.length,6,'First wave should be a small beginner formation');
   assert.equal(game.forts.length,20);
   t.key('keydown',' ');t.frames(650);t.key('keyup',' ');
   assert.ok(game.score>0,'Shooting hits invaders and awards points');
