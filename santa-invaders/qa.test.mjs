@@ -124,6 +124,8 @@ test('incoming fire damages player, then ends the game when lives run out',async
   }
   assert.equal(qa.game.state,'over');
   assert.equal(qa.player.hurt>0,true);
+  qa.player.hurt=0;qa.damagePlayer();qa.damagePlayer();
+  assert.equal(qa.game.lives,0,'Damage after game over must never create negative lives');
   qa.begin();assert.equal(qa.game.state,'playing');assert.equal(qa.game.lives,3);
   assert.ok(store instanceof Map);
 });
