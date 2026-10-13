@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#d8edf5">
 <title>Santa Invaders · GameBox</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <main class="arcade" aria-label="Santa Invaders Christmas arcade">
@@ -32,10 +32,7 @@
 
     <div id="overlay" class="overlay show" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
       <section class="menuCard">
-        <div class="heroScene" aria-hidden="true">
-          <span class="sceneSnow"></span><span class="sceneDefender"></span>
-          <span class="sceneGinger"></span><span class="sceneSlime"></span><span class="sceneDevil"></span>
-        </div>
+        <div class="heroScene" aria-hidden="true"><canvas id="heroCanvas" width="312" height="112"></canvas></div>
         <p class="eyebrow">GAMEBOX CHRISTMAS</p>
         <h1 id="overlayTitle">SANTA <em>INVADERS</em></h1>
         <p id="overlayText" class="tagline">Snowman defenders versus a marching monster invasion. Hold the line and save the workshop.</p>
@@ -50,6 +47,6 @@
     <div id="announce" class="srOnly" aria-live="polite"></div>
   </div>
 </main>
-<script src="game.js?v=3"></script>
+<script src="game.js?v=4"></script>
 </body>
 </html>
