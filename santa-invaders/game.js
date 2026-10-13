@@ -3,7 +3,36 @@
    Every gameplay character is loaded from its existing licensed pack, never generated. */
 (()=>{
 "use strict";
-const W=360,H=600,TILE=16,ROWS=4,COLS=8;
+const W=360,H=600,TILE=16,COLS=8;
+const ICE_LINE_Y=H-112, INVADER_W=24,INVADER_H=25;
+// Each silhouette is authored on the same eight-column grid so collisions,
+// animations, and left/right edge movement stay aligned with visible invaders.
+const FORMATIONS=[
+  {name:"SCOUTS",     rows:["...XX...","..XXXX.."]},
+  {name:"CHEVRON",    rows:["..X..X..",".X.XX.X.","..XXXX.."]},
+  {name:"DIAMOND",    rows:["...XX...","..XXXX..",".XXXXXX."]},
+  {name:"TWIN LANES", rows:[".XX..XX.",".XX..XX.",".XX..XX.",".XX..XX."]},
+  {name:"STAIRCASE",  rows:["XX......","XXXX....","..XXXX..","....XXXX"]},
+  {name:"TREE",       rows:["....X...","...XXX..","..XXXXX.",".XXXXXXX"]},
+  {name:"ARCH",       rows:[".XXXXXX.","XX....XX","XX....XX","XXXXXXXX"]},
+  {name:"FULL SWARM", rows:["XXXXXXXX",".XXXXXX.","XXXXXXXX","XXXXXXXX"]}
+];
+function formationFor(wave){
+  const pattern=FORMATIONS[(wave-1)%FORMATIONS.length];
+  // Repeat only after all eight distinct shapes; mirror alternating cycles.
+  const mirror=Math.floor((wave-1)/FORMATIONS.length)%2===1;
+  return {name:pattern.name,rows:mirror?pattern.rows.map(row=>[...row].reverse().join("")):pattern.rows};
+}
+function difficultyFor(wave){
+  const n=Math.max(0,wave-1);
+  return {
+    speed:Math.min(60,12+n*4),
+    volleyTime:Math.max(.86,3.4-n*.27),
+    projectileSpeed:Math.min(255,112+n*14),
+    drop:Math.min(16,9+Math.floor(n/2)),
+    grace:Math.max(1.2,3.0-n*.18)
+  };
+}
 const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("2d");
 ctx.imageSmoothingEnabled=false;
 const ui={score:$("score"),wave:$("wave"),lives:$("lives"),banner:$("waveBanner"),asset:$("assetStatus"),
@@ -29,7 +58,8 @@ const player={x:W/2,y:H-79,hurt:0,rapid:0,fireCooldown:0,moveAnimation:0};
 const game={state:"ready",returnTo:"ready",score:0,lives:3,wave:1,time:0,
   fx:[],shots:[],enemyShots:[],invaders:[],forts:[],special:null,
   direction:1,gridX:20,gridY:84,fireClock:1.7,specialClock:14,
-  grace:0,transition:0,flash:0,shake:0,bannerTimer:0};
+  grace:0,transition:0,flash:0,shake:0,bannerTimer:0,
+  rules:difficultyFor(1),startCount:0,formationName:"SCOUTS",overReason:""};
 function tone(freq=520,length=.055,type="square",vol=.022){
   if(!soundOn)return;
   try{
@@ -73,6 +103,26 @@ function tree(x,y,target=ctx){
   for(let row=0;row<3;row++)for(let col=0;col<3;col++)
     tile(9+col,6+row,x+col*TILE,y+row*TILE,1,target);
 }
+// A continuous frozen crossing, made from the same Gherwit winter ground
+// tiles as the rest of the stage, with crisp blue ice edging. This is the
+// actual gameplay boundary, not a decorative line near the defender.
+function drawIceLine(target){
+  const y=ICE_LINE_Y;
+  for(let x=0;x<W;x+=TILE){
+    tile(12,1,x,y-5,1,target);
+    target.fillStyle="#6caac7";target.fillRect(x,y+5,TILE,3);
+    target.fillStyle="#b5e6f5";target.fillRect(x,y-4,TILE,10);
+    target.fillStyle="#e9faff";target.fillRect(x+1,y-4,13,2);
+    target.fillStyle="#85c3dc";target.fillRect(x+1,y+2,13,2);
+    target.fillStyle="#468ba9";target.fillRect(x,y+7,TILE,2);
+    if((x/TILE)%3===0){
+      target.fillStyle="#ffffff";target.fillRect(x+3,y-2,5,2);
+      target.fillStyle="#7ebbd5";target.fillRect(x+9,y+1,2,3);
+    }
+  }
+  target.fillStyle="#195c78";target.font="bold 8px monospace";
+  target.fillText("ICE LINE",W-56,y-10);
+}
 let backdrop=null;
 function background(){
   if(!ready){ctx.fillStyle="#eaf8fc";ctx.fillRect(0,0,W,H);return;}
@@ -86,8 +136,8 @@ function background(){
     for(const [x,y] of [[-28,15],[W-21,25],[-24,240],[W-23,250],[-27,466],[W-22,477]])
       tree(x,y,g);
     for(const [x,y] of [[25,55],[310,187],[20,344],[315,440]])tile(1,1,x,y,1,g);
-    for(const [col,row,tx,ty] of [[6,0,0,0],[7,0,1,0],[8,0,2,0],[3,5,0,1],[1,5,1,1],[5,5,2,1]])
-      tile(col,row,156+tx*16,H-73+ty*16,1,g);
+    // No workshop door or building: a single visible frozen no-cross line.
+    drawIceLine(g);
   }
   ctx.drawImage(backdrop,0,0);
 }
@@ -149,15 +199,46 @@ function fort(f){
 }
 function spawnWave(){
   game.invaders=[];
-  game.gridX=20;game.gridY=82;game.direction=1;game.fireClock=1.65;
+  game.rules=difficultyFor(game.wave);
+  const formation=formationFor(game.wave);
+  game.formationName=formation.name;
+  game.gridX=20;game.gridY=82;game.direction=1;
+  game.fireClock=game.rules.volleyTime;
   game.specialClock=rand(12,20);game.special=null;
-  game.shots=[];game.enemyShots=[];game.grace=1.5;
+  game.shots=[];game.enemyShots=[];game.grace=game.rules.grace;
   const types=["devil","ginger","slime","rabbit"];
-  for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++)
-    game.invaders.push({type:types[row],row,col,alive:true,points:[40,30,20,10][row],variant:(row+col)%6});
+  for(let row=0;row<formation.rows.length;row++){
+    for(let col=0;col<COLS;col++){
+      if(formation.rows[row][col]!=="X")continue;
+      game.invaders.push({type:types[(row+game.wave-1)%types.length],
+        row,col,alive:true,points:[40,30,20,10][row],variant:(row+col)%6});
+    }
+  }
+  game.startCount=game.invaders.length;
   makeForts();hud();
 }
 function xy(e){return{x:game.gridX+e.col*40,y:game.gridY+e.row*39}}
+function overlap(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;
+}
+// Enemy bodies smash ice shields on contact, without losing the invader.
+// Every segment shatters once; subsequent frames cannot repeatedly damage it.
+function shatterOnContact(enemies){
+  let broken=0;
+  for(const e of enemies){
+    const p=xy(e);
+    if(p.y+INVADER_H<H-174||p.y>ICE_LINE_Y)continue;
+    for(const f of game.forts){
+      if(f.hp<=0)continue;
+      if(!overlap(p.x,p.y,INVADER_W,INVADER_H,f.x,f.y,13,13))continue;
+      f.hp=0;broken++;
+      particle(f.x+6,f.y+6,"#8ccbe7",9);
+      particle(f.x+6,f.y+6,"#ecfcff",5);
+    }
+  }
+  if(broken)tone(225,.075,"triangle",.032);
+  return broken;
+}
 function openPanel(state){
   game.state=state;ui.overlay.classList.add("show");ui.overlay.setAttribute("aria-hidden","false");
   ui.result.hidden=state!=="over";ui.sound.hidden=state==="over"||state==="help";
@@ -174,11 +255,11 @@ function openPanel(state){
     ui.primary.textContent="RESUME";ui.primary.disabled=false;ui.secondary.textContent="RESTART RUN";
   }else if(state==="help"){
     ui.title.innerHTML="HOW TO <em>PLAY</em>";
-    ui.text.textContent="Hold the arrow buttons (or A / D) to move. Hold FIRE (or SPACE) to throw snowballs. Defeat all invaders before they reach the defender. Hide behind the snow forts to block incoming shots. Hit the rare golden-glow monster for bonus points and rapid fire.";
+    ui.text.textContent="Hold the arrows (or A / D) to move and FIRE (or SPACE) to throw snowballs. Clear each differently shaped wave before it crosses the blue ice line. Ice shields block shots but invaders smash them on contact. Hit the rare glowing monster for bonus points and rapid fire.";
     ui.primary.textContent="GOT IT";ui.primary.disabled=false;
   }else if(state==="over"){
     ui.title.innerHTML="WORKSHOP <em>OVERRUN</em>";
-    ui.text.textContent="The monsters broke through. Fancy another go?";
+    ui.text.textContent=game.overReason||"The monsters broke through. Fancy another go?";
     ui.primary.textContent="PLAY AGAIN";ui.primary.disabled=false;
     ui.endScore.textContent=game.score.toLocaleString();ui.endBest.textContent=best.toLocaleString();
   }
@@ -191,7 +272,8 @@ function release(){
 function begin(){
   if(!ready)return;game.score=0;game.wave=1;game.lives=3;game.time=0;game.fx=[];
   player.x=W/2;player.hurt=0;player.rapid=0;player.fireCooldown=0;
-  spawnWave();game.state="playing";closePanel();showBanner("WAVE 01");
+  game.overReason="";spawnWave();game.state="playing";closePanel();
+  showBanner("WAVE 01 · "+game.formationName);
   tone(660,.1,"triangle",.05);
 }
 function pause(){
@@ -199,7 +281,8 @@ function pause(){
   game.returnTo=game.state;release();openPanel("paused");
 }
 function resume(){game.state=game.returnTo;closePanel()}
-function end(){
+function end(reason=""){
+  game.overReason=reason;
   release();saveBest();openPanel("over");announce("Run over. Score: "+game.score);
   tone(210,.2,"sawtooth",.05);
 }
@@ -224,13 +307,14 @@ function enemyFire(){
   }
   if(!choices.length)return;
   const e=choices[Math.floor(Math.random()*choices.length)],p=xy(e);
-  game.enemyShots.push({x:p.x+12,y:p.y+12,vy:151+game.wave*14,r:4});
+  game.enemyShots.push({x:p.x+12,y:p.y+12,vy:game.rules.projectileSpeed,r:4});
 }
 function hit(b,x,y,w,h){return b.x+b.r>x&&b.x-b.r<x+w&&b.y+b.r>y&&b.y-b.r<y+h}
 function nextWave(){
   addScore(100+game.wave*30);game.wave++;spawnWave();
   game.transition=1.6;game.state="between";
-  showBanner("WAVE "+String(game.wave).padStart(2,"0"));tone(920,.15,"triangle",.05);
+  showBanner("WAVE "+String(game.wave).padStart(2,"0")+" · "+game.formationName);
+  tone(920,.15,"triangle",.05);
 }
 function move(dt){
   game.time+=dt;
@@ -252,20 +336,23 @@ function move(dt){
   player.moveAnimation+=dt*(dir?8:5);
   if(held.fire)fire();
   const live=game.invaders.filter(e=>e.alive);
-  const speed=(20+Math.min(70,game.wave*5))*(1+(1-live.length/(ROWS*COLS))*1.65);
+  const speed=game.rules.speed*(1+(1-live.length/game.startCount)*.72);
   game.gridX+=game.direction*speed*dt;
   if(live.length){
     const xs=live.map(xy),left=Math.min(...xs.map(p=>p.x)),right=Math.max(...xs.map(p=>p.x+24));
     if((game.direction>0&&right>W-14)||(game.direction<0&&left<14)){
       game.gridX+=game.direction>0?W-14-right:14-left;
-      game.direction*=-1;game.gridY+=13;
+      game.direction*=-1;game.gridY+=game.rules.drop;
       tone(180,.025,"square",.01);
     }
-    if(xs.some(p=>p.y+18>=player.y-16)){end();return}
+    shatterOnContact(live);
+    if(xs.some(p=>p.y+INVADER_H>=ICE_LINE_Y)){
+      end("The invaders crossed the ice line. Protect it next time!");return
+    }
   }
   game.fireClock-=dt;
   if(game.fireClock<=0&&game.grace<=0){
-    enemyFire();game.fireClock=rand(.7,1.35)*Math.max(.42,1-(game.wave-1)*.055);
+    enemyFire();game.fireClock=game.rules.volleyTime*rand(.85,1.15);
   }
   game.specialClock-=dt;
   if(game.specialClock<=0&&!game.special){
