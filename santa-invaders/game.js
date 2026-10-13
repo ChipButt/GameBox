@@ -18,26 +18,6 @@
     R:"#d84c54",r:"#973649",G:"#3c9a67",g:"#84d28d",Y:"#ffe28a",
     B:"#a56943",b:"#deaa6a",S:"#ffceb0",O:"#f9a65a",T:"#81cadb",t:"#35799d" };
   const patterns = {
-    snowman:[
-      "......KKKK......",".....KKKKKK.....","....KKKKKKKK....",".....WWWWWW.....",
-      "....WWXWWXWW....","....WWWOWWWW....","...WWWWWWWWWW...","...RRRRRRRRRR...",
-      "...WWWWWWWWWW...","..WWWwWXRWWWw..","..WWWWWWWWWWWW..","..WWWwWWWWwWWW..",
-      "...WWWWXWWWW...","....WWWWWWWW....",".....wWWWWw.....","......wWWw......"],
-    ginger:[
-      "......BBBB......","....BBBBBBBB....","....BWBWBWBW....","....BWBWBWBW....",
-      "....BBBbBBBB....","..BBBBBBBBBBBB..",".BBBBBBbBBBBBBB.","BBBBBBBBBBBBBBBB",
-      "BBBbBBRBBbBBBBB","..BBBbYbBBBBB..","....BBBBBBBB....","....BBbBBbBB....",
-      "...BBBB..BBBB...","..BBBB....BBBB..","..BBBB....BBBB..","...BB......BB..."],
-    elf:[
-      ".........GG.....","........GGGG....","......GGGGGG....","....GGGGGGGG....",
-      "...RRRRRRRRRR...","....SSSSSSSS....","....SXSSXSXS....","....SSSSSSSS....",
-      ".....SSOOSS.....","....GGRRGGGG....","...GGgGGgGGGG...","...GGGGGGGGGG...","....GGYYYYGG....",
-      ".....KKKKKK.....","....KKK..KKK....","....KKK..KKK...."],
-    present:[
-      ".....Y....Y.....","....YY...YY.....","...YYYYYYYY.....","..RRRYYYYRRRR...","..RRRYYYYRRRR...","..RRRYYYYRRRR...",
-      ".XXXXXXXXXXXXXX.","..GGGGYYGGGGGG..","..GGGGYYGGGGGG..","..GGGGYYGGGGGG..",
-      "..GGGGYYGGGGGG..","..GGGGYYGGGGGG..","..GGGGYYGGGGGG..","..GGGGYYGGGGGG..",
-      "..XXXXXXXXXXXX.."],
     sleigh:[
       "...........KKK...................","..........KKKKK..................","..........RRRRR..................",
       "..........SSXSS..................",".........WRRRRRWW................",".........RRRRRRRR..YY............",
@@ -57,6 +37,78 @@
     const g=c.getContext("2d");g.imageSmoothingEnabled=false;
     rows.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ink=colours[row[x]];if(ink){g.fillStyle=ink;g.fillRect(x,y,1,1);}}});
     sprites[name]=c;
+  }
+
+  // Reuse original Christmas monster art already committed for Workshop Watch.
+  // Source sheets: Admurin Monster Pack 82/85, 128x128 cells, 4 idle frames.
+  // Trim transparent margins once at load time so each monster is legible in the
+  // tight Space Invaders formation. Cache the 28x28 cut-outs for cheap draw calls.
+  const WORKSHOP="../workshop-watch/assets/vendor/admurin/";
+  const CHRISTMAS_SPRITES={
+    defender:WORKSHOP+"pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_A_Idle.png",
+    snowman:WORKSHOP+"pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png",
+    ginger:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Idle.png",
+    slime:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Idle.png",
+    devil:WORKSHOP+"pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Idle.png"
+  };
+  const animationFrames={};
+  let artworkReady=false,artworkLoading=false;
+  function trimFrame(img,index){
+    const cell=128,raw=document.createElement("canvas");
+    raw.width=raw.height=cell;
+    const g=raw.getContext("2d",{willReadFrequently:true});
+    g.clearRect(0,0,cell,cell);
+    g.drawImage(img,index*cell,0,cell,cell,0,0,cell,cell);
+    const pixels=g.getImageData(0,0,cell,cell).data;
+    let left=cell,top=cell,right=-1,bottom=-1;
+    for(let y=0;y<cell;y++)for(let x=0;x<cell;x++){
+      if(pixels[(y*cell+x)*4+3]<20)continue;
+      left=Math.min(left,x);right=Math.max(right,x);
+      top=Math.min(top,y);bottom=Math.max(bottom,y);
+    }
+    if(right<left)throw Error("Christmas sprite frame is empty");
+    const out=document.createElement("canvas");out.width=out.height=32;
+    const o=out.getContext("2d");o.imageSmoothingEnabled=false;
+    const w=right-left+1,h=bottom-top+1;
+    const scale=Math.min(28/w,28/h,2.2);
+    const dw=Math.round(w*scale),dh=Math.round(h*scale);
+    o.drawImage(raw,left,top,w,h,Math.round((32-dw)/2),Math.round((32-dh)/2),dw,dh);
+    return out;
+  }
+  function loadArtwork(){
+    if(artworkLoading)return;
+    artworkLoading=true;artworkReady=false;
+    ui.primary.disabled=true;ui.primary.textContent="LOADING CHRISTMAS ART…";
+    Promise.all(Object.entries(CHRISTMAS_SPRITES).map(([key,src])=>new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>{
+        try{
+          if(img.naturalWidth<512||img.naturalHeight<128)throw Error("Invalid Christmas sprite sheet");
+          animationFrames[key]=[0,1,2,3].map(i=>trimFrame(img,i));
+          resolve();
+        }catch(error){reject(error);}
+      };
+      img.onerror=()=>reject(Error("Artwork could not load: "+key));
+      img.src=src;
+    }))).then(()=>{
+      artworkReady=true;artworkLoading=false;
+      if(game.phase==="ready"){
+        ui.primary.disabled=false;
+        ui.primary.textContent="DEFEND THE NORTH POLE";
+      }
+    }).catch(error=>{
+      console.error("Santa Invaders: existing Christmas asset failed",error);
+      artworkLoading=false;
+      ui.primary.disabled=false;
+      ui.primary.textContent="RETRY ARTWORK";
+      ui.text.textContent="Christmas artwork could not load. Check the connection and try again.";
+    });
+  }
+  function drawChristmasSprite(kind,x,y,w=28,h=28,offset=0){
+    const frames=animationFrames[kind];
+    if(!frames)return;
+    const frame=frames[Math.floor(game.elapsed*5+offset)%frames.length];
+    ctx.drawImage(frame,Math.round(x),Math.round(y),w,h);
   }
   const artImage=src=>{const i=new Image();i.src=src;return i;};
   const snowball=artImage("../assets/gamebox/kenney/2d/Platformer Assets Holiday/ball_lightBlue.png");
@@ -135,7 +187,7 @@
     game.bonusClock=11;game.bonus=null;game.bullets=[];game.enemyShots=[];game.gifts=[];
     game.enemies=[];
     for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++)
-      game.enemies.push({row,col,kind:["present","ginger","snowman","elf"][row],
+      game.enemies.push({row,col,kind:["devil","ginger","snowman","slime"][row],
         points:[40,30,20,10][row],alive:true,step:Math.random()*6});
     newForts();refreshHUD();
   }
@@ -168,6 +220,7 @@
   let helpFrom="ready";
   function hideOverlay(){ui.overlay.classList.remove("show");ui.overlay.setAttribute("aria-hidden","true");}
   function reset(){
+    if(!artworkReady){loadArtwork();return;}
     game.wave=1;game.score=0;game.lives=3;game.elapsed=0;game.shake=0;game.whiteout=0;
     game.particles=[];game.fireWait=0;player.x=W/2;player.invuln=1.3;player.rapid=0;player.triple=0;
     buildWave();hideOverlay();game.phase="playing";flashBanner("WAVE 01");announce("Wave one started");
@@ -341,7 +394,7 @@
       if(!e.alive)continue;
       const p=coord(e);
       const bob=Math.sin(game.elapsed*5+e.step)*1.2;
-      image(e.kind,p.x,p.y+bob,24,24);
+      drawChristmasSprite(e.kind,p.x-3,p.y-4+bob,30,30,e.col*.3);
     }
     for(const b of game.bullets){snow(b.x,b.y,b.r);}
     for(const b of game.enemyShots){
@@ -357,6 +410,7 @@
     if(player.invuln<=0||Math.floor(game.elapsed*12)%2===0||game.phase==="ready"){
       ctx.fillStyle="rgba(9,30,49,.4)";ctx.fillRect(player.x-21,player.y+16,42,4);
       image("sleigh",player.x-24,player.y-19,48,34);
+      drawChristmasSprite("defender",player.x-15,player.y-30,30,30);
       ctx.fillStyle="#fff";ctx.fillRect(player.x-22,player.y+7,2,2);
     }
     if(player.triple>0||player.rapid>0){
@@ -433,7 +487,7 @@
     if(game.phase==="ready"){helpFrom="ready";setOverlay("help");}
     else if(game.phase==="paused")reset();
   });
-  buildWave();setOverlay("ready");
+  buildWave();setOverlay("ready");loadArtwork();
   let last=0;
   function tick(now){
     const dt=last?Math.min(.034,(now-last)/1000):0;last=now;
