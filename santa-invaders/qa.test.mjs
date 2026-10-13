@@ -98,7 +98,7 @@ test('all artwork is present, valid PNG, and sprite-sheet frames have correct gr
 test('the run starts only after sprites load and player can shoot',async()=>{
   const h=await loaded();const {qa}=h;qa.begin();
   assert.equal(qa.game.state,'playing');
-  assert.equal(qa.game.invaders.length,6,'Wave one should introduce only six invaders');
+  assert.equal(qa.game.invaders.length,7,'Wave one begins with a small seven-invader bauble');
   assert.equal(qa.game.lives,3);
   qa.fire();assert.equal(qa.game.shots.length,1);
   qa.fire();assert.equal(qa.game.shots.length,1,'Fire cooldown ignored');
@@ -157,29 +157,35 @@ test('menu previews and gameplay do not reference unrelated art packs',()=>{
 });
 
 
-test('the first eight levels use recognisably different shapes and progressively tougher rules',async()=>{
+test('twelve consecutive waves spell out twelve different Christmas silhouettes',async()=>{
   const {qa}=await loaded();
   qa.begin();
-  const seen=new Set();
-  const sizes=[];
-  for(let wave=1;wave<=8;wave++){
-    qa.game.wave=wave;qa.spawnWave();
-    const shape=qa.game.invaders.map(e=>e.row+':'+e.col).sort().join(',');
-    assert.equal(seen.has(shape),false,'Wave '+wave+' repeats an earlier formation');
-    seen.add(shape);sizes.push(qa.game.invaders.length);
-    assert.ok(qa.game.invaders.every(e=>e.col>=0&&e.col<8),'Invader outside eight-column playfield');
-    assert.ok(qa.game.invaders.length<=32,'Formation exceeds playable grid');
-    assert.equal(qa.game.startCount,qa.game.invaders.length,'Speed ramp denominator should reflect actual formation');
+  const expected=["BAUBLE","CANDY CANE","CHRISTMAS TREE","STOCKING","SNOWMAN","STAR",
+    "PRESENT","WREATH","BELL","SANTA HAT","SNOWFLAKE","GINGERBREAD"];
+  const masks=new Set(),sizes=[];
+  for(let wave=1;wave<=expected.length;wave++){
+    const form=qa.formationFor(wave);
+    assert.equal(form.name,expected[wave-1],`Wrong Christmas icon at wave ${wave}`);
+    assert.ok(form.rows.every(row=>/^[.X]{9}$/.test(row)),'Every shape needs exactly nine clean cells per row');
+    const mask=form.rows.join('/');
+    assert.ok(!masks.has(mask),`Duplicate formation: ${form.name}`);
+    masks.add(mask);
+    qa.game.wave=wave;
+    qa.spawnWave();
+    const intended=form.rows.reduce((sum,row)=>sum+[...row].filter(x=>x==='X').length,0);
+    assert.equal(qa.game.invaders.length,intended,`Gaps in ${form.name} must stay empty`);
+    assert.equal(qa.game.startCount,intended,'Wave count should match speed denominator');
+    assert.ok(qa.game.invaders.every(e=>e.col>=0&&e.col<9&&e.row>=0&&e.row<form.rows.length),'Enemy placed outside silhouette');
+    assert.ok(qa.game.invaders.every(e=>e.points>0),'No undefined points on tall shapes');
+    sizes.push(intended);
     if(wave>1){
-      assert.ok(qa.difficultyFor(wave).speed>qa.difficultyFor(wave-1).speed,'Enemy movement should ramp');
-      assert.ok(qa.difficultyFor(wave).volleyTime<qa.difficultyFor(wave-1).volleyTime,'Enemy fire frequency should ramp');
+      assert.ok(qa.difficultyFor(wave).speed>qa.difficultyFor(wave-1).speed,'Movement must get faster');
+      assert.ok(qa.difficultyFor(wave).volleyTime<qa.difficultyFor(wave-1).volleyTime,'Firing must get faster');
     }
   }
-  assert.equal(sizes[0],6,'Opening wave is deliberately small');
-  assert.ok(sizes[7]>sizes[0],'Later formations are substantially larger');
-  assert.equal(qa.formationFor(1).name,'SCOUTS');
-  assert.equal(qa.formationFor(8).name,'FULL SWARM');
-  assert.equal(qa.formationFor(9).name,'SCOUTS','Formations cycle after eight distinct patterns');
+  assert.equal(sizes[0],7,'Begin with an easy small Christmas bauble');
+  assert.ok(sizes.at(-1)>sizes[0],'Later formations should be fuller');
+  assert.equal(qa.formationFor(13).name,'BAUBLE','All twelve shapes play before the sequence repeats');
 });
 test('invader bodies shatter the protective ice and only the ice boundary ends the run',async()=>{
   const {qa}=await loaded();qa.begin();
@@ -207,6 +213,7 @@ test('invader bodies shatter the protective ice and only the ice boundary ends t
 });
 test('winter stage has a real continuous ice crossing and no workshop door decoration',()=>{
   assert.match(source,/drawIceLine\(g\)/,'Frozen crossing must be rendered on the actual cached background');
+  assert.doesNotMatch(source,/fillText\(["']ICE LINE["']/,'Do not draw label text on frozen boundary');
   assert.match(source,/ICE_LINE_Y=H-112/,'Marked ice line and collision threshold share one constant');
   assert.doesNotMatch(source,/156\+tx\*16,H-73\+ty\*16/,'Old door tiles must be removed');
   assert.match(source,/shatterOnContact\(live\)/,'Invader collision must run during every formation update');
