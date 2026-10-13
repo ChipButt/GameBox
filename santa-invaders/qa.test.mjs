@@ -14,7 +14,7 @@ const source = fs.readFileSync(path.join(dir, 'game.js'), 'utf8');
 const anchor = 'spawnWave();openPanel("ready");load();';
 assert.ok(source.includes(anchor), 'Test hooks must remain attached to actual production source');
 const script = source.replace(anchor,
-  'window.__qa={game,player,ASSETS,images,spawnWave,begin,fire,move,pause,resume,end,damagePlayer,openPanel,hud};' + anchor);
+  'window.__qa={game,player,ASSETS,images,spawnWave,begin,fire,move,pause,resume,end,damagePlayer,openPanel,hud,formationFor,difficultyFor,shatterOnContact,ICE_LINE_Y};' + anchor);
 
 function pngDimensions(file) {
   const buf = fs.readFileSync(file);
@@ -98,7 +98,7 @@ test('all artwork is present, valid PNG, and sprite-sheet frames have correct gr
 test('the run starts only after sprites load and player can shoot',async()=>{
   const h=await loaded();const {qa}=h;qa.begin();
   assert.equal(qa.game.state,'playing');
-  assert.equal(qa.game.invaders.length,32);
+  assert.equal(qa.game.invaders.length,6,'Wave one should introduce only six invaders');
   assert.equal(qa.game.lives,3);
   qa.fire();assert.equal(qa.game.shots.length,1);
   qa.fire();assert.equal(qa.game.shots.length,1,'Fire cooldown ignored');
@@ -154,4 +154,60 @@ test('menu previews and gameplay do not reference unrelated art packs',()=>{
     const file=path.resolve(dir,decodeURIComponent(u));
     assert.ok(fs.existsSync(file),'Broken CSS art: '+u);
   }
+});
+
+
+test('the first eight levels use recognisably different shapes and progressively tougher rules',async()=>{
+  const {qa}=await loaded();
+  qa.begin();
+  const seen=new Set();
+  const sizes=[];
+  for(let wave=1;wave<=8;wave++){
+    qa.game.wave=wave;qa.spawnWave();
+    const shape=qa.game.invaders.map(e=>e.row+':'+e.col).sort().join(',');
+    assert.equal(seen.has(shape),false,'Wave '+wave+' repeats an earlier formation');
+    seen.add(shape);sizes.push(qa.game.invaders.length);
+    assert.ok(qa.game.invaders.every(e=>e.col>=0&&e.col<8),'Invader outside eight-column playfield');
+    assert.ok(qa.game.invaders.length<=32,'Formation exceeds playable grid');
+    assert.equal(qa.game.startCount,qa.game.invaders.length,'Speed ramp denominator should reflect actual formation');
+    if(wave>1){
+      assert.ok(qa.difficultyFor(wave).speed>qa.difficultyFor(wave-1).speed,'Enemy movement should ramp');
+      assert.ok(qa.difficultyFor(wave).volleyTime<qa.difficultyFor(wave-1).volleyTime,'Enemy fire frequency should ramp');
+    }
+  }
+  assert.equal(sizes[0],6,'Opening wave is deliberately small');
+  assert.ok(sizes[7]>sizes[0],'Later formations are substantially larger');
+  assert.equal(qa.formationFor(1).name,'SCOUTS');
+  assert.equal(qa.formationFor(8).name,'FULL SWARM');
+  assert.equal(qa.formationFor(9).name,'SCOUTS','Formations cycle after eight distinct patterns');
+});
+test('invader bodies shatter the protective ice and only the ice boundary ends the run',async()=>{
+  const {qa}=await loaded();qa.begin();
+  const fort=qa.game.forts[0];
+  assert.equal(fort.hp,3);
+  qa.game.invaders=[{type:'ginger',row:0,col:0,alive:true,points:30,variant:0}];
+  qa.game.startCount=1;
+  qa.game.gridX=fort.x;qa.game.gridY=fort.y-23;
+  qa.game.enemyShots=[];qa.game.shots=[];qa.game.grace=10;
+  qa.move(.01);
+  assert.equal(fort.hp,0,'Invader contact must destroy the ice block, without needing a shot');
+  assert.equal(qa.game.invaders[0].alive,true,'Invader continues through the broken ice');
+  assert.equal(qa.game.state,'playing','Ice is protection, not the defeat line');
+  const effects=qa.game.fx.length;
+  qa.move(.01);
+  assert.ok(qa.game.fx.length<=effects,'Destroyed segment should not shatter again next frame');
+  qa.game.gridX=250;
+  qa.game.gridY=qa.ICE_LINE_Y-26;
+  qa.move(.01);
+  assert.equal(qa.game.state,'playing','Invaders may approach without crossing the marked ice line');
+  qa.game.gridY=qa.ICE_LINE_Y-23;
+  qa.move(.01);
+  assert.equal(qa.game.state,'over','Crossing the ice line ends the run');
+  assert.match(qa.game.overReason,/ice line/i);
+});
+test('winter stage has a real continuous ice crossing and no workshop door decoration',()=>{
+  assert.match(source,/drawIceLine\(g\)/,'Frozen crossing must be rendered on the actual cached background');
+  assert.match(source,/ICE_LINE_Y=H-112/,'Marked ice line and collision threshold share one constant');
+  assert.doesNotMatch(source,/156\+tx\*16,H-73\+ty\*16/,'Old door tiles must be removed');
+  assert.match(source,/shatterOnContact\(live\)/,'Invader collision must run during every formation update');
 });
