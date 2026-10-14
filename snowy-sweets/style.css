@@ -428,3 +428,32 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 @media(prefers-reduced-motion:reduce){
  .cell.is-falling .piece,.cell.is-dragging .piece{will-change:auto}
 }
+
+/* v9: fixed, self-contained special sprites (row/gold, column/ice, burst/pink).
+   Only motion is CSS; the sweets and the activated beams are actual image files. */
+.cell.power-row .candy,
+.cell.power-col .candy,
+.cell.power-burst .candy{
+  width:96%;
+  height:96%;
+  image-rendering:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 0 rgba(18,53,71,.26));
+  animation:none;
+}
+.cell.power-row .candy.fullLengthCandy,
+.cell.power-col .candy.fullLengthCandy,
+.cell.power-burst .candy.fullLengthCandy{
+  width:100%;height:100%;
+}
+.cell.power-burst .piece{animation:none}
+.power-effect{
+  display:block;position:absolute;z-index:20;pointer-events:none;
+  max-width:none;object-fit:fill;image-rendering:pixelated;
+  transform-origin:center center;
+  user-select:none;
+}
+.boardShell{position:relative;isolation:isolate;overflow:hidden}
+.cell.is-falling .piece,.cell.is-dragging .piece{
+  will-change:transform;
+}
