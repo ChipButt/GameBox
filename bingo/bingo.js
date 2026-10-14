@@ -78,6 +78,7 @@
     localStorage.setItem(SESSION_KEY, JSON.stringify(state));
     renderMaster();
     broadcastSnapshots();
+    window.dispatchEvent(new CustomEvent('gamebox-bingo-change',{detail:{called:[...state.called],winTarget:state.winTarget,started:state.started}}));
   }
 
   function columnRange(col) {
@@ -515,6 +516,7 @@
     localStorage.setItem(SESSION_KEY, JSON.stringify(state));
     renderMaster();
     startHostNetwork();
+    window.dispatchEvent(new CustomEvent('gamebox-bingo-change'));
   }
 
   function getDeviceId() {
@@ -664,6 +666,36 @@
     if (buildPrintArea()) window.print();
   };
 
+  // Stable operator API used by Bingo In Event Host. Core caller, claims and
+  // printable serials remain authoritative; the host does not invent cards.
+  window.GameBoxBingo={
+    snapshot:()=>JSON.parse(JSON.stringify(state)),
+    library:()=>JSON.parse(JSON.stringify(library)),
+    availableCards:()=>availableCards().map(x=>x.id),
+    card:id=>{const x=cardById(id);return x?JSON.parse(JSON.stringify(x)):null},
+    issue:(name,ownerId,serial)=>issueCard(ownerId,name,'physical',serial),
+    returnIssue:id=>{
+      const x=state.assignments.find(a=>a.id===id);
+      if(!x)return false;
+      state.assignments=state.assignments.filter(a=>a.id!==id);
+      state.audit.push({at:Date.now(),action:'return-unsold-card',cardId:x.cardId});
+      saveSession();return true;
+    },
+    setPrice:p=>{state.cardPrice=p;saveSession()},
+    nextGame:()=>{
+      if(state.called.length===0&&!state.started)return false;
+      state.audit.push({at:Date.now(),action:'next-game',calls:state.called.length});
+      state.called=[];state.voidedCalls=[];state.claims=[];state.started=false;state.winTarget='line';
+      saveSession();return true;
+    },
+    freshEvent:()=>{
+      stopHostNetwork();state=blankSession();saveSession();startHostNetwork();
+    },
+    showHost:()=>{$('openMaster').click()},
+    addCards:n=>{library=ensureUniqueCards(library,Math.min(1000,library.length+n));saveLibrary();},
+    print:()=>{$('printCards').click()},
+    verify:(serial,target)=>{const card=cardById(serial);return card?checkWin(card,target):null}
+  };
   renderMaster();
   setScreen("roleScreen");
 })();
