@@ -24,7 +24,7 @@ let effects=[],shots=[],orders=[],alerts=[],wrecks=[],controlMode=null,lastThrea
 const modeLabel={moving:'MOVE',gather:'GATHER',farm:'FARM',return:'RETURN',build:'BUILD',repair:'REPAIR',attack:'ATTACK',attackmove:'ATTACK MOVE',hold:'HOLD',idle:'IDLE'};
 function orderEffect(x,y,kind='moving'){orders.push({x,y,kind,life:2.5,max:2.5});if(orders.length>32)orders.shift();}
 function addEffect(x,y,type='hit',value=0){effects.push({x,y,type,value,life:type==='damage'?1.4:.75,max:type==='damage'?1.4:.75});if(effects.length>100)effects.shift();}
-function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);notice(message);}
+function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);notice(message);updateBattleHud();}
 function applyDamage(t,damage,source,projectile=false){
  if(!t||t.hp<=0)return;
 const aliveBefore=t.hp>0;
