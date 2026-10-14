@@ -11,16 +11,18 @@ A standalone pixel-art match-three game in GameBox, currently a **test candidate
 - Move and score counters, sound, hints, restart, level select, level stars and browser-saved progress.
 
 ## Production artwork and visual consistency
-Every ordinary match piece is a **real PNG from Kenney's Pixel Platformer Food Expansion**, copied from the user's existing ToolBox asset library to `snowy-sweets/assets/`. The six source files are:
+All six match pieces are complete, standalone 16×16 Kenney Pixel Platformer Food Expansion sprites copied from the existing ToolBox source art:
 - `tile_0014.png` · iced doughnut
 - `tile_0041.png` · candy cane
-- `tile_0043.png` · ice pop
-- `tile_0056.png` · pink sweet
+- `tile_0043.png` · ice lolly
 - `tile_0058.png` · biscuit
-- `tile_0108.png` · frosted treat
+- `tile_0080.png` · ice cream
+- `tile_0082.png` · frosted sundae
+
+The truncated-looking marshmallow and frosted-cake fragments were removed. Row, column and burst specials keep their *original sweet image*, differentiated by small Kenney pixel-art stripes and subtle animation instead of separate presents.
 
 Additional source sprites from the same user's Kenney library:
-- `tile_0057.png` · special-move mark and burst particles
+- `tile_0096.png`, `tile_0097.png` · special-move strips and match particles
 - `snow_base.png`, `snow_flecks.png` · Tiny Ski snow tiles
 - `ice_block.png` · Platformer Assets Ice visual
 - Kenney Holiday Pack · Christmas panel illustration and special present
