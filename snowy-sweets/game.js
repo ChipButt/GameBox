@@ -29,6 +29,9 @@
   ];
   const $ = (id) => document.getElementById(id);
   const boardEl = $("board");
+  // A stable 8×8 DOM and keyed candy nodes replace full-board redraws.
+  const spriteEls = new Map();
+  const CELL_COUNT = N*N;
   let audioContext = null, touch = null, selected = -1, currentLevel = 0;
   let board = [], ice = [], goal = 0, progress = 0, moves = 0, score = 0;
   let mode = "ready", toastTimer = null, lastFocused = null, generation = 0;
@@ -111,6 +114,7 @@
     currentLevel=Math.max(0,Math.min(LEVELS.length-1,index));
     settings.last=currentLevel;save();
     const config=LEVELS[currentLevel];
+    clearSpriteNodes();
     board=newBoard();
     ice=Array(N*N).fill(0);
     if(config.kind==="ice"){
@@ -140,42 +144,90 @@
     const thresholds=[0.35,0.65,0.9];
     thresholds.forEach((ratio,i)=>$("star"+(i+1)).classList.toggle("earned",progress>=goal*ratio));
   }
-  function render(flags={}) {
-    const fragment=document.createDocumentFragment();
-    for(let i=0;i<N*N;i++){
+  function cellAt(i){return boardEl.children[i];}
+  function ensureCells(){
+    if(boardEl.children.length===CELL_COUNT)return;
+    const frag=document.createDocumentFragment();
+    for(let i=0;i<CELL_COUNT;i++){
       const el=document.createElement("button");
-      el.type="button";el.className="cell";el.dataset.index=i;
+      el.type="button";
+      el.className="cell";
+      el.dataset.index=i;
+      el.tabIndex=i===0?0:-1;
       el.setAttribute("role","gridcell");
-      el.setAttribute("aria-label", "Row "+(1+Math.floor(i/N))+", column "+(1+i%N)+": "+(board[i] ? NAMES[board[i].t].toLowerCase() : "empty")+(ice[i]?", ice "+ice[i]:""));
-      el.tabIndex=i===0 ? 0 : -1;
-      if(i===selected)el.classList.add("selected");
-      if(flags.spawn?.has(i))el.classList.add("spawn");
-      if(flags.swap?.has(i))el.classList.add("swap");
-      if(flags.clearing?.has(i))el.classList.add("clearing");
-      if(board[i]){
-        const piece=document.createElement("span");
-        piece.className="piece";
-        piece.dataset.pieceId=String(board[i].id);
-        const art=document.createElement("img");
-        art.className="candy"+((board[i].t===1||board[i].t===2)?" fullLengthCandy":"");
-        art.src=(window.SnowySweetsArt?.get(board[i].t,board[i].s)||ART[board[i].t]);
-        art.alt="";art.draggable=false;
-        piece.appendChild(art);
-        if(board[i].s){
-          el.classList.add("power-"+board[i].s);
-          el.setAttribute("aria-label",el.getAttribute("aria-label")+", "+(board[i].s==="burst"?"burst":board[i].s==="row"?"row clearing":"column clearing")+" power");
-        }
-        el.appendChild(piece);
-      }
-      if(ice[i]>0){
-        const glass=document.createElement("img");
-        glass.src=GLASS;glass.alt="";glass.className="iceOverlay";el.appendChild(glass);
-        el.classList.add("ice"+ice[i]);
-        if(ice[i]>1){const badge=document.createElement("span");badge.className="iceBadge";badge.textContent=ice[i];el.appendChild(badge);}
-      }
-      fragment.appendChild(el);
+      frag.appendChild(el);
     }
-    boardEl.replaceChildren(fragment);
+    boardEl.replaceChildren(frag);
+  }
+  function spriteFor(piece){
+    let node=spriteEls.get(piece.id);
+    if(!node){
+      node=document.createElement("span");
+      node.className="piece";
+      node.dataset.pieceId=String(piece.id);
+      const img=document.createElement("img");
+      img.className="candy"+((piece.t===1||piece.t===2)?" fullLengthCandy":"");
+      img.alt="";img.draggable=false;
+      node.appendChild(img);
+      spriteEls.set(piece.id,node);
+    }
+    const img=node.querySelector(".candy");
+    const src=(window.SnowySweetsArt?.get(piece.t,piece.s)||ART[piece.t]);
+    if(img.getAttribute("src")!==src)img.setAttribute("src",src);
+    return node;
+  }
+  function render(){
+    ensureCells();
+    for(let i=0;i<CELL_COUNT;i++){
+      const cell=cellAt(i),piece=board[i];
+      // Move an existing DOM image into its next cell, keeping its identity.
+      if(piece){
+        const sprite=spriteFor(piece);
+        if(sprite.parentElement!==cell)cell.appendChild(sprite);
+      }else{
+        const old=cell.querySelector(".piece");
+        if(old)old.remove();
+      }
+      cell.classList.toggle("selected",selected===i);
+      for(const kind of ["row","col","burst"])cell.classList.toggle("power-"+kind,piece?.s===kind);
+      cell.setAttribute("aria-label","Row "+(1+Math.floor(i/N))+", column "+(1+i%N)+": "+
+        (piece?NAMES[piece.t].toLowerCase():"empty")+(piece?.s?", "+piece.s+" power":"")+(ice[i]?", ice "+ice[i]:""));
+      let glass=cell.querySelector(".iceOverlay");
+      if(ice[i]){
+        if(!glass){
+          glass=document.createElement("img");
+          glass.className="iceOverlay";glass.src=GLASS;glass.alt="";glass.draggable=false;
+          cell.appendChild(glass);
+        }
+      }else if(glass)glass.remove();
+      let badge=cell.querySelector(".iceBadge");
+      if(ice[i]>1){
+        if(!badge){badge=document.createElement("span");badge.className="iceBadge";cell.appendChild(badge);}
+        badge.textContent=String(ice[i]);
+      }else if(badge)badge.remove();
+    }
+  }
+  function clearSpriteNodes(){
+    for(const el of spriteEls.values())el.remove();
+    spriteEls.clear();
+  }
+  async function clearMatches(indices){
+    const effects=[];
+    if(!REDUCED_MOTION){
+      for(const i of indices){
+        const node=board[i]&&spriteEls.get(board[i].id);
+        if(!node || !node.animate)continue;
+        const a=node.animate([
+          {transform:"scale(1)",opacity:1,offset:0},
+          {transform:"scale(1.16)",opacity:1,offset:.36},
+          {transform:"scale(.15)",opacity:0,offset:1}
+        ],{duration:195,easing:"cubic-bezier(.33,.01,.85,.5)",fill:"forwards"});
+        effects.push(a);
+      }
+      if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
+      else await sleep(195);
+    }
+    for(const a of effects)a.cancel();
   }
   function toast(message,ms=1100) {
     const el=$("gameToast");clearTimeout(toastTimer);
@@ -235,43 +287,56 @@
     }
     return {fall,spawn};
   }
-  function animatePositions(movements,spawn){
-    const size=(boardEl.children[0]?.getBoundingClientRect?.().height||42)+2;
-    const promises=[];
-    if(REDUCED_MOTION)return Promise.resolve();
-    for(const [index,originalRow] of movements){
-      const cell=boardEl.children[index],piece=cell?.querySelector(".piece");
-      if(!piece?.animate)continue;
-      const destinationRow=Math.floor(index/N);
-      const travel=(originalRow-destinationRow)*size;
-      cell.style.zIndex="5";
-      const animation=piece.animate([
-        {transform:"translate3d(0,"+travel+"px,0) scale(.97)",opacity:spawn.has(index)?.85:1},
-        {transform:"translate3d(0,0,0) scale(1.08)",offset:.83,opacity:1},
-        {transform:"translate3d(0,0,0) scale(1)",opacity:1}
-      ],{duration:235+Math.min(105,Math.abs(travel)*.21),delay:(index%N)*9,easing:"cubic-bezier(.21,.72,.24,1)",fill:"both"});
-      promises.push(animation.finished.catch(()=>{}).then(()=>{cell.style.zIndex="";}));
-    }
-    return Promise.all(promises);
+  function cellStride(){
+    ensureCells();
+    const a=cellAt(0).getBoundingClientRect();
+    const right=cellAt(1).getBoundingClientRect();
+    const down=cellAt(N).getBoundingClientRect();
+    return {x:right.left-a.left,y:down.top-a.top};
   }
-  function animateSwap(a,b,reverse=false){
-    if(REDUCED_MOTION)return sleep(70);
-    const first=boardEl.children[a],second=boardEl.children[b];
-    const pieceA=first?.querySelector(".piece"),pieceB=second?.querySelector(".piece");
-    if(!pieceA?.animate || !pieceB?.animate)return sleep(170);
-    const rectA=first.getBoundingClientRect(),rectB=second.getBoundingClientRect();
-    const dx=rectB.left-rectA.left,dy=rectB.top-rectA.top;
-    const both=[[pieceA,dx,dy],[pieceB,-dx,-dy]];
-    return Promise.all(both.map(([piece,x,y])=>{
-      const initial=reverse?"translate3d("+x+"px,"+y+"px,0)":"translate3d(0,0,0)";
-      const ending=reverse?"translate3d(0,0,0)":"translate3d("+x+"px,"+y+"px,0)";
-      const anim=piece.animate([
-        {transform:initial+" scale(1)",filter:"brightness(1)"},
-        {transform:ending+" scale(1.12)",offset:.68,filter:"brightness(1.14)"},
-        {transform:ending+" scale(1)",filter:"brightness(1)"}
-      ],{duration:reverse?155:198,easing:"cubic-bezier(.24,.76,.28,1)",fill:"forwards"});
-      return anim.finished.catch(()=>{});
-    }));
+  async function animatePositions(movements,spawn){
+    if(REDUCED_MOTION)return;
+    const step=cellStride(),effects=[];
+    for(const [index,originalRow] of movements){
+      const sprite=board[index]&&spriteEls.get(board[index].id);
+      if(!sprite?.animate)continue;
+      const dist=(originalRow-Math.floor(index/N))*step.y;
+      const isNew=spawn.has(index);
+      const a=sprite.animate([
+        {transform:"translate3d(0,"+dist+"px,0) scale(1)",opacity:isNew?.9:1,offset:0},
+        {transform:"translate3d(0,0,0) scale(1.045,.95)",opacity:1,offset:.84},
+        {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:1}
+      ],{duration:280+Math.min(160,Math.abs(dist)*.27),
+        delay:isNew?25:0,easing:"cubic-bezier(.22,.75,.24,1)",fill:"both"});
+      effects.push(a);
+    }
+    if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
+    for(const a of effects)a.cancel();
+  }
+  async function animateSwap(a,b,valid){
+    const na=board[a]&&spriteEls.get(board[a].id);
+    const nb=board[b]&&spriteEls.get(board[b].id);
+    if(!na||!nb){await sleep(90);return;}
+    if(REDUCED_MOTION)return;
+    const step=cellStride(),dx=(b%N-a%N)*step.x,dy=(Math.floor(b/N)-Math.floor(a/N))*step.y;
+    const effects=[];
+    for(const [node,x,y] of [[na,dx,dy],[nb,-dx,-dy]]){
+      if(!node.animate)continue;
+      const at="translate3d("+x+"px,"+y+"px,0)";
+      const frames=valid?[
+        {transform:"translate3d(0,0,0) scale(1)"},
+        {transform:at+" scale(1.055)",offset:.82},
+        {transform:at+" scale(1)"}
+      ]:[
+        {transform:"translate3d(0,0,0)",offset:0},
+        {transform:at,offset:.5},
+        {transform:"translate3d(0,0,0)",offset:1}
+      ];
+      effects.push(node.animate(frames,{duration:valid?205:260,easing:"cubic-bezier(.2,.69,.27,1)",fill:"forwards"}));
+    }
+    if(effects.length)await Promise.all(effects.map(anim=>anim.finished.catch(()=>{})));
+    else await sleep(valid?205:260);
+    for(const effect of effects)effect.cancel();
   }
   function showScoreFloat(index,points,chain){
     if(REDUCED_MOTION)return;
@@ -302,26 +367,24 @@
       }
     }
   }
-  async function resolveTurn(a,b) {
-    if(mode!=="playing" || hasOverlay() || !adjacent(a,b))return;
-    const myGeneration=generation;
+  async function resolveTurn(a,b){
+    if(mode!=="playing"||hasOverlay()||!adjacent(a,b))return;
+    const currentGeneration=generation;
     mode="busy";selected=-1;
-    tone(470,.045);
+    render();
     swap(a,b);
     const groupsAtSwap=matches(board);
     const forced=[a,b].filter(i=>board[i]?.s);
     swap(a,b);
-    // Keep the old pieces on screen while they actually move, not an instant re-render.
-    await animateSwap(a,b);
-    if(myGeneration!==generation)return;
-    if(!groupsAtSwap.length && !forced.length){
-      await animateSwap(a,b,true);
-      if(myGeneration!==generation)return;
-      mode="playing";render();tone(170,.08);
-      return;
+    const valid=groupsAtSwap.length>0||forced.length>0;
+    tone(valid?510:230,.06);
+    await animateSwap(a,b,valid);
+    if(currentGeneration!==generation)return;
+    if(!valid){
+      mode="playing";render();return;
     }
     swap(a,b);
-    render({swap:new Set([a,b])});
+    render();
     let groups=groupsAtSwap;
     moves--;
     updateHUD();
@@ -361,12 +424,15 @@
       }
       score+=Math.max(0,clear.size-3)*15;
       if(LEVELS[currentLevel].kind==="score")progress=score;
-      render({clearing:clear});
       tone(Math.min(920,425+chain*110),.1);
       if(chain===1)vibrate();
-      await sleep(205);
-      if(myGeneration!==generation)return;
-      for(const index of clear)board[index]=null;
+      await clearMatches(clear);
+      if(currentGeneration!==generation)return;
+      for(const index of clear){
+        const old=board[index];
+        if(old){const sprite=spriteEls.get(old.id);sprite?.remove();spriteEls.delete(old.id);}
+        board[index]=null;
+      }
       for(const [index,power] of spawns){
         if(clear.has(index))continue;
         const piece=board[index];
@@ -376,10 +442,10 @@
       render();
       updateHUD();
       await animatePositions(falling.fall,falling.spawn);
-      if(myGeneration!==generation)return;
+      if(currentGeneration!==generation)return;
       groups=matches(board);
     }while((groups.length>0) && chain<40);
-    if(myGeneration!==generation)return;
+    if(currentGeneration!==generation)return;
     render();updateHUD();
     if(progress>=goal){
       finish(true);
@@ -388,7 +454,7 @@
     }else{
       mode="playing";
       if(!findMove(board)){
-        board=newBoard();render({spawn:new Set(Array.from({length:N*N},(_,i)=>i))});
+        clearSpriteNodes();board=newBoard();render();
         toast("Sweet shuffle!");
       }
     }
@@ -460,7 +526,7 @@
     const possible=findMove(board);
     if(!possible)return toast("Shuffling...");
     selected=-1;render();
-    possible.forEach(i=>boardEl.children[i]?.classList.add("hint"));
+    possible.forEach(i=>cellAt(i)?.classList.add("hint"));
     toast("Try these sweets");
     tone(700,.08);
   }
@@ -516,6 +582,6 @@
   $("soundButton").querySelector("img").src="../assets/gamebox/kenney/icons/Game Icons/White/2x/"+(settings.sound?"audioOn":"audioOff")+".png";
   // Generate integrated real-alpha power images once, then replace early fallback art.
   window.SnowySweetsArt?.build(ART).then(ok=>{
-    if(ok && mode==="playing" && !hasOverlay())render();
+    if(ok && mode!=="busy")render();
   }).catch(()=>{});
 })();
