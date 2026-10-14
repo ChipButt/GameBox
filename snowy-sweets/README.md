@@ -5,6 +5,8 @@ A standalone pixel-art match-three game in GameBox, currently a **test candidate
 ## Gameplay
 - Swipe or tap to swap neighbours. Invalid swaps smoothly reverse and do not consume a move.
 - Match 3 sweets to clear; match 4 to make row or column striped power sweets; match 5 or more to create a burst special built from the matching sweet.
+- When a four- or five-piece special is formed, the consumed sweets visibly travel and shrink into the surviving sweet; only then does it morph into the special artwork with a larger gold-white ping.
+- Every destroyed sweet has a sharp pixel-art sparkle ping rather than only a shrink-and-fade. Existing row, column and burst activation animations remain intact.
 - Swaps travel between positions, matched sprites pop, and keyed candies fall into their new cells without recreating the whole board; special activations animate their own sweeping blast artwork.
 - Ice breaks when the sweet in its square clears; some later tiles require two hits.
 - 12 selectable levels have distinct moves and sweet-collection, score, or ice goals.
