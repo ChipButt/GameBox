@@ -6,7 +6,7 @@ if(!core||!M){console.error('Bingo In needs the Bingo engine and accounting mode
 const KEY='gamebox.bingo.host-event.v1',DISPLAY_KEY='gamebox.bingo.public.v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=p=>'£'+M.pounds(p),stageLabel={line:'1 Line',two:'2 Lines',house:'Full House'};
-let event=loadEvent(),tab='run',toastTimer=null,tracks=[],trackIndex=-1,objectUrl='',pausedByCall=false;
+let event=loadEvent(),tab='run',toastTimer=null,tracks=[],trackIndex=-1,objectUrl='',lastDrawCount=0,lastDrawGame=0;
 const audio=new Audio();audio.preload='none';audio.volume=.6;
 audio.addEventListener('ended',()=>playTrack(trackIndex+1));
 audio.addEventListener('error',()=>notice('Audio could not be played. Try another file.'));
@@ -93,6 +93,7 @@ function render(){
     '<form id="hostSettings"><label>Evening name<input name="title" maxlength="80" value="'+esc(event.title)+'" required></label>'+
     '<label>Pub / venue<input name="venue" maxlength="90" value="'+esc(event.venue)+'" placeholder="e.g. The King\'s Arms"></label>'+
     '<label>Event date<input type="date" name="date" value="'+esc(event.date)+'"></label>'+
+    '<label>Pub hosting fee (£, minimum £150)<input type="number" name="hostingFee" min="150" step="1" value="'+M.pounds(event.hostingFeePence??15000)+'" required></label>'+
     '<label>Ticket price, per game (£)<select name="ticketPrice">'+[50,100,150,200,250,300,400,500].map(p=>'<option value="'+p+'" '+(event.ticketPricePence===p?'selected':'')+'>'+money(p)+'</option>').join('')+'</select></label>'+
     '<div class="hostMiniInfo"><strong>Five games included</strong><p>Each printed card is reused for all five separately drawn games. Full-book price is five times the per-game ticket price.</p></div>'+
     '<button class="hostButton hostPrimary" type="submit" '+(event.sales.length||event.started?'disabled':'')+'>Save event details</button></form>'+
@@ -112,7 +113,7 @@ function musicMarkup(){
 }
 function csvCell(v){const s=String(v??'');return /[,"\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 function makeCSV(){
- const lines=[['BINGO IN EVENT REPORT',event.title],['Venue',event.venue],['Date',event.date],['Game count',event.gameCount],[],['Total stakes collected',M.pounds(accounting().takingsPence)],['Cash prizes paid',M.pounds(accounting().paidPence)],['Unpaid prizes',M.pounds(accounting().outstandingPence)],[],['TICKET SALES'],['Player','Cards','Card serials','Cash collected']];
+ const lines=[['BINGO IN EVENT REPORT',event.title],['Venue',event.venue],['Date',event.date],['Game count',event.gameCount],[],['Venue hosting fee (separate invoice)',M.pounds(event.hostingFeePence??15000)],['Total stakes collected',M.pounds(accounting().takingsPence)],['Cash prizes paid',M.pounds(accounting().paidPence)],['Unpaid prizes',M.pounds(accounting().outstandingPence)],[],['TICKET SALES'],['Player','Cards','Card serials','Cash collected']];
  event.sales.forEach(s=>lines.push([s.name,s.quantity,s.cardIds.join(' '),M.pounds(s.collectedPence)]));
  lines.push([],['PRIZES PAID'],['Game','Prize','Winner','Card serial','Amount']);
  event.payouts.forEach(p=>lines.push([p.gameIndex+1,stageLabel[p.stage],p.winner,p.cardId,M.pounds(p.amountPence)]));
@@ -130,7 +131,7 @@ function printReport(){
  if(!w){notice('Allow pop-ups to print the report, or use Export CSV.');return}
  const rows=event.payouts.map(p=>'<tr><td>'+(p.gameIndex+1)+'</td><td>'+stageLabel[p.stage]+'</td><td>'+esc(p.winner)+'</td><td>'+esc(p.cardId)+'</td><td>'+money(p.amountPence)+'</td></tr>').join('');
  w.document.open();
- w.document.write('<!doctype html><html><head><title>Bingo In event report</title><style>body{font:15px Arial;margin:32px;color:#17283b}h1{font-size:27px}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:10px 5px;text-align:left}section{margin:22px 0}strong{font-weight:800}.summary{display:flex;gap:32px;flex-wrap:wrap}.muted{color:#667}</style></head><body><h1>BINGO IN! — End-of-night report</h1><p>'+esc(event.title)+' · '+esc(event.venue)+' · '+esc(event.date)+'</p><div class="summary"><p><strong>Stakes: '+money(a.takingsPence)+'</strong></p><p><strong>Prizes paid: '+money(a.paidPence)+'</strong></p><p><strong>Unpaid: '+money(a.outstandingPence)+'</strong></p></div><p class="muted">Separate venue hosting fees are not bingo stakes or prize income.</p><section><h2>Prize payments</h2><table><thead><tr><th>Game</th><th>Prize</th><th>Winner</th><th>Card</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table></section><section><h2>Sales</h2><table><thead><tr><th>Player / seat</th><th>Card serials</th><th>Cash collected</th></tr></thead><tbody>'+event.sales.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+esc(s.cardIds.join(', '))+'</td><td>'+money(s.collectedPence)+'</td></tr>').join('')+'</tbody></table></section></body></html>');
+ w.document.write('<!doctype html><html><head><title>Bingo In event report</title><style>body{font:15px Arial;margin:32px;color:#17283b}h1{font-size:27px}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:10px 5px;text-align:left}section{margin:22px 0}strong{font-weight:800}.summary{display:flex;gap:32px;flex-wrap:wrap}.muted{color:#667}</style></head><body><h1>BINGO IN! — End-of-night report</h1><p>'+esc(event.title)+' · '+esc(event.venue)+' · '+esc(event.date)+'</p><div class="summary"><p><strong>Stakes: '+money(a.takingsPence)+'</strong></p><p><strong>Prizes paid: '+money(a.paidPence)+'</strong></p><p><strong>Unpaid: '+money(a.outstandingPence)+'</strong></p></div><p class="muted">Venue hosting fee (invoiced separately): '+money(event.hostingFeePence??15000)+'. This fee is not bingo stake or prize money.</p><section><h2>Prize payments</h2><table><thead><tr><th>Game</th><th>Prize</th><th>Winner</th><th>Card</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table></section><section><h2>Sales</h2><table><thead><tr><th>Player / seat</th><th>Card serials</th><th>Cash collected</th></tr></thead><tbody>'+event.sales.map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+esc(s.cardIds.join(', '))+'</td><td>'+money(s.collectedPence)+'</td></tr>').join('')+'</tbody></table></section></body></html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),200);
 }
 async function db(){
@@ -163,10 +164,11 @@ async function removeTrack(index){
  await store('delete',tracks[index].id);await loadTracks();
 }
 function markCall(){
- const s=snapshot();
+ const s=snapshot(),newNumber=s.called.length>lastDrawCount;
+ lastDrawCount=s.called.length;lastDrawGame=event.gameIndex;
  if(!event.started&&s.called.length){event.started=true;event.firstCallAt=new Date().toISOString();save()}
  else publish();
- if(localStorage.getItem('gamebox.bingo.pause-music')!=='no'&&!audio.paused&&s.called.length){audio.pause();pausedByCall=true;render()}
+ if(newNumber&&localStorage.getItem('gamebox.bingo.pause-music')!=='no'&&!audio.paused){audio.pause();render()}
 }
 function showError(e){notice(e?.message||String(e))}
 host.addEventListener('click',async e=>{
@@ -195,7 +197,7 @@ host.addEventListener('click',async e=>{
   }
   if(action==='reset'){
     if(!window.confirm('Create a NEW evening? Current sales and prize records will be replaced. Export a report first.'))return;
-    event=M.createEvent();core.freshEvent();core.setPrice(1);tab='settings';save();notice('New bingo evening created. Set the venue and ticket price.')
+    event=M.createEvent();core.freshEvent();core.setPrice(1);lastDrawCount=0;lastDrawGame=0;tab='settings';save();notice('New bingo evening created. Set the venue and ticket price.')
   }
  }catch(err){showError(err)}
 });
@@ -208,7 +210,7 @@ host.addEventListener('submit',e=>{
   if(form.id==='hostSettings'){
     if(event.sales.length||event.started)throw Error('Event setup is locked after tickets are sold.');
     event.title=String(data.get('title')||'Bingo In!').trim();event.venue=String(data.get('venue')||'').trim();event.date=String(data.get('date')||'');
-    event.ticketPricePence=Number(data.get('ticketPrice'));core.setPrice(event.ticketPricePence/100);
+    event.ticketPricePence=Number(data.get('ticketPrice'));event.hostingFeePence=M.toPence(data.get('hostingFee'));if(event.hostingFeePence<15000)throw Error('The minimum hosting fee is £150.');core.setPrice(event.ticketPricePence/100);
     document.getElementById('eventName').value=event.title;document.getElementById('eventName').dispatchEvent(new Event('change'));
     save();notice('Evening configured. Go to Tickets & cards to start selling.');
   }
