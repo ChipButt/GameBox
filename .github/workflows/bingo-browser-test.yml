@@ -1,0 +1,30 @@
+name: Bingo In browser smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bingo/**'
+      - 'bingo.html'
+      - '.github/workflows/bingo-browser-test.yml'
+  workflow_dispatch:
+
+jobs:
+  browser-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install lightweight Chromium driver
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Verify local Chrome
+        run: which google-chrome || which chromium
+      - name: Start local GameBox preview
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/gamebox-http.log 2>&1 &
+          sleep 2
+      - name: Run interactive Bingo host tests
+        run: node bingo/browser-smoke.cjs
