@@ -524,10 +524,10 @@
       }
       const falling=applyGravity();
       render();
-      playCreatedPowerEffect(spawns.keys());
       updateHUD();
       await animatePositions(falling.fall,falling.spawn);
       if(currentGeneration!==generation)return;
+      playCreatedPowerEffect(spawns.keys());
       groups=matches(board);
     }while((groups.length>0) && chain<40);
     if(currentGeneration!==generation)return;
