@@ -508,7 +508,39 @@ function screenWorld(px,py){return fromIso(cam.x+px/cam.zoom,cam.y+py/cam.zoom);
 function evPos(ev){const r=canvas.getBoundingClientRect();return{x:ev.clientX-r.left,y:ev.clientY-r.top};}
 function pointerDown(ev){if(ev.cancelable)ev.preventDefault();canvas.setPointerCapture(ev.pointerId);const p=evPos(ev);pointers.set(ev.pointerId,{start:p,now:p,last:p,travel:0});if(pointers.size===2){const v=[...pointers.values()],mid={x:(v[0].now.x+v[1].now.x)/2,y:(v[0].now.y+v[1].now.y)/2};v[0].travel=999;v[1].travel=999;gesture={distance:Math.hypot(v[0].now.x-v[1].now.x,v[0].now.y-v[1].now.y),zoom:cam.zoom,x:mid.x,y:mid.y};}}
 function pointerMove(ev){const p=pointers.get(ev.pointerId),n=evPos(ev);mouseWorld=screenWorld(n.x,n.y);if(!p)return;if(ev.cancelable)ev.preventDefault();p.travel=Math.max(p.travel,Math.hypot(n.x-p.start.x,n.y-p.start.y));if(pointers.size===1){cam.x-=(n.x-p.last.x)/cam.zoom;cam.y-=(n.y-p.last.y)/cam.zoom;boundCamera();}p.now=n;p.last=n;if(pointers.size===2&&gesture){const v=[...pointers.values()],d=Math.hypot(v[0].now.x-v[1].now.x,v[0].now.y-v[1].now.y);zoomTo(gesture.zoom*d/Math.max(10,gesture.distance),gesture.x,gesture.y);}}
-function pointerUp(ev){const p=pointers.get(ev.pointerId);if(!p)return;if(ev.cancelable)ev.preventDefault();pointers.delete(ev.pointerId);if(!gesture&&p.travel<9){const n=evPos(ev),w=screenWorld(n.x,n.y);actAt(w.x,w.y);}if(pointers.size<2)gesture=null;}
+function hitSprite(px,py){
+ const z=cam.zoom;let candidates=[];
+ for(const u of units){if(u.hp<=0||u.team==='red'&&!visibleTile(u.x,u.y))continue;
+ const p=toIso(u.x,u.y),x=(p.x-cam.x)*z,y=(p.y-cam.y)*z;
+ if(Math.abs(px-x)<24*z+8&&py>y-49*z-8&&py<y+13*z+6){
+   candidates.push({kind:'unit',item:u,score:Math.hypot((px-x)/z,(py-(y-21*z))/z)-25});
+ }}
+ for(const b of buildings){if(b.hp<=0||b.team==='red'&&!visibleTile(b.x,b.y))continue;
+ const mid=toIso(b.x+b.w/2,b.y+b.h/2),foot=toIso(b.x+b.w,b.y+b.h);
+ const name={town:'castle',house:'house',barracks:'barracks',tower:'tower',granary:'stable',farm:'blacksmith'}[b.type],im=art[name];
+ const dw=(b.w+b.h)*28,dh=im?.naturalWidth?dw*im.naturalHeight/im.naturalWidth:85;
+ const x=(mid.x-cam.x)*z,y=(foot.y-cam.y)*z;
+ if(px>x-dw*z/2&&px<x+dw*z/2&&py>y-dh*z+7*z&&py<y+6*z){
+   candidates.push({kind:'building',item:b,score:Math.hypot((px-x)/z,(py-(y-dh*z/2))/z)});
+ }}
+ for(const o of objects){if(!o.alive||!visibleTile(o.x,o.y))continue;
+ const p=toIso(o.x+.5,o.y+.5),x=(p.x-cam.x)*z,y=(p.y-cam.y)*z;
+ const w=o.type==='tree'?38:25,h=o.type==='tree'?75:36;
+ if(Math.abs(px-x)<w*z&&py>y-h*z&&py<y+11*z)candidates.push({kind:'object',item:o,score:40+Math.hypot((px-x)/z,(py-(y-h*z/2))/z)});
+ }
+ candidates.sort((a,b)=>a.score-b.score);
+ return candidates[0]||null;
+}
+function actPointer(px,py){
+ const w=screenWorld(px,py);
+ if(buildMode||controlMode==='move'||controlMode==='rally'||controlMode==='attackmove')return actAt(w.x,w.y);
+ const hit=hitSprite(px,py);
+ if(hit?.kind==='unit')return actAt(hit.item.x,hit.item.y);
+ if(hit?.kind==='building')return actAt(hit.item.x+hit.item.w/2,hit.item.y+hit.item.h/2);
+ if(hit?.kind==='object')return actAt(hit.item.x+.5,hit.item.y+.5);
+ return actAt(w.x,w.y);
+}
+function pointerUp(ev){const p=pointers.get(ev.pointerId);if(!p)return;if(ev.cancelable)ev.preventDefault();pointers.delete(ev.pointerId);if(!gesture&&p.travel<9){const n=evPos(ev);actPointer(n.x,n.y);}if(pointers.size<2)gesture=null;}
 function zoomTo(z,cx=cw/2,cy=ch/2){const before=screenWorld(cx,cy);cam.zoom=clamp(z,.72,2.3);const p=toIso(before.x,before.y);cam.x=p.x-cx/cam.zoom;cam.y=p.y-cy/cam.zoom;boundCamera();}
 function resize(){const r=wrap.getBoundingClientRect();cw=Math.max(1,r.width);ch=Math.max(1,r.height);dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.round(cw*dpr);canvas.height=Math.round(ch*dpr);canvas.style.width=cw+'px';canvas.style.height=ch+'px';ctx.imageSmoothingEnabled=false;boundCamera();}
 canvas.addEventListener('pointerdown',pointerDown,{passive:false});canvas.addEventListener('pointermove',pointerMove,{passive:false});canvas.addEventListener('pointerup',pointerUp,{passive:false});canvas.addEventListener('pointercancel',pointerUp,{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
