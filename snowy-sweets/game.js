@@ -189,6 +189,7 @@
         if(old)old.remove();
       }
       cell.classList.toggle("selected",selected===i);
+      cell.classList.remove("hint");
       for(const kind of ["row","col","burst"])cell.classList.toggle("power-"+kind,piece?.s===kind);
       cell.setAttribute("aria-label","Row "+(1+Math.floor(i/N))+", column "+(1+i%N)+": "+
         (piece?NAMES[piece.t].toLowerCase():"empty")+(piece?.s?", "+piece.s+" power":"")+(ice[i]?", ice "+ice[i]:""));
@@ -296,10 +297,12 @@
   }
   async function animatePositions(movements,spawn){
     if(REDUCED_MOTION)return;
-    const step=cellStride(),effects=[];
+    const step=cellStride(),effects=[],movingCells=[];
     for(const [index,originalRow] of movements){
       const sprite=board[index]&&spriteEls.get(board[index].id);
       if(!sprite?.animate)continue;
+      const cell=cellAt(index);
+      cell.classList.add("is-falling");movingCells.push(cell);
       const dist=(originalRow-Math.floor(index/N))*step.y;
       const isNew=spawn.has(index);
       const a=sprite.animate([
@@ -312,31 +315,49 @@
     }
     if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
     for(const a of effects)a.cancel();
+    for(const cell of movingCells)cell.classList.remove("is-falling");
   }
-  async function animateSwap(a,b,valid){
+  async function animateSwap(a,b,valid,preview=null){
     const na=board[a]&&spriteEls.get(board[a].id);
     const nb=board[b]&&spriteEls.get(board[b].id);
     if(!na||!nb){await sleep(90);return;}
-    if(REDUCED_MOTION)return;
+    const ca=cellAt(a),cb=cellAt(b);
+    ca.classList.add("is-dragging");cb.classList.add("is-dragging");
+    if(REDUCED_MOTION){
+      na.style.transform="";nb.style.transform="";
+      ca.classList.remove("is-dragging");cb.classList.remove("is-dragging");
+      return;
+    }
     const step=cellStride(),dx=(b%N-a%N)*step.x,dy=(Math.floor(b/N)-Math.floor(a/N))*step.y;
+    const fromA=preview&&preview.b===b?[preview.dx,preview.dy]:[0,0];
+    const fromB=preview&&preview.b===b?[-preview.dx*.28,-preview.dy*.28]:[0,0];
     const effects=[];
-    for(const [node,x,y] of [[na,dx,dy],[nb,-dx,-dy]]){
+    const moves=[[na,dx,dy,fromA],[nb,-dx,-dy,fromB]];
+    for(const [node,x,y,from] of moves){
       if(!node.animate)continue;
-      const at="translate3d("+x+"px,"+y+"px,0)";
+      const initial="translate3d("+from[0]+"px,"+from[1]+"px,0)";
+      const dest="translate3d("+x+"px,"+y+"px,0)";
       const frames=valid?[
-        {transform:"translate3d(0,0,0) scale(1)"},
-        {transform:at+" scale(1.055)",offset:.82},
-        {transform:at+" scale(1)"}
-      ]:[
-        {transform:"translate3d(0,0,0)",offset:0},
-        {transform:at,offset:.5},
+        {transform:initial+" scale(1)",offset:0},
+        {transform:dest+" scale(1.035)",offset:.81},
+        {transform:dest+" scale(1)",offset:1}
+      ]:(preview&&preview.b===b?[
+        {transform:initial,offset:0},
         {transform:"translate3d(0,0,0)",offset:1}
-      ];
-      effects.push(node.animate(frames,{duration:valid?205:260,easing:"cubic-bezier(.2,.69,.27,1)",fill:"forwards"}));
+      ]:[
+        {transform:initial,offset:0},
+        {transform:dest,offset:.44},
+        {transform:initial,offset:1}
+      ]);
+      effects.push(node.animate(frames,{duration:valid?Math.max(100,205-(Math.abs(from[0]+from[1])*1.5)):(preview?130:245),
+        easing:"cubic-bezier(.19,.73,.25,1)",fill:"forwards"}));
     }
     if(effects.length)await Promise.all(effects.map(anim=>anim.finished.catch(()=>{})));
-    else await sleep(valid?205:260);
+    else await sleep(valid?170:210);
+    // Cancel just before reparenting. The next render happens in the same task.
+    na.style.transform="";nb.style.transform="";
     for(const effect of effects)effect.cancel();
+    ca.classList.remove("is-dragging");cb.classList.remove("is-dragging");
   }
   function showScoreFloat(index,points,chain){
     if(REDUCED_MOTION)return;
@@ -367,7 +388,7 @@
       }
     }
   }
-  async function resolveTurn(a,b){
+  async function resolveTurn(a,b,preview=null){
     if(mode!=="playing"||hasOverlay()||!adjacent(a,b))return;
     const currentGeneration=generation;
     mode="busy";selected=-1;
@@ -378,7 +399,7 @@
     swap(a,b);
     const valid=groupsAtSwap.length>0||forced.length>0;
     tone(valid?510:230,.06);
-    await animateSwap(a,b,valid);
+    await animateSwap(a,b,valid,preview);
     if(currentGeneration!==generation)return;
     if(!valid){
       mode="playing";render();return;
@@ -493,24 +514,65 @@
     }
     selected=i;render();tone(400,.045);
   }
+  function clearDrag(drag){
+    if(!drag)return;
+    const a=cellAt(drag.i)?.querySelector(".piece");
+    if(a)a.style.transform="";
+    if(drag.b!=null){
+      const b=cellAt(drag.b)?.querySelector(".piece");
+      if(b)b.style.transform="";
+      cellAt(drag.b)?.classList.remove("is-dragging");
+    }
+    cellAt(drag.i)?.classList.remove("is-dragging");
+  }
   boardEl.addEventListener("pointerdown",e=>{
     const button=e.target.closest(".cell");
-    if(!button || mode!=="playing" || hasOverlay())return;
-    touch={i:Number(button.dataset.index),x:e.clientX,y:e.clientY,pointer:e.pointerId};
-    try{boardEl.setPointerCapture(e.pointerId);}catch(_){}
+    if(!button||mode!=="playing"||hasOverlay())return;
+    touch={i:Number(button.dataset.index),x:e.clientX,y:e.clientY,pointer:e.pointerId,
+      b:null,dx:0,dy:0,didDrag:false};
+    try{boardEl.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  boardEl.addEventListener("pointermove",e=>{
+    if(!touch||touch.pointer!==e.pointerId||mode!=="playing")return;
+    const drag=touch;
+    const rawX=e.clientX-drag.x,rawY=e.clientY-drag.y;
+    if(Math.max(Math.abs(rawX),Math.abs(rawY))<7&&!drag.didDrag)return;
+    drag.didDrag=true;
+    const horizontal=Math.abs(rawX)>=Math.abs(rawY);
+    const step=cellStride();
+    const candidate=drag.i+(horizontal?(rawX>=0?1:-1):(rawY>=0?N:-N));
+    const next=adjacent(drag.i,candidate)?candidate:null;
+    if(drag.b!==null&&drag.b!==next){
+      const old=cellAt(drag.b)?.querySelector(".piece");
+      if(old)old.style.transform="";
+      cellAt(drag.b)?.classList.remove("is-dragging");
+    }
+    drag.b=next;
+    if(next===null){drag.dx=0;drag.dy=0;return;}
+    drag.dx=horizontal?Math.max(-step.x,Math.min(step.x,rawX)):0;
+    drag.dy=horizontal?0:Math.max(-step.y,Math.min(step.y,rawY));
+    const a=cellAt(drag.i),b=cellAt(next);
+    a.classList.add("is-dragging");b.classList.add("is-dragging");
+    const current=a.querySelector(".piece"),other=b.querySelector(".piece");
+    if(current)current.style.transform="translate3d("+drag.dx+"px,"+drag.dy+"px,0)";
+    if(other)other.style.transform="translate3d("+(-drag.dx*.28)+"px,"+(-drag.dy*.28)+"px,0)";
   });
   boardEl.addEventListener("pointerup",e=>{
     if(!touch||touch.pointer!==e.pointerId)return;
-    const {i,x,y}=touch;touch=null;
-    const dx=e.clientX-x,dy=e.clientY-y;
-    if(Math.abs(dx)>20||Math.abs(dy)>20){
-      let j=i;
-      if(Math.abs(dx)>Math.abs(dy))j+=dx>0?1:-1;
-      else j+=dy>0?N:-N;
-      if(adjacent(i,j))resolveTurn(i,j);else clickCell(i);
-    }else clickCell(i);
+    const drag=touch;touch=null;
+    const rawX=e.clientX-drag.x,rawY=e.clientY-drag.y;
+    const horizontal=Math.abs(rawX)>=Math.abs(rawY);
+    const dest=drag.i+(horizontal?(rawX>=0?1:-1):(rawY>=0?N:-N));
+    if(Math.max(Math.abs(rawX),Math.abs(rawY))>17&&adjacent(drag.i,dest)){
+      // If the finger took another direction at release, discard earlier preview.
+      if(drag.b!==dest)clearDrag(drag);
+      resolveTurn(drag.i,dest,drag.b===dest?drag:null);
+    }else{
+      clearDrag(drag);
+      if(!drag.didDrag)clickCell(drag.i);
+    }
   });
-  boardEl.addEventListener("pointercancel",()=>touch=null);
+  boardEl.addEventListener("pointercancel",()=>{clearDrag(touch);touch=null;});
   boardEl.addEventListener("keydown",e=>{
     const b=e.target.closest(".cell");if(!b)return;
     const i=Number(b.dataset.index),next={ArrowRight:i+1,ArrowLeft:i-1,ArrowDown:i+N,ArrowUp:i-N}[e.key];
