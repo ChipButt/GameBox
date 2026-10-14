@@ -429,11 +429,13 @@
     for(const index of indices){
       const piece=board[index],sprite=piece&&spriteEls.get(piece.id);
       if(!piece?.s||!sprite?.animate)continue;
+      // Animate only the glow: a second transform animation can fight a
+      // simultaneous cascade/clear and make the candy snap on iOS Safari.
       const anim=sprite.animate([
-        {filter:"drop-shadow(0 0 1px #fff)",transform:"scale(.86)"},
-        {filter:"drop-shadow(0 0 9px #ffe88a)",transform:"scale(1.15)",offset:.57},
-        {filter:"drop-shadow(0 0 2px #ffe88a)",transform:"scale(1)"}
-      ],{duration:220,easing:"cubic-bezier(.16,.78,.28,1)"});
+        {filter:"drop-shadow(0 0 1px #fff)"},
+        {filter:"drop-shadow(0 0 9px #ffe88a)",offset:.54},
+        {filter:"drop-shadow(0 0 2px #ffe88a)"}
+      ],{duration:185,easing:"cubic-bezier(.16,.78,.28,1)"});
       anim.finished.catch(()=>{});
     }
   }
