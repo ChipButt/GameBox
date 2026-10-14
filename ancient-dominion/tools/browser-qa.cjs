@@ -12,11 +12,42 @@ const fs=require('fs'), assert=require('assert');
    const art=await page.evaluate(()=>window.__ancientGame.artStatus());
    assert(initial.units>=4&&initial.buildings>=3,'missing game objects');
    for(const n of ['house','barracks','tower','castle','stable','blacksmith','villager','spearman','archer','tree'])assert(art[n].ready,'asset not loaded: '+n);
+   // Verify explicit movement controls and destination state.
    await page.evaluate(()=>window.__ancientGame.tap(13,21));
-   await page.evaluate(()=>window.__ancientGame.tap(16,22));
-   await page.waitForTimeout(400);
-   await page.evaluate(()=>document.querySelector('#home').click());
-   await page.waitForTimeout(200);
+   const selectedVillager=await page.evaluate(()=>window.__ancientGame.getState().selected);
+   assert(selectedVillager?.kind==='unit','villager not selectable');
+   await page.locator('#actions').getByText('Move',{exact:true}).click();
+   assert.strictEqual((await page.evaluate(()=>window.__ancientGame.getFeedback())).controlMode,'move');
+   await page.evaluate(()=>window.__ancientGame.tap(19,21));
+   let afterMove=await page.evaluate(()=>window.__ancientGame.getState());
+   assert(afterMove.unitDetails.some(u=>u.id===selectedVillager.id&&u.task==='moving'&&u.goal),'move order destination missing');
+   assert((await page.evaluate(()=>window.__ancientGame.getFeedback())).orderCount>0,'missing click command marker');
+   // A damaged HQ must be obvious, locatable and reparable by a villager.
+   const hq=initial.buildingDetails.find(b=>b.type==='town'&&b.team==='blue');
+   await page.evaluate(id=>window.__ancientGame.testDamage(id,490),hq.id);
+   await page.waitForTimeout(100);
+   assert(await page.locator('#battleAlert').isVisible(),'under-attack alert missing');
+   await page.locator('#battleAlert').click();
+   assert((await page.evaluate(()=>window.__ancientGame.getState())).selected.id===hq.id,'alert did not locate HQ');
+   // Issue a genuine repair command.
+   const v=afterMove.unitDetails.find(u=>u.id===selectedVillager.id);
+   await page.evaluate(p=>window.__ancientGame.tap(p.x,p.y),v);
+   await page.locator('#actions').getByText('Repair',{exact:true}).click();
+   await page.evaluate(()=>window.__ancientGame.tap(10,18));
+   assert((await page.evaluate(()=>window.__ancientGame.getState())).unitDetails.some(u=>u.id===selectedVillager.id&&u.task==='repair'),'repair order not applied');
+   // A town centre should have configurable rally point.
+   await page.evaluate(()=>window.__ancientGame.tap(10,18));
+   await page.locator('#actions').getByText('Set rally',{exact:true}).click();
+   await page.evaluate(()=>window.__ancientGame.tap(13,19));
+   assert((await page.evaluate(()=>window.__ancientGame.getState())).buildingDetails.find(b=>b.id===hq.id).rally,'rally point absent');
+   // Military gets attack-move order and does not silently ignore the target.
+   await page.evaluate(()=>window.__ancientGame.spawnArmy());
+   await page.locator('#army').click();
+   await page.locator('#actions').getByText('Attack-move',{exact:true}).click();
+   await page.evaluate(()=>window.__ancientGame.tap(25,20));
+   assert((await page.evaluate(()=>window.__ancientGame.getState())).unitDetails.some(u=>u.team==='blue'&&u.kind==='spearman'&&u.task==='attackmove'),'attack-move ignored');
+   await page.evaluate(()=>window.__ancientGame.testSkirmish());
+   await page.waitForTimeout(1100);
    await page.screenshot({path:'/tmp/ancient-'+name+'.png'});
    console.log(JSON.stringify({name,width,height,units:initial.units,buildings:initial.buildings,art,errors}));
    assert.deepStrictEqual(errors,[],'uncaught browser errors');
