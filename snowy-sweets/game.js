@@ -218,23 +218,70 @@
     for(const el of spriteEls.values())el.remove();
     spriteEls.clear();
   }
-  async function clearMatches(indices){
-    const effects=[];
+  // A single consumed candy may belong to overlapping horizontal/vertical
+  // matches. Assign it to one surviving special so it never flies twice.
+  function creationSourceTargets(groups,spawns,clear,activated){
+    const targets=new Map();
+    for(const group of groups){
+      if(group.indexes.length<4)continue;
+      const anchors=group.indexes.filter(i=>spawns.has(i)&&!clear.has(i)&&!activated.has(i));
+      if(!anchors.length)continue;
+      for(const index of group.indexes){
+        if(!clear.has(index)||targets.has(index))continue;
+        const nearest=anchors.reduce((best,next)=>{
+          const dist=i=>Math.abs(i%N-index%N)+Math.abs(Math.floor(i/N)-Math.floor(index/N));
+          return dist(next)<dist(best)?next:best;
+        });
+        targets.set(index,nearest);
+      }
+    }
+    return targets;
+  }
+  async function clearMatches(indices,converging=new Map()){
+    const effects=[],marked=[];
     if(!REDUCED_MOTION){
       for(const i of indices){
         const node=board[i]&&spriteEls.get(board[i].id);
-        if(!node || !node.animate)continue;
-        const a=node.animate([
-          {transform:"scale(1)",opacity:1,offset:0},
-          {transform:"scale(1.16)",opacity:1,offset:.36},
-          {transform:"scale(.15)",opacity:0,offset:1}
-        ],{duration:125,easing:"cubic-bezier(.25,.1,.7,.42)",fill:"forwards"});
-        effects.push(a);
+        if(!node)continue;
+        const cell=cellAt(i);
+        // Ping art is an actual transparent pixel sprite, displayed behind
+        // all consumed sweets (including those flying into a power-up).
+        cell.classList.add("sweet-ping");
+        marked.push(cell);
+        if(!node.animate)continue;
+        const target=converging.get(i);
+        let keyframes,duration;
+        if(target!==undefined){
+          const from=cell.getBoundingClientRect(),to=cellAt(target).getBoundingClientRect();
+          const dx=to.left-from.left,dy=to.top-from.top;
+          duration=205;
+          keyframes=[
+            {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:0},
+            {transform:"translate3d("+dx*.38+"px,"+dy*.38+"px,0) scale(.88)",opacity:1,offset:.43},
+            {transform:"translate3d("+dx+"px,"+dy+"px,0) scale(.08)",opacity:0,offset:1}
+          ];
+          cell.classList.add("is-merging");
+        }else{
+          duration=165;
+          keyframes=[
+            {transform:"scale(1)",opacity:1,offset:0},
+            {transform:"scale(1.17)",opacity:1,offset:.4},
+            {transform:"scale(.1)",opacity:0,offset:1}
+          ];
+        }
+        const anim=node.animate(keyframes,{
+          duration,easing:target!==undefined?"cubic-bezier(.26,.65,.3,1)":"cubic-bezier(.25,.16,.72,.56)",
+          fill:"forwards"
+        });
+        effects.push(anim);
       }
       if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
-      else await sleep(125);
+      else await sleep(REDUCED_MOTION?0:165);
     }
     for(const a of effects)a.cancel();
+    for(const cell of marked){
+      cell.classList.remove("sweet-ping","is-merging");
+    }
   }
   function toast(message,ms=1100) {
     const el=$("gameToast");clearTimeout(toastTimer);
@@ -428,15 +475,21 @@
     if(REDUCED_MOTION)return;
     for(const index of indices){
       const piece=board[index],sprite=piece&&spriteEls.get(piece.id);
-      if(!piece?.s||!sprite?.animate)continue;
-      // Animate only the glow: a second transform animation can fight a
-      // simultaneous cascade/clear and make the candy snap on iOS Safari.
-      const anim=sprite.animate([
-        {filter:"drop-shadow(0 0 1px #fff)"},
-        {filter:"drop-shadow(0 0 9px #ffe88a)",offset:.54},
-        {filter:"drop-shadow(0 0 2px #ffe88a)"}
-      ],{duration:185,easing:"cubic-bezier(.16,.78,.28,1)"});
+      if(!piece?.s||!sprite)continue;
+      // Animate the artwork INSIDE the sprite. Gravity moves the outer
+      // sprite so these two motions never fight each other in Safari.
+      const art=sprite.querySelector(".candy");
+      if(!art?.animate)continue;
+      const anim=art.animate([
+        {transform:"scale(.8) rotate(-9deg)",filter:"brightness(1.6)",offset:0},
+        {transform:"scale(1.23) rotate(4deg)",filter:"brightness(1.9)",offset:.38},
+        {transform:"scale(1) rotate(0deg)",filter:"brightness(1)",offset:1}
+      ],{duration:250,easing:"cubic-bezier(.14,.8,.25,1)"});
       anim.finished.catch(()=>{});
+      const cell=cellAt(index);
+      cell.classList.add("special-born");
+      setTimeout(()=>cell.classList.remove("special-born"),280);
+      tone(piece.s==="burst"?1040:880,.10);
     }
   }
   function collectPower(index,cleared,queue,activated) {
@@ -493,8 +546,9 @@
         if(!clear.has(at))clear.add(at);
         collectPower(at,clear,queue,activated);
       }
-      // A freshly made power sweet remains on the board until matched later.
+      // A newly created special is the surviving destination of its match.
       for(const index of spawns.keys())if(!activated.has(index))clear.delete(index);
+      const merging=creationSourceTargets(groups,spawns,clear,activated);
       if(!clear.size)break;
       clearedTotal+=clear.size;
       if(chain>2)toast("CHAIN ×"+chain,570);
@@ -512,24 +566,28 @@
       tone(Math.min(920,425+chain*110),.09);
       if(chain===1)vibrate();
       playPowerEffects(activated);
-      await clearMatches(clear);
+      await clearMatches(clear,merging);
       if(currentGeneration!==generation)return;
       for(const index of clear){
         const old=board[index];
         if(old){const sprite=spriteEls.get(old.id);sprite?.remove();spriteEls.delete(old.id);}
         board[index]=null;
       }
+      // The consumed pieces have now reached their shared destination.
+      // Change the surviving art immediately, before the next gravity pass.
+      const created=[];
       for(const [index,power] of spawns){
         if(clear.has(index))continue;
         const piece=board[index];
-        if(piece)piece.s=power;
+        if(piece){piece.s=power;created.push(index);}
       }
+      render();
+      playCreatedPowerEffect(created);
       const falling=applyGravity();
       render();
       updateHUD();
       await animatePositions(falling.fall,falling.spawn);
       if(currentGeneration!==generation)return;
-      playCreatedPowerEffect(spawns.keys());
       groups=matches(board);
     }while((groups.length>0) && chain<40);
     if(currentGeneration!==generation)return;
