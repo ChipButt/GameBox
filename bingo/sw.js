@@ -1,6 +1,6 @@
 /* Bingo In physical-host offline cache. Only controls /GameBox/bingo/ pages. */
-const CACHE='bingo-in-event-host-v4';
-const FILES=['./','./index.html','./display.html','./bingo.css','./bingo.js','./event-model.js','./event-host.css','./event-host.js'];
+const CACHE='bingo-in-event-host-v5';
+const FILES=['./','./index.html','./display.html','./favicon.svg','./bingo.css','./bingo.js','./event-model.js','./event-host.css','./event-host.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(Promise.all([
  caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('bingo-in-event-host-')&&k!==CACHE).map(k=>caches.delete(k)))),
