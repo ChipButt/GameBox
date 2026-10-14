@@ -21,6 +21,13 @@ async function main(){
     await page.locator('#hostSettings input[name="venue"]').fill('Example Pub');
     await page.locator('#hostSettings input[name="hostingFee"]').fill('150');
     await page.locator('#hostSettings button[type="submit"]').click();
+    console.log('DIAGNOSTIC setup',JSON.stringify(await page.evaluate(()=>({
+      title:document.querySelector('#hostTitle')?.textContent,
+      notice:document.querySelector('#hostNotice')?.textContent,
+      formDisabled:document.querySelector('#hostSettings button[type=submit]')?.disabled,
+      storage:localStorage.getItem('gamebox.bingo.host-event.v1'),
+      errors:window.__errors||[]
+    }))));
     assert.match(await page.locator('#hostTitle').textContent(),/Bingo In Browser Test/);
     console.log('PASS venue setup with £150 minimum');
     await page.locator('[data-host-tab="tickets"]').click();
