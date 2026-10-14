@@ -71,7 +71,7 @@ function render(){
    const maxBooks=Math.min(5,Math.floor(500/event.ticketPricePence),core.availableCards().length);
    main.innerHTML=banner+'<div class="hostColumns"><section class="hostCard"><span class="hostEyebrow">TICKET DESK</span><h3>Sell a five-game ticket book</h3>'+
     '<p class="hostMuted">One numbered bingo card covers all five games. <strong>'+money(event.ticketPricePence) +' per game × 5 games = '+money(event.ticketPricePence*5)+' per book.</strong> Record the cash collected and issue its printed card.</p>'+ 
-    '<p class="hostMuted"><strong>Pub bingo stake limit: £5 per person, per game — not £5 across the evening.</strong> For example, five £5 books cost £25 across five games, but represent only £5 staked in each game.</p>'+
+    '<p class="hostMuted"><strong>Pub bingo stake limit: £5 per person, per game — not £5 across the evening.</strong> At £1 per game, five books cost £25 across the evening but represent £5 staked in each game.</p>'+
     '<form id="hostSale"><label>Player / seat reference<input name="name" placeholder="e.g. Alex — Table 3" maxlength="80" required></label>'+
     '<label>How many five-game books for this player?<select name="quantity" id="hostSaleQuantity">'+Array.from({length:maxBooks},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' '+(i===0?'book':'books')+' — '+money((i+1)*event.ticketPricePence*5)+' total ('+money((i+1)*event.ticketPricePence)+'/game)</option>').join('')+'</select></label>'+ 
     '<p class="hostMuted" id="hostSaleLimit">Maximum £5 per person per game. The list adjusts if this player has already bought books.</p>'+
@@ -222,10 +222,10 @@ host.addEventListener('click',async e=>{
 function refreshSaleLimit(){
  const form=document.getElementById('hostSale');
  if(!form)return;
- const name=String(form.elements.name?.value||'').trim().toLowerCase().replace(/\\s+/g,' ');
- const prior=name?event.sales.filter(x=>x.name.trim().toLowerCase().replace(/\\s+/g,' ')===name).reduce((sum,x)=>sum+x.quantity,0):0;
- const allowed=Math.max(0,Math.min(5,Math.floor(500/event.ticketPricePence))-prior,core.availableCards().length);
- const select=form.elements.quantity,old=Number(select.value)||1;
+ const name=String(form.elements.namedItem('name')?.value||'').trim().toLowerCase().replace(/\s+/g,' ');
+ const prior=name?event.sales.filter(x=>x.name.trim().toLowerCase().replace(/\s+/g,' ')===name).reduce((sum,x)=>sum+x.quantity,0):0;
+ const allowed=Math.max(0,Math.min(Math.min(5,Math.floor(500/event.ticketPricePence))-prior,core.availableCards().length));
+ const select=form.elements.namedItem('quantity'),old=Number(select.value)||1;
  select.innerHTML=Array.from({length:allowed},(_,i)=>{
   const count=i+1,perGame=count*event.ticketPricePence,full=perGame*event.gameCount;
   return '<option value="'+count+'">'+count+' '+(count===1?'book':'books')+' — '+money(full)+' total ('+money(perGame)+'/game)</option>';
