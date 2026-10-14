@@ -203,7 +203,7 @@ function drawIsoWorld(){
    renderables.push({order:o.x+o.y+.8,draw(){
      if(o.type==='tree'&&artLand){ctx.drawImage(artLand,545,1122,118,160,p.x-34,p.y-69,68,79);}
      else if(o.type==='tree')drawTree(ctx,p.x-18,p.y-18,o);
-     else if(o.type==='berry')drawBerry(ctx,p.x-18,p.y-18,o);
+     else if(o.type==='berry'&&artLand){ctx.drawImage(artLand,255,330,64,52,p.x-29,p.y-35,58,46);ctx.fillStyle='#a83f35';for(let i=0;i<5;i++){const ox=[-10,-2,11,4,-15][i],oy=[-18,-9,-15,-22,-12][i];ctx.fillRect(p.x+ox,p.y+oy,3,3);}}else if(o.type==='berry')drawBerry(ctx,p.x-18,p.y-18,o);
      else drawStone(ctx,p.x-18,p.y-16,o);
    }});
  }
@@ -223,7 +223,7 @@ function drawIsoWorld(){
         ctx.fillStyle='#b4a58b';ctx.fillRect(mid.x-27,foot.y-32,54,32);
       }
       if(selected?.kind==='building'&&selected.id===b.id){
-        for(let i=0;i<b.w;i++)for(let j=0;j<b.h;j++)isoDiamond(ctx,b.x+i,b.y+j,'#ffffff06','#f7e1a9');
+        const corners=[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]].map(([x,y])=>{const p=toIso(x,y);return[p.x,p.y]});polygon(ctx,corners,'#ffffff07','#f7e1a9');
         health(ctx,mid.x-28,foot.y-dh-11,56,b.hp/b.maxHp,b.team==='red');
       }
       if(b.queue.length){ctx.font='10px Georgia';ctx.fillStyle='#f3e1b7';ctx.fillText(b.queue.length+' queued',mid.x-18,foot.y-dh-14);}
