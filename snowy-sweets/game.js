@@ -13,21 +13,21 @@
   const LEVELS = [
     {kind:"collect",target:0,goal:8,moves:24},
     {kind:"collect",target:1,goal:12,moves:23},
-    {kind:"score",goal:1900,moves:22},
-    {kind:"ice",moves:28,pattern:0},
+    {kind:"score",goal:3050,moves:22},
+    {kind:"ice",moves:26,pattern:0},
     {kind:"collect",target:2,goal:16,moves:24},
-    {kind:"score",goal:3600,moves:22},
-    {kind:"ice",moves:32,pattern:1},
+    {kind:"score",goal:4700,moves:22},
+    {kind:"ice",moves:30,pattern:1},
     {kind:"collect",target:3,goal:17,moves:22},
-    {kind:"score",goal:5300,moves:21},
-    {kind:"ice",moves:37,pattern:2},
+    {kind:"score",goal:6600,moves:21},
+    {kind:"ice",moves:36,pattern:2},
     {kind:"collect",target:5,goal:20,moves:23},
-    {kind:"score",goal:7500,moves:20}
+    {kind:"score",goal:8600,moves:20}
   ];
   const ICE_PATTERNS = [
-    [9,14,17,22,41,46,49,54],
-    [9,10,13,14,17,22,25,30,33,38,41,46,49,54],
-    [9,10,11,12,13,14,17,22,25,30,33,38,41,46,49,50,53,54]
+    [18,19,20,21,34,35],
+    [9,14,18,21,27,28,35,36,42,45],
+    [9,10,13,14,17,22,25,30,33,38,41,46,49,50,53,54]
   ];
   const $ = (id) => document.getElementById(id);
   const boardEl = $("board");
