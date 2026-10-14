@@ -7,6 +7,19 @@
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[ch]));
 
+  let peerLoadPromise = null;
+  function ensurePeerJS(){
+    if(window.Peer)return Promise.resolve(true);
+    if(peerLoadPromise)return peerLoadPromise;
+    peerLoadPromise=new Promise(resolve=>{
+      const script=document.createElement('script');
+      script.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js';
+      script.onload=()=>resolve(Boolean(window.Peer));
+      script.onerror=()=>{peerLoadPromise=null;resolve(false)};
+      document.head.appendChild(script);
+    });
+    return peerLoadPromise;
+  }
   let hostPeer = null;
   let playerPeer = null;
   let playerConn = null;
@@ -312,7 +325,8 @@
 
   function startHostNetwork() {
     stopHostNetwork();
-    if (!window.Peer) return;
+    if (state.cardMode !== 'digital') return;
+    if (!window.Peer){ensurePeerJS().then(ok=>{if(ok)startHostNetwork()});return}
     hostPeer = new Peer(peerId(state.sessionCode));
     hostPeer.on("connection", (conn) => {
       let playerId = "";
@@ -533,6 +547,7 @@
   }
 
   function joinPlayer() {
+    if(!window.Peer){ensurePeerJS().then(ok=>ok?joinPlayer():$("joinStatus").textContent='Digital connection unavailable; physical hosted Bingo works offline.');return}
     const code = $("joinCode").value.trim().toUpperCase();
     const name = $("joinName").value.trim();
     if (code.length < 4 || !name) {
@@ -616,7 +631,7 @@
   $("joinGame").onclick = joinPlayer;
 
   ["eventName","callerMode","cardMode","cardPrice","winTarget"].forEach((id) => {
-    $(id).addEventListener("change", () => { syncSetupFromInputs(); saveSession(); });
+    $(id).addEventListener("change", () => { syncSetupFromInputs(); saveSession(); if(id==='cardMode'&&state.cardMode==='digital')startHostNetwork(); });
   });
   $("eventName").addEventListener("input", () => { state.eventName = $("eventName").value; localStorage.setItem(SESSION_KEY, JSON.stringify(state)); $("masterEventTitle").textContent = state.eventName || "Bingo Night"; });
 
