@@ -126,3 +126,102 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
  .footerCaption{font-size:8px}.boardShell{max-width:min(100%,calc((100dvh - 220px) * 1));align-self:center}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+
+/* Pixel-art edition: all game pieces, ice, floor and power marks are actual
+   bundled Kenney image sprites. CSS here handles placement and movement only. */
+.boardShell{
+ background:#93c6d5;border:10px solid transparent;
+ border-image-source:var(--frame);border-image-slice:32;
+ border-image-width:10px;border-image-repeat:stretch;
+ border-radius:1px;box-shadow:0 7px 0 rgba(2,12,18,.32);
+ padding:3px;overflow:hidden;isolation:isolate;
+}
+.board{gap:0;border-radius:0;background:#e9f8ff;overflow:hidden}
+.cell,.cell:nth-child(16n+1),.cell:nth-child(16n+3),
+.cell:nth-child(16n+5),.cell:nth-child(16n+7),
+.cell:nth-child(16n+10),.cell:nth-child(16n+12),
+.cell:nth-child(16n+14),.cell:nth-child(16n+16){
+ background:#e6f6ff url("assets/snow_base.png") center / 100% 100% no-repeat;
+ border-radius:0;box-shadow:none;overflow:visible;
+}
+.cell:nth-child(3n+2){
+ background-image:url("assets/snow_flecks.png");
+}
+.cell:focus-visible{outline:3px solid #ffda71;outline-offset:-3px;z-index:6}
+.cell.selected{outline:3px solid #ffcb48;outline-offset:-3px;background-color:#fff5ce}
+.cell.selected,.cell.hint{z-index:8}
+.cell .piece{
+ position:relative;display:grid;place-items:center;
+ width:100%;height:100%;pointer-events:none;
+ will-change:transform;transform:translateZ(0);
+}
+.cell .candy{
+ position:relative;width:97%;height:97%;object-fit:contain;
+ image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(38,87,99,.3));
+ transform:none;transition:none;
+}
+.cell.selected .candy{transform:scale(1.08)}
+.cell.swap .candy{animation:none}
+.cell.spawn .candy{animation:none}
+.cell.clearing .piece{
+ z-index:9;animation:piecePop .19s cubic-bezier(.31,0,.8,.33) forwards;
+}
+.cell.power-row .candy,.cell.power-col .candy{
+ filter:drop-shadow(0 0 4px #ffdf5b) drop-shadow(0 2px 0 #654a17)
+}
+.powerStripe{
+ position:absolute;z-index:2;width:34%;height:58%;top:20%;left:33%;
+ object-fit:contain;image-rendering:pixelated;
+ filter:drop-shadow(0 1px 1px #604128);
+ transform:rotate(90deg);pointer-events:none;
+ background:none;border:none;border-radius:0;box-shadow:none;opacity:1;
+}
+.power-col .powerStripe{transform:rotate(0)}
+.powerBurstMark{position:absolute;z-index:2;width:43%;height:43%;
+ right:-2px;top:-4px;object-fit:contain;image-rendering:pixelated;pointer-events:none}
+.cell.power-burst .candy{
+ filter:drop-shadow(0 0 4px #ffca4d);
+ animation:powerPulse .75s steps(2,end) infinite alternate;
+}
+.iceOverlay{
+ z-index:3;inset:0;width:100%;height:100%;object-fit:fill;
+ image-rendering:pixelated;opacity:.64;filter:none;
+ pointer-events:none;
+}
+.cell.ice2 .iceOverlay{opacity:.9}
+.iceBadge{z-index:4;right:0;bottom:0;border-radius:2px;box-shadow:0 1px 0 #3b7895}
+.popParticle{
+ position:absolute;z-index:12;top:50%;left:50%;width:24%;height:24%;
+ image-rendering:pixelated;pointer-events:none;
+ animation:pixelConfetti .31s ease-out var(--delay,0ms) both;
+}
+.levelBadge,.movesBadge,.mission{
+ border:0;box-shadow:none;border-radius:0;
+ background:transparent var(--grey-button) center / 100% 100% no-repeat;
+}
+.levelBadge small,.movesBadge small,.mission small{color:#314755;text-shadow:0 1px rgba(255,255,255,.35)}
+.levelBadge b{color:#273f4d}.movesBadge b{color:#8d4800}
+.mission strong{color:#243e4d}
+.missionTrack{width:88%;height:9px;background:#8faebd;box-shadow:inset 0 1px 2px #647d88;border:1px solid #aec1c9}
+#missionFill{background:#36a976}
+.gameFrame{
+ background:#1b2a33 url("../assets/gamebox/kenney/2d/Retro Textures Fantasy/floor_wood_planks_wide.png") center / 90px 90px repeat;
+ background-blend-mode:multiply;
+}
+.scoreLine{color:#dceff5}
+.scoreLine b{color:#fff3a4}
+.footerCaption{color:#e2edf2;text-shadow:0 1px 2px #0d2531}
+.progressStars{color:#8b9ba1}
+.progressStars span.earned{color:#ffde60}
+@keyframes piecePop{
+ 0%{transform:scale(1);opacity:1;filter:brightness(1)}
+ 45%{transform:scale(1.24);opacity:1;filter:brightness(1.6)}
+ 100%{transform:scale(.13);opacity:0;filter:brightness(2)}
+}
+@keyframes pixelConfetti{
+ from{transform:translate(-50%,-50%) rotate(var(--direction,0deg)) translateY(0) scale(.6);opacity:1}
+ to{transform:translate(-50%,-50%) rotate(var(--direction,0deg)) translateY(calc(-1 * var(--distance,24px))) scale(.2);opacity:0}
+}
+@keyframes powerPulse{to{transform:scale(1.12)}}
+@media(max-width:390px){.boardShell{border-width:7px;border-image-width:7px;padding:2px}}
