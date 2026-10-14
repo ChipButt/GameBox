@@ -24,7 +24,7 @@ let effects=[],shots=[],orders=[],alerts=[],wrecks=[],controlMode=null,lastThrea
 const modeLabel={moving:'MOVE',gather:'GATHER',farm:'FARM',return:'RETURN',build:'BUILD',repair:'REPAIR',attack:'ATTACK',attackmove:'ATTACK MOVE',hold:'HOLD',idle:'IDLE'};
 function orderEffect(x,y,kind='moving'){orders.push({x,y,kind,life:2.5,max:2.5});if(orders.length>32)orders.shift();}
 function addEffect(x,y,type='hit',value=0){effects.push({x,y,type,value,life:type==='damage'?1.4:.75,max:type==='damage'?1.4:.75});if(effects.length>100)effects.shift();}
-function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);notice(message);updateBattleHud();}
+function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);if(urgent){$('hint').classList.remove('show');toastDeadline=0;}else notice(message);updateBattleHud();}
 function applyDamage(t,damage,source,projectile=false){
  if(!t||t.hp<=0)return;
 const aliveBefore=t.hp>0;
@@ -78,7 +78,7 @@ for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1]]){const nx=x+dx,ny=y+dy;if(!inMa
 const out=[];let cursor=best;while(cursor!==start&&cursor>=0&&out.length<200){out.push({x:cursor%W+.5,y:Math.floor(cursor/W)+.5});cursor=prev[cursor]}out.reverse();return out;}
 function setMove(u,x,y,task='moving',target=null){
  u.task=task;u.target=target;u.goal={x,y};u.path=pathfind(u.x,u.y,x,y);u.stuck=0;
- if(u.team==='blue'){orderEffect(x,y,task);u.lastOrder=task;}
+ if(u.team==='blue'){u.lastOrder=task;}
 }
 function nearestTown(u){return buildings.filter(b=>b.team===u.team&&(b.type==='town'||b.type==='granary')&&b.complete&&b.hp>0).sort((a,b)=>dist(u,{x:a.x+1,y:a.y+1})-dist(u,{x:b.x+1,y:b.y+1}))[0];}
 function assignGather(u,o){if(u.kind!=='villager'||!o)return;u.harvestId=o.id;u.farmId=null;setMove(u,o.x+.5,o.y+.5,'gather',{category:'object',id:o.id});}
@@ -89,7 +89,7 @@ function assignAttack(u,entity,category){if(u.kind==='villager'||!entity)return;
 }
 function assignRepair(u,b){if(u.kind!=='villager'||b.team!==u.team||b.hp>=b.maxHp){notice('Select a damaged friendly building to repair.');return;}
  u.harvestId=null;u.farmId=null;setMove(u,b.x+b.w/2,b.y+b.h/2,'repair',{category:'building',id:b.id});}
-function orderAttackMove(units,x,y){for(const u of units){if(u.kind==='villager')continue;setMove(u,x,y,'attackmove');u.attackMoveReturn={x,y};}controlMode=null;notice('Attack-move: soldiers will fight enemies encountered along the way.');}
+function orderAttackMove(units,x,y){for(const u of units){if(u.kind==='villager')continue;setMove(u,x,y,'attackmove');u.attackMoveReturn={x,y};}orderEffect(x,y,'attackmove');controlMode=null;notice('Attack-move: soldiers will fight enemies encountered along the way.');}
 function findEnemy(u,radius){const near=units.filter(v=>v.team!==u.team&&v.hp>0&&dist(u,v)<radius).map(v=>({entity:v,category:'unit',d:dist(u,v)}));
  for(const b of buildings)if(b.team!==u.team&&b.hp>0){const p={x:b.x+b.w/2,y:b.y+b.h/2},d=dist(u,p);if(d<radius)near.push({entity:b,category:'building',d});}
  return near.sort((a,b)=>a.d-b.d)[0];
@@ -108,11 +108,11 @@ function allSelectedUnits(){if(selected?.army)return units.filter(u=>u.team==='b
 function actAt(x,y){if(ended)return;
  if(controlMode==='rally'){const b=selectedObject();if(b?.team==='blue'&&b.type&&validLand(x,y)){b.rally={x,y};orderEffect(x,y,'rally');notice('Rally point set. New units will go here.');}controlMode=null;renderUi();return;}
  if(controlMode==='attackmove'){const group=allSelectedUnits().filter(u=>u.kind!=='villager');if(group.length&&validLand(x,y))orderAttackMove(group,x,y);else notice('Select soldiers, then tap a destination.');controlMode=null;renderUi();return;}
- if(controlMode==='repair'){const b=buildings.find(b=>b.team==='blue'&&b.hp>0&&x>=b.x-.6&&x<b.x+b.w+.6&&y>=b.y-.6&&y<b.y+b.h+.6);const workers=allSelectedUnits().filter(u=>u.kind==='villager');if(b&&workers.length){workers.forEach(u=>assignRepair(u,b));notice('Repairing '+BLD[b.type].name+'.');controlMode=null;}else notice('Tap a damaged friendly building to repair.');renderUi();return;}
- if(controlMode==='move'){const group=allSelectedUnits();if(group.length&&validLand(x,y)){group.forEach((u,i)=>setMove(u,x+(i%3)*.45,y+Math.floor(i/3)*.45));controlMode=null;}renderUi();return;}
+ if(controlMode==='repair'){const b=buildings.find(b=>b.team==='blue'&&b.hp>0&&x>=b.x-.6&&x<b.x+b.w+.6&&y>=b.y-.6&&y<b.y+b.h+.6);const workers=allSelectedUnits().filter(u=>u.kind==='villager');if(b&&workers.length){workers.forEach(u=>assignRepair(u,b));orderEffect(b.x+b.w/2,b.y+b.h/2,'repair');notice('Repairing '+BLD[b.type].name+'.');controlMode=null;}else notice('Tap a damaged friendly building to repair.');renderUi();return;}
+ if(controlMode==='move'){const group=allSelectedUnits();if(group.length&&validLand(x,y)){group.forEach((u,i)=>setMove(u,x+(i%3)*.45,y+Math.floor(i/3)*.45));orderEffect(x,y,'moving');controlMode=null;}renderUi();return;}
  if(buildMode){placeBuilding(x,y);return;}const candidates=units.filter(u=>u.hp>0&&Math.hypot(u.x-x,u.y-y)<.65).sort((a,b)=>dist(a,{x,y})-dist(b,{x,y}));const targetUnit=candidates[0];const building=buildings.slice().reverse().find(b=>b.hp>0&&x>=b.x-.15&&x<=b.x+b.w+.15&&y>=b.y-(b.type==='town'?1.6:.8)&&y<=b.y+b.h+.1);const thing=objects.find(o=>o.alive&&(o.type==='tree'?Math.abs(o.x+.5-x)<.8&&y>o.y-1.5&&y<o.y+1.1:Math.hypot(o.x+.5-x,o.y+.5-y)<.8));const ours=targetUnit?.team==='blue'?{kind:'unit',id:targetUnit.id}:building?.team==='blue'?{kind:'building',id:building.id}:null;
 if(ours){const selectedWorkers=allSelectedUnits().filter(u=>u.kind==='villager');if(building?.type==='farm'&&building.complete&&selectedWorkers.length){selectedWorkers.forEach(u=>assignFarm(u,building));notice('Working the farm.');}else selected=ours;renderUi();return;}
-const selUnits=allSelectedUnits();if(selUnits.length){if(targetUnit?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,targetUnit,'unit'));notice('Attack!');}else if(building?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,building,'building'));notice('Attack the rival settlement!');}else if(thing){selUnits.forEach(u=>u.kind==='villager'?assignGather(u,thing):setMove(u,x,y));if(selUnits.some(u=>u.kind==='villager'))notice('Gathering '+thing.type+'.');}else {selUnits.forEach((u,i)=>setMove(u,x+(i%3)*.6,y+Math.floor(i/3)*.5));}renderUi();return;}
+const selUnits=allSelectedUnits();if(selUnits.length){if(targetUnit?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,targetUnit,'unit'));orderEffect(x,y,'attack');notice('Attack!');}else if(building?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,building,'building'));orderEffect(x,y,'attack');notice('Attack the rival settlement!');}else if(thing){selUnits.forEach(u=>u.kind==='villager'?assignGather(u,thing):setMove(u,x,y));orderEffect(x,y,'gather');if(selUnits.some(u=>u.kind==='villager'))notice('Gathering '+thing.type+'.');}else {selUnits.forEach((u,i)=>setMove(u,x+(i%3)*.6,y+Math.floor(i/3)*.5));orderEffect(x,y,'moving');}renderUi();return;}
 if(targetUnit){selected={kind:'unit',id:targetUnit.id};}else if(building){selected={kind:'building',id:building.id};}else if(thing){selected={kind:'object',id:thing.id};}else selected=null;renderUi();}
 function progressUnits(dt){advanceEffects(dt);for(const u of units){if(u.hp<=0)continue;u.frame+=dt*6;u.attackClock=Math.max(0,u.attackClock-dt);
 if(u.path.length){const p=u.path[0],d=dist(u,p),step=KINDS[u.kind].speed/T*dt;if(d<Math.max(.055,step)){u.x=p.x;u.y=p.y;u.path.shift();}else{u.x+=(p.x-u.x)/d*step;u.y+=(p.y-u.y)/d*step;}}
@@ -278,11 +278,9 @@ function drawUnitIndicators(g,u,p){
  if(u.team==='blue'){
    if(u.kind==='villager'&&u.task==='idle'){
      roundedLabel(g,'!',p.x,p.y-47,'#f8d78e','#503319ed');
-   }else if(selected?.kind==='unit'&&(selected.id===u.id||selected.army&&u.kind!=='villager')){
+   }else if(selected?.kind==='unit'&&selected.id===u.id){
      const state=u.task==='gather'?'HARVEST':u.task==='return'?'RETURN':u.task==='farm'?'FARM':modeLabel[u.task]||'IDLE';
      roundedLabel(g,state,p.x,p.y-53,tacticalColour(u.task));
-   }else if(u.task==='attack'||u.task==='build'||u.task==='repair'){
-     roundedLabel(g,u.task==='attack'?'⚔':u.task==='build'?'BUILD':'REPAIR',p.x,p.y-47,tacticalColour(u.task));
    }
  }
  if(u.swing>0){
@@ -333,13 +331,27 @@ function drawWorldFeedback(g){
  // Buildings can send all newly trained units to a rally point.
  const selectedBuilding=selected?.kind==='building'?selectedObject():null;
  if(selectedBuilding?.rally){const start=toIso(selectedBuilding.x+selectedBuilding.w/2,selectedBuilding.y+selectedBuilding.h/2),end=toIso(selectedBuilding.rally.x,selectedBuilding.rally.y);g.strokeStyle='#97d8ff';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(start.x,start.y);g.lineTo(end.x,end.y);g.stroke();g.setLineDash([]);ring(g,end,9,'#97d8ff');roundedLabel(g,'RALLY',end.x,end.y-19,'#97d8ff');}
- for(const e of orders){if(!visibleTile(e.x,e.y))continue;const p=toIso(e.x,e.y),f=e.life/e.max,color=tacticalColour(e.kind);ring(g,p,7+23*(1-f),color);if(f>.35)roundedLabel(g,modeLabel[e.kind]||e.kind.toUpperCase(),p.x,p.y-17,color);}
+ for(const e of orders){const p=toIso(e.x,e.y),f=e.life/e.max,color=tacticalColour(e.kind);ring(g,p,7+23*(1-f),color);if(f>.35)roundedLabel(g,modeLabel[e.kind]||e.kind.toUpperCase(),p.x,p.y-17,color);}
  for(const sh of shots){const sx=sh.x+(sh.tx-sh.x)*sh.progress,sy=sh.y+(sh.ty-sh.y)*sh.progress;if(!visibleTile(sx,sy))continue;const p=toIso(sx,sy),back=toIso(sx-(sh.tx-sh.x)*.09,sy-(sh.ty-sh.y)*.09);g.strokeStyle=sh.style==='tower'?'#fff7bf':'#f5ce7b';g.lineWidth=2.8;g.beginPath();g.moveTo(back.x,back.y-29);g.lineTo(p.x,p.y-32-Math.sin(sh.progress*Math.PI)*18);g.stroke();g.fillStyle='#fff4c4';g.fillRect(p.x-2,p.y-32-Math.sin(sh.progress*Math.PI)*18,4,4);}
  for(const e of effects){if(!visibleTile(e.x,e.y))continue;const p=toIso(e.x,e.y),f=e.life/e.max;
    if(e.type==='damage'){g.font='bold 14px Georgia';g.textAlign='center';g.lineWidth=3;g.strokeStyle='#3a180f';g.strokeText('−'+e.value,p.x,p.y-48-22*(1-f));g.fillStyle='#ffe09c';g.fillText('−'+e.value,p.x,p.y-48-22*(1-f));g.textAlign='start';}
    else if(e.type==='impact'){g.strokeStyle='#ffcd72';g.lineWidth=2;for(let i=0;i<7;i++){const a=i*Math.PI*2/7,radius=22*(1-f)+3;g.beginPath();g.moveTo(p.x+Math.cos(a)*radius,p.y-20+Math.sin(a)*radius*.6);g.lineTo(p.x+Math.cos(a)*(radius+9*f),p.y-20+Math.sin(a)*(radius+9*f)*.6);g.stroke();}}
    else if(e.type==='repair'){g.fillStyle='#a5f9d5';g.font='bold 16px Georgia';g.fillText('+',p.x,p.y-39-18*(1-f));}
  }
+}
+
+function drawOffscreenObjective(){
+ const u=selected?.kind==='unit'?selectedObject():null,group=selected?.army?allSelectedUnits():[];
+ const dest=u?.goal||(group.find(q=>q.goal)?.goal);
+ if(!dest||!u&&group.length===0)return;
+ const p=toIso(dest.x,dest.y),px=(p.x-cam.x)*cam.zoom,py=(p.y-cam.y)*cam.zoom;
+ const padding=40;if(px>=padding&&px<=cw-padding&&py>=padding&&py<=ch-padding)return;
+ const cx=cw/2,cy=ch/2,dx=px-cx,dy=py-cy;
+ const scale=Math.min((cx-padding)/Math.max(.001,Math.abs(dx)),(cy-padding)/Math.max(.001,Math.abs(dy)));
+ const ex=clamp(cx+dx*scale,padding,cw-padding),ey=clamp(cy+dy*scale,padding,ch-padding),angle=Math.atan2(dy,dx);
+ ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.fillStyle='#162b35de';ctx.strokeStyle='#a5d9ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ex,ey,16,0,Math.PI*2);ctx.fill();ctx.stroke();
+ ctx.translate(ex,ey);ctx.rotate(angle);ctx.fillStyle='#c7edff';ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-7,-7);ctx.lineTo(-7,7);ctx.closePath();ctx.fill();ctx.restore();
 }
 function drawIsoWorld(){
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#101710';ctx.fillRect(0,0,cw,ch);
@@ -426,7 +438,7 @@ function drawIsoWorld(){
    }
  }
  drawWorldFeedback(ctx);
- ctx.restore();
+ ctx.restore();drawOffscreenObjective();
 }
 function drawWorld(){return drawIsoWorld();ctx.setTransform(dpr,0,0,dpr,0,0);brush(ctx,'#0e1a11',0,0,cw,ch);ctx.save();ctx.scale(cam.zoom,cam.zoom);ctx.translate(-cam.x,-cam.y);const x0=clamp(Math.floor(cam.x/T)-2,0,W),y0=clamp(Math.floor(cam.y/T)-3,0,H),x1=clamp(Math.ceil((cam.x+cw/cam.zoom)/T)+3,0,W),y1=clamp(Math.ceil((cam.y+ch/cam.zoom)/T)+4,0,H);
 for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const typ=tile(x,y),t=textures[typ][Math.floor(rand(x,y,5)*32)];ctx.drawImage(t,x*T,y*T);if(typ==='grass'){const p=getActualGround();if(p){ctx.fillStyle=p;ctx.globalAlpha=.77;ctx.fillRect(x*T,y*T,T,T);ctx.globalAlpha=1;}}if(typ!=='water'&&(tile(x-1,y)==='water'||tile(x+1,y)==='water'||tile(x,y+1)==='water'||tile(x,y-1)==='water')){ctx.fillStyle='#c8b0785b';ctx.fillRect(x*T,y*T,T,T);}if(typ==='water'&&rand(x,y,12)>.7){brush(ctx,'#6393a088',x*T+Math.sin(elapsed*.5+x+y)*5+5,y*T+16,17,1);}}
@@ -453,6 +465,9 @@ function updateBattleHud(){
  const idle=idleVillagers();const idleButton=$('idleJump');idleButton.textContent='Idle villagers: '+idle.length;idleButton.style.display=idle.length?'inline-block':'none';
  const o=selectedObject();const count=selected?.army?allSelectedUnits().length:0;
  let text=count?count+' soldiers selected':o?.kind?(KINDS[o.kind].name+' · '+(modeLabel[o.task]||'IDLE')):o?.type?(BLD[o.type].name+' · '+Math.ceil(o.hp/o.maxHp*100)+'% HP'):'Select a unit or building';
+ if(selected?.kind==='unit'&&o?.goal&&o.task!=='idle'&&o.task!=='hold'){text+=' · '+Math.round(dist(o,o.goal))+' tiles to target';}
+ if(selected?.army){const group=allSelectedUnits();const engaged=group.filter(u=>u.task==='attack').length,travelling=group.filter(u=>u.task==='moving'||u.task==='attackmove').length;
+ text=count+' soldiers · '+(engaged?engaged+' fighting':'')+(engaged&&travelling?' · ':'')+(travelling?travelling+' moving':'')+(engaged||travelling?'':'standing by');}
  if(controlMode)text='TAP MAP: '+(modeLabel[controlMode]||controlMode.toUpperCase());
  else if(buildMode)text='PLACE '+BLD[buildMode].name.toUpperCase();
  $('worldOrder').textContent=text;
