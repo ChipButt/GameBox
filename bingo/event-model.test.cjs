@@ -30,8 +30,9 @@ test('payouts reconcile, split winner allowed, overspend refused',()=>{
  const b=M.recordPayout(e,{gameIndex:0,stage:'line',winner:'Sam',cardId:'CI-002',amount:M.pounds(p.line-20)});
  assert.equal(a.amountPence+b.amountPence,p.line);
  assert.equal(M.stageRemaining(e,0,'line'),0);
+ assert.throws(()=>M.recordPayout(e,{gameIndex:0,stage:'line',winner:'Alex',cardId:'CI-001',amount:'0.01'}),/already received/);
  assert.throws(()=>M.recordPayout(e,{gameIndex:0,stage:'line',winner:'Alex',cardId:'CI-001',amount:'0.01'}),/remaining/);
- assert.throws(()=>M.recordPayout(e,{gameIndex:1,stage:'house',winner:'Sam',cardId:'CI-002',amount:'0.10'}),/current/);
+ assert.throws(()=>M.recordPayout(e,{gameIndex:1,stage:'house',winner:'Sam',cardId:'CI-002',amount:'0.10'}),/this game/);
  const outstanding=M.reconcile(e).outstandingPence;assert.equal(outstanding,1000-p.line);
 });
 test('amount validation protects against malformed money',()=>{
