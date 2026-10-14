@@ -8,10 +8,6 @@
   const NAMES = ["ICED DOUGHNUTS","CANDY CANES","ICE LOLLIES","BISCUITS","ICE CREAMS","FROSTED SUNDAES"];
   const GLASS = "assets/ice_block.png";
   const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  // Pixel stripes decorate, rather than replace, the original sweet silhouettes.
-  const POWER_ROW = "assets/tile_0097.png";
-  const POWER_COL = "assets/tile_0096.png";
-  const PARTICLE = "assets/tile_0096.png";
   const LEVELS = [
     {kind:"collect",target:0,goal:8,moves:24},
     {kind:"collect",target:1,goal:12,moves:23},
@@ -162,35 +158,14 @@
         piece.dataset.pieceId=String(board[i].id);
         const art=document.createElement("img");
         art.className="candy"+((board[i].t===1||board[i].t===2)?" fullLengthCandy":"");
-        art.src=ART[board[i].t];
+        art.src=(window.SnowySweetsArt?.get(board[i].t,board[i].s)||ART[board[i].t]);
         art.alt="";art.draggable=false;
         piece.appendChild(art);
         if(board[i].s){
           el.classList.add("power-"+board[i].s);
           el.setAttribute("aria-label",el.getAttribute("aria-label")+", "+(board[i].s==="burst"?"burst":board[i].s==="row"?"row clearing":"column clearing")+" power");
-          const band=document.createElement("img");
-          band.className="powerBand";
-          band.src=board[i].s==="col"?POWER_COL:POWER_ROW;
-          band.alt="";band.draggable=false;
-          piece.appendChild(band);
-          if(board[i].s==="burst"){
-            const second=document.createElement("img");
-            second.className="powerBand powerBandCross";
-            second.src=POWER_COL;second.alt="";second.draggable=false;
-            piece.appendChild(second);
-          }
         }
         el.appendChild(piece);
-      }
-      if(flags.clearing?.has(i)){
-        for(let j=0;j<3;j++){
-          const particle=document.createElement("img");
-          particle.src=PARTICLE;particle.alt="";particle.className="popParticle";
-          particle.style.setProperty("--direction",String((j*120+i*41)%360)+"deg");
-          particle.style.setProperty("--distance",String(20+((i+j)%5)*5)+"px");
-          particle.style.setProperty("--delay",String(j*24)+"ms");
-          el.appendChild(particle);
-        }
       }
       if(ice[i]>0){
         const glass=document.createElement("img");
@@ -342,7 +317,7 @@
     if(!groupsAtSwap.length && !forced.length){
       await animateSwap(a,b,true);
       if(myGeneration!==generation)return;
-      mode="playing";render();tone(170,.08);toast("Try another match!");
+      mode="playing";render();tone(170,.08);
       return;
     }
     swap(a,b);
@@ -374,8 +349,8 @@
       for(const index of spawns.keys())if(!activated.has(index))clear.delete(index);
       if(!clear.size)break;
       clearedTotal+=clear.size;
-      if(chain>1)toast("Sweet chain ×"+chain,530);
-      showScoreFloat([...clear][Math.floor(clear.size/2)],clear.size*(80+Math.min(chain,6)*20),chain);
+      if(chain>2)toast("CHAIN ×"+chain,570);
+      if(chain>1 || clear.size>=5)showScoreFloat([...clear][Math.floor(clear.size/2)],clear.size*(80+Math.min(chain,6)*20),chain);
       for(const index of clear){
         if(ice[index]>0){
           ice[index]--;
@@ -415,7 +390,7 @@
       if(!findMove(board)){
         board=newBoard();render({spawn:new Set(Array.from({length:N*N},(_,i)=>i))});
         toast("Sweet shuffle!");
-      }else if(chain>2)toast("Wonderful combo!");
+      }
     }
   }
   function starsEarned(){
@@ -539,4 +514,8 @@
   $("playButton").textContent="Play Level "+(currentLevel+1);
   $("soundLabel").textContent="Sound "+(settings.sound?"On":"Off");
   $("soundButton").querySelector("img").src="../assets/gamebox/kenney/icons/Game Icons/White/2x/"+(settings.sound?"audioOn":"audioOff")+".png";
+  // Generate integrated real-alpha power images once, then replace early fallback art.
+  window.SnowySweetsArt?.build(ART).then(ok=>{
+    if(ok && mode==="playing" && !hasOverlay())render();
+  }).catch(()=>{});
 })();
