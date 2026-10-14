@@ -9,6 +9,7 @@ async function main(){
   const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true});
   const errors=[];
   page.on('pageerror',err=>errors.push('PAGE ERROR: '+err.stack));
+  page.on('framenavigated',frame=>console.log('BROWSER NAVIGATED',frame.url()));
   page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE ERROR: '+m.text())});
   try{
     await page.goto(process.env.BINGO_URL||'http://127.0.0.1:8787/bingo/',{waitUntil:'domcontentloaded'});
@@ -20,7 +21,12 @@ async function main(){
     await page.locator('#hostSettings input[name="title"]').fill('Bingo In Browser Test');
     await page.locator('#hostSettings input[name="venue"]').fill('Example Pub');
     await page.locator('#hostSettings input[name="hostingFee"]').fill('150');
+    console.log('DIAGNOSTIC before click',JSON.stringify(await page.evaluate(()=>({
+      url:location.href, hostContains:document.querySelector('#bingoEventHost')?.contains(document.querySelector('#hostSettings')),
+      fields:[...document.querySelector('#hostSettings').elements].map(el=>({name:el.name,value:el.value}))
+    }))));
     await page.locator('#hostSettings button[type="submit"]').click();
+    console.log('DIAGNOSTIC after click URL',page.url());
     console.log('DIAGNOSTIC setup',JSON.stringify(await page.evaluate(()=>({
       title:document.querySelector('#hostTitle')?.textContent,
       notice:document.querySelector('#hostNotice')?.textContent,
