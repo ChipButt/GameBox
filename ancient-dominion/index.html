@@ -211,8 +211,9 @@ function drawIsoWorld(){
    const mid=toIso(b.x+b.w/2,b.y+b.h/2),foot=toIso(b.x+b.w,b.y+b.h);if(!visible(mid))continue;
    renderables.push({order:b.x+b.y+b.w+b.h+.1,draw(){
       const map={town:'castle',house:'house',barracks:'barracks',tower:'tower',granary:'stable',farm:'blacksmith'},im=art[map[b.type]];
+      let dh=75;
       if(im?.complete&&im.naturalWidth){
-        const dw=(b.w+b.h)*28,dh=dw*im.naturalHeight/im.naturalWidth;
+        const dw=(b.w+b.h)*28;dh=dw*im.naturalHeight/im.naturalWidth;
         ctx.save();ctx.globalAlpha=b.complete?1:.45+.55*b.progress;
         ctx.imageSmoothingEnabled=true;ctx.drawImage(im,mid.x-dw/2,foot.y-dh+7,dw,dh);ctx.restore();
         const fx=mid.x+dw*.27,fy=foot.y-dh*.8;
