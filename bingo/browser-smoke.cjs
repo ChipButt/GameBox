@@ -29,6 +29,37 @@ async function main(){
   await page.locator('#hostSale button[type="submit"]').click();
   assert.match(await page.locator('#hostMain').textContent(),/CI-001/);
   console.log('PASS ticket sale and serial assigned');
+  // Verify the physical print page is genuinely an A4 sheet split into two
+  // A5 landscape tickets, and every 90-ball number cell is square.
+  await page.evaluate(()=>{window.print=()=>{window.__printInvoked=true}});
+  await page.locator('#printCount').fill('2');
+  await page.locator('[data-host-action="print"]').click();
+  const printCheck=await page.evaluate(()=>{
+    const sheets=[...document.querySelectorAll('#printArea .printSheet')];
+    return {sheets:sheets.length,tickets:sheets.map(x=>x.querySelectorAll('.printTicket').length),
+      invoked:window.__printInvoked===true};
+  });
+  assert.equal(printCheck.sheets,1,'Two A5 cards must print on one A4 sheet');
+  assert.deepEqual(printCheck.tickets,[2]);
+  assert.equal(printCheck.invoked,true);
+  await page.emulateMedia({media:'print'});
+  const printDimensions=await page.evaluate(()=>{
+    const sheet=document.querySelector('#printArea .printSheet'),tickets=[...sheet.querySelectorAll('.printTicket')],
+      cells=[...tickets[0].querySelectorAll('.ticketCell')],page=sheet.getBoundingClientRect();
+    const first=tickets[0].getBoundingClientRect(),second=tickets[1].getBoundingClientRect(),cell=cells[0].getBoundingClientRect();
+    return {page:{w:page.width,h:page.height},a5HalfPixels:page.height/2,
+      ticketCount:tickets.length,cardNumberCells:cells.length,first:{top:first.top,height:first.height},second:{top:second.top,height:second.height},
+      squareCell:{w:cell.width,h:cell.height},grid:sheet.querySelector('.ticketGrid').getBoundingClientRect().width};
+  });
+  console.log('A5 PRINT GEOMETRY',JSON.stringify(printDimensions));
+  const mmToPx=mm=>mm*96/25.4;
+  assert.ok(Math.abs(printDimensions.page.w-mmToPx(210))<3,'Sheet must be A4 width');
+  assert.ok(Math.abs(printDimensions.page.h-mmToPx(297))<3,'Sheet must be A4 height');
+  assert.equal(printDimensions.cardNumberCells,27,'90-ball ticket must be 3 by 9');
+  assert.ok(Math.abs(printDimensions.second.top-printDimensions.first.top-mmToPx(148.5))<3,'A5 cards must be exactly half an A4 page apart');
+  assert.ok(Math.abs(printDimensions.squareCell.w-printDimensions.squareCell.h)<1,'Number cells must be square');
+  await page.emulateMedia({media:'screen'});
+  console.log('PASS two landscape A5 bingo cards per A4, with 27 square cells each');
   await page.locator('[data-host-tab="run"]').click();
   const smallWav=Buffer.alloc(44);smallWav.write('RIFF',0);smallWav.writeUInt32LE(36,4);smallWav.write('WAVEfmt ',8);smallWav.writeUInt32LE(16,16);smallWav.writeUInt16LE(1,20);smallWav.writeUInt16LE(1,22);smallWav.writeUInt32LE(8000,24);smallWav.writeUInt32LE(16000,28);smallWav.writeUInt16LE(2,32);smallWav.writeUInt16LE(16,34);smallWav.write('data',36);smallWav.writeUInt32LE(0,40);
   await page.locator('#hostMusicUpload').setInputFiles({name:'sample-licensed.wav',mimeType:'audio/wav',buffer:smallWav});
