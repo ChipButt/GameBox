@@ -23,9 +23,9 @@ All six match pieces use the existing Kenney Pixel Platformer Food Expansion art
 
 The completed sprites are centred in 32×32 transparent PNG canvases and sized to fit entirely within an individual board cell; powered-up specials reuse these same complete images.
 
-The truncated-looking marshmallow and frosted-cake fragments were removed. The six sweets now each have three **dedicated static special assets** under `assets/pieces/`: gold row-stripe, cyan column-stripe and magenta burst. These are self-contained SVG sprite images with the original PNG artwork embedded; no runtime art generator, CSS-painted candy or detachable markers are used. The SVGs have actual transparency.
+The truncated-looking marshmallow and frosted-cake fragments were removed. Each sweet now has three **finished, distinct pixel-art specials** (gold row stripe, cyan column stripe, magenta burst) contained in a **192×96 RGBA PNG atlas**, `assets/pieces/special-atlas.png`. The 18 transparent 32×32 variants are decoded once when the page loads into small transparent PNG image URLs. Safari no longer has to render SVG images containing embedded PNGs. All original Kenney artwork is retained in the actual raster tiles. Old SVG variants remain only as a backup if the atlas is unavailable.
 
-Special activations use additional asset-backed line and burst animations under `assets/fx/`. Movement uses persistent 64-cell DOM layout and keyed candy nodes, finger-following drags, quick reverse swaps, 125 ms clears, and distance-based gravity lasting approximately 175–290 ms. Normal matches do not spawn floating scores.
+Special activations use asset-backed beams and bursts under `assets/fx/`. Movement uses persistent 64-cell DOM layout and keyed candy nodes, finger-following dragging, quick reverse swaps and distance-based gravity. Swaps now move existing pieces into their actual destination DOM cells before the animation begins (FLIP), so ending animations do not cause a visible snap-back. Cleared sweets are removed before cancelling their finish-state animation, preventing momentary reappearance. Special-birth pings follow the moving candy instead of being stuck to a board cell. Normal matches do not spawn floating scores.
 
 Additional source sprites from the same user's Kenney library:
 - `tile_0096.png`, `tile_0097.png` · special-move strips and match particles
@@ -35,7 +35,7 @@ Additional source sprites from the same user's Kenney library:
 - Kenney UI Pack / Adventure · buttons, frame and menu icons
 - Kenney Retro Textures Fantasy · wood table surface
 
-**Art is not generated with CSS shapes.** Normal sweet assets are transparent PNGs; the new fixed special variants and blast effects are self-contained transparent SVG images assembled from real sprite art. CSS handles positioning and animation only. No fake checkerboard backgrounds are used.
+**Art is not generated with CSS shapes.** Normal sweet assets are transparent PNGs, and special variants are rasterised from one true-alpha PNG atlas. Blast effects use SVG image assets. CSS handles positioning and animation only. No fake checkerboard backgrounds are used.
 
 ## Deployment
 - Play: `https://chipbutt.github.io/GameBox/snowy-sweets/`
