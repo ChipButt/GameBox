@@ -344,3 +344,37 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
  .bottomBar{grid-template-columns:minmax(0,1fr) 77px 84px}
  .bottomBar .assetAction{font-size:11px}
 }
+
+
+/* In-grid goal artwork and compact, non-blocking match feedback. */
+.missionHeading{
+ width:100%;min-width:0;
+ display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.missionHeading img{
+ display:block;flex:0 0 19px;width:19px;height:19px;
+ object-fit:contain;image-rendering:pixelated;
+}
+.missionHeading small{
+ display:block;min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;
+}
+#movesValue.lowMoves{color:#c33d40}
+.scoreFloat{
+ position:absolute;z-index:11;pointer-events:none;white-space:nowrap;
+ font:700 17px/1 Fredoka,system-ui,sans-serif;
+ letter-spacing:.01em;text-shadow:0 2px #26576c,1px 0 #26576c,-1px 0 #26576c;
+ transform:translateX(-50%);
+ animation:pointsRise .67s cubic-bezier(.17,.73,.3,1) both;
+}
+@keyframes pointsRise{
+ from{opacity:0;transform:translate(-50%,4px) scale(.78)}
+ 18%{opacity:1;transform:translate(-50%,-6px) scale(1.12)}
+ 65%{opacity:1;transform:translate(-50%,-22px) scale(1)}
+ to{opacity:0;transform:translate(-50%,-37px) scale(.95)}
+}
+.boardShell{width:min(100%,calc(100dvh - 275px))}
+@media(max-height:680px){
+ .boardShell{width:min(100%,calc(100dvh - 258px))}
+}
+@media(prefers-reduced-motion:reduce){.scoreFloat{display:none}}
