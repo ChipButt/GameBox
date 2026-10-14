@@ -68,11 +68,14 @@ function render(){
     musicMarkup();
  }else if(tab==='tickets'){
    const sales=[...event.sales].reverse();
+   const maxBooks=Math.min(5,Math.floor(500/event.ticketPricePence),core.availableCards().length);
    main.innerHTML=banner+'<div class="hostColumns"><section class="hostCard"><span class="hostEyebrow">TICKET DESK</span><h3>Sell a five-game ticket book</h3>'+
-    '<p class="hostMuted">One reusable numbered card covers all five games. Each book costs <strong>'+money(event.ticketPricePence*5)+'</strong>. Record cash collected and hand out its printed card.</p>'+
+    '<p class="hostMuted">One numbered bingo card covers all five games. <strong>'+money(event.ticketPricePence) +' per game × 5 games = '+money(event.ticketPricePence*5)+' per book.</strong> Record the cash collected and issue its printed card.</p>'+ 
+    '<p class="hostMuted"><strong>Pub bingo stake limit: £5 per person, per game — not £5 across the evening.</strong> For example, five £5 books cost £25 across five games, but represent only £5 staked in each game.</p>'+
     '<form id="hostSale"><label>Player / seat reference<input name="name" placeholder="e.g. Alex — Table 3" maxlength="80" required></label>'+
-    '<label>How many tickets for this player?<select name="quantity">'+Array.from({length:5},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' — '+money((i+1)*event.ticketPricePence*5)+'</option>').join('')+'</select></label>'+
-    '<button type="submit" class="hostButton hostPrimary" '+(event.started||event.finishedAt?'disabled':'')+'>Record cash sale & issue cards</button></form>'+
+    '<label>How many five-game books for this player?<select name="quantity" id="hostSaleQuantity">'+Array.from({length:maxBooks},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' '+(i===0?'book':'books')+' — '+money((i+1)*event.ticketPricePence*5)+' total ('+money((i+1)*event.ticketPricePence)+'/game)</option>').join('')+'</select></label>'+ 
+    '<p class="hostMuted" id="hostSaleLimit">Maximum £5 per person per game. The list adjusts if this player has already bought books.</p>'+
+    '<button type="submit" class="hostButton hostPrimary" '+(event.started||event.finishedAt||!maxBooks?'disabled':'')+'>Record cash sale & issue cards</button></form>'+
     (event.started?'<p class="hostWarning">Ticket sales are locked after the first number is drawn.</p>':'')+
     '<div class="hostMiniInfo"><strong>'+core.availableCards().length+' unsold cards available</strong><p>Print two A5 landscape cards per A4 sheet (square number cells), then issue the exact serials shown in the sales ledger.</p>'+
     '<button class="hostButton" data-host-action="print">Print A5 cards (2 per A4)</button> '+
@@ -215,6 +218,27 @@ host.addEventListener('click',async e=>{
     event=M.createEvent();core.freshEvent();core.setPrice(1);lastDrawCount=0;lastDrawGame=0;tab='settings';save();notice('New bingo evening created. Set the venue and ticket price.')
   }
  }catch(err){showError(err)}
+});
+function refreshSaleLimit(){
+ const form=document.getElementById('hostSale');
+ if(!form)return;
+ const name=String(form.elements.name?.value||'').trim().toLowerCase().replace(/\\s+/g,' ');
+ const prior=name?event.sales.filter(x=>x.name.trim().toLowerCase().replace(/\\s+/g,' ')===name).reduce((sum,x)=>sum+x.quantity,0):0;
+ const allowed=Math.max(0,Math.min(5,Math.floor(500/event.ticketPricePence))-prior,core.availableCards().length);
+ const select=form.elements.quantity,old=Number(select.value)||1;
+ select.innerHTML=Array.from({length:allowed},(_,i)=>{
+  const count=i+1,perGame=count*event.ticketPricePence,full=perGame*event.gameCount;
+  return '<option value="'+count+'">'+count+' '+(count===1?'book':'books')+' — '+money(full)+' total ('+money(perGame)+'/game)</option>';
+ }).join('');
+ if(allowed)select.value=String(Math.min(old,allowed));
+ select.disabled=allowed===0;
+ const submit=form.querySelector('button[type="submit"]');
+ if(submit)submit.disabled=Boolean(event.started||event.finishedAt||!allowed);
+ const info=document.getElementById('hostSaleLimit');
+ if(info)info.textContent=allowed?('£5 per person per game maximum. '+(prior?prior+' book'+(prior===1?'':'s')+' already sold to this player; ':'')+allowed+' more allowed at this price.'):'No more books can be sold to this player within the £5-per-game limit (or there are no unsold cards).';
+}
+host.addEventListener('input',e=>{
+ if(e.target.matches('#hostSale input[name="name"]'))refreshSaleLimit();
 });
 host.addEventListener('submit',e=>{
  const form=e.target;
