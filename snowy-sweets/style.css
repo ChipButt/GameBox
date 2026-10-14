@@ -470,7 +470,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
   background:url("assets/fx/ping.svg") center center / contain no-repeat;
   image-rendering:pixelated;opacity:0;
   transform-origin:center;
-  animation:sweetDestructionPing 170ms cubic-bezier(.2,.75,.2,1) both;
+  animation:sweetDestructionPing 260ms cubic-bezier(.19,.68,.28,1) both;
 }
 .cell.special-born{z-index:12}
 .cell.special-born::before{
@@ -481,16 +481,18 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
   animation:specialMergePing 275ms cubic-bezier(.14,.77,.24,1) both;
 }
 @keyframes sweetDestructionPing{
-  0%{transform:scale(.36) rotate(-12deg);opacity:0}
-  35%{transform:scale(1.16) rotate(0deg);opacity:1}
-  72%{transform:scale(1.32) rotate(4deg);opacity:.9}
-  100%{transform:scale(1.48) rotate(8deg);opacity:0}
+  0%{transform:scale(.3) rotate(-9deg);opacity:0}
+  22%{transform:scale(.85) rotate(-3deg);opacity:.82}
+  46%{transform:scale(1.22) rotate(1deg);opacity:1}
+  70%{transform:scale(1.42) rotate(4deg);opacity:.8}
+  100%{transform:scale(1.65) rotate(7deg);opacity:0}
 }
 @keyframes specialMergePing{
-  0%{transform:scale(.2) rotate(-14deg);opacity:0}
-  23%{transform:scale(1.14) rotate(0deg);opacity:1}
-  58%{transform:scale(1.25) rotate(4deg);opacity:1}
-  100%{transform:scale(1.55) rotate(12deg);opacity:0}
+  0%{transform:scale(.25) rotate(-10deg);opacity:0}
+  22%{transform:scale(.88) rotate(-4deg);opacity:.92}
+  42%{transform:scale(1.18) rotate(0deg);opacity:1}
+  72%{transform:scale(1.31) rotate(5deg);opacity:.96}
+  100%{transform:scale(1.56) rotate(11deg);opacity:0}
 }
 @media(prefers-reduced-motion:reduce){
   .cell.sweet-ping::after,.cell.special-born::before{animation:none;opacity:0}
@@ -507,7 +509,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
   content:"";position:absolute;inset:-38%;z-index:12;pointer-events:none;
   background:url("assets/fx/ping.svg") center / contain no-repeat;
   image-rendering:pixelated;
-  animation:specialMergePing 260ms cubic-bezier(.14,.77,.24,1) both;
+  animation:specialMergePing 340ms cubic-bezier(.2,.75,.24,1) both;
 }
 @media(prefers-reduced-motion:reduce){
  .piece.special-born::after{display:none}
