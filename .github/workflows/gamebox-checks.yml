@@ -36,9 +36,17 @@ jobs:
           node --check heads-up/heads-lan-v3.js
           node --check race-manager/app.js
           node --check race-manager/track-ui.js
+          node --check bingo/bingo.js
+          node --check bingo/event-model.js
+          node --check bingo/event-host.js
+          node --test bingo/event-model.test.cjs
       - name: Check required files
         run: |
           test -f hub/santa-invaders-tile.js
+          test -f bingo/event-host.js
+          test -f bingo/event-host.css
+          test -f bingo/event-model.js
+          test -f bingo/display.html
           test -f santa-invaders/index.html
           test -f santa-invaders/style.css
           test -f santa-invaders/game.js
