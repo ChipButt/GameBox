@@ -280,4 +280,9 @@ window.addEventListener('gamebox-bingo-change',()=>{markCall();render()});
 window.addEventListener('storage',e=>{if(e.key===KEY){event=loadEvent();render();publish()}});
 document.getElementById('speakCalls').checked=localStorage.getItem('bingoin.speak')==='yes';
 render();publish();loadTracks();
+if(typeof navigator!=='undefined'&&'serviceWorker' in navigator){
+  // The /bingo/ route is cached for unreliable pub Wi-Fi. Offline music stays
+  // in local IndexedDB; external digital-player networking is not offline.
+  navigator.serviceWorker.register(new URL('sw.js',new URL('bingo/',document.baseURI)).href).catch(()=>{});
+}
 })();
