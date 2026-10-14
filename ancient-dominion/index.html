@@ -144,6 +144,7 @@ else if(u.task==='attack'){const t=getTarget(u);if(!t){u.task='idle';u.path=[];c
  u.attackClock=u.kind==='archer'?1.15:.78;if(t.hp<=0){if(t.kind)notice((t.team==='red'?'Enemy':'Your')+' unit defeated.');else if(t.type==='town'){win(t.team==='red');}u.task='idle';u.target=null;if(u.attackMoveReturn){const dest=u.attackMoveReturn;u.attackMoveReturn=null;setMove(u,dest.x,dest.y,'attackmove');}}}
  else if(!u.path.length||rand(Math.floor(elapsed*2),u.id)<.015)u.path=pathfind(u.x,u.y,pt.x,pt.y,t.id);}
 }
+}
 for(const b of buildings){if(b.hp<=0||!b.complete)continue;if(b.queue.length){b.trainProgress+=dt;const k=b.queue[0];if(b.trainProgress>=KINDS[k].train){b.trainProgress=0;b.queue.shift();let x=b.x+b.w/2,y=b.y+b.h+1;if(occupancy(Math.floor(x),Math.floor(y))){x=b.x-1;y=b.y+b.h/2;}const recruit=spawnUnit(k,b.team,x,y);if(b.rally&&b.team==='blue')setMove(recruit,b.rally.x,b.rally.y);if(b.team==='blue')notice(KINDS[k].name+' ready.');}}
 if(b.team==='blue'&&b.type==='tower'){const targets=units.filter(u=>u.team==='red'&&u.hp>0&&dist(u,{x:b.x+1,y:b.y+1})<6);b.shootClock=(b.shootClock||0)-dt;if(targets.length&&b.shootClock<=0){dispatchShot({x:b.x+1,y:b.y+1,team:b.team},targets[0],14,'tower');b.shootClock=1.8;}}}
 units=units.filter(u=>u.hp>0);buildings=buildings.filter(b=>b.hp>0);objects=objects.filter(o=>o.alive);if(selected&&!selectedObject())selected=null;}
