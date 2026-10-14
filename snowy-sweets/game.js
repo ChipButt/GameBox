@@ -4,7 +4,7 @@
   const N = 8;
   // All normal match pieces come from the same Kenney Pixel Platformer Food Expansion.
   // Sprite art is bundled locally; CSS only arranges the artwork and animates it.
-  const ART = ["0014","0041","0043","0058","0080","0082"].map(n=>"assets/tile_"+n+".png");
+  const ART = ["assets/tile_0014.png","assets/candy-cane-complete.png","assets/ice-lolly-complete.png","assets/tile_0058.png","assets/tile_0080.png","assets/tile_0082.png"];
   const NAMES = ["ICED DOUGHNUTS","CANDY CANES","ICE LOLLIES","BISCUITS","ICE CREAMS","FROSTED SUNDAES"];
   const GLASS = "assets/ice_block.png";
   const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
@@ -161,7 +161,7 @@
         piece.className="piece";
         piece.dataset.pieceId=String(board[i].id);
         const art=document.createElement("img");
-        art.className="candy";
+        art.className="candy"+((board[i].t===1||board[i].t===2)?" fullLengthCandy":"");
         art.src=ART[board[i].t];
         art.alt="";art.draggable=false;
         piece.appendChild(art);
