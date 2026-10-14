@@ -3,7 +3,7 @@
 'use strict';
 const targets=['line','two','house'],pounds=p=>((p||0)/100).toFixed(2);
 function toPence(v){const s=String(v).trim();if(!/^\d+(?:\.\d{1,2})?$/.test(s))throw Error('Enter pounds and pence, such as 2.50.');return Math.round(Number(s)*100)}
-function createEvent(d={}){return {version:1,id:'event-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),title:String(d.title||'Bingo In!'),venue:String(d.venue||''),date:d.date||new Date().toISOString().slice(0,10),gameCount:5,gameIndex:0,ticketPricePence:100,started:false,sales:[],payouts:[],finishedGames:[],createdAt:new Date().toISOString()}}
+function createEvent(d={}){return {version:1,id:'event-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),title:String(d.title||'Bingo In!'),venue:String(d.venue||''),date:d.date||new Date().toISOString().slice(0,10),gameCount:5,gameIndex:0,ticketPricePence:100,hostingFeePence:15000,started:false,sales:[],payouts:[],finishedGames:[],createdAt:new Date().toISOString()}}
 function moneyFromSales(e){return(e.sales||[]).reduce((a,s)=>a+s.quantity*s.ticketPricePence*s.gameCount,0)}
 function allocate(e){const n=e.gameCount||5,total=moneyFromSales(e),base=Math.floor(total/n),extra=total%n;return Array.from({length:n},(_,i)=>{const amount=base+(i<extra?1:0),line=Math.floor(amount*.2),two=Math.floor(amount*.3);return {index:i,game:i+1,total:amount,line,two,house:amount-line-two}})}
 function stageRemaining(e,index,stage){if(!targets.includes(stage))throw Error('Invalid prize stage');const p=allocate(e)[index];if(!p)throw Error('Invalid game');const paid=(e.payouts||[]).filter(x=>x.gameIndex===index&&x.stage===stage).reduce((a,x)=>a+x.amountPence,0);return Math.max(0,p[stage]-paid)}
