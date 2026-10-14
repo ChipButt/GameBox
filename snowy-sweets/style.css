@@ -414,3 +414,17 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
  .scoreFloat{display:none}
  .gameToast,.gameToast.show{transition:none;transform:translate(-50%,0)}
 }
+
+
+/* v8: animate stable candy nodes rather than rebuilding a board every step.
+   Promote only moving sprites to compositor layers (not all 64 every frame). */
+.cell .piece{will-change:auto;touch-action:none}
+.cell.is-falling{z-index:6}
+.cell.is-dragging{z-index:9}
+.cell.is-falling .piece,.cell.is-dragging .piece{will-change:transform}
+.cell .piece{transform:translate3d(0,0,0)}
+.cell .candy{pointer-events:none}
+.board{touch-action:none}
+@media(prefers-reduced-motion:reduce){
+ .cell.is-falling .piece,.cell.is-dragging .piece{will-change:auto}
+}
