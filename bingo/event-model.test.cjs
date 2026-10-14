@@ -24,6 +24,17 @@ test('no overselling to same player, duplicated card or sales after start',()=>{
  assert.throws(()=>M.recordSale(e,{name:'Seat 6',quantity:1,cardIds:['CI-001']}),/unique/);
  e.started=true;assert.throws(()=>M.recordSale(e,{name:'Seat 7',quantity:1,cardIds:['CI-050']}),/locked/);
 });
+test('£5 limit is per player, per game, including repeat buyers and higher-priced cards',()=>{
+ const e=M.createEvent();
+ sale(e,'Alex',2);
+ sale(e,'alex ',3);
+ assert.equal(M.reconcile(e).takingsPence,2500,'Five £5 evening books are £25 collected, £5 staked in each game');
+ assert.throws(()=>M.recordSale(e,{name:' ALEX ',quantity:1,cardIds:['CI-099']}),/£5 per player per game/);
+ const e2=M.createEvent();
+ e2.ticketPricePence=200; // £2 per game; each five-game book is £10 total.
+ sale(e2,'Jo',2);
+ assert.throws(()=>M.recordSale(e2,{name:'jo',quantity:1,cardIds:['CI-003']}),/£5 per player per game/);
+});
 test('payouts reconcile, split winner allowed, overspend refused',()=>{
  const e=M.createEvent();sale(e,'Alex',2);const p=M.allocate(e)[0];
  const a=M.recordPayout(e,{gameIndex:0,stage:'line',winner:'Alex',cardId:'CI-001',amount:'0.20'});
