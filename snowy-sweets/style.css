@@ -495,3 +495,20 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 @media(prefers-reduced-motion:reduce){
   .cell.sweet-ping::after,.cell.special-born::before{animation:none;opacity:0}
 }
+
+/* v12: complete RGBA pixel sprites and no snap-back during FLIP motion. */
+.cell.power-row .candy,.cell.power-col .candy,.cell.power-burst .candy{
+  image-rendering:pixelated;
+  filter:drop-shadow(0 1px 0 rgba(30,68,88,.30));
+}
+.cell.special-born::before{display:none!important}
+.piece.special-born{position:relative;z-index:11}
+.piece.special-born::after{
+  content:"";position:absolute;inset:-38%;z-index:12;pointer-events:none;
+  background:url("assets/fx/ping.svg") center / contain no-repeat;
+  image-rendering:pixelated;
+  animation:specialMergePing 260ms cubic-bezier(.14,.77,.24,1) both;
+}
+@media(prefers-reduced-motion:reduce){
+ .piece.special-born::after{display:none}
+}
