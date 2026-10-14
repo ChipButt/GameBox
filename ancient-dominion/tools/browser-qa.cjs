@@ -12,6 +12,15 @@ const fs=require('fs'), assert=require('assert');
    const art=await page.evaluate(()=>window.__ancientGame.artStatus());
    assert(initial.units>=4&&initial.buildings>=3,'missing game objects');
    for(const n of ['house','barracks','tower','castle','stable','blacksmith','villager','spearman','archer','tree'])assert(art[n].ready,'asset not loaded: '+n);
+   // Tap the visible sprite body (not the ground tile) as a real player would.
+   const spritePoint=await page.evaluate(()=>{
+     const st=window.__ancientGame.getState(),u=st.unitDetails.find(u=>u.team==='blue'&&u.kind==='villager'&&Math.abs(u.x-13)<.8&&Math.abs(u.y-21)<.8),r=document.querySelector('#game').getBoundingClientRect();
+     const projection={x:(u.x-u.y+38)*32,y:(u.x+u.y)*16};
+     return {x:r.left+(projection.x-st.cam.x)*st.cam.zoom,y:r.top+(projection.y-st.cam.y-25)*st.cam.zoom};
+   });
+   await page.mouse.click(spritePoint.x,spritePoint.y);
+   const selectedBySprite=await page.evaluate(()=>window.__ancientGame.getState().selected);
+   assert(selectedBySprite?.kind==='unit','touch selection failed on visible unit artwork');
    // Verify explicit movement controls and destination state.
    await page.evaluate(()=>window.__ancientGame.tap(13,21));
    const selectedVillager=await page.evaluate(()=>window.__ancientGame.getState().selected);
