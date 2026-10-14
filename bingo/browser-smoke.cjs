@@ -25,7 +25,14 @@ async function main(){
       url:location.href, hostContains:document.querySelector('#bingoEventHost')?.contains(document.querySelector('#hostSettings')),
       fields:[...document.querySelector('#hostSettings').elements].map(el=>({name:el.name,value:el.value}))
     }))));
+    await page.evaluate(()=>{
+      window.__bingoSubmitDebug=[];
+      document.addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'capture',target:e.target?.id,prevented:e.defaultPrevented}),true);
+      document.querySelector('#bingoEventHost').addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'hostbubble',target:e.target?.id,prevented:e.defaultPrevented}));
+      document.addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'bubble',target:e.target?.id,prevented:e.defaultPrevented}));
+    });
     await page.locator('#hostSettings button[type="submit"]').click();
+    console.log('DIAGNOSTIC events',JSON.stringify(await page.evaluate(()=>window.__bingoSubmitDebug)));
     console.log('DIAGNOSTIC after click URL',page.url());
     console.log('DIAGNOSTIC setup',JSON.stringify(await page.evaluate(()=>({
       title:document.querySelector('#hostTitle')?.textContent,
