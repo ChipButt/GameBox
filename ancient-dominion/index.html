@@ -20,14 +20,16 @@ button.field-chip{cursor:pointer}.field-chip.hot{background:#7d2319e9;border-col
 (()=>{
 const T=36,W=50,H=38, SAVE='ancient-dominion-v1', $=id=>document.getElementById(id); const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false}),mini=$('minimap'),mctx=mini.getContext('2d');
 const wrap=$('world-wrap'); let cw=390,ch=610,dpr=1,cam={x:0,y:0,zoom:1.12},paused=false,buildMode=null,selected=null,showPicker=false,last=0,uiClock=0,saveClock=0,toastDeadline=0,pointers=new Map(),gesture=null,justWon=false,elapsed=0;
-let effects=[],shots=[],orders=[],alerts=[],controlMode=null,lastThreatAt=-100,guardMode=false;
+let effects=[],shots=[],orders=[],alerts=[],wrecks=[],controlMode=null,lastThreatAt=-100,guardMode=false;
 const modeLabel={moving:'MOVE',gather:'GATHER',farm:'FARM',return:'RETURN',build:'BUILD',repair:'REPAIR',attack:'ATTACK',attackmove:'ATTACK MOVE',hold:'HOLD',idle:'IDLE'};
 function orderEffect(x,y,kind='moving'){orders.push({x,y,kind,life:2.5,max:2.5});if(orders.length>32)orders.shift();}
 function addEffect(x,y,type='hit',value=0){effects.push({x,y,type,value,life:type==='damage'?1.4:.75,max:type==='damage'?1.4:.75});if(effects.length>100)effects.shift();}
 function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);notice(message);}
 function applyDamage(t,damage,source,projectile=false){
  if(!t||t.hp<=0)return;
+const aliveBefore=t.hp>0;
  t.hp=Math.max(0,t.hp-damage);t.hitFlash=.35;t.lastHit=elapsed;
+ if(aliveBefore&&t.hp<=0){wrecks.push({x:t.x+(t.w||0)/2,y:t.y+(t.h||0)/2,type:t.type?'building':'unit',w:t.w||1,h:t.h||1,team:t.team,life:t.type?35:11,max:t.type?35:11});if(wrecks.length>50)wrecks.shift();}
  const x=t.x+(t.w||0)/2,y=t.y+(t.h||0)/2;if(t.hp<=0&&t.type==='town')win(t.team==='red');
  addEffect(x,y,'damage',Math.round(damage));addEffect(x,y,'impact');
  if(t.team==='blue'){
@@ -42,6 +44,7 @@ function advanceEffects(dt){
  shots=shots.filter(q=>q.progress<1);
  for(const e of effects)e.life-=dt;effects=effects.filter(e=>e.life>0);
  for(const e of orders)e.life-=dt;orders=orders.filter(e=>e.life>0);
+ for(const w of wrecks)w.life-=dt;wrecks=wrecks.filter(w=>w.life>0);
  for(const b of buildings)b.hitFlash=Math.max(0,(b.hitFlash||0)-dt);
  for(const u of units){u.hitFlash=Math.max(0,(u.hitFlash||0)-dt);u.swing=Math.max(0,(u.swing||0)-dt);}
 }
@@ -58,7 +61,7 @@ function spawnBuilding(type,team,x,y,ready=true){const k=BLD[type],b={id:nextId+
 function spawnUnit(kind,team,x,y){const k=KINDS[kind],u={id:nextId++,kind,team,x,y,hp:k.hp,maxHp:k.hp,task:'idle',target:null,goal:null,path:[],carry:0,carryType:null,harvestId:null,work:0,attackClock:0,frame:rand(x,y)*8,stuck:0};units.push(u);return u;}
 function terrain(){ground=[];for(let y=0;y<H;y++){let row=[];for(let x=0;x<W;x++){let r=rand(Math.floor(x/5),Math.floor(y/5),7);let water=(x>43+(y>25?-1:1))||(y<3&&x>31)||(x>37&&y<8&&x<46&&rand(x,y,11)<.4);let desert=((x<8&&y>26)||(x>29&&y>28)||(r<.14&&x<20&&y>27));row.push(water?'water':desert?'sand':'grass');}ground.push(...row);}}
 function emptyFor(x,y,w=1,h=1,ignore){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++){if(!validLand(i,j))return false;if(objects.some(o=>o.alive&&o!==ignore&&Math.abs(o.x-i)<.6&&Math.abs(o.y-j)<.6))return false;if(buildings.some(b=>b.hp>0&&i>=b.x&&i<b.x+b.w&&j>=b.y&&j<b.y+b.h))return false;}return true;}
-function generate(){effects=[];shots=[];orders=[];alerts=[];controlMode=null;lastThreatAt=-100;nextId=1;terrain();objects=[];buildings=[];units=[];resources={food:230,wood:225,stone:135,gold:100};age=0;enemyClock=64;discovered=new Uint8Array(W*H);elapsed=0;ended=false;justWon=false;
+function generate(){effects=[];shots=[];orders=[];alerts=[];wrecks=[];controlMode=null;lastThreatAt=-100;nextId=1;terrain();objects=[];buildings=[];units=[];resources={food:230,wood:225,stone:135,gold:100};age=0;enemyClock=64;discovered=new Uint8Array(W*H);elapsed=0;ended=false;justWon=false;
 spawnBuilding('town','blue',9,17);spawnBuilding('house','blue',5,21);spawnBuilding('town','red',35,14);spawnBuilding('house','red',40,18);spawnBuilding('barracks','red',33,21);
 [[13,21],[9,22],[12,24],[11,21]].forEach(p=>spawnUnit('villager','blue',p[0],p[1]));[[34,19],[39,22],[37,20]].forEach(p=>spawnUnit('spearman','red',p[0],p[1]));
 let fixed=[['tree',4,13],['tree',6,11],['tree',8,12],['tree',10,11],['tree',13,12],['tree',3,15],['tree',4,17],['tree',6,15],['tree',15,10],['tree',14,15],['tree',17,12],['tree',19,13],['tree',25,10],['tree',28,12],['berry',16,22],['berry',17,23],['berry',18,22],['berry',19,23],['stone',19,16],['stone',20,17],['stone',21,15],['gold',24,24],['gold',25,24],['gold',26,23],['tree',29,18],['tree',28,15],['tree',30,11],['tree',42,11],['tree',40,10],['stone',27,29],['berry',30,27]];
@@ -113,6 +116,14 @@ const selUnits=allSelectedUnits();if(selUnits.length){if(targetUnit?.team==='red
 if(targetUnit){selected={kind:'unit',id:targetUnit.id};}else if(building){selected={kind:'building',id:building.id};}else if(thing){selected={kind:'object',id:thing.id};}else selected=null;renderUi();}
 function progressUnits(dt){advanceEffects(dt);for(const u of units){if(u.hp<=0)continue;u.frame+=dt*6;u.attackClock=Math.max(0,u.attackClock-dt);
 if(u.path.length){const p=u.path[0],d=dist(u,p),step=KINDS[u.kind].speed/T*dt;if(d<Math.max(.055,step)){u.x=p.x;u.y=p.y;u.path.shift();}else{u.x+=(p.x-u.x)/d*step;u.y+=(p.y-u.y)/d*step;}}
+if(u.task==='hold'&&u.kind!=='villager'&&u.attackClock<=0){
+ const target=findEnemy(u,KINDS[u.kind].range+1.3);
+ if(target&&target.d<KINDS[u.kind].range+((target.entity.w||1)+(target.entity.h||1))/5){
+ const damage=KINDS[u.kind].attack*(1+age*.18);u.swing=u.kind==='archer'?.48:.34;
+ if(u.kind==='archer')dispatchShot(u,target.entity,damage,'arrow');else applyDamage(target.entity,damage,u);
+ u.attackClock=u.kind==='archer'?1.15:.78;
+ }
+}
 if(u.team==='blue'&&u.kind!=='villager'&&u.task!=='hold'&&u.task!=='attack'){
  const foe=findEnemy(u,u.task==='attackmove'?5:3.5);
  if(foe&&(['idle','moving','attackmove'].includes(u.task))){if(u.task==='attackmove')u.attackMoveReturn=u.goal?{...u.goal}:u.attackMoveReturn;assignAttack(u,foe.entity,foe.category);}
@@ -351,6 +362,11 @@ function drawIsoWorld(){
    }
  }
  const renderables=[];
+ for(const w of wrecks){const p=toIso(w.x,w.y);if(!visible(p))continue;
+ renderables.push({order:w.x+w.y+.75,draw(){ctx.save();ctx.globalAlpha=Math.min(1,w.life/4);
+ ctx.fillStyle=w.type==='building'?'#594b3a':'#795d49';const count=w.type==='building'?13:4;
+ for(let i=0;i<count;i++){const rx=(rand(w.x+i,w.y,4)-.5)*(w.type==='building'?65:22),ry=(rand(w.y+i,w.x,7)-.5)*(w.type==='building'?20:9);const size=w.type==='building'?6+(i%3)*2:3;ctx.fillRect(p.x+rx,p.y+ry,size,size*.52);}
+ ctx.strokeStyle=w.team==='blue'?'#346ec06f':'#b243416f';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,w.type==='building'?26:9,w.type==='building'?10:4,0,0,Math.PI*2);ctx.stroke();ctx.restore();}});}
  for(const o of objects)if(o.alive){
    const p=toIso(o.x+.5,o.y+.5);if(!visible(p))continue;
    renderables.push({order:o.x+o.y+.8,draw(){
@@ -379,7 +395,8 @@ function drawIsoWorld(){
         const corners=[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]].map(([x,y])=>{const p=toIso(x,y);return[p.x,p.y]});polygon(ctx,corners,'#ffffff07','#f7e1a9');
         health(ctx,mid.x-28,foot.y-dh-11,56,b.hp/b.maxHp,b.team==='red');
       }
-      drawBuildingDamage(ctx,b,mid,foot,(b.w+b.h)*28,dh);if(b.queue.length){ctx.font='10px Georgia';ctx.fillStyle='#f3e1b7';ctx.fillText(b.queue.length+' queued',mid.x-18,foot.y-dh-14);}
+      drawBuildingDamage(ctx,b,mid,foot,(b.w+b.h)*28,dh);if(b.queue.length){ctx.font='bold 10px Georgia';ctx.fillStyle='#f3e1b7';ctx.fillText(b.queue.length+' queued',mid.x-18,foot.y-dh-14);
+ const fraction=clamp(b.trainProgress/KINDS[b.queue[0]].train,0,1);ctx.fillStyle='#423322';ctx.fillRect(mid.x-25,foot.y-dh-8,50,4);ctx.fillStyle='#7ecf79';ctx.fillRect(mid.x-25,foot.y-dh-8,50*fraction,4);}
     }});
  }
  for(const u of units)if(u.hp>0){
@@ -467,7 +484,9 @@ else if(o.type==='barracks'){actions.append(btn('Spearman',()=>queueTrain(o,'spe
 else if(o.type==='house')actions.append(btn('Population +5',()=>{},'More houses = more units',true));else if(o.type==='tower')actions.append(btn('Auto defence',()=>{},'Attacks nearby enemies',true));else if(o.type==='farm')actions.append(btn('Farming',()=>{},'Select villager then tap farm to work',true));}
 if(o?.team==='blue'&&selected.kind==='building'&&o.hp<o.maxHp&&o.complete)actions.append(btn('Damaged',()=>notice('Select a villager, choose Repair, then tap this building.'),Math.round(100*o.hp/o.maxHp)+'% HP',true));
  if(controlMode)actions.append(btn('Cancel order',()=>{controlMode=null;renderUi();}));
- if(buildMode)actions.append(btn('Cancel build',()=>{buildMode=null;renderUi();}));if(o?.queue?.length)actions.append(btn('Training',()=>{},'Progress '+Math.floor(o.trainProgress/KINDS[o.queue[0]].train*100)+'%',true));}
+ if(buildMode)actions.append(btn('Cancel build',()=>{buildMode=null;renderUi();}));if(o?.queue?.length){actions.append(btn('Training',()=>{},'Progress '+Math.floor(o.trainProgress/KINDS[o.queue[0]].train*100)+'%',true));
+ if(o.team==='blue')actions.append(btn('Cancel queued',()=>{const kind=o.queue.pop();if(kind){for(const [k,value] of Object.entries(COST[kind]))resources[k]+=value;if(!o.queue.length)o.trainProgress=0;notice(KINDS[kind].name+' cancelled; resources refunded.');renderUi();}},o.queue.length+' in queue'));
+}}
 function togglePicker(){const o=selectedObject();if(selected?.kind!=='unit'||o?.team!=='blue'||o?.kind!=='villager'){notice('Select a blue villager before constructing a building.');return;}showPicker=!showPicker;const box=$('buildPicker');box.replaceChildren();for(const type of ['house','barracks','tower','granary','farm'])box.append(btn(BLD[type].name,()=>setBuild(type),costLabel(COST[type])));box.append(btn('Close',()=>{showPicker=false;box.classList.remove('show');}));box.classList.toggle('show',showPicker);}
 let mouseWorld=null;
 function screenWorld(px,py){return fromIso(cam.x+px/cam.zoom,cam.y+py/cam.zoom);}
@@ -487,7 +506,7 @@ $('pause').onclick=()=>{paused=!paused;renderUi();notice(paused?'Paused.':'Resum
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){buildMode=null;showPicker=false;$('buildPicker').classList.remove('show');$('menuModal').classList.add('hidden');paused=false;renderUi();}if(e.key==='1')allArmy();if(e.key==='i')focusIdleVillager();if(e.key==='m'&&allSelectedUnits().length)prepareOrder('move');if(e.key==='q'&&allSelectedUnits().some(u=>u.kind!=='villager'))prepareOrder('attackmove');if(e.key===' '&&document.activeElement?.tagName!=='BUTTON'){e.preventDefault();paused=!paused;renderUi();}if(e.key==='h')$('home').click();const p=21;if(e.key==='ArrowLeft'||e.key==='a')cam.x-=p;if(e.key==='ArrowRight'||e.key==='d')cam.x+=p;if(e.key==='ArrowUp'||e.key==='w')cam.y-=p;if(e.key==='ArrowDown'||e.key==='s')cam.y+=p;boundCamera();});window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
 makeTextures();resize();if(!load())generate();else{resize();renderUi();}updateVis();renderUi();paused=true;
 let miniLast=0;function loop(t){requestAnimationFrame(loop);if(!last)last=t;let dt=clamp((t-last)/1000,0,.05);last=t;if(!paused&&!ended){elapsed+=dt;enemyAI(dt);progressUnits(dt);saveClock+=dt;visClock+=dt;uiClock+=dt;if(visClock>.5){updateVis();visClock=0;}if(uiClock>.35){renderUi();uiClock=0;}if(saveClock>8){save();saveClock=0;}}if(toastDeadline&&t>toastDeadline){$('hint').classList.remove('show');toastDeadline=0;}drawWorld();if(t-miniLast>180){drawMini();miniLast=t;}}requestAnimationFrame(loop);
-window.__ancientGame={getState:()=>({units:units.length,buildings:buildings.length,objects:objects.length,resources,age,elapsed,paused,ended,cam,selected,unitDetails:units.map(u=>({id:u.id,kind:u.kind,team:u.team,x:u.x,y:u.y,task:u.task,carry:u.carry,goal:u.goal,target:u.target,health:u.hp,pathLength:u.path.length,attackMoveReturn:u.attackMoveReturn||null})),buildingDetails:buildings.map(b=>({id:b.id,type:b.type,team:b.team,x:b.x,y:b.y,complete:b.complete,progress:b.progress,queue:b.queue,health:b.hp,maxHealth:b.maxHp,rally:b.rally||null}))}),tap:(x,y)=>actAt(x,y),spawnArmy:()=>{const b=buildings.find(q=>q.team==='blue'&&q.type==='town');spawnUnit('spearman','blue',b.x+4,b.y+4);renderUi();},artStatus:()=>Object.fromEntries(ART_NAMES.map(n=>[n,{ready:artReady(n),width:art[n]?.naturalWidth||0}])),getFeedback:()=>({controlMode,orderCount:orders.length,shots:shots.length,effects:effects.length,alerts:alerts.map(a=>({message:a.message,x:a.x,y:a.y})),idleWorkers:idleVillagers().length}),
+window.__ancientGame={getState:()=>({units:units.length,buildings:buildings.length,objects:objects.length,resources,age,elapsed,paused,ended,cam,selected,unitDetails:units.map(u=>({id:u.id,kind:u.kind,team:u.team,x:u.x,y:u.y,task:u.task,carry:u.carry,goal:u.goal,target:u.target,health:u.hp,pathLength:u.path.length,attackMoveReturn:u.attackMoveReturn||null})),buildingDetails:buildings.map(b=>({id:b.id,type:b.type,team:b.team,x:b.x,y:b.y,complete:b.complete,progress:b.progress,queue:b.queue,health:b.hp,maxHealth:b.maxHp,rally:b.rally||null}))}),tap:(x,y)=>actAt(x,y),spawnArmy:()=>{const b=buildings.find(q=>q.team==='blue'&&q.type==='town');spawnUnit('spearman','blue',b.x+4,b.y+4);renderUi();},artStatus:()=>Object.fromEntries(ART_NAMES.map(n=>[n,{ready:artReady(n),width:art[n]?.naturalWidth||0}])),getFeedback:()=>({controlMode,orderCount:orders.length,shots:shots.length,effects:effects.length,wrecks:wrecks.length,alerts:alerts.map(a=>({message:a.message,x:a.x,y:a.y})),idleWorkers:idleVillagers().length}),
 testDamage:(id,amount)=>{if(!['localhost','127.0.0.1'].includes(location.hostname))return null;const b=getBuilding(id);if(!b)return null;applyDamage(b,amount);return b.hp;},
 testSkirmish:()=>{if(!['localhost','127.0.0.1'].includes(location.hostname))return;const p=units.find(u=>u.team==='blue'&&u.kind==='spearman')||spawnUnit('spearman','blue',14,21);const enemy=spawnUnit('spearman','red',p.x+1.7,p.y);assignAttack(p,enemy,'unit');return {friendly:p.id,enemy:enemy.id};},
 getErrors:()=>''};
