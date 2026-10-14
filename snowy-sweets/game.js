@@ -174,7 +174,15 @@
     const level=LEVELS[currentLevel];
     $("levelNumber").textContent=String(currentLevel+1).padStart(2,"0");
     $("movesValue").textContent=moves;
-    $("scoreValue").textContent=score.toLocaleString("en-GB");
+    const scoreNode=$("scoreValue");
+    const lastScore=Number(scoreNode.dataset.previousScore||0);
+    scoreNode.textContent=score.toLocaleString("en-GB");
+    scoreNode.dataset.previousScore=String(score);
+    if(!REDUCED_MOTION && score>lastScore && mode==="busy"){
+      scoreNode.classList.remove("score-tick");
+      void scoreNode.offsetWidth;
+      scoreNode.classList.add("score-tick");
+    }else if(score===0)scoreNode.classList.remove("score-tick");
     $("bestValue").textContent=(settings.levelBest[currentLevel]||0).toLocaleString("en-GB");
     let label="";
     if(level.kind==="collect")label="COLLECT "+NAMES[level.target];
@@ -186,7 +194,17 @@
     $("missionProgress").textContent=progress.toLocaleString("en-GB")+" / "+goal.toLocaleString("en-GB");
     $("missionFill").style.width=(Math.min(1,progress/goal)*100)+"%";
     const thresholds=[0.35,0.65,0.9];
-    thresholds.forEach((ratio,i)=>$("star"+(i+1)).classList.toggle("earned",progress>=goal*ratio));
+    thresholds.forEach((ratio,i)=>{
+      const star=$("star"+(i+1)),earned=progress>=goal*ratio;
+      const justEarned=earned&&!star.classList.contains("earned");
+      star.classList.toggle("earned",earned);
+      if(!earned)star.classList.remove("star-award");
+      else if(justEarned&&!REDUCED_MOTION){
+        star.classList.remove("star-award");
+        void star.offsetWidth;
+        star.classList.add("star-award");
+      }
+    });
   }
   function cellAt(i){return boardEl.children[i];}
   function ensureCells(){
