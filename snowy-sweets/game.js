@@ -529,7 +529,7 @@
     const button=e.target.closest(".cell");
     if(!button||mode!=="playing"||hasOverlay())return;
     touch={i:Number(button.dataset.index),x:e.clientX,y:e.clientY,pointer:e.pointerId,
-      b:null,dx:0,dy:0,didDrag:false};
+      b:null,dx:0,dy:0,didDrag:false,step:cellStride()};
     try{boardEl.setPointerCapture(e.pointerId)}catch(_){}
   });
   boardEl.addEventListener("pointermove",e=>{
@@ -539,7 +539,7 @@
     if(Math.max(Math.abs(rawX),Math.abs(rawY))<7&&!drag.didDrag)return;
     drag.didDrag=true;
     const horizontal=Math.abs(rawX)>=Math.abs(rawY);
-    const step=cellStride();
+    const step=drag.step;
     const candidate=drag.i+(horizontal?(rawX>=0?1:-1):(rawY>=0?N:-N));
     const next=adjacent(drag.i,candidate)?candidate:null;
     if(drag.b!==null&&drag.b!==next){
@@ -548,7 +548,7 @@
       cellAt(drag.b)?.classList.remove("is-dragging");
     }
     drag.b=next;
-    if(next===null){drag.dx=0;drag.dy=0;return;}
+    if(next===null){const current=cellAt(drag.i)?.querySelector(".piece");if(current)current.style.transform="";drag.dx=0;drag.dy=0;return;}
     drag.dx=horizontal?Math.max(-step.x,Math.min(step.x,rawX)):0;
     drag.dy=horizontal?0:Math.max(-step.y,Math.min(step.y,rawY));
     const a=cellAt(drag.i),b=cellAt(next);
