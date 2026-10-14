@@ -362,28 +362,6 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 @media(prefers-reduced-motion:reduce){.scoreFloat{display:none}}
 
 
-/* Specials retain their original complete sweet silhouette.
-   Real Kenney stripe PNGs sit as a small lower-edge inlay, not a floating prop. */
-.powerBand{
- position:absolute;
- z-index:3;bottom:8%;right:7%;
- width:24%;height:32%;
- object-fit:contain;image-rendering:pixelated;
- pointer-events:none;
- filter:drop-shadow(0 1px 0 rgba(22,58,88,.55));
-}
-.cell.power-row .powerBand{transform:rotate(90deg)}
-.cell.power-col .powerBand{transform:rotate(0deg)}
-.cell.power-burst .powerBand{right:5%;bottom:5%;width:27%;height:27%}
-.cell.power-burst .powerBandCross{right:17%;bottom:12%;transform:rotate(90deg);opacity:.9}
-.cell.power-row .candy{filter:drop-shadow(0 0 5px #fff2a7) drop-shadow(0 2px 0 #976d21)}
-.cell.power-col .candy{filter:drop-shadow(0 0 5px #b7edff) drop-shadow(0 2px 0 #2369a1)}
-.cell.power-burst .candy{
- filter:drop-shadow(0 0 6px #ffca4d) drop-shadow(0 2px 0 #8b5921);
- animation:powerPulse .75s steps(2,end) infinite alternate
-}
-
-
 /* Complete joined sprites: show both halves, centred and uncropped.
    Both images are 32×32 true-alpha PNGs built from the existing pixel tiles. */
 .cell .candy.fullLengthCandy{
@@ -392,3 +370,47 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
  image-rendering:pixelated;
 }
 .cell.selected .candy.fullLengthCandy{transform:scale(1.025)}
+
+
+/* v7: Specials have no extra DOM markers. Their highlights are baked into
+   transparent sprite images from power-art.js, clipped to the candy pixels. */
+.cell.power-row .candy,.cell.power-col .candy,.cell.power-burst .candy{
+ filter:drop-shadow(0 2px 0 rgba(19,62,88,.33));
+ animation:none;
+}
+.cell.power-burst .piece{animation:powerBreathe 1.25s steps(3,end) infinite alternate}
+@keyframes powerBreathe{
+ from{filter:drop-shadow(0 0 1px rgba(255,206,116,.45))}
+ to{filter:drop-shadow(0 0 5px rgba(255,212,110,.9))}
+}
+/* Compact asset-backed announcements; no large floating boxes obscuring play. */
+.gameToast{
+ top:6px;z-index:8;
+ max-width:88%;padding:10px 18px 12px;
+ border:0;border-radius:0;box-shadow:none;
+ background:transparent var(--yellow-button) center / 100% 100% no-repeat;
+ font:800 12px/1 Fredoka,system-ui,sans-serif;
+ letter-spacing:.075em;color:#70500f;text-shadow:0 1px rgba(255,255,255,.45);
+ transform:translate(-50%,-8px) scale(.94);
+ transition:transform .12s ease-out,opacity .12s ease-out;
+}
+.gameToast.show{transform:translate(-50%,0) scale(1)}
+/* Match feedback is reserved for bigger clears; it does not cover every match. */
+.scoreFloat{
+ z-index:9;padding:4px 7px 5px;
+ font:800 13px/1 Fredoka,system-ui,sans-serif;letter-spacing:.035em;
+ color:#fff4bd!important;
+ text-shadow:-1px -1px 0 #38536b,1px -1px 0 #38536b,-1px 1px 0 #38536b,1px 1px 0 #38536b,0 2px 0 #264658;
+ animation:cleanPoints .53s cubic-bezier(.15,.65,.22,1) both;
+}
+@keyframes cleanPoints{
+ from{opacity:0;transform:translate(-50%,5px) scale(.88)}
+ 18%{opacity:1;transform:translate(-50%,-4px) scale(1.03)}
+ 70%{opacity:1;transform:translate(-50%,-16px) scale(1)}
+ to{opacity:0;transform:translate(-50%,-23px) scale(.95)}
+}
+@media(prefers-reduced-motion:reduce){
+ .cell.power-burst .piece{animation:none}
+ .scoreFloat{display:none}
+ .gameToast,.gameToast.show{transition:none;transform:translate(-50%,0)}
+}
