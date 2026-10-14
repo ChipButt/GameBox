@@ -251,7 +251,8 @@ host.addEventListener('change',async e=>{
 });
 host.addEventListener('input',e=>{if(e.target.id==='hostVolume')audio.volume=Number(e.target.value)/100});
 document.getElementById('audienceDisplay').onclick=()=>{
- const windowRef=window.open('bingo/display.html','bingo-in-audience','width=1100,height=720');
+ const displayUrl=new URL('display.html',new URL('bingo/',document.baseURI)).href;
+ const windowRef=window.open(displayUrl,'bingo-in-audience','width=1100,height=720');
  if(!windowRef)notice('Allow pop-ups or open bingo/display.html on the projector browser.');
  publish();
 };
