@@ -8,7 +8,7 @@ This is the working Bingo In venue-host console, not a separate app. It reuses t
 
 1. Open the host page while online once, then reload it; the browser can cache the Bingo In host, calling board and display for later offline use. Test by turning Wi-Fi off before leaving.
 2. In **Event setup**, enter the venue, event name, event date, ticket price per game and the separately invoiced venue fee (minimum £150). Default is five games at £1 per game per card, with a £5 five-game ticket.
-3. Select **Tickets & cards** and print enough cards. Each numbered card is reusable through all five separately drawn games. Issue only printed serials you can physically hand to the buyer.
+3. Select **Tickets & cards** and print enough **A5 landscape cards**. The print layout puts two A5 cards on each A4 portrait sheet, with square number cells and a middle cut line. Each numbered card is reusable through all five separately drawn games. Issue only printed serials you can physically hand to the buyer.
 4. Under **Run the night**, upload audio files you have permission to play publicly. Audio is saved **on this browser/device** using IndexedDB — not uploaded to a server. Disable automatic computer announcements to use your own microphone (off by default).
 5. Connect your own speaker and microphone and open the **audience screen** on a second display or projector. It shows only the draw, number board, game and prize allocation — never the cash register.
 
