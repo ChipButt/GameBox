@@ -22,12 +22,5 @@ const fs=require('fs'), assert=require('assert');
    assert.deepStrictEqual(errors,[],'uncaught browser errors');
    await page.close();
  }
- const assetsPage=await browser.newPage({viewport:{width:1150,height:1450},deviceScaleFactor:1});
- await assetsPage.goto('http://127.0.0.1:8787/ancient-dominion/assets/terrain-atlas.png',{waitUntil:'load'});
- await assetsPage.screenshot({path:'/tmp/ancient-atlas.png'});
- await assetsPage.setContent('<body style="background:#ccb88b"><h2>Tree sprite preview</h2><img style="image-rendering:pixelated;width:680px" src="http://127.0.0.1:8787/ancient-dominion/assets/tree.png"></body>');
- await assetsPage.waitForTimeout(400);
- await assetsPage.screenshot({path:'/tmp/ancient-tree.png'});
- await assetsPage.close();
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
