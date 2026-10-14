@@ -12,17 +12,18 @@
   ];
   const NAMES = ["RED", "GREEN", "GOLD", "CANDY CANES", "LOLLIPOPS"];
   const GLASS = ROOT + "Physics Assets/Glass elements/elementGlass013.png";
+  const GIFT = ROOT + "Platformer Assets Holiday/present_small_red.png";
   const LEVELS = [
     {kind:"collect",target:0,goal:14,moves:20},
     {kind:"collect",target:1,goal:17,moves:20},
     {kind:"score",goal:2500,moves:19},
-    {kind:"ice",moves:24,pattern:0},
-    {kind:"collect",target:2,goal:23,moves:20},
+    {kind:"ice",moves:28,pattern:0},
+    {kind:"collect",target:2,goal:23,moves:22},
     {kind:"score",goal:3900,moves:19},
-    {kind:"ice",moves:23,pattern:1},
+    {kind:"ice",moves:32,pattern:1},
     {kind:"collect",target:3,goal:20,moves:19},
     {kind:"score",goal:5500,moves:18},
-    {kind:"ice",moves:24,pattern:2},
+    {kind:"ice",moves:37,pattern:2},
     {kind:"collect",target:4,goal:24,moves:19},
     {kind:"score",goal:7500,moves:20}
   ];
@@ -155,7 +156,7 @@
       if(flags.clearing?.has(i))el.classList.add("clearing");
       if(board[i]){
         const art=document.createElement("img");
-        art.className="candy";art.src=ART[board[i].t];art.alt="";art.draggable=false;
+        art.className="candy";art.src=board[i].s==="burst"?GIFT:ART[board[i].t];art.alt="";art.draggable=false;
         el.appendChild(art);
         if(board[i].s){
           el.classList.add("power-"+board[i].s);
@@ -444,4 +445,5 @@
   $("startSheet").classList.add("show");
   $("playButton").textContent="Play Level "+(currentLevel+1);
   $("soundLabel").textContent="Sound "+(settings.sound?"On":"Off");
+  $("soundButton").querySelector("img").src="../assets/gamebox/kenney/icons/Game Icons/White/2x/"+(settings.sound?"audioOn":"audioOff")+".png";
 })();
