@@ -27,6 +27,16 @@ async function main(){
     }))));
     await page.evaluate(()=>{
       window.__bingoSubmitDebug=[];
+      document.addEventListener('click',e=>{
+        window.__bingoSubmitDebug.push({phase:'click-capture',target:e.target?.tagName,
+         targetId:e.target?.id,targetText:e.target?.textContent?.trim()?.slice(0,50),
+         tab:e.target?.closest?.('[data-host-tab]')?.getAttribute('data-host-tab')||null,
+         action:e.target?.closest?.('[data-host-action]')?.getAttribute('data-host-action')||null,
+         buttonIsConnected:document.querySelector('#hostSettings button[type=submit]')?.isConnected});
+      },true);
+      document.addEventListener('click',e=>{
+        window.__bingoSubmitDebug.push({phase:'click-bubble',target:e.target?.tagName,targetId:e.target?.id});
+      });
       document.addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'capture',target:e.target?.id,prevented:e.defaultPrevented}),true);
       document.querySelector('#bingoEventHost').addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'hostbubble',target:e.target?.id,prevented:e.defaultPrevented}));
       document.addEventListener('submit',e=>window.__bingoSubmitDebug.push({phase:'bubble',target:e.target?.id,prevented:e.defaultPrevented}));
