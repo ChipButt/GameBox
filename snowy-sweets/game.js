@@ -7,20 +7,21 @@
   const ART = ["0014","0041","0043","0056","0058","0108"].map(n=>"assets/tile_"+n+".png");
   const NAMES = ["ICED DONUTS","CANDY CANES","ICE POPS","MARSHMALLOWS","BISCUITS","FROSTED CAKES"];
   const GLASS = "assets/ice_block.png";
+  const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   const POWER_STRIPE = "assets/tile_0057.png";
   const GIFT = "../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png";
   const LEVELS = [
-    {kind:"collect",target:0,goal:14,moves:20},
-    {kind:"collect",target:1,goal:17,moves:20},
-    {kind:"score",goal:2500,moves:19},
+    {kind:"collect",target:0,goal:8,moves:24},
+    {kind:"collect",target:1,goal:12,moves:23},
+    {kind:"score",goal:1900,moves:22},
     {kind:"ice",moves:28,pattern:0},
-    {kind:"collect",target:2,goal:23,moves:22},
-    {kind:"score",goal:3900,moves:19},
+    {kind:"collect",target:2,goal:16,moves:24},
+    {kind:"score",goal:3600,moves:22},
     {kind:"ice",moves:32,pattern:1},
-    {kind:"collect",target:3,goal:20,moves:19},
-    {kind:"score",goal:5500,moves:18},
+    {kind:"collect",target:3,goal:17,moves:22},
+    {kind:"score",goal:5300,moves:21},
     {kind:"ice",moves:37,pattern:2},
-    {kind:"collect",target:5,goal:21,moves:22},
+    {kind:"collect",target:5,goal:20,moves:23},
     {kind:"score",goal:7500,moves:20}
   ];
   const ICE_PATTERNS = [
@@ -134,6 +135,8 @@
     else if(level.kind==="ice")label="BREAK ALL THE ICE";
     else label="REACH THE SCORE";
     $("missionLabel").textContent=label;
+    $("missionIcon").src=level.kind==="collect"?ART[level.target]:level.kind==="ice"?GLASS:GIFT;
+    $("movesValue").classList.toggle("lowMoves",moves<=5);
     $("missionProgress").textContent=progress.toLocaleString("en-GB")+" / "+goal.toLocaleString("en-GB");
     $("missionFill").style.width=(Math.min(1,progress/goal)*100)+"%";
     const thresholds=[0.35,0.65,0.9];
@@ -253,8 +256,9 @@
     return {fall,spawn};
   }
   function animatePositions(movements,spawn){
-    const size=boardEl.children[0]?.getBoundingClientRect?.().height||42;
+    const size=(boardEl.children[0]?.getBoundingClientRect?.().height||42)+2;
     const promises=[];
+    if(REDUCED_MOTION)return Promise.resolve();
     for(const [index,originalRow] of movements){
       const cell=boardEl.children[index],piece=cell?.querySelector(".piece");
       if(!piece?.animate)continue;
@@ -265,12 +269,13 @@
         {transform:"translate3d(0,"+travel+"px,0) scale(.97)",opacity:spawn.has(index)?.85:1},
         {transform:"translate3d(0,0,0) scale(1.08)",offset:.83,opacity:1},
         {transform:"translate3d(0,0,0) scale(1)",opacity:1}
-      ],{duration:300+Math.min(140,Math.abs(travel)*.36),delay:(index%N)*12,easing:"cubic-bezier(.19,.8,.25,1)",fill:"both"});
+      ],{duration:235+Math.min(105,Math.abs(travel)*.21),delay:(index%N)*9,easing:"cubic-bezier(.21,.72,.24,1)",fill:"both"});
       promises.push(animation.finished.catch(()=>{}).then(()=>{cell.style.zIndex="";}));
     }
     return Promise.all(promises);
   }
   function animateSwap(a,b,reverse=false){
+    if(REDUCED_MOTION)return sleep(70);
     const first=boardEl.children[a],second=boardEl.children[b];
     const pieceA=first?.querySelector(".piece"),pieceB=second?.querySelector(".piece");
     if(!pieceA?.animate || !pieceB?.animate)return sleep(170);
@@ -281,12 +286,28 @@
       const initial=reverse?"translate3d("+x+"px,"+y+"px,0)":"translate3d(0,0,0)";
       const ending=reverse?"translate3d(0,0,0)":"translate3d("+x+"px,"+y+"px,0)";
       const anim=piece.animate([
-        {transform:initial+" scale(1)"},
-        {transform:ending+" scale(1.15)",offset:.76},
-        {transform:ending+" scale(1)"}
-      ],{duration:reverse?170:235,easing:"cubic-bezier(.24,.77,.28,1)",fill:"forwards"});
+        {transform:initial+" scale(1)",filter:"brightness(1)"},
+        {transform:ending+" scale(1.12)",offset:.68,filter:"brightness(1.14)"},
+        {transform:ending+" scale(1)",filter:"brightness(1)"}
+      ],{duration:reverse?155:198,easing:"cubic-bezier(.24,.76,.28,1)",fill:"forwards"});
       return anim.finished.catch(()=>{});
     }));
+  }
+  function showScoreFloat(index,points,chain){
+    if(REDUCED_MOTION)return;
+    const cell=boardEl.children[index];
+    const root=$("board").parentElement;
+    if(!cell || !root || !cell.getBoundingClientRect)return;
+    const bounds=cell.getBoundingClientRect(),holder=root.getBoundingClientRect();
+    const el=document.createElement("span");
+    el.className="scoreFloat";
+    el.textContent=chain>1?"COMBO ×"+chain:"+"+points;
+    el.style.left=(bounds.left-holder.left+bounds.width/2)+"px";
+    el.style.top=(bounds.top-holder.top+bounds.height/2)+"px";
+    el.style.color=chain>1?"#ffe873":"#ffffff";
+    el.addEventListener("animationend",()=>el.remove(),{once:true});
+    root.appendChild(el);
+    setTimeout(()=>el.remove(),850);
   }
   function collectPower(index,cleared,queue,activated) {
     const piece=board[index];
@@ -323,6 +344,7 @@
     render({swap:new Set([a,b])});
     let groups=groupsAtSwap;
     moves--;
+    updateHUD();
     let chain=0, clearedTotal=0;
     do{
       chain++;
@@ -347,7 +369,8 @@
       for(const index of spawns.keys())if(!activated.has(index))clear.delete(index);
       if(!clear.size)break;
       clearedTotal+=clear.size;
-      if(chain>1)toast("Sweet chain ×"+chain,670);
+      if(chain>1)toast("Sweet chain ×"+chain,530);
+      showScoreFloat([...clear][Math.floor(clear.size/2)],clear.size*(80+Math.min(chain,6)*20),chain);
       for(const index of clear){
         if(ice[index]>0){
           ice[index]--;
@@ -361,7 +384,7 @@
       render({clearing:clear});
       tone(Math.min(920,425+chain*110),.1);
       if(chain===1)vibrate();
-      await sleep(180);
+      await sleep(205);
       if(myGeneration!==generation)return;
       for(const index of clear)board[index]=null;
       for(const [index,power] of spawns){
@@ -493,7 +516,8 @@
   bind("menuRestart",()=>startLevel(currentLevel));
   bind("hintButton",hint);
   bind("resultPrimary",()=>{
-    if(mode==="won")startLevel(Math.min(LEVELS.length-1,currentLevel+1));
+    if(mode==="won" && currentLevel===LEVELS.length-1)showLevels();
+    else if(mode==="won")startLevel(currentLevel+1);
     else startLevel(currentLevel);
   });
   bind("resultRetry",()=>startLevel(currentLevel));
