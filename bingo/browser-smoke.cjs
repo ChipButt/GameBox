@@ -29,6 +29,13 @@ async function main(){
   await page.locator('#hostSale button[type="submit"]').click();
   assert.match(await page.locator('#hostMain').textContent(),/CI-001/);
   console.log('PASS ticket sale and serial assigned');
+  await page.locator('#hostSale input[name="name"]').fill('Table 1 Alex');
+  assert.equal(await page.locator('#hostSaleQuantity option').count(),4,'Existing £1/game book must reduce remaining player cap to 4');
+  assert.match(await page.locator('#hostSaleQuantity option').last().textContent(),/£4\.00\/game/);
+  await page.locator('#hostSale input[name="name"]').fill('Another player');
+  assert.equal(await page.locator('#hostSaleQuantity option').count(),5);
+  assert.match(await page.locator('#hostSaleQuantity option').last().textContent(),/£25\.00 total \(£5\.00\/game\)/);
+  console.log('PASS ticket dropdown labels total and per-game stakes and respects previous purchases');
   // Verify the physical print page is genuinely an A4 sheet split into two
   // A5 landscape tickets, and every 90-ball number cell is square.
   await page.evaluate(()=>{window.print=()=>{window.__printInvoked=true}});
