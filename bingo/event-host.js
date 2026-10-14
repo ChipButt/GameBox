@@ -74,8 +74,8 @@ function render(){
     '<label>How many tickets for this player?<select name="quantity">'+Array.from({length:5},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' — '+money((i+1)*event.ticketPricePence*5)+'</option>').join('')+'</select></label>'+
     '<button type="submit" class="hostButton hostPrimary" '+(event.started||event.finishedAt?'disabled':'')+'>Record cash sale & issue cards</button></form>'+
     (event.started?'<p class="hostWarning">Ticket sales are locked after the first number is drawn.</p>':'')+
-    '<div class="hostMiniInfo"><strong>'+core.availableCards().length+' unsold cards available</strong><p>Print the library first, then issue the exact serial numbers shown in the sale ledger.</p>'+
-    '<button class="hostButton" data-host-action="print">Print / save ticket cards</button> '+
+    '<div class="hostMiniInfo"><strong>'+core.availableCards().length+' unsold cards available</strong><p>Print two A5 landscape cards per A4 sheet (square number cells), then issue the exact serials shown in the sales ledger.</p>'+
+    '<button class="hostButton" data-host-action="print">Print A5 cards (2 per A4)</button> '+
     '<button class="hostButton" data-host-action="more-cards">Create 24 more cards</button></div></section>'+
     '<section class="hostCard"><span class="hostEyebrow">ISSUED CARDS</span><h3>'+event.sales.reduce((a,x)=>a+x.quantity,0)+' cards sold</h3>'+
     '<div class="hostLedger">'+(sales.length?sales.map(x=>'<div class="hostLedgerRow"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.cardIds.join(', '))+'</small></div><div class="hostSoldAction"><strong>'+money(x.collectedPence)+'</strong>'+(event.started?'':'<button class="hostButton" data-host-action="refund" data-sale-id="'+esc(x.id)+'">Void / refund</button>')+'</div></div>').join(''):'<p class="hostMuted">No sales recorded yet.</p>')+'</div>'+
