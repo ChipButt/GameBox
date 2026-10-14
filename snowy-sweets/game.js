@@ -4,12 +4,14 @@
   const N = 8;
   // All normal match pieces come from the same Kenney Pixel Platformer Food Expansion.
   // Sprite art is bundled locally; CSS only arranges the artwork and animates it.
-  const ART = ["0014","0041","0043","0056","0058","0108"].map(n=>"assets/tile_"+n+".png");
-  const NAMES = ["ICED DONUTS","CANDY CANES","ICE POPS","MARSHMALLOWS","BISCUITS","FROSTED CAKES"];
+  const ART = ["0014","0041","0043","0058","0080","0082"].map(n=>"assets/tile_"+n+".png");
+  const NAMES = ["ICED DOUGHNUTS","CANDY CANES","ICE LOLLIES","BISCUITS","ICE CREAMS","FROSTED SUNDAES"];
   const GLASS = "assets/ice_block.png";
   const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  const POWER_STRIPE = "assets/tile_0057.png";
-  const GIFT = "../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png";
+  // Pixel stripes decorate, rather than replace, the original sweet silhouettes.
+  const POWER_ROW = "assets/tile_0097.png";
+  const POWER_COL = "assets/tile_0096.png";
+  const PARTICLE = "assets/tile_0096.png";
   const LEVELS = [
     {kind:"collect",target:0,goal:8,moves:24},
     {kind:"collect",target:1,goal:12,moves:23},
@@ -135,7 +137,7 @@
     else if(level.kind==="ice")label="BREAK ALL THE ICE";
     else label="REACH THE SCORE";
     $("missionLabel").textContent=label;
-    $("missionIcon").src=level.kind==="collect"?ART[level.target]:level.kind==="ice"?GLASS:GIFT;
+    $("missionIcon").src=level.kind==="collect"?ART[level.target]:level.kind==="ice"?GLASS:ART[0];
     $("movesValue").classList.toggle("lowMoves",moves<=5);
     $("missionProgress").textContent=progress.toLocaleString("en-GB")+" / "+goal.toLocaleString("en-GB");
     $("missionFill").style.width=(Math.min(1,progress/goal)*100)+"%";
@@ -160,19 +162,22 @@
         piece.dataset.pieceId=String(board[i].id);
         const art=document.createElement("img");
         art.className="candy";
-        art.src=board[i].s==="burst"?GIFT:ART[board[i].t];
+        art.src=ART[board[i].t];
         art.alt="";art.draggable=false;
         piece.appendChild(art);
         if(board[i].s){
           el.classList.add("power-"+board[i].s);
-          if(board[i].s!=="burst"){
-            const mark=document.createElement("img");
-            mark.className="powerStripe";mark.src=POWER_STRIPE;mark.alt="";
-            mark.draggable=false;piece.appendChild(mark);
-          }else{
-            const mark=document.createElement("img");
-            mark.className="powerBurstMark";mark.src=POWER_STRIPE;mark.alt="";
-            piece.appendChild(mark);
+          el.setAttribute("aria-label",el.getAttribute("aria-label")+", "+(board[i].s==="burst"?"burst":board[i].s==="row"?"row clearing":"column clearing")+" power");
+          const band=document.createElement("img");
+          band.className="powerBand";
+          band.src=board[i].s==="col"?POWER_COL:POWER_ROW;
+          band.alt="";band.draggable=false;
+          piece.appendChild(band);
+          if(board[i].s==="burst"){
+            const second=document.createElement("img");
+            second.className="powerBand powerBandCross";
+            second.src=POWER_COL;second.alt="";second.draggable=false;
+            piece.appendChild(second);
           }
         }
         el.appendChild(piece);
@@ -180,7 +185,7 @@
       if(flags.clearing?.has(i)){
         for(let j=0;j<3;j++){
           const particle=document.createElement("img");
-          particle.src=POWER_STRIPE;particle.alt="";particle.className="popParticle";
+          particle.src=PARTICLE;particle.alt="";particle.className="popParticle";
           particle.style.setProperty("--direction",String((j*120+i*41)%360)+"deg");
           particle.style.setProperty("--distance",String(20+((i+j)%5)*5)+"px");
           particle.style.setProperty("--delay",String(j*24)+"ms");
