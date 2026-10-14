@@ -174,7 +174,7 @@ function markCall(){
 }
 function showError(e){notice(e?.message||String(e))}
 host.addEventListener('click',async e=>{
- const tabButton=e.target.closest('[data-host-tab]');
+ const tabButton=e.target.closest('.hostTabs > button[data-host-tab]');
  if(tabButton){tab=tabButton.dataset.hostTab;render();return}
  const b=e.target.closest('[data-host-action]');if(!b)return;
  const action=b.dataset.hostAction;
