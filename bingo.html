@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#eefaf5">
 <title>GameBox Bingo · Chip In Games</title>
 <link rel="stylesheet" href="bingo/bingo.css?v=1">
+<link rel="stylesheet" href="bingo/event-host.css?v=1">
 </head>
 <body>
 <main class="bingoApp">
@@ -21,9 +22,9 @@
     <div class="heroCard">
       <div class="bingoBalls"><span>9</span><span>0</span></div>
       <h2>Ready to play?</h2>
-      <p>Run the room as Bingo Master or join a live game on your own device.</p>
+      <p>Host a five-game Bingo In evening, or join as a player.</p>
       <div class="roleGrid">
-        <button id="openMaster" class="bigChoice gold"><strong>Bingo Master</strong><small>Create, issue cards and run the game</small></button>
+        <button id="openMaster" class="bigChoice gold"><strong>Bingo Master</strong><small>Tickets, numbers, cash prizes and music</small></button>
         <button id="openPlayer" class="bigChoice blue"><strong>Player</strong><small>Join a live digital-card session</small></button>
       </div>
     </div>
@@ -206,6 +207,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
-<script src="bingo/bingo.js?v=1"></script>
+<script src="bingo/bingo.js?v=2"></script>
+<script src="bingo/event-model.js?v=1"></script>
+<script src="bingo/event-host.js?v=1"></script>
 </body>
 </html>
