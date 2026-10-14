@@ -53,7 +53,7 @@ function render(){
     '<div class="hostColumns"><section class="hostCard hostFeature"><span class="hostEyebrow">NOW PLAYING</span><h3>Game '+(event.gameIndex+1)+' · '+stageLabel[s]+'</h3>'+
     '<div class="hostBall">'+(state.called.at(-1)||'—')+'</div><p>'+state.called.length+' of 90 numbers called</p>'+
     '<button class="hostButton hostPrimary hostBig" data-host-action="draw" '+(event.finishedAt?'disabled':'')+'>Draw next number</button>'+
-    '<div class="hostButtonRow"><button class="hostButton" data-host-action="advance" '+(event.finishedAt?'disabled':'')+'>Next prize stage →</button>'+
+    '<div class="hostButtonRow"><button class="hostButton" data-host-action="advance" '+(event.finishedAt||s==='house'?'disabled':'')+'>Next prize stage →</button>'+
     '<button class="hostButton" data-host-action="undo">Undo last number</button></div>'+
     '<div class="hostPrize"><span>Current '+stageLabel[s]+' allocation</span><strong>'+money(pot[s])+'</strong><small>'+money(rem)+' remains to be paid</small></div>'+
     '<button class="hostButton hostNext" data-host-action="next-game" '+(event.finishedAt?'disabled':'')+'>'+(event.gameIndex===4?'Finish evening':'Complete game → Next game')+'</button>'+
@@ -78,7 +78,7 @@ function render(){
     '<button class="hostButton" data-host-action="print">Print / save ticket cards</button> '+
     '<button class="hostButton" data-host-action="more-cards">Create 24 more cards</button></div></section>'+
     '<section class="hostCard"><span class="hostEyebrow">ISSUED CARDS</span><h3>'+event.sales.reduce((a,x)=>a+x.quantity,0)+' cards sold</h3>'+
-    '<div class="hostLedger">'+(sales.length?sales.map(x=>'<div class="hostLedgerRow"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.cardIds.join(', '))+'</small></div><strong>'+money(x.collectedPence)+'</strong></div>').join(''):'<p class="hostMuted">No sales recorded yet.</p>')+'</div>'+
+    '<div class="hostLedger">'+(sales.length?sales.map(x=>'<div class="hostLedgerRow"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.cardIds.join(', '))+'</small></div><div class="hostSoldAction"><strong>'+money(x.collectedPence)+'</strong>'+(event.started?'':'<button class="hostButton" data-host-action="refund" data-sale-id="'+esc(x.id)+'">Void / refund</button>')+'</div></div>').join(''):'<p class="hostMuted">No sales recorded yet.</p>')+'</div>'+
     '<p class="hostMuted">When checking winners, enter the CI-xxx serial printed on the card.</p></section></div>';
  }else if(tab==='prizes'){
    const pots=a.gamePots;
@@ -97,6 +97,7 @@ function render(){
     '<label>Ticket price, per game (£)<select name="ticketPrice">'+[50,100,150,200,250,300,400,500].map(p=>'<option value="'+p+'" '+(event.ticketPricePence===p?'selected':'')+'>'+money(p)+'</option>').join('')+'</select></label>'+
     '<div class="hostMiniInfo"><strong>Five games included</strong><p>Each printed card is reused for all five separately drawn games. Full-book price is five times the per-game ticket price.</p></div>'+
     '<button class="hostButton hostPrimary" type="submit" '+(event.sales.length||event.started?'disabled':'')+'>Save event details</button></form>'+
+    '<div class="hostMiniInfo"><strong>Caller voice</strong><p>Use your microphone for a traditional hosted evening. Alternatively, let your Mac speak the numbers.</p><label class="hostCheck"><input id="hostVoice" type="checkbox" '+(document.getElementById('speakCalls').checked?'checked':'')+'> Computer reads called numbers aloud</label></div>'+
     '<div class="hostMiniInfo"><strong>Start a completely new event</strong><p>This clears live calls and ticket assignments. Export your report first; local records for the current event are replaced.</p><button class="hostButton hostDanger" data-host-action="reset">New event (clear this evening)</button></div></section>'+
     '<section class="hostCard"><span class="hostEyebrow">RUNNING CHECKLIST</span><h3>Ready for the pub?</h3>'+
     '<ul class="hostChecklist"><li>Bring your speaker, microphone, Mac, power lead and cash tin</li><li>Print enough reusable numbered cards and bring pens</li><li>Check your venue\'s bingo arrangements and permitted stakes</li><li>Check you have permission for every uploaded music track to be played publicly</li><li>Record each sale before drawing the first number</li><li>Open the audience display on the venue screen</li><li>Reconcile all cash prizes and export the report afterwards</li></ul></section></div>';
@@ -115,6 +116,7 @@ function csvCell(v){const s=String(v??'');return /[,"\r\n]/.test(s)?'"'+s.replac
 function makeCSV(){
  const lines=[['BINGO IN EVENT REPORT',event.title],['Venue',event.venue],['Date',event.date],['Game count',event.gameCount],[],['Venue hosting fee (separate invoice)',M.pounds(event.hostingFeePence??15000)],['Total stakes collected',M.pounds(accounting().takingsPence)],['Cash prizes paid',M.pounds(accounting().paidPence)],['Unpaid prizes',M.pounds(accounting().outstandingPence)],[],['TICKET SALES'],['Player','Cards','Card serials','Cash collected']];
  event.sales.forEach(s=>lines.push([s.name,s.quantity,s.cardIds.join(' '),M.pounds(s.collectedPence)]));
+ lines.push([],['VOIDED / REFUNDED SALES'],['Player','Cards','Refund paid']);(event.refunds||[]).forEach(s=>lines.push([s.name,s.cardIds.join(' '),M.pounds(s.collectedPence)]));
  lines.push([],['PRIZES PAID'],['Game','Prize','Winner','Card serial','Amount']);
  event.payouts.forEach(p=>lines.push([p.gameIndex+1,stageLabel[p.stage],p.winner,p.cardId,M.pounds(p.amountPence)]));
  lines.push([],['GAME PRIZE ALLOCATION'],['Game','1 Line','2 Lines','Full House','Total']);
@@ -179,10 +181,23 @@ host.addEventListener('click',async e=>{
  try{
   if(action==='draw'){if(event.finishedAt)throw Error('This event is finished.');document.getElementById('drawNumber').click()}
   if(action==='undo')document.getElementById('undoCall').click();
-  if(action==='advance')document.getElementById('advancePrize').click();
+  if(action==='advance'){if(stage()==='house')throw Error('Full House is the final stage. Complete this game instead.');if(remaining()>0)throw Error('Record the '+money(remaining())+' '+stageLabel[stage()]+' prize payout before advancing.');document.getElementById('advancePrize').click()}
   if(action==='print')core.print();
   if(action==='more-cards'){core.addCards(24);render();notice('Added 24 unique ticket cards. Print them before selling.')}
   if(action==='export')downloadReport();
+  if(action==='refund'){
+    if(event.started||event.finishedAt)throw Error('Refunds are only possible before the first ball is called.');
+    const sale=event.sales.find(x=>x.id===b.dataset.saleId);
+    if(!sale)throw Error('Sale not found.');
+    if(!window.confirm('Void '+sale.cardIds.join(', ')+' and refund '+money(sale.collectedPence)+' to '+sale.name+'?'))return;
+    for(const serial of sale.cardIds){
+      const issue=snapshot().assignments.find(x=>x.cardId===serial);
+      if(issue)core.returnIssue(issue.id);
+    }
+    event.sales=event.sales.filter(x=>x.id!==sale.id);
+    (event.refunds||(event.refunds=[])).push({...sale,refundedAt:new Date().toISOString()});
+    save();notice('Sale voided. Return '+money(sale.collectedPence)+' cash to '+sale.name+'.');
+  }
   if(action==='music-toggle')toggleMusic();
   if(action==='music-next')playTrack(trackIndex+1);
   if(action==='music-play')playTrack(Number(b.dataset.index));
@@ -246,6 +261,7 @@ host.addEventListener('submit',e=>{
 });
 host.addEventListener('change',async e=>{
  if(e.target.id==='hostMusicUpload'){await addTracks([...e.target.files]);e.target.value=''}
+ if(e.target.id==='hostVoice'){document.getElementById('speakCalls').checked=e.target.checked;localStorage.setItem('bingoin.speak',e.target.checked?'yes':'no')}
  if(e.target.id==='hostPauseOnCall')localStorage.setItem('gamebox.bingo.pause-music',e.target.checked?'yes':'no');
  if(e.target.id==='hostVolume')audio.volume=Number(e.target.value)/100;
 });
@@ -262,5 +278,6 @@ document.getElementById('newSession').addEventListener('click',e=>{
 },true);
 window.addEventListener('gamebox-bingo-change',()=>{markCall();render()});
 window.addEventListener('storage',e=>{if(e.key===KEY){event=loadEvent();render();publish()}});
+document.getElementById('speakCalls').checked=localStorage.getItem('bingoin.speak')==='yes';
 render();publish();loadTracks();
 })();
