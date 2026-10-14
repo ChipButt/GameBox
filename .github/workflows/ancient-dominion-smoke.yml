@@ -1,0 +1,32 @@
+name: Ancient Dominion visual smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ancient-dominion/index.html'
+      - 'ancient-dominion/assets/**'
+      - 'ancient-dominion/tools/browser-qa.cjs'
+      - '.github/workflows/ancient-dominion-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - run: |
+          which google-chrome || which chromium
+          python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/ancient-http.log 2>&1 &
+          sleep 2
+      - run: node ancient-dominion/tools/browser-qa.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ancient-dominion-visual-screenshots
+          path: /tmp/ancient-*.png
