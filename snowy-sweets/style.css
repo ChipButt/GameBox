@@ -457,3 +457,41 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
 .cell.is-falling .piece,.cell.is-dragging .piece{
   will-change:transform;
 }
+
+
+/* v11: image-backed star pings on EVERY consumed candy and a larger burst
+   precisely where four/five sweets converge to form a new power-up. */
+.cell.sweet-ping{z-index:7}
+.cell.is-merging{z-index:13}
+.cell.is-merging .piece{will-change:transform,opacity}
+.cell.sweet-ping::after{
+  content:"";pointer-events:none;position:absolute;
+  z-index:16;left:-20%;top:-20%;width:140%;height:140%;
+  background:url("assets/fx/ping.svg") center center / contain no-repeat;
+  image-rendering:pixelated;opacity:0;
+  transform-origin:center;
+  animation:sweetDestructionPing 170ms cubic-bezier(.2,.75,.2,1) both;
+}
+.cell.special-born{z-index:12}
+.cell.special-born::before{
+  content:"";pointer-events:none;position:absolute;
+  z-index:17;left:-48%;top:-48%;width:196%;height:196%;
+  background:url("assets/fx/ping.svg") center / contain no-repeat;
+  image-rendering:pixelated;transform-origin:center;
+  animation:specialMergePing 275ms cubic-bezier(.14,.77,.24,1) both;
+}
+@keyframes sweetDestructionPing{
+  0%{transform:scale(.36) rotate(-12deg);opacity:0}
+  35%{transform:scale(1.16) rotate(0deg);opacity:1}
+  72%{transform:scale(1.32) rotate(4deg);opacity:.9}
+  100%{transform:scale(1.48) rotate(8deg);opacity:0}
+}
+@keyframes specialMergePing{
+  0%{transform:scale(.2) rotate(-14deg);opacity:0}
+  23%{transform:scale(1.14) rotate(0deg);opacity:1}
+  58%{transform:scale(1.25) rotate(4deg);opacity:1}
+  100%{transform:scale(1.55) rotate(12deg);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .cell.sweet-ping::after,.cell.special-born::before{animation:none;opacity:0}
+}
