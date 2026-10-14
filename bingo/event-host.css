@@ -1,0 +1,99 @@
+/* Bingo In — purpose-built Mac and mobile event console. */
+#masterScreen.withHost{--hostNavy:#09233e;--hostBlue:#134c7c;--hostGold:#f0bf38;--hostPaper:#f4f7fb;--hostInk:#112b47;max-width:1440px;margin:0 auto;color:var(--hostInk)}
+#masterScreen.withHost .masterHeader{margin:8px 0 14px}
+.hostDashboard{background:transparent;margin:0 0 16px}
+.hostBanner{display:flex;justify-content:space-between;align-items:center;gap:18px;background:linear-gradient(115deg,#0b2b48,#135583);color:#fff;border-radius:20px;padding:23px 26px;box-shadow:0 18px 35px #0a325129}
+.hostEyebrow{display:block;font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:#b98110}
+.hostBanner .hostEyebrow{color:#f4cd66}
+.hostBanner h2{font-size:clamp(25px,4vw,36px);line-height:1.05;margin:9px 0 6px;font-weight:850;letter-spacing:-.035em;color:white}
+.hostBanner p{margin:0;color:#d5e4f3;font-size:14px}
+.hostBannerActions{display:flex;flex-wrap:wrap;gap:9px}
+.hostButton{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #c9d6e4;border-radius:11px;background:#fff;color:#123958;font-size:14px;font-weight:750;padding:11px 14px;cursor:pointer;min-height:43px;text-align:center;line-height:1.2;transition:background .12s,transform .12s}
+.hostButton:hover:not(:disabled){background:#eaf2fa;transform:translateY(-1px)}
+.hostButton:focus-visible{outline:3px solid #f4c44a;outline-offset:3px}
+.hostButton:disabled{opacity:.4;cursor:not-allowed}
+.hostBanner .hostButton{background:#ffffff13;color:#fff;border-color:#ffffff53}
+.hostBanner .hostButton:hover{background:#ffffff32}
+.hostPrimary{background:#dca926;color:#111f33;border-color:#bc8e1b}
+.hostPrimary:hover:not(:disabled){background:#edbd41}
+.hostDanger{color:#9d2734;border-color:#e9a7aa;background:#fff9f9}
+.hostTabs{display:flex;gap:5px;flex-wrap:wrap;margin:14px 0;padding:5px;background:#e4edf6;border:1px solid #d5e0eb;border-radius:13px}
+.hostTabs button{flex:1;min-width:128px;background:transparent;color:#344e68;border:0;border-radius:9px;padding:12px 10px;font-weight:800;cursor:pointer;font-size:14px}
+.hostTabs button.active{background:#fff;color:#0c395b;box-shadow:0 2px 9px #102d4819}
+.hostTabs button:focus-visible{outline:3px solid #dca926}
+.hostMetrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 15px}
+.hostMetric{padding:17px 16px;background:#fff;border:1px solid #dce5ec;border-radius:14px;box-shadow:0 4px 9px #071f3510}
+.hostMetric small{display:block;text-transform:uppercase;color:#5c7285;font-size:11px;font-weight:800;letter-spacing:.04em}
+.hostMetric strong{display:block;font-size:clamp(22px,3.3vw,30px);color:#0b3556;line-height:1.15;margin-top:7px;font-variant-numeric:tabular-nums}
+.hostSteps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 0 15px}
+.hostSteps span{padding:10px 4px;background:#e7edf3;color:#60768b;border:1px solid #d7e1e9;border-radius:9px;text-align:center;font-size:12px;font-weight:850}
+.hostSteps span.now{background:#d8ecf9;color:#0e4d7d;border-color:#7cb2d4}
+.hostSteps span.done{background:#e7f5e9;color:#28693a;border-color:#b1d9bd}
+.hostColumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:15px;align-items:start}
+.hostCard{background:white;border:1px solid #d7e1eb;border-radius:16px;padding:23px;box-shadow:0 7px 20px #072a4814;min-width:0;margin:0 0 14px}
+.hostColumns .hostCard{margin:0}
+.hostCard h3{font-size:clamp(21px,3vw,26px);line-height:1.12;margin:5px 0 17px;color:#0e3150;font-weight:850}
+.hostCard h4{font-size:16px;margin:8px 0}
+.hostCard label{display:block;color:#3d5771;font-size:13px;font-weight:800;margin:0 0 12px}
+.hostCard label input:not([type=checkbox]):not([type=range]):not([type=file]),.hostCard label select{display:block;width:100%;min-height:45px;border:1px solid #b8c9d9;background:#fff;border-radius:9px;padding:9px 11px;margin-top:6px;color:#122d46;font-size:16px;font-weight:600}
+.hostCard input:focus,.hostCard select:focus{outline:2px solid #ebbd40;outline-offset:1px}
+.hostCard form .hostButton{width:100%;margin:8px 0}
+.hostBall{height:145px;width:145px;background:radial-gradient(circle at 28% 20%,#fff5d0,#e9b52d 72%,#9c6606);border-radius:100%;box-shadow:inset 0 -13px 18px #b47b2440,0 9px 0 #8a5815,0 16px 25px #0002;display:flex;align-items:center;justify-content:center;font-size:79px;font-weight:1000;color:#152b40;margin:18px auto;line-height:1}
+.hostFeature{text-align:center}
+.hostFeature h3{font-size:25px}
+.hostFeature .hostEyebrow{text-align:left}
+.hostFeature p{color:#53718c;font-weight:700}
+.hostBig{font-size:20px;min-height:65px;width:100%;letter-spacing:-.01em}
+.hostButtonRow{display:flex;gap:10px;justify-content:center;margin-top:11px}
+.hostButtonRow>*{flex:1}
+.hostPrize{display:flex;align-items:center;flex-direction:column;border-top:1px solid #dce6ef;border-bottom:1px solid #dce6ef;padding:16px;margin:19px 0}
+.hostPrize span{font-size:13px;font-weight:800;color:#60768b}
+.hostPrize strong{font-size:31px;color:#0c3a5b;margin:5px 0}
+.hostPrize small{color:#60768b;font-size:12px;font-weight:700}
+.hostNext{width:100%;background:#10456f;color:white;border-color:#10456f}
+.hostNext:hover:not(:disabled){background:#1b5f91}
+.hostMuted{font-size:13px;line-height:1.5;color:#566d81}
+.hostMiniInfo{border-radius:12px;background:#eff5fb;border:1px solid #d7e6f2;padding:14px;margin-top:15px;color:#294a67;text-align:left}
+.hostMiniInfo strong{display:block;font-size:13px}
+.hostMiniInfo p{font-size:13px;line-height:1.5;margin:6px 0 9px}
+.hostMiniInfo .hostButton{margin:2px}
+.hostWarning{background:#fff1da;border-radius:9px;padding:12px;color:#88551c;font-weight:750}
+.hostLedger{max-height:360px;overflow-y:auto}
+.hostLedgerRow{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:12px 1px;border-bottom:1px solid #e2eaf1}
+.hostLedgerRow strong{font-size:14px;color:#123b5a}
+.hostLedgerRow small{display:block;font-size:12px;color:#6a8092;margin-top:3px;overflow-wrap:anywhere}
+.hostLedgerRow>strong{flex:none;font-variant-numeric:tabular-nums}
+.hostTableScroll{width:100%;overflow-x:auto}
+.hostTable{width:100%;border-collapse:collapse;font-size:14px;text-align:left}
+.hostTable th,.hostTable td{padding:12px 9px;border-bottom:1px solid #e1e8ef;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hostTable thead{background:#f2f6fa}
+.hostTable th{font-weight:900;color:#173d5f}
+.hostCardHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hostCardHeader h3{margin-bottom:9px}
+.hostMusic{margin-bottom:18px}
+.hostMusicControls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+.hostUpload{cursor:pointer}
+.hostCard .hostVolume{display:flex;align-items:center;gap:12px;margin:0;padding:6px}
+.hostVolume input{width:85px}
+.hostCard .hostCheck{display:flex;align-items:center;gap:6px;margin:0;font-size:12px}
+.hostCard .hostCheck input{accent-color:#1c75af;min-width:17px;min-height:17px}
+.hostTrackList{max-height:190px;overflow-y:auto}
+.hostTrack{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #e4ebf2;font-size:13px;overflow-wrap:anywhere}
+.hostTrack span:last-child{display:flex;gap:6px;flex-shrink:0}
+.hostTrack .hostButton{padding:6px 10px;font-size:12px;min-height:33px}
+.hostNotice{padding:13px 16px;border:1px solid #efc55b;background:#fff4cf;color:#563a0a;border-radius:10px;margin-bottom:14px;font-weight:700;line-height:1.45}
+.hostChecklist{margin:0;padding-left:20px;color:#3e5a73;line-height:1.9}
+#masterScreen.withHost .masterGrid{display:none}
+#masterScreen.withHost[data-host-tab="run"] .masterGrid{display:grid;grid-template-columns:1fr}
+#masterScreen.withHost[data-host-tab="run"] .masterGrid>section{display:none}
+#masterScreen.withHost[data-host-tab="run"] .masterGrid>.callerPanel{display:block;width:100%;max-width:none}
+#masterScreen.withHost[data-host-tab="run"] .callerPanel>.callerTop,#masterScreen.withHost[data-host-tab="run"] .callerPanel>.callerControls,#masterScreen.withHost[data-host-tab="run"] .callerPanel>.buttonRow{display:none}
+#masterScreen.withHost[data-host-tab="tickets"] .masterGrid{display:grid;grid-template-columns:1fr}
+#masterScreen.withHost[data-host-tab="tickets"] .masterGrid>section{display:none}
+#masterScreen.withHost[data-host-tab="tickets"] .masterGrid>.stockPanel{display:block}
+#masterScreen.withHost .numberBoard{grid-template-columns:repeat(10,minmax(0,1fr))}
+#masterScreen.withHost .numberCell{min-width:0;aspect-ratio:1;display:grid;place-items:center}
+#masterScreen.withHost .numberCell.called{box-shadow:inset 0 0 0 2px #f1bc29}
+#masterScreen.withHost .roomCodeBox{display:none}
+@media(max-width:850px){.hostColumns{grid-template-columns:1fr}.hostMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}.hostBanner{align-items:flex-start;flex-direction:column}.hostBannerActions{width:100%}.hostBannerActions .hostButton{flex:1}}
+@media(max-width:540px){.hostBanner{padding:19px}.hostCard{padding:18px}.hostTabs button{font-size:12px;min-width:40%;padding:10px 7px}.hostMetrics{gap:8px}.hostMetric{padding:13px 11px}.hostMetric strong{font-size:23px}.hostSteps{gap:3px}.hostSteps span{font-size:10px;padding:8px 0}.hostBall{width:120px;height:120px;font-size:65px}.hostButtonRow{flex-direction:column}.hostMusicControls{align-items:stretch;flex-direction:column}.hostMusicControls>button,.hostMusicControls>.hostVolume{width:100%}}
