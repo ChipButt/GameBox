@@ -8,11 +8,40 @@
   const NAMES = ["ICED DOUGHNUTS","CANDY CANES","ICE LOLLIES","BISCUITS","ICE CREAMS","FROSTED SUNDAES"];
   const GLASS = "assets/ice_block.png";
   const SPECIAL_NAMES = ["doughnut","cane","lolly","biscuit","icecream","sundae"];
-  const SPECIAL_ART = Object.fromEntries(["row","col","burst"].map(kind=>[
+  // The atlas is one 192x96 RGBA PNG containing 18 finished, fully rasterised
+  // specials (6 sweets x 3 types). Crop it ONCE, outside the gameplay loop.
+  // This avoids Safari's unreliable SVG-with-embedded-PNG rendering.
+  const SPECIAL_TYPES=["row","col","burst"];
+  const SPECIAL_ART=Object.fromEntries(SPECIAL_TYPES.map(kind=>[kind,Array(ART.length).fill(null)]));
+  const SPECIAL_FALLBACK=Object.fromEntries(SPECIAL_TYPES.map(kind=>[
     kind,SPECIAL_NAMES.map(name=>"assets/pieces/"+name+"_"+kind+".svg")
   ]));
   const FX_ART = {row:"assets/fx/row.svg",col:"assets/fx/col.svg",burst:"assets/fx/burst.svg"};
-  function spriteUrl(piece){return piece.s ? SPECIAL_ART[piece.s]?.[piece.t]||ART[piece.t]:ART[piece.t];}
+  function spriteUrl(piece){
+    return piece.s ? (SPECIAL_ART[piece.s]?.[piece.t] || SPECIAL_FALLBACK[piece.s]?.[piece.t] || ART[piece.t]):ART[piece.t];
+  }
+  function loadSpecialAtlas(){
+    return new Promise(resolve=>{
+      const atlas=new Image();
+      atlas.onload=()=>{
+        try{
+          if(atlas.naturalWidth!==192||atlas.naturalHeight!==96)throw Error("Unexpected atlas dimensions");
+          for(let row=0;row<3;row++)for(let col=0;col<ART.length;col++){
+            const canvas=document.createElement("canvas");
+            canvas.width=canvas.height=32;
+            const ctx=canvas.getContext("2d");
+            if(!ctx)throw Error("Canvas unavailable");
+            ctx.imageSmoothingEnabled=false;
+            ctx.drawImage(atlas,col*32,row*32,32,32,0,0,32,32);
+            SPECIAL_ART[SPECIAL_TYPES[row]][col]=canvas.toDataURL("image/png");
+          }
+          resolve(true);
+        }catch(err){console.error("Could not load Snowy Sweets PNG specials",err);resolve(false);}
+      };
+      atlas.onerror=()=>resolve(false);
+      atlas.src="assets/pieces/special-atlas.png?v=12";
+    });
+  }
   const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   const LEVELS = [
     {kind:"collect",target:0,goal:8,moves:24},
@@ -278,6 +307,13 @@
       if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
       else await sleep(REDUCED_MOTION?0:165);
     }
+    // Remove the consumed sprites BEFORE cancelling the fill-forwards
+    // animations. Previously cancellation briefly restored full-size sweets
+    // in their old cells, causing a visible jerk/flicker on iPhone Safari.
+    for(const index of indices){
+      const piece=board[index];
+      if(piece)spriteEls.get(piece.id)?.remove();
+    }
     for(const a of effects)a.cancel();
     for(const cell of marked){
       cell.classList.remove("sweet-ping","is-merging");
@@ -371,46 +407,53 @@
     for(const cell of movingCells)cell.classList.remove("is-falling");
   }
   async function animateSwap(a,b,valid,preview=null){
-    const na=board[a]&&spriteEls.get(board[a].id);
-    const nb=board[b]&&spriteEls.get(board[b].id);
-    if(!na||!nb){await sleep(65);return;}
-    const ca=cellAt(a),cb=cellAt(b);
-    ca.classList.add("is-dragging");cb.classList.add("is-dragging");
+    const step=cellStride();
+    const dx=(b%N-a%N)*step.x,dy=(Math.floor(b/N)-Math.floor(a/N))*step.y;
+    const fromA=preview?.b===b?[preview.dx,preview.dy]:[0,0];
+    const fromB=preview?.b===b?[-preview.dx*.28,-preview.dy*.28]:[0,0];
+    // COMMIT FIRST: both sprites are now physically in their destination
+    // cells, so cancelling their completed animations cannot snap them back.
+    if(valid){swap(a,b);render();}
+    const atB=valid?board[b]:board[a],atA=valid?board[a]:board[b];
+    const nodeA=atB&&spriteEls.get(atB.id),nodeB=atA&&spriteEls.get(atA.id);
+    if(!nodeA||!nodeB)return;
+    const cellA=cellAt(a),cellB=cellAt(b);
+    cellA.classList.add("is-dragging");cellB.classList.add("is-dragging");
     if(REDUCED_MOTION){
-      na.style.transform="";nb.style.transform="";
-      ca.classList.remove("is-dragging");cb.classList.remove("is-dragging");
+      nodeA.style.transform="";nodeB.style.transform="";
+      cellA.classList.remove("is-dragging");cellB.classList.remove("is-dragging");
       return;
     }
-    const step=cellStride(),dx=(b%N-a%N)*step.x,dy=(Math.floor(b/N)-Math.floor(a/N))*step.y;
-    const fromA=preview&&preview.b===b?[preview.dx,preview.dy]:[0,0];
-    const fromB=preview&&preview.b===b?[-preview.dx*.28,-preview.dy*.28]:[0,0];
     const effects=[];
-    const moves=[[na,dx,dy,fromA],[nb,-dx,-dy,fromB]];
-    for(const [node,x,y,from] of moves){
-      if(!node.animate)continue;
-      const initial="translate3d("+from[0]+"px,"+from[1]+"px,0)";
-      const dest="translate3d("+x+"px,"+y+"px,0)";
+    const firstStart=valid?[fromA[0]-dx,fromA[1]-dy]:fromA;
+    const secondStart=valid?[fromB[0]+dx,fromB[1]+dy]:fromB;
+    for(const [node,start,travel] of [[nodeA,firstStart,[dx,dy]],[nodeB,secondStart,[-dx,-dy]]]){
+      const tr=(p)=>"translate3d("+p[0]+"px,"+p[1]+"px,0)";
       const frames=valid?[
-        {transform:initial+" scale(1)",offset:0},
-        {transform:dest+" scale(1.035)",offset:.81},
-        {transform:dest+" scale(1)",offset:1}
-      ]:(preview&&preview.b===b?[
-        {transform:initial,offset:0},
-        {transform:"translate3d(0,0,0)",offset:1}
+        {transform:tr(start)+" scale(1.035)",offset:0},
+        {transform:tr([0,0])+" scale(1)",offset:1}
+      ]:preview?.b===b?[
+        {transform:tr(start),offset:0},
+        {transform:tr([0,0]),offset:1}
       ]:[
-        {transform:initial,offset:0},
-        {transform:dest,offset:.44},
-        {transform:initial,offset:1}
-      ]);
-      effects.push(node.animate(frames,{duration:valid?Math.max(95,150-(Math.abs(from[0]+from[1])*1.05)):(preview?115:170),
-        easing:"cubic-bezier(.19,.73,.25,1)",fill:"forwards"}));
+        {transform:tr([0,0]),offset:0},
+        {transform:tr(travel)+" scale(1.035)",offset:.45},
+        {transform:tr([0,0]),offset:1}
+      ];
+      const animation=node.animate(frames,{
+        duration:valid?145:(preview?.b===b?115:165),
+        easing:valid?"cubic-bezier(.18,.8,.26,1)":"cubic-bezier(.2,.65,.32,1)",
+        fill:"both"
+      });
+      effects.push(animation);
     }
-    if(effects.length)await Promise.all(effects.map(anim=>anim.finished.catch(()=>{})));
-    else await sleep(valid?135:160);
-    // Cancel just before reparenting. The next render happens in the same task.
-    na.style.transform="";nb.style.transform="";
-    for(const effect of effects)effect.cancel();
-    ca.classList.remove("is-dragging");cb.classList.remove("is-dragging");
+    try{await Promise.all(effects.map(effect=>effect.finished.catch(()=>{})));}
+    finally{
+      nodeA.style.transform="";nodeB.style.transform="";
+      // Their current DOM positions ARE the landing positions.
+      for(const effect of effects)effect.cancel();
+      cellA.classList.remove("is-dragging");cellB.classList.remove("is-dragging");
+    }
   }
   function showScoreFloat(index,points,chain){
     if(REDUCED_MOTION)return;
@@ -521,8 +564,7 @@
     if(!valid){
       mode="playing";render();return;
     }
-    swap(a,b);
-    render();
+    // The FLIP animation already swapped the logical pieces and landed them.
     let groups=groupsAtSwap;
     moves--;
     updateHUD();
@@ -766,10 +808,13 @@
   $("playButton").textContent="Play Level "+(currentLevel+1);
   $("soundLabel").textContent="Sound "+(settings.sound?"On":"Off");
   $("soundButton").querySelector("img").src="../assets/gamebox/kenney/icons/Game Icons/White/2x/"+(settings.sound?"audioOn":"audioOff")+".png";
-  // Preload dedicated static artwork during the level-introduction screen.
-  for(const artwork of Object.values(SPECIAL_ART).flat()){
-    const img=new Image();img.src=artwork;
-  }
+  // Decode the static RGBA atlas before the first playable move.
+  const play=$("playButton");
+  play.disabled=true;
+  loadSpecialAtlas().then(ok=>{
+    play.disabled=false;
+    if(ok && mode!=="busy")render();
+  });
   for(const artwork of Object.values(FX_ART)){
     const img=new Image();img.src=artwork;
   }
