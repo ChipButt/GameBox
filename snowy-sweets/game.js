@@ -2,6 +2,15 @@
 (() => {
   "use strict";
   const N = 8;
+  // A single animation language for the entire match → resolve → fall loop.
+  // Clear/morph must be long enough to read, while completed moves have no
+  // arbitrary dead waits. Durations in milliseconds (normal-motion mode).
+  const MOTION=Object.freeze({
+    swap:235,invalid:260,invalidPreview:200,
+    clear:260,merge:355,form:340,
+    fallBase:330,fallPerPixel:.32,fallMaximum:570,
+    beam:310,burst:400,settle:65,celebrate:340
+  });
   // All normal match pieces come from the same Kenney Pixel Platformer Food Expansion.
   // Sprite art is bundled locally; CSS only arranges the artwork and animates it.
   const ART = ["assets/tile_0014.png","assets/candy-cane-complete.png","assets/ice-lolly-complete.png","assets/tile_0058.png","assets/tile_0080.png","assets/tile_0082.png"];
@@ -270,54 +279,50 @@
     const effects=[],marked=[];
     if(!REDUCED_MOTION){
       for(const i of indices){
-        const node=board[i]&&spriteEls.get(board[i].id);
+        const piece=board[i],node=piece&&spriteEls.get(piece.id);
         if(!node)continue;
-        const cell=cellAt(i);
-        // Ping art is an actual transparent pixel sprite, displayed behind
-        // all consumed sweets (including those flying into a power-up).
+        const cell=cellAt(i),target=converging.get(i);
         cell.classList.add("sweet-ping");
         marked.push(cell);
         if(!node.animate)continue;
-        const target=converging.get(i);
-        let keyframes,duration;
+        let frames,duration;
         if(target!==undefined){
           const from=cell.getBoundingClientRect(),to=cellAt(target).getBoundingClientRect();
           const dx=to.left-from.left,dy=to.top-from.top;
-          duration=205;
-          keyframes=[
+          duration=MOTION.merge;
+          cell.classList.add("is-merging");
+          frames=[
             {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:0},
-            {transform:"translate3d("+dx*.38+"px,"+dy*.38+"px,0) scale(.88)",opacity:1,offset:.43},
+            {transform:"translate3d("+dx*.16+"px,"+dy*.16+"px,0) scale(1.07)",opacity:1,offset:.2},
+            {transform:"translate3d("+dx*.64+"px,"+dy*.64+"px,0) scale(.74)",opacity:1,offset:.68},
             {transform:"translate3d("+dx+"px,"+dy+"px,0) scale(.08)",opacity:0,offset:1}
           ];
-          cell.classList.add("is-merging");
         }else{
-          duration=165;
-          keyframes=[
+          duration=MOTION.clear;
+          frames=[
             {transform:"scale(1)",opacity:1,offset:0},
-            {transform:"scale(1.17)",opacity:1,offset:.4},
+            {transform:"scale(1.15)",opacity:1,offset:.34},
+            {transform:"scale(1.21)",opacity:.9,offset:.55},
             {transform:"scale(.1)",opacity:0,offset:1}
           ];
         }
-        const anim=node.animate(keyframes,{
-          duration,easing:target!==undefined?"cubic-bezier(.26,.65,.3,1)":"cubic-bezier(.25,.16,.72,.56)",
+        const anim=node.animate(frames,{
+          duration,
+          easing:target!==undefined?"cubic-bezier(.31,.02,.27,1)":"cubic-bezier(.17,.75,.31,1)",
           fill:"forwards"
         });
         effects.push(anim);
       }
       if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
-      else await sleep(REDUCED_MOTION?0:165);
     }
-    // Remove the consumed sprites BEFORE cancelling the fill-forwards
-    // animations. Previously cancellation briefly restored full-size sweets
-    // in their old cells, causing a visible jerk/flicker on iPhone Safari.
+    // Remove sprites before dropping the animation's fill-forwards state.
+    // Otherwise Safari briefly flashes the sweets at their original position.
     for(const index of indices){
       const piece=board[index];
       if(piece)spriteEls.get(piece.id)?.remove();
     }
-    for(const a of effects)a.cancel();
-    for(const cell of marked){
-      cell.classList.remove("sweet-ping","is-merging");
-    }
+    for(const effect of effects)effect.cancel();
+    for(const cell of marked)cell.classList.remove("sweet-ping","is-merging");
   }
   function toast(message,ms=1100) {
     const el=$("gameToast");clearTimeout(toastTimer);
@@ -395,11 +400,12 @@
       const dist=(originalRow-Math.floor(index/N))*step.y;
       const isNew=spawn.has(index);
       const a=sprite.animate([
-        {transform:"translate3d(0,"+dist+"px,0) scale(1)",opacity:isNew?.9:1,offset:0},
-        {transform:"translate3d(0,0,0) scale(1.045,.95)",opacity:1,offset:.84},
+        {transform:"translate3d(0,"+dist+"px,0) scale(1)",opacity:isNew?.85:1,offset:0},
+        {transform:"translate3d(0,"+(dist*.27)+"px,0) scale(1)",opacity:1,offset:.68},
+        {transform:"translate3d(0,0,0) scale(1.035,.96)",opacity:1,offset:.91},
         {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:1}
-      ],{duration:175+Math.min(115,Math.abs(dist)*.19),
-        delay:0,easing:"cubic-bezier(.18,.79,.22,1)",fill:"both"});
+      ],{duration:Math.min(MOTION.fallMaximum,MOTION.fallBase+Math.abs(dist)*MOTION.fallPerPixel),
+        delay:0,easing:"cubic-bezier(.2,.73,.23,1)",fill:"both"});
       effects.push(a);
     }
     if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
@@ -441,7 +447,7 @@
         {transform:tr([0,0]),offset:1}
       ];
       const animation=node.animate(frames,{
-        duration:valid?145:(preview?.b===b?115:165),
+        duration:valid?MOTION.swap:(preview?.b===b?MOTION.invalidPreview:MOTION.invalid),
         easing:valid?"cubic-bezier(.18,.8,.26,1)":"cubic-bezier(.2,.65,.32,1)",
         fill:"both"
       });
@@ -510,31 +516,37 @@
         {transform:"scale(.15) rotate(-12deg)",opacity:0},
         {transform:"scale(1.12) rotate(0deg)",opacity:1,offset:.55},
         {transform:"scale(1.5) rotate(12deg)",opacity:0}
-      ],{duration:kind==="burst"?235:185,easing:"cubic-bezier(.18,.73,.3,1)",fill:"forwards"});
+      ],{duration:kind==="burst"?MOTION.burst:MOTION.beam,easing:"cubic-bezier(.2,.62,.26,1)",fill:"forwards"});
       anim.finished.catch(()=>{}).then(()=>{anim.cancel();flash.remove()});
     }
   }
-  function playCreatedPowerEffect(indices){
-    if(REDUCED_MOTION)return;
+  async function playCreatedPowerEffect(indices){
+    if(!indices.length)return;
+    const running=[],born=[];
     for(const index of indices){
       const piece=board[index],sprite=piece&&spriteEls.get(piece.id);
       if(!piece?.s||!sprite)continue;
-      // Animate the artwork INSIDE the sprite. Gravity moves the outer
-      // sprite so these two motions never fight each other in Safari.
       const art=sprite.querySelector(".candy");
-      if(!art?.animate)continue;
-      const anim=art.animate([
-        {transform:"scale(.8) rotate(-9deg)",filter:"brightness(1.6)",offset:0},
-        {transform:"scale(1.23) rotate(4deg)",filter:"brightness(1.9)",offset:.38},
-        {transform:"scale(1) rotate(0deg)",filter:"brightness(1)",offset:1}
-      ],{duration:250,easing:"cubic-bezier(.14,.8,.25,1)"});
-      anim.finished.catch(()=>{});
-      // Attach the birth flash to the MOVING candy rather than the fixed
-      // board square, so it follows the special during the first cascade.
+      if(!art)continue;
       sprite.classList.add("special-born");
-      setTimeout(()=>sprite.classList.remove("special-born"),280);
-      tone(piece.s==="burst"?1040:880,.10);
+      born.push(sprite);
+      if(!REDUCED_MOTION&&art.animate){
+        const anim=art.animate([
+          {transform:"scale(.72) rotate(-8deg)",filter:"brightness(1.7)",offset:0},
+          {transform:"scale(1.18) rotate(4deg)",filter:"brightness(1.45)",offset:.43},
+          {transform:"scale(1.08) rotate(-2deg)",filter:"brightness(1.15)",offset:.72},
+          {transform:"scale(1) rotate(0deg)",filter:"brightness(1)",offset:1}
+        ],{duration:MOTION.form,easing:"cubic-bezier(.19,.73,.25,1)",fill:"both"});
+        running.push(anim);
+      }
+      tone(piece.s==="burst"?1040:880,.16);
     }
+    if(running.length){
+      await Promise.all(running.map(anim=>anim.finished.catch(()=>{})));
+      // Finish visibly at rest before gravity moves the special.
+      for(const anim of running)anim.cancel();
+    }
+    for(const sprite of born)sprite.classList.remove("special-born");
   }
   function collectPower(index,cleared,queue,activated) {
     const piece=board[index];
@@ -625,16 +637,27 @@
         if(piece){piece.s=power;created.push(index);}
       }
       render();
-      playCreatedPowerEffect(created);
+      // Formation is a reward moment: let the new special fully transform
+      // before the column settles. No detached or overlapping transforms.
+      await playCreatedPowerEffect(created);
+      if(currentGeneration!==generation)return;
       const falling=applyGravity();
       render();
       updateHUD();
       await animatePositions(falling.fall,falling.spawn);
       if(currentGeneration!==generation)return;
       groups=matches(board);
+      // A small visual beat between consecutive chains distinguishes
+      // one cascade from the next without stalling ordinary single matches.
+      if(groups.length && !REDUCED_MOTION)await sleep(MOTION.settle);
     }while((groups.length>0) && chain<40);
     if(currentGeneration!==generation)return;
     render();updateHUD();
+    if(progress>=goal && !REDUCED_MOTION){
+      // Let the winning clear visibly land before opening the result sheet.
+      await sleep(MOTION.celebrate);
+      if(currentGeneration!==generation)return;
+    }
     if(progress>=goal){
       finish(true);
     }else if(moves<=0){
