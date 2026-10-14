@@ -33,8 +33,8 @@ const fs=require('fs'), assert=require('assert');
    await page.locator('#battleAlert').click();
    assert((await page.evaluate(()=>window.__ancientGame.getState())).selected.id===hq.id,'alert did not locate HQ');
    // Issue a genuine repair command.
-   const v=afterMove.unitDetails.find(u=>u.id===selectedVillager.id);
-   await page.evaluate(p=>window.__ancientGame.tap(p.x,p.y),v);
+   await page.evaluate(id=>{const v=window.__ancientGame.getState().unitDetails.find(u=>u.id===id);window.__ancientGame.tap(v.x,v.y);},selectedVillager.id);
+   assert((await page.evaluate(()=>window.__ancientGame.getState())).selected?.id===selectedVillager.id,'worker could not be selected for repair');
    await page.locator('#actions').getByText('Repair',{exact:true}).click();
    await page.evaluate(()=>window.__ancientGame.tap(10,18));
    assert((await page.evaluate(()=>window.__ancientGame.getState())).unitDetails.some(u=>u.id===selectedVillager.id&&u.task==='repair'),'repair order not applied');
