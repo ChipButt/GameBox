@@ -134,6 +134,16 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - Six original long-form tracks with genuinely different, non-crossing course geometry; rail edges are validated against self-intersections, road chevrons show race direction, and track-selection mini-maps are generated from the same paths used by rendering, rails, collisions and lap progress
 
 
+### Bingo In — Pub Event Host
+
+**Live host:** https://chipbutt.github.io/GameBox/bingo/  ·  **Guide:** [Bingo In host instructions](bingo/HOST_GUIDE.md)
+
+The existing 90-ball Bingo Master now includes a five-game event dashboard, reusable printed ticket books, cash sale and refund ledger, automated prize splits with serial-verified payouts, downloadable CSV and printable reports, a full-screen audience number board, and a local IndexedDB playlist for music files supplied by the host.
+
+Event data and imported music remain **on the operator's browser/device**. The `/bingo/` host route has an offline cache for local physical-card events. GameBox's optional remote digital player mode still needs a network connection.
+
+Hosting fee defaults to **£150 minimum** and is tracked separately from all bingo stakes. The app's accounting safeguards do not confer gambling-law permission or music public-performance rights.
+
 ### Bingo
 - 90-ball Bingo Master and player system
 - Two caller modes: secure digital number draw or manual entry from a physical bingo ball dispenser
