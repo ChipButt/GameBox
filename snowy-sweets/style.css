@@ -382,3 +382,13 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offse
  filter:drop-shadow(0 0 6px #ffca4d) drop-shadow(0 2px 0 #8b5921);
  animation:powerPulse .75s steps(2,end) infinite alternate
 }
+
+
+/* Complete joined sprites: show both halves, centred and uncropped.
+   Both images are 32×32 true-alpha PNGs built from the existing pixel tiles. */
+.cell .candy.fullLengthCandy{
+ width:94%;height:94%;
+ object-fit:contain;object-position:center;
+ image-rendering:pixelated;
+}
+.cell.selected .candy.fullLengthCandy{transform:scale(1.025)}
