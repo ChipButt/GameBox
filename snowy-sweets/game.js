@@ -529,9 +529,10 @@
         {transform:"scale(1) rotate(0deg)",filter:"brightness(1)",offset:1}
       ],{duration:250,easing:"cubic-bezier(.14,.8,.25,1)"});
       anim.finished.catch(()=>{});
-      const cell=cellAt(index);
-      cell.classList.add("special-born");
-      setTimeout(()=>cell.classList.remove("special-born"),280);
+      // Attach the birth flash to the MOVING candy rather than the fixed
+      // board square, so it follows the special during the first cascade.
+      sprite.classList.add("special-born");
+      setTimeout(()=>sprite.classList.remove("special-born"),280);
       tone(piece.s==="burst"?1040:880,.10);
     }
   }
