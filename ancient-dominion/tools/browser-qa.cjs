@@ -24,8 +24,11 @@ const fs=require('fs'), assert=require('assert');
    assert((await page.evaluate(()=>window.__ancientGame.getFeedback())).orderCount>0,'missing click command marker');
    // A damaged HQ must be obvious, locatable and reparable by a villager.
    const hq=initial.buildingDetails.find(b=>b.type==='town'&&b.team==='blue');
-   await page.evaluate(id=>window.__ancientGame.testDamage(id,490),hq.id);
-   await page.waitForTimeout(100);
+   const damagedHp=await page.evaluate(id=>window.__ancientGame.testDamage(id,490),hq.id);
+   await page.waitForTimeout(450);
+   const damageDiag=await page.evaluate(()=>({feedback:window.__ancientGame.getFeedback(),alertClass:document.querySelector('#battleAlert').className,alertText:document.querySelector('#battleAlert').textContent,display:getComputedStyle(document.querySelector('#battleAlert')).display}));
+   console.log('DAMAGE CHECK',JSON.stringify({damagedHp,damageDiag}));
+   assert(damagedHp!==null,'test building not found');
    assert(await page.locator('#battleAlert').isVisible(),'under-attack alert missing');
    await page.locator('#battleAlert').click();
    assert((await page.evaluate(()=>window.__ancientGame.getState())).selected.id===hq.id,'alert did not locate HQ');
