@@ -262,6 +262,7 @@
     const n = Number(number);
     if (!Number.isInteger(n) || n < 1 || n > 90) return false;
     if (state.called.includes(n)) return false;
+    if (!state.started) { state.started = true; state.audit.push({ at:Date.now(), action:'start-game', source:'first-call' }); }
     state.called.push(n);
     state.audit.push({ at:Date.now(), action:"call", number:n, source });
     saveSession();
