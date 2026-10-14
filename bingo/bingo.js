@@ -508,15 +508,15 @@
     if (!cards.length) return false;
     const area = $("printArea");
     area.innerHTML = "";
-    for (let i=0;i<cards.length;i+=4) {
+    for (let i=0;i<cards.length;i+=2) {
       const sheet = document.createElement("section");
       sheet.className = "printSheet";
-      cards.slice(i,i+4).forEach((card) => {
+      cards.slice(i,i+2).forEach((card) => {
         const ticket = document.createElement("article");
         ticket.className = "printTicket";
         ticket.innerHTML = '<div class="printTitle"><strong>CHIP IN · BINGO</strong><span>' + esc(card.id) + '</span></div>' +
           renderTicket(card, false, [], new Set(), "line") +
-          '<div class="printFooter">Permanent reusable card serial · Keep this card visible when claiming Bingo</div>';
+          '<div class="printFooter">Keep this card for all 5 games · Show your card when claiming Bingo</div>';
         sheet.appendChild(ticket);
       });
       area.appendChild(sheet);
