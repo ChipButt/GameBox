@@ -12,10 +12,67 @@ label{display:block;text-align:left;font-size:11px;font-weight:900;text-transfor
 .salesStat{text-align:right}.salesStat span{display:block;font-size:9px;font-weight:900;color:var(--muted)}.salesStat strong{font-size:24px;color:var(--navy)}.roster,.issuedList,.claimList{display:grid;gap:8px}.rosterItem,.issuedItem,.claimItem{border:1px solid var(--line);background:#fbfefd;border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.rosterItem small,.issuedItem small,.claimItem small{display:block;color:var(--muted);margin-top:2px}.miniActions{display:flex;gap:6px}.miniActions button{border:0;border-radius:9px;padding:8px 10px;font-weight:850;background:#edf4f8;color:var(--navy)}.issueRow,.verifyRow{display:grid;grid-template-columns:1.2fr 1fr auto;gap:8px;align-items:end}.issueRow input,.issueRow select,.verifyRow input,.verifyRow select{margin:0}.issuedList{max-height:240px;overflow:auto;margin-top:12px}
 .callerTop{display:flex;align-items:center;justify-content:space-between;gap:14px}.currentBall{display:flex;align-items:center;gap:10px}.currentBall span{font-size:10px;font-weight:900;color:var(--muted)}.currentBall strong{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-size:45px;box-shadow:inset 0 -8px 0 rgba(0,0,0,.08)}.callerControls{margin:14px 0}.drawButton{width:100%;min-height:64px;background:var(--navy);color:#fff;font-size:20px}.callerControls label{margin:0 0 8px}.numberBoard{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:14px}.numberCell{aspect-ratio:1;border-radius:8px;background:#f1f6f4;display:grid;place-items:center;font-weight:850;color:#738296}.numberCell.called{background:var(--navy);color:#fff}.numberCell.last{background:var(--gold);color:var(--navy);box-shadow:0 0 0 3px rgba(247,189,24,.23)}.historyWrap{margin-top:14px}.callHistory{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.historyBall{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#edf4f8;color:var(--navy);font-size:12px;font-weight:900}.historyBall.void{opacity:.45;text-decoration:line-through}.verifyResult{margin-top:10px;min-height:48px;border-radius:12px;padding:12px;background:#f5f8f7;color:var(--muted)}.verifyResult.good{background:#e9f8ef;color:var(--good);font-weight:850}.verifyResult.bad{background:#fff0ef;color:var(--danger);font-weight:850}.claimBadge{min-width:32px;height:32px;border-radius:16px;background:var(--gold);display:grid;place-items:center;font-weight:1000}.claimItem.valid{border-color:#9fdab9}.claimItem.invalid{border-color:#e9b0aa}.claimItem.accepted{background:#eaf8f0}.claimItem.rejected{opacity:.65}
 .playerShell label{text-align:left}.status{min-height:22px;margin-top:10px;color:var(--danger);font-size:13px}.playerGameHeader{position:sticky;top:0;background:rgba(238,250,245,.94);backdrop-filter:blur(12px);z-index:5;padding:8px 0}.connectionPill{font-size:12px}.playerStatusCard{background:var(--navy);color:#fff;border-radius:20px;padding:16px;text-align:center;margin-bottom:12px}.playerStatusCard span{font-size:10px;font-weight:900;letter-spacing:.12em;color:#cfe2ff}.playerStatusCard strong{display:block;font-size:25px;margin:4px 0}.playerStatusCard small{color:#d7e4f5}.waitingCard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:36px;text-align:center;box-shadow:var(--shadow)}.waitingCard h3{color:var(--navy);margin:10px 0 6px}.waitingCard p{color:var(--muted);margin:0}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #d8e5ef;border-top-color:var(--navy);animation:spin .8s linear infinite;margin:auto}@keyframes spin{to{transform:rotate(360deg)}}.playerCards{display:grid;gap:14px}.playerCalled{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:14px;text-align:center}.playerCalled span{font-size:10px;color:var(--muted);font-weight:900}.playerCalled strong{display:block;color:var(--navy);font-size:36px}.playerCalled small{color:var(--muted)}
-.bingoCard{background:#fff;border:2px solid var(--navy);border-radius:18px;padding:10px;box-shadow:var(--shadow)}.cardMeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.cardMeta strong{color:var(--navy);font-size:18px}.cardMeta span{font-size:10px;font-weight:900;color:var(--muted)}.ticketGrid{display:grid;grid-template-columns:repeat(9,1fr);border-top:1px solid var(--navy);border-left:1px solid var(--navy)}.ticketCell{aspect-ratio:1.25;border-right:1px solid var(--navy);border-bottom:1px solid var(--navy);display:grid;place-items:center;font-weight:1000;background:#fff;color:var(--navy);font-size:clamp(14px,4vw,22px);position:relative}.ticketCell.blank{background:#edf4f8}.ticketCell.called::after{content:"";position:absolute;inset:13%;border-radius:50%;background:rgba(247,189,24,.42)}.ticketCell.marked{background:var(--gold)}.ticketCell.marked::after{display:none}.cardClaimRow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}.claimButton{border:0;border-radius:12px;background:var(--gold);color:var(--navy);font-weight:1000;padding:10px 16px}.claimButton:disabled{opacity:.45}.cardProgress{font-size:11px;color:var(--muted);display:flex;align-items:center}.printArea{display:none}
+.bingoCard{background:#fff;border:2px solid var(--navy);border-radius:18px;padding:10px;box-shadow:var(--shadow)}.cardMeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.cardMeta strong{color:var(--navy);font-size:18px}.cardMeta span{font-size:10px;font-weight:900;color:var(--muted)}.ticketGrid{display:grid;grid-template-columns:repeat(9,1fr);border-top:1px solid var(--navy);border-left:1px solid var(--navy)}.ticketCell{aspect-ratio:1;border-right:1px solid var(--navy);border-bottom:1px solid var(--navy);display:grid;place-items:center;font-weight:1000;background:#fff;color:var(--navy);font-size:clamp(14px,4vw,22px);position:relative}.ticketCell.blank{background:#edf4f8}.ticketCell.called::after{content:"";position:absolute;inset:13%;border-radius:50%;background:rgba(247,189,24,.42)}.ticketCell.marked{background:var(--gold)}.ticketCell.marked::after{display:none}.cardClaimRow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}.claimButton{border:0;border-radius:12px;background:var(--gold);color:var(--navy);font-weight:1000;padding:10px 16px}.claimButton:disabled{opacity:.45}.cardProgress{font-size:11px;color:var(--muted);display:flex;align-items:center}.printArea{display:none}
 @media(max-width:850px){.masterGrid{grid-template-columns:1fr}.roleGrid{grid-template-columns:1fr}.heroCard{margin-top:3vh}.numberBoard{grid-template-columns:repeat(9,1fr)}}
 @media(max-width:560px){.bingoApp{padding:10px}.heroCard,.playerShell{padding:22px;border-radius:20px}.heroCard h2,.playerShell h2{font-size:28px}.twoCol,.printOptions{grid-template-columns:1fr}.issueRow,.verifyRow{grid-template-columns:1fr}.numberBoard{grid-template-columns:repeat(10,1fr);gap:3px}.numberCell{border-radius:5px;font-size:12px}.currentBall strong{width:76px;height:76px;font-size:38px}.ticketCell{font-size:14px}.masterHeader{align-items:flex-start}}
 @media print{
-  @page{size:A4 portrait;margin:10mm}
-  body{background:#fff}.noPrint{display:none!important}.bingoApp{width:auto;margin:0;padding:0}.printArea{display:block!important}.printSheet{break-after:page;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10mm;height:277mm}.printTicket{border:2px solid #082f68;border-radius:8px;padding:5mm;display:flex;flex-direction:column;justify-content:center;break-inside:avoid}.printTicket .ticketGrid{width:100%}.printTicket .ticketCell{font-size:15px}.printTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:4mm;color:#082f68}.printTitle strong{font-size:20px}.printTitle span{font-size:11px;font-weight:800}.printFooter{text-align:center;font-size:9px;color:#687a90;margin-top:3mm}
+  /* Two full A5 landscape cards on each portrait A4 sheet, with a centre cut. */
+  @page{size:A4 portrait;margin:0}
+  html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .noPrint{display:none!important}
+  .bingoApp{width:210mm!important;max-width:none!important;margin:0!important;padding:0!important}
+  .printArea{display:block!important;margin:0!important;padding:0!important}
+  .printSheet{
+    display:grid!important;
+    grid-template-columns:210mm;
+    grid-template-rows:148.5mm 148.5mm;
+    position:relative;
+    width:210mm;
+    height:297mm;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    break-after:page;
+    page-break-after:always;
+  }
+  .printSheet:last-child{break-after:auto;page-break-after:auto}
+  .printSheet::after{
+    content:"";position:absolute;pointer-events:none;
+    top:148.5mm;left:8mm;right:8mm;
+    border-top:.25mm dashed #8797a9;
+  }
+  .printTicket{
+    width:auto;height:auto;min-width:0;min-height:0;
+    box-sizing:border-box;
+    margin:7mm 8mm;
+    padding:9mm 10mm;
+    border:1.25pt solid #082f68;border-radius:3mm;
+    background:#fff;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:5mm;break-inside:avoid;page-break-inside:avoid;
+    box-shadow:none;
+  }
+  .printTicket .printTitle{
+    display:flex;justify-content:space-between;align-items:center;
+    margin:0;color:#082f68;
+  }
+  .printTicket .printTitle strong{font-size:22pt;letter-spacing:.02em}
+  .printTicket .printTitle span{font-size:12pt;font-weight:850}
+  .printTicket .bingoCard{width:100%;min-width:0;padding:0;margin:0;border:0;border-radius:0;box-shadow:none}
+  .printTicket .cardMeta{margin-bottom:3mm}
+  .printTicket .cardMeta strong{font-size:15pt}
+  .printTicket .cardMeta span{font-size:9pt}
+  .printTicket .ticketGrid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));width:100%;margin:0}
+  .printTicket .ticketCell{
+    aspect-ratio:1 / 1;
+    width:auto;height:auto;min-width:0;min-height:0;
+    font-size:22pt;font-weight:900;line-height:1;
+    border-color:#082f68;
+  }
+  .printTicket .ticketCell.blank{background:#f1f4f8}
+  .printTicket .printFooter{
+    text-align:center;font-size:9pt;line-height:1.25;
+    font-weight:650;color:#3f5772;margin:0;
+  }
 }
