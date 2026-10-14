@@ -21,7 +21,7 @@ All six match pieces use the existing Kenney Pixel Platformer Food Expansion art
 
 The completed sprites are centred in 32×32 transparent PNG canvases and sized to fit entirely within an individual board cell; powered-up specials reuse these same complete images.
 
-The truncated-looking marshmallow and frosted-cake fragments were removed. Row, column and burst specials keep their *original sweet image*, differentiated by small Kenney pixel-art stripes and subtle animation instead of separate presents.
+The truncated-looking marshmallow and frosted-cake fragments were removed. Row, column and burst specials are now *new transparent PNG versions of their original sweet art*, assembled with the bundled source images by `power-art.js` in the browser. Gold horizontal, icy-blue vertical, and pink/gold burst highlights are baked into each sprite. No separate stripe marker is attached or positioned alongside the sweet. Small scores appear only for large clears or chains; ordinary matches are kept unobstructed.
 
 Additional source sprites from the same user's Kenney library:
 - `tile_0096.png`, `tile_0097.png` · special-move strips and match particles
@@ -31,7 +31,7 @@ Additional source sprites from the same user's Kenney library:
 - Kenney UI Pack / Adventure · buttons, frame and menu icons
 - Kenney Retro Textures Fantasy · wood table surface
 
-**Art is not generated with CSS shapes.** CSS is used for sprite layout and motion only; all candy and board-tile art comes from existing PNG files.
+**Art is not generated with CSS shapes.** The runtime renders fully transparent RGBA PNG special variants from the original Kenney PNG art using Canvas, while CSS only handles positioning and motion. No fake checkerboard transparency is used.
 
 ## Deployment
 - Play: `https://chipbutt.github.io/GameBox/snowy-sweets/`
@@ -39,4 +39,4 @@ Additional source sprites from the same user's Kenney library:
 - This candidate is not yet added to Advent2026. The Advent day-lock mechanism stays in the parent calendar, not here.
 
 ## Testing limitations
-The game engine was verified through scripted 12-level match/move/cascade simulations and JavaScript syntax checks. Manual browser gameplay, visual review and device animation performance still need checking before Advent approval.
+The game engine was verified through scripted 12-level match/move/cascade simulations and JavaScript syntax checks. Manual Safari visual review, special-effect appearance and device animation performance still need checking before Advent approval.
