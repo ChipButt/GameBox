@@ -15,6 +15,16 @@ Open **https://chipbutt.github.io/GameBox/ancient-dominion/** in a mobile or des
 - **Select the Village Centre** to train villagers or advance to Bronze/Iron Age.
 - **Select Barracks** to train spearmen or archers.
 - **Tap troops and then red units/buildings** to attack.
+- **Move** highlights a destination and shows the selected unit's route as a dotted line with a target ring. An arrow at the edge of the screen points to offscreen waypoints.
+- **Attack-move** advances towards the chosen target while engaging nearby enemies, then resumes the route when enemies are defeated.
+- **Hold** makes soldiers defend within weapon range without chasing enemies.
+- **Repair** on a selected villager lets you tap a damaged friendly building; repairing consumes wood.
+- **Set rally** at the Village Centre or Barracks sends newly recruited units to a chosen position.
+- **Cancel queued** returns the resources for the last queued training order.
+- **Idle Villagers** on the map selects and centres a worker with no current assignment.
+- **Under attack** red alert jumps to the threatened building; the minimap highlights recent attacks. Damaged buildings show health bars, cracks, smoke, and fire.
+- **Tap actual unit and building sprites** to select them; you no longer have to tap precisely on the hidden ground tile.
+- **Space** pauses on desktop; **I** finds an idle villager, **M** issues a move order, **Q** enters attack-move, **1** selects the army.
 - **ARMY** selects all your combat units; **HOME** returns the camera to your village.
 - **Tap the minimap** to reposition your camera.
 
@@ -28,4 +38,8 @@ One self-contained `index.html` file, plain JavaScript and Canvas 2D, no externa
 
 ## Current scope
 
-One handcrafted skirmish map, Stone/Bronze/Iron progression, basic enemy AI, five economic resources/population counters, basic fog of war, touch navigation and trainable units. Not a feature-complete replacement for the commercial games: no historical campaigns, selectable civilizations, multiplayer, naval combat, or original artwork.
+One handcrafted skirmish map, Stone/Bronze/Iron progression, basic enemy AI, four economic resources plus population, basic fog of war, touch navigation and trainable units. Not a feature-complete replacement for the commercial games: no historical campaigns, selectable civilizations, multiplayer, naval combat, or original artwork.
+
+## Asset credits
+
+The artwork is from OpenGameArt with credited CC0 and CC BY-SA licensed packs. See [ASSET_CREDITS.md](ASSET_CREDITS.md) for each artist, source and licence. The game makes no claim to the artwork or code from the commercial Age of Empires series.
