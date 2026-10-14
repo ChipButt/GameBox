@@ -442,3 +442,8 @@
 .snowyHomeMark{position:absolute;top:8px;right:9px;width:45px;height:45px;object-fit:contain;opacity:.9}
 .toyGameSnowySweets .gameTile small{color:#ffe49b}
 @media(max-width:560px){.snowyHomeBoard{width:88px;height:88px}.snowyHomeMark{width:39px;height:39px}}
+
+/* Snowy Sweets pixel-art preview shares real snow tiles and candy sprite artwork. */
+.snowyHomeBoard{background:#e6f6ff url("../snowy-sweets/assets/snow_base.png") center / 33.333% 33.333% repeat}
+.snowyHomeBoard img{image-rendering:pixelated;background:transparent!important;filter:drop-shadow(0 2px 0 rgba(20,70,94,.28))}
+.snowyHomeBoard img:nth-child(2n){background:transparent!important}
