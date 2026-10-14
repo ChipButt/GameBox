@@ -7,6 +7,12 @@
   const ART = ["assets/tile_0014.png","assets/candy-cane-complete.png","assets/ice-lolly-complete.png","assets/tile_0058.png","assets/tile_0080.png","assets/tile_0082.png"];
   const NAMES = ["ICED DOUGHNUTS","CANDY CANES","ICE LOLLIES","BISCUITS","ICE CREAMS","FROSTED SUNDAES"];
   const GLASS = "assets/ice_block.png";
+  const SPECIAL_NAMES = ["doughnut","cane","lolly","biscuit","icecream","sundae"];
+  const SPECIAL_ART = Object.fromEntries(["row","col","burst"].map(kind=>[
+    kind,SPECIAL_NAMES.map(name=>"assets/pieces/"+name+"_"+kind+".svg")
+  ]));
+  const FX_ART = {row:"assets/fx/row.svg",col:"assets/fx/col.svg",burst:"assets/fx/burst.svg"};
+  function spriteUrl(piece){return piece.s ? SPECIAL_ART[piece.s]?.[piece.t]||ART[piece.t]:ART[piece.t];}
   const REDUCED_MOTION = !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   const LEVELS = [
     {kind:"collect",target:0,goal:8,moves:24},
@@ -172,7 +178,7 @@
       spriteEls.set(piece.id,node);
     }
     const img=node.querySelector(".candy");
-    const src=(window.SnowySweetsArt?.get(piece.t,piece.s)||ART[piece.t]);
+    const src=spriteUrl(piece);
     if(img.getAttribute("src")!==src)img.setAttribute("src",src);
     return node;
   }
@@ -222,11 +228,11 @@
           {transform:"scale(1)",opacity:1,offset:0},
           {transform:"scale(1.16)",opacity:1,offset:.36},
           {transform:"scale(.15)",opacity:0,offset:1}
-        ],{duration:195,easing:"cubic-bezier(.33,.01,.85,.5)",fill:"forwards"});
+        ],{duration:125,easing:"cubic-bezier(.25,.1,.7,.42)",fill:"forwards"});
         effects.push(a);
       }
       if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
-      else await sleep(195);
+      else await sleep(125);
     }
     for(const a of effects)a.cancel();
   }
@@ -309,8 +315,8 @@
         {transform:"translate3d(0,"+dist+"px,0) scale(1)",opacity:isNew?.9:1,offset:0},
         {transform:"translate3d(0,0,0) scale(1.045,.95)",opacity:1,offset:.84},
         {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:1}
-      ],{duration:280+Math.min(160,Math.abs(dist)*.27),
-        delay:isNew?25:0,easing:"cubic-bezier(.22,.75,.24,1)",fill:"both"});
+      ],{duration:175+Math.min(115,Math.abs(dist)*.19),
+        delay:0,easing:"cubic-bezier(.18,.79,.22,1)",fill:"both"});
       effects.push(a);
     }
     if(effects.length)await Promise.all(effects.map(a=>a.finished.catch(()=>{})));
@@ -320,7 +326,7 @@
   async function animateSwap(a,b,valid,preview=null){
     const na=board[a]&&spriteEls.get(board[a].id);
     const nb=board[b]&&spriteEls.get(board[b].id);
-    if(!na||!nb){await sleep(90);return;}
+    if(!na||!nb){await sleep(65);return;}
     const ca=cellAt(a),cb=cellAt(b);
     ca.classList.add("is-dragging");cb.classList.add("is-dragging");
     if(REDUCED_MOTION){
@@ -349,11 +355,11 @@
         {transform:dest,offset:.44},
         {transform:initial,offset:1}
       ]);
-      effects.push(node.animate(frames,{duration:valid?Math.max(100,205-(Math.abs(from[0]+from[1])*1.5)):(preview?130:245),
+      effects.push(node.animate(frames,{duration:valid?Math.max(95,150-(Math.abs(from[0]+from[1])*1.05)):(preview?115:170),
         easing:"cubic-bezier(.19,.73,.25,1)",fill:"forwards"}));
     }
     if(effects.length)await Promise.all(effects.map(anim=>anim.finished.catch(()=>{})));
-    else await sleep(valid?170:210);
+    else await sleep(valid?135:160);
     // Cancel just before reparenting. The next render happens in the same task.
     na.style.transform="";nb.style.transform="";
     for(const effect of effects)effect.cancel();
@@ -374,6 +380,62 @@
     el.addEventListener("animationend",()=>el.remove(),{once:true});
     root.appendChild(el);
     setTimeout(()=>el.remove(),850);
+  }
+  function playPowerEffects(activated){
+    if(REDUCED_MOTION || !activated.size)return;
+    const shell=boardEl.parentElement;
+    if(!shell)return;
+    const boardRect=boardEl.getBoundingClientRect();
+    const shellRect=shell.getBoundingClientRect();
+    const cell=cellAt(0).getBoundingClientRect();
+    const stride=cellStride();
+    for(const index of activated){
+      const kind=board[index]?.s;
+      if(!FX_ART[kind])continue;
+      const x=index%N,y=Math.floor(index/N);
+      const flash=document.createElement("img");
+      flash.className="power-effect power-effect-"+kind;
+      flash.src=FX_ART[kind];flash.alt="";
+      flash.setAttribute("aria-hidden","true");
+      flash.draggable=false;
+      const originX=boardRect.left-shellRect.left;
+      const originY=boardRect.top-shellRect.top;
+      if(kind==="row"){
+        flash.style.left=originX+"px";flash.style.top=(originY+y*stride.y+cell.height*.2)+"px";
+        flash.style.width=boardRect.width+"px";flash.style.height=(cell.height*.6)+"px";
+      }else if(kind==="col"){
+        flash.style.left=(originX+x*stride.x+cell.width*.2)+"px";flash.style.top=originY+"px";
+        flash.style.width=(cell.width*.6)+"px";flash.style.height=boardRect.height+"px";
+      }else{
+        flash.style.left=(originX+x*stride.x-cell.width)+"px";
+        flash.style.top=(originY+y*stride.y-cell.height)+"px";
+        flash.style.width=cell.width*3+"px";flash.style.height=cell.height*3+"px";
+      }
+      shell.appendChild(flash);
+      const anim=flash.animate(kind==="row"?[
+        {transform:"scaleX(.02)",opacity:.8},{transform:"scaleX(1)",opacity:1,offset:.55},{transform:"scaleX(1)",opacity:0}
+      ]:kind==="col"?[
+        {transform:"scaleY(.02)",opacity:.8},{transform:"scaleY(1)",opacity:1,offset:.55},{transform:"scaleY(1)",opacity:0}
+      ]:[
+        {transform:"scale(.15) rotate(-12deg)",opacity:0},
+        {transform:"scale(1.12) rotate(0deg)",opacity:1,offset:.55},
+        {transform:"scale(1.5) rotate(12deg)",opacity:0}
+      ],{duration:kind==="burst"?235:185,easing:"cubic-bezier(.18,.73,.3,1)",fill:"forwards"});
+      anim.finished.catch(()=>{}).then(()=>{anim.cancel();flash.remove()});
+    }
+  }
+  function playCreatedPowerEffect(indices){
+    if(REDUCED_MOTION)return;
+    for(const index of indices){
+      const piece=board[index],sprite=piece&&spriteEls.get(piece.id);
+      if(!piece?.s||!sprite?.animate)continue;
+      const anim=sprite.animate([
+        {filter:"drop-shadow(0 0 1px #fff)",transform:"scale(.86)"},
+        {filter:"drop-shadow(0 0 9px #ffe88a)",transform:"scale(1.15)",offset:.57},
+        {filter:"drop-shadow(0 0 2px #ffe88a)",transform:"scale(1)"}
+      ],{duration:220,easing:"cubic-bezier(.16,.78,.28,1)"});
+      anim.finished.catch(()=>{});
+    }
   }
   function collectPower(index,cleared,queue,activated) {
     const piece=board[index];
@@ -445,8 +507,9 @@
       }
       score+=Math.max(0,clear.size-3)*15;
       if(LEVELS[currentLevel].kind==="score")progress=score;
-      tone(Math.min(920,425+chain*110),.1);
+      tone(Math.min(920,425+chain*110),.09);
       if(chain===1)vibrate();
+      playPowerEffects(activated);
       await clearMatches(clear);
       if(currentGeneration!==generation)return;
       for(const index of clear){
@@ -461,6 +524,7 @@
       }
       const falling=applyGravity();
       render();
+      playCreatedPowerEffect(spawns.keys());
       updateHUD();
       await animatePositions(falling.fall,falling.spawn);
       if(currentGeneration!==generation)return;
@@ -642,8 +706,11 @@
   $("playButton").textContent="Play Level "+(currentLevel+1);
   $("soundLabel").textContent="Sound "+(settings.sound?"On":"Off");
   $("soundButton").querySelector("img").src="../assets/gamebox/kenney/icons/Game Icons/White/2x/"+(settings.sound?"audioOn":"audioOff")+".png";
-  // Generate integrated real-alpha power images once, then replace early fallback art.
-  window.SnowySweetsArt?.build(ART).then(ok=>{
-    if(ok && mode!=="busy")render();
-  }).catch(()=>{});
+  // Preload dedicated static artwork during the level-introduction screen.
+  for(const artwork of Object.values(SPECIAL_ART).flat()){
+    const img=new Image();img.src=artwork;
+  }
+  for(const artwork of Object.values(FX_ART)){
+    const img=new Image();img.src=artwork;
+  }
 })();
