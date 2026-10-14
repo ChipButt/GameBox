@@ -1,0 +1,118 @@
+{
+  "house": {
+    "source": "https://opengameart.org/content/western-european-medieval-houses-isometric-25d",
+    "download": "https://opengameart.org/sites/default/files/house1_1.png",
+    "size": [
+      178,
+      141
+    ],
+    "licence": "CC0",
+    "bytes": 51539
+  },
+  "barracks": {
+    "source": "https://opengameart.org/content/medieval-barracks-isometric-25d",
+    "download": "https://opengameart.org/sites/default/files/barracks_1.png",
+    "size": [
+      309,
+      245
+    ],
+    "licence": "CC0",
+    "bytes": 126936
+  },
+  "tower": {
+    "source": "https://opengameart.org/content/medieval-stone-guard-tower-isometric-25d",
+    "download": "https://opengameart.org/sites/default/files/watchtower_lvl2-exp_full_size.png",
+    "size": [
+      320,
+      240
+    ],
+    "licence": "CC0",
+    "bytes": 50660
+  },
+  "castle": {
+    "source": "https://opengameart.org/content/isometric-25d-western-european-castle",
+    "download": "https://opengameart.org/sites/default/files/castle_7.png",
+    "size": [
+      290,
+      245
+    ],
+    "licence": "CC0",
+    "bytes": 135604
+  },
+  "stable": {
+    "source": "https://opengameart.org/content/isometric-25d-medieval-stable",
+    "download": "https://opengameart.org/sites/default/files/stable_0.png",
+    "size": [
+      309,
+      245
+    ],
+    "licence": "CC0",
+    "bytes": 116989
+  },
+  "archery": {
+    "source": "https://opengameart.org/content/medieval-archery-range-isometric-25d",
+    "download": "https://opengameart.org/sites/default/files/archery_range.png",
+    "size": [
+      305,
+      222
+    ],
+    "licence": "CC0",
+    "bytes": 122312
+  },
+  "blacksmith": {
+    "source": "https://opengameart.org/content/medieval-blacksmith-isometric-25d",
+    "download": "https://opengameart.org/sites/default/files/blacksmith_0.png",
+    "size": [
+      289,
+      245
+    ],
+    "licence": "CC0",
+    "bytes": 116114
+  },
+  "villager": {
+    "source": "https://opengameart.org/content/germanic-worker",
+    "download": "https://opengameart.org/sites/default/files/worker_0.png",
+    "size": [
+      360,
+      936
+    ],
+    "licence": "CC BY-SA 3.0",
+    "bytes": 47753
+  },
+  "spearman": {
+    "source": "https://opengameart.org/content/germanic-warrior",
+    "download": "https://opengameart.org/sites/default/files/warrior_0.png",
+    "size": [
+      360,
+      864
+    ],
+    "licence": "CC BY-SA 3.0",
+    "bytes": 52821
+  },
+  "archer": {
+    "source": "https://opengameart.org/content/germanic-archer",
+    "download": "https://opengameart.org/sites/default/files/archer_2.png",
+    "size": [
+      360,
+      1440
+    ],
+    "licence": "CC BY-SA 3.0",
+    "bytes": 94882
+  },
+  "tree": {
+    "source": "https://opengameart.org/content/isometric-trees-1",
+    "size": [
+      170,
+      97
+    ],
+    "licence": "CC0"
+  },
+  "terrain-atlas": {
+    "source": "https://opengameart.org/content/grassland-tileset",
+    "size": [
+      1024,
+      1344
+    ],
+    "licence": "See source page (CC-BY-SA; attribution in ASSET_CREDITS.md)"
+  }
+}
