@@ -1,0 +1,31 @@
+name: Import Ancient Dominion free artwork
+on:
+  push:
+    paths:
+      - 'ancient-dominion/tools/import_art.py'
+      - '.github/workflows/ancient-dominion-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check Pillow requests beautifulsoup4
+      - name: Fetch licensed original image files
+        run: python ancient-dominion/tools/import_art.py
+      - name: Commit imported raster art
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ancient-dominion/assets
+          if ! git diff --cached --quiet; then
+            git commit -m 'Import verified OpenGameArt raster sprites for Ancient Dominion'
+            git push
+          fi
