@@ -2,17 +2,13 @@
 (() => {
   "use strict";
   const N = 8;
-  const ROOT = "../assets/gamebox/kenney/2d/";
-  const ART = [
-    ROOT + "Platformer Assets Candy/candyRed.png",
-    ROOT + "Platformer Assets Candy/candyGreen.png",
-    ROOT + "Platformer Assets Candy/candyYellow.png",
-    ROOT + "Platformer Assets Candy/canePink.png",
-    ROOT + "Platformer Assets Candy/lollipopWhiteRed.png"
-  ];
-  const NAMES = ["RED", "GREEN", "GOLD", "CANDY CANES", "LOLLIPOPS"];
-  const GLASS = ROOT + "Physics Assets/Glass elements/elementGlass013.png";
-  const GIFT = ROOT + "Platformer Assets Holiday/present_small_red.png";
+  // All normal match pieces come from the same Kenney Pixel Platformer Food Expansion.
+  // Sprite art is bundled locally; CSS only arranges the artwork and animates it.
+  const ART = ["0014","0041","0043","0056","0058","0108"].map(n=>"assets/tile_"+n+".png");
+  const NAMES = ["ICED DONUTS","CANDY CANES","ICE POPS","MARSHMALLOWS","BISCUITS","FROSTED CAKES"];
+  const GLASS = "assets/ice_block.png";
+  const POWER_STRIPE = "assets/tile_0057.png";
+  const GIFT = "../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png";
   const LEVELS = [
     {kind:"collect",target:0,goal:14,moves:20},
     {kind:"collect",target:1,goal:17,moves:20},
@@ -24,7 +20,7 @@
     {kind:"collect",target:3,goal:20,moves:19},
     {kind:"score",goal:5500,moves:18},
     {kind:"ice",moves:37,pattern:2},
-    {kind:"collect",target:4,goal:24,moves:19},
+    {kind:"collect",target:5,goal:21,moves:22},
     {kind:"score",goal:7500,moves:20}
   ];
   const ICE_PATTERNS = [
@@ -47,7 +43,8 @@
   const save = () => {try{localStorage.setItem("gamebox-snowy-sweets-v1",JSON.stringify(settings));}catch(_){}};
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve,ms));
   const rand = (n) => Math.floor(Math.random()*n);
-  const makeSweet = () => ({t:rand(ART.length),s:null});
+  let candyIdentity=0;
+  const makeSweet = () => ({id:++candyIdentity,t:rand(ART.length),s:null});
   const neighbours = (i) => {
     const x=i%N,y=Math.floor(i/N),out=[];
     if(x>0)out.push(i-1);if(x<N-1)out.push(i+1);
@@ -99,8 +96,8 @@
         const invalid=[];
         if(i%N>=2 && test[i-1].t===test[i-2].t)invalid.push(test[i-1].t);
         if(i>=2*N && test[i-N].t===test[i-2*N].t)invalid.push(test[i-N].t);
-        const choices=[0,1,2,3,4].filter(t=>!invalid.includes(t));
-        test.push({t:choices[rand(choices.length)],s:null});
+        const choices=Array.from({length:ART.length},(_,t)=>t).filter(t=>!invalid.includes(t));
+        test.push({id:++candyIdentity,t:choices[rand(choices.length)],s:null});
       }
       if(findMove(test))return test;
     }
@@ -155,16 +152,36 @@
       if(flags.swap?.has(i))el.classList.add("swap");
       if(flags.clearing?.has(i))el.classList.add("clearing");
       if(board[i]){
+        const piece=document.createElement("span");
+        piece.className="piece";
+        piece.dataset.pieceId=String(board[i].id);
         const art=document.createElement("img");
-        art.className="candy";art.src=board[i].s==="burst"?GIFT:ART[board[i].t];art.alt="";art.draggable=false;
-        el.appendChild(art);
+        art.className="candy";
+        art.src=board[i].s==="burst"?GIFT:ART[board[i].t];
+        art.alt="";art.draggable=false;
+        piece.appendChild(art);
         if(board[i].s){
           el.classList.add("power-"+board[i].s);
-          const symbol=document.createElement("span");
-          symbol.className=board[i].s==="burst"?"burstStar":"powerStripe";
-          symbol.setAttribute("aria-hidden","true");
-          if(board[i].s==="burst")symbol.textContent="★";
-          el.appendChild(symbol);
+          if(board[i].s!=="burst"){
+            const mark=document.createElement("img");
+            mark.className="powerStripe";mark.src=POWER_STRIPE;mark.alt="";
+            mark.draggable=false;piece.appendChild(mark);
+          }else{
+            const mark=document.createElement("img");
+            mark.className="powerBurstMark";mark.src=POWER_STRIPE;mark.alt="";
+            piece.appendChild(mark);
+          }
+        }
+        el.appendChild(piece);
+      }
+      if(flags.clearing?.has(i)){
+        for(let j=0;j<3;j++){
+          const particle=document.createElement("img");
+          particle.src=POWER_STRIPE;particle.alt="";particle.className="popParticle";
+          particle.style.setProperty("--direction",String((j*120+i*41)%360)+"deg");
+          particle.style.setProperty("--distance",String(20+((i+j)%5)*5)+"px");
+          particle.style.setProperty("--delay",String(j*24)+"ms");
+          el.appendChild(particle);
         }
       }
       if(ice[i]>0){
@@ -213,21 +230,63 @@
   }
   function hasOverlay(){return !!document.querySelector(".sheet.show");}
   function applyGravity() {
-    const newPositions=new Set();
+    const fall=new Map(),spawn=new Set();
     for(let x=0;x<N;x++){
       const kept=[];
       for(let y=N-1;y>=0;y--){
-        const p=board[y*N+x];
-        if(p)kept.push(p);
+        const piece=board[y*N+x];
+        if(piece)kept.push({piece,row:y});
       }
       for(let y=N-1;y>=0;y--){
-        const pos=y*N+x;
-        const next=kept[N-1-y]||makeSweet();
-        if(board[pos]!==next)newPositions.add(pos);
-        board[pos]=next;
+        const index=y*N+x;
+        const old=kept[N-1-y];
+        if(old){
+          board[index]=old.piece;
+          if(old.row!==y)fall.set(index,old.row);
+        }else{
+          board[index]=makeSweet();
+          spawn.add(index);
+          fall.set(index,y-(N-kept.length)-1);
+        }
       }
     }
-    return newPositions;
+    return {fall,spawn};
+  }
+  function animatePositions(movements,spawn){
+    const size=boardEl.children[0]?.getBoundingClientRect?.().height||42;
+    const promises=[];
+    for(const [index,originalRow] of movements){
+      const cell=boardEl.children[index],piece=cell?.querySelector(".piece");
+      if(!piece?.animate)continue;
+      const destinationRow=Math.floor(index/N);
+      const travel=(originalRow-destinationRow)*size;
+      cell.style.zIndex="5";
+      const animation=piece.animate([
+        {transform:"translate3d(0,"+travel+"px,0) scale(.97)",opacity:spawn.has(index)?.85:1},
+        {transform:"translate3d(0,0,0) scale(1.08)",offset:.83,opacity:1},
+        {transform:"translate3d(0,0,0) scale(1)",opacity:1}
+      ],{duration:300+Math.min(140,Math.abs(travel)*.36),delay:(index%N)*12,easing:"cubic-bezier(.19,.8,.25,1)",fill:"both"});
+      promises.push(animation.finished.catch(()=>{}).then(()=>{cell.style.zIndex="";}));
+    }
+    return Promise.all(promises);
+  }
+  function animateSwap(a,b,reverse=false){
+    const first=boardEl.children[a],second=boardEl.children[b];
+    const pieceA=first?.querySelector(".piece"),pieceB=second?.querySelector(".piece");
+    if(!pieceA?.animate || !pieceB?.animate)return sleep(170);
+    const rectA=first.getBoundingClientRect(),rectB=second.getBoundingClientRect();
+    const dx=rectB.left-rectA.left,dy=rectB.top-rectA.top;
+    const both=[[pieceA,dx,dy],[pieceB,-dx,-dy]];
+    return Promise.all(both.map(([piece,x,y])=>{
+      const initial=reverse?"translate3d("+x+"px,"+y+"px,0)":"translate3d(0,0,0)";
+      const ending=reverse?"translate3d(0,0,0)":"translate3d("+x+"px,"+y+"px,0)";
+      const anim=piece.animate([
+        {transform:initial+" scale(1)"},
+        {transform:ending+" scale(1.15)",offset:.76},
+        {transform:ending+" scale(1)"}
+      ],{duration:reverse?170:235,easing:"cubic-bezier(.24,.77,.28,1)",fill:"forwards"});
+      return anim.finished.catch(()=>{});
+    }));
   }
   function collectPower(index,cleared,queue,activated) {
     const piece=board[index];
@@ -246,18 +305,23 @@
     if(mode!=="playing" || hasOverlay() || !adjacent(a,b))return;
     const myGeneration=generation;
     mode="busy";selected=-1;
-    swap(a,b);render({swap:new Set([a,b])});tone(330,.07);
-    await sleep(140);
-    if(myGeneration!==generation)return;
-    let groups=matches(board);
+    tone(470,.045);
+    swap(a,b);
+    const groupsAtSwap=matches(board);
     const forced=[a,b].filter(i=>board[i]?.s);
-    if(!groups.length && !forced.length) {
-      swap(a,b);render({swap:new Set([a,b])});tone(180,.08);
-      await sleep(130);
+    swap(a,b);
+    // Keep the old pieces on screen while they actually move, not an instant re-render.
+    await animateSwap(a,b);
+    if(myGeneration!==generation)return;
+    if(!groupsAtSwap.length && !forced.length){
+      await animateSwap(a,b,true);
       if(myGeneration!==generation)return;
-      mode="playing";render();toast("Match 3 or more!");
+      mode="playing";render();tone(170,.08);toast("Try another match!");
       return;
     }
+    swap(a,b);
+    render({swap:new Set([a,b])});
+    let groups=groupsAtSwap;
     moves--;
     let chain=0, clearedTotal=0;
     do{
@@ -306,9 +370,9 @@
         if(piece)piece.s=power;
       }
       const falling=applyGravity();
-      render({spawn:falling});
+      render();
       updateHUD();
-      await sleep(200);
+      await animatePositions(falling.fall,falling.spawn);
       if(myGeneration!==generation)return;
       groups=matches(board);
     }while((groups.length>0) && chain<40);
