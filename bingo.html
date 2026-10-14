@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#eefaf5">
 <title>Bingo In! · Chip In Games</title>
 <link rel="icon" type="image/svg+xml" href="bingo/favicon.svg">
-<link rel="stylesheet" href="bingo/bingo.css?v=1">
+<link rel="stylesheet" href="bingo/bingo.css?v=2">
 <link rel="stylesheet" href="bingo/event-host.css?v=2">
 </head>
 <body>
@@ -83,13 +83,13 @@
         </div>
         <div class="buttonRow">
           <button id="addCards" class="secondary">Add 24 Cards</button>
-          <button id="printCards" class="secondary">Print / Save PDF</button>
+          <button id="printCards" class="secondary">Print A5 cards (2 per A4)</button>
         </div>
         <div class="printOptions">
           <label>From card<input id="printFrom" type="number" min="1" value="1"></label>
           <label>How many<input id="printCount" type="number" min="1" max="120" value="24"></label>
         </div>
-        <p class="smallText">Each card has a permanent serial such as CI-001. You can pre-print a stock at home, laminate it and reuse it with counters or dry-wipe markers.</p>
+        <p class="smallText">Each card is A5 landscape with square number cells. Print two per A4 sheet, cut in half and reuse for all five games.</p>
       </section>
 
       <section class="panel salesPanel">
@@ -207,7 +207,7 @@
   <section id="printArea" class="printArea"></section>
 </main>
 
-<script src="bingo/bingo.js?v=4"></script>
+<script src="bingo/bingo.js?v=5"></script>
 <script src="bingo/event-model.js?v=2"></script>
 <script src="bingo/event-host.js?v=3"></script>
 </body>
