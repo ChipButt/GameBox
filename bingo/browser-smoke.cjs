@@ -25,6 +25,8 @@ async function main(){
       title:document.querySelector('#hostTitle')?.textContent,
       notice:document.querySelector('#hostNotice')?.textContent,
       formDisabled:document.querySelector('#hostSettings button[type=submit]')?.disabled,
+      valid:document.querySelector('#hostSettings')?.checkValidity(),
+      fields:[...document.querySelector('#hostSettings').elements].map(el=>({tag:el.tagName,name:el.name,value:el.value,valid:el.validity.valid,validation:el.validationMessage})),
       storage:localStorage.getItem('gamebox.bingo.host-event.v1'),
       errors:window.__errors||[]
     }))));
