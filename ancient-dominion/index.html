@@ -11,6 +11,31 @@
 (()=>{
 const T=36,W=50,H=38, SAVE='ancient-dominion-v1', $=id=>document.getElementById(id); const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false}),mini=$('minimap'),mctx=mini.getContext('2d');
 const wrap=$('world-wrap'); let cw=390,ch=610,dpr=1,cam={x:0,y:0,zoom:1.12},paused=false,buildMode=null,selected=null,showPicker=false,last=0,uiClock=0,saveClock=0,toastDeadline=0,pointers=new Map(),gesture=null,justWon=false,elapsed=0;
+let effects=[],shots=[],orders=[],alerts=[],controlMode=null,lastThreatAt=-100,guardMode=false;
+const modeLabel={moving:'MOVE',gather:'GATHER',farm:'FARM',return:'RETURN',build:'BUILD',repair:'REPAIR',attack:'ATTACK',attackmove:'ATTACK MOVE',hold:'HOLD',idle:'IDLE'};
+function orderEffect(x,y,kind='moving'){orders.push({x,y,kind,life:2.5,max:2.5});if(orders.length>32)orders.shift();}
+function addEffect(x,y,type='hit',value=0){effects.push({x,y,type,value,life:type==='damage'?1.4:.75,max:type==='damage'?1.4:.75});if(effects.length>100)effects.shift();}
+function warnPlayer(message,x,y,urgent=false){const now=elapsed;if(urgent&&now-lastThreatAt<4)return; if(urgent)lastThreatAt=now;alerts.unshift({message,x,y,at:now,urgent});alerts=alerts.slice(0,6);notice(message);}
+function applyDamage(t,damage,source,projectile=false){
+ if(!t||t.hp<=0)return;
+ t.hp=Math.max(0,t.hp-damage);t.hitFlash=.35;t.lastHit=elapsed;
+ const x=t.x+(t.w||0)/2,y=t.y+(t.h||0)/2;
+ addEffect(x,y,'damage',Math.round(damage));addEffect(x,y,'impact');
+ if(t.team==='blue'){
+   if(t.type)warnPlayer(BLD[t.type].name+' under attack!',x,y,true);
+   else if(elapsed-lastThreatAt>4)warnPlayer('Your '+KINDS[t.kind].name+' is under attack!',x,y,true);
+ }
+}
+function dispatchShot(source,target,damage,style){shots.push({x:source.x+(source.w||0)/2,y:source.y+(source.h||0)/2,tx:target.x+(target.w||0)/2,ty:target.y+(target.h||0)/2,targetId:target.id,targetKind:target.type?'building':'unit',damage,team:source.team,progress:0,style});}
+function advanceEffects(dt){
+ for(const shot of shots){shot.progress+=dt*(shot.style==='arrow'?2.4:3.6);const target=shot.targetKind==='building'?getBuilding(shot.targetId):getUnit(shot.targetId);if(target){shot.tx=target.x+(target.w||0)/2;shot.ty=target.y+(target.h||0)/2;}
+ if(shot.progress>=1){if(target)applyDamage(target,shot.damage);shot.progress=2;}}
+ shots=shots.filter(q=>q.progress<1);
+ for(const e of effects)e.life-=dt;effects=effects.filter(e=>e.life>0);
+ for(const e of orders)e.life-=dt;orders=orders.filter(e=>e.life>0);
+ for(const b of buildings)b.hitFlash=Math.max(0,(b.hitFlash||0)-dt);
+ for(const u of units){u.hitFlash=Math.max(0,(u.hitFlash||0)-dt);u.swing=Math.max(0,(u.swing||0)-dt);}
+}
 let ground=[],objects=[],buildings=[],units=[],resources={food:220,wood:220,stone:135,gold:105},age=0,enemyClock=55,discovered=new Uint8Array(W*H),nextId=1,ended=false;
 const COLORS={blue:'#3156a4',red:'#a94232'}; const COST={house:{wood:55},barracks:{wood:155,stone:40},tower:{wood:70,stone:110},granary:{wood:90},farm:{wood:65},villager:{food:50},spearman:{food:65,wood:25},archer:{food:55,wood:45},age:{food:260,gold:140}};
 const KINDS={villager:{name:'Villager',hp:60,attack:3,range:1.1,speed:48,train:7},spearman:{name:'Spearman',hp:95,attack:12,range:1.35,speed:44,train:12},archer:{name:'Archer',hp:65,attack:9,range:4.6,speed:46,train:14}};
@@ -24,7 +49,7 @@ function spawnBuilding(type,team,x,y,ready=true){const k=BLD[type],b={id:nextId+
 function spawnUnit(kind,team,x,y){const k=KINDS[kind],u={id:nextId++,kind,team,x,y,hp:k.hp,maxHp:k.hp,task:'idle',target:null,goal:null,path:[],carry:0,carryType:null,harvestId:null,work:0,attackClock:0,frame:rand(x,y)*8,stuck:0};units.push(u);return u;}
 function terrain(){ground=[];for(let y=0;y<H;y++){let row=[];for(let x=0;x<W;x++){let r=rand(Math.floor(x/5),Math.floor(y/5),7);let water=(x>43+(y>25?-1:1))||(y<3&&x>31)||(x>37&&y<8&&x<46&&rand(x,y,11)<.4);let desert=((x<8&&y>26)||(x>29&&y>28)||(r<.14&&x<20&&y>27));row.push(water?'water':desert?'sand':'grass');}ground.push(...row);}}
 function emptyFor(x,y,w=1,h=1,ignore){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++){if(!validLand(i,j))return false;if(objects.some(o=>o.alive&&o!==ignore&&Math.abs(o.x-i)<.6&&Math.abs(o.y-j)<.6))return false;if(buildings.some(b=>b.hp>0&&i>=b.x&&i<b.x+b.w&&j>=b.y&&j<b.y+b.h))return false;}return true;}
-function generate(){nextId=1;terrain();objects=[];buildings=[];units=[];resources={food:230,wood:225,stone:135,gold:100};age=0;enemyClock=64;discovered=new Uint8Array(W*H);elapsed=0;ended=false;justWon=false;
+function generate(){effects=[];shots=[];orders=[];alerts=[];controlMode=null;lastThreatAt=-100;nextId=1;terrain();objects=[];buildings=[];units=[];resources={food:230,wood:225,stone:135,gold:100};age=0;enemyClock=64;discovered=new Uint8Array(W*H);elapsed=0;ended=false;justWon=false;
 spawnBuilding('town','blue',9,17);spawnBuilding('house','blue',5,21);spawnBuilding('town','red',35,14);spawnBuilding('house','red',40,18);spawnBuilding('barracks','red',33,21);
 [[13,21],[9,22],[12,24],[11,21]].forEach(p=>spawnUnit('villager','blue',p[0],p[1]));[[34,19],[39,22],[37,20]].forEach(p=>spawnUnit('spearman','red',p[0],p[1]));
 let fixed=[['tree',4,13],['tree',6,11],['tree',8,12],['tree',10,11],['tree',13,12],['tree',3,15],['tree',4,17],['tree',6,15],['tree',15,10],['tree',14,15],['tree',17,12],['tree',19,13],['tree',25,10],['tree',28,12],['berry',16,22],['berry',17,23],['berry',18,22],['berry',19,23],['stone',19,16],['stone',20,17],['stone',21,15],['gold',24,24],['gold',25,24],['gold',26,23],['tree',29,18],['tree',28,15],['tree',30,11],['tree',42,11],['tree',40,10],['stone',27,29],['berry',30,27]];
@@ -39,11 +64,23 @@ function pathfind(sx,sy,tx,ty,skip=0){const startX=clamp(Math.floor(sx),0,W-1),s
 while(qi<qj){const n=queue[qi++],x=n%W,y=Math.floor(n/W),dd=near(x,y);if(dd<bestD){best=n;bestD=dd}if(dd<=1&&(!occupancy(goalX,goalY,skip)||dd===1))break;
 for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1]]){const nx=x+dx,ny=y+dy;if(!inMap(nx,ny))continue;const idx=key(nx,ny);if(prev[idx]!==-2||occupancy(nx,ny,skip))continue;prev[idx]=n;queue[qj++]=idx;}}
 const out=[];let cursor=best;while(cursor!==start&&cursor>=0&&out.length<200){out.push({x:cursor%W+.5,y:Math.floor(cursor/W)+.5});cursor=prev[cursor]}out.reverse();return out;}
-function setMove(u,x,y,task='moving',target=null){u.task=task;u.target=target;u.goal={x,y};u.path=pathfind(u.x,u.y,x,y);u.stuck=0;}
+function setMove(u,x,y,task='moving',target=null){
+ u.task=task;u.target=target;u.goal={x,y};u.path=pathfind(u.x,u.y,x,y);u.stuck=0;
+ if(u.team==='blue'){orderEffect(x,y,task);u.lastOrder=task;}
+}
 function nearestTown(u){return buildings.filter(b=>b.team===u.team&&(b.type==='town'||b.type==='granary')&&b.complete&&b.hp>0).sort((a,b)=>dist(u,{x:a.x+1,y:a.y+1})-dist(u,{x:b.x+1,y:b.y+1}))[0];}
 function assignGather(u,o){if(u.kind!=='villager'||!o)return;u.harvestId=o.id;u.farmId=null;setMove(u,o.x+.5,o.y+.5,'gather',{category:'object',id:o.id});}
 function assignFarm(u,b){if(u.kind!=='villager'||!b||!b.complete)return;u.farmId=b.id;u.harvestId=null;setMove(u,b.x+b.w/2,b.y+b.h/2,'farm',{category:'building',id:b.id});}
-function assignAttack(u,entity,category){if(u.kind==='villager'||!entity)return;setMove(u,entity.x+(.5*(entity.w||1)),entity.y+(.5*(entity.h||1)),'attack',{category,id:entity.id});}
+function assignAttack(u,entity,category){if(u.kind==='villager'||!entity)return;
+ setMove(u,entity.x+(.5*(entity.w||1)),entity.y+(.5*(entity.h||1)),'attack',{category,id:entity.id});u.attackMoveReturn=u.task==='attackmove'?u.goal:null;
+}
+function assignRepair(u,b){if(u.kind!=='villager'||b.team!==u.team||b.hp>=b.maxHp){notice('Select a damaged friendly building to repair.');return;}
+ u.harvestId=null;u.farmId=null;setMove(u,b.x+b.w/2,b.y+b.h/2,'repair',{category:'building',id:b.id});}
+function orderAttackMove(units,x,y){for(const u of units){if(u.kind==='villager')continue;setMove(u,x,y,'attackmove');u.attackMoveReturn={x,y};}controlMode=null;notice('Attack-move: soldiers will fight enemies encountered along the way.');}
+function findEnemy(u,radius){const near=units.filter(v=>v.team!==u.team&&v.hp>0&&dist(u,v)<radius).map(v=>({entity:v,category:'unit',d:dist(u,v)}));
+ for(const b of buildings)if(b.team!==u.team&&b.hp>0){const p={x:b.x+b.w/2,y:b.y+b.h/2},d=dist(u,p);if(d<radius)near.push({entity:b,category:'building',d});}
+ return near.sort((a,b)=>a.d-b.d)[0];
+}
 function pay(cost){if(!Object.entries(cost).every(([k,v])=>resources[k]>=v)){notice('Not enough resources.');return false;}for(const [k,v] of Object.entries(cost))resources[k]-=v;return true;}
 function costLabel(cost){return Object.entries(cost||{}).map(([k,v])=>v+' '+({food:'F',wood:'W',stone:'S',gold:'G'}[k])).join('  ');}
 function populationLimit(team='blue'){return buildings.filter(b=>b.team===team&&b.hp>0&&b.complete).reduce((n,b)=>n+(b.type==='town'?6:b.type==='house'?5:0),0);}
@@ -51,7 +88,7 @@ function population(team='blue'){return units.filter(u=>u.team===team&&u.hp>0).l
 function notice(message){$('hint').textContent=message;$('hint').classList.add('show');toastDeadline=performance.now()+2700;}
 function queueTrain(b,kind){if(population()>=populationLimit()){notice('Build houses to increase your population limit.');return;}if(b.queue.length>=4){notice('Training queue is full.');return;}if(pay(COST[kind])){b.queue.push(kind);notice(KINDS[kind].name+' queued.');renderUi();}}
 function setBuild(type){showPicker=false;$('buildPicker').classList.remove('show');buildMode=type;notice('Place '+BLD[type].name+' on open ground. Tap where it should be built.');renderUi();}
-function placeBuilding(x,y){const type=buildMode,k=BLD[type],sx=Math.floor(x-k.w/2),sy=Math.floor(y-k.h/2);if(!emptyFor(sx,sy,k.w,k.h)){notice('Cannot build here. Choose clear ground.');return;}if(!pay(COST[type]))return;const b=spawnBuilding(type,'blue',sx,sy,false);const builder=units.find(u=>u.id===selected?.id&&u.kind==='villager'&&u.hp>0)||units.find(u=>u.team==='blue'&&u.kind==='villager'&&u.hp>0);if(builder)setMove(builder,sx+k.w/2,sy+k.h/2,'build',{category:'building',id:b.id});buildMode=null;selected={kind:'building',id:b.id};notice(BLD[type].name+' foundation placed.');renderUi();}
+function placeBuilding(x,y){const type=buildMode,k=BLD[type],sx=Math.floor(x-k.w/2),sy=Math.floor(y-k.h/2);if(!emptyFor(sx,sy,k.w,k.h)){notice('Cannot build here. Choose clear ground.');return;}if(!pay(COST[type]))return;const b=spawnBuilding(type,'blue',sx,sy,false);orderEffect(sx+k.w/2,sy+k.h/2,'build');const builder=units.find(u=>u.id===selected?.id&&u.kind==='villager'&&u.hp>0)||units.find(u=>u.team==='blue'&&u.kind==='villager'&&u.hp>0);if(builder)setMove(builder,sx+k.w/2,sy+k.h/2,'build',{category:'building',id:b.id});buildMode=null;selected={kind:'building',id:b.id};notice(BLD[type].name+' foundation placed.');renderUi();}
 function advance(){if(age>=2){notice('You have reached the Iron Age.');return;}if(pay(COST.age)){age++;for(const u of units)if(u.team==='blue')u.maxHp+=age*2;notice('Your civilisation has advanced to the '+['Stone Age','Bronze Age','Iron Age'][age]+'!');renderUi();}}
 function allArmy(){const arr=units.filter(u=>u.team==='blue'&&u.kind!=='villager'&&u.hp>0);if(!arr.length){notice('Train soldiers at the barracks first.');return;}selected={kind:'unit',id:arr[0].id,army:true};const avg={x:arr.reduce((n,u)=>n+u.x,0)/arr.length,y:arr.reduce((n,u)=>n+u.y,0)/arr.length};center(avg.x,avg.y);notice(arr.length+' soldiers selected. Tap land to move or enemies to attack.');renderUi();}
 function allSelectedUnits(){if(selected?.army)return units.filter(u=>u.team==='blue'&&u.kind!=='villager'&&u.hp>0);const o=selectedObject();return selected?.kind==='unit'&&o?.team==='blue'?[o]:[];}
@@ -59,8 +96,14 @@ function actAt(x,y){if(ended)return;if(buildMode){placeBuilding(x,y);return;}con
 if(ours){const selectedWorkers=allSelectedUnits().filter(u=>u.kind==='villager');if(building?.type==='farm'&&building.complete&&selectedWorkers.length){selectedWorkers.forEach(u=>assignFarm(u,building));notice('Working the farm.');}else selected=ours;renderUi();return;}
 const selUnits=allSelectedUnits();if(selUnits.length){if(targetUnit?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,targetUnit,'unit'));notice('Attack!');}else if(building?.team==='red'){selUnits.forEach(u=>u.kind==='villager'?setMove(u,x,y):assignAttack(u,building,'building'));notice('Attack the rival settlement!');}else if(thing){selUnits.forEach(u=>u.kind==='villager'?assignGather(u,thing):setMove(u,x,y));if(selUnits.some(u=>u.kind==='villager'))notice('Gathering '+thing.type+'.');}else {selUnits.forEach((u,i)=>setMove(u,x+(i%3)*.6,y+Math.floor(i/3)*.5));}renderUi();return;}
 if(targetUnit){selected={kind:'unit',id:targetUnit.id};}else if(building){selected={kind:'building',id:building.id};}else if(thing){selected={kind:'object',id:thing.id};}else selected=null;renderUi();}
-function progressUnits(dt){for(const u of units){if(u.hp<=0)continue;u.frame+=dt*6;u.attackClock=Math.max(0,u.attackClock-dt);
+function progressUnits(dt){advanceEffects(dt);for(const u of units){if(u.hp<=0)continue;u.frame+=dt*6;u.attackClock=Math.max(0,u.attackClock-dt);
 if(u.path.length){const p=u.path[0],d=dist(u,p),step=KINDS[u.kind].speed/T*dt;if(d<Math.max(.055,step)){u.x=p.x;u.y=p.y;u.path.shift();}else{u.x+=(p.x-u.x)/d*step;u.y+=(p.y-u.y)/d*step;}}
+if(u.team==='blue'&&u.kind!=='villager'&&u.task!=='hold'&&u.task!=='attack'){
+ const foe=findEnemy(u,u.task==='attackmove'?5:3.5);
+ if(foe&&(['idle','moving','attackmove'].includes(u.task))){if(u.task==='attackmove')u.attackMoveReturn=u.goal?{...u.goal}:u.attackMoveReturn;assignAttack(u,foe.entity,foe.category);}
+}
+if(u.task==='moving'&&!u.path.length&&u.goal&&dist(u,u.goal)<1.4)u.task='idle';
+if(u.task==='attackmove'&&!u.path.length&&u.goal&&dist(u,u.goal)<1.4)u.task='idle';
 if(u.team==='red'&&u.kind!=='villager'){const base=getBuilding(buildings.find(b=>b.team==='red'&&b.type==='town')?.id);const enemies=units.filter(v=>v.team==='blue'&&v.hp>0);const buildingsBlue=buildings.filter(b=>b.team==='blue'&&b.hp>0);const options=[...enemies.map(v=>({entity:v,category:'unit',d:dist(u,v)})),...buildingsBlue.map(b=>({entity:b,category:'building',d:dist(u,{x:b.x+b.w/2,y:b.y+b.h/2})}))].sort((a,b)=>a.d-b.d);
 if(options.length&&((elapsed>56&&options[0].d<20)||options[0].d<7)){const target=getTarget(u),newTarget=options[0];if(!target||u.target?.id!==newTarget.entity.id&&(options[0].d<4||rand(Math.floor(elapsed),u.id)<.15)){assignAttack(u,newTarget.entity,newTarget.category);}}else if(base&&dist(u,base)>11&&!u.path.length)setMove(u,base.x+2,base.y+3,'moving');}
 if(u.task==='gather'){let o=getObj(u.harvestId);if(!o){const previousType=u.carryType==='wood'?'tree':u.carryType==='food'?'berry':u.carryType;o=objects.filter(q=>q.alive&&q.type===previousType).sort((a,b)=>dist(u,a)-dist(u,b))[0];if(o)u.harvestId=o.id;else if(u.carry>0){u.carry=18;const home=nearestTown(u);if(home){setMove(u,home.x+home.w/2,home.y+home.h/2,'return',{category:'building',id:home.id});}continue;}else {u.task='idle';continue;}}
@@ -69,18 +112,32 @@ else if(dist(u,{x:o.x+.5,y:o.y+.5})<1.6){u.path.length=0;u.work+=dt;const rate=5
 else if(!u.path.length||u.goal&&dist(u.goal,{x:o.x+.5,y:o.y+.5})>.8){setMove(u,o.x+.5,o.y+.5,'gather',{category:'object',id:o.id});u.harvestId=o.id;}}
 else if(u.task==='farm'){const farm=getBuilding(u.farmId);if(!farm||!farm.complete){u.task='idle';continue;}const pos={x:farm.x+farm.w/2,y:farm.y+farm.h/2};if(u.carry>=18){const town=nearestTown(u);if(town)setMove(u,town.x+town.w/2,town.y+town.h/2,'return',{category:'building',id:town.id});else u.task='idle';}else if(dist(u,pos)<3){u.path=[];u.carry=Math.min(18,u.carry+dt*5.5);u.carryType='food';}else if(!u.path.length)u.path=pathfind(u.x,u.y,pos.x,pos.y,farm.id);}
 else if(u.task==='return'){const town=getTarget(u)||nearestTown(u);if(!town){u.task='idle';continue;}if(dist(u,{x:town.x+town.w/2,y:town.y+town.h/2})<2.8){resources[u.carryType]=(resources[u.carryType]||0)+Math.ceil(u.carry);u.carry=0;const obj=getObj(u.harvestId),farm=getBuilding(u.farmId);if(obj){assignGather(u,obj);}else if(farm){assignFarm(u,farm);}else u.task='idle';}else if(!u.path.length){u.path=pathfind(u.x,u.y,town.x+town.w/2,town.y+town.h/2,town.id);}}
+else if(u.task==='repair'){
+ const b=getTarget(u);if(!b||b.hp<=0||b.hp>=b.maxHp||b.team!==u.team){u.task='idle';u.target=null;continue;}
+ const pos={x:b.x+b.w/2,y:b.y+b.h/2};
+ if(dist(u,pos)<Math.max(b.w,b.h)*.65+1.2){
+   u.path=[];u.swing=Math.max(u.swing||0,.2);
+   if(u.team==='blue'&&resources.wood<1){u.task='idle';warnPlayer('Repairs stopped — gather more wood.',pos.x,pos.y);continue;}
+   const amount=Math.min(b.maxHp-b.hp,dt*18);
+   b.hp+=amount;if(u.team==='blue')resources.wood=Math.max(0,resources.wood-amount/9);
+   if(Math.random()<dt*2)addEffect(pos.x,pos.y,'repair');
+ }else if(!u.path.length)u.path=pathfind(u.x,u.y,pos.x,pos.y,b.id);
+}
 else if(u.task==='build'){const b=getTarget(u);if(!b||b.complete){u.task='idle';continue;}const dest={x:b.x+b.w/2,y:b.y+b.h/2};if(dist(u,dest)<Math.max(b.w,b.h)*.65+1){u.path.length=0;b.progress=Math.min(1,b.progress+dt/.77/25);b.hp=Math.max(b.hp,b.maxHp*b.progress);if(b.progress>=1){b.complete=true;b.hp=b.maxHp;u.task='idle';notice(BLD[b.type].name+' completed.');renderUi();}}else if(!u.path.length)u.path=pathfind(u.x,u.y,dest.x,dest.y,b.id);}
-else if(u.task==='attack'){const t=getTarget(u);if(!t){u.task='idle';u.path=[];continue;}const pt={x:t.x+(t.w||1)/2,y:t.y+(t.h||1)/2},range=KINDS[u.kind].range+((t.w||1)+((t.h||1)))/5;if(dist(u,pt)<=range){u.path.length=0;if(u.attackClock<=0){let damage=KINDS[u.kind].attack*(1+age*.18);if(u.kind==='archer'&&t.type==='tower')damage*=.7;t.hp-=damage;u.attackClock=u.kind==='archer'?1.15:.78;if(t.hp<=0){if(t.kind)notice((t.team==='red'?'Enemy':'Your')+' unit defeated.');else if(t.type==='town'){win(t.team==='red');}u.task='idle';u.target=null;}}}else if(!u.path.length||rand(Math.floor(elapsed*2),u.id)<.015)u.path=pathfind(u.x,u.y,pt.x,pt.y,t.id);}
+else if(u.task==='attack'){const t=getTarget(u);if(!t){u.task='idle';u.path=[];continue;}const pt={x:t.x+(t.w||1)/2,y:t.y+(t.h||1)/2},range=KINDS[u.kind].range+((t.w||1)+((t.h||1)))/5;if(dist(u,pt)<=range){u.path.length=0;if(u.attackClock<=0){let damage=KINDS[u.kind].attack*(1+age*.18);if(u.kind==='archer'&&t.type==='tower')damage*=.7;u.swing=u.kind==='archer'?.48:.34;
+ if(u.kind==='archer')dispatchShot(u,t,damage,'arrow');else applyDamage(t,damage,u);
+ u.attackClock=u.kind==='archer'?1.15:.78;if(t.hp<=0){if(t.kind)notice((t.team==='red'?'Enemy':'Your')+' unit defeated.');else if(t.type==='town'){win(t.team==='red');}u.task='idle';u.target=null;if(u.attackMoveReturn){const dest=u.attackMoveReturn;u.attackMoveReturn=null;setMove(u,dest.x,dest.y,'attackmove');}}}
+ else if(!u.path.length||rand(Math.floor(elapsed*2),u.id)<.015)u.path=pathfind(u.x,u.y,pt.x,pt.y,t.id);}
 }
 for(const b of buildings){if(b.hp<=0||!b.complete)continue;if(b.queue.length){b.trainProgress+=dt;const k=b.queue[0];if(b.trainProgress>=KINDS[k].train){b.trainProgress=0;b.queue.shift();let x=b.x+b.w/2,y=b.y+b.h+1;if(occupancy(Math.floor(x),Math.floor(y))){x=b.x-1;y=b.y+b.h/2;}spawnUnit(k,b.team,x,y);if(b.team==='blue')notice(KINDS[k].name+' ready.');}}
-if(b.team==='blue'&&b.type==='tower'){const targets=units.filter(u=>u.team==='red'&&u.hp>0&&dist(u,{x:b.x+1,y:b.y+1})<6);b.shootClock=(b.shootClock||0)-dt;if(targets.length&&b.shootClock<=0){targets[0].hp-=14;b.shootClock=1.8;}}}
+if(b.team==='blue'&&b.type==='tower'){const targets=units.filter(u=>u.team==='red'&&u.hp>0&&dist(u,{x:b.x+1,y:b.y+1})<6);b.shootClock=(b.shootClock||0)-dt;if(targets.length&&b.shootClock<=0){dispatchShot({x:b.x+1,y:b.y+1,team:b.team},targets[0],14,'tower');b.shootClock=1.8;}}}
 units=units.filter(u=>u.hp>0);buildings=buildings.filter(b=>b.hp>0);objects=objects.filter(o=>o.alive);if(selected&&!selectedObject())selected=null;}
 function enemyAI(dt){enemyClock-=dt;if(enemyClock<0){enemyClock=35+rand(Math.floor(elapsed),21)*23;const base=buildings.find(b=>b.team==='red'&&b.type==='barracks');if(base&&units.filter(u=>u.team==='red').length<15){for(let i=0;i<(elapsed>180?3:2);i++)spawnUnit('spearman','red',base.x+(i%2),base.y+3+i*.3);notice('Enemy scouts approach your settlement!');}}}
 function reveal(){for(const u of units){if(u.team!=='blue')continue;const cx=Math.floor(u.x),cy=Math.floor(u.y);for(let y=cy-7;y<=cy+7;y++)for(let x=cx-7;x<=cx+7;x++)if(inMap(x,y)&&Math.hypot(x-cx,y-cy)<7.5)discovered[key(x,y)]=1;}
 for(const b of buildings){if(b.team!=='blue')continue;for(let y=b.y-5;y<b.y+b.h+5;y++)for(let x=b.x-5;x<b.x+b.w+5;x++)if(inMap(x,y)&&Math.hypot(x-b.x,y-b.y)<8)discovered[key(x,y)]=1;}}
 function win(victory){if(ended)return;ended=true;paused=true;justWon=victory;save();$('result').textContent=victory?'Victory! Your warriors have captured the rival settlement.':'Defeat. The rival army destroyed your village centre.';$('menuModal').classList.remove('hidden');$('menuModal').querySelector('h1').textContent=victory?'Victory':'Defeat';$('resume').textContent='View battlefield';}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify({ground,objects,buildings,units,resources,age,elapsed,enemyClock,discovered:Array.from(discovered),nextId,ended,cam,selected,iso:1}));}catch(e){console.warn('Save unavailable:',e);}}
-function load(){try{const s=JSON.parse(localStorage.getItem(SAVE));if(!s||!Array.isArray(s.ground)||s.ground.length!==W*H||!s.units?.length)return false;({ground,objects,buildings,units,resources,age,elapsed,enemyClock,nextId,ended,cam,selected}=s);discovered=Uint8Array.from(s.discovered||[]);if(discovered.length!==W*H)discovered=new Uint8Array(W*H);if(!s.iso){const p=toIso((cam.x+cw/(2*cam.zoom))/T,(cam.y+ch/(2*cam.zoom))/T);cam.x=p.x-cw/(2*cam.zoom);cam.y=p.y-ch/(2*cam.zoom);}for(const u of units){u.path||=[];u.frame||=0;u.attackClock||=0;}for(const b of buildings){b.queue||=[];b.trainProgress||=0;}return true;}catch(e){return false;}}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE));if(!s||!Array.isArray(s.ground)||s.ground.length!==W*H||!s.units?.length)return false;({ground,objects,buildings,units,resources,age,elapsed,enemyClock,nextId,ended,cam,selected}=s);discovered=Uint8Array.from(s.discovered||[]);if(discovered.length!==W*H)discovered=new Uint8Array(W*H);if(!s.iso){const p=toIso((cam.x+cw/(2*cam.zoom))/T,(cam.y+ch/(2*cam.zoom))/T);cam.x=p.x-cw/(2*cam.zoom);cam.y=p.y-ch/(2*cam.zoom);}for(const u of units){u.path||=[];u.frame||=0;u.attackClock||=0;u.swing||=0;}for(const b of buildings){b.queue||=[];b.trainProgress||=0;}return true;}catch(e){return false;}}
 // Sprite drawing: all terrain and units are drawn on the game's pixel canvas, not represented by CSS placeholders.
 const textures={},brush=(g,color,x,y,w,h)=>{g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 function makeTextures(){for(const type of ['grass','sand','water']){textures[type]=[];for(let n=0;n<32;n++){const c=document.createElement('canvas');c.width=c.height=T;const g=c.getContext('2d');let base=type==='grass'?'#728850':type==='sand'?['#b59b69','#c1aa78','#bba073'][n%3]:['#2f5e75','#315c72','#2c6179'][n%3];brush(g,base,0,0,T,T);for(let i=0;i<230;i++){const x=Math.floor(rand(i,n,21)*T),y=Math.floor(rand(i,n,33)*T),q=rand(i,n,28);let col=type==='grass'?q<.5?'#677e44':q<.75?'#82965a':'#5b7442':type==='sand'?q<.48?'#ab9060':q<.85?'#d0b584':'#927b50':q<.55?'#346d80':'#25546c';brush(g,col,x,y,q>.6?2:1,1);}if(type==='grass'){for(let i=0;i<12;i++){const x=rand(i,n,50)*T,y=rand(i,n,51)*T;brush(g,i%2?'#a0a769':'#556f39',x,y,1,3);brush(g,'#9dac70',x+1,y-2,1,2);}}if(type==='water'){for(let i=0;i<3;i++){const x=rand(i,n,71)*31,y=rand(i,n,73)*32;brush(g,'#65909b',x,y,9,1);brush(g,'#458196',x+2,y+2,7,1);}}textures[type].push(c);}}}
