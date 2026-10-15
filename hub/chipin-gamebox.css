@@ -447,3 +447,16 @@
 .snowyHomeBoard{background:#e6f6ff url("../snowy-sweets/assets/snow_base.png") center / 33.333% 33.333% repeat}
 .snowyHomeBoard img{image-rendering:pixelated;background:transparent!important;filter:drop-shadow(0 2px 0 rgba(20,70,94,.28))}
 .snowyHomeBoard img:nth-child(2n){background:transparent!important}
+
+
+/* Snowy Crossing: GameBox tile uses existing Gherwit and Admurin artwork. */
+.toyBox .toyGameSnowyCrossing .snowyCrossingHomeTile{background:linear-gradient(145deg,#dff8ff,#8bc8dd);border-color:#f5fcff;overflow:hidden;justify-content:center}
+.toyBox .toyGameSnowyCrossing .snowyCrossingHomeTile strong{color:#123c56;text-shadow:0 2px #f0fbff}
+.toyBox .toyGameSnowyCrossing .snowyCrossingHomeTile small{color:#2c6880;text-shadow:none}
+.snowyCrossingHomeScene{position:relative;width:112px;height:86px;overflow:hidden;flex:0 0 auto;border:3px solid #28536f;border-bottom:6px solid #143a54;border-radius:7px;background:#d9edf2 url("../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png") -288px -24px / 336px 288px no-repeat;image-rendering:pixelated;box-shadow:0 5px 0 #1b446543}
+.crossRoad{position:absolute;top:39px;width:24px;height:24px;background-image:url("../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png");background-size:336px 288px;background-position:-168px -24px;background-repeat:no-repeat;image-rendering:pixelated}
+.crossPlayer,.crossMonster{position:absolute;display:block;image-rendering:pixelated;background-repeat:no-repeat}
+.crossPlayer{left:12px;top:20px;width:43px;height:46px;background-image:url("../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png");background-size:768px 768px;background-position:-75px -74px;z-index:2}
+.crossMonster{right:3px;top:32px;width:36px;height:35px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png");background-size:1152px 768px;background-position:-78px -78px;z-index:3}
+.crossGift{position:absolute;right:17px;top:3px;width:28px;height:28px;object-fit:contain;image-rendering:pixelated;z-index:3}
+@media(max-width:560px){.snowyCrossingHomeScene{width:102px;height:79px}.crossPlayer{left:7px;top:16px}.crossMonster{right:1px;top:26px}.crossGift{right:12px}}
