@@ -117,6 +117,7 @@ const $=id=>document.getElementById(id);
 const ASSET={
  winter:'../workshop-watch/assets/vendor/gherwit/winter/Winter-Download/Winter-tiles.png',
  hero:'../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Idle.png',
+ heroMove:'../workshop-watch/assets/vendor/admurin/pack82/Monster%20Pack%2082%20(Event)/Snowmen/Christmas_Snowman_C_Move.png',
  ginger:'../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Gingerbread/Christmas_Gingerbread_Move.png',
  slime:'../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png',
  devil:'../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Devil/Christmas_Devil_Move.png',
@@ -191,7 +192,7 @@ function makeLane(row){
  return lane;
 }
 function ensureRows(to){
- for(let i=0;i<=to;i++)if(!lanes.has(i))lanes.set(i,makeLane(i));
+ for(let i=Math.max(0,Math.floor(camera)-7);i<=to;i++)if(!lanes.has(i))lanes.set(i,makeLane(i));
  for(const row of lanes.keys())if(row<Math.max(0,Math.floor(camera)-7))lanes.delete(row);
 }
 function newRun(){
@@ -251,14 +252,14 @@ function tick(dt){
  if(player.hop===0){
   const lane=lanes.get(player.row);
   if(lane&&lane.type==='river'){
-   const plat=platformAt(lane,(player.x+.5)*T);
+   const plat=platformAt(lane,(player.x+(player.floater||0)+.5)*T);
    if(!plat){death('You slipped into the icy water.');return}
    if(!Number.isFinite(player.floater))player.floater=0;
    player.floater+=plat.speed*dt/T;
    if(Math.abs(player.floater)>.48){
     const dx=Math.sign(player.floater);
     player.floater-=dx;player.x+=dx;player.fromX=player.x;
-    if(player.x<0||player.x>=COLS){death('The drifting ice carried you away.');return}
+    if(player.x+(player.floater||0)<-.3||player.x+(player.floater||0)>COLS-.7){death('The drifting ice carried you away.');return}
    }
   }else{player.floater=0}
   if(lane&&lane.type==='parade'&&hitMonster(lane)){death('A Christmas creature caught you!');return}
@@ -350,7 +351,7 @@ function drawRow(lane){
 }
 function sprite(kind,x,y,frame=0,dir=0,scale=86){
  const im=imgs[kind];if(!im)return;
- const cols=(kind==='hero'?4:6),rows=Math.max(1,Math.floor(im.naturalHeight/128));
+ const cols=(kind==='hero'||kind==='heroMove'?4:6),rows=Math.max(1,Math.floor(im.naturalHeight/128));
  const cf=frame%cols,rf=clamp(dir,0,rows-1),base=128;
  ctx.drawImage(im,cf*base,rf*base,base,base,Math.round(x-scale/2),Math.round(y-scale/2),scale,scale)
 }
@@ -372,13 +373,13 @@ function render(){
  for(let r=end;r>=start;r--){const lane=lanes.get(r);if(lane)drawRow(lane)}
  drawStorm();
  if(imgs.hero){
-  let posX=getWorldX()*T+T/2,posY=worldY(getWorldRow())+T/2;
+  let posX=(getWorldX()+(player.floater||0))*T+T/2,posY=worldY(getWorldRow())+T/2;
   if(mode!=='playing'){posX=(player.x+.5)*T;posY=worldY(player.row)+T/2}
   const inHop=mode==='playing'&&player.hop>0;
   if(inHop)posY-=Math.sin((1-player.hop/.16)*Math.PI)*11;
   ctx.fillStyle='#17475d66';ctx.beginPath();ctx.ellipse(posX,posY+16,11,4,0,0,Math.PI*2);ctx.fill();
   const dir={up:0,left:1,right:2,down:3}[player.dir]||0;
-  sprite('hero',posX,posY,Math.floor(worldTime*7)%4,dir,92);
+  sprite(inHop?'heroMove':'hero',posX,posY,Math.floor(worldTime*7)%4,dir,92);
  }
  for(const p of particles){
   ctx.fillStyle='#ffe8a3';ctx.fillRect(Math.round(p.x),Math.round(p.y),4,4)
@@ -408,7 +409,7 @@ for(const button of document.querySelectorAll('[data-move]')){
 }
 let down=null;
 cvs.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};try{cvs.setPointerCapture(e.pointerId)}catch(err){}});
-cvs.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down=null;if(Math.max(Math.abs(dx),Math.abs(dy))<12)return;move(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up')});
+cvs.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down=null;if(Math.max(Math.abs(dx),Math.abs(dy))<12){move('up');return}move(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up')});
 cvs.addEventListener('pointercancel',()=>down=null);
 loadAll();requestAnimationFrame(loop);
 })();
