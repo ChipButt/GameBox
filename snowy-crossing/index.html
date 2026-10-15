@@ -53,6 +53,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #fade{position:absolute;z-index:8;inset:0;pointer-events:none;background:white;opacity:0}
 #pauseOverlay,#overOverlay{z-index:13}
+#shell.defeated #controls{opacity:0;pointer-events:none}
+#shell.defeated #pause{pointer-events:none;opacity:.65}
 #rules{font-size:12px!important;text-align:left;line-height:1.6!important}
 #rules strong{color:#ffdc7b}
 #assetError{color:#ffdebc!important;font-size:11px!important}
@@ -89,7 +91,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 <button type="button" id="start" class="action" disabled>LOADING WINTER…</button>
 <div id="loadState">Gathering game artwork…</div><div class="statsLine">BEST RUN <b id="startBest">0</b></div>
 <div class="helpMini"><span class="helpArrow">◀</span><span>TAP FORWARD / SWIPE TO TURN<br>OR USE THE ARROWS</span><span class="helpArrow">▶</span></div>
-<p class="tip">Keep moving. Don't fall behind the snowstorm.</p><p id="assetError"></p>
+<p class="tip">Red creature shadows = danger. Bright ice centre = safe landing. Keep moving!</p><p id="assetError"></p>
 </div>
 </section>
 <section class="overlay" id="pauseOverlay" aria-label="Paused" aria-hidden="true">
@@ -97,7 +99,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 <button type="button" id="resume" class="action">RESUME RUN</button>
 <button type="button" id="restart" class="action alt">RESTART RUN</button>
 <button type="button" id="sound" class="action dark">SOUND: ON</button>
-<p id="rules"><strong>CONTROLS</strong> — Swipe in any direction, use the arrows or WASD.<br><strong>SNOW</strong> — Safe, but avoid creatures.<br><strong>ICY WATER</strong> — Land on the moving ice floes.<br><strong>PRESENTS</strong> — Worth 15 bonus points.<br><strong>SNOWSTORM</strong> — Advance before it catches you.</p>
+<p id="rules"><strong>CONTROLS</strong> — Swipe in any direction, use the arrows or WASD.<br><strong>SNOW</strong> — Safe, but avoid creatures.<br><strong>RED FOOTPRINTS</strong> — These show where creatures can hit you.<br><strong>ICY WATER</strong> — Land within the bright strips of moving ice.<br><strong>PRESENTS</strong> — Worth 15 bonus points.<br><strong>SNOWSTORM</strong> — Advance before it catches you.</p>
 <a href="../" class="action dark" style="text-decoration:none;display:grid;place-items:center">BACK TO GAMEBOX</a></div>
 </section>
 <section class="overlay" id="overOverlay" aria-label="Game over" aria-hidden="true">
@@ -157,6 +159,10 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const randRange=(r,a,b)=>a+(b-a)*r();
 let lanes=new Map(),player={x:5,row:2,fromX:5,fromRow:2,hop:0,dir:'down'},mode='start';
 let seed=0,rng=Math.random,maxRow=2,camera=0,camAim=0,score=0,collect=0,worldTime=0,lastMove=0,storm=0,particles=[],toastUntil=0,toastMsg='',flash=0,pending=[];
+const HERO_RADIUS=8;
+const CREATURE_RADIUS={slime:10,ginger:11,devil:13};
+const DEATH_DURATION={monster:1.2,water:1.35,storm:1.55};
+let defeat=null;
 const GROUND=[[12,1],[12,1],[12,1],[12,1],[12,1],[12,1],[12,1],[12,1]];
 function valueNoise(a,b){let n=(Math.imul(a+37,374761393)^Math.imul(b+11,668265263))|0;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296}
 function makeLane(row){
@@ -197,7 +203,7 @@ function ensureRows(to){
 }
 function newRun(){
  rng=seeded((Date.now()^Math.floor(Math.random()*2147483647))>>>0);
- lanes=new Map();maxRow=2;camera=0;camAim=0;worldTime=0;lastMove=0;storm=-6;collect=0;score=0;particles=[];pending=[];flash=0;
+ lanes=new Map();maxRow=2;camera=0;camAim=0;worldTime=0;lastMove=0;storm=-6;collect=0;score=0;particles=[];pending=[];flash=0;defeat=null;$('shell').classList.remove('defeated');
  player={x:5,row:2,fromX:5,fromRow:2,hop:0,dir:'down'};
  ensureRows(ROWS+8);for(let i=0;i<4;i++)lanes.get(i).trees=[];
  mode='playing';toggle('startOverlay',false);toggle('overOverlay',false);toggle('pauseOverlay',false);
@@ -223,72 +229,102 @@ function move(dir){
  blip(290+(row%5)*20,.045,'triangle',.012);
 }
 function entityX(o,now){const period=W+220,dist=((o.x+o.speed*now+70)%period+period)%period;return dist-70}
+// The illuminated inset on each floe is its exact usable landing area.
+const FLOE_MARGIN=6;
 function platformAt(lane,x){
  for(const o of lane.objects){
   const pos=entityX(o,worldTime);
   for(const shift of [-W-220,0,W+220]){
    const cx=pos+shift+o.width/2;
-   if(Math.abs(cx-x)<o.width/2-6)return o;
+   if(Math.abs(cx-x)<o.width/2-FLOE_MARGIN)return o;
   }
  }return null;
 }
-function death(reason){
+function makeBurst(cx,cy,kind){
+ const colours=kind==='water'?['#ebfdff','#87dcef','#479ac2']:kind==='monster'?['#fff8da','#e8faff','#9edbeb','#f8c0ae']:['#ffffff','#c1eefa','#70b3cf'];
+ const amount=kind==='storm'?54:38;
+ for(let i=0;i<amount;i++){
+  const a=Math.PI*2*(i/amount)+(Math.random()-.5)*.3;
+  const speed=kind==='storm'?38+Math.random()*135:36+Math.random()*125;
+  particles.push({x:cx,y:cy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(kind==='water'?45:65),life:.45+Math.random()*.8,
+   maxLife:1.25,size:i%5===0?5:2+(i%3),color:colours[i%colours.length]});
+ }
+}
+function death(reason,kind='monster'){
  if(mode!=='playing')return;
- mode='over';pending.length=0;flash=.85;blip(145,.3,'sawtooth',.05);buzz([30,60,60]);
+ const cx=(player.x+(player.floater||0)+.5)*T,cy=worldY(player.row)+T/2;
+ defeat={kind,reason,cx,cy,elapsed:0,duration:DEATH_DURATION[kind]||1.2,dir:player.dir};
+ mode='dying';pending.length=0;player.hop=0;flash=kind==='monster'?.45:.12;
+ $('shell').classList.add('defeated');
+ makeBurst(cx,cy,kind);
+ if(kind==='water'){blip(270,.24,'sine',.04);buzz([18,45,25])}
+ else if(kind==='storm'){blip(205,.35,'sawtooth',.025);buzz([30,40,60])}
+ else {blip(135,.23,'square',.04);buzz([25,50,65])}
  if(score>best){best=score;try{localStorage.setItem(key,String(best))}catch(e){}$('overKicker').textContent='NEW PERSONAL BEST!'}
  else $('overKicker').textContent='RUN OVER';
  $('best').textContent=best;$('startBest').textContent=best;$('total').textContent=score;
  $('endSteps').textContent=Math.max(0,maxRow-2);$('endPresents').textContent=collect;$('endBest').textContent=best;
  $('overReason').textContent=reason;
- setTimeout(()=>{if(mode==='over')toggle('overOverlay',true)},380);
 }
 function getWorldX(){return player.fromX+(player.x-player.fromX)*(1-player.hop/.16)}
 function getWorldRow(){return player.fromRow+(player.row-player.fromRow)*(1-player.hop/.16)}
 function tick(dt){
- worldTime+=dt;
  if(flash>0)flash=Math.max(0,flash-dt*2);
+ if(mode==='dying'){
+  defeat.elapsed=Math.min(defeat.duration,defeat.elapsed+dt);
+  advanceParticles(dt);
+  if(defeat.elapsed>=defeat.duration){mode='over';toggle('overOverlay',true)}
+  return;
+ }
  if(mode!=='playing')return;
+ worldTime+=dt;
  if(player.hop>0){player.hop=Math.max(0,player.hop-dt);if(player.hop===0){onLanding();if(pending.length&&mode==='playing'){const d=pending.shift();move(d)}}}
  if(mode!=='playing')return;
  if(player.hop===0){
   const lane=lanes.get(player.row);
   if(lane&&lane.type==='river'){
    const plat=platformAt(lane,(player.x+(player.floater||0)+.5)*T);
-   if(!plat){death('You slipped into the icy water.');return}
+   if(!plat){death('You slipped into the icy water.','water');return}
    if(!Number.isFinite(player.floater))player.floater=0;
    player.floater+=plat.speed*dt/T;
    if(Math.abs(player.floater)>.48){
     const dx=Math.sign(player.floater);
     player.floater-=dx;player.x+=dx;player.fromX=player.x;
-    if(player.x+(player.floater||0)<-.3||player.x+(player.floater||0)>COLS-.7){death('The drifting ice carried you away.');return}
+    if(player.x+(player.floater||0)<-.3||player.x+(player.floater||0)>COLS-.7){death('The drifting ice carried you away.','water');return}
    }
   }else{player.floater=0}
   if(lane&&lane.type==='parade'&&hitMonster(lane)){death('A Christmas creature caught you!');return}
  }
  if(worldTime-lastMove>5&&maxRow>5){storm+=dt*(.42+Math.min(maxRow/110,.40))}
  storm=Math.max(storm,Math.max(0,maxRow-15));
- if(storm>player.row-.35){death('The snowstorm caught up!');return}
+ if(storm>player.row-.35){death('The snowstorm caught up!','storm');return}
  camAim=Math.max(camAim,Math.max(0,maxRow-6),storm+1);
  camera+=(camAim-camera)*Math.min(1,dt*5.5);
  ensureRows(Math.ceil(camera)+ROWS+6);
- if(camera>player.row+1.1){death('You fell behind the crossing.');return}
- particles=particles.filter(p=>(p.life-=dt)>0);
- for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=dt*38}
+ if(camera>player.row+1.1){death('You fell behind the crossing.','storm');return}
+ advanceParticles(dt);
  if(worldTime>toastUntil)$('toast').classList.remove('show');
 }
+function advanceParticles(dt){
+ particles=particles.filter(p=>(p.life-=dt)>0);
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=dt*40}
+}
+function monsterTouches(kind,monsterX,heroX){
+ return Math.abs(monsterX-heroX)<HERO_RADIUS+(CREATURE_RADIUS[kind]||11);
+}
 function hitMonster(lane){
- const px=(player.x+.5)*T;
+ const px=(player.x+(player.floater||0)+.5)*T;
  for(const o of lane.objects){
   const x=entityX(o,worldTime);
   for(const shift of [-W-220,0,W+220]){
-   if(Math.abs(x+shift+16-px)<23)return true;
+   if(monsterTouches(o.kind,x+shift+16,px))return true;
   }
  }return false;
 }
 function onLanding(){
  const lane=lanes.get(player.row);player.fromX=player.x;player.fromRow=player.row;
  if(!lane)return;
- if(lane.type==='river'&&!platformAt(lane,(player.x+.5)*T)){death('You missed the moving ice!');return}
+ if(lane.type==='river'&&!platformAt(lane,(player.x+.5)*T)){death('You missed the moving ice!','water');return}
  if(lane.type==='parade'&&hitMonster(lane)){death('You bumped into a Christmas creature!');return}
  if(lane.type==='snow'&&lane.gift===player.x){
   lane.gift=-1;collect++;updateHud();blip(860,.13,'sine',.035);buzz(12);toast('+15 PRESENT!');
@@ -301,8 +337,19 @@ function atlas(col,row,x,y,w=T,h=T){
  ctx.drawImage(imgs.winter,col*16,row*16,16,16,Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))
 }
 function drawTree(x,y){
- const tileScale=T/16;
  for(let r=0;r<3;r++)for(let c=0;c<3;c++)atlas(9+c,6+r,x+(c-1)*T,y+(r-2)*T,T,T);
+}
+function dangerFootprint(cx,cy,kind){
+ const radius=HERO_RADIUS+(CREATURE_RADIUS[kind]||11);
+ // Grounded red collision footprint: its width precisely matches the hit test.
+ ctx.save();
+ ctx.fillStyle='rgba(161,50,68,.46)';
+ ctx.beginPath();ctx.ellipse(cx,cy+11,radius,7,0,0,Math.PI*2);ctx.fill();
+ ctx.lineWidth=2;ctx.strokeStyle='#ffecb7';
+ ctx.beginPath();ctx.ellipse(cx,cy+11,radius,7,0,0,Math.PI*2);ctx.stroke();
+ ctx.fillStyle='#fff5d2';
+ ctx.fillRect(Math.round(cx-2),Math.round(cy+9),4,4);
+ ctx.restore();
 }
 function drawRow(lane){
  const y=worldY(lane.row),r=lane.row;
@@ -321,7 +368,12 @@ function drawRow(lane){
     ctx.fillStyle='#d7f8ff';ctx.fillRect(Math.round(px),Math.round(y+4),Math.ceil(o.width),T-7);
     ctx.fillStyle='#66a8c7';ctx.fillRect(Math.round(px+3),Math.round(y+T-7),Math.max(1,Math.ceil(o.width-6)),4);
     for(let xx=px+5;xx<px+o.width-6;xx+=T-2)atlas(12,1,xx,y+5,T-3,T-11);
-    ctx.fillStyle='#effbff';ctx.fillRect(Math.round(px+3),Math.round(y+5),Math.round(o.width-7),3);
+    // The pearl-blue inner strip is exactly where a hop can safely land.
+    ctx.fillStyle='#fffef1';ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+5),Math.max(0,Math.round(o.width-FLOE_MARGIN*2)),3);
+    ctx.fillStyle='#84cee0';ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+T-7),Math.max(0,Math.round(o.width-FLOE_MARGIN*2)),2);
+    ctx.fillStyle='#36718d';
+    ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+5),2,T-11);
+    ctx.fillRect(Math.round(px+o.width-FLOE_MARGIN-2),Math.round(y+5),2,T-11);
    }
   }
  }else{
@@ -338,7 +390,9 @@ function drawRow(lane){
    for(const {o,x} of ordered){
     for(const shift of [-W-220,0,W+220]){
      const px=x+shift;if(px<-64||px>W+55)continue;
-     sprite(o.kind,Math.round(px+16),Math.round(y+T*.50),Math.floor(worldTime*7+o.phase)%6, (o.speed<0?1:2),80);
+     const cx=Math.round(px+16),cy=Math.round(y+T*.50);
+     dangerFootprint(cx,cy,o.kind);
+     sprite(o.kind,cx,cy,Math.floor(worldTime*7+o.phase)%6,(o.speed<0?1:2),80);
     }
    }
   }else{
@@ -354,6 +408,46 @@ function sprite(kind,x,y,frame=0,dir=0,scale=86){
  const cols=(kind==='hero'||kind==='heroMove'?4:6),rows=Math.max(1,Math.floor(im.naturalHeight/128));
  const cf=frame%cols,rf=clamp(dir,0,rows-1),base=128;
  ctx.drawImage(im,cf*base,rf*base,base,base,Math.round(x-scale/2),Math.round(y-scale/2),scale,scale)
+}
+function drawDefeat(){
+ if(!defeat)return;
+ const d=defeat,t=clamp(d.elapsed/d.duration,0,1);
+ const ease=1-Math.pow(1-t,3),cx=d.cx,cy=d.cy;
+ ctx.save();
+ if(d.kind==='monster'){
+  // Impact ring, recoil, tumble, then a settling flurry.
+  ctx.strokeStyle='rgba(255,241,179,'+(1-t)+')';
+  ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(cx,cy+10,8+t*43,5+t*13,0,0,Math.PI*2);ctx.stroke();
+  const knockout=clamp(t/.65,0,1);
+  ctx.translate(cx+(d.dir==='left'?1:-1)*knockout*17,cy-Math.sin(knockout*Math.PI)*15+Math.max(0,t-.5)*29);
+  ctx.rotate((d.dir==='left'?-1:1)*Math.PI*.48*ease);
+  ctx.globalAlpha=1-clamp((t-.67)/.25,0,1);
+  sprite('heroMove',0,0,Math.floor(t*14)%4,3,92);
+ }else if(d.kind==='water'){
+  // Two ripples frame the snowman's visible plunge through the river surface.
+  for(let k=0;k<2;k++){
+   const spread=clamp(t*1.6-k*.2,0,1);
+   ctx.strokeStyle='rgba(226,251,255,'+(1-spread)*.8+')';ctx.lineWidth=k?2:4;
+   ctx.beginPath();ctx.ellipse(cx,cy+10,8+spread*36,3+spread*11,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.translate(cx,cy+t*46);
+  ctx.rotate(-t*.45);
+  ctx.globalAlpha=1-clamp((t-.24)/.5,0,1);
+  sprite('heroMove',0,0,Math.floor(t*10)%4,3,92*(1-.55*ease));
+ }else{
+  // The blizzard wraps around the sprite until it disappears into a snow drift.
+  ctx.translate(cx+Math.sin(t*37)*(1-t)*5,cy+ease*20);
+  ctx.rotate(Math.sin(t*25)*.12*(1-t));
+  ctx.globalAlpha=1-clamp((t-.33)/.46,0,1);
+  sprite('heroMove',0,0,Math.floor(t*12)%4,0,92);
+ }
+ ctx.restore();
+ if(d.kind==='storm'){
+  // Existing Gherwit snow detail becomes the final drift covering the snowman.
+  const v=clamp((t-.40)/.52,0,1);
+  if(v>0){ctx.save();ctx.globalAlpha=v;atlas(0,1,cx-16,cy+8,32,32);ctx.restore()}
+ }
 }
 function drawStorm(){
  let sy=worldY(storm);
@@ -373,16 +467,19 @@ function render(){
  for(let r=end;r>=start;r--){const lane=lanes.get(r);if(lane)drawRow(lane)}
  drawStorm();
  if(imgs.hero){
-  let posX=(getWorldX()+(player.floater||0))*T+T/2,posY=worldY(getWorldRow())+T/2;
-  if(mode!=='playing'){posX=(player.x+.5)*T;posY=worldY(player.row)+T/2}
-  const inHop=mode==='playing'&&player.hop>0;
-  if(inHop)posY-=Math.sin((1-player.hop/.16)*Math.PI)*11;
-  ctx.fillStyle='#17475d66';ctx.beginPath();ctx.ellipse(posX,posY+16,11,4,0,0,Math.PI*2);ctx.fill();
-  const dir={up:0,left:1,right:2,down:3}[player.dir]||0;
-  sprite(inHop?'heroMove':'hero',posX,posY,Math.floor(worldTime*7)%4,dir,92);
+  if(mode==='dying'||mode==='over')drawDefeat();
+  else{
+   let posX=(getWorldX()+(player.floater||0))*T+T/2,posY=worldY(getWorldRow())+T/2;
+   const inHop=mode==='playing'&&player.hop>0;
+   if(inHop)posY-=Math.sin((1-player.hop/.16)*Math.PI)*11;
+   ctx.fillStyle='#173f5866';ctx.beginPath();ctx.ellipse(posX,posY+12,HERO_RADIUS,5,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#d8ffffaa';ctx.lineWidth=1;ctx.stroke();
+   const dir={up:0,left:1,right:2,down:3}[player.dir]||0;
+   sprite(inHop?'heroMove':'hero',posX,posY,Math.floor(worldTime*7)%4,dir,92);
+  }
  }
  for(const p of particles){
-  ctx.fillStyle='#ffe8a3';ctx.fillRect(Math.round(p.x),Math.round(p.y),4,4)
+  ctx.fillStyle=p.color||'#ffe8a3';ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size||4,p.size||4)
  }
  if(mode==='playing'&&worldTime-lastMove>3.5){
   const v=clamp((worldTime-lastMove-3.5)/2.2,0,1);
@@ -391,7 +488,7 @@ function render(){
  if(flash>0){ctx.fillStyle='rgba(255,255,255,'+(flash*.28)+')';ctx.fillRect(0,0,W,H)}
 }
 let prev=0;
-function loop(ms){if(!document.hidden){const dt=Math.min(.042,Math.max(0,(ms-prev)/1000||0));if(mode==='playing'||mode==='start'||mode==='over')tick(dt);render()}prev=ms;requestAnimationFrame(loop)}
+function loop(ms){if(!document.hidden){const dt=Math.min(.042,Math.max(0,(ms-prev)/1000||0));if(mode==='playing'||mode==='start'||mode==='dying'||mode==='over')tick(dt);render()}prev=ms;requestAnimationFrame(loop)}
 document.addEventListener('visibilitychange',()=>{prev=performance.now();if(document.hidden&&mode==='playing'){mode='paused';toggle('pauseOverlay',true)}});
 $('start').addEventListener('click',()=>{if(!loaded){loadAll();return}newRun()});
 $('again').addEventListener('click',newRun);
