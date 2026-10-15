@@ -324,6 +324,8 @@ function hitMonster(lane){
 function onLanding(){
  const lane=lanes.get(player.row);player.fromX=player.x;player.fromRow=player.row;
  if(!lane)return;
+ // Floe drift stops immediately when the character reaches dry ground.
+ if(lane.type!=='river')player.floater=0;
  if(lane.type==='river'&&!platformAt(lane,(player.x+.5)*T)){death('You missed the moving ice!','water');return}
  if(lane.type==='parade'&&hitMonster(lane)){death('You bumped into a Christmas creature!');return}
  if(lane.type==='snow'&&lane.gift===player.x){
