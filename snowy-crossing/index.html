@@ -91,7 +91,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 <button type="button" id="start" class="action" disabled>LOADING WINTER…</button>
 <div id="loadState">Gathering game artwork…</div><div class="statsLine">BEST RUN <b id="startBest">0</b></div>
 <div class="helpMini"><span class="helpArrow">◀</span><span>TAP FORWARD / SWIPE TO TURN<br>OR USE THE ARROWS</span><span class="helpArrow">▶</span></div>
-<p class="tip">Red creature shadows = danger. Bright ice centre = safe landing. Keep moving!</p><p id="assetError"></p>
+<p class="tip">Red creature shadows = danger. The whole ice floe = safe landing. Keep moving!</p><p id="assetError"></p>
 </div>
 </section>
 <section class="overlay" id="pauseOverlay" aria-label="Paused" aria-hidden="true">
@@ -99,7 +99,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 <button type="button" id="resume" class="action">RESUME RUN</button>
 <button type="button" id="restart" class="action alt">RESTART RUN</button>
 <button type="button" id="sound" class="action dark">SOUND: ON</button>
-<p id="rules"><strong>CONTROLS</strong> — Swipe in any direction, use the arrows or WASD.<br><strong>SNOW</strong> — Safe, but avoid creatures.<br><strong>RED FOOTPRINTS</strong> — These show where creatures can hit you.<br><strong>ICY WATER</strong> — Land within the bright strips of moving ice.<br><strong>PRESENTS</strong> — Worth 15 bonus points.<br><strong>SNOWSTORM</strong> — Advance before it catches you.</p>
+<p id="rules"><strong>CONTROLS</strong> — Swipe in any direction, use the arrows or WASD.<br><strong>SNOW</strong> — Safe, but avoid creatures.<br><strong>RED FOOTPRINTS</strong> — These show where creatures can hit you.<br><strong>ICY WATER</strong> — The entire visible top of each moving floe is safe.<br><strong>PRESENTS</strong> — Worth 15 bonus points.<br><strong>SNOWSTORM</strong> — Advance before it catches you.</p>
 <a href="../" class="action dark" style="text-decoration:none;display:grid;place-items:center">BACK TO GAMEBOX</a></div>
 </section>
 <section class="overlay" id="overOverlay" aria-label="Game over" aria-hidden="true">
@@ -229,14 +229,17 @@ function move(dir){
  blip(290+(row%5)*20,.045,'triangle',.012);
 }
 function entityX(o,now){const period=W+220,dist=((o.x+o.speed*now+70)%period+period)%period;return dist-70}
-// The illuminated inset on each floe is its exact usable landing area.
-const FLOE_MARGIN=6;
+// Use the exact pixel footprint drawn for a floe, including its visible edges.
+// The entire snowy top is landable; the subtle rim is decoration, not a hazard.
+function floeBounds(o,shift=0){
+ const left=Math.round(entityX(o,worldTime)+shift);
+ return {left,right:left+Math.ceil(o.width)};
+}
 function platformAt(lane,x){
  for(const o of lane.objects){
-  const pos=entityX(o,worldTime);
   for(const shift of [-W-220,0,W+220]){
-   const cx=pos+shift+o.width/2;
-   if(Math.abs(cx-x)<o.width/2-FLOE_MARGIN)return o;
+   const {left,right}=floeBounds(o,shift);
+   if(x>=left&&x<=right)return o;
   }
  }return null;
 }
@@ -365,17 +368,18 @@ function drawRow(lane){
   for(const o of lane.objects){
    const x=entityX(o,worldTime);
    for(const shift of [-W-220,0,W+220]){
-    const px=x+shift;
-    if(px>W+10||px+o.width< -10)continue;
-    ctx.fillStyle='#d7f8ff';ctx.fillRect(Math.round(px),Math.round(y+4),Math.ceil(o.width),T-7);
-    ctx.fillStyle='#66a8c7';ctx.fillRect(Math.round(px+3),Math.round(y+T-7),Math.max(1,Math.ceil(o.width-6)),4);
-    for(let xx=px+5;xx<px+o.width-6;xx+=T-2)atlas(12,1,xx,y+5,T-3,T-11);
-    // The pearl-blue inner strip is exactly where a hop can safely land.
-    ctx.fillStyle='#fffef1';ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+5),Math.max(0,Math.round(o.width-FLOE_MARGIN*2)),3);
-    ctx.fillStyle='#84cee0';ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+T-7),Math.max(0,Math.round(o.width-FLOE_MARGIN*2)),2);
-    ctx.fillStyle='#36718d';
-    ctx.fillRect(Math.round(px+FLOE_MARGIN),Math.round(y+5),2,T-11);
-    ctx.fillRect(Math.round(px+o.width-FLOE_MARGIN-2),Math.round(y+5),2,T-11);
+    const {left,right}=floeBounds(o,shift);
+    const width=right-left;
+    if(left>W+10||right< -10)continue;
+    // Full-width snowy face: every visible pixel between left and right is safe.
+    ctx.fillStyle='#d7f8ff';ctx.fillRect(left,Math.round(y+4),width,T-7);
+    for(let xx=left+4;xx<right-4;xx+=T-2){
+     atlas(12,1,xx,y+6,Math.min(T-4,right-xx-2),T-12);
+    }
+    // Thin frost glint across the whole platform; side shading is purely depth.
+    ctx.fillStyle='#fffef1';ctx.fillRect(left,Math.round(y+4),width,2);
+    ctx.fillStyle='#84cee0';ctx.fillRect(left,Math.round(y+T-6),width,2);
+    ctx.fillStyle='#66a8c7';ctx.fillRect(left+2,Math.round(y+T-4),Math.max(0,width-4),1);
    }
   }
  }else{
