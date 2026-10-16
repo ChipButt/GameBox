@@ -460,3 +460,14 @@
 .crossMonster{right:3px;top:32px;width:36px;height:35px;background-image:url("../workshop-watch/assets/vendor/admurin/pack85/Monster%20Pack%2085%20(Event%203)/Spritesheets/Slime/Christmas_Slime_Move.png");background-size:1152px 768px;background-position:-78px -78px;z-index:3}
 .crossGift{position:absolute;right:17px;top:3px;width:28px;height:28px;object-fit:contain;image-rendering:pixelated;z-index:3}
 @media(max-width:560px){.snowyCrossingHomeScene{width:102px;height:79px}.crossPlayer{left:7px;top:16px}.crossMonster{right:1px;top:26px}.crossGift{right:12px}}
+
+
+/* Santa's Present Stack — catalogue tile uses real included Kenney present sprites. */
+.toyGamePresentStack .gameTile{background:linear-gradient(155deg,#235f58,#163b48);border-color:#e8d19a}
+.toyBox .toyGamePresentStack .gameTile strong{color:#fff1cb;font-size:18px;text-shadow:0 2px 0 #092a31}
+.toyBox .toyGamePresentStack .gameTile small{color:#d2e5c9}
+.presentStackHomeScene{position:relative;z-index:1;width:116px;height:80px;border:3px solid #d1a96f;border-radius:7px;background:repeating-linear-gradient(0deg,#28545b 0 11px,#1e4851 11px 13px);box-shadow:0 5px 0 #12323d;overflow:hidden;image-rendering:pixelated}
+.presentStackHomeShelf{position:absolute;left:0;right:0;top:11px;height:5px;background:#a97b50;box-shadow:0 3px 0 #5c4739}
+.presentStackHomeScene:after{content:"";position:absolute;left:0;right:0;bottom:2px;height:6px;background:repeating-linear-gradient(90deg,#d8ac6b 0 9px,#42616a 9px 13px)}
+.presentStackHomeScene .presentStackGift{position:absolute;width:36px;height:36px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(1px 3px 0 #132a35)}
+.presentStackHomeScene .psOne{left:8px;bottom:7px}.presentStackHomeScene .psTwo{left:39px;bottom:7px}.presentStackHomeScene .psThree{left:39px;bottom:34px}
