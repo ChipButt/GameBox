@@ -1,0 +1,33 @@
+name: Present Stack regression checks
+on:
+  push:
+    paths:
+      - 'present-stack/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - '.github/workflows/present-stack-checks.yml'
+  pull_request:
+    paths:
+      - 'present-stack/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - '.github/workflows/present-stack-checks.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check engine and renderer syntax
+        run: |
+          node --check present-stack/engine.js
+          node --check present-stack/game.js
+      - name: Test gameplay rules
+        run: node present-stack/engine.test.cjs
+      - name: Verify GameBox launchers
+        run: |
+          test -s present-stack/index.html
+          grep -q 'present-stack/' index.html
+          grep -q 'present-stack/' hub/index.html
