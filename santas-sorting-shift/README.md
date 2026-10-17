@@ -6,7 +6,7 @@ A complete, responsive Christmas arcade game for GameBox. Play it at `/santas-so
 - **Touch, drag, drop:** collect parcels from the moving conveyor and drop them into the matching physical crate.
 - **Presents:** green PRESENTS bin, using the existing six real Kenney holiday present sprites.
 - **Coal:** red COAL bin, with an original detailed pixel-art coal sprite.
-- **Express:** gold star-stamped present, available from shift 1; drop into the gold EXPRESS bin.
+- **Express:** glowing, pulsing present, available from shift 1; drop into the gold EXPRESS bin.
 - Brisk opening belt (100 px/s) and 1.38-second starting parcel interval, then 12 escalating shifts; live belt movement, time limit, sorting quota, combo bonuses, three chances, wrong-bin/missed-parcel penalties, shift completion, local high score and unlocked shift.
 - Proper pause/resume, auto-pause on page hide, sound toggle, portrait-mobile pointer controls, mouse support, reduced-motion CSS and keyboard Pause/Escape.
 - Draws an original textured Santa's workshop scene in cached Canvas art: timber walls, windows, snow, stacked stock, motor/rollers, a festive decorated sign, illuminated conveyor and physical wooden sorting crates.
