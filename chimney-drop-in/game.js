@@ -185,7 +185,7 @@ document.addEventListener("keyup",e=>{if(e.key==="ArrowLeft"||e.key.toLowerCase(
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pause();});
 function steerButton(button,dir){
  const key=dir==="left"?"left":"right";
- button.addEventListener("pointerdown",e=>{if(mode!=="play")return;e.preventDefault();button.setPointerCapture?.(e.pointerId);game.input[key]=true;game.setTarget(null);button.classList.add("held");});
+ button.addEventListener("pointerdown",e=>{if(mode!=="play")return;e.preventDefault();try{if(e.isTrusted)button.setPointerCapture?.(e.pointerId);}catch(_){}game.input[key]=true;game.setTarget(null);button.classList.add("held");});
  const up=e=>{game.input[key]=false;button.classList.remove("held");};
  ["pointerup","pointercancel","lostpointercapture"].forEach(n=>button.addEventListener(n,up));
 }
