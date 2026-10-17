@@ -1,0 +1,44 @@
+name: Santa's Sorting Shift checks
+on:
+  push:
+    paths:
+      - 'santas-sorting-shift/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/santas-sorting-shift.yml'
+  pull_request:
+    paths:
+      - 'santas-sorting-shift/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/santas-sorting-shift.yml'
+jobs:
+  arcade-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check game and engine syntax
+        run: |
+          node --check santas-sorting-shift/engine.js
+          node --check santas-sorting-shift/game.js
+          node --check santas-sorting-shift/engine.test.cjs
+      - name: Run sorting gameplay regression tests
+        run: node --test santas-sorting-shift/engine.test.cjs
+      - name: Validate launchers, assets and entrypoint sync
+        run: |
+          test -s santas-sorting-shift/index.html
+          test -s santas-sorting-shift/style.css
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_red.png
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_green.png
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_blue.png
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_orange.png
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_yellow.png
+          test -s assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_lightBlue.png
+          grep -q 'href="santas-sorting-shift/"' index.html
+          grep -q 'href="santas-sorting-shift/"' hub/index.html
+          python3 tools/sync-entry-points.py --check
