@@ -261,46 +261,78 @@ function worldPoint(e){
 }
 // Match the visible crates, not only the centre of a parcel grabbed off-centre.
 function binAt(x,y){
- if(y<352||y>474)return null;
- return binList.find(b=>x>=b.x+3&&x<=b.x+b.w-3)||null;
+ // The clickable area follows the complete visible crate, including its opening
+ // and base. Accept releases on the down arrow just above the rim as well.
+ if(y<339||y>481)return null;
+ return binList.find(b=>x>=b.x-2&&x<=b.x+b.w+2)||null;
 }
-canvas.addEventListener("pointerdown",e=>{
- if(screen!=="game"||drag)return;
+function beginDrag(e,kind="pointer"){
+ if(screen!=="game"||drag)return false;
+ if(e.pointerType==="mouse"&&e.button!==0)return false;
+ if(kind==="mouse"&&e.button!==0)return false;
  const p=worldPoint(e);
  let best=null,distance=44;
  for(const item of game.items){
-   const d=Math.hypot(p.x-item.x,p.y-item.y);
-   if(d<distance){distance=d;best=item;}
+  const d=Math.hypot(p.x-item.x,p.y-item.y);
+  if(d<distance){distance=d;best=item;}
  }
- if(!best)return;
- const held=game.hold(best.id);if(!held)return;
- e.preventDefault();canvas.setPointerCapture?.(e.pointerId);
- drag={id:best.id,pointer:e.pointerId,x:p.x,y:p.y,pointerX:p.x,pointerY:p.y,dx:p.x-best.x,dy:p.y-best.y};
-});
-window.addEventListener("pointermove",e=>{
- if(!drag||drag.pointer!==e.pointerId)return;
+ if(!best||!game.hold(best.id))return false;
+ drag={
+  id:best.id,pointer:kind==="pointer"?e.pointerId:null,
+  kind:kind==="mouse"||e.pointerType==="mouse"?"mouse":"touch",
+  x:p.x,y:p.y,pointerX:p.x,pointerY:p.y,
+  dx:p.x-best.x,dy:p.y-best.y
+ };
+ // A desktop browser can abandon pointer capture during a mouse drag.
+ // Keep the drag state until mouseup/pointerup instead of resetting it.
+ if(kind==="pointer"){
+  try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}
+ }
+ e.preventDefault();
+ return true;
+}
+function moveDrag(e,mouseFallback=false){
+ if(!drag)return;
+ if(mouseFallback){if(drag.kind!=="mouse")return;}
+ else if(drag.pointer!==e.pointerId)return;
  const p=worldPoint(e);
  drag.pointerX=p.x;drag.pointerY=p.y;
  drag.x=Math.max(8,Math.min(W-8,p.x-drag.dx));
  drag.y=Math.max(10,Math.min(H-8,p.y-drag.dy));
  e.preventDefault();
-});
-function drop(e,cancelled=false){
- if(!drag||drag.pointer!==e.pointerId)return;
+}
+function drop(e,cancelled=false,mouseFallback=false){
+ if(!drag)return;
+ if(mouseFallback){if(drag.kind!=="mouse")return;}
+ else if(drag.pointer!==e.pointerId)return;
  const d=drag;drag=null;
  const p=worldPoint(e);
- // Release over the visible crate works with a mouse even when the gift was grabbed by its edge.
- // Retain a parcel-centre fallback for touch drags holding the corner of a gift.
- const b=!cancelled&&(binAt(p.x,p.y)||binAt(p.x-d.dx,p.y-d.dy));
- try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}
+ // Desktop release position takes precedence over the off-centre item.
+ // Retain the item's centre as a fallback for touch and mouse grabs.
+ const b=!cancelled&&(binAt(p.x,p.y)||binAt(p.x-d.dx,p.y-d.dy)
+   ||binAt(d.pointerX,d.pointerY)||binAt(d.x,d.y));
+ if(d.pointer!==null){
+  try{if(canvas.hasPointerCapture?.(d.pointer))canvas.releasePointerCapture(d.pointer);}catch(_){}
+ }
  if(b){game.sort(d.id,b.id);handle(game.consume());}
  else game.release(d.id);
  e.preventDefault();
 }
-// Also handle mouse releases outside the canvas if pointer capture is unavailable.
+canvas.addEventListener("pointerdown",e=>beginDrag(e));
+window.addEventListener("pointermove",e=>moveDrag(e));
 window.addEventListener("pointerup",e=>drop(e));
 window.addEventListener("pointercancel",e=>drop(e,true));
-canvas.addEventListener("lostpointercapture",()=>{if(drag){game.release(drag.id);drag=null;}});
+// Mouse compatibility events cover desktop browsers that cancel or fail to
+// deliver their pointerup when capture changes between canvas and window.
+canvas.addEventListener("mousedown",e=>{if(!drag)beginDrag(e,"mouse");});
+window.addEventListener("mousemove",e=>moveDrag(e,true));
+window.addEventListener("mouseup",e=>{if(e.button===0)drop(e,false,true);});
+// Losing pointer capture does not mean a mouse was released over no bin.
+canvas.addEventListener("lostpointercapture",()=>{});
+window.addEventListener("blur",()=>{
+ if(!drag)return;
+ game.release(drag.id);drag=null;
+});
 function drawWheel(g,x,y,r,angle){
  circle(g,x,y,r+4,"#243741");circle(g,x,y,r,"#acb5a9");circle(g,x,y,r-4,"#586d73");
  for(let i=0;i<5;i++){const a=i*Math.PI*2/5+angle;line(g,x+Math.cos(a)*4,y+Math.sin(a)*4,x+Math.cos(a)*(r-4),y+Math.sin(a)*(r-4),"#d3c8a9",3);}
