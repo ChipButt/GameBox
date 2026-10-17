@@ -321,7 +321,7 @@ function drop(e,cancelled=false,mouseFallback=false){
 canvas.addEventListener("pointerdown",e=>beginDrag(e));
 window.addEventListener("pointermove",e=>moveDrag(e));
 window.addEventListener("pointerup",e=>drop(e));
-window.addEventListener("pointercancel",e=>drop(e,true));
+window.addEventListener("pointercancel",e=>{if(drag?.kind!=="mouse")drop(e,true);});
 // Mouse compatibility events cover desktop browsers that cancel or fail to
 // deliver their pointerup when capture changes between canvas and window.
 canvas.addEventListener("mousedown",e=>{if(!drag)beginDrag(e,"mouse");});
