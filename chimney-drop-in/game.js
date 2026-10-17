@@ -191,7 +191,7 @@ function steerButton(button,dir){
 }
 steerButton($("moveLeft"),"left");steerButton($("moveRight"),"right");
 function screenPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*360/r.width,y:(e.clientY-r.top)*560/r.height};}
-canvas.addEventListener("pointerdown",e=>{if(mode!=="play")return;const p=screenPoint(e);activeTouch=e.pointerId;game.setTarget(p.x);canvas.setPointerCapture?.(e.pointerId);e.preventDefault();});
+canvas.addEventListener("pointerdown",e=>{if(mode!=="play")return;const p=screenPoint(e);activeTouch=e.pointerId;game.setTarget(p.x);try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}e.preventDefault();});
 canvas.addEventListener("pointermove",e=>{if(mode!=="play"||activeTouch!==e.pointerId)return;game.setTarget(screenPoint(e).x);e.preventDefault();});
 const unstick=e=>{if(activeTouch!==e.pointerId)return;activeTouch=null;game.setTarget(null);};
 canvas.addEventListener("pointerup",unstick);canvas.addEventListener("pointercancel",unstick);
