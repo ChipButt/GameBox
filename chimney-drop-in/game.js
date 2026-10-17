@@ -112,6 +112,9 @@ function baubleArt(){
  return c;
 }
 const art={santa:[0,1,2,3].map(santaArt),cookie:cookieArt(),milk:milkArt(),ember:emberArt(),wreath:wreathArt(),bauble:baubleArt()};
+// Render the actual, separately-authored Santa sprite in the front menu too.
+const heroSanta=$("heroSanta");
+if(heroSanta){const heroContext=heroSanta.getContext("2d");heroContext.imageSmoothingEnabled=false;heroContext.clearRect(0,0,60,68);heroContext.drawImage(art.santa[1],3,0,54,66);}
 function sprite(g,im,x,y,w,h){if(!im)return;g.drawImage(im,Math.round(x-w/2),Math.round(y-h/2),w,h);}
 function tone(kind){
  if(!save.sound)return;
