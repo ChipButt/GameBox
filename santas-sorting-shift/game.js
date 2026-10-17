@@ -288,7 +288,9 @@ function beginDrag(e,kind="pointer"){
  if(kind==="pointer"){
   try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}
  }
- e.preventDefault();
+ // On desktop, allow native mouse compatibility events to fire; the
+ // mouseup fallback cannot help if pointerdown suppresses those events.
+ if(kind!=="pointer"||e.pointerType!=="mouse")e.preventDefault();
  return true;
 }
 function moveDrag(e,mouseFallback=false){
@@ -299,7 +301,7 @@ function moveDrag(e,mouseFallback=false){
  drag.pointerX=p.x;drag.pointerY=p.y;
  drag.x=Math.max(8,Math.min(W-8,p.x-drag.dx));
  drag.y=Math.max(10,Math.min(H-8,p.y-drag.dy));
- e.preventDefault();
+ if(drag.kind!=="mouse")e.preventDefault();
 }
 function drop(e,cancelled=false,mouseFallback=false){
  if(!drag)return;
