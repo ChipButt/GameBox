@@ -42,3 +42,22 @@ jobs:
           grep -q 'href="santas-sorting-shift/"' index.html
           grep -q 'href="santas-sorting-shift/"' hub/index.html
           python3 tools/sync-entry-points.py --check
+      - name: Install lightweight browser driver
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Verify local Chromium
+        run: which google-chrome || which chromium
+      - name: Serve local GameBox site
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/sorting-shift-http.log 2>&1 &
+          sleep 2
+      - name: Play the game in a mobile browser
+        run: node santas-sorting-shift/browser-smoke.cjs
+      - name: Save gameplay previews
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sorting-shift-mobile-previews
+          path: |
+            santas-sorting-shift/preview-menu.png
+            santas-sorting-shift/preview-playing.png
+          if-no-files-found: ignore
