@@ -29,7 +29,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .menu::before{left:11px}.menu::after{right:11px}
 .menu-eyebrow{display:block;color:#f5cfa1;font:900 10px/1.1 "Barlow Condensed",sans-serif;letter-spacing:1.9px;padding:0 9px}
 .menu-santa{height:70px;position:relative;display:flex;align-items:center;justify-content:center;margin:4px 0 -1px}
-.menu-santa-shape{color:#fff4d2;display:grid;place-items:center;width:59px;height:59px;border:4px solid #ffd59c;border-radius:17px;background:linear-gradient(#d96c54,#9e3d4b);box-shadow:inset 0 4px #ffce8e,0 6px #181e31;font:900 40px "Barlow Condensed",sans-serif;transform:rotate(-8deg);text-shadow:0 4px #772d36}
+.menu-santa-sprite{display:block;position:relative;z-index:2;width:61px;height:69px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 0 #1a2131) drop-shadow(0 0 7px #f6b56856);transform:rotate(-5deg)}
 .menu-drop-lines{position:absolute;inset:0;pointer-events:none}
 .menu-drop-lines i{position:absolute;width:3px;height:34px;background:#fbc36e;transform:rotate(22deg);opacity:.7}
 .menu-drop-lines i:nth-child(1){left:57px;top:10px}.menu-drop-lines i:nth-child(2){right:66px;top:3px;height:24px}.menu-drop-lines i:nth-child(3){right:49px;top:31px;height:19px}
