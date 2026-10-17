@@ -6,6 +6,8 @@ Play: `https://chipbutt.github.io/GameBox/chimney-drop-in/`
 
 ## How to play
 
+**New visual rule:** green circular **+** markers and labels mean safe pickups (**SHIELD**, **BOOST**, **BONUS**); red diamond **!** markers and **AVOID** labels mean dangerous obstacles. Protruding ledges have warning stripes and exclamation marks. The legend stays visible above the chimney while playing.
+
 Steer Santa with **LEFT/RIGHT** buttons, drag him horizontally inside the chimney, or use keyboard Left/Right or A/D. Santa falls continually, and the procedurally generated brick walls move past him. The chute width, masonry structure and hazard combinations change as he descends.
 
 - **Embers / ember showers** — burning fire hazards. Stay away.
