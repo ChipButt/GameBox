@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#101923">
 <meta name="description" content="Chimney Drop-In: steer Santa down an endless procedurally generated chimney network, dodge bricks and burning embers, and collect cookies and milk.">
 <title>Chimney Drop-In · GameBox</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <main class="arcade" aria-label="Chimney Drop-In arcade game">
@@ -31,6 +31,8 @@
     <div class="menu-santa" aria-hidden="true"><div class="menu-drop-lines"><i></i><i></i><i></i></div><div class="menu-presents"><img src="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/present_small_red.png" alt=""><img src="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/present_small_green.png" alt=""></div><canvas id="heroSanta" class="menu-santa-sprite" width="60" height="68" aria-hidden="true"></canvas></div>
     <h2 id="overlayTitle">DOWN THE<br><em>CHIMNEY!</em></h2>
     <p id="menuText">One Santa. Endless chimneys. Dodge red-hot embers, crumbling bricks and nasty Christmas decorations on your way down.</p>
+    <div id="helpGallery" class="help-gallery" hidden aria-label="Item guide"></div>
+    <div id="helpPager" class="help-pager" hidden aria-live="polite"></div>
     <div id="menuStats" class="menu-stats"><div><span>PERSONAL BEST</span><strong id="bestScore">0m</strong></div><div><span>COLLECT</span><strong>COOKIE · MILK</strong></div></div>
     <button type="button" class="mainButton" id="primaryButton">START FALLING <span>➜</span></button>
     <button type="button" class="secondaryButton" id="secondaryButton">HOW TO PLAY</button>
@@ -51,6 +53,6 @@
  <p id="announce" class="sr-only" aria-live="polite"></p>
 </main>
 <script src="engine.js?v=1"></script>
-<script src="game.js?v=2"></script>
+<script src="game.js?v=3"></script>
 </body>
 </html>
