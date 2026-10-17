@@ -25,13 +25,15 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   await page.screenshot({path:"santas-sorting-shift/preview-menu.png",fullPage:true});
   await page.locator("#primaryButton").click();
   assert.equal(await page.locator("#overlay").isVisible(),false);
-  await page.waitForTimeout(1450);
+  const firstParcel=await (await page.waitForFunction(()=>{
+    const q=window.__sortingShiftTest?.();
+    return q?.speed>=100&&q.items.find(i=>i.type==="gift"&&i.x>55&&i.x<245);
+  },null,{timeout:5000})).jsonValue();
   const box=await page.locator("#world").boundingBox();
   assert.ok(box&&box.width>260);
   const x=n=>box.x+n*box.width/360,y=n=>box.y+n*box.height/540;
-  // Faster opening conveyor: the first gift enters at 0.42s, moving at 100 px/sec.
-  // Around 1.45s, its centre is near 72px.
-  await page.mouse.move(x(72),y(261));
+  // Acquire the real moving parcel centre instead of depending on animation timing.
+  await page.mouse.move(x(firstParcel.x),y(firstParcel.y));
   await page.mouse.down();
   await page.mouse.move(x(70),y(405),{steps:13});
   await page.mouse.up();
@@ -63,10 +65,13 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   await expressPage.addInitScript(()=>{Math.random=()=>.05;});
   await expressPage.goto("http://127.0.0.1:"+PORT+"/santas-sorting-shift/",{waitUntil:"domcontentloaded"});
   await expressPage.locator("#primaryButton").click();
-  await expressPage.waitForTimeout(1450);
+  const expressParcel=await (await expressPage.waitForFunction(()=>{
+    const q=window.__sortingShiftTest?.();
+    return q?.level===1&&q.items.find(i=>i.type==="express"&&i.x>55&&i.x<245);
+  },null,{timeout:5000})).jsonValue();
   const expressBox=await expressPage.locator("#world").boundingBox();
   const ex=n=>expressBox.x+n*expressBox.width/360, ey=n=>expressBox.y+n*expressBox.height/540;
-  await expressPage.mouse.move(ex(72),ey(261));
+  await expressPage.mouse.move(ex(expressParcel.x),ey(expressParcel.y));
   await expressPage.mouse.down();
   await expressPage.mouse.move(ex(290),ey(407),{steps:13});
   await expressPage.mouse.up();
