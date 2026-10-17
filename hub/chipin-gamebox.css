@@ -471,3 +471,18 @@
 .presentStackHomeScene:after{content:"";position:absolute;left:0;right:0;bottom:2px;height:6px;background:repeating-linear-gradient(90deg,#d8ac6b 0 9px,#42616a 9px 13px)}
 .presentStackHomeScene .presentStackGift{position:absolute;width:36px;height:36px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(1px 3px 0 #132a35)}
 .presentStackHomeScene .psOne{left:8px;bottom:7px}.presentStackHomeScene .psTwo{left:39px;bottom:7px}.presentStackHomeScene .psThree{left:39px;bottom:34px}
+
+
+/* Santa's Sorting Shift — real Kenney sprites in the GameBox catalogue tile. */
+.toyGameSortingShift .gameTile{background:linear-gradient(155deg,#32766c,#153d49);border-color:#f1d391}
+.toyBox .toyGameSortingShift .gameTile strong{font-size:18px;color:#fff0c5;text-shadow:0 2px #0c2b32}
+.toyBox .toyGameSortingShift .gameTile small{color:#c6e9d5}
+.ssHomeScene{position:relative;width:116px;height:80px;overflow:hidden;border:3px solid #d7ae70;border-radius:7px;background:repeating-linear-gradient(0deg,#78573f 0 10px,#5f493b 10px 12px);box-shadow:0 4px #102b34;image-rendering:pixelated}
+.ssHomeBelt{position:absolute;top:20px;left:2px;right:2px;height:34px;border:3px solid #aab5ad;border-bottom:6px solid #273d47;background:repeating-linear-gradient(90deg,#5e777c 0 12px,#344f58 12px 20px);animation:ssMove 1.2s linear infinite}
+.ssHomeGift{position:absolute;top:-11px;width:34px;height:34px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 3px #172936)}
+.ssOne{left:13px}.ssTwo{left:62px}
+.ssHomeBins{position:absolute;left:3px;right:3px;bottom:3px;display:flex;gap:3px;height:20px}
+.ssHomeBins span{flex:1;display:grid;place-items:center;border:2px solid #f2daab;border-bottom:4px solid #47332e;background:#2f896c;color:#fff8e1;font-weight:900;font-size:8px}
+.ssHomeBins span:nth-child(2){background:#bc5d4c}.ssHomeBins span:nth-child(3){background:#dbab52;color:#21383d;font-size:13px}
+@keyframes ssMove{to{background-position:20px 0}}
+@media(prefers-reduced-motion:reduce){.ssHomeBelt{animation:none}}
