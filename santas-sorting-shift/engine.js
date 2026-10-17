@@ -37,7 +37,7 @@
       return n<.60?"gift":"coal";
     }
     spawn(type){
-      const item={id:this.nextId++,type:type||this.choose(),x:-31,y:261,held:false,variant:Math.floor(this.random()*6),phase:this.random()*6.28};
+      const item={id:this.nextId++,type:type||(this.nextId===4?"express":this.choose()),x:-31,y:261,held:false,variant:Math.floor(this.random()*6),phase:this.random()*6.28};
       this.items.push(item);this.events.push({type:"spawn",id:item.id,itemType:item.type});return item;
     }
     step(seconds){
