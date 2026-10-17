@@ -98,7 +98,7 @@ function makeBackdrop(){
  for(let a=0;a<6;a++){const ang=a*Math.PI/3;line(g,305+Math.cos(ang)*4,189+Math.sin(ang)*4,305+Math.cos(ang)*12,189+Math.sin(ang)*12,"#ced0b6",3);}
  circle(g,305,189,5,"#dfc584");
  rect(g,126,133,137,73,"#253f43");rect(g,130,136,129,66,"#8c6147");rect(g,134,139,121,57,"#d8b57e");rect(g,139,143,111,48,"#254c49");
- text(g,"SANTA'S",195,158,14,"#ffdf9c");text(g,"PACKING LINE",195,178,24,"#f6e5c4");
+ text(g,"SANTA'S",195,158,14,"#ffdf9c");text(g,"PACKING LINE",195,178,15,"#f6e5c4");
  rect(g,142,186,104,2,"#569380");
  // Hanging festive bunting, garland and light sockets.
  line(g,8,25,351,24,"#174c41",3);
@@ -152,12 +152,12 @@ function sound(kind){
 function uiUpdate(){
  ui.score.textContent=String(game.score).padStart(6,"0");
  ui.shift.textContent=String(game.level).padStart(2,"0")+" / 12";
- ui.streak.textContent="×"+game.streak;
- ui.lives.textContent="♥ ".repeat(Math.max(0,game.lives)).trim()||"—";
+ ui.streak.textContent="×"+(game.streak||0);
+ ui.lives.textContent="♥ ".repeat(Math.max(0,game.lives??3)).trim()||"—";
  const sec=Math.ceil(game.timeLeft||0);ui.timer.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");
  ui.timer.style.color=sec<10?"#ff847c":"#ffdf9b";
  const required=game.rule?.quota||11;
- ui.progressLabel.textContent=game.sorted+" / "+required;
+ ui.progressLabel.textContent=(game.sorted||0)+" / "+required;
  ui.progressFill.style.width=Math.min(100,(game.sorted/required)*100)+"%";
  ui.progressTrack.setAttribute("aria-valuemax",required);
  ui.progressTrack.setAttribute("aria-valuenow",game.sorted||0);
@@ -443,5 +443,5 @@ function animate(now){
  drawScene(phase);
  requestAnimationFrame(animate);
 }
-menu("home");requestAnimationFrame(animate);
+game.start(1);menu("home");requestAnimationFrame(animate);
 })();
