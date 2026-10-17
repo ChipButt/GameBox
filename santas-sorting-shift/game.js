@@ -259,6 +259,11 @@ function worldPoint(e){
  const b=canvas.getBoundingClientRect();
  return {x:(e.clientX-b.left)*(W/b.width),y:(e.clientY-b.top)*(H/b.height)};
 }
+// Match the visible crates, not only the centre of a parcel grabbed off-centre.
+function binAt(x,y){
+ if(y<352||y>474)return null;
+ return binList.find(b=>x>=b.x+3&&x<=b.x+b.w-3)||null;
+}
 canvas.addEventListener("pointerdown",e=>{
  if(screen!=="game"||drag)return;
  const p=worldPoint(e);
@@ -270,24 +275,31 @@ canvas.addEventListener("pointerdown",e=>{
  if(!best)return;
  const held=game.hold(best.id);if(!held)return;
  e.preventDefault();canvas.setPointerCapture?.(e.pointerId);
- drag={id:best.id,pointer:e.pointerId,x:p.x,y:p.y,dx:p.x-best.x,dy:p.y-best.y};
+ drag={id:best.id,pointer:e.pointerId,x:p.x,y:p.y,pointerX:p.x,pointerY:p.y,dx:p.x-best.x,dy:p.y-best.y};
 });
-canvas.addEventListener("pointermove",e=>{
+window.addEventListener("pointermove",e=>{
  if(!drag||drag.pointer!==e.pointerId)return;
- const p=worldPoint(e);drag.x=Math.max(8,Math.min(W-8,p.x-drag.dx));drag.y=Math.max(10,Math.min(H-8,p.y-drag.dy));e.preventDefault();
+ const p=worldPoint(e);
+ drag.pointerX=p.x;drag.pointerY=p.y;
+ drag.x=Math.max(8,Math.min(W-8,p.x-drag.dx));
+ drag.y=Math.max(10,Math.min(H-8,p.y-drag.dy));
+ e.preventDefault();
 });
 function drop(e,cancelled=false){
  if(!drag||drag.pointer!==e.pointerId)return;
  const d=drag;drag=null;
- const p=worldPoint(e),x=p.x-d.dx,y=p.y-d.dy;
- const b=!cancelled&&y>350&&y<488?binList.find(b=>x>=b.x-2&&x<=b.x+b.w+2):null;
+ const p=worldPoint(e);
+ // Release over the visible crate works with a mouse even when the gift was grabbed by its edge.
+ // Retain a parcel-centre fallback for touch drags holding the corner of a gift.
+ const b=!cancelled&&(binAt(p.x,p.y)||binAt(p.x-d.dx,p.y-d.dy));
  try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}
  if(b){game.sort(d.id,b.id);handle(game.consume());}
  else game.release(d.id);
  e.preventDefault();
 }
-canvas.addEventListener("pointerup",e=>drop(e));
-canvas.addEventListener("pointercancel",e=>drop(e,true));
+// Also handle mouse releases outside the canvas if pointer capture is unavailable.
+window.addEventListener("pointerup",e=>drop(e));
+window.addEventListener("pointercancel",e=>drop(e,true));
 canvas.addEventListener("lostpointercapture",()=>{if(drag){game.release(drag.id);drag=null;}});
 function drawWheel(g,x,y,r,angle){
  circle(g,x,y,r+4,"#243741");circle(g,x,y,r,"#acb5a9");circle(g,x,y,r-4,"#586d73");
@@ -365,8 +377,9 @@ function drawItem(g,item,x,y,lift=false){
 }
 function drawBins(g,time){
  const active=true;
+ const hovered=drag&&(binAt(drag.pointerX,drag.pointerY)||binAt(drag.x,drag.y));
  for(const b of binList){
-   const locked=b.id==="express"&&!active,selected=drag&&drag.y>=346&&drag.y<=488&&drag.x>=b.x&&drag.x<=b.x+b.w;
+   const locked=b.id==="express"&&!active,selected=hovered?.id===b.id;
    const x=b.x,w=b.w;
    // Feet/shadow and reinforced wooden side pieces.
    rect(g,x+8,465,w-10,10,"#2e292d");rect(g,x+16,474,12,5,"#302d30");rect(g,x+w-28,474,12,5,"#302d30");
@@ -401,7 +414,7 @@ function drawBins(g,time){
  // Item destination arrow guidance in normal gameplay, one per bin.
  for(const b of binList){
    if(!drag)continue;
-   text(g,"↓",b.x+b.w/2,345,19,drag.x>=b.x&&drag.x<=b.x+b.w?"#ffe795":"#b8d9ca");
+   text(g,"↓",b.x+b.w/2,345,19,hovered?.id===b.id?"#ffe795":"#b8d9ca");
  }
 }
 function drawScene(time){
