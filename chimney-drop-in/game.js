@@ -112,6 +112,8 @@ function baubleArt(){
  return c;
 }
 const art={santa:[0,1,2,3].map(santaArt),cookie:cookieArt(),milk:milkArt(),ember:emberArt(),wreath:wreathArt(),bauble:baubleArt()};
+const menuSanta=document.querySelector(".menu-santa-shape");
+if(menuSanta){menuSanta.textContent="";menuSanta.classList.add("has-art");menuSanta.style.backgroundImage="url("+art.santa[0].toDataURL("image/png")+")";}
 // Render the actual, separately-authored Santa sprite in the front menu too.
 const heroSanta=$("heroSanta");
 if(heroSanta){const heroContext=heroSanta.getContext("2d");heroContext.imageSmoothingEnabled=false;heroContext.clearRect(0,0,60,68);heroContext.drawImage(art.santa[1],3,0,54,66);}
@@ -276,12 +278,14 @@ function wallScene(g,depth,now){
   if(k<0)continue;
   const d=k*archStep+300,y=Y+d-depth,p=passage(d,game.seed);
   if(y<-85||y>620)continue;
-  rect(g,p.left+5,y,Math.max(0,p.width-10),8,"#262e3a");
-  rect(g,p.left+9,y+1,Math.max(0,p.width-18),2,"#bc9167");
-  rect(g,p.left+8,y+10,14,29,"#584244");rect(g,p.right-22,y+10,14,29,"#584244");
-  rect(g,p.left+10,y+12,4,18,"#b07e5c");rect(g,p.right-14,y+12,4,18,"#b07e5c");
-  for(let n=0;n<3;n++)rect(g,p.left+35+n*(p.width-72)/2,y+2,5,4,"#d0b183");
-  label(g,k%2?"NO. "+(k+1):"CHIMNEY "+(k+1),p.center,y+22,10,"#b4a18c");
+  // Decorative side-mounted chimney markers. Do not draw a fake solid
+  // barrier across the playable passage: players can fly straight through.
+  rect(g,p.left-16,y,48,8,"#34323e");rect(g,p.right-32,y,48,8,"#34323e");
+  rect(g,p.left-13,y+1,43,2,"#bb9270");rect(g,p.right-30,y+1,43,2,"#bb9270");
+  rect(g,p.left+6,y+8,12,29,"#584244");rect(g,p.right-18,y+8,12,29,"#584244");
+  rect(g,p.left+8,y+10,3,18,"#bd8966");rect(g,p.right-12,y+10,3,18,"#bd8966");
+  rect(g,p.left+6,y+35,19,12,"#322f3a");
+  label(g,""+(k+1),p.left+16,y+41,11,"#f5d19a");
  }
  // Soot and falling flakes: parallax specks locked to distance for deterministic visual texture.
  for(let i=0;i<37;i++){
