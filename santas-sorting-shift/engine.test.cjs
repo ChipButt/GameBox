@@ -55,6 +55,11 @@ test("Express parcels spawn and score correctly in the first shift",()=>{
  assert.equal(first.sort(special.id,"express").type,"correct");
  assert.equal(first.score,160);
 });
+test("Express appears by the third parcel even if random rolls avoid specials",()=>{
+ const g=new SortingShift(()=>.5).start(1);
+ const types=[g.spawn().type,g.spawn().type,g.spawn().type];
+ assert.deepEqual(types,["gift","gift","express"]);
+});
 test("invalid destination does not consume the parcel",()=>{
  const g=new SortingShift(()=>.4).start(1),item=g.spawn("gift");
  assert.equal(g.sort(item.id,"unknown").type,"ignored");
