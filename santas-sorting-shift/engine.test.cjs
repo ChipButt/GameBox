@@ -2,12 +2,13 @@ const test=require("node:test");
 const assert=require("node:assert/strict");
 const {SortingShift,config,MAX_SHIFT}=require("./engine.js");
 
-test("difficulty progressively rises and stage three unlocks express",()=>{
+test("conveyor starts briskly, accelerates further, and Express is unlocked from Shift 1",()=>{
  assert.equal(MAX_SHIFT,12);
+ assert.ok(config(1).speed>=100,"the opening belt must not feel slow");
+ assert.ok(config(1).interval<=1.4,"opening parcels should appear frequently");
  assert.ok(config(12).speed>config(1).speed);
  assert.ok(config(12).interval<config(1).interval);
- assert.equal(config(2).express,false);
- assert.equal(config(3).express,true);
+ for(let level=1;level<=MAX_SHIFT;level++)assert.equal(config(level).express,true);
 });
 test("moving parcels can be lifted, held still, and released",()=>{
  const g=new SortingShift(()=>.4).start(1),item=g.spawn("gift");
@@ -46,11 +47,13 @@ test("time only advances while running, and expiration fails unfinished shift",(
  for(let i=0;i<950;i++)g.step(.05);
  assert.equal(g.status,"failed");
 });
-test("express parcels only occur after shift three, with star-mark bonus",()=>{
- const early=new SortingShift(()=>.01).start(2),later=new SortingShift(()=>.01).start(3);
- assert.equal(early.choose(),"gift");assert.equal(later.choose(),"express");
- const item=later.spawn("express");later.sort(item.id,"express");
- assert.equal(later.score,160);
+test("Express parcels spawn and score correctly in the first shift",()=>{
+ const first=new SortingShift(()=>.01).start(1);
+ assert.equal(first.choose(),"express");
+ const special=first.spawn();
+ assert.equal(special.type,"express");
+ assert.equal(first.sort(special.id,"express").type,"correct");
+ assert.equal(first.score,160);
 });
 test("invalid destination does not consume the parcel",()=>{
  const g=new SortingShift(()=>.4).start(1),item=g.spawn("gift");
