@@ -103,6 +103,27 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
     // Pick up the gift by its lower-right corner (not its centre).
     await desktopPage.mouse.move(cx(present.x+14),cy(present.y+19));
     await desktopPage.mouse.down();
+    if(width===1440){
+      // Reproduce the desktop failure mode: Chrome/Safari can lose pointer capture
+      // in the middle of an otherwise ordinary mouse drag.
+      const captureDropped=await desktopPage.evaluate(()=>{
+        const canvas=document.getElementById("world");
+        if(!canvas.hasPointerCapture(1))return false;
+        canvas.releasePointerCapture(1);
+        return true;
+      });
+      assert.ok(captureDropped,"Expected an active mouse pointer capture before the regression case");
+      await desktopPage.waitForTimeout(40);
+      const heldAfterLoss=await desktopPage.evaluate(()=>window.__sortingShiftTest?.()?.items.some(item=>item.held));
+      assert.equal(heldAfterLoss,true,"Losing desktop pointer capture must NOT return the present to the belt");
+      await desktopPage.evaluate(()=>{
+        document.getElementById("world").dispatchEvent(
+          new PointerEvent("pointercancel",{bubbles:true,pointerId:1,pointerType:"mouse"})
+        );
+      });
+      const heldAfterCancel=await desktopPage.evaluate(()=>window.__sortingShiftTest?.()?.items.some(item=>item.held));
+      assert.equal(heldAfterCancel,true,"Desktop pointercancel must retain the drag until mouseup");
+    }
     await desktopPage.mouse.move(cx(70),cy(dropY),{steps:15});
     await desktopPage.mouse.up();
     await desktopPage.waitForTimeout(90);
