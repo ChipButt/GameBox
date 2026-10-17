@@ -73,3 +73,15 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 /* Real cached Santa sprite on the menu replaces the generic letter badge. */
 .menu-santa-shape.has-art{width:67px;height:77px;background-color:transparent!important;background-position:center;background-repeat:no-repeat;background-size:contain;image-rendering:pixelated;border:0;box-shadow:none;text-shadow:none;transform:rotate(-9deg);align-self:center;flex:none}
 @media(max-height:740px){.menu-santa-shape.has-art{width:52px;height:54px}}
+
+
+/* Hazard language: green round "+" collect / orange-red diamond "!" avoid.
+   Always visible during gameplay; shapes and words work without colour vision. */
+.risk-legend{position:absolute;z-index:3;left:50%;top:7px;transform:translateX(-50%);width:max-content;display:flex;align-items:center;justify-content:center;gap:9px;pointer-events:none;filter:drop-shadow(0 2px 3px #070b16a8)}
+.risk-legend span{min-width:105px;height:24px;display:inline-flex;justify-content:center;align-items:center;gap:6px;border:2px solid #061e26;border-radius:8px;color:#f6fff4;font:900 12px/1 "Barlow Condensed",system-ui,sans-serif;letter-spacing:1.4px;text-shadow:0 1px #0e2a2f}
+.risk-legend b{width:17px;height:17px;display:grid;place-items:center;font:900 16px/1 "Barlow Condensed",system-ui,sans-serif;color:#fff9df;border:2px solid #e1f4df;background:#1e473d;border-radius:50%}
+.risk-legend .risk-good{background:#23684f;border-color:#aaf2b2}
+.risk-legend .risk-bad{background:#922e37;border-color:#ffad80}
+.risk-legend .risk-bad b{border-color:#fff3db;background:#58242d;border-radius:3px;transform:rotate(45deg);font-size:0}
+.risk-legend .risk-bad b::after{content:"!";font:900 13px/1 "Barlow Condensed",system-ui,sans-serif;transform:rotate(-45deg)}
+@media(max-width:340px){.risk-legend{gap:5px}.risk-legend span{min-width:88px;font-size:10px;height:21px;gap:3px}.risk-legend b{width:15px;height:15px}}
