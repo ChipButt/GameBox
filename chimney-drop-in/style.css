@@ -69,3 +69,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 @media(max-height:740px){.arcade{gap:4px}.headbar{height:36px}.square-link{width:35px;height:35px;flex-basis:35px}.stat{min-height:39px}.boost-panel{padding:3px 7px}.steer{height:47px}.controls{min-height:48px}.menu{padding:9px 12px 7px}.menu-santa{height:42px}.menu-santa-shape{width:39px;height:39px;font-size:30px}.menu h2{font-size:33px}.menu p{font-size:11px;margin:5px 0}.menu-stats{margin:4px 0 8px}.menu-presents img{width:28px;height:28px}.mainButton{min-height:37px}.secondaryButton{min-height:30px}}
 @media(max-height:620px){.controls-mid .tip{display:none}.controls-mid b{font-size:9px}.steer{flex-basis:95px}.menu-santa{display:none}.menu h2{font-size:28px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Real cached Santa sprite on the menu replaces the generic letter badge. */
+.menu-santa-shape.has-art{width:67px;height:77px;background-color:transparent!important;background-position:center;background-repeat:no-repeat;background-size:contain;image-rendering:pixelated;border:0;box-shadow:none;text-shadow:none;transform:rotate(-9deg);align-self:center;flex:none}
+@media(max-height:740px){.menu-santa-shape.has-art{width:52px;height:54px}}
