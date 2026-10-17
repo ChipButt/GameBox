@@ -85,3 +85,34 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .risk-legend .risk-bad b{border-color:#fff3db;background:#58242d;border-radius:3px;transform:rotate(45deg);font-size:0}
 .risk-legend .risk-bad b::after{content:"!";font:900 13px/1 "Barlow Condensed",system-ui,sans-serif;transform:rotate(-45deg)}
 @media(max-width:340px){.risk-legend{gap:5px}.risk-legend span{min-width:88px;font-size:10px;height:21px;gap:3px}.risk-legend b{width:15px;height:15px}}
+
+
+/* Two-page in-game sprite handbook — original sprites, not emoji substitutes. */
+.menu.help-mode{padding:10px 12px 9px}
+.menu.help-mode .menu-santa,.menu.help-mode .menu-stats{display:none}
+.menu.help-mode h2{font-size:clamp(30px,8.4vw,38px);line-height:.93;margin:9px 0 5px}
+.menu.help-mode p{font-size:11px;line-height:1.28;margin:3px auto 7px;color:#f1e8dc}
+.help-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:7px 0}
+.guide-card{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;border:2px solid #76c6a3;border-bottom:5px solid #174c45;border-radius:12px;padding:6px 3px 7px;background:linear-gradient(165deg,#3b645b,#203b41);box-shadow:inset 0 1px #f0ffd73b}
+.guide-card.avoid{border-color:#ec9478;border-bottom-color:#71383b;background:linear-gradient(165deg,#774649,#402d38)}
+.guide-art{position:relative;width:67px;height:65px;display:grid;place-items:center;border-radius:10px;border:2px solid #8db5a6;background:radial-gradient(ellipse,#355853,#193139 76%);overflow:visible}
+.guide-card.avoid .guide-art{border-color:#b67a74;background:radial-gradient(ellipse,#5d383d,#2d2433 78%)}
+.guide-sprite{display:block;width:64px;height:64px;image-rendering:pixelated;object-fit:contain}
+.guide-marker{position:absolute;top:-5px;right:-6px;width:22px;height:22px;display:grid;place-items:center;border:2px solid #f9f3cf;border-radius:50%;background:#27915c;color:#fffde9;font:900 18px/1 "Barlow Condensed",sans-serif;text-shadow:0 1px #143a2d;box-shadow:0 2px #1a3034}
+.guide-marker.avoid{background:#d14c48;border-radius:5px;transform:rotate(45deg);font-size:0}
+.guide-marker.avoid::after{content:"!";font:900 15px "Barlow Condensed",sans-serif;transform:rotate(-45deg)}
+.guide-card strong{font:900 13px/1 "Barlow Condensed",sans-serif;color:#ffefcf;letter-spacing:.15px}
+.guide-card small{font:800 10px/1.13 "Barlow Condensed",sans-serif;color:#dae5da}
+.help-pager{font:900 10px/1 "Barlow Condensed",sans-serif;color:#e8ceab;letter-spacing:1.5px;text-align:center;padding:2px 0 5px}
+.menu.help-mode .mainButton{min-height:42px}
+.menu.help-mode .secondaryButton{min-height:32px}
+@media(max-height:740px){
+ .menu.help-mode{padding:8px 10px}
+ .menu.help-mode h2{font-size:30px;margin:5px 0 3px}
+ .help-gallery{gap:5px;margin:5px 0}
+ .guide-card{padding:4px 2px 5px;gap:2px}
+ .guide-art{width:57px;height:55px}
+ .guide-sprite{width:55px;height:55px}
+ .guide-card strong{font-size:12px}
+ .guide-card small{font-size:9px}
+}
