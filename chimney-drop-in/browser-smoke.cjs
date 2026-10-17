@@ -20,6 +20,28 @@ if(!executablePath)throw Error("Chrome/Chromium executable missing");
    assert.match(await guidance.innerText(),/AVOID/);
    assert.equal(await page.locator("#overlay").isVisible(),true);
    await page.screenshot({path:"chimney-drop-in/preview-menu-"+size.width+".png",fullPage:true});
+   // The opening How To guide must show actual game-art sprites on two distinct pages.
+   await page.locator("#secondaryButton").click();
+   assert.equal(await page.locator("#helpGallery").isVisible(),true);
+   assert.match(await page.locator("#overlayTitle").innerText(),/COLLECT/);
+   assert.equal(await page.locator(".guide-card.collect").count(),3);
+   for(const name of ["COOKIE","MILK","PRESENT"])assert.ok((await page.locator("#helpGallery").innerText()).includes(name));
+   await page.waitForFunction(()=>Array.from(document.querySelectorAll(".guide-sprite")).every(c=>{
+     const x=c.getContext("2d").getImageData(0,0,64,64).data;
+     return Array.from(x).some((v,i)=>i%4===3&&v>0);
+   }));
+   await page.screenshot({path:"chimney-drop-in/preview-help-collect-"+size.width+".png",fullPage:true});
+   await page.locator("#primaryButton").click();
+   assert.match(await page.locator("#overlayTitle").innerText(),/AVOID/);
+   assert.equal(await page.locator(".guide-card.avoid").count(),5);
+   for(const name of ["EMBERS","BRICKS","WREATH","BAUBLE","EMBER SHOWER"])assert.ok((await page.locator("#helpGallery").innerText()).includes(name));
+   await page.screenshot({path:"chimney-drop-in/preview-help-avoid-"+size.width+".png",fullPage:true});
+   await page.locator("#secondaryButton").click();
+   assert.match(await page.locator("#overlayTitle").innerText(),/COLLECT/);
+   await page.locator("#primaryButton").click();
+   await page.locator("#primaryButton").click();
+   assert.equal(await page.locator("#helpGallery").isVisible(),false);
+   assert.match(await page.locator("#overlayTitle").innerText(),/CHIMNEY/);
    await page.locator("#primaryButton").click();
    assert.equal(await page.locator("#overlay").isVisible(),false);
    assert.equal(await guidance.isVisible(),true);
