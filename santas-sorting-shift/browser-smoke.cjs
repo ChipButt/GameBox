@@ -79,6 +79,41 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   assert.ok(expressScore>=160,"Shift 1 Express must sort into the gold crate, got "+expressScore);
   await expressPage.screenshot({path:"santas-sorting-shift/preview-express.png",fullPage:true});
   await expressPage.close();
+  // Desktop regression: an off-centre mouse grab must drop successfully when
+  // the cursor is released over the visible crate, even above its midpoint.
+  for(const {width,height,dropY} of [
+    {width:1366,height:768,dropY:362},
+    {width:1440,height:900,dropY:458}
+  ]){
+    const desktopContext=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+    const desktopPage=await desktopContext.newPage();
+    const desktopErrors=[];
+    desktopPage.on("pageerror",error=>desktopErrors.push(error.message));
+    await desktopPage.addInitScript(()=>{Math.random=()=>.32;});
+    const desktopResponse=await desktopPage.goto("http://127.0.0.1:"+PORT+"/santas-sorting-shift/",{waitUntil:"domcontentloaded"});
+    assert.equal(desktopResponse.status(),200);
+    await desktopPage.locator("#primaryButton").click();
+    const present=await (await desktopPage.waitForFunction(()=>{
+      const state=window.__sortingShiftTest?.();
+      return state?.items.find(item=>item.type==="gift"&&item.x>75&&item.x<170);
+    },null,{timeout:5000})).jsonValue();
+    const bounds=await desktopPage.locator("#world").boundingBox();
+    assert.ok(bounds&&bounds.width>350,"Desktop game canvas should be visible at "+width+"x"+height);
+    const cx=n=>bounds.x+n*bounds.width/360,cy=n=>bounds.y+n*bounds.height/540;
+    // Pick up the gift by its lower-right corner (not its centre).
+    await desktopPage.mouse.move(cx(present.x+14),cy(present.y+19));
+    await desktopPage.mouse.down();
+    await desktopPage.mouse.move(cx(70),cy(dropY),{steps:15});
+    await desktopPage.mouse.up();
+    await desktopPage.waitForTimeout(90);
+    assert.match(await desktopPage.locator("#progressLabel").innerText(),/1 \/ 11/,"Desktop mouse drop did not enter PRESENTS at "+width+"x"+height);
+    const desktopScore=Number((await desktopPage.locator("#score").innerText()).replace(/\D/g,""));
+    assert.ok(desktopScore>=100,"Desktop mouse drop should score for a gift at "+width+"x"+height);
+    assert.deepEqual(desktopErrors,[],"No desktop browser errors at "+width+"x"+height);
+    if(width===1366)await desktopPage.screenshot({path:"santas-sorting-shift/preview-desktop.png",fullPage:true});
+    await desktopContext.close();
+  }
+  console.log("PASS: desktop mouse drag and release into visible PRESENTS crate at 1366x768 and 1440x900");
   await context.close();
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
