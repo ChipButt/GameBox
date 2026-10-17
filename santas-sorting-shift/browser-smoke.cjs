@@ -29,9 +29,9 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   const box=await page.locator("#world").boundingBox();
   assert.ok(box&&box.width>260);
   const x=n=>box.x+n*box.width/360,y=n=>box.y+n*box.height/540;
-  // With the seeded RNG, the first present is red/green/blue but always a gift.
-  // It spawns at 0.42s and is near x=37 at 1.45s.
-  await page.mouse.move(x(36),y(261));
+  // Faster opening conveyor: the first gift enters at 0.42s, moving at 100 px/sec.
+  // Around 1.45s, its centre is near 72px.
+  await page.mouse.move(x(72),y(261));
   await page.mouse.down();
   await page.mouse.move(x(70),y(405),{steps:13});
   await page.mouse.up();
@@ -58,6 +58,22 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   assert.ok(layout.width<=layout.viewport+2,"Unexpected horizontal scrolling");
   assert.ok(layout.stageBottom<=layout.screenHeight,"The main playfield should fit on screen");
   console.log("PASS: launched mobile viewport, visible GameBox art, drag gift to bin, score, pause, resume, no page errors",layout);
+  // A fresh Shift 1 must already produce Express specials and accept the gold crate.
+  const expressPage=await context.newPage();
+  await expressPage.addInitScript(()=>{Math.random=()=>.05;});
+  await expressPage.goto("http://127.0.0.1:"+PORT+"/santas-sorting-shift/",{waitUntil:"domcontentloaded"});
+  await expressPage.locator("#primaryButton").click();
+  await expressPage.waitForTimeout(1450);
+  const expressBox=await expressPage.locator("#world").boundingBox();
+  const ex=n=>expressBox.x+n*expressBox.width/360, ey=n=>expressBox.y+n*expressBox.height/540;
+  await expressPage.mouse.move(ex(72),ey(261));
+  await expressPage.mouse.down();
+  await expressPage.mouse.move(ex(290),ey(407),{steps:13});
+  await expressPage.mouse.up();
+  const expressScore=Number((await expressPage.locator("#score").innerText()).replace(/\\D/g,""));
+  assert.ok(expressScore>=160,"Shift 1 Express must sort into the gold crate, got "+expressScore);
+  await expressPage.screenshot({path:"santas-sorting-shift/preview-express.png",fullPage:true});
+  await expressPage.close();
   await context.close();
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
