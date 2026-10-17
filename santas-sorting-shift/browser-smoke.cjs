@@ -70,7 +70,7 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   await expressPage.mouse.down();
   await expressPage.mouse.move(ex(290),ey(407),{steps:13});
   await expressPage.mouse.up();
-  const expressScore=Number((await expressPage.locator("#score").innerText()).replace(/\\D/g,""));
+  const expressScore=Number((await expressPage.locator("#score").innerText()).replace(/\D/g,""));
   assert.ok(expressScore>=160,"Shift 1 Express must sort into the gold crate, got "+expressScore);
   await expressPage.screenshot({path:"santas-sorting-shift/preview-express.png",fullPage:true});
   await expressPage.close();
