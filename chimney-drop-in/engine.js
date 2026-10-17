@@ -42,8 +42,11 @@
    generate(){
      const id=this.nextId,depth=this.nextDepth;
      const P=passage(depth,this.seed),diff=difficulty(depth),r=hash(id*17,this.seed),safe=hash(id*13,this.seed)>0.5?1:-1;
-     const lane=clamp(P.center+safe*P.width*.26,P.left+40,P.right-40);
-     const danger=clamp(P.center-safe*P.width*.25,P.left+37,P.right-37);
+     const hazardLane=Math.min(2,Math.floor(hash(id*43+17,this.seed)*3));
+     const freeLane=(hazardLane+1+(hash(id*71+23,this.seed)>.52?1:0))%3;
+     const laneX=index=>P.center+(index-1)*P.width*.265;
+     const lane=clamp(laneX(freeLane),P.left+42,P.right-42);
+     const danger=clamp(laneX(hazardLane),P.left+38,P.right-38);
      const sector=Math.floor(depth/150);
      if(sector>1 && sector%8===6 && r<.48){
        this.add("ledge",depth,0,{side:r<.24?"left":"right",reach:34+hash(id*9,this.seed)*26});
