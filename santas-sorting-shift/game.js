@@ -161,7 +161,7 @@ function uiUpdate(){
  ui.progressFill.style.width=Math.min(100,(game.sorted/required)*100)+"%";
  ui.progressTrack.setAttribute("aria-valuemax",required);
  ui.progressTrack.setAttribute("aria-valuenow",game.sorted||0);
- ui.mission.textContent="SHIFT "+String(game.level).padStart(2,"0")+" · "+(game.level>=3?"EXPRESS ORDERS ACTIVE":"PRESENTS & COAL");
+ ui.mission.textContent="SHIFT "+String(game.level).padStart(2,"0")+" · "+("PRESENTS · COAL · EXPRESS");
 }
 function menu(kind){
  screen=kind;ui.overlay.hidden=false;drag=null;
@@ -184,7 +184,7 @@ function menu(kind){
  }else if(kind==="help"){
    ui.kicker.textContent="HOW TO PLAY";
    ui.stats.hidden=true;ui.sound.hidden=true;ui.secondary.hidden=true;
-   set("SORT <em>FAST!</em>","<b>1.</b> Touch a parcel on the moving belt.<br><b>2.</b> Drag it into the matching crate below.<br><b>3.</b> Don't let parcels escape at the right!<br><br><b>GREEN</b> for presents · <b>RED</b> for coal.<br><b>GOLD</b> for star-marked express gifts from shift 3.<br><br>Three mistakes end your shift.","GOT IT","");
+   set("SORT <em>FAST!</em>","<b>1.</b> Touch a parcel on the moving belt.<br><b>2.</b> Drag it into the matching crate below.<br><b>3.</b> Don't let parcels escape at the right!<br><br><b>GREEN</b> for presents · <b>RED</b> for coal.<br><b>GOLD</b> for star-marked express gifts from Shift 1.<br><br>Three mistakes end your shift.","GOT IT","");
  }
  ui.sound.textContent=save.sound?"♪ SOUND ON":"♪ SOUND OFF";ui.sound.setAttribute("aria-pressed",String(save.sound));
  ui.pause.textContent="Ⅱ";uiUpdate();
@@ -343,7 +343,7 @@ function drawItem(g,item,x,y,lift=false){
  g.restore();
 }
 function drawBins(g,time){
- const active=game.level>=3||screen==="home";
+ const active=true;
  for(const b of binList){
    const locked=b.id==="express"&&!active,selected=drag&&drag.y>=346&&drag.y<=488&&drag.x>=b.x&&drag.x<=b.x+b.w;
    const x=b.x,w=b.w;
@@ -369,7 +369,7 @@ function drawBins(g,time){
      if(b.id==="express"){gift(g,x+w/2,412,4,34);circle(g,x+w/2+14,401,8,"#fff0b7");text(g,"★",x+w/2+14,401,12,"#7c5031");}
    }else{text(g,"III",x+w/2,408,25,"#d5c19c");}
    rect(g,x+14,442,w-28,20,locked?"#5f5c52":b.color);
-   text(g,locked?"SHIFT 03":b.text,x+w/2,452,b.id==="express"?15:16,locked?"#d6c5a5":"#132f36");
+   text(g,locked?"EXPRESS":b.text,x+w/2,452,b.id==="express"?15:16,locked?"#d6c5a5":"#132f36");
    for(const bx of [x+12,x+w-16])for(const by of [373,454])rect(g,bx,by,3,3,"#e9c588");
    if(selected&&!locked){
      g.strokeStyle="#fff0ab";g.lineWidth=4;g.strokeRect(x+3,354,w-6,111);
@@ -378,7 +378,7 @@ function drawBins(g,time){
    if(locked){g.fillStyle="#081b2688";g.fillRect(x+4,362,w-8,101);}
  }
  // Item destination arrow guidance in normal gameplay, one per bin.
- for(const b of binList){if(b.id==="express"&&game.level<3&&screen!=="home")continue;
+ for(const b of binList){
    if(!drag)continue;
    text(g,"↓",b.x+b.w/2,345,19,drag.x>=b.x&&drag.x<=b.x+b.w?"#ffe795":"#b8d9ca");
  }
@@ -404,7 +404,7 @@ function drawScene(time){
  drawBelt(ctx,time);
  let items=game.items;
  if(screen==="home"){
-   items=[{x:48+(time*29)%415-40,y:261,type:"gift",variant:0},{x:130+(time*29)%415-40,y:261,type:"coal",variant:0},{x:240+(time*29)%415-40,y:261,type:"gift",variant:2}];
+   items=[{x:48+(time*50)%415-40,y:261,type:"gift",variant:0,phase:0},{x:130+(time*50)%415-40,y:261,type:"coal",variant:0,phase:2},{x:240+(time*50)%415-40,y:261,type:"express",variant:2,phase:3}];
  }
  for(const item of items){
    if(item.held)continue;
