@@ -175,7 +175,7 @@ function menu(kind){
  const set=(title,desc,primary,secondary)=>{ui.title.innerHTML=title;ui.text.innerHTML=desc;ui.primary.innerHTML=primary+' <span>➜</span>';ui.secondary.textContent=secondary};
  if(kind==="home"){
    ui.kicker.textContent="A NORTH POLE ORIGINAL";
-   set("THE <em>CHRISTMAS</em><br>RUSH IS ON!","The belt starts fast! Sort presents, coal and gold-star Express parcels into the matching crates before they escape.",(save.unlocked>1?"CONTINUE SHIFT "+String(save.unlocked).padStart(2,"0"):"START SHIFT 01"),save.unlocked>1?"START FROM SHIFT 01":"HOW TO PLAY");
+   set("THE <em>CHRISTMAS</em><br>RUSH IS ON!","The belt starts fast! Sort presents, coal and glowing Express presents into the matching crates before they escape.",(save.unlocked>1?"CONTINUE SHIFT "+String(save.unlocked).padStart(2,"0"):"START SHIFT 01"),save.unlocked>1?"START FROM SHIFT 01":"HOW TO PLAY");
  }else if(kind==="pause"){
    ui.kicker.textContent="WORKSHOP BREAK";
    set("SHIFT <em>PAUSED</em>","Take a moment. The conveyor is stopped until you're ready to return.","RESUME SHIFT","HOW TO PLAY");
@@ -188,7 +188,7 @@ function menu(kind){
  }else if(kind==="help"){
    ui.kicker.textContent="HOW TO PLAY";
    ui.stats.hidden=true;ui.sound.hidden=true;ui.secondary.hidden=true;
-   set("SORT <em>FAST!</em>","<b>1.</b> Touch a parcel on the moving belt.<br><b>2.</b> Drag it into the matching crate below.<br><b>3.</b> Don't let parcels escape at the right!<br><br><b>GREEN</b> for presents · <b>RED</b> for coal.<br><b>GOLD</b> for star-marked express gifts from Shift 1.<br><br>Three mistakes end your shift.","GOT IT","");
+   set("SORT <em>FAST!</em>","<b>1.</b> Touch a parcel on the moving belt.<br><b>2.</b> Drag it into the matching crate below.<br><b>3.</b> Don't let parcels escape at the right!<br><br><b>GREEN</b> for presents · <b>RED</b> for coal.<br><b>GOLD</b> for glowing express presents from Shift 1.<br><br>Three mistakes end your shift.","GOT IT","");
  }
  ui.sound.textContent=save.sound?"♪ SOUND ON":"♪ SOUND OFF";ui.sound.setAttribute("aria-pressed",String(save.sound));
  ui.pause.textContent="Ⅱ";uiUpdate();
@@ -330,20 +330,37 @@ function gift(g,x,y,idx,size=49){
  rect(g,x-size*.13,y-size*.43,size*.11,size*.17,"#ffe8a7");
  rect(g,x+size*.06,y-size*.43,size*.11,size*.17,"#ffe8a7");
 }
+// Express is recognised by its warm moving radiance, not an added label or badge.
+function drawExpressPresent(g,x,y,size,clock){
+ const pulse=(Math.sin(clock*5.3)+1)*.5;
+ const radius=size*.77+pulse*size*.10;
+ g.save();g.translate(Math.round(x),Math.round(y));
+ const halo=g.createRadialGradient(0,0,size*.12,0,0,radius);
+ halo.addColorStop(0,"rgba(255,253,218,0.55)");
+ halo.addColorStop(.48,"rgba(255,215,102,0.30)");
+ halo.addColorStop(1,"rgba(255,188,56,0)");
+ g.fillStyle=halo;g.fillRect(-radius,-radius,radius*2,radius*2);
+ g.shadowColor="#ffd45c";g.shadowBlur=9+pulse*10;
+ gift(g,0,0,4,size);
+ g.shadowBlur=0;
+ // A handful of detached pinprick highlights accent the glow without a star sticker.
+ for(let i=0;i<4;i++){
+   const a=clock*.85+i*Math.PI/2;
+   const d=size*(.60+.055*Math.sin(clock*3+i));
+   const sx=Math.cos(a)*d,sy=Math.sin(a)*d;
+   const r=i%2?2:3;
+   rect(g,sx-r/2,sy-r/2,r,r,i%2?"#ffe096":"#fffbe3");
+ }
+ g.restore();
+}
 function drawItem(g,item,x,y,lift=false){
  const scale=lift?1.18:1;
  if(!lift){rect(g,x-18,y+19,37,5,"#071a276e");}
- else{circle(g,x+2,y+36,20,"#061a2455");circle(g,x,y,30,"#fff3b122");}
+ else{circle(g,x+2,y+36,20,"#061a2455");}
  g.save();g.translate(Math.round(x),Math.round(y));g.scale(scale,scale);
- if(item.type==="coal"){g.drawImage(coal,-25,-25,50,50);}
- else{
-   gift(g,0,0,item.type==="express"?4:item.variant,49);
-   if(item.type==="express"){
-     // Gold star label is a meaningful sorting distinction, not just a colour.
-     circle(g,14,-16,10,"#342e2f");circle(g,14,-17,8,"#ffe6a3");
-     text(g,"★",14,-17,15,"#8e542c");
-   }
- }
+ if(item.type==="coal")g.drawImage(coal,-25,-25,50,50);
+ else if(item.type==="express")drawExpressPresent(g,0,0,49,phase);
+ else gift(g,0,0,item.variant,49);
  g.restore();
 }
 function drawBins(g,time){
@@ -370,7 +387,7 @@ function drawBins(g,time){
    if(!locked){
      if(b.id==="gift")gift(g,x+w/2,412,0,34);
      if(b.id==="coal")g.drawImage(coal,x+w/2-21,391,42,39);
-     if(b.id==="express"){gift(g,x+w/2,412,4,34);circle(g,x+w/2+14,401,8,"#fff0b7");text(g,"★",x+w/2+14,401,12,"#7c5031");}
+     if(b.id==="express")drawExpressPresent(g,x+w/2,412,34,time);
    }else{text(g,"III",x+w/2,408,25,"#d5c19c");}
    rect(g,x+14,442,w-28,20,locked?"#5f5c52":b.color);
    text(g,locked?"EXPRESS":b.text,x+w/2,452,b.id==="express"?15:16,locked?"#d6c5a5":"#132f36");
