@@ -118,6 +118,37 @@ if(menuSanta){menuSanta.textContent="";menuSanta.classList.add("has-art");menuSa
 const heroSanta=$("heroSanta");
 if(heroSanta){const heroContext=heroSanta.getContext("2d");heroContext.imageSmoothingEnabled=false;heroContext.clearRect(0,0,60,68);heroContext.drawImage(art.santa[1],3,0,54,66);}
 function sprite(g,im,x,y,w,h){if(!im)return;g.drawImage(im,Math.round(x-w/2),Math.round(y-h/2),w,h);}
+
+/* Non-colour-only affordances: round green '+' pickups and red diamond '!' hazards. */
+function markerBase(g,x,y,r,good,now){
+ const throb=1+Math.sin(now*5+x*.017)*.035;
+ g.save();g.translate(Math.round(x),Math.round(y));g.scale(throb,throb);
+ g.beginPath();
+ if(good)g.arc(0,0,r,0,Math.PI*2);
+ else for(let i=0;i<8;i++){const a=Math.PI/8+i*Math.PI/4,xx=Math.cos(a)*r,yy=Math.sin(a)*r;i?g.lineTo(xx,yy):g.moveTo(xx,yy);}
+ g.closePath();
+ g.fillStyle=good?"#103c36a9":"#4e252bc2";g.fill();
+ g.strokeStyle=good?"#9ff3bc":"#ff846d";g.lineWidth=3;g.stroke();
+ g.restore();
+}
+function markerLabel(g,x,y,r,kind,good){
+ const iconX=Math.round(x+r*.79),iconY=Math.round(y-r*.76);
+ g.save();g.translate(iconX,iconY);
+ if(good){
+  circ(g,0,0,10,"#102b2c");circ(g,0,0,8,"#56cd84");
+  rect(g,-6,-2,12,4,"#f8ffec");rect(g,-2,-6,4,12,"#f8ffec");
+ }else{
+  g.rotate(Math.PI/4);rect(g,-10,-10,20,20,"#48242d");rect(g,-8,-8,16,16,"#e65b4e");
+  g.rotate(-Math.PI/4);label(g,"!",0,0,17,"#fff2ce");
+ }
+ g.restore();
+ const tag=good?(kind==="cookie"?"SHIELD":kind==="milk"?"BOOST":"BONUS"):"AVOID";
+ const w=good?49:43,top=Math.round(y+r-5);
+ rect(g,x-w/2-2,top-1,w+4,15,"#10212b");
+ rect(g,x-w/2,top,w,12,good?"#2f915f":"#af3c3e");
+ label(g,tag,x,top+6,11,"#fff9e3");
+}
+
 function tone(kind){
  if(!save.sound)return;
  try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!ac)ac=new AC();if(ac.state==="suspended")ac.resume();
@@ -159,7 +190,7 @@ function menu(name){
  if(name==="home")set("THE MOST DANGEROUS DELIVERY ROUTE","DOWN THE<br><em>CHIMNEY!</em>","One Santa. Endless chimneys. Dodge red-hot embers, crumbling bricks and nasty Christmas decorations on your way down.","START FALLING","HOW TO PLAY");
  if(name==="pause")set("TAKE A BREATHER","FALLING<br><em>PAUSED</em>","The chimney network has stopped. Santa will continue from exactly here when you're ready.","RESUME THE DROP","HOW TO PLAY");
  if(name==="over")set("DELIVERY INTERRUPTED","YOU GOT<br><em>SOOTED!</em>","Santa made it <b>"+Math.floor(game.distance/10).toLocaleString("en-GB")+"m</b> down the chimney.<br>Score <b>"+game.score.toLocaleString("en-GB")+"</b> · cookies <b>"+game.collected.cookie+"</b> · milk <b>"+game.collected.milk+"</b>.","TRY AGAIN","BACK TO TITLE");
- if(name==="help"){set("NORTH POLE SAFETY BRIEF","KEEP<br><em>FALLING!</em>","<b>HOLD LEFT / RIGHT</b> or <b>drag Santa</b> to steer.<br><br>Avoid hot embers, jutting bricks, angry wreaths and spiky baubles. You have 3 hearts.<br><br><b>COOKIE</b> gives a 6.5-second protective shield.<br><b>MILK</b> gives a 5-second descent boost.<br><b>PRESENT</b> awards bonus points.<br><br>Every metre counts — survive as long as you can!","GOT IT","");UI.stats.hidden=true;UI.secondary.hidden=true;UI.sound.hidden=true;}
+ if(name==="help"){set("NORTH POLE SAFETY BRIEF","KEEP<br><em>FALLING!</em>","<b>HOLD LEFT / RIGHT</b> or <b>drag Santa</b> to steer.<br><br><b>GREEN + / COLLECT:</b> cookies give a shield, milk boosts speed, and presents earn points.<br><br><b>RED ! / AVOID:</b> fire, protruding bricks, angry wreaths and spiky baubles.<br><br>You have 3 hearts. Every metre counts!","GOT IT","");UI.stats.hidden=true;UI.secondary.hidden=true;UI.sound.hidden=true;}
  UI.sound.textContent=save.sound?"♪ SOUND ON":"♪ SOUND OFF";UI.sound.setAttribute("aria-pressed",String(save.sound));hud();
 }
 function start(){
@@ -323,12 +354,22 @@ function drawLedge(g,e,y){
  for(let i=0;i<n;i++){const bx=x+i*24;rect(g,bx+1,y-8,Math.min(21,x+w-bx-2),12,"#af6051");rect(g,bx+6,y-5,6,2,"#d58b6c");}
  rect(g,left?x+w-6:x,y-15,6,34,"#4b3d40");rect(g,left?x+w-4:x+2,y-13,2,27,"#e09d73");
  for(let i=0;i<3;i++)rect(g,x+4+i*(w-8)/3,y+16,5,3,"#d29c70");
+ // Hazard stripes and a warning badge mark the protruding brick lip.
+ for(let i=0;i<w-7;i+=11){rect(g,x+i+3,y-18,6,4,"#ffce77");rect(g,x+i+9,y-18,3,4,"#d95649");}
+ const tip=left?x+w-2:x+2;
+ circ(g,tip,y-25,12,"#3d232d");circ(g,tip,y-25,9,"#df594c");
+ label(g,"!",tip,y-25,18,"#fff4d6");
+ rect(g,tip-19,y+20,38,13,"#37252e");rect(g,tip-17,y+21,34,11,"#ac3c3f");
+ label(g,"AVOID",tip,y+27,10,"#fff4d9");
 }
 function drawEntity(g,e,now){
  const y=Y+(e.depth-game.distance);
  if(y< -70||y>625)return;
  const x=e.x+((e.sway||0)*Math.sin(game.time*2.25+e.phase));
  if(e.kind==="ledge"){drawLedge(g,e,y);return;}
+ const good=e.kind==="cookie"||e.kind==="milk"||e.kind==="gift";
+ const radius=e.kind==="embers"?38:good?26:28;
+ markerBase(g,x,y,radius,good,now);
  if(e.kind==="cookie"){
   circ(g,x,y,22,"#e0a75620");sprite(g,art.cookie,x,y,34,34);
  }else if(e.kind==="milk"){
@@ -350,6 +391,7 @@ function drawEntity(g,e,now){
   sprite(g,art.ember,x,y+Math.sin(now*9+e.phase)*2,35,39);
   if(Math.floor(now*10+e.phase)%3===0){rect(g,x+14,y+9,3,5,"#ffdd8c");rect(g,x-17,y-1,2,4,"#ee8b42");}
  }
+ markerLabel(g,x,y,radius,e.kind,good);
 }
 function drawSanta(g,now){
  if(game.invincible>0&&Math.floor(now*14)%2===0)return;
