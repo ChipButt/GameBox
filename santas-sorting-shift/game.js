@@ -7,6 +7,10 @@ const $=id=>document.getElementById(id);
 const canvas=$("world"),ctx=canvas.getContext("2d",{alpha:false});
 ctx.imageSmoothingEnabled=false;
 const W=360,H=540,game=new SortingShift();
+// Local-only, read-only test telemetry keeps drag tests accurate as belt speed changes.
+if(location.hostname==="127.0.0.1"||location.hostname==="localhost"){
+ window.__sortingShiftTest=()=>({status:game.status,level:game.level,speed:game.rule?.speed,items:game.items.map(i=>({id:i.id,x:i.x,y:i.y,type:i.type,held:i.held}))});
+}
 const C={ink:"#102936",wood:"#79503a",woodDark:"#4a302c",woodLight:"#b98253",gold:"#ffd983",cream:"#ffefd0",light:"#c7ebdf",green:"#329978",red:"#d2534a",steel:"#829a9b",dark:"#071c2b"};
 const binList=[
  {id:"gift",x:13,w:106,color:"#54ba8c",dark:"#1a5d51",text:"PRESENTS"},
