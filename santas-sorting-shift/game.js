@@ -175,7 +175,7 @@ function menu(kind){
  const set=(title,desc,primary,secondary)=>{ui.title.innerHTML=title;ui.text.innerHTML=desc;ui.primary.innerHTML=primary+' <span>➜</span>';ui.secondary.textContent=secondary};
  if(kind==="home"){
    ui.kicker.textContent="A NORTH POLE ORIGINAL";
-   set("THE <em>CHRISTMAS</em><br>RUSH IS ON!","The belt never stops! Drag each present or lump of coal into the right bin before it reaches the end.",(save.unlocked>1?"CONTINUE SHIFT "+String(save.unlocked).padStart(2,"0"):"START SHIFT 01"),save.unlocked>1?"START FROM SHIFT 01":"HOW TO PLAY");
+   set("THE <em>CHRISTMAS</em><br>RUSH IS ON!","The belt starts fast! Sort presents, coal and gold-star Express parcels into the matching crates before they escape.",(save.unlocked>1?"CONTINUE SHIFT "+String(save.unlocked).padStart(2,"0"):"START SHIFT 01"),save.unlocked>1?"START FROM SHIFT 01":"HOW TO PLAY");
  }else if(kind==="pause"){
    ui.kicker.textContent="WORKSHOP BREAK";
    set("SHIFT <em>PAUSED</em>","Take a moment. The conveyor is stopped until you're ready to return.","RESUME SHIFT","HOW TO PLAY");
