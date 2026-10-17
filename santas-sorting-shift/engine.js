@@ -11,9 +11,9 @@
   const config=level=>({
     quota:11+(level-1)*2,
     duration:47,
-    speed:66+(level-1)*7,
-    interval:Math.max(1.08,1.85-(level-1)*0.067),
-    express:level>=3
+    speed:100+(level-1)*8,
+    interval:Math.max(.90,1.38-(level-1)*0.043),
+    express:true
   });
   class SortingShift {
     constructor(rng=Math.random){
