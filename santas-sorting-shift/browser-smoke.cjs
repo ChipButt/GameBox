@@ -20,6 +20,8 @@ if(!executablePath)throw Error("Chromium/Chrome executable not found");
   await page.locator("#world").waitFor({state:"visible"});
   assert.match(await page.title(),/Sorting Shift/);
   assert.equal(await page.locator("#overlay").isVisible(),true);
+  assert.ok(!(await page.locator(".scorebar").innerText()).includes("undefined"),"Title-screen HUD should contain actual values");
+  assert.ok(!(await page.locator(".statusfoot").innerText()).includes("undefined"),"Title-screen progress should contain actual values");
   await page.screenshot({path:"santas-sorting-shift/preview-menu.png",fullPage:true});
   await page.locator("#primaryButton").click();
   assert.equal(await page.locator("#overlay").isVisible(),false);
