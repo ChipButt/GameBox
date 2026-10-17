@@ -1,0 +1,61 @@
+name: Chimney Drop-In arcade tests
+on:
+  push:
+    paths:
+      - 'chimney-drop-in/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/chimney-drop-in.yml'
+  pull_request:
+    paths:
+      - 'chimney-drop-in/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/chimney-drop-in.yml'
+  workflow_dispatch:
+jobs:
+  check-and-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check game scripts
+        run: |
+          node --check chimney-drop-in/engine.js
+          node --check chimney-drop-in/game.js
+          node --check chimney-drop-in/browser-smoke.cjs
+      - name: Test procedural engine and power-ups
+        run: node --test chimney-drop-in/engine.test.cjs
+      - name: Check GameBox launchers and asset paths
+        run: |
+          test -s chimney-drop-in/index.html
+          test -s chimney-drop-in/style.css
+          grep -q 'href="chimney-drop-in/"' hub/index.html
+          grep -q 'href="chimney-drop-in/"' index.html
+          test -s 'assets/gamebox/kenney/2d/Brick Pack/Double/Red/brick_medium_2.png'
+          test -s 'assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png'
+          test -s 'assets/gamebox/kenney/2d/Platformer Assets Candy/canePink.png'
+          test -s 'assets/gamebox/kenney/icons/Game Icons/White/2x/home.png'
+          python3 tools/sync-entry-points.py --check
+      - name: Install Chromium driver
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Verify local Chromium
+        run: which google-chrome || which chromium
+      - name: Launch preview server
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/chimney-drop-http.log 2>&1 &
+          sleep 2
+      - name: Test playability at two mobile sizes
+        run: node chimney-drop-in/browser-smoke.cjs
+      - name: Keep game screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chimney-drop-in-mobile-screens
+          path: chimney-drop-in/preview-*.png
+          if-no-files-found: ignore
