@@ -60,4 +60,5 @@ jobs:
           path: |
             santas-sorting-shift/preview-menu.png
             santas-sorting-shift/preview-playing.png
+            santas-sorting-shift/preview-express.png
           if-no-files-found: ignore
