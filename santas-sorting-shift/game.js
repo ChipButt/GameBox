@@ -262,7 +262,7 @@ function worldPoint(e){
 canvas.addEventListener("pointerdown",e=>{
  if(screen!=="game"||drag)return;
  const p=worldPoint(e);
- let best=null,distance=37;
+ let best=null,distance=44;
  for(const item of game.items){
    const d=Math.hypot(p.x-item.x,p.y-item.y);
    if(d<distance){distance=d;best=item;}
@@ -280,7 +280,7 @@ function drop(e,cancelled=false){
  if(!drag||drag.pointer!==e.pointerId)return;
  const d=drag;drag=null;
  const p=worldPoint(e),x=p.x-d.dx,y=p.y-d.dy;
- const b=!cancelled&&y>350&&y<488?binList.find(b=>x>=b.x-2&&x<=b.x+b.w+2&&!(b.id==="express"&&game.level<3)):null;
+ const b=!cancelled&&y>350&&y<488?binList.find(b=>x>=b.x-2&&x<=b.x+b.w+2):null;
  try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}
  if(b){game.sort(d.id,b.id);handle(game.consume());}
  else game.release(d.id);
