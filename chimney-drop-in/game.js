@@ -7,11 +7,12 @@ const $=id=>document.getElementById(id),canvas=$("world"),ctx=canvas.getContext(
 ctx.imageSmoothingEnabled=false;
 const game=new ChimneyDrop(4129);
 const UI={score:$("score"),depth:$("depth"),combo:$("combo"),hearts:$("hearts"),toast:$("toast"),overlay:$("overlay"),eyebrow:$("menuEyebrow"),title:$("overlayTitle"),text:$("menuText"),best:$("bestScore"),stats:$("menuStats"),primary:$("primaryButton"),secondary:$("secondaryButton"),sound:$("soundButton"),pause:$("pauseBtn"),shieldFill:$("shieldFill"),boostFill:$("boostFill"),shieldTime:$("shieldTime"),boostTime:$("boostTime"),announce:$("announce")};
+UI.helpGallery=$("helpGallery");UI.helpPager=$("helpPager");UI.menu=UI.overlay.querySelector(".menu");
 const KEY="gamebox.chimneyDropIn.v1";let save={best:0,meters:0,plays:0,sound:true};
 try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&typeof v==="object"){save.best=Math.max(0,+v.best||0);save.meters=Math.max(0,+v.meters||0);save.plays=Math.max(0,+v.plays||0);save.sound=v.sound!==false;}}catch(_){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(_){}}
 const P={ink:"#151d2c",black:"#101b28",stone:"#6a3d40",stoneLight:"#bd6f58",stoneTop:"#dc9270",grout:"#322b39",fire:"#ffb94e",ash:"#777984",cream:"#fff0d2",snow:"#dae9e5",gold:"#ffd37a",pine:"#427758",red:"#bd414c"};
-let mode="home",helpFrom="home",time=0,last=0,activeTouch=null,fx=[],floats=[],hits=0,flash=0,shake=0,shakeAge=0,toastTimer,ac=null;
+let mode="home",helpFrom="home",helpPage=0,time=0,last=0,activeTouch=null,fx=[],floats=[],hits=0,flash=0,shake=0,shakeAge=0,toastTimer,ac=null;
 const images={};
 function loadImg(name,path){const im=new Image();im.src=path;images[name]=im;}
 loadImg("brick","../assets/gamebox/kenney/2d/Brick%20Pack/Double/Red/brick_medium_2.png");
@@ -180,9 +181,75 @@ function hud(){
  UI.shieldTime.textContent=game.shield>0?game.shield.toFixed(1)+"s":"—";
  UI.boostTime.textContent=game.boost>0?game.boost.toFixed(1)+"s":"—";
 }
+const HOW_TO=[
+ {section:"collect",entries:[
+  {kind:"cookie",title:"COOKIE",hint:"Shield for 6.5 sec"},
+  {kind:"milk",title:"MILK",hint:"Speed boost"},
+  {kind:"gift",title:"PRESENT",hint:"Extra points"}
+ ]},
+ {section:"avoid",entries:[
+  {kind:"ember",title:"EMBERS",hint:"Hot flames"},
+  {kind:"ledge",title:"BRICKS",hint:"Jutting ledges"},
+  {kind:"wreath",title:"WREATH",hint:"Angry decoration"},
+  {kind:"bauble",title:"BAUBLE",hint:"Spiky ornament"},
+  {kind:"embers",title:"EMBER SHOWER",hint:"Fire clusters"}
+ ]}
+];
+function drawGuideIcon(canvas,kind){
+ const g=canvas.getContext("2d");g.imageSmoothingEnabled=false;
+ g.clearRect(0,0,64,64);
+ if(kind==="ledge"){
+  // Render the same actual obstacle silhouette as the moving chimney.
+  const [tmp,tc]=newCanvas(360,94);
+  const depth=780;
+  drawLedge(tc,{side:"left",depth,reach:63},43);
+  const x=passage(depth,game.seed).left;
+  g.drawImage(tmp,Math.max(0,Math.floor(x)-13),0,92,94,1,2,62,60);
+  return;
+ }
+ if(kind==="cookie")sprite(g,art.cookie,32,32,45,45);
+ else if(kind==="milk")sprite(g,art.milk,32,32,39,53);
+ else if(kind==="gift"){
+  // Do not substitute a different pictogram while the approved Kenney PNG loads.
+  if(images.gift.complete&&images.gift.naturalWidth)sprite(g,images.gift,32,32,51,51);
+ }
+ else if(kind==="ember")sprite(g,art.ember,32,32,43,49);
+ else if(kind==="wreath")sprite(g,art.wreath,32,32,55,55);
+ else if(kind==="bauble")sprite(g,art.bauble,32,32,47,57);
+ else if(kind==="embers"){
+  for(let i=0;i<4;i++)sprite(g,art.ember,20+i%2*20,20+Math.floor(i/2)*21,26,30);
+ }
+}
+function renderHelpGallery(){
+ const data=HOW_TO[helpPage];
+ UI.helpGallery.replaceChildren();
+ UI.helpGallery.className="help-gallery "+data.section;
+ for(const item of data.entries){
+  const card=document.createElement("div");card.className="guide-card "+data.section;
+  const artBox=document.createElement("div");artBox.className="guide-art";
+  const canvas=document.createElement("canvas");canvas.width=64;canvas.height=64;
+  canvas.className="guide-sprite";canvas.setAttribute("role","img");canvas.setAttribute("aria-label",item.title+" gameplay sprite");
+  artBox.appendChild(canvas);
+  const marker=document.createElement("span");marker.className="guide-marker "+data.section;marker.textContent=helpPage===0?"+":"!";
+  artBox.appendChild(marker);
+  const name=document.createElement("strong");name.textContent=item.title;
+  const hint=document.createElement("small");hint.textContent=item.hint;
+  card.append(artBox,name,hint);UI.helpGallery.appendChild(card);
+  drawGuideIcon(canvas,item.kind);
+ }
+ UI.helpPager.textContent="PAGE "+(helpPage+1)+" OF 2";
+}
+images.gift.addEventListener("load",()=>{
+ if(mode==="help")for(const canvas of UI.helpGallery.querySelectorAll(".guide-sprite")){
+  if(canvas.getAttribute("aria-label")==="PRESENT gameplay sprite")drawGuideIcon(canvas,"gift");
+ }
+});
 function menu(name){
  mode=name;UI.overlay.hidden=false;
- UI.best.textContent=save.meters+"m";UI.stats.hidden=false;UI.secondary.hidden=false;UI.sound.hidden=false;
+ const help=name==="help";
+ UI.menu.classList.toggle("help-mode",help);
+ UI.helpGallery.hidden=!help;UI.helpPager.hidden=!help;
+ UI.best.textContent=save.meters+"m";UI.stats.hidden=help;UI.secondary.hidden=false;UI.sound.hidden=help;
  const set=(eyebrow,title,desc,primary,secondary)=>{
   UI.eyebrow.textContent=eyebrow;UI.title.innerHTML=title;UI.text.innerHTML=desc;
   UI.primary.innerHTML=primary+" <span>➜</span>";UI.secondary.textContent=secondary;
@@ -190,7 +257,11 @@ function menu(name){
  if(name==="home")set("THE MOST DANGEROUS DELIVERY ROUTE","DOWN THE<br><em>CHIMNEY!</em>","One Santa. Endless chimneys. Dodge red-hot embers, crumbling bricks and nasty Christmas decorations on your way down.","START FALLING","HOW TO PLAY");
  if(name==="pause")set("TAKE A BREATHER","FALLING<br><em>PAUSED</em>","The chimney network has stopped. Santa will continue from exactly here when you're ready.","RESUME THE DROP","HOW TO PLAY");
  if(name==="over")set("DELIVERY INTERRUPTED","YOU GOT<br><em>SOOTED!</em>","Santa made it <b>"+Math.floor(game.distance/10).toLocaleString("en-GB")+"m</b> down the chimney.<br>Score <b>"+game.score.toLocaleString("en-GB")+"</b> · cookies <b>"+game.collected.cookie+"</b> · milk <b>"+game.collected.milk+"</b>.","TRY AGAIN","BACK TO TITLE");
- if(name==="help"){set("NORTH POLE SAFETY BRIEF","KEEP<br><em>FALLING!</em>","<b>HOLD LEFT / RIGHT</b> or <b>drag Santa</b> to steer.<br><br><b>GREEN + / COLLECT:</b> cookies give a shield, milk boosts speed, and presents earn points.<br><br><b>RED ! / AVOID:</b> fire, protruding bricks, angry wreaths and spiky baubles.<br><br>You have 3 hearts. Every metre counts!","GOT IT","");UI.stats.hidden=true;UI.secondary.hidden=true;UI.sound.hidden=true;}
+ if(help){
+  if(helpPage===0)set("HOW TO PLAY · 1 / 2","<em>COLLECT</em> THESE","Green + means helpful. Grab these as you fall.","NEXT: AVOID","CLOSE GUIDE");
+  else set("HOW TO PLAY · 2 / 2","<em>AVOID</em> THESE","Red ! means danger. Steer clear to protect Santa's three hearts.","GOT IT","PREVIOUS PAGE");
+  renderHelpGallery();
+ }
  UI.sound.textContent=save.sound?"♪ SOUND ON":"♪ SOUND OFF";UI.sound.setAttribute("aria-pressed",String(save.sound));hud();
 }
 function start(){
@@ -202,11 +273,19 @@ function stopControl(){game.input.left=false;game.input.right=false;game.setTarg
 UI.primary.addEventListener("click",()=>{
  if(mode==="home"||mode==="over")start();
  else if(mode==="pause"){game.resume();mode="play";UI.overlay.hidden=true;last=performance.now();}
- else if(mode==="help")menu(helpFrom);
+ else if(mode==="help"){
+  if(helpPage===0){helpPage=1;menu("help");}
+  else{helpPage=0;menu(helpFrom);}
+ }
 });
 UI.secondary.addEventListener("click",()=>{
  if(mode==="over"){menu("home");return;}
- helpFrom=mode;menu("help");
+ if(mode==="help"){
+  if(helpPage===1){helpPage=0;menu("help");}
+  else menu(helpFrom);
+  return;
+ }
+ helpFrom=mode;helpPage=0;menu("help");
 });
 UI.sound.addEventListener("click",()=>{save.sound=!save.sound;persist();UI.sound.textContent=save.sound?"♪ SOUND ON":"♪ SOUND OFF";UI.sound.setAttribute("aria-pressed",String(save.sound));if(save.sound)tone("cookie");});
 UI.pause.addEventListener("click",()=>{if(mode==="play")pause();else if(mode==="pause"){game.resume();mode="play";UI.overlay.hidden=true;last=performance.now();}});
