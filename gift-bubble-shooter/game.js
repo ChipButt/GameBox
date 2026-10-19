@@ -199,7 +199,7 @@ function arrive(){
   combo=0;misses++;
   playSound(245,.08,'triangle');
  }
- if(countGifts()===0){setTimeout(()=>{if(mode==='playing')finish(true)},550);return}
+ if(countGifts()===0){mode='clearing';setTimeout(()=>{if(mode==='clearing')finish(true)},550);return}
  if(misses>=Math.max(4,7-Math.floor(level/3))){
   misses=0;pushRow();hint('NEW ROW!');
  }
