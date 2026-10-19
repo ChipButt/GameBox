@@ -1,0 +1,42 @@
+name: Gift Bubble Shooter checks
+on:
+  pull_request:
+    paths:
+      - 'gift-bubble-shooter/**'
+      - 'hub/index.html'
+      - 'index.html'
+      - '.github/workflows/gift-bubble-shooter.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'gift-bubble-shooter/**'
+      - 'hub/index.html'
+      - 'index.html'
+      - '.github/workflows/gift-bubble-shooter.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify game scripts and gameplay
+        run: |
+          node --check gift-bubble-shooter/game.js
+          node --test gift-bubble-shooter/game.test.cjs
+      - name: Verify approved artwork and hub integration
+        run: |
+          python3 tools/sync-entry-points.py --check
+          grep -q 'href="gift-bubble-shooter/"' hub/index.html
+          grep -q 'href="gift-bubble-shooter/"' index.html
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png"
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png"
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_blue.png"
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_yellow.png"
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_lightBlue.png"
+          test -f "assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_orange.png"
+          test -f "assets/gamebox/kenney/2d/Background Elements Remastered/treePineSnow.png"
+          test -f "assets/gamebox/kenney/2d/Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png"
+          test -f "assets/gamebox/kenney/2d/Rolling Ball Assets/Retina/star.png"
