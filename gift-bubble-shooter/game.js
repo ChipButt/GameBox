@@ -5,13 +5,20 @@ const ctx = canvas.getContext('2d');
 const $ = id => document.getElementById(id);
 const W=480,H=760, LEFT=48, TOP=106, STEP=44, RISE=38, RADIUS=20, SHOOT_X=240, SHOOT_Y=684, DANGER=607;
 const COLOURS=['#ef5e52','#6bc675','#62adeb','#f0c654','#b48ad9','#f38c50'];
-const GIFT_FILES=['present_small_red.png','present_small_green.png','present_small_blue.png','present_small_yellow.png','present_small_lightBlue.png','present_small_orange.png'];
-const ROOT='../assets/gamebox/kenney/2d/';
+const ASSET_ROOT='../assets/gamebox/kenney/2d/';
+const GIFT_FILES=[
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_red.png',
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_green.png',
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_blue.png',
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_yellow.png',
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_lightBlue.png',
+ ASSET_ROOT+'Platformer Assets Holiday/present_small_orange.png'
+];
 const image = src => { const i=new Image();i.src=src;return i; };
-const gifts=GIFT_FILES.map(name=>image(ROOT+'Platformer Assets Holiday/'+name));
-const snowTree=image(ROOT+'Background Elements Remastered/treePineSnow.png');
-const mark=image(ROOT+'Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png');
-const star=image(ROOT+'Rolling Ball Assets/Retina/star.png');
+const gifts=GIFT_FILES.map(image);
+const snowTree=image(ASSET_ROOT+'Background Elements Remastered/treePineSnow.png');
+const mark=image(ASSET_ROOT+'Holiday Pack 2016/RTS pack/Retina/RTSobject_15.png');
+const star=image(ASSET_ROOT+'Rolling Ball Assets/Retina/star.png');
 const store={get(k,d){try{return JSON.parse(localStorage.getItem('gift-bubble-v1-'+k))??d}catch(_){return d}},set(k,v){try{localStorage.setItem('gift-bubble-v1-'+k,JSON.stringify(v))}catch(_){}}};
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const rand=n=>Math.floor(Math.random()*n);
