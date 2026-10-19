@@ -25,6 +25,8 @@ jobs:
           node --test unfinished-business/world.test.mjs
           node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
           node --check hub/santa-invaders-tile.js
+          node --check gift-bubble-shooter/game.js
+          node --test gift-bubble-shooter/game.test.cjs
           node --check santa-invaders/game.js
           node --test santa-invaders/game.test.mjs
           node --test santa-invaders/qa.test.mjs
@@ -47,6 +49,9 @@ jobs:
           test -f bingo/event-host.css
           test -f bingo/event-model.js
           test -f bingo/display.html
+          test -f gift-bubble-shooter/index.html
+          test -f gift-bubble-shooter/style.css
+          test -f gift-bubble-shooter/game.js
           test -f santa-invaders/index.html
           test -f santa-invaders/style.css
           test -f santa-invaders/game.js

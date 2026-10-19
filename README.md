@@ -36,6 +36,14 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+### Gift Bubble Shooter
+- Christmas match-three ornament shooter with colour matching, bank shots, falling unsupported groups and Kenney present rescues.
+- 12 progressively denser levels, escalating row penalties, compact gift/score HUD, next-shot preview and swap.
+- Pointer/touch aim and release, keyboard controls, synth sound toggle and browser-saved high score/level unlocks.
+- Uses the existing approved Kenney holiday present, snow-tree and GameBox UI artwork (no borrowed PrimaryGames game files).
+- Play at `gift-bubble-shooter/`.
+
+
 ### Santa Invaders
 - Space Invaders-style Christmas arcade shooter, visually matched to Workshop Watch.
 - Real animated Christmas sprites from the bundled Admurin Snowmen (Pack 82), Gingerbread/Slime/Devil (Pack 85), and Horned Rabbit pack; Gherwit 16×16 winter atlas for snow scenery and fort blocks.
