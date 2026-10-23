@@ -44,6 +44,14 @@ const saveKey='chipin-snow-shoveller-v1';
       await page.waitForTimeout(650);
       await page.keyboard.up('ArrowUp');
       await page.waitForTimeout(400);
+      await page.screenshot({path:'snow-shoveller/return-'+size.width+'.png'});
+      await page.locator('#menuBtn').click();
+      const result=await page.evaluate(key=>{
+        const s=JSON.parse(localStorage.getItem(key));
+        return {x:s.player.x,y:s.player.y,bag:s.player.bag,coins:s.coins};
+      },saveKey);
+      console.log('Furnace return snapshot',size.width,result);
+      await page.locator('#resumeBtn').click();
       const payout=Number((await page.locator('#coins').innerText()).replaceAll(',',''));
       assert(payout>0,'Walking snow to the furnace must award currency (got '+payout+')');
       assert.match(await page.locator('#bag').innerText(),/^0 \/ /,'Furnace empties snow sack');
