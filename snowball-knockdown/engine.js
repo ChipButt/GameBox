@@ -42,7 +42,7 @@ function makeLevel(level){
          used:0,clock:0,score:0,aim:{x:210,y:350}};
 }
 function launch(s,x,y){
- if(s.ball||s.balls<=0||s.won||s.failed)return false;
+ if(s.ball||s.balls<=0||s.won||s.failed||s.gifts.every(g=>g.fallen||g.cleared))return false;
  let dx=x-START.x,dy=y-START.y,d=Math.hypot(dx,dy);
  if(d<9||dy>=-20)return false;
  dx/=d;dy/=d;

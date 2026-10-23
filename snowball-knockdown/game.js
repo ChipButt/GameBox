@@ -35,7 +35,7 @@ function vibrate(){if(navigator.vibrate)try{navigator.vibrate(15);}catch{}}
 function msg(txt,seconds=1.1){toastText=txt;toastUntil=performance.now()+seconds*1000;$("message").textContent=txt;$("announcer").textContent=txt;}
 function updateHUD(){
  $("level").textContent=String(state.level).padStart(2,"0");
- $("balls").textContent=Array.from({length:state.initialBalls},(_,i)=>i<state.balls?"●":"○").join(" ");
+ $("balls").textContent=state.balls+" / "+state.initialBalls;
  $("score").textContent=state.score.toLocaleString("en-GB");
  $("gifts").textContent=String(state.gifts.filter(g=>!g.cleared).length).padStart(2,"0");
 }
@@ -71,7 +71,7 @@ function setOverlay(next){
  $("soundBtn").textContent=sound?"♪ SOUND ON":"♪ SOUND OFF";$("soundBtn").setAttribute("aria-pressed",String(sound));
 }
 function hideOverlay(){mode="playing";$("overlay").classList.remove("show");$("levelOverlay").hidden=true;canvas.focus({preventScroll:true});}
-function start(level){roundToken++;state=E.makeLevel(level);aim={x:210,y:325};holding=false;announced=false;sparks=[];hideOverlay();updateHUD();msg("READY, AIM, SNOW!",.9);}
+function start(level){roundToken++;state=E.makeLevel(level);save("-current",level);aim={x:210,y:325};holding=false;announced=false;sparks=[];hideOverlay();updateHUD();msg("READY, AIM, SNOW!",.9);}
 function finish(kind){const token=roundToken;if(announced)return;announced=true;beep(kind);if(kind==="win")vibrate();
  setTimeout(()=>{if(token===roundToken&&mode==="playing")setOverlay(kind);},560);
 }

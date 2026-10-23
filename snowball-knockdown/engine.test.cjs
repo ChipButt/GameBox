@@ -55,3 +55,9 @@ test("invalid taps cannot fire or spend snowballs",()=>{
  const s=E.makeLevel(1),shots=s.balls;
  assert.equal(E.launch(s,210,600),false);assert.equal(s.balls,shots);
 });
+
+test("all toppled presents cannot consume surplus snowballs before the clearance animation",()=>{
+ const s=E.makeLevel(1);s.gifts.forEach(g=>E.applyImpact(s,g,0,-920,3));
+ const before=s.balls;assert.equal(E.launch(s,210,400),false);assert.equal(s.balls,before);
+ advance(s);assert.equal(s.won,true);
+});
