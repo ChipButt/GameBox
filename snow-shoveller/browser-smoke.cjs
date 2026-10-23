@@ -53,7 +53,7 @@ const saveKey='chipin-snow-shoveller-v1';
       await page.locator('#shopClose').click();
       await page.evaluate(key=>{
         const s=JSON.parse(localStorage.getItem(key));
-        const first=s.ice[0];assert(first,'Frozen character must be available');
+        const first=s.ice[0];if(!first)throw Error('Frozen character must be available');
         first.hp=.3;s.player.x=first.id==='Pip'?12.5:23.5;s.player.y=first.id==='Pip'?8.5:10.5;s.player.bag=0;
         localStorage.setItem(key,JSON.stringify(s));
       },saveKey);
