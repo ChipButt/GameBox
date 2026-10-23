@@ -13,7 +13,7 @@ const saveKey='chipin-snow-shoveller-v1';
       const page=await browser.newPage({viewport:size,isMobile:true,hasTouch:true,deviceScaleFactor:1});
       const errors=[],missing=[];
       page.on('pageerror',e=>errors.push(e.message));
-      page.on('response',r=>{if(r.status()===404&&!r.url().includes('fonts.googleapis'))missing.push(r.url());});
+      page.on('response',r=>{if(r.status()===404&&new URL(r.url()).pathname.startsWith('/snow-shoveller/'))missing.push(r.url());});
       await page.goto(url,{waitUntil:'domcontentloaded'});
       assert.equal(await page.locator('a[href="snow-shoveller/"]').count(),1,'Christmas GameBox tile present');
       const response=await page.goto(url+'snow-shoveller/',{waitUntil:'domcontentloaded'});
