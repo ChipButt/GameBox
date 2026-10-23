@@ -37,9 +37,9 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 ## Included games
 
 ### Snowball Knockdown
-- Christmas fairground can-toss arcade game inspired by the aiming and knockdown genre, with original procedural art and no copied game files.
-- Mobile touch/tap aiming, drag release and keyboard controls; physics-based impacts, tin cascades and red chain-reaction cans.
-- 12 hand-designed arrangements looping into increasing challenge, a limited snowball supply, star ratings, local saved level unlocks, best score and an optional sound toggle.
+- Christmas fairground snowball toss: knock weight-coded Christmas presents off the shelves using local approved holiday sprites and no copied game files.
+- Mobile tap/drag and keyboard aiming; snowballs collide only with presents they actually hit. Small gifts need one hit, medium two and heavy three; no invisible obstacles or automatic radius chain reactions.
+- 12 hand-designed arrangements with progressively heavier gifts, a limited and mathematically sufficient snowball supply, knock-off animations, star ratings, saved progress, best score and sound toggle.
 - Play at `snowball-knockdown/`.
 
 

@@ -38,3 +38,11 @@ canvas:focus-visible{outline:3px solid #fae49b;outline-offset:-5px}
 @media(max-width:370px){.arcade{padding-left:5px;padding-right:5px;gap:3px}.top{height:43px;flex-basis:43px}.hud{flex-basis:46px}.sheet{padding:10px 12px}.heading h1{font-size:21px}.crest{height:68px}.foot{flex-basis:39px}.foot button{height:35px}.foot>span{font-size:10px}}
 @media(max-height:660px){.top{height:39px;flex-basis:39px}.back,.menuButton{height:35px;width:36px}.top{grid-template-columns:38px 1fr 38px}.hud{flex-basis:42px}.foot{flex-basis:35px}.foot button{height:33px}.sheet{padding:7px 14px}.crest{height:53px}.crestCans{transform:scale(.75) rotate(-10deg);transform-origin:bottom}.crestSnow{font-size:29px}.sheet h2{font-size:31px}.sheet p{font-size:11px;margin:5px 0}.primary,.secondary{min-height:35px;font-size:16px}.levelGrid button{height:47px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Gift box trophy on the menu, with three visibly different sizes/weights. */
+.crestPresents{position:absolute;bottom:4px;left:36px;display:flex;align-items:flex-end;gap:4px;transform:rotate(-9deg)}
+.crestPresents i{position:relative;display:block;width:28px;height:29px;border:2px solid #f7d7a9;border-radius:3px;background:#c34d56;box-shadow:0 3px #0b2a32}
+.crestPresents i:nth-child(2){height:40px;background:#3d9971}.crestPresents i:nth-child(3){height:46px;background:#507ab6}
+.crestPresents i:before{content:"";position:absolute;left:9px;top:0;bottom:0;width:5px;background:#ffe1a5}
+.crestPresents i:after{content:"";position:absolute;left:0;right:0;top:11px;height:5px;background:#ffe1a5}
+@media(max-height:660px){.crestPresents{transform:scale(.75) rotate(-9deg);transform-origin:bottom}}
