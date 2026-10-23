@@ -1,35 +1,57 @@
 const test=require("node:test"),assert=require("node:assert/strict"),E=require("./engine.js");
-test("levels create reachable targets, limited throws and predictable patterns",()=>{
- for(let level=1;level<=36;level++){
-  const s=E.makeLevel(level);
-  assert.ok(s.tins.length>=3);assert.ok(s.balls>=4);
-  assert.ok(s.tins.every(t=>t.x>24&&t.x<396&&t.y>175&&t.y<420));
-  assert.equal(new Set(s.tins.map(t=>t.id)).size,s.tins.length);
+function advance(s,time=2.6){for(let i=0;i<Math.ceil(time*60);i++)E.step(s,1/60);}
+test("36 challenge levels contain only weighted presents; no obstacles, and sufficient snowballs",()=>{
+ for(let n=1;n<=36;n++){const s=E.makeLevel(n);
+  assert.ok(s.gifts.length>=3);assert.equal("barriers" in s,false);
+  assert.ok(s.gifts.every(g=>E.TYPES[g.type]&&g.x>=40&&g.x<=380&&g.y>=220&&g.y<=420));
+  assert.ok(s.balls>s.gifts.reduce((sum,g)=>sum+Math.ceil(g.needed/1.05),0));
+  assert.equal(new Set(s.gifts.map(g=>g.id)).size,s.gifts.length);
  }
 });
-test("launching consumes one snowball, blocks duplicate launches and advances",()=>{
- const s=E.makeLevel(1);assert.equal(E.launch(s,210,380),true);
- assert.equal(s.balls,3);assert.equal(E.launch(s,210,350),false);
- for(let i=0;i<160;i++)E.step(s,1/60);
- assert.ok(s.tins.some(t=>t.fallen),"A centre shot should knock over a tin");
-});
-test("special red target causes a chain reaction",()=>{
- const s=E.makeLevel(4),red=s.tins.find(t=>t.type==="blast");
- assert.ok(red);E.strikeTin(s,red,0,-1);
- assert.ok(s.tins.filter(t=>t.fallen).length>1);
-});
-test("clearing all tins wins, awards remaining shots and stars",()=>{
+test("a direct hit removes just one light present, not the entire row",()=>{
  const s=E.makeLevel(1);
- s.tins.forEach(t=>E.strikeTin(s,t,0,-1));
- E.step(s,.016);assert.equal(s.won,true);assert.equal(E.stars(s),3);
+ assert.ok(E.launch(s,s.gifts[0].x,s.gifts[0].y));advance(s);
+ assert.equal(s.gifts.filter(g=>g.cleared).length,1);
+ assert.equal(s.gifts.filter(g=>!g.cleared).length,2);
+ assert.equal(s.won,false);
 });
-test("a missed final throw ends the level without a win",()=>{
+test("a miss costs one snowball and never knocks a gift down",()=>{
+ const s=E.makeLevel(1),before=s.balls;
+ assert.equal(E.launch(s,15,280),true);advance(s);
+ assert.equal(s.balls,before-1);
+ assert.equal(s.gifts.filter(g=>g.fallen).length,0);
+});
+test("a medium present moves on its second hit, not on its first",()=>{
+ const s=E.makeLevel(2),g=s.gifts.find(g=>g.type==="medium");
+ assert.ok(E.launch(s,g.x,g.y));advance(s);
+ assert.equal(g.fallen,false);assert.ok(g.damage>0);
+ assert.ok(E.launch(s,g.x,g.y));advance(s);
+ assert.equal(g.cleared,true);
+});
+test("a heavy present needs three separate accurate hits",()=>{
+ const s=E.makeLevel(6),g=s.gifts.find(g=>g.type==="heavy");
+ for(let i=0;i<2;i++){assert.ok(E.launch(s,g.x,g.y));advance(s);assert.equal(g.fallen,false);}
+ assert.ok(E.launch(s,g.x,g.y));advance(s);
+ assert.equal(g.cleared,true);
+});
+test("a neighbouring light present is not automatically defeated by a hit",()=>{
+ const s=E.makeLevel(1),g=s.gifts[0],neighbour=s.gifts[1];
+ E.applyImpact(s,g,0,-920,1.1);advance(s);
+ assert.equal(g.cleared,true);assert.equal(neighbour.cleared,false);assert.equal(neighbour.fallen,false);
+});
+test("clear animation finishes before victory is awarded",()=>{
  const s=E.makeLevel(1);
- s.balls=1;
- assert.equal(E.launch(s,10,350),true);
- assert.equal(s.failed,false);
- s.ball=null; // Simulate the final ball leaving the scene without a hit.
- E.step(s,1/60);
- assert.equal(s.failed,true);assert.equal(s.won,false);
+ for(const g of s.gifts)E.applyImpact(s,g,0,-920,3.1);
+ assert.equal(s.won,false);
+ advance(s);assert.equal(s.won,true);assert.equal(E.stars(s),3);
+});
+test("missed final snowball causes loss after it has left the scene",()=>{
+ const s=E.makeLevel(1);s.balls=1;
+ assert.ok(E.launch(s,15,280));assert.equal(s.failed,false);
+ advance(s);assert.equal(s.failed,true);assert.equal(s.won,false);
  assert.equal(E.launch(s,210,400),false);
+});
+test("invalid taps cannot fire or spend snowballs",()=>{
+ const s=E.makeLevel(1),shots=s.balls;
+ assert.equal(E.launch(s,210,600),false);assert.equal(s.balls,shots);
 });
