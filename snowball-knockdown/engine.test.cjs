@@ -23,8 +23,13 @@ test("clearing all tins wins, awards remaining shots and stars",()=>{
  s.tins.forEach(t=>E.strikeTin(s,t,0,-1));
  E.step(s,.016);assert.equal(s.won,true);assert.equal(E.stars(s),3);
 });
-test("misses end the level only when all throws finish",()=>{
+test("a missed final throw ends the level without a win",()=>{
  const s=E.makeLevel(1);
- for(let i=0;i<4;i++){assert.ok(E.launch(s,395,480));for(let k=0;k<180;k++)E.step(s,1/60);}
- assert.equal(s.failed,true);assert.equal(s.won,false);assert.equal(E.launch(s,210,400),false);
+ s.balls=1;
+ assert.equal(E.launch(s,10,350),true);
+ assert.equal(s.failed,false);
+ s.ball=null; // Simulate the final ball leaving the scene without a hit.
+ E.step(s,1/60);
+ assert.equal(s.failed,true);assert.equal(s.won,false);
+ assert.equal(E.launch(s,210,400),false);
 });
