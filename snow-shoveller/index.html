@@ -379,9 +379,21 @@ function render(){
  for(const a of particles){ctx.globalAlpha=clamp(a.life/a.max,0,1);ellipse(a.x,a.y,a.r,a.r*.8,a.color);}ctx.globalAlpha=1;
  ctx.strokeStyle='#d8f5e35b';ctx.lineWidth=6;ctx.strokeRect(3,3,fullW-6,fullH-6);
  ctx.restore();
+ // Keep the furnace findable even when the camera leaves it behind.
+ const fx=cw/2+(F.x*T-targetX)*zoom,fy=ch/2+(F.y*T-targetY)*zoom;
+ if(fx<32||fy<68||fx>cw-32||fy>ch-65){
+  const vx=fx-cw/2,vy=fy-ch/2,edge=Math.max(1,Math.abs(vx)/(cw/2-34),Math.abs(vy)/(ch/2-72));
+  const px=cw/2+vx/edge,py=ch/2+vy/edge;
+  ctx.save();ctx.translate(px,py);
+  ellipse(0,0,23,23,state.player.bag>=cap()*.8?'#f0c978':'#123c4fda');
+  ctx.strokeStyle='#fff3d7';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,21,0,Math.PI*2);ctx.stroke();
+  ctx.rotate(Math.atan2(vy,vx));ctx.fillStyle='#fff3d7';
+  ctx.beginPath();ctx.moveTo(13,0);ctx.lineTo(-7,-10);ctx.lineTo(-4,-2);ctx.lineTo(-12,0);ctx.lineTo(-4,2);ctx.lineTo(-7,10);ctx.closePath();ctx.fill();
+  ctx.restore();
+ }
  if(touch){ctx.save();ctx.globalAlpha=.77;ellipse(touch.ox,touch.oy,51,51,'#0e354f7d');ctx.strokeStyle='#edffef';ctx.lineWidth=3;ctx.beginPath();ctx.arc(touch.ox,touch.oy,49,0,Math.PI*2);ctx.stroke();const vx=clamp(touch.x-touch.ox,-47,47),vy=clamp(touch.y-touch.oy,-47,47);ellipse(touch.ox+vx,touch.oy+vy,22,22,'#f7e0a0');ellipse(touch.ox+vx-4,touch.oy+vy-5,10,7,'#fff4cb');ctx.restore();}
 }
-function frame(t){const dt=last?Math.min(.035,(t-last)/1000):0;last=t;if(running)tick(dt);render();if(toastEnd&&t>toastEnd){$('toast').classList.remove('show');toastEnd=0;}requestAnimationFrame(frame);}
+function frame(t){const dt=last?Math.min(.12,(t-last)/1000):0;last=t;if(running)tick(dt);render();if(toastEnd&&t>toastEnd){$('toast').classList.remove('show');toastEnd=0;}requestAnimationFrame(frame);}
 function inputPosition(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
 canvas.addEventListener('pointerdown',e=>{if(!running||touch)return;e.preventDefault();const p=inputPosition(e);touch={id:e.pointerId,ox:p.x,oy:p.y,x:p.x,y:p.y};try{canvas.setPointerCapture(e.pointerId);}catch{}});
 canvas.addEventListener('pointermove',e=>{if(!touch||e.pointerId!==touch.id)return;e.preventDefault();const p=inputPosition(e);touch.x=p.x;touch.y=p.y;});
