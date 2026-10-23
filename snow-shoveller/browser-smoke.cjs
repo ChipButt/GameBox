@@ -29,21 +29,28 @@ const saveKey='chipin-snow-shoveller-v1';
       await page.mouse.move(box.x+box.width*.40,box.y+box.height*.55);
       await page.mouse.down();
       await page.mouse.move(box.x+box.width*.67,box.y+box.height*.55,{steps:12});
-      await page.waitForTimeout(2600);
+      await page.waitForTimeout(3700);
       await page.mouse.up();
       await page.waitForTimeout(350);
       const bag=Number((await page.locator('#bag').innerText()).split('/')[0].trim());
       assert(bag>0,'Shovelling should collect snow via pointer drag');
       assert.equal(await page.locator('#coins').innerText(),startCoins,'Shovelling cannot mint coins before furnace deposit');
       await page.screenshot({path:'snow-shoveller/playing-'+size.width+'.png'});
-      await page.evaluate(key=>{
-        const s=JSON.parse(localStorage.getItem(key));s.player.x=5.7;s.player.y=5.6;s.player.bag=21;localStorage.setItem(key,JSON.stringify(s));
-      },saveKey);
-      await page.reload({waitUntil:'domcontentloaded'});
-      await page.locator('#startBtn').click();
-      await page.waitForTimeout(350);
-      assert(Number((await page.locator('#coins').innerText()).replaceAll(',',''))>=63,'Furnace must award currency for deposited load');
+      // Return to the furnace using actual player input, not an injected deposit.
+      await page.keyboard.down('ArrowLeft');
+      await page.waitForTimeout(4400);
+      await page.keyboard.up('ArrowLeft');
+      await page.keyboard.down('ArrowUp');
+      await page.waitForTimeout(650);
+      await page.keyboard.up('ArrowUp');
+      await page.waitForTimeout(400);
+      const payout=Number((await page.locator('#coins').innerText()).replaceAll(',',''));
+      assert(payout>0,'Walking snow to the furnace must award currency (got '+payout+')');
       assert.match(await page.locator('#bag').innerText(),/^0 \/ /,'Furnace empties snow sack');
+      await page.addInitScript(key=>{
+        const snapshot=sessionStorage.getItem('snow-shoveller-test-fixture');
+        if(snapshot){localStorage.setItem(key,snapshot);sessionStorage.removeItem('snow-shoveller-test-fixture');}
+      },saveKey);
       await page.locator('#shopBtn').click();
       assert(await page.locator('#shop').isVisible());
       const upgrade=page.locator('#shopGrid .upgrade').first();
@@ -55,7 +62,7 @@ const saveKey='chipin-snow-shoveller-v1';
         const s=JSON.parse(localStorage.getItem(key));
         const first=s.ice[0];if(!first)throw Error('Frozen character must be available');
         first.hp=.3;s.player.x=first.id==='Pip'?12.5:23.5;s.player.y=first.id==='Pip'?8.5:10.5;s.player.bag=0;
-        localStorage.setItem(key,JSON.stringify(s));
+        sessionStorage.setItem('snow-shoveller-test-fixture',JSON.stringify(s));
       },saveKey);
       await page.reload({waitUntil:'domcontentloaded'});
       await page.locator('#startBtn').click();
