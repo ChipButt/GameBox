@@ -36,6 +36,13 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+### Snowball Knockdown
+- Christmas fairground can-toss arcade game inspired by the aiming and knockdown genre, with original procedural art and no copied game files.
+- Mobile touch/tap aiming, drag release and keyboard controls; physics-based impacts, tin cascades and red chain-reaction cans.
+- 12 hand-designed arrangements looping into increasing challenge, a limited snowball supply, star ratings, local saved level unlocks, best score and an optional sound toggle.
+- Play at `snowball-knockdown/`.
+
+
 ### Gift Bubble Shooter
 - Christmas match-three ornament shooter with colour matching, bank shots, falling unsupported groups and Kenney present rescues.
 - 12 progressively denser levels, escalating row penalties, compact gift/score HUD, next-shot preview and swap.
