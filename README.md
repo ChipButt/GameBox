@@ -36,6 +36,14 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+### Snow Shoveller
+- Christmas snow-clearing progression game: drag on mobile or use WASD / arrow keys to move and automatically shovel.
+- Snow goes into a capacity-limited sack; coins are awarded **only** when loads are melted at the furnace.
+- Four persistent upgrade tracks: shovel clearing speed, player sack capacity, helper capacity and helper movement speed.
+- Five rescuable friends frozen in ice across multiple districts; each helper gathers independently, carries a limited load and automatically deposits at the furnace.
+- Procedural snowy districts, live progress HUD, local saves, responsive mobile UI and original vector Christmas scenery.
+- Play at `snow-shoveller/`. Automated mechanics: `node --test snow-shoveller/game.test.cjs`.
+
 ### Snowball Knockdown
 - Christmas fairground snowball toss: knock weight-coded Christmas presents off the shelves using local approved holiday sprites and no copied game files.
 - Mobile tap/drag and keyboard aiming; snowballs collide only with presents they actually hit. Small gifts need one hit, medium two and heavy three; no invisible obstacles or automatic radius chain reactions.
