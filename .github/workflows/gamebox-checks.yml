@@ -28,6 +28,7 @@ jobs:
           node --check snowball-knockdown/engine.js
           node --check snowball-knockdown/game.js
           node --test snowball-knockdown/engine.test.cjs
+          node --test snow-shoveller/game.test.cjs
           node --check gift-bubble-shooter/game.js
           node --test gift-bubble-shooter/game.test.cjs
           node --check santa-invaders/game.js
@@ -52,6 +53,8 @@ jobs:
           test -f bingo/event-host.css
           test -f bingo/event-model.js
           test -f bingo/display.html
+          test -f snow-shoveller/index.html
+          test -f snow-shoveller/game.test.cjs
           test -f snowball-knockdown/index.html
           test -f snowball-knockdown/style.css
           test -f snowball-knockdown/engine.js
