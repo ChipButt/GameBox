@@ -1,0 +1,49 @@
+name: Snow Shoveller mobile checks
+on:
+  push:
+    paths:
+      - 'snow-shoveller/**'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - 'index.html'
+      - '.github/workflows/snow-shoveller.yml'
+  pull_request:
+    paths:
+      - 'snow-shoveller/**'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - 'index.html'
+      - '.github/workflows/snow-shoveller.yml'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check economy, rescue, upgrades and saved progress
+        run: |
+          node --check snow-shoveller/game.test.cjs
+          node --check snow-shoveller/browser-smoke.cjs
+          node --test snow-shoveller/game.test.cjs
+          python3 tools/sync-entry-points.py --check
+          grep -q 'href="snow-shoveller/"' index.html
+          grep -q 'href="snow-shoveller/"' hub/index.html
+      - name: Install browser test runner
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Start static site
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 > /tmp/snow-shoveller-http.log 2>&1 &
+          sleep 2
+      - name: Test mobile movement and snow-furnace economy
+        run: node snow-shoveller/browser-smoke.cjs
+      - name: Upload mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snow-shoveller-mobile
+          path: snow-shoveller/*.png
+          if-no-files-found: ignore
