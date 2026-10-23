@@ -3,6 +3,12 @@
 const E=window.SnowballEngine,$=id=>document.getElementById(id);
 const canvas=$("game"),ctx=canvas.getContext("2d",{alpha:false});
 const pref="chipin-snowball-v1";
+const PRESENTS={};
+for(const [type,color] of [["light","red"],["medium","green"],["heavy","blue"]]){
+ const img=new Image();
+ img.src="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/present_small_"+color+".png";
+ PRESENTS[type]=img;
+}
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(pref+key))??fallback;}catch{return fallback;}};
 const save=(key,v)=>{try{localStorage.setItem(pref+key,JSON.stringify(v));}catch{}};
 let unlocked=read("-unlocked",1),best=read("-best",0),records=read("-stars",{}),sound=read("-sound",true);
@@ -31,20 +37,20 @@ function updateHUD(){
  $("level").textContent=String(state.level).padStart(2,"0");
  $("balls").textContent=Array.from({length:state.initialBalls},(_,i)=>i<state.balls?"●":"○").join(" ");
  $("score").textContent=state.score.toLocaleString("en-GB");
- $("best").textContent=best.toLocaleString("en-GB");
+ $("gifts").textContent=String(state.gifts.filter(g=>!g.cleared).length).padStart(2,"0");
 }
 function setOverlay(next){
  mode=next;const ov=$("overlay");ov.classList.add("show");
  $("resultMeta").hidden=true;$("secondBtn").hidden=false;$("levelBtn").hidden=false;
  const headline=$("overlayTitle"),k=$("overlayKicker"),p=$("overlayText"),play=$("playBtn"),secondary=$("secondBtn");
  if(next==="intro"){k.textContent="THE NORTH POLE WINTER FAIR";headline.innerHTML="SNOWBALL<br><em>KNOCKDOWN</em>";
-  p.textContent="Aim your snowballs and topple every festive tin. Clear the shelf with fewer throws to earn more stars!";
+  p.textContent="Knock every Christmas present off the shelves. Small gifts take one hit, medium gifts two, and heavy gifts three!";
   play.textContent="LET'S PLAY  ➜";secondary.textContent="HOW TO PLAY";$("levelBtn").textContent="CHOOSE LEVEL";}
  if(next==="menu"){k.textContent="TAKE A BREATHER";headline.innerHTML="GAME<br><em>PAUSED</em>";
   p.textContent="Snowballs at the ready. The North Pole fair is right where you left it.";
   play.textContent="RESUME  ➜";secondary.textContent="RESTART LEVEL";$("levelBtn").textContent="CHOOSE LEVEL";}
  if(next==="help"){k.textContent="HOW TO PLAY";headline.innerHTML="READY, AIM,<br><em>SNOW!</em>";
-  p.innerHTML="Tap a tin to throw, or drag to line up your shot and release. Knock over <b>every tin</b> before you run out of snowballs. <b>Red star tins</b> set off a chain reaction. Bank shots off the side walls. Keyboard: ← → aim · Space shoot.";
+  p.innerHTML="Tap a present to throw, or drag to aim and release. <b>Small red:</b> 1 hit. <b>Medium green:</b> 2 hits. <b>Heavy blue:</b> 3 hits. Each snowball only hits what it touches. Knock every gift off the shelf before you run out! Keyboard: ← → aim · Space shoot.";
   play.textContent="GOT IT  ➜";secondary.textContent="RESTART LEVEL";$("levelBtn").hidden=true;}
  if(next==="win"){
   const stars=E.stars(state);
@@ -52,13 +58,13 @@ function setOverlay(next){
   records[state.level]=Math.max(stars,records[state.level]||0);save("-stars",records);
   best=Math.max(best,state.score);save("-best",best);updateHUD();
   k.textContent="THE SHELF IS CLEAR!";headline.innerHTML="BRILLIANT<br><em>SHOT!</em>";
-  p.textContent=stars===3?"Snowball superstar! That was a perfect little demolition.":"Every tin down! Think you can use fewer snowballs next time?";
+  p.textContent=stars===3?"Snowball superstar! You cleared every Christmas present with snowballs to spare.":"All the presents knocked off! Could you manage it with fewer snowballs?";
   $("resultMeta").hidden=false;$("resultStars").textContent="★".repeat(stars)+"☆".repeat(3-stars);
   $("resultScore").textContent=state.score.toLocaleString("en-GB")+" PTS";
   play.textContent="NEXT LEVEL  ➜";secondary.textContent="PLAY AGAIN";$("levelBtn").textContent="CHOOSE LEVEL";
  }
  if(next==="lose"){k.textContent="SO CLOSE!";headline.innerHTML="OUT OF<br><em>SNOWBALLS</em>";
-  p.textContent=state.tins.filter(t=>!t.fallen).length+" tin(s) still standing. Try another angle or bounce a snowball off the sides.";
+  p.textContent=state.gifts.filter(g=>!g.cleared).length+" present(s) left on the shelves. Aim carefully and save your snowballs for the heavier boxes.";
   $("resultMeta").hidden=false;$("resultStars").textContent="☆☆☆";$("resultScore").textContent=state.score.toLocaleString("en-GB")+" PTS";
   play.textContent="TRY AGAIN  ➜";secondary.textContent="HOW TO PLAY";$("levelBtn").textContent="CHOOSE LEVEL";
  }
@@ -149,6 +155,16 @@ function scenery(t){
 }
 function platform(){
  ctx.fillStyle="#23383a";ctx.fillRect(24,414,370,103);
+ // Display shelves only: decorative supports, never collision obstacles.
+ for(const row of [1,2]){
+  if(!state.gifts.some(g=>g.row===row))continue;
+  const sy=E.SHELF_Y[row],left=39,right=381;
+  ctx.fillStyle="#442f32";rr(left+2,sy+4,right-left,12,3);ctx.fill();
+  const sg=ctx.createLinearGradient(0,sy,0,sy+11);
+  sg.addColorStop(0,"#d4a06c");sg.addColorStop(1,"#6e4937");
+  ctx.fillStyle=sg;rr(left,sy,right-left,11,3);ctx.fill();
+  ctx.fillStyle="#eff8ec";ctx.fillRect(left+3,sy-2,right-left-6,3);
+ }
  const wood=ctx.createLinearGradient(0,437,0,512);wood.addColorStop(0,"#c6915f");wood.addColorStop(.35,"#794938");wood.addColorStop(1,"#4a3434");
  ctx.fillStyle=wood;rr(23,437,373,78,5);ctx.fill();
  ctx.fillStyle="#d3a070";ctx.fillRect(27,457,367,5);ctx.fillRect(27,493,367,4);
@@ -163,36 +179,39 @@ function platform(){
  ctx.fillStyle="#ad7848";rr(153,587,114,27,4);ctx.fill();ctx.fillStyle="#f3d0a0";ctx.fillRect(160,599,100,3);
  label("SNOWBALLS",210,612,15,"#392c2b");
 }
-function drawBarrier(q){
- ctx.save();ctx.fillStyle="#2b3b3b";ctx.fillRect(q.x+3,q.y+5,q.w,q.h);
- const g=ctx.createLinearGradient(0,q.y,0,q.y+q.h);g.addColorStop(0,"#e3b479");g.addColorStop(1,"#7b493b");
- ctx.fillStyle=g;rr(q.x,q.y,q.w,q.h,3);ctx.fill();
- ctx.strokeStyle="#553d36";ctx.lineWidth=2;ctx.strokeRect(q.x+3,q.y+2,q.w-6,q.h-4);
- for(let i=1;i<q.w/21;i++){ctx.fillStyle="#65433b";ctx.fillRect(q.x+i*21,q.y+3,2,q.h-5);}
- ctx.fillStyle="#f0f5ee";ctx.fillRect(q.x,q.y-2,q.w,3);ctx.restore();
-}
-function tin(t){
+function present(g){
+ if(g.cleared)return;
  ctx.save();
- const x=t.x,y=t.y,fall=t.fallen;
- ctx.fillStyle="#172f35aa";ctx.beginPath();ctx.ellipse(x+3,y+28,fall?32:20,6,0,0,6.29);ctx.fill();
- ctx.translate(x,y);ctx.rotate(t.angle);
- const w=36,h=48;
- const colors=t.type==="blast"?["#a72438","#ff7971","#7a2134"]:[["#9d3440","#e3756b","#7c2937"],["#1a6659","#61b38f","#165048"],["#a77a31","#eec975","#8c592f"]][t.color];
- const g=ctx.createLinearGradient(-w/2,0,w/2,0);g.addColorStop(0,colors[2]);g.addColorStop(.33,colors[1]);g.addColorStop(.72,colors[0]);g.addColorStop(1,colors[2]);
- ctx.fillStyle=g;rr(-w/2,-h/2,w,h,6);ctx.fill();
- ctx.strokeStyle="#392d34";ctx.lineWidth=1.5;ctx.stroke();
- ctx.fillStyle="#c7d0ca";ctx.beginPath();ctx.ellipse(0,-h/2,17.5,5.5,0,0,6.29);ctx.fill();
- ctx.fillStyle="#7a8985";ctx.beginPath();ctx.ellipse(0,-h/2+1,12.2,2.7,0,0,6.29);ctx.fill();
- ctx.fillStyle="#e8cfa8";ctx.fillRect(-16,-h/2+11,32,4);ctx.fillRect(-16,h/2-10,32,3);
- ctx.fillStyle="#fff7db";ctx.beginPath();
- if(t.type==="blast"){for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?7:12;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r+1);}ctx.closePath();ctx.fill();ctx.fillStyle="#82303b";label("!",0,7,14,"#913441");}
- else{
-  ctx.strokeStyle="#fff5d9";ctx.lineWidth=2.2;
-  for(let i=0;i<3;i++){let a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(-Math.sin(a)*10,Math.cos(a)*10);ctx.lineTo(Math.sin(a)*10,-Math.cos(a)*10);ctx.stroke();}
-  ctx.fillStyle="#fdf3d5";ctx.beginPath();ctx.arc(0,0,3,0,6.29);ctx.fill();
+ const x=g.x,y=g.y,size=g.size,angle=g.angle;
+ ctx.fillStyle="#07192375";ctx.beginPath();
+ ctx.ellipse(x+4,g.baseY+g.size*.54,g.fallen?size*.55:size*.48,5,0,0,Math.PI*2);ctx.fill();
+ ctx.translate(x,y);ctx.rotate(angle);
+ // Weight-coded, increasingly large presents: approved Kenney holiday sprites.
+ const sprite=PRESENTS[g.type],pad=3;
+ if(sprite&&sprite.complete&&sprite.naturalWidth>0){
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(sprite,-size*.5-pad,-size*.5-pad,size+pad*2,size+pad*2);
+ }else{
+  const c={light:"#d74f57",medium:"#40956f",heavy:"#5889c7"}[g.type];
+  const dark={light:"#8f3342",medium:"#24634e",heavy:"#3c5c93"}[g.type];
+  ctx.fillStyle=dark;rr(-size*.5,-size*.47,size,size*.94,5);ctx.fill();
+  ctx.fillStyle=c;rr(-size*.5+4,-size*.44,size-8,size*.83,2);ctx.fill();
+  ctx.fillStyle="#f8e7b6";ctx.fillRect(-3,-size*.44,6,size*.83);
+  ctx.fillRect(-size*.5+4,-4,size-8,7);
+  ctx.fillStyle="#fff4d9";ctx.beginPath();ctx.ellipse(-5,-size*.45,7,4,.4,0,6.29);ctx.ellipse(5,-size*.45,7,4,-.4,0,6.29);ctx.fill();
  }
- ctx.fillStyle="#e0e4d7";ctx.beginPath();ctx.ellipse(0,h/2,16.5,4.5,0,0,6.29);ctx.fill();
- if(!fall){ctx.fillStyle="#ffffff29";ctx.fillRect(-13,-16,3,28);}
+ // Visible, distinct mass labels, with dimmed labels on partly hit gifts.
+ ctx.fillStyle="#102c35df";rr(-size*.45,size*.23,size*.9,17,5);ctx.fill();
+ ctx.fillStyle="#f6deb1";ctx.font="900 11px 'Barlow Condensed',system-ui";ctx.textAlign="center";
+ ctx.fillText(g.type==="light"?"1 HIT":g.type==="medium"?"2 HITS":"3 HITS",0,size*.23+12);
+ if(!g.fallen&&g.damage>0){
+  // Damage is visible: segments show how many hits are still required.
+  const count=Math.ceil(g.needed/1.05);
+  for(let i=0;i<count;i++){
+   ctx.fillStyle=i<Math.floor(g.damage/1.05+.0001)?"#ffe1a5":"#1f344a";
+   ctx.fillRect(-count*8/2+i*8,-size*.53,6,5);
+  }
+ }
  ctx.restore();
 }
 function snowball(x,y,r){
@@ -225,8 +244,7 @@ function render(){
  if(!scale)return;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#142b32";ctx.fillRect(0,0,canvas.width,canvas.height);
  ctx.setTransform(scale,0,0,scale,ox,oy);
  scenery(state.clock);platform();
- state.barriers.forEach(drawBarrier);
- [...state.tins].sort((a,b)=>a.y-b.y).forEach(tin);
+ [...state.gifts].sort((a,b)=>a.y-b.y).forEach(present);
  launcher();
  if(state.ball){
   const b=state.ball;
@@ -235,10 +253,10 @@ function render(){
   snowball(b.x,b.y,clamp(11+(b.y-250)/23,8,23));
  }
  snowflakes();
- if(mode==="playing"&&!state.ball&&state.balls>0&&state.clock<5){label("TAP THE TINS OR DRAG TO AIM",210,533,14,"#245863");}
+ if(mode==="playing"&&!state.ball&&state.balls>0&&state.clock<5){label("AIM FOR THE PRESENTS",210,533,15,"#245863");}
 }
 function addParticles(x,y,kind){
- const color=kind==="blast"?"#ffbf62":kind==="tin"?"#f7ecd2":"#e5f8fa",num=kind==="blast"?48:kind==="tin"?20:7;
+ const color=kind==="topple"?"#ffdf9b":kind==="impact"?"#e6f6fc":"#e5f8fa",num=kind==="topple"?18:kind==="impact"?11:7;
  for(let i=0;i<num;i++){const a=i/num*Math.PI*2,v=rand(40,200);sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,r:rand(3,8),life:rand(.28,.86),color:i%4?"#e9f6e8":color,rot:rand(0,6.28)});}
  if(sparks.length>150)sparks.splice(0,sparks.length-150);
 }
@@ -247,8 +265,12 @@ function tick(now){
  if(mode==="playing"){
   E.step(state,dt);
   for(const ev of state.events){
-   if(ev.kind==="tin"||ev.kind==="blast"){addParticles(ev.x,ev.y,ev.kind);beep(ev.kind);vibrate();}
-   if(ev.kind==="wood")addParticles(ev.x,ev.y,"snow");
+   if(ev.kind==="impact"){addParticles(ev.x,ev.y,"impact");beep("impact");vibrate();
+     if(ev.remaining>0)msg(ev.type==="heavy"?"HEAVY PRESENT!": "ONE MORE HIT!",.55);
+   }
+   if(ev.kind==="topple"){addParticles(ev.x,ev.y,"topple");beep("tin");}
+   if(ev.kind==="clear")addParticles(ev.x,ev.y,"snow");
+   if(ev.kind==="snow")addParticles(ev.x,ev.y,"snow");
    if(ev.kind==="win"){msg("SHELF CLEARED!",1.3);finish("win");}
    if(ev.kind==="lose"){msg("OUT OF SNOWBALLS!",1.3);finish("lose");}
   }
