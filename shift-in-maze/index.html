@@ -1245,10 +1245,17 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   outline:0!important;
 }
 
-/* SINGLE MAZE SHIFT UI BACKGROUND */
+/* SINGLE MAZE SHIFT UI BACKGROUND
+   Retain a full-screen dungeon backdrop even when the optional artwork is missing. */
 .playScreen{
   isolation:isolate!important;
-  background:#040b13!important;
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 34%,rgba(30,101,111,.32),transparent 76%),
+    radial-gradient(ellipse 45% 38% at 5% 80%,rgba(151,105,38,.13),transparent 80%),
+    radial-gradient(ellipse 45% 38% at 95% 80%,rgba(151,105,38,.13),transparent 80%),
+    repeating-linear-gradient(90deg,transparent 0 65px,rgba(137,166,169,.023) 65px 67px),
+    repeating-linear-gradient(0deg,transparent 0 37px,rgba(137,166,169,.025) 37px 39px),
+    linear-gradient(180deg,#0d2534 0%,#091b29 38%,#071520 70%,#050c15 100%)!important;
 }
 .mazeShiftUiArt{
   position:absolute!important;
@@ -2077,7 +2084,7 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   </section>
 
   <section id="gameView" class="view playScreen hidden">
-    <img class="mazeShiftUiArt" src="maze_shift_ui.png" alt="" aria-hidden="true">
+    <img class="mazeShiftUiArt" src="maze_shift_ui.png" onerror="this.hidden=true" alt="" aria-hidden="true">
     <header class="gameHud">
       <div class="turnHud">
         <span class="turnDot" id="turnDot"></span>
@@ -2192,9 +2199,9 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
   var HOME_ASSET=ASSET_ROOT+'22_home.png';
   var SHIFT_ASSET=ASSET_ROOT+'23_shift_arrow.png';
   var TILE_ASSETS={
-    I:{movable:'shift-in-maze/assets/tiles/movable_straight.png',fixed:'shift-in-maze/assets/tiles/immovable_straight.png'},
+    I:{movable:'shift-in-maze/assets/01_movable_tile_straight.png',fixed:'shift-in-maze/assets/04_immovable_tile_straight.png'},
     L:{movable:'shift-in-maze/assets/tiles/movable_corner.png',fixed:'shift-in-maze/assets/tiles/immovable_corner.png'},
-    T:{movable:'shift-in-maze/assets/tiles/movable_t_junction.png',fixed:'shift-in-maze/assets/tiles/immovable_t_junction.png'}
+    T:{movable:'shift-in-maze/assets/03_movable_tile_t_junction.png',fixed:'shift-in-maze/assets/06_immovable_tile_t_junction.png'}
   };
   var ROTATE_ASSET=ASSET_ROOT+'24_rotate.png';
   var DIFFICULTY_SECONDS={easy:180,medium:90,hard:30};
@@ -2400,23 +2407,19 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
     return o;
   }
   function fixedTile(r,c){
+    // The four home squares are fixed corners; the other twelve
+    // fixed squares are T-junctions on a classic 7x7 shifting board.
     if(r===0&&c===0)return tile('L',1,true);
     if(r===0&&c===6)return tile('L',2,true);
     if(r===6&&c===0)return tile('L',0,true);
     if(r===6&&c===6)return tile('L',3,true);
-    var centerR=3,centerC=3,dirs=[];
-    if(r>centerR)dirs.push('N');else if(r<centerR)dirs.push('S');
-    if(c>centerC)dirs.push('W');else if(c<centerC)dirs.push('E');
-    if(dirs.length===1){
-      if(dirs[0]==='N')return tile('T',0,true);
-      if(dirs[0]==='E')return tile('T',3,true);
-      if(dirs[0]==='S')return tile('T',2,true);
-      return tile('T',1,true);
-    }
-    if(dirs.indexOf('N')>=0&&dirs.indexOf('E')>=0)return tile('L',0,true);
-    if(dirs.indexOf('E')>=0&&dirs.indexOf('S')>=0)return tile('L',1,true);
-    if(dirs.indexOf('S')>=0&&dirs.indexOf('W')>=0)return tile('L',2,true);
-    return tile('L',3,true);
+    // Edge openings face into the board.
+    if(r===0)return tile('T',2,true);
+    if(r===6)return tile('T',0,true);
+    if(c===0)return tile('T',1,true);
+    if(c===6)return tile('T',3,true);
+    // The four interior junctions face towards the board centre.
+    return tile('T',c===2?1:3,true);
   }
   function buildBoard(){
     var movable=[],counts={I:13,L:15,T:6};
