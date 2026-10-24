@@ -1266,6 +1266,32 @@ button:focus-visible,select:focus-visible{outline:3px solid rgba(91,221,182,.38)
   user-select:none!important;
   -webkit-user-drag:none!important;
 }
+/* Restored original HUD frame artwork. Keep all artwork below the actual
+   interactive controls and display only while the full-screen composite is absent. */
+.mazeHudFrame{
+  position:absolute!important;
+  display:block;
+  z-index:10!important;
+  width:100%!important;
+  object-fit:fill!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+}
+.mazeHudFrameTop{
+  left:0!important;
+  top:1.5%!important;
+  height:8.5%!important;
+}
+.mazeHudFrameBottom{
+  left:0!important;
+  top:69%!important;
+  height:26%!important;
+}
+.mazeHudFrame[hidden],
+.mazeShiftUiArt:not([hidden]) ~ .mazeHudFrame{
+  display:none!important;
+}
 /* Every real game element is explicitly above the complete background composition. */
 .playScreen>.gameHud{z-index:30!important}
 .playScreen>.boardStage{z-index:40!important}
@@ -2083,6 +2109,8 @@ body:not(.playing) .app{width:min(100%,760px);padding:0 14px 38px}
 
   <section id="gameView" class="view playScreen hidden">
     <img class="mazeShiftUiArt" src="maze_shift_ui.png" onerror="this.hidden=true" alt="" aria-hidden="true">
+    <img class="mazeHudFrame mazeHudFrameTop" src="shift-in-maze/assets/ui/01_maze_shift_top_hud_frame.png" onerror="this.hidden=true" alt="" aria-hidden="true">
+    <img class="mazeHudFrame mazeHudFrameBottom" src="shift-in-maze/assets/ui/02_maze_shift_bottom_hud_frame.png" onerror="this.hidden=true" alt="" aria-hidden="true">
     <header class="gameHud">
       <div class="turnHud">
         <span class="turnDot" id="turnDot"></span>
