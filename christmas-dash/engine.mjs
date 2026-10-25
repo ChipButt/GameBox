@@ -65,9 +65,16 @@ export function spawnRow(run) {
     ? ['crate', 'snowman']
     : ['crate', 'snowman', 'arch', 'arch'];
   const hazardZ = -45;
+  // Snowmen are impassable. Place them clearly ahead of the gift sequence,
+  // rather than at the same depth where they can seem to swallow presents.
+  const snowmanZ = hazardZ + 12;
   for (let n = 0; n < count; n++) {
     const lane = hazards.splice(Math.floor(run.random() * hazards.length), 1)[0];
-    run.objects.push({ id: run.nextId(), kind: choose(run.random, kinds), lane, z: hazardZ, hit: false });
+    const kind = choose(run.random, kinds);
+    run.objects.push({
+      id: run.nextId(), kind, lane,
+      z: kind === 'snowman' ? snowmanZ : hazardZ, hit: false
+    });
   }
   // The reward lane is ALWAYS actionable when all three lanes are blocked.
   // Alternate actions in consecutive forced sections for real jump/duck
@@ -91,13 +98,18 @@ export function spawnRow(run) {
   const offsets = rewardHazard?.kind === 'crate' ? [4.8, 0, -4.8]
     : rewardHazard?.kind === 'arch' ? [4.8, -3.5, -6]
     : [4.8, 2.4, 0];
-  for (let n = 0; n < 3; n++) {
-    run.objects.push({
-      id: run.nextId(), kind: 'gift', lane: giftLane,
-      z: hazardZ + offsets[n], height: rewardHazard?.kind === 'crate' && n === 1 ? 1.0 : 0,
-      hit: false
-    });
-  }
+  const gifts = offsets.map((offset, n) => ({
+    id: run.nextId(), kind: 'gift', lane: giftLane,
+    z: hazardZ + offset, height: rewardHazard?.kind === 'crate' && n === 1 ? 1.0 : 0,
+    hit: false
+  }));
+  // Compare against the full active scene, including earlier sections. If an
+  // impassable snowman lies anywhere on this reward line, don't spawn gifts
+  // inviting the player to run straight into it.
+  const overlapsSnowman = gifts.some(g => run.objects.some(o =>
+    o.kind === 'snowman' && !o.hit && o.lane === g.lane && Math.abs(o.z - g.z) < 4
+  ));
+  if (!overlapsSnowman) run.objects.push(...gifts);
   run.rows++;
 }
 export function advance(run, dt) {
