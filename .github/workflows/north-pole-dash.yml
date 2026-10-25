@@ -28,6 +28,7 @@ jobs:
           node --check christmas-dash/engine.mjs
           node --check christmas-dash/game.js
           node --test christmas-dash/engine.test.mjs
+          node --check christmas-dash/browser-smoke.cjs
       - name: Verify original winter artwork and menu integration
         run: |
           test -f shared/asset-pool/quaternius/ultimate-animated-character/Elf.gltf
@@ -38,3 +39,20 @@ jobs:
           grep -q 'href="christmas-dash/"' index.html
           grep -q 'href="christmas-dash/"' hub/index.html
           python3 tools/sync-entry-points.py --check
+      - name: Install browser smoke test driver
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Confirm Chromium
+        run: which google-chrome || which chromium
+      - name: Serve GameBox locally
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 > /tmp/north-pole-http.log 2>&1 &
+          sleep 2
+      - name: Test real 3D model loading, swipes, pause and restart on mobile
+        run: node christmas-dash/browser-smoke.cjs
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: north-pole-dash-browser-screenshots
+          path: christmas-dash/*.png
+          if-no-files-found: ignore
