@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#153b4b">
 <title>North Pole Dash · GameBox</title>
-<link rel="stylesheet" href="./style.css?v=5">
+<link rel="stylesheet" href="./style.css?v=6">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}
 </script>
@@ -23,10 +23,10 @@
  </header>
  <div class="speedtag" id="speedtag">NORTH POLE · LEVEL 1</div>
  <div id="toast" class="toast" aria-live="polite"></div>
- <div class="mobileActions" aria-label="Runner controls">
-  <button class="steerControl" data-action="left" aria-label="Move left"><span class="controlArrow">‹</span><span class="controlLabel">LEFT</span></button>
-  <div class="verticalActions"><button data-action="jump" aria-label="Jump"><span class="controlLabel">JUMP</span></button><button data-action="slide" aria-label="Duck"><span class="controlLabel">DUCK</span></button></div>
-  <button class="steerControl" data-action="right" aria-label="Move right"><span class="controlArrow">›</span><span class="controlLabel">RIGHT</span></button>
+ <div class="mobileActions" aria-label="Jump and duck controls">
+  <button type="button" class="jumpControl" data-action="jump" aria-label="Jump"><span class="controlLabel">JUMP</span><span class="controlPrompt">TAP</span></button>
+  <span class="swipeHint" aria-hidden="true">SWIPE<br>TO MOVE</span>
+  <button type="button" class="duckControl" data-action="slide" aria-label="Duck"><span class="controlLabel">DUCK</span><span class="controlPrompt">HOLD</span></button>
  </div>
  <section class="overlay shown" id="startOverlay" aria-label="Start North Pole Dash">
   <div class="menu">
@@ -34,9 +34,9 @@
    <div class="titleArt" aria-hidden="true"><div class="miniTree treeL"></div><img class="titleGift giftL" src="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/present_small_green.png" alt=""><img class="titleGift giftR" src="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/present_small_red.png" alt=""><div class="miniTree treeR"></div></div>
    <h1>NORTH POLE<br><em>DASH</em></h1>
    <p class="lead">Sprint through Santa's village. Dodge the festive chaos. Grab every present.</p>
-   <div class="howto"><span><b>← →</b> MOVE</span><span><b>↑</b> JUMP</span><span><b>↓</b> DUCK</span></div>
+   <div class="howto"><span><b>← →</b> SWIPE</span><span><b>JUMP</b> TAP</span><span><b>DUCK</b> HOLD</span></div>
    <button class="primary" id="startBtn" type="button" disabled>PREPARING THE NORTH POLE…</button>
-   <div class="smallprint">SWIPE ON MOBILE · ARROW KEYS OR WASD ON DESKTOP</div>
+   <div class="smallprint">SWIPE LEFT/RIGHT TO STEER · TAP JUMP · HOLD DUCK</div>
    <p class="bestline">PERSONAL BEST <strong id="startBest">0</strong></p>
   </div>
  </section>
@@ -62,6 +62,6 @@
  </section>
  <div id="fatal" class="fatal" role="alert" hidden>Unable to start 3D graphics on this browser. Please reload the page or try an updated browser.</div>
 </main>
-<script type="module" src="./game.js?v=6"></script>
+<script type="module" src="./game.js?v=7"></script>
 </body>
 </html>
