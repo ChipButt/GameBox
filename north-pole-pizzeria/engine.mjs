@@ -48,15 +48,38 @@ export function makeOrder(day,index){
   const price=8+2.1*toppings.length+(wellDone?1.5:0)+(side!=='all'?.5:0);
   return {id:d+'-'+i,day:d,index:i,customer,portrait,needed,description,price:+price.toFixed(2)};
 }
-export function newPizza(){return {sauce:false,cheese:false,toppings:[],bake:0,cuts:0,spend:1.20};}
+// Sauce and mozzarella are hand-applied brush marks, never full-pizza toggles.
+// Restrict painting to the edible centre, leaving the hand-formed crust bare.
+export const BASE_RADIUS=.345;
+export const BRUSH_RADII={sauce:.109,cheese:.114};
+const grid=[];
+for(let gy=-10;gy<=10;gy++)for(let gx=-10;gx<=10;gx++){
+  const x=.5+gx*.032,y=.5+gy*.032;
+  if(Math.hypot(x-.5,y-.5)<=BASE_RADIUS-.012)grid.push([x,y]);
+}
+export function layerCoverage(pizza,ingredient){
+  if(ingredient!=='sauce'&&ingredient!=='cheese')return 0;
+  const marks=pizza[ingredient]||[];
+  if(!marks.length)return 0;
+  const radius=BRUSH_RADII[ingredient]**2;
+  let covered=0;
+  for(const [x,y] of grid)if(marks.some(p=>(p.x-x)**2+(p.y-y)**2<=radius))covered++;
+  return covered/grid.length;
+}
+export function newPizza(){return {sauce:[],cheese:[],toppings:[],bake:0,cuts:0,spend:1.20};}
 export function applyIngredient(pizza,ingredient,x=.5,y=.5){
+  if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+  const px=Math.max(0,Math.min(1,x)),py=Math.max(0,Math.min(1,y));
+  if(Math.hypot(px-.5,py-.5)>BASE_RADIUS)return false;
   if(ingredient==='sauce'||ingredient==='cheese'){
-    if(pizza[ingredient])return false;
-    pizza[ingredient]=true;pizza.spend+=ingredient==='sauce'?.65:.95;return true;
+    const marks=pizza[ingredient];
+    if(marks.length>=160||marks.some(p=>(p.x-px)**2+(p.y-py)**2<.018**2))return false;
+    marks.push({x:px,y:py});
+    // Every stroke uses ingredients; overworking a layer costs more.
+    pizza.spend=+(pizza.spend+(ingredient==='sauce'?.011:.017)).toFixed(3);
+    return true;
   }
   if(!(ingredient in TOPPINGS)||pizza.toppings.length>=48)return false;
-  const px=Math.max(0,Math.min(1,x)),py=Math.max(0,Math.min(1,y));
-  if(Math.hypot(px-.5,py-.5)>.43)return false;
   pizza.toppings.push({kind:ingredient,x:px,y:py});
   pizza.spend+=TOPPINGS[ingredient].cost;
   return true;
@@ -64,7 +87,14 @@ export function applyIngredient(pizza,ingredient,x=.5,y=.5){
 export function evaluate(order,pizza,patience=1,upgrades={}){
   const recipe=order.needed;
   let points=0,possible=0;
-  for(const field of ['sauce','cheese']){possible+=16;points+=pizza[field]===recipe[field]?16:0;}
+  for(const field of ['sauce','cheese']){
+    possible+=16;
+    const coverage=layerCoverage(pizza,field);
+    const target=field==='sauce'?.74:.74;
+    // A few dabs do not qualify as a fully dressed pizza.
+    if(recipe[field])points+=16*Math.min(1,coverage/target);
+    else points+=16*Math.max(0,1-coverage/.2);
+  }
   const expected=new Set(recipe.toppings);
   const used=new Set(pizza.toppings.map(t=>t.kind));
   for(const ingredient of Object.keys(TOPPINGS)){
