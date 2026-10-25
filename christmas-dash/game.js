@@ -208,9 +208,11 @@ function getScore(){return currentRun.score.toLocaleString('en-GB');}
 function refreshHUD(){
   $('score').textContent=String(currentRun.score).padStart(6,'0');
   $('gifts').textContent=currentRun.gifts;
-  $('distance').textContent=Math.floor(currentRun.distance);
-  const level=Math.min(10,1+Math.floor(currentRun.distance/170));
+  const metres=Math.floor(currentRun.distance);
+  $('distance').textContent=String(metres).padStart(5,'0');
+  const level=Math.min(10,1+Math.floor(metres/120));
   $('speedtag').textContent='NORTH POLE · LEVEL '+level;
+  $('distanceFill').style.width=((metres%120)/120*100).toFixed(1)+'%';
 }
 function showToast(message){
   const t=$('toast');t.textContent=message;t.classList.add('show');
@@ -287,7 +289,24 @@ async function loadModels(){
     const asset=await loadThreeAsset('quaternius:ultimate-animated-character:Elf',{GLTFLoader});
     const obj=asset.object;
     if(!obj)throw Error('Elf scene missing');
-    obj.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
+    let recolouredSkin = 0;
+    obj.traverse(node=>{
+      if(!node.isMesh)return;
+      node.castShadow=true;node.receiveShadow=true;
+      // Quaternius Elf.gltf defines Skin as [0.0134, 0.0134, 0.0134].
+      // Keep the original animated mesh and correct just the faulty material.
+      const recolour = original=>{
+        if(original?.name?.trim().toLowerCase()!=='skin')return original;
+        const corrected=original.clone();
+        corrected.color.set('#eeb38e');
+        corrected.roughness=0.92;
+        corrected.needsUpdate=true;
+        recolouredSkin++;
+        return corrected;
+      };
+      node.material=Array.isArray(node.material)?node.material.map(recolour):recolour(node.material);
+    });
+    if(!recolouredSkin)console.warn('The imported elf did not expose its named Skin material');
     const box3=new THREE.Box3().setFromObject(obj);
     const size=new THREE.Vector3();box3.getSize(size);
     if(size.y<.0001)throw Error('Elf model has no bounds');
@@ -344,14 +363,23 @@ function moveWorld(dt,travel){
 }
 function frame(){
   requestAnimationFrame(frame);
-  const dt=Math.min(clock.getDelta(),.05),running=currentRun.status==='running';
+  // Advance with real elapsed time, not frame count. Substeps preserve
+  // accurate metres and collision detection on slower WebGL/mobile devices.
+  const dt=Math.min(clock.getDelta(),.25),running=currentRun.status==='running';
   if(running){
-    const before=currentRun.distance,events=advance(currentRun,dt);
-    const travel=currentRun.distance-before;moveWorld(dt,travel);
-    for(const e of events){
-      if(e.type==='gift'){playTone(750+(currentRun.gifts%4)*110,.095);if(currentRun.gifts%3===0)showToast('PRESENTS +75');}
-      if(e.type==='crash'){endRun();break;}
+    const before=currentRun.distance;
+    let remaining=dt,crashed=false;
+    while(remaining>0.000001&&!crashed){
+      const step=Math.min(remaining,1/50);
+      remaining-=step;
+      const events=advance(currentRun,step);
+      for(const e of events){
+        if(e.type==='gift'){playTone(750+(currentRun.gifts%4)*110,.095);if(currentRun.gifts%3===0)showToast('PRESENTS +75');}
+        if(e.type==='crash'){crashed=true;break;}
+      }
     }
+    moveWorld(dt,currentRun.distance-before);
+    if(crashed)endRun();
   }
   for(const obj of currentRun.objects){
     if(!visuals.has(obj.id))makeVisual(obj);
@@ -374,7 +402,7 @@ function frame(){
   }
   camera.position.x+=(player.position.x*.16-camera.position.x)*Math.min(1,dt*3);
   camera.lookAt(camera.position.x*.35,1.25,-20);
-  if(running&&currentRun.seconds-lastUi>.08){refreshHUD();lastUi=currentRun.seconds;}
+  if(running||currentRun.status==='ready'){refreshHUD();lastUi=currentRun.seconds;}
   renderer.render(scene,camera);
 }
 async function boot(){
