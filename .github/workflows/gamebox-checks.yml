@@ -25,6 +25,9 @@ jobs:
           node --test unfinished-business/world.test.mjs
           node --test unfinished-business/model.test.mjs unfinished-business/entities.test.mjs
           node --check hub/santa-invaders-tile.js
+          node --check christmas-dash/engine.mjs
+          node --check christmas-dash/game.js
+          node --test christmas-dash/engine.test.mjs
           node --check snowball-knockdown/engine.js
           node --check snowball-knockdown/game.js
           node --test snowball-knockdown/engine.test.cjs
@@ -53,6 +56,11 @@ jobs:
           test -f bingo/event-host.css
           test -f bingo/event-model.js
           test -f bingo/display.html
+          test -f christmas-dash/index.html
+          test -f christmas-dash/style.css
+          test -f christmas-dash/game.js
+          test -f christmas-dash/engine.mjs
+          test -f christmas-dash/engine.test.mjs
           test -f snow-shoveller/index.html
           test -f snow-shoveller/game.test.cjs
           test -f snowball-knockdown/index.html
