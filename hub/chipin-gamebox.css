@@ -570,3 +570,18 @@
 .pzPresent{position:absolute;width:22px;height:22px;right:4px;bottom:7px;z-index:2;object-fit:contain;image-rendering:pixelated}
 @keyframes pzRise{0%{opacity:0;transform:translateY(7px)}40%{opacity:1}100%{opacity:0;transform:translateY(-7px)}}
 @media(prefers-reduced-motion:reduce){.pzSteam{animation:none}}
+
+/* Santa's Potion Sort · Christmas glass-bottle tile */
+.toyBox .toyGamePotion .gameTile{background:linear-gradient(150deg,#243c66,#183f55 58%,#285a57);border-color:#e4bc79;justify-content:center;overflow:hidden}
+.toyBox .toyGamePotion .gameTile strong{font-size:18px;color:#ffe9b0;text-shadow:0 2px 0 #0b2335}
+.toyBox .toyGamePotion .gameTile small{color:#d9f3e4}
+.potionHomeScene{width:125px;height:86px;border:2px solid #caa675;border-bottom:5px solid #78533c;border-radius:12px;background:radial-gradient(circle at center,#427b87,#193654 80%);position:relative;display:flex;justify-content:center;align-items:flex-end;gap:9px;padding-bottom:8px;box-shadow:inset 0 1px #fff6,0 4px 5px #061d3380}
+.potionHomeScene .potionStar{position:absolute;top:4px;left:12px;color:#ffdd92;font-size:19px;text-shadow:0 0 8px #ffe79b}
+.potionMiniBottle{width:26px;height:52px;border:2px solid #b3eafa;border-radius:8px 8px 9px 9px;position:relative;box-shadow:inset 2px 0 #fff6,0 3px 5px #031f3199;overflow:visible;background:#0e33588c}
+.potionMiniBottle:before{content:"";position:absolute;top:-8px;left:5px;right:5px;height:9px;border:2px solid #c5efff;border-radius:5px;background:#3b7287}
+.potionMiniBottle i,.potionMiniBottle b,.potionMiniBottle em{position:absolute;display:block;bottom:1px;left:2px;right:2px;height:12px;border-radius:2px;background:linear-gradient(#f6a0a4,#ce4852)}
+.potionMiniBottle b{bottom:13px;background:linear-gradient(#ffe9a2,#e6a749)}
+.potionMiniBottle em{bottom:25px;background:linear-gradient(#a6f0a3,#409d62)}
+.pmbB{height:62px}.pmbB i{background:linear-gradient(#b8f0fa,#4eb5d6)}.pmbB b{background:linear-gradient(#a6f0a3,#409d62)}.pmbB em{background:linear-gradient(#f6a0a4,#ce4852)}
+.pmbC i{background:linear-gradient(#eed0ff,#9b6de0)}.pmbC b{background:linear-gradient(#b8f0fa,#4eb5d6)}.pmbC em{background:linear-gradient(#ffe9a2,#e6a749)}
+.potionHomeTree{position:absolute;right:-14px;bottom:-5px;width:36px;image-rendering:pixelated;filter:drop-shadow(0 3px 2px #062733)}
