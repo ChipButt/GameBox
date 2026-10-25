@@ -32,7 +32,13 @@ export function generateLevel(level){
     for(let z=1;z<maxLength;z++){
       const choices=[dir];
       if(forward>0){choices.push((dir+1)%4,(dir+3)%4);}
-      const dirs=choices.sort(()=>rng()-.5);
+      // Portable seeded shuffle: random sort comparators produce different
+      // layouts between Node and Chrome, breaking replayable levels.
+      for(let j=choices.length-1;j>0;j--){
+        const k=integer(rng,j+1);
+        [choices[j],choices[k]]=[choices[k],choices[j]];
+      }
+      const dirs=choices;
       let found=false;
       for(const choice of dirs){
         const [sx,sy]=DIRECTIONS[choice],nx=x+sx,ny=y+sy,k=key(nx,ny);
