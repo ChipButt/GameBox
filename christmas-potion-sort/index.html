@@ -108,7 +108,7 @@ import {CAPACITY,COLORS,makeLevel,canPour,pour,isSorted,isSolved,copy,colourCoun
 const $ = id => document.getElementById(id);
 const storageKey="gamebox.santas-potion-sort.v1";
 const giftsBase="../assets/gamebox/kenney/2d/Platformer%20Assets%20Holiday/";
-const giftArt = ['present_small_red.png','present_small_green.png','present_small_blue.png'];
+const giftArt = ["red","green","blue"];
 let saved={unlocked:1,finished:{},stars:0,sound:true,patterns:false,active:null};
 try {const s=JSON.parse(localStorage.getItem(storageKey)||"null");if(s && typeof s==="object"){saved={...saved,...s};}}catch(e){}
 saved.unlocked=Math.max(1,Math.min(999,Number(saved.unlocked)||1));
@@ -160,7 +160,7 @@ function choose(index){
  },delay);
 }
 function escapeText(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function giftHtml(){return '<div class="gifts" aria-hidden="true">'+giftArt.map(p=>'<img src="'+giftsBase+p+'" alt="">').join("")+'</div>'}
+function giftHtml(){return '<div class="gifts" aria-hidden="true">'+giftArt.map(p=>'<img src="'+giftsBase+"present_small_"+p+".png"+'" alt="">').join("")+'</div>'}
 function openDialog(kind){modal=kind;$("overlay").hidden=false;const dlg=$("dialog");
  if(kind==="intro"){dlg.innerHTML='<div class="eyebrow">SANTA’S SECRET BOTTLING ROOM</div><h2>CHRISTMAS<br><em>POTION SORT</em></h2>'+giftHtml()+'<p>Mix the North Pole’s magic potions! Pour matching colours together until every filled bottle has just one colour.</p><button class="cta" data-act="play">PLAY LEVEL '+currentLevel+'</button><button class="secondary" data-act="levels">CHOOSE LEVEL</button><p class="fine">No timer. No adverts. Progress saves automatically.</p>';}
  else if(kind==="menu"){dlg.innerHTML='<div class="eyebrow">COCOA BREAK</div><h2>POTION <em>PAUSED</em></h2><div class="rule"><b>1</b>Tap one bottle to lift it.</div><div class="rule"><b>2</b>Tap an empty bottle, or one whose top colour matches.</div><div class="rule"><b>3</b>Fill every bottle with just one colour.</div><button class="cta" data-act="resume">RESUME GAME</button><button class="secondary" data-act="levels">CHOOSE LEVEL</button><button class="secondary" data-act="sound">SOUND: '+(saved.sound?"ON":"OFF")+'</button><button class="secondary" data-act="patterns">COLOUR LABELS: '+(saved.patterns?"ON":"OFF")+'</button><button class="secondary" data-act="new">RESTART LEVEL</button><a class="fine" href="../">BACK TO GAMEBOX</a>';}
