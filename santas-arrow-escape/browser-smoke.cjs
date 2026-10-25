@@ -27,9 +27,9 @@ async function hit(page,puzzle,path){
    assert.equal(await page.locator("#intro").isVisible(),false);
    await page.locator("#board").waitFor({state:"visible"});
    const box=await page.locator("#board").boundingBox();
-   console.log("LAYOUT",size,await page.evaluate(()=>Object.fromEntries([".gameShell",".playZone",".boardFrame",".iceBoard","#board"].map(q=>{const r=document.querySelector(q).getBoundingClientRect();return [q,{x:r.x,y:r.y,w:r.width,h:r.height}]}))),"innerWidth",await page.evaluate(()=>innerWidth));
    assert.ok(box.width>245&&box.height>230,"Board should dominate phone: "+JSON.stringify(box));
    const dimensions=await page.evaluate(()=>({width:document.documentElement.scrollWidth,vw:innerWidth,footer:document.querySelector(".bottomBar").getBoundingClientRect().bottom,vh:innerHeight}));
+   assert.equal(dimensions.vw,size.width,"Actual phone viewport must not zoom out to accommodate overflow");
    assert.ok(dimensions.width<=dimensions.vw+3,"Horizontal scrolling: "+JSON.stringify(dimensions));
    assert.ok(dimensions.footer<=dimensions.vh+3,"Buttons beneath the viewport: "+JSON.stringify(dimensions));
    let state=generateLevel(1),initial=state.paths.length;
@@ -43,10 +43,7 @@ async function hit(page,puzzle,path){
    }
    await page.screenshot({path:"santas-arrow-escape/play-"+size.width+".png"});
    const free=freePaths(state)[0];
-   console.log("DEBUG free path",free.id,free.points,"board",box);
    await hit(page,state,free);
-   await page.waitForTimeout(900);
-   console.log("DEBUG after tap",await page.evaluate(()=>({remaining:document.querySelector("#remaining").textContent,emptyHearts:document.querySelectorAll(".lives svg.empty").length,toast:document.querySelector("#boardToast").textContent,footer:document.querySelector("#footerTip").textContent})));
    await page.waitForFunction(n=>Number(document.querySelector("#remaining").textContent)===n-1,initial,{timeout:3000});
    state=removeArrow(state,free.id).board;
    assert.equal(Number(await page.locator("#remaining").innerText()),initial-1);
