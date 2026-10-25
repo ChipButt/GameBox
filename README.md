@@ -37,6 +37,12 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 ## Included games
 
 
+### Santa's Arrow Escape
+- A Christmas arrow-removal logic puzzle: find an unblocked exit, tap the winding path and send it flying off the icy board.
+- 40 seed-stable, guaranteed-solvable levels, with five hearts, three hints per level, stars, level picker, sound, keyboard access and local progression saves.
+- Reuses local Kenney Christmas trees, presents and snow art alongside original game rendering. No third-party art downloads are needed.
+- Source: `santas-arrow-escape/`. Run `node --test santas-arrow-escape/engine.test.mjs` or the dedicated Chromium mobile workflow.
+
 ### North Pole Dash
 - Original three-lane, third-person 3D Christmas endless runner with progressive pace, moving festive scenery, swipe/keyboard/accessible on-screen controls, jump, slide, presents, collisions, pause/replay and locally saved high score.
 - Uses the bundled CC0 Quaternius rigged `Elf.gltf` and snow-covered `PineTree_Snow_2.fbx` / `_4.fbx` models from the GameBox shared asset pool. Existing Kenney holiday present sprites and Game Icons are reused for game menus and GameBox tiles.
