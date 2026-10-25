@@ -200,8 +200,8 @@ function clearVisuals(){for(const obj of visuals.values())scene.remove(obj);visu
 function resize(){
   const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;
   renderer.setSize(w,h,false);
-  camera.aspect=w/h;camera.fov=w<h?64:53;camera.updateProjectionMatrix();
-  camera.position.set(0,w<h?6.9:7.6,w<h?15.8:17.5);
+  camera.aspect=w/h;camera.fov=w<h?68:53;camera.updateProjectionMatrix();
+  camera.position.set(0,w<h?7.2:7.6,w<h?17.2:17.5);
   camera.lookAt(0,1.3,-20);
 }
 function getScore(){return currentRun.score.toLocaleString('en-GB');}
@@ -401,8 +401,8 @@ function frame(){
     if(!mixer)elfModel.position.y=Math.sin(currentRun.seconds*17)*.06;
     mixer?.update(dt);
   }
-  camera.position.x+=(player.position.x*.16-camera.position.x)*Math.min(1,dt*3);
-  camera.lookAt(camera.position.x*.35,1.25,-20);
+  camera.position.x+=(player.position.x*.46-camera.position.x)*Math.min(1,dt*5);
+  camera.lookAt(camera.position.x*.3,1.25,-20);
   if(running||currentRun.status==='ready'){refreshHUD();lastUi=currentRun.seconds;}
   renderer.render(scene,camera);
 }
