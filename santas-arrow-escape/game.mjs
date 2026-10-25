@@ -171,7 +171,7 @@ function chooseArrow(path){
    lives--;highlightBad=path.id;shakeUntil=performance.now()+470;
    hearts();sound('bad');toast('Blocked! −1 heart');
    $('footerTip').textContent=lives+' hearts left — look for a clear exit.';
-   if(lives<=0)setTimeout(()=>finish(false),525);
+   if(lives<=0){winning=true;const lostBoard=board;setTimeout(()=>{if(board===lostBoard&&winning)finish(false);},525);}
    return;
  }
  sound('move');burst(path);
