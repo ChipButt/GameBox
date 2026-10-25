@@ -1,29 +1,29 @@
 # Santa's Potion Sort
 
-A standalone, mobile-first Christmas water-sort puzzle for the GameBox festive games range.
+Christmas-themed water-sort puzzles for the GameBox festive range. Play at `christmas-potion-sort/` or through the GameBox main menu.
 
-**Play:** `christmas-potion-sort/` from the GameBox home screen. Tap a bottle with liquid, then an empty bottle or one with matching top liquid. A tap automatically pours the entire contiguous top colour, limited by capacity. Fill every nonempty bottle with four matching layers to complete a room.
+## Puzzle rules
 
-**Features:** deterministic progressively complex levels (3–8 colours), two empty bottles, unlimited undo, restart, visual hint, optional colour-letter labels for accessibility, synthesised optional sound, stars, level picker, touch/mouse/keyboard input, saved level unlocks and active puzzle state.
+Tap a glass bottle, then a destination bottle. Only the matching top colour or an empty bottle can receive liquid. The complete continuous top-colour run pours automatically, stopping at the bottle's four-layer capacity. Empty or finish every bottle with a single colour to win.
 
-## Local artwork
+## Difficulty and progression
 
-Uses original CSS-drawn glass bottles and scene effects, plus existing approved **Kenney** holiday graphics already committed to GameBox:
-- `../assets/gamebox/kenney/2d/Background Elements Remastered/treePineSnow.png`
-- `../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png`, `present_small_green.png`, `present_small_blue.png`
+The first level contains **seven heavily mixed colours and two empty bottles** rather than three. Levels 3–6 contain eight colours, levels 7–13 have nine, and level 14 onward contains ten. The selected challenges have 20–33 verified solution moves and diverse colour transitions; bottle and colour arrangements vary deterministically with the level number.
 
-No assets from the reference commercial mobile game are copied. The art style and interface are original.
+Every source puzzle was solved with a legal-move search before inclusion, and the compressed move proofs are revalidated in the automated tests. The challenges never rely on blind random scrambles that might be impossible to solve. There are **two hints per level**, unlimited undo/restart, stars based on relative move efficiency, and saved progress (with migration of unlocked levels from the previous version).
 
-## Puzzle correctness
+## Visual system
 
-`engine.mjs` builds each puzzle by applying reverse moves to a solved position where **each step can be undone by one legal forward water sort move**. The accompanying constructive proof is checked for the first 120 levels by `engine.test.mjs`, including forward auto-pour batch sizes, colour counts and capacity. The source puzzle layout is seeded by level for repeatable play. No adverts, paywalls or blind random hidden layers are used.
+`liquid-renderer.mjs` draws the coloured liquids and refraction-tinted glass at native device resolution with Canvas 2D. Highlights, transparent glass walls, rounded liquid surfaces, bubbles and glints are rendered in every bottle. A live canvas overlay moves, tilts and pours a lifted bottle into its target, while both quantities animate smoothly. Reduced-motion settings skip animation.
 
-## Test
+The winter trees and holiday present art come from Kenney assets already committed in the repository. No artwork from the reference commercial mobile game is copied. Colour initials can be enabled in the menu for accessibility (off by default).
+
+## Quality checks
 
 ```sh
 node --test christmas-potion-sort/engine.test.mjs
 ```
 
-`browser-smoke.cjs` is run by `.github/workflows/christmas-potion-sort.yml` in three mobile Chromium viewports, including a complete solution and reload test. GameBox's root index and `hub/index.html` both contain the Christmas game tile.
+`.github/workflows/christmas-potion-sort.yml` runs the deterministic puzzle tests on 120 levels and Chromium touch tests at 390×844, 360×740, and 320×568. The browser tests check glass rendering, bottle layout, moving pour visuals, undo, a full proof-played victory, next-level unlock and persistence.
 
-Keyboard: 1–9 selects a bottle, U undoes and Escape opens/closes the menu. For later 10-bottle levels, use touch or mouse to select bottle 10.
+Keyboard: keys 1–9 select a bottle, U undoes, Escape opens/closes menu. Touch/mouse can select all bottles.
