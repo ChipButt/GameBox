@@ -1,4 +1,4 @@
-import {TOPPINGS,UPGRADES,ORDERS_PER_DAY,availableToppings,requiredCuts,makeOrder,newPizza,applyIngredient,evaluate,buyUpgrade,ovenDuration,customerSeconds} from './engine.mjs';
+import {TOPPINGS,UPGRADES,ORDERS_PER_DAY,availableToppings,requiredCuts,makeOrder,newPizza,applyIngredient,layerCoverage,evaluate,buyUpgrade,ovenDuration,customerSeconds} from './engine.mjs';
 
 const $=id=>document.getElementById(id);
 const STORAGE='gamebox.north-pole-pizzeria.v1';
@@ -40,7 +40,8 @@ function ingredientsUI(){
     b.innerHTML='<span class="foodIcon" aria-hidden="true">'+food.icon+'</span><span>'+food.name+'</span>';
     b.addEventListener('click',()=>{
       if(stage!=='prep'||paused)return;
-      if(food.id==='sauce'||food.id==='cheese'){add(food.id,.5,.5);return;}
+      // Select each ingredient as a tool. Sauce and cheese are painted on
+      // the pizza, exactly like picking pepperoni and placing it by hand.
       selected=food.id;refresh();sound(330);
     });
     $('ingredients').appendChild(b);
@@ -70,7 +71,7 @@ function refresh(){
   setLabel('stationLabel',{prep:'FRESH PIZZA DOUGH',oven:'COOKING TO PERFECTION',slice:'FRESH FROM THE OVEN',ready:'BOXED & READY'}[stage]);
   setLabel('stepTitle',{prep:'Build their pizza',oven:'Watch the oven!',slice:'Time to slice',ready:'Send it out!'}[stage]);
   setLabel('stepHelp',{
-    prep:'Tap sauce or cheese to spread it. Select a topping, then tap around the pizza to place each piece.',
+    prep:'Select sauce or cheese, then drag across the pizza to spread it. Tap to place other toppings.',
     oven:'The pizza is baking. Pull it out when the golden zone is reached. Be careful not to burn it.',
     slice:'Cut the pizza into the number of slices requested by your customer.',
     ready:'Finish this order and hear what your customer thought.'
@@ -81,9 +82,9 @@ function refresh(){
   $('mainBtn').innerHTML=({prep:'BAKE PIZZA',oven:'PULL FROM OVEN',slice:'SERVE CUSTOMER',ready:'SERVE CUSTOMER'}[stage])+' <span>➜</span>';
   $('mainBtn').disabled=baking&&pizza.bake<.62;
   $('cutBtn').hidden=!cutting;
-  $('canvasHint').textContent={prep:('SELECT '+(selected==='sauce'?'SAUCE':selected==='cheese'?'CHEESE':TOPPINGS[selected]?.label.toUpperCase()||'TOPPINGS')+' · TAP PIZZA'),oven:'THE OVEN IS HEATING UP',slice:'TAP CUT PIZZA TO ADD A SLICE',ready:'READY FOR THE CUSTOMER'}[stage];
+  $('canvasHint').textContent={prep:('SELECTED: '+(selected==='sauce'?'SAUCE · DRAG TO SPREAD':selected==='cheese'?'CHEESE · DRAG TO SPRINKLE':TOPPINGS[selected]?.label.toUpperCase()+' · TAP PIZZA'||'TOPPINGS')),oven:'THE OVEN IS HEATING UP',slice:'TAP CUT PIZZA TO ADD A SLICE',ready:'READY FOR THE CUSTOMER'}[stage];
   setLabel('slicesDone',pizza.cuts);setLabel('slicesNeeded',requiredCuts(order?.needed.slices||6));
-  setLabel('tipText',{prep:'For the best review, aim for six pieces of each topping — three for a half pizza.',oven:'Regular pizzas need a golden bake. Extra crispy ones need a deeper colour.',slice:'Each cut passes through the middle and creates two more slices.',ready:'A good pizza earns a tip. Wasted ingredients reduce your profit.'}[stage]);
+  setLabel('tipText',{prep:'Spread sauce and cheese evenly. Aim for six pieces of other toppings — three on a half pizza.',oven:'Regular pizzas need a golden bake. Extra crispy ones need a deeper colour.',slice:'Each cut passes through the middle and creates two more slices.',ready:'A good pizza earns a tip. Wasted ingredients reduce your profit.'}[stage]);
   document.querySelectorAll('.ingredientBtn').forEach(b=>b.classList.toggle('selected',b.dataset.ingredient===selected));
   paint();
 }
@@ -91,19 +92,70 @@ function startOrder(i){
   orderIndex=i;order=makeOrder(shop.day,i);pizza=newPizza();history=[];stage='prep';remaining=customerSeconds(shop.upgrades);selected='sauce';
   ingredientsUI();setLabel('bakePercent','0%');$('ovenFill').style.width='0%';setLabel('heatLabel','WARMING UP');show(null);refresh();sound(610);
 }
-function add(id,x,y){
-  if(stage!=='prep'||paused)return;
+// Each brush gesture is a single undoable step. Pointer capture allows
+// continuous spreading on touch screens without accidental page scrolling.
+let stroke=null,strokePaintPending=false;
+function scheduleStrokePaint(){
+  if(strokePaintPending)return;
+  strokePaintPending=true;
+  requestAnimationFrame(()=>{
+    strokePaintPending=false;
+    if(stage!=='prep')return;
+    setLabel('ingredientCost',money(pizza.spend));
+    const sauce=layerCoverage(pizza,'sauce'),cheese=layerCoverage(pizza,'cheese');
+    $('canvasHint').textContent=selected==='sauce'?'SAUCE COVERAGE '+Math.round(sauce*100)+'% · DRAG':
+      selected==='cheese'?'CHEESE COVERAGE '+Math.round(cheese*100)+'% · DRAG':'TAP TO ADD TOPPINGS';
+    paint();
+  });
+}
+function add(id,x,y,group=false){
+  if(stage!=='prep'||paused)return false;
   const before=structuredClone(pizza);
-  if(!applyIngredient(pizza,id,x,y)){if(id==='sauce'||id==='cheese')toast('Already added!');return;}
-  history.push(before);refresh();sound(420);
+  if(!applyIngredient(pizza,id,x,y))return false;
+  if(!group)history.push(before);
+  scheduleStrokePaint();
+  return true;
+}
+function pointerPoint(event){
+  const r=canvas.getBoundingClientRect();
+  return {x:(event.clientX-r.left)/r.width,y:(event.clientY-r.top)/r.height};
 }
 canvas.addEventListener('pointerdown',event=>{
-  if(paused||stage!=='prep')return;
-  const r=canvas.getBoundingClientRect(),x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height;
-  add(selected,x,y);
+  if(paused||stage!=='prep'||stroke)return;
+  const pos=pointerPoint(event),layer=selected==='sauce'||selected==='cheese';
+  if(!add(selected,pos.x,pos.y))return;
+  if(layer){
+    stroke={pointerId:event.pointerId,ingredient:selected,last:pos};
+    try{canvas.setPointerCapture(event.pointerId)}catch{}
+  }else refresh();
+  if(event.cancelable)event.preventDefault();
 });
-canvas.addEventListener('keydown',event=>{if(event.code==='Enter'||event.code==='Space'){event.preventDefault();add(selected,.5,.5)}});
-$('undoBtn').addEventListener('click',()=>{if(!history.length||stage!=='prep'||paused)return;pizza=history.pop();refresh()});
+canvas.addEventListener('pointermove',event=>{
+  if(!stroke||stroke.pointerId!==event.pointerId||paused||stage!=='prep')return;
+  const pos=pointerPoint(event),start=stroke.last;
+  const distance=Math.hypot(pos.x-start.x,pos.y-start.y);
+  const steps=Math.min(20,Math.ceil(distance/.028));
+  for(let i=1;i<=steps;i++)add(stroke.ingredient,start.x+(pos.x-start.x)*i/steps,start.y+(pos.y-start.y)*i/steps,true);
+  stroke.last=pos;
+  if(event.cancelable)event.preventDefault();
+});
+function finishStroke(event){
+  if(!stroke||event.pointerId!==stroke.pointerId)return;
+  stroke=null;refresh();
+}
+canvas.addEventListener('pointerup',finishStroke);
+canvas.addEventListener('pointercancel',finishStroke);
+canvas.addEventListener('lostpointercapture',finishStroke);
+canvas.addEventListener('keydown',event=>{
+  if(event.code!=='Enter'&&event.code!=='Space')return;
+  event.preventDefault();
+  // Keyboard access to paints: each press adds another dab in a distinct
+  // location; the mouse/touch brush is the primary full-coverage control.
+  const count=(pizza[selected]||[]).length;
+  const a=count*2.399963,rad=.21*Math.sqrt((count%36)/36);
+  if(add(selected,.5+Math.cos(a)*rad,.5+Math.sin(a)*rad))refresh();
+});
+$('undoBtn').addEventListener('click',()=>{if(!history.length||stage!=='prep'||paused)return;stroke=null;pizza=history.pop();refresh()});
 $('resetBtn').addEventListener('click',()=>{if(stage!=='prep'||paused)return;pizza=newPizza();history=[];refresh();toast('Fresh dough ready')});
 function serve(){
   const review=evaluate(order,pizza,remaining/customerSeconds(shop.upgrades),shop.upgrades);
@@ -209,29 +261,39 @@ function paint(){
   ctx.closePath();ctx.fillStyle=bread;ctx.fill();ctx.strokeStyle='#ad6f42';ctx.lineWidth=5;ctx.stroke();
   // Hand-formed crust bubbles.
   for(let i=0;i<35;i++){const a=r()*TWO_PI,rr=211+r()*12,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;circle(x,y,2+r()*6,r()>.5?'#f9d89b':'#c3854f')}
-  if(pizza.sauce){
-    const sauce=ctx.createRadialGradient(271,265,40,280,280,202);
-    sauce.addColorStop(0,'#dc6046');sauce.addColorStop(.8,'#c84634');sauce.addColorStop(1,'#9f392c');
-    circle(cx,cy,198,sauce);
-    for(let j=0;j<74;j++){let a=r()*TWO_PI,dist=Math.sqrt(r())*189;circle(cx+Math.cos(a)*dist,cy+Math.sin(a)*dist,1+r()*3,r()>.5?'#f17c4c':'#ae342a')}
-  }
-  if(pizza.cheese){
-    circle(cx,cy,pizza.sauce?191:197,pizza.sauce?'#f9dca28c':'#f6db9ad7');
-    // Uneven melted mozzarella islands leave the red tomato sauce visible.
-    for(let j=0;j<27;j++){
-      const angle=r()*TWO_PI,dist=Math.sqrt(r())*164;
-      const px=cx+Math.cos(angle)*dist,py=cy+Math.sin(angle)*dist;
-      ctx.save();ctx.translate(px,py);ctx.rotate(r()*TWO_PI);
-      ctx.beginPath();ctx.ellipse(0,0,8+r()*20,6+r()*13,0,0,TWO_PI);
-      ctx.fillStyle=r()>.35?'#fff0b5da':'#f6d17cbb';ctx.fill();ctx.restore();
+  // Hand-painted sauce and hand-scattered mozzarella reveal bare dough
+  // wherever the player hasn't worked. Both are clipped inside the crust.
+  ctx.save();
+  ctx.beginPath();ctx.arc(cx,cy,199,0,TWO_PI);ctx.clip();
+  for(const [i,mark] of pizza.sauce.entries()){
+    const x=mark.x*560,y=mark.y*560,rr=61;
+    const g=ctx.createRadialGradient(x-8,y-10,2,x,y,rr);
+    g.addColorStop(0,i%3===0?'#e97452':'#df6245');
+    g.addColorStop(.65,'#d44d37');g.addColorStop(1,'#b53d30d9');
+    circle(x,y,rr,g);
+    const seeded=rand(i*173+417);
+    for(let k=0;k<6;k++){
+      const a=seeded()*TWO_PI,radius=seeded()*48;
+      circle(x+Math.cos(a)*radius,y+Math.sin(a)*radius,1+seeded()*3,
+        seeded()>.5?'#f17c4caa':'#aa3a2fa2');
     }
-    for(let j=0;j<290;j++){
-      let a=r()*TWO_PI,dist=Math.sqrt(r())*184,x=cx+Math.cos(a)*dist,y=cy+Math.sin(a)*dist;
-      ctx.save();ctx.translate(x,y);ctx.rotate(r()*TWO_PI);ctx.fillStyle=r()>.36?'#fff0ac':'#e6ae57';
-      ctx.fillRect(-1.2,-1.7,1.5+r()*5,1.6+r()*4);ctx.restore();
-    }
-    for(let j=0;j<38;j++){let a=r()*TWO_PI,dist=Math.sqrt(r())*187;circle(cx+Math.cos(a)*dist,cy+Math.sin(a)*dist,1+r()*2.6,'#de8e3a99')}
   }
+  for(const [i,mark] of pizza.cheese.entries()){
+    const x=mark.x*560,y=mark.y*560,rr=63;
+    const seeded=rand(i*641+193);
+    ctx.save();ctx.translate(x,y);ctx.rotate(seeded()*TWO_PI);
+    ctx.beginPath();ctx.ellipse(0,0,rr*.95,rr*.81,0,0,TWO_PI);
+    ctx.fillStyle='#f8da88d0';ctx.fill();
+    for(let k=0;k<19;k++){
+      const a=seeded()*TWO_PI,dist=Math.sqrt(seeded())*53;
+      ctx.save();ctx.translate(Math.cos(a)*dist,Math.sin(a)*dist);
+      ctx.rotate(seeded()*TWO_PI);
+      ctx.fillStyle=seeded()>.4?'#fff2b9':'#eab65c';
+      ctx.fillRect(-3,-1.5,6+seeded()*8,3+seeded()*4);ctx.restore();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
   pizza.toppings.forEach(ingredientArt);
   if(stage!=='prep'&&pizza.bake>.05){
     const burn=Math.min(.25,pizza.bake*.09);
