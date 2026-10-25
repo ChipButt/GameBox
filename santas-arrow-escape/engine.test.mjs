@@ -8,7 +8,11 @@ test('all 40 Christmas levels are deterministic, correctly sized, nonoverlapping
   assert.deepEqual(puzzle,generateLevel(level),'level '+level+' must be stable across reloads');
   assert.equal(puzzle.level,level);
   assert.deepEqual([puzzle.cols,puzzle.rows],[dimensions(level).cols,dimensions(level).rows]);
-  assert.ok(puzzle.paths.length>=8,'level '+level+' should have a substantial puzzle');
+  const occupied=puzzle.paths.reduce((sum,path)=>sum+path.points.length,0);
+  const coverage=occupied/(puzzle.cols*puzzle.rows);
+  assert.ok(puzzle.paths.length>=17,'level '+level+' needs a crowded board of arrows');
+  assert.ok(coverage>=.64,'level '+level+' must keep arrows closely packed; only '+Math.round(coverage*100)+'% occupied');
+  assert.ok(freePaths(puzzle).length<puzzle.paths.length/2,'level '+level+' must have a majority of initially blocked arrows');
   assert.ok(verifyBoard(puzzle),'level '+level+' is not solvable');
   const snapshot=puzzle.paths.map(x=>x.id);
   let cur=puzzle,cleared=0;
@@ -45,4 +49,12 @@ test('all arrow paths end in an actual direction and IDs are unique',()=>{
    assert.ok(['number'].includes(typeof p.color));
   }
  }
+});
+
+test('first level is a real interlocking challenge, not a sparse tutorial board',()=>{
+ const level=generateLevel(1);
+ const occupied=level.paths.reduce((sum,p)=>sum+p.points.length,0);
+ assert.ok(level.paths.length>=18,'Level one should have significantly more arrows');
+ assert.ok(occupied/(level.cols*level.rows)>=.78,'Level one should be tightly packed');
+ assert.ok(freePaths(level).length<=6,'Level one should have few initially removable arrows');
 });
