@@ -307,6 +307,7 @@ async function loadModels(){
       node.material=Array.isArray(node.material)?node.material.map(recolour):recolour(node.material);
     });
     if(!recolouredSkin)console.warn('The imported elf did not expose its named Skin material');
+    canvas.dataset.skinCorrected = String(recolouredSkin);
     const box3=new THREE.Box3().setFromObject(obj);
     const size=new THREE.Vector3();box3.getSize(size);
     if(size.y<.0001)throw Error('Elf model has no bounds');
