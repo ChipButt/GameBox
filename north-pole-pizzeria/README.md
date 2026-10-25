@@ -6,8 +6,8 @@ Original Christmas cooking and shop-management mini-game for GameBox. Inspired b
 Visit [North Pole Pizzeria](https://chipbutt.github.io/GameBox/north-pole-pizzeria/) or open the Christmas GameBox section.
 
 - Read each visitor's full pizza order and watch their patience.
-- Tap **Tomato sauce** and **Mozzarella** to add base layers (unless the customer asks you to leave either off).
-- Choose toppings, then tap individual pieces onto the pizza. Aim for **six pieces** of each requested ingredient on whole pizzas, or **three** on the specified half. Incorrect toppings, wasted ingredients and incorrect half placement reduce quality and profit.
+- **Select Tomato sauce or Mozzarella**, then **drag your finger or mouse across the pizza** to spread the sauce or sprinkle cheese exactly where you want it. Selecting the ingredient alone adds nothing; a single dab only covers a small patch. The customer's rating reflects how well you cover the base. Do not paint an ingredient if the order asks you to leave it off. Each drag is one undoable action.
+- Choose other toppings, then tap individual pieces onto the pizza. Aim for **six pieces** of each requested ingredient on whole pizzas, or **three** on the specified half. Incorrect toppings, wasted ingredients and incorrect half placement reduce quality and profit.
 - Bake in the animated wood-fired oven. A standard pizza should be pulled at about **72–110%**; extra-crispy requests need **104–148%**.
 - Cut pizzas with the **CUT PIZZA** button: two, three or four cuts for four, six or eight slices.
 - Serve, see the score, tips, costs and profit, and take the next order. Every day has four customers.
