@@ -33,15 +33,19 @@ if(!executable)throw Error('Chromium binary unavailable');
     await page.screenshot({path:'christmas-dash/menu-'+size.width+'.png'});
     await page.locator('#startBtn').click();
     assert.equal(await page.locator('#startOverlay').isVisible(),false);
-    await page.waitForTimeout(1200);
-    const d1=Number(await page.locator('#distance').innerText());
-    assert.ok(d1>3,'The live metres counter must advance during gameplay');
-    assert.ok(parseFloat(await page.locator('#distanceFill').evaluate(e=>e.style.width))>0,'Visible distance progress strip must advance');
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('Space');
-    await page.screenshot({path:'christmas-dash/playing-'+size.width+'.png'});
+    // The revised game is deliberately much harder. Freeze before the
+    // first obstacle rather than letting screenshot latency cause a crash.
+    await page.waitForFunction(()=>Number(document.querySelector('#distance').textContent)>15,null,{timeout:10000});
+    const d1=Number(await page.locator('#distance').innerText());
+    assert.ok(d1>15,'The live metres counter must advance during gameplay');
+    assert.ok(parseFloat(await page.locator('#distanceFill').evaluate(e=>e.style.width))>10,'Visible distance progress strip must advance');
     await page.locator('#pauseBtn').click();
     assert.equal(await page.locator('#pauseOverlay').isVisible(),true,'Pause overlay not shown');
+    await page.locator('#pauseOverlay').evaluate(el=>el.style.visibility='hidden');
+    await page.screenshot({path:'christmas-dash/playing-'+size.width+'.png'});
+    await page.locator('#pauseOverlay').evaluate(el=>el.style.visibility='');
     const pausedDistance=Number(await page.locator('#distance').innerText());
     await page.waitForTimeout(350);
     assert.equal(Number(await page.locator('#distance').innerText()),pausedDistance,'Distance advanced while paused');
