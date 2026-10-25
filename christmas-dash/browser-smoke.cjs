@@ -50,19 +50,22 @@ if(!executable)throw Error('Chromium binary unavailable');
     await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='1');
     const drag=async(fromX,toX,fromY,toY)=>{
       await page.mouse.move(fromX,fromY);await page.mouse.down();
-      await page.mouse.move(toX,toY,{steps:5});await page.mouse.up();
+      await page.mouse.move(toX,toY,{steps:1});await page.mouse.up();
     };
     await drag(size.width*.68,size.width*.32,size.height*.44,size.height*.44);
     await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='0',null,{timeout:1500});
-    console.log('SWIPE LEFT',await page.locator('#world').evaluate(el=>({lane:el.dataset.lane,status:el.dataset.status,pose:el.dataset.pose,distance:document.querySelector('#distance').textContent})));
     await drag(size.width*.32,size.width*.68,size.height*.44,size.height*.44);
-    console.log('SWIPE RIGHT',await page.locator('#world').evaluate(el=>({lane:el.dataset.lane,status:el.dataset.status,pose:el.dataset.pose,distance:document.querySelector('#distance').textContent})));
     await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='1',null,{timeout:1500});
     // A tap or vertical swipe must NOT trigger Jump or Duck.
     await page.mouse.click(size.width*.5,size.height*.44);
     await drag(size.width*.5,size.width*.5,size.height*.3,size.height*.52);
     assert.equal(await page.locator('#world').getAttribute('data-lane'),'1');
     assert.equal(await page.locator('#world').getAttribute('data-pose'),'run');
+    // Reset the running distance between independent input tests. Otherwise
+    // slow software WebGL may hit a real barricade during test assertions.
+    await page.locator('#pauseBtn').click();
+    await page.locator('#restartBtn').click();
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.status==='running');
     // A held Duck stays down, then returns to RUN immediately on button release.
     await page.mouse.move(boxes.slide.x+boxes.slide.width/2,boxes.slide.y+boxes.slide.height/2);
     await page.mouse.down();
@@ -77,6 +80,8 @@ if(!executable)throw Error('Chromium binary unavailable');
     await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='jump',null,{timeout:1200});
     await page.mouse.up();
     await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='run',null,{timeout:1500});
+    await page.locator('#pauseBtn').click();
+    await page.locator('#restartBtn').click();
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('Space');
     // The revised game is deliberately much harder. Freeze before the
