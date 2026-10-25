@@ -1,119 +1,40 @@
-// Santa's Potion Sort — deterministic, reversible Christmas water-sort puzzles.
-// Each generated level starts from a solved state and uses *inverse-legal* moves,
-// so the recorded inverse path is a constructive proof that the puzzle is solvable.
-export const CAPACITY = 4;
-export const COLORS = [
-  {id:"ruby", name:"Ruby red", light:"#ff9c85", color:"#dc434c", dark:"#8f1e38"},
-  {id:"pine", name:"Fir green", light:"#a9e88e", color:"#44b46b", dark:"#1e734e"},
-  {id:"gold", name:"Starlight gold", light:"#fff2a3", color:"#f7be48", dark:"#b76828"},
-  {id:"frost", name:"Frost blue", light:"#a6efff", color:"#4bbadf", dark:"#2875bb"},
-  {id:"berry", name:"Berry pink", light:"#ffb7ed", color:"#e77ac0", dark:"#a4469e"},
-  {id:"plum", name:"Twilight violet", light:"#d6b9ff", color:"#9477e1", dark:"#6547a7"},
-  {id:"orange", name:"Tangerine", light:"#ffcd8a", color:"#f18d4a", dark:"#af4a32"},
-  {id:"mint", name:"Winter mint", light:"#c4fff1", color:"#5dcfbb", dark:"#268b8a"}
+// Pre-solved hard water-sort puzzles: each colour appears in four layers.
+// Verified solution paths are encoded as base-36 bottle index pairs and are
+// transformed together with bottle ordering so every published level is solvable.
+export const CAPACITY=4;
+export const COLORS=[
+{id:"ruby",name:"Ruby red",light:"#ffaaa7",color:"#eb4456",dark:"#9b163a"},
+{id:"pine",name:"Evergreen",light:"#b0f3ae",color:"#30b97a",dark:"#176f5e"},
+{id:"gold",name:"Starlight",light:"#fff0a2",color:"#ffd34d",dark:"#b57626"},
+{id:"frost",name:"Ice blue",light:"#c1f7ff",color:"#50bcf5",dark:"#236bab"},
+{id:"berry",name:"Candy pink",light:"#ffd2f3",color:"#f371c0",dark:"#a5368f"},
+{id:"plum",name:"Amethyst",light:"#ded1ff",color:"#9672ee",dark:"#5d3d9c"},
+{id:"orange",name:"Tangerine",light:"#ffd3a0",color:"#fb914d",dark:"#aa4327"},
+{id:"mint",name:"Winter mint",light:"#b9ffeb",color:"#50d3c3",dark:"#198781"},
+{id:"cocoa",name:"Cocoa",light:"#e9b993",color:"#aa674c",dark:"#613b41"},
+{id:"lime",name:"Holly lime",light:"#e0ff93",color:"#9bde43",dark:"#518833"}
 ];
-export const copy = bottles => bottles.map(b => [...b]);
-export function topRun(bottle) {
-  if (!bottle?.length) return 0;
-  const top = bottle[bottle.length - 1];
-  let n = 1;
-  for (let k = bottle.length - 2; k >= 0 && bottle[k] === top; k--) n++;
-  return n;
+export const copy=b=>b.map(x=>[...x]);
+export function topRun(b){if(!b?.length)return 0;let i=b.length-1;while(i>0&&b[i-1]===b[b.length-1])i--;return b.length-i;}
+export function canPour(b,from,to){if(!Number.isInteger(from)||!Number.isInteger(to)||from===to||from<0||to<0||from>=b.length||to>=b.length)return false;return b[from].length>0&&b[to].length<CAPACITY&&(!b[to].length||b[from].at(-1)===b[to].at(-1));}
+export function pour(b,from,to){if(!canPour(b,from,to))return null;const next=copy(b),a=next[from],dst=next[to],moved=Math.min(topRun(a),CAPACITY-dst.length);for(let i=0;i<moved;i++)dst.push(a.pop());return {bottles:next,from,to,moved,color:dst.at(-1)};}
+export const isSorted=b=>b.length===CAPACITY&&b.every(x=>x===b[0]);
+export const isSolved=b=>b.every(x=>!x.length||isSorted(x));
+export function colourCounts(b){const counts=Object.create(null);for(const a of b)for(const c of a)counts[c]=(counts[c]||0)+1;return counts;}
+export function difficulty(level){const n=Math.max(1,Math.floor(Number(level)||1));return {colors:n<3?7:n<7?8:n<14?9:10,twists:24+Math.min(20,n)};}
+export function rng(seed){let x=seed>>>0;return ()=>((x+=0x6d2b79f5,x=Math.imul(x^x>>>15,x|1),x^=x+Math.imul(x^x>>>7,x|61),((x^x>>>14)>>>0)/4294967296));}
+function shuffle(a,r){for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const CHALLENGES={"7":[["EDCDCDFABEDFFBFCABGABEAGGEGC","471721180121606462465657254247140104503138353825"],["BFGDEGDCACAFBEGFCACEGFDAEDBB","2752585708050760684614183731153103402420420416"],["GBFGBDFADEBAEACDECEGGDFFBCAC","5735631617510507683623384534632642432412010516"],["EGEACFAADBBECGDBDFAGCBDFEGFC","1718616846475448543534361351350763060320212406"],["BBFEBEDFEBADGFCGDADCGAGCEFAC","5735374767134164365348245235142863162102030126"],["GBEDDCEBEACFCBFGGGDABCDFAEAF","57672728620560260210124618415134373053050438"],["EABGFCGDABEAFCGDFFBGECBEACDD","1737670118483813361340346103065053512625232605"],["FBFGEDCAEGCBAAECBDFDABGDCFEG","47570504580540472454151217686160362628323512"],["GCGBBDAEFGFACBCEAEDDAGCFBEFD","47144814671724260120526236683536530503504516"],["CGBFEFEGFACCABAEBGDEDCGDABFD","47375415582532170103085045483423121765626436"]],"8":[["HDCABCBEAFAGEGDEFCAGEDFHBHBGCDHF","482824725752593539383515681643412402010970791761601623"],["HDBFHGFEBAEHFBGDFCAGDCAEGABECCDH","2852296919783743246265363231435345140402705705160118"],["EABCBCFHECFHHCBHGDAEADFEGGBGDADF","2838181219313938230229527353017570570540454764614602"],["BCBGHFDAEDCFAHCFBCEBADGGADGEHHFE","0840646858392923521561561525427234173136794304030417"],["FDGAEHGBHAAGAFEDCDHCCFGEFBDCEBBH","18197178572902055930375345410430231217416461680645"],["EGAFECGDCCABBDBGEAHAFHHDDFCBHFEG","38633913186129060270087053765765363943472312431404"],["EFDEEDHABHBGBBDHFCFAAHGCACCFGDEG","58750709606846404804707927573539231612190120235056"],["ACBHAGBDHGBGDAEFFHEGBECHCCEFAFDD","284849042028524264693456530506393013737415180117"],["AAGDEFEGFEHDFCDGAACHGHBCBHDCEFBB","083038632668465469562559761521721712173123054104"],["DEBBAEEGDBHHCDAFGGHCAFDBCAFGFEHC","784847146429793617130271016736303823535257656802"]],"9":[["BIAGCHBDDIGCCFIAEHEBCEFHADGBHFAEFIGD","2902302A2312616A868A6206084074761051751719813158454754383559"],["BHEDACECFIBGFCFDHIEGGEHDGAHABCDFAIBI","39597379090A505A4517144A25848284686068564504202532131871073123"],["IHAFDEBADAGIFFACHEIDHGHGCBDCIEGBEFBC","698946782427392362866A69161A36831812030671784748515451050745"],["HGDFBGBEEABDHIIBHACAIIDFECHFGFDCGECA","5925325A3569362342747A070A7970271213101387414764816186080426"],["FBHHFIDBCEICEAIGABDHGCGEIEABCFADFGDH","8949094814604A0A717407108038316334631671272652235852851827"],["EDHBIFDECBDHHICIHIEBCCFAGGBAFDAEGAGF","695985466A86748968790A20272A363236037057250210124017413416"],["IAEBGIDAHFIGHGEFCEDAHBECABDDGHFIFCCB","69066A168A580540144906545A102120702725428438783231377517"],["ABCIDICBDCGHBEFAIEECAHDFIFGAFGGHHDBE","498418190109804A148178282729127157525835373A036061674605"],["HEBDEFBAIBIEDAAHHIDFCCIHCDABGEFGGCGF","691619410409206A462429425452343A635615010485787571878678"],["BHAGIHFHADACEEACFHDFBEBEIIGICDGBFDGC","29890820398A283253757A7879028748470450530514401410616A1648"]],"10":[["DEFHEBCGHICBFIGDAHJEGIFHBJFDCAJAIEJBCAGD","5A0A6B9B3B39563503634046A46A868A805895797A267927284294151916010B79"],["BJCEBHGHHDGEAJGCFIDJHGDAIECBDAFBCFIFEIJA","0A2A30323B934B9B534549848984080B60686A969A707473295227121559150125"],["DJFEDJECCHGHDGHADIBGBHIGFJACEAABJFICEIBF","2A2B2A625B368258533A1201904B7595453B493463731761060104907980861814"],["BDFCCJIDAFEGJIEEJECICFHAJFGDGBHAHHIBBGDA","6A1A3B43262B04207252929A69060A7570978909186061865850361315454B34"],["DCHIJJBJHFDGGAECDHAJAGEFCIFIABBEDFBCEIHG","6A6B6A365B53950A098006250210180141808B282B929A397970375345424857"],["AEJCDGGIGJCHGAHDJBEIHAIHBAFEFDBEFCFDIJCB","6A7A97099B90494A7437535919876856252B020A6046241271878B78353023"],["GIGFBJACDCEICBABCDFDJIEJFIAEAHGGDJHHHFBE","7A8758655B259B2B3912131891090A050A907937316732536385484648242806"],["DBIJCHFAJHHCFDGDGAEBICBIEJJGBCFEIAFEHGAD","3A633B3A06504574739A191327216286468384085075070A4090941951584B"],["BEIAJJIGECEAFJICIFFDEGGDHBDCFHGBBHACADJH","6A568A285B25322A2562767B1B3142973943149192098904056086087637"],["IHEFEHEBCCJAJIEGBCFHCHADAAIJDIGBBDDGFGFJ","7A87581A25627B67563B131531379345949B09490123240270875245488A"]]};
+export function makeLevel(level){
+ level=Math.max(1,Math.min(999,Math.floor(Number(level)||1)));
+ const n=difficulty(level).colors,choices=CHALLENGES[n];
+ const pick=choices[(level*7+Math.floor(level/6))%choices.length];
+ const r=rng((Math.imul(level,2246822519)^0x9e3779b9)>>>0);
+ const bottleOrder=shuffle(Array.from({length:n+2},(_,i)=>i),r);
+ const colours=shuffle(Array.from({length:n},(_,i)=>i),r);
+ const result=Array.from({length:n+2},()=>[]);
+ for(let i=0;i<n;i++)result[bottleOrder[i]]=Array.from(pick[0].slice(i*4,i*4+4),c=>colours[c.charCodeAt(0)-65]);
+ const proof=[];for(let i=0;i<pick[1].length;i+=2)proof.push({from:bottleOrder[parseInt(pick[1][i],36)],to:bottleOrder[parseInt(pick[1][i+1],36)]});
+ return {level,bottles:result,proof,colors:n,minChallengeMoves:proof.length};
 }
-export function canPour(bottles, from, to) {
-  if (!Number.isInteger(from) || !Number.isInteger(to) || from === to ||
-      from < 0 || to < 0 || from >= bottles.length || to >= bottles.length) return false;
-  const a = bottles[from], b = bottles[to];
-  return a.length > 0 && b.length < CAPACITY &&
-    (!b.length || a[a.length-1] === b[b.length-1]);
-}
-export function pour(bottles, from, to) {
-  if (!canPour(bottles, from, to)) return null;
-  const next = copy(bottles), src = next[from], dest = next[to];
-  const moved = Math.min(topRun(src), CAPACITY - dest.length);
-  for (let i = 0; i < moved; i++) dest.push(src.pop());
-  return {bottles: next, from, to, moved, color: dest[dest.length-1]};
-}
-export function isSorted(bottle) {
-  return bottle.length === CAPACITY && bottle.every(x => x === bottle[0]);
-}
-export function isSolved(bottles) {
-  return bottles.every(b => b.length === 0 || isSorted(b));
-}
-export function colourCounts(bottles) {
-  const counts = Object.create(null);
-  for (const b of bottles) for (const c of b) counts[c] = (counts[c] || 0) + 1;
-  return counts;
-}
-export function difficulty(level) {
-  const n = Math.max(1, Math.floor(level) || 1);
-  return {colors: Math.min(8, 3 + Math.floor((n - 1)/3)), 
-    twists: Math.min(100, 13 + n*3)};
-}
-export function rng(seed) {
-  let x = seed >>> 0;
-  return () => ((x = Math.imul(x ^ x >>> 15, 1 | x),
-    x ^= x + Math.imul(x ^ x >>> 7, 61 | x),
-    ((x ^ x >>> 14) >>> 0) / 4294967296));
-}
-function inverseSteps(level, salt=0) {
-  const config = difficulty(level), r = rng((Math.imul(level, 2654435761) ^ salt ^ 0x5f3759df)>>>0);
-  const initial = Array.from({length:config.colors}, (_,i)=>Array(CAPACITY).fill(i));
-  initial.push([],[]);
-  let bottles = copy(initial);
-  const history = [], recently = [];
-  for (let step=0; step<config.twists*6; step++) {
-    const options=[];
-    for(let from=0;from<bottles.length;from++) {
-      const a=bottles[from];
-      if(!a.length) continue;
-      const color=a[a.length-1], run=topRun(a);
-      for(let moved=1;moved<=run;moved++){
-        const rem=a.length-moved;
-        // The inverse of a reverse step must be an ordinary legal pour.
-        if(rem && a[rem-1]!==color) continue;
-        for(let to=0;to<bottles.length;to++){
-          if(from===to)continue;
-          const b=bottles[to];
-          if(b.length + moved>CAPACITY || (b.length && b[b.length-1]===color))continue;
-          if(recently.length && recently[recently.length-1].from===to && recently[recently.length-1].to===from)continue;
-          options.push({from,to,moved,score:(b.length?4:2)+(isSorted(a)?1:0) + r()*5});
-        }
-      }
-    }
-    if(!options.length)break;
-    options.sort((a,b)=>b.score-a.score);
-    const p=options[Math.floor(r()*Math.min(4,options.length))];
-    const src=bottles[p.from],dst=bottles[p.to];
-    for(let i=0;i<p.moved;i++)dst.push(src.pop());
-    history.push({from:p.to,to:p.from,moved:p.moved});
-    recently.push(p);
-    if(recently.length>4)recently.shift();
-    if(history.length>=config.twists)break;
-  }
-  return {bottles, proof:history.reverse(), initial};
-}
-export function makeLevel(level) {
-  level = Math.max(1, Math.floor(Number(level)||1));
-  let best = null, bestScore = -1;
-  for(let attempt=0;attempt<16;attempt++){
-    const result=inverseSteps(level, attempt*7919);
-    const mixed=result.bottles.filter(b=>b.length>1&&!b.every(x=>x===b[0])).length;
-    const seen=result.bottles.filter(b=>b.length).length;
-    const score=mixed*100+seen*7+result.proof.length;
-    if(score>bestScore){best=result;bestScore=score}
-    if(mixed>=Math.min(difficulty(level).colors, 3+Math.floor(level/4)))break;
-  }
-  return {level, bottles:copy(best.bottles), proof:best.proof, colors:difficulty(level).colors};
-}
-export function replayProof(puzzle) {
-  let bottles=copy(puzzle.bottles);
-  for(const step of puzzle.proof) {
-    // A multi-layer reversal can be part of a larger top run: the same move
-    // legally pours as many layers as fit; an intermediate may differ.
-    const from=bottles[step.from], to=bottles[step.to];
-    if(!from.length || (to.length && to[to.length-1]!==from[from.length-1]) || to.length+step.moved>CAPACITY) return false;
-    for(let i=0;i<step.moved;i++)to.push(from.pop());
-  }
-  return isSolved(bottles);
-}
+export function replayProof(p){let state=copy(p.bottles);for(const step of p.proof){const move=pour(state,step.from,step.to);if(!move)return false;state=move.bottles;}return isSolved(state);}
