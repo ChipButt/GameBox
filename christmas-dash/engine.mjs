@@ -7,8 +7,8 @@ export function createRun(random = Math.random) {
   let id = 0;
   return {
     status: 'ready', lane: 1, distance: 0, gifts: 0, score: 0,
-    speed: 15, jumpY: 0, jumpV: 0, slide: 0, seconds: 0,
-    objects: [], spawnIn: 11, rows: 0, combo: 0, lastEvent: '',
+    speed: 21, jumpY: 0, jumpV: 0, slide: 0, seconds: 0,
+    objects: [], spawnIn: 2, rows: 0, combo: 0, lastEvent: '',
     random, nextId: () => ++id
   };
 }
@@ -42,18 +42,23 @@ export function spawnRow(run) {
   const lanes = [0, 1, 2];
   const safeLane = choose(run.random, lanes);
   const hazards = lanes.filter(l => l !== safeLane);
-  const hasHazard = run.rows >= 2;
-  const twoHazards = run.distance > 115 && run.random() < 0.36;
-  const count = hasHazard ? (twoHazards ? 2 : 1) : 0;
-  const kinds = run.distance < 65 ? ['crate', 'snowman'] : ['crate', 'snowman', 'arch'];
+  // The first row contains a real obstacle. Two-lane pressure begins
+  // in the first 100m and becomes normal as the player's skill grows.
+  const stage = Math.min(5, Math.floor(run.distance / 120));
+  const twoHazardChance = [0.22, 0.7, 0.9, 1, 1, 1][stage];
+  const count = run.random() < twoHazardChance ? 2 : 1;
+  const kinds = run.distance < 50
+    ? ['crate', 'snowman']
+    : ['crate', 'snowman', 'arch', 'arch'];
+  const hazardZ = -45;
   for (let n = 0; n < count; n++) {
     const lane = hazards.splice(Math.floor(run.random() * hazards.length), 1)[0];
-    run.objects.push({ id: run.nextId(), kind: choose(run.random, kinds), lane, z: -72, hit: false });
+    run.objects.push({ id: run.nextId(), kind: choose(run.random, kinds), lane, z: hazardZ, hit: false });
   }
-  const giftLane = hasHazard ? safeLane : choose(run.random, lanes);
-  // Three gifts in a line; the first is slightly nearer for readable approach.
+  // Reward the safe path without making the next route obvious too early.
+  const giftLane = safeLane;
   for (let n = 0; n < 3; n++) {
-    run.objects.push({ id: run.nextId(), kind: 'gift', lane: giftLane, z: -66 - n * 3.0, hit: false });
+    run.objects.push({ id: run.nextId(), kind: 'gift', lane: giftLane, z: hazardZ + 4.8 - n * 2.4, hit: false });
   }
   run.rows++;
 }
@@ -61,14 +66,14 @@ export function advance(run, dt) {
   if (run.status !== 'running') return [];
   dt = clamp(dt, 0, 0.05);
   run.seconds += dt;
-  run.speed = Math.min(29, 15 + run.distance / 110);
+  run.speed = Math.min(43, 21 + run.distance / 57);
   const travel = run.speed * dt;
   run.distance += travel;
   run.spawnIn -= travel;
   if (run.spawnIn <= 0) {
     spawnRow(run);
-    // Faster pace, but hazard rows keep a comfortable gap as speed increases.
-    run.spawnIn += 26 + run.random() * 7;
+    // Sufficient reaction room even in the final tier, without long empty roads.
+    run.spawnIn += 20 + run.random() * 5;
   }
   if (run.jumpY > 0 || run.jumpV > 0) {
     run.jumpY += run.jumpV * dt;
