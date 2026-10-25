@@ -11,7 +11,7 @@
 .hud strong{font:900 clamp(18px,4.2vw,27px)/1 'Barlow Condensed',sans-serif;letter-spacing:1px;font-variant-numeric:tabular-nums}.hudgifts img{width:27px;height:27px;object-fit:contain;image-rendering:pixelated}.hudgifts strong{font-size:25px}
 .speedtag{position:absolute;top:calc(env(safe-area-inset-top) + 79px);left:50%;transform:translateX(-50%);z-index:2;background:#164858d9;border:1px solid #c5f0ef66;border-radius:30px;padding:5px 13px;white-space:nowrap;font:800 11px 'Nunito',sans-serif;letter-spacing:1.5px;box-shadow:0 3px 12px #173e5244}
 .toast{position:absolute;left:50%;top:30%;z-index:4;transform:translate(-50%,12px) scale(.9);font:900 clamp(22px,5vw,36px) 'Barlow Condensed';letter-spacing:2px;text-shadow:0 4px 0 #154857,0 6px 18px #133d4a;opacity:0;pointer-events:none;transition:opacity .14s,transform .18s;white-space:nowrap}.toast.show{opacity:1;transform:translate(-50%,-12px) scale(1)}
-.mobileActions{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 19px);left:0;right:0;display:none;justify-content:space-between;align-items:end;z-index:3;pointer-events:none;padding:0 19px}.mobileActions button{pointer-events:auto;width:68px;height:68px;border:2px solid #ffffff85;border-radius:22px;background:linear-gradient(#276477ba,#124658cf);box-shadow:0 5px 0 #0a3541a6;color:white;font:900 44px 'Barlow Condensed';touch-action:manipulation;user-select:none}.mobileActions button:active{transform:translateY(4px);box-shadow:0 1px 0 #0a3541}.verticalActions{display:flex;gap:8px;flex-direction:column}.verticalActions button{width:55px;height:55px;font-size:32px}
+.mobileActions{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 15px);display:none;justify-content:space-between;align-items:end;z-index:3;pointer-events:none;padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right))}
 .overlay{position:absolute;inset:0;z-index:5;display:none;justify-content:center;align-items:center;overflow:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top) + 75px) 16px calc(env(safe-area-inset-bottom) + 20px);background:linear-gradient(140deg,#072f48bc,#0f4559b6 50%,#072e42d9);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);touch-action:pan-y}.overlay.shown{display:flex}
 .menu{width:min(100%,425px);position:relative;padding:30px 25px 23px;border-radius:30px;text-align:center;border:3px solid #e3f7e4;box-shadow:0 8px 0 #0d6a68,0 22px 55px #082b48aa,inset 0 0 0 3px #83cbbb80;background:radial-gradient(circle at 50% 2%,#428b83 0,#1c665f 28%,#0e464d 77%,#0b4148);overflow:hidden}.menu:before{content:'';height:10px;position:absolute;left:0;right:0;top:0;background:repeating-linear-gradient(90deg,#f8e9d9 0 22px,#d74748 22px 44px)}.menu.compact{padding-top:34px}
 .kicker{font-size:11px;letter-spacing:2.4px;font-weight:900;color:#d1f8e1}.star{color:#fed968;margin:0 5px}
@@ -30,15 +30,6 @@ h2{font-size:clamp(50px,11vw,66px);line-height:.84}.lead{font-size:14px;font-wei
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 
 
-/* Accessibility/legibility upgrade: the runner never hides the actual action names. */
-.mobileActions{bottom:calc(env(safe-area-inset-bottom) + 12px);padding:0 clamp(8px,3vw,22px)}
-.mobileActions button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;width:clamp(68px,18vw,88px);height:clamp(68px,18vw,88px);border-radius:19px;padding:5px 3px;background:linear-gradient(#21697fd9,#104357ed);border:2px solid #d0fbf2b3}
-.mobileActions .controlArrow{font:900 39px/.93 'Barlow Condensed',sans-serif;display:block}
-.mobileActions .controlLabel{font:900 clamp(11px,3vw,14px)/1.2 'Nunito',sans-serif;letter-spacing:.75px;color:#ffecac;margin-top:3px}
-.mobileActions .verticalActions{gap:7px}
-.mobileActions .verticalActions button{width:clamp(75px,20vw,99px);height:62px;background:linear-gradient(#277d75e8,#15544fe8);border-color:#e4f4c5b0}
-.mobileActions .verticalActions .controlArrow{font-size:26px}
-.mobileActions .verticalActions .controlLabel{font-size:18px;letter-spacing:1px;margin-top:0}
 .huddistance{flex:0 1 104px;min-width:87px;padding:5px 7px 4px}
 .huddistance .distanceNumber{display:flex;align-items:baseline;gap:2px;font:900 clamp(22px,5.8vw,31px)/1 'Barlow Condensed',sans-serif;letter-spacing:.3px;font-variant-numeric:tabular-nums}
 .huddistance .distanceNumber i{font-size:13px;font-style:normal;color:#fbde91}
@@ -46,32 +37,85 @@ h2{font-size:clamp(50px,11vw,66px);line-height:.84}.lead{font-size:14px;font-wei
 .huddistance .distanceTrack span{display:block;width:0;height:100%;background:linear-gradient(90deg,#87efc2,#ffdd75);border-radius:5px;transition:width .09s linear}
 @media(max-width:520px){.huddistance{flex-basis:88px;min-width:82px}.hudscore{min-width:72px}.hud{gap:5px}.hudscore,.hudgifts{padding-left:5px;padding-right:5px}}
 
-/* One ergonomic thumb row: LEFT | JUMP | DUCK | RIGHT, never stacked. */
+
+/* Corner actions: swiping on the open game canvas is the ONLY mobile steering.
+   Thumb-friendly 110px buttons have strong shape, colour and readable labels. */
 .mobileActions{
-  justify-content:center;
-  align-items:center;
-  gap:clamp(5px,1.8vw,13px);
-  padding-left:max(8px,env(safe-area-inset-left));
-  padding-right:max(8px,env(safe-area-inset-right));
+  display:none;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
 }
-.mobileActions .steerControl{
+.mobileActions button{
+  pointer-events:auto;
   flex:0 0 auto;
-  width:clamp(58px,18vw,78px);
-  height:clamp(62px,18vw,78px);
-}
-.mobileActions .verticalActions{
   display:flex;
-  flex-direction:row;
+  flex-direction:column;
   align-items:center;
-  gap:clamp(4px,1.3vw,10px);
-  flex:0 0 auto;
+  justify-content:center;
+  width:clamp(94px,29vw,128px);
+  height:clamp(94px,29vw,128px);
+  padding:8px 3px;
+  border:4px solid #fff7cf;
+  border-radius:26px;
+  box-shadow:0 7px 0 #0b3440,0 11px 24px #061e3c99,inset 0 2px 8px #ffffff65;
+  color:#fff;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  text-shadow:0 2px 3px #132d3c77;
+  transition:transform .08s,box-shadow .08s;
 }
-.mobileActions .verticalActions button{
-  width:clamp(67px,20vw,88px);
-  height:clamp(62px,18vw,78px);
-  flex:0 0 auto;
+.mobileActions button:active{
+  transform:translateY(4px) scale(.97);
+  box-shadow:0 3px 0 #0b3440,0 5px 12px #061e3c99,inset 0 2px 8px #ffffff65;
 }
-@media(max-height:580px){
-  .mobileActions{bottom:calc(env(safe-area-inset-bottom) + 7px)}
-  .mobileActions .steerControl,.mobileActions .verticalActions button{height:60px}
+.mobileActions .jumpControl{
+  background:linear-gradient(155deg,#f5bd3e,#df7f21 85%);
+  border-color:#fff0b1;
+}
+.mobileActions .duckControl{
+  background:linear-gradient(155deg,#33a9a0,#11635d 85%);
+  border-color:#c5ffe6;
+}
+.mobileActions .controlLabel{
+  font:900 clamp(27px,8vw,37px)/1 'Barlow Condensed',Impact,sans-serif;
+  letter-spacing:1px;
+  color:white;
+}
+.mobileActions .controlPrompt{
+  display:block;
+  margin-top:8px;
+  padding:3px 8px;
+  border-radius:16px;
+  background:#143e4a75;
+  color:#fff8cc;
+  font:900 11px/1 'Nunito',sans-serif;
+  letter-spacing:2px;
+}
+.mobileActions .swipeHint{
+  flex:1;
+  min-width:0;
+  align-self:center;
+  max-width:145px;
+  margin-bottom:9px;
+  padding:7px 2px;
+  border:1px solid #c6eefb88;
+  border-radius:14px;
+  background:#104357bf;
+  box-shadow:0 3px 8px #13384955;
+  color:#f4fcff;
+  text-align:center;
+  font:900 clamp(10px,3vw,14px)/1.3 'Nunito',sans-serif;
+  letter-spacing:.6px;
+  text-shadow:0 1px 3px #06242b;
+  pointer-events:none;
+}
+@media(max-width:520px), (hover:none) and (pointer:coarse){
+  .mobileActions{display:flex}
+}
+@media(max-height:610px){
+  .mobileActions{bottom:calc(env(safe-area-inset-bottom) + 9px)}
+  .mobileActions button{width:clamp(92px,24vh,112px);height:clamp(92px,24vh,112px)}
 }
