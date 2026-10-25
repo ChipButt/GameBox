@@ -52,13 +52,13 @@ export function releaseDuck(run) {
 export function spawnRow(run) {
   // Most encounters now CLOSE ALL THREE LANES. No amount of side-stepping
   // can bypass them: the reward route needs an intentional jump or duck.
-  // A breather after four mandatory actions prevents unfair endless chains.
+  // A breather after six mandatory actions prevents unfair endless chains.
   const lanes = [0, 1, 2];
   const safeLane = choose(run.random, lanes);
   const hazards = lanes.filter(l => l !== safeLane);
   const stage = Math.min(5, Math.floor(run.distance / 110));
-  const forceChance = [0.58, 0.71, 0.80, 0.86, 0.91, 0.94][stage];
-  const forced = run.forcedStreak < 4 && run.random() < forceChance;
+  const forceChance = [0.65, 0.79, 0.87, 0.94, 0.97, 0.985][stage];
+  const forced = run.forcedStreak < 6 && run.random() < forceChance;
   const twoHazardChance = [0.46, 0.78, 0.94, 1, 1, 1][stage];
   const count = forced || run.random() < twoHazardChance ? 2 : 1;
   const kinds = run.distance < 50
