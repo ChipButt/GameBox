@@ -81,7 +81,7 @@ export function advance(run, dt) {
     const previousZ = o.z;
     o.z += travel;
     if (o.hit || o.lane !== run.lane) continue;
-    if (previousZ < PLAYER_Z && o.z >= PLAYER_Z - 0.6 && o.z <= PLAYER_Z + 0.85) {
+    if (previousZ <= PLAYER_Z + 0.65 && o.z >= PLAYER_Z - 0.65) {
       if (o.kind === 'gift') {
         o.hit = true;
         run.gifts++;
