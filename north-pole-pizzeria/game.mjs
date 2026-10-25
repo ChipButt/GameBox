@@ -266,4 +266,24 @@ function frame(t){
   }
   requestAnimationFrame(frame);
 }
+// Reserve a square for the pizza from the space *actually available* in
+// the full-height workspace. The desktop and phone layouts use the same
+// unwarped 560x560 Canvas texture and pointer co-ordinates.
+function fitPizzaBoard(){
+  const prep=document.querySelector('.prepArea');
+  const header=prep.querySelector('.stationHead');
+  const footer=prep.querySelector('.costBar');
+  const css=getComputedStyle(prep);
+  const px=value=>Number.parseFloat(value)||0;
+  const innerWidth=prep.clientWidth-px(css.paddingLeft)-px(css.paddingRight);
+  const innerHeight=prep.clientHeight-px(css.paddingTop)-px(css.paddingBottom)
+    -header.getBoundingClientRect().height-footer.getBoundingClientRect().height-2;
+  const size=Math.max(24,Math.floor(Math.min(innerWidth,innerHeight)));
+  const board=$('boardWrap');
+  if(board.style.getPropertyValue('--pizza-size')!==size+'px')board.style.setProperty('--pizza-size',size+'px');
+}
+const prepResizeObserver=new ResizeObserver(()=>fitPizzaBoard());
+prepResizeObserver.observe(document.querySelector('.prepArea'));
+window.addEventListener('resize',fitPizzaBoard);
+requestAnimationFrame(fitPizzaBoard);
 setLabel('soundBtn','SOUND: '+(shop.sound?'ON':'OFF'));updateTop();paint();requestAnimationFrame(frame);
