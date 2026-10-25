@@ -28,3 +28,20 @@ h2{font-size:clamp(50px,11vw,66px);line-height:.84}.lead{font-size:14px;font-wei
 @media(max-height:690px){.menu{padding-top:16px;padding-bottom:16px}.titleArt{height:54px;margin-top:2px}.miniTree{transform:scale(.55);transform-origin:bottom}.lead{margin-bottom:5px}.howto{margin:8px auto 12px}h1{font-size:53px;margin:8px 0 11px}.primary{min-height:46px;padding:8px}.smallprint{font-size:9px}.overlay{padding-top:calc(env(safe-area-inset-top) + 57px)}}
 @media(hover:none) and (pointer:coarse){.mobileActions{display:flex}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
+
+
+/* Accessibility/legibility upgrade: the runner never hides the actual action names. */
+.mobileActions{bottom:calc(env(safe-area-inset-bottom) + 12px);padding:0 clamp(8px,3vw,22px)}
+.mobileActions button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;width:clamp(68px,18vw,88px);height:clamp(68px,18vw,88px);border-radius:19px;padding:5px 3px;background:linear-gradient(#21697fd9,#104357ed);border:2px solid #d0fbf2b3}
+.mobileActions .controlArrow{font:900 39px/.93 'Barlow Condensed',sans-serif;display:block}
+.mobileActions .controlLabel{font:900 clamp(11px,3vw,14px)/1.2 'Nunito',sans-serif;letter-spacing:.75px;color:#ffecac;margin-top:3px}
+.mobileActions .verticalActions{gap:7px}
+.mobileActions .verticalActions button{width:clamp(75px,20vw,99px);height:62px;background:linear-gradient(#277d75e8,#15544fe8);border-color:#e4f4c5b0}
+.mobileActions .verticalActions .controlArrow{font-size:26px}
+.mobileActions .verticalActions .controlLabel{font-size:13px}
+.huddistance{flex:0 1 104px;min-width:87px;padding:5px 7px 4px}
+.huddistance .distanceNumber{display:flex;align-items:baseline;gap:2px;font:900 clamp(22px,5.8vw,31px)/1 'Barlow Condensed',sans-serif;letter-spacing:.3px;font-variant-numeric:tabular-nums}
+.huddistance .distanceNumber i{font-size:13px;font-style:normal;color:#fbde91}
+.huddistance .distanceTrack{height:4px;border-radius:5px;background:#123547;margin-top:4px;width:100%;overflow:hidden}
+.huddistance .distanceTrack span{display:block;width:0;height:100%;background:linear-gradient(90deg,#87efc2,#ffdd75);border-radius:5px;transition:width .09s linear}
+@media(max-width:520px){.huddistance{flex-basis:88px;min-width:82px}.hudscore{min-width:72px}.hud{gap:5px}.hudscore,.hudgifts{padding-left:5px;padding-right:5px}}
