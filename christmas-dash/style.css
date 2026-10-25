@@ -45,3 +45,33 @@ h2{font-size:clamp(50px,11vw,66px);line-height:.84}.lead{font-size:14px;font-wei
 .huddistance .distanceTrack{height:4px;border-radius:5px;background:#123547;margin-top:4px;width:100%;overflow:hidden}
 .huddistance .distanceTrack span{display:block;width:0;height:100%;background:linear-gradient(90deg,#87efc2,#ffdd75);border-radius:5px;transition:width .09s linear}
 @media(max-width:520px){.huddistance{flex-basis:88px;min-width:82px}.hudscore{min-width:72px}.hud{gap:5px}.hudscore,.hudgifts{padding-left:5px;padding-right:5px}}
+
+/* One ergonomic thumb row: LEFT | JUMP | DUCK | RIGHT, never stacked. */
+.mobileActions{
+  justify-content:center;
+  align-items:center;
+  gap:clamp(5px,1.8vw,13px);
+  padding-left:max(8px,env(safe-area-inset-left));
+  padding-right:max(8px,env(safe-area-inset-right));
+}
+.mobileActions .steerControl{
+  flex:0 0 auto;
+  width:clamp(58px,18vw,78px);
+  height:clamp(62px,18vw,78px);
+}
+.mobileActions .verticalActions{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:clamp(4px,1.3vw,10px);
+  flex:0 0 auto;
+}
+.mobileActions .verticalActions button{
+  width:clamp(67px,20vw,88px);
+  height:clamp(62px,18vw,78px);
+  flex:0 0 auto;
+}
+@media(max-height:580px){
+  .mobileActions{bottom:calc(env(safe-area-inset-bottom) + 7px)}
+  .mobileActions .steerControl,.mobileActions .verticalActions button{height:60px}
+}
