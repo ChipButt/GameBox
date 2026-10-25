@@ -8,7 +8,8 @@ export function createRun(random = Math.random) {
   return {
     status: 'ready', lane: 1, distance: 0, gifts: 0, score: 0,
     speed: 21, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, slideHeldTime: 0, seconds: 0,
-    objects: [], spawnIn: 2, rows: 0, combo: 0, lastEvent: '',
+    objects: [], spawnIn: 2, rows: 0, forcedRows: 0, forcedStreak: 0,
+    lastForcedKind: null, combo: 0, lastEvent: '',
     random, nextId: () => ++id
   };
 }
@@ -49,15 +50,17 @@ export function releaseDuck(run) {
   run.slide = Math.min(run.slide, run.slideHeldTime < 0.12 ? 0.24 : 0.055);
 }
 export function spawnRow(run) {
-  // All rows have at least one safe lane, including the dual-hazard rows.
+  // Most encounters now CLOSE ALL THREE LANES. No amount of side-stepping
+  // can bypass them: the reward route needs an intentional jump or duck.
+  // A breather after four mandatory actions prevents unfair endless chains.
   const lanes = [0, 1, 2];
   const safeLane = choose(run.random, lanes);
   const hazards = lanes.filter(l => l !== safeLane);
-  // The first row contains a real obstacle. Two-lane pressure begins
-  // in the first 100m and becomes normal as the player's skill grows.
   const stage = Math.min(5, Math.floor(run.distance / 110));
+  const forceChance = [0.58, 0.71, 0.80, 0.86, 0.91, 0.94][stage];
+  const forced = run.forcedStreak < 4 && run.random() < forceChance;
   const twoHazardChance = [0.46, 0.78, 0.94, 1, 1, 1][stage];
-  const count = run.random() < twoHazardChance ? 2 : 1;
+  const count = forced || run.random() < twoHazardChance ? 2 : 1;
   const kinds = run.distance < 50
     ? ['crate', 'snowman']
     : ['crate', 'snowman', 'arch', 'arch'];
@@ -66,20 +69,22 @@ export function spawnRow(run) {
     const lane = hazards.splice(Math.floor(run.random() * hazards.length), 1)[0];
     run.objects.push({ id: run.nextId(), kind: choose(run.random, kinds), lane, z: hazardZ, hit: false });
   }
-  // The reward lane sometimes demands a genuine jump OVER a barricade.
-  // A clear reward lane remains common early on; later layouts may require
-  // an arch duck instead. Snowmen never block all three lanes.
+  // The reward lane is ALWAYS actionable when all three lanes are blocked.
+  // Alternate actions in consecutive forced sections for real jump/duck
+  // variety. Clear reward lanes still appear as intentional breathing space.
   const giftLane = safeLane;
-  const barricadeChance = [0.26, 0.38, 0.47, 0.56, 0.63, 0.68][stage];
-  const guaranteedJumpRoute = run.random() < barricadeChance;
+  const optionalActionChance = [0.12, 0.18, 0.22, 0.24, 0.27, 0.30][stage];
   let rewardHazard = null;
-  if (guaranteedJumpRoute || (stage >= 3 && run.random() < 0.27 + (stage - 3) * 0.12)) {
-    rewardHazard = {
-      id: run.nextId(), kind: guaranteedJumpRoute ? 'crate' : choose(run.random(), ['crate','arch']),
-      lane: safeLane, z: hazardZ, hit: false
-    };
+  if (forced || run.random() < optionalActionChance) {
+    const kind = forced && run.forcedStreak > 0
+      ? (run.lastForcedKind === 'crate' ? 'arch' : 'crate')
+      : (run.random() < 0.55 ? 'crate' : 'arch');
+    rewardHazard = { id: run.nextId(), kind, lane: safeLane, z: hazardZ, hit: false };
     run.objects.push(rewardHazard);
+    if (forced) run.lastForcedKind = kind;
   }
+  run.forcedStreak = forced ? run.forcedStreak + 1 : 0;
+  if (forced) run.forcedRows++;
   // 1st: approach, 2nd: directly ABOVE the top of the barricade,
   // 3rd: landing. Never put the centre gift *inside* the obstacle.
   const offsets = rewardHazard?.kind === 'crate' ? [4.8, 0, -4.8]
@@ -104,8 +109,10 @@ export function advance(run, dt) {
   run.spawnIn -= travel;
   if (run.spawnIn <= 0) {
     spawnRow(run);
-    // Sufficient reaction room even in the final tier, without long empty roads.
-    run.spawnIn += 20 + run.random() * 5;
+    // Two consecutive compulsory jumps must remain physically achievable
+    // even at top speed (0.55s airtime); preserve a little input/reaction
+    // margin rather than spawning the next unavoidable barricade too soon.
+    run.spawnIn += Math.max(23, run.speed * 0.72) + run.random() * 4;
   }
   if (run.jumpY > 0 || run.jumpV > 0) {
     run.jumpY += run.jumpV * dt;
