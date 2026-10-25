@@ -34,7 +34,10 @@ test("every generated puzzle is deterministic, balanced, and replay-solvable",()
   assert.equal(snapshot(p.bottles),snapshot(q.bottles),"unstable seed level "+level);
   assert.equal(p.bottles.length,n+2,"wrong bottle count level "+level);
   assert.ok(!isSolved(p.bottles),"already solved level "+level);
-  assert.ok(p.proof.length>0,"missing constructive solution level "+level);
+  assert.ok(p.proof.length>=20,"challenge is too simple on level "+level+": "+p.proof.length);
+  assert.equal(p.minChallengeMoves,p.proof.length);
+  const mixed=p.bottles.filter(b=>b.length&&new Set(b).size>=3).length;
+  assert.ok(mixed>=Math.floor(n*.7),"too many trivial bottles level "+level+" mixed "+mixed+" of "+n);
   assert.ok(p.bottles.every(b=>b.length<=CAPACITY),"overcapacity level "+level);
   const counts=colourCounts(p.bottles);
   for(let c=0;c<n;c++)assert.equal(counts[c],4,"unbalanced colour "+c+" level "+level);
@@ -50,8 +53,11 @@ test("every generated puzzle is deterministic, balanced, and replay-solvable",()
  }
 });
 test("difficulty scales without introducing more than eight colours",()=>{
- assert.equal(difficulty(1).colors,3);
+ assert.equal(difficulty(1).colors,7);
+ assert.equal(difficulty(3).colors,8);
+ assert.equal(difficulty(7).colors,9);
+ assert.equal(difficulty(14).colors,10);
  assert.ok(difficulty(25).colors>difficulty(1).colors);
- assert.equal(difficulty(500).colors,8);
- assert.equal(COLORS.length,8);
+ assert.equal(difficulty(500).colors,10);
+ assert.equal(COLORS.length,10);
 });
