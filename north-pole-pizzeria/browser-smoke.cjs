@@ -28,11 +28,12 @@ if(!exe)throw Error('Chromium unavailable');
           const measurements=await page.evaluate(()=>{
             const rect=id=>{const r=document.querySelector(id).getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
             return {vw:innerWidth,vh:innerHeight,scrollHeight:document.documentElement.scrollHeight,bodyHeight:document.body.scrollHeight,scrollWidth:document.documentElement.scrollWidth,scrollY:window.scrollY,
-              pizza:rect('#pizzaCanvas'),customer:rect('.orderTicket'),ingredients:rect('#ingredients'),oven:rect('#ovenPanel'),slice:rect('#slicePanel'),main:rect('#mainBtn'),cut:rect('#cutBtn'),lastIngredient:(()=>{const el=document.querySelector('.ingredientBtn:last-child');if(!el)return null;const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};})()};
+              title:rect('.brand'),header:rect('.topbar'),pizza:rect('#pizzaCanvas'),customer:rect('.orderTicket'),ingredients:rect('#ingredients'),oven:rect('#ovenPanel'),slice:rect('#slicePanel'),main:rect('#mainBtn'),cut:rect('#cutBtn'),lastIngredient:(()=>{const el=document.querySelector('.ingredientBtn:last-child');if(!el)return null;const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};})()};
           });
           assert.ok(measurements.scrollWidth<=measurements.vw+2,'Page must not scroll sideways '+stage+' '+JSON.stringify(measurements));
           assert.ok(measurements.scrollHeight<=measurements.vh+2,'Page must not scroll vertically '+stage+' '+JSON.stringify(measurements));
           assert.ok(measurements.bodyHeight<=measurements.vh+2,'Body must not grow beyond screen '+stage+' '+JSON.stringify(measurements));
+          assert.ok(measurements.title.top>=measurements.header.top-2&&measurements.title.bottom<=measurements.header.bottom+2,'Full pizzeria title must fit the header '+stage+' '+JSON.stringify(measurements));
           assert.ok(measurements.main.top>=0&&measurements.main.bottom<=measurements.vh+1,'Main cook/serve button must stay on-screen '+stage+' '+JSON.stringify(measurements));
           assert.ok(measurements.customer.top>=0&&measurements.customer.bottom<=measurements.vh+1,'Customer order must remain on-screen '+stage);
           assert.ok(measurements.pizza.top>=0&&measurements.pizza.bottom<=measurements.vh+1,'Whole pizza must remain on-screen '+stage+' '+JSON.stringify(measurements));
