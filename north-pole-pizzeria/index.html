@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#25483e">
 <title>North Pole Pizzeria · GameBox</title>
 <meta name="description" content="Run a cosy Christmas pizza shop. Take unusual orders, make pizzas, bake them, slice them and upgrade your kitchen.">
-<link rel="stylesheet" href="./style.css?v=6"></head><body>
+<link rel="stylesheet" href="./style.css?v=7"></head><body>
 <div class="snow" aria-hidden="true"></div>
 <main class="shell">
   <header class="topbar">
@@ -38,7 +38,7 @@
     <div class="stationSide">
       <div class="stageHeading"><div><small>THE KITCHEN</small><h2 id="stepTitle">Make it delicious!</h2></div><span id="phaseCount">01 / 04</span></div>
       <div class="orderReminder"><b>✦ CURRENT ORDER</b><span id="orderReminder">Waiting for a customer...</span></div>
-      <p class="stageInstructions" id="stepHelp">Start with sauce and cheese. Tap a topping, then place pieces across the pizza.</p>
+      <p class="stageInstructions" id="stepHelp">Select sauce or cheese, drag on the pizza to spread it, then tap to place other toppings.</p>
       <div class="ingredients" id="ingredients"></div>
       <div class="ovenPanel" id="ovenPanel" hidden>
         <div class="ovenMouth"><span class="ovenGlow"></span><div class="ovenPizza"></div><i>WOOD FIRED</i></div>
@@ -51,11 +51,11 @@
         <p>Tap <b>CUT PIZZA</b> to slice. Check the customer's requested number of slices.</p>
       </div>
       <div class="actionPanel">
-        <div class="littleActions" id="prepActions"><button id="undoBtn" type="button">↶ UNDO TOPPING</button><button id="resetBtn" type="button">↺ START AGAIN</button></div>
+        <div class="littleActions" id="prepActions"><button id="undoBtn" type="button">↶ UNDO STEP</button><button id="resetBtn" type="button">↺ START AGAIN</button></div>
         <button class="primaryBtn" id="mainBtn" type="button">BAKE PIZZA <span>➜</span></button>
         <button class="secondaryBtn" id="cutBtn" type="button" hidden>CUT PIZZA <span>✂</span></button>
       </div>
-      <div class="tipCard"><span class="tipSpark">✦</span><div><small>CHEF'S TIP</small><p id="tipText">Tap sauce and cheese once, then add roughly six of each topping.</p></div></div>
+      <div class="tipCard"><span class="tipSpark">✦</span><div><small>CHEF'S TIP</small><p id="tipText">Drag sauce and cheese across the dough, then place roughly six pieces of each other topping.</p></div></div>
     </div>
   </section>
   <footer class="bottom"><span>EST. THE NORTH POLE · HAND-CRAFTED CHRISTMAS COOKING</span><span>NO ADS · FREE TO PLAY</span></footer>
@@ -94,5 +94,5 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./game.mjs?v=4"></script>
+<script type="module" src="./game.mjs?v=5"></script>
 </body></html>
