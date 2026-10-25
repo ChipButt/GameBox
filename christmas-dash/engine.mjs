@@ -7,7 +7,7 @@ export function createRun(random = Math.random) {
   let id = 0;
   return {
     status: 'ready', lane: 1, distance: 0, gifts: 0, score: 0,
-    speed: 21, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, seconds: 0,
+    speed: 21, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, slideHeldTime: 0, seconds: 0,
     objects: [], spawnIn: 2, rows: 0, combo: 0, lastEvent: '',
     random, nextId: () => ++id
   };
@@ -37,13 +37,16 @@ export function duck(run, held = false) {
   if (run.status !== 'running' || run.jumpY > 0) return false;
   // A held Duck control stays active only while pressed; swipes are short taps.
   run.slideHeld = Boolean(held);
+  run.slideHeldTime = 0;
   run.slide = held ? 1 : 0.34;
   return true;
 }
 export function releaseDuck(run) {
   run.slideHeld = false;
   // Don't leave the player crouched for a second after releasing the button.
-  run.slide = Math.min(run.slide, 0.055);
+  // Quick taps still produce a useful duck; deliberate holds stand up
+  // almost immediately when released.
+  run.slide = Math.min(run.slide, run.slideHeldTime < 0.12 ? 0.24 : 0.055);
 }
 export function spawnRow(run) {
   // All rows have at least one safe lane, including the dual-hazard rows.
@@ -109,6 +112,7 @@ export function advance(run, dt) {
     run.jumpV -= 40 * dt;
     if (run.jumpY <= 0) { run.jumpY = 0; run.jumpV = 0; }
   }
+  if(run.slideHeld)run.slideHeldTime += dt;
   run.slide = run.slideHeld ? 1 : Math.max(0, run.slide - dt);
   const events = [];
   for (const o of run.objects) {
