@@ -64,6 +64,18 @@ if(!exe)throw Error('Chromium unavailable');
             await page.locator('[data-ingredient="sauce"]').click();
             await page.locator('[data-ingredient="cheese"]').click();
             assert.equal(await page.locator('#ingredientCost').innerText(),startCost,'Selecting a base ingredient must not auto-apply it');
+            // A full drag is a single undoable action rather than many
+            // disconnected dabs; check before preparing the real order.
+            await page.locator('[data-ingredient="sauce"]').click();
+            const dough=await page.locator('#pizzaCanvas').boundingBox();
+            await page.mouse.move(dough.x+dough.width*.30,dough.y+dough.height*.5);
+            await page.mouse.down();
+            await page.mouse.move(dough.x+dough.width*.70,dough.y+dough.height*.5,{steps:16});
+            await page.mouse.up();
+            assert.ok(Number(await page.locator('#pizzaCanvas').getAttribute('data-sauce-coverage'))>10,'Manual spreading should cover the drawn track');
+            await page.locator('#undoBtn').click();
+            assert.equal(await page.locator('#pizzaCanvas').getAttribute('data-sauce-coverage'),'0','One undo should clear one entire sauce stroke');
+            assert.equal(await page.locator('#ingredientCost').innerText(),startCost,'Undo should refund used sauce');
           }
           if(o.needed.sauce)await brush('sauce');
           if(o.needed.cheese)await brush('cheese');
