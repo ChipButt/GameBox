@@ -8,14 +8,14 @@ Open `santas-arrow-escape/` from GameBox or load the folder's `index.html` over 
 
 - Tap any section of a winding arrow to try to send it off the board.
 - Its arrowhead must have a clear straight route to the board's edge.
-- A blocked tap costs one of five hearts; five wrong taps end the attempt.
+- A blocked tap costs one of three hearts; three wrong taps end the attempt.
 - Clear every arrow to finish the level, earn up to three stars and unlock the next level.
-- Three hints per level show a currently safe arrow.
+- One hint per level shows a currently safe arrow.
 - The level picker, restart, pause, sound control and local saved progression are included.
 - Keyboard: Tab to board, arrow keys to select a path, Enter/Space to attempt; H for hint, R for restart, Escape for menu.
-- 40 deterministic levels grouped into seasonal chapters. Board density and grid sizes increase.
+- 40 deterministic levels grouped into seasonal chapters. Five seeded candidates are evaluated for each level to favour tightly packed arrows and a high proportion of initially blocked paths. Level one now has 19 arrows, ~85% coverage and only five initially open exits (formerly 12 arrows, ~46% coverage).
 
-All levels are constructed in **reverse-solvable order**; with each added path initially able to escape, there is always a valid next move in the final puzzle. A portable seeded shuffle keeps the same level geometry across Chrome and Node.
+All levels are constructed in **reverse-solvable order**; with each added path initially able to escape, there is always a valid next move in the final puzzle. A portable seeded shuffle keeps the same level geometry across Chrome and Node. Each level remains solvable, and increasingly crowded layouts demand that you identify which arrows free other arrows rather than simply tapping any visible exit.
 
 ## Artwork
 
