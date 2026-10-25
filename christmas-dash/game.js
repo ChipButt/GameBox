@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/loaders/FBXLoader.js';
 import {loadThreeAsset} from '../shared/asset-pool/gamebox-asset-pool.js';
-import {LANES, PLAYER_Z, createRun, startRun, advance, steer, jump, duck, togglePause} from './engine.mjs';
+import {LANES, PLAYER_Z, createRun, startRun, advance, steer, jump, duck, releaseDuck, togglePause} from './engine.mjs';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), startBtn = $('startBtn');
@@ -153,7 +153,7 @@ function makeFallbackElf(){
   box(g,M.green,.72,1.6,0,.3,.73,.3);
   return g;
 }
-function makeGift(lane) {
+function makeGift(lane, elevated = false) {
   const g=new THREE.Group();
   const base=[M.red,M.mint,M.darkRed][lane]||M.red;
   box(g,base,0,.85,0,.89,.89,.89);
@@ -164,6 +164,8 @@ function makeGift(lane) {
   const loop2=mesh(geo.torus,M.ribbon,.19,1.53,0,1,g);loop2.rotation.y=Math.PI/2;
   const halo=mesh(new THREE.RingGeometry(.65,.76,22),mat('#ffdb77',{emissive:'#e7aa24',emissiveIntensity:.6,transparent:true,opacity:.85}),0,.08,0,1,g);
   halo.rotation.x=-Math.PI/2;
+  // Raised gift: its glow sits above the barricade rather than inside it.
+  if(elevated)halo.position.y=.48;
   g.userData.spin=true;return g;
 }
 function makeCrate(){
@@ -193,8 +195,8 @@ function makeArch(){
   return g;
 }
 function makeVisual(o) {
-  const g = o.kind==='gift'?makeGift(o.lane):o.kind==='crate'?makeCrate():o.kind==='snowman'?makeSnowman():makeArch();
-  g.position.set(LANES[o.lane],0,o.z);scene.add(g);visuals.set(o.id,g);
+  const g = o.kind==='gift'?makeGift(o.lane,(o.height||0)>0):o.kind==='crate'?makeCrate():o.kind==='snowman'?makeSnowman():makeArch();
+  g.position.set(LANES[o.lane],o.height||0,o.z);scene.add(g);visuals.set(o.id,g);
 }
 function clearVisuals(){for(const obj of visuals.values())scene.remove(obj);visuals.clear();}
 function resize(){
@@ -255,19 +257,20 @@ function pause(){
   if(currentRun.status==='running'){togglePause(currentRun);showOverlay('pauseOverlay');}
 }
 function resume(){if(currentRun.status==='paused'){togglePause(currentRun);showOverlay(null);clock.getDelta();}}
-function action(name){
+function action(name, held = false){
   if(currentRun.status!=='running')return;
   if(name==='left'||name==='right'){steer(currentRun,name==='left'?-1:1);playTone(220,.038);}
   if(name==='jump'&&jump(currentRun))playTone(480,.1);
-  if(name==='slide'&&duck(currentRun))playTone(310,.08);
+  if(name==='slide'&&duck(currentRun,held))playTone(310,.08);
 }
 function inputs(){
   window.addEventListener('keydown',e=>{
     const actions={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'jump',KeyW:'jump',Space:'jump',ArrowDown:'slide',KeyS:'slide'};
-    if(actions[e.code]){e.preventDefault();if(!e.repeat)action(actions[e.code]);}
+    if(actions[e.code]){e.preventDefault();if(!e.repeat)action(actions[e.code],actions[e.code]==='slide');}
     else if(['Escape','KeyP'].includes(e.code)){e.preventDefault();currentRun.status==='paused'?resume():pause();}
     else if(e.code==='Enter'&&!e.repeat&&currentRun.status==='ready')begin();
   });
+  window.addEventListener('keyup',e=>{if(e.code==='ArrowDown'||e.code==='KeyS')releaseDuck(currentRun);});
   let gesture=null;
   canvas.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};},{passive:true});
   canvas.addEventListener('pointerup',e=>{
@@ -277,7 +280,28 @@ function inputs(){
     action(Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'jump':'slide'));
   },{passive:true});
   canvas.addEventListener('pointercancel',()=>gesture=null,{passive:true});
-  for(const b of document.querySelectorAll('[data-action]'))b.addEventListener('pointerdown',e=>{e.preventDefault();action(b.dataset.action);});
+  let duckPointerId=null;
+  for(const b of document.querySelectorAll('[data-action]')){
+    b.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      if(b.dataset.action==='slide'){
+        duckPointerId=e.pointerId;
+        b.setPointerCapture?.(e.pointerId);
+        action('slide',true);
+      }else action(b.dataset.action);
+    });
+    if(b.dataset.action==='slide'){
+      const release=e=>{
+        if(e.pointerId!==duckPointerId)return;
+        duckPointerId=null;releaseDuck(currentRun);
+      };
+      b.addEventListener('pointerup',release);
+      b.addEventListener('pointercancel',release);
+      b.addEventListener('lostpointercapture',release);
+      window.addEventListener('pointerup',release);
+    }
+  }
+  window.addEventListener('blur',()=>{duckPointerId=null;releaseDuck(currentRun);});
   $('pauseBtn').onclick=()=>currentRun.status==='paused'?resume():pause();
   $('resumeBtn').onclick=resume;$('startBtn').onclick=begin;$('retryBtn').onclick=begin;$('restartBtn').onclick=begin;
   $('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent='SOUND: '+(sound?'ON':'OFF');};
@@ -394,8 +418,11 @@ function frame(){
   const tx=LANES[currentRun.lane];
   player.position.x+=(tx-player.position.x)*Math.min(1,dt*12);
   player.position.y=currentRun.jumpY;
-  if(currentRun.slide>.01){player.scale.y+=(.56-player.scale.y)*Math.min(1,dt*16);}
-  else player.scale.y+=(1-player.scale.y)*Math.min(1,dt*12);
+  // Recover to running posture promptly after the Duck button is released.
+  if(currentRun.slide>.01){player.scale.y+=(.56-player.scale.y)*Math.min(1,dt*28);}
+  else player.scale.y+=(1-player.scale.y)*Math.min(1,dt*28);
+  const pose=currentRun.jumpY>0?'jump':currentRun.slide>.01?'duck':'run';
+  if(canvas.dataset.pose!==pose)canvas.dataset.pose=pose;
   if(running){
     elfModel.rotation.z = (tx-player.position.x)*.048;
     if(!mixer)elfModel.position.y=Math.sin(currentRun.seconds*17)*.06;
