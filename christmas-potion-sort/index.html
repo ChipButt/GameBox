@@ -33,7 +33,7 @@ button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible
 .tree.left{width:86px;left:-23px}.tree.right{width:94px;right:-26px;transform:scaleX(-1)}
 .ornament{position:absolute;z-index:1;top:13px;color:#fff4be;text-shadow:0 0 12px #ffe58d;font-size:20px}.ornament.a{left:17px}.ornament.b{right:19px;font-size:13px}
 .scene-title{position:absolute;z-index:2;top:14px;left:10%;right:10%;text-align:center;font-size:11px;font-weight:950;letter-spacing:2px;color:#e0f5e8;text-shadow:0 2px #183a51}
-.rack{position:absolute;inset:41px 4px 22px;z-index:2;display:flex;justify-content:center;align-items:center}
+.rack{position:absolute;inset:41px 4px 39px;z-index:2;display:flex;justify-content:center;align-items:center}
 .bottles{max-width:465px}
 
 .bottle{appearance:none;display:block;position:relative;min-width:0;width:100%;height:100%;max-width:96px;max-height:155px;min-height:0;padding:0;margin:auto;border:0;background:transparent;touch-action:manipulation;transition:transform .16s ease,filter .16s ease;filter:drop-shadow(0 7px 3px #041329aa)}
@@ -71,8 +71,8 @@ button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible
 @keyframes snow{to{background-position:0 260px,0 190px}}@keyframes hint{50%{transform:translateY(-11px)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 @keyframes tilt{40%{transform:translateY(-20px) rotate(13deg)}75%{transform:translateY(-16px) rotate(10deg)}}
 @keyframes stream{0%,100%{opacity:0}40%,70%{opacity:.9}}@keyframes twinkle{50%{opacity:.58;transform:scale(.88)}}
-@media(max-height:690px){.app{gap:5px;padding-top:calc(4px + env(safe-area-inset-top))}.top{min-height:39px}.back,.menu{height:36px;flex-basis:38px}.menu{flex-basis:49px}.stat{min-height:43px;padding:3px 2px}.stat b{font-size:17px}.scene-title{top:8px}.rack{inset:31px 1px 15px}.tools,.tool{min-height:52px}.tool svg{height:19px}.foot{min-height:12px}}
-@media(max-width:355px){.app{padding-left:6px;padding-right:6px}.scene{border-width:2px}.heading h1{font-size:17px}.bottle{max-width:72px}.bottles{column-gap:0}.tools{gap:5px}.tool{font-size:10px}.stat small{font-size:8px}}
+@media(max-height:690px){.app{gap:5px;padding-top:calc(4px + env(safe-area-inset-top))}.top{min-height:39px}.back,.menu{height:36px;flex-basis:38px}.menu{flex-basis:49px}.stat{min-height:43px;padding:3px 2px}.stat b{font-size:17px}.scene-title{top:8px}.rack{inset:31px 1px 35px}.tools,.tool{min-height:52px}.tool svg{height:19px}.foot{min-height:12px}}
+@media(max-width:355px){.app{padding-left:6px;padding-right:6px}.scene{border-width:2px}.tip{font-size:8px;left:5%;right:5%}.heading h1{font-size:17px}.bottle{max-width:72px}.bottles{column-gap:0}.tools{gap:5px}.tool{font-size:10px}.stat small{font-size:8px}}
 @media(min-width:650px){.app{height:min(94dvh,920px);border:4px solid #729f9a;border-radius:24px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
@@ -88,7 +88,7 @@ button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible
 </section>
 <div class="tools">
 <button type="button" class="tool" id="undo"><svg viewBox="0 0 24 24"><path d="M9 6 4 11l5 5M4 11h10a6 6 0 0 1 0 12" transform="translate(0 -3)"/></svg>UNDO</button>
-<button type="button" class="tool primary" id="hint"><svg viewBox="0 0 24 24"><path d="m9 18 3-3 3 3M12 15V8M7 8a5 5 0 1 1 10 0c0 2-1 3-2 5H9c-1-2-2-3-2-5Z"/></svg>HINT</button>
+<button type="button" class="tool primary" id="hint"><svg viewBox="0 0 24 24"><path d="m9 18 3-3 3 3M12 15V8M7 8a5 5 0 1 1 10 0c0 2-1 3-2 5H9c-1-2-2-3-2-5Z"/></svg>HINT (<span id="hintCount">2</span>)</button>
 <button type="button" class="tool" id="restart"><svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 2 7M4 5v6h6"/></svg>RESTART</button>
 </div>
 <footer class="foot">POUR · MATCH · COMPLETE THE CHRISTMAS POTIONS</footer>
@@ -106,16 +106,16 @@ let saved={unlocked:1,finished:{},stars:0,sound:true,patterns:false,active:null}
 try {const modern=JSON.parse(localStorage.getItem(storageKey)||"null");const old=modern||JSON.parse(localStorage.getItem("gamebox.santas-potion-sort.v1")||"null");if(old&&typeof old==="object"){saved={...saved,...old,active:modern?.active||null};}}catch(e){}
 saved.unlocked=Math.max(1,Math.min(999,Number(saved.unlocked)||1));
 saved.finished=saved.finished&&typeof saved.finished==="object"?saved.finished:{};
-let currentLevel=1,board=[],starting=[],undoStack=[],moves=0,selected=null,busy=false,modal="intro",hinted=null,levelProof=[],proofCursor=0,threeStarTarget=26;
+let currentLevel=1,board=[],starting=[],undoStack=[],moves=0,selected=null,busy=false,modal="intro",hinted=null,levelProof=[],proofCursor=0,threeStarTarget=26,hintsUsed=0;
 let audio;
 function sound(freq=440){if(!saved.sound)return;try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;audio=audio||new A();const o=audio.createOscillator(),g=audio.createGain();o.type="sine";o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*1.35,audio.currentTime+.12);g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(.06,audio.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+.17);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.18);}catch(e){}}
-function save(){try{saved.active={level:currentLevel,board,moves};localStorage.setItem(storageKey,JSON.stringify(saved));}catch(e){}}
+function save(){try{saved.active={level:currentLevel,board,moves,hintsUsed};localStorage.setItem(storageKey,JSON.stringify(saved));}catch(e){}}
 function loadLevel(level,restore=false){
- currentLevel=Math.max(1,Math.min(999,level));const p=makeLevel(currentLevel);starting=copy(p.bottles);board=copy(starting);levelProof=p.proof;threeStarTarget=p.minChallengeMoves+2;proofCursor=0;moves=0;selected=null;hinted=null;undoStack=[];busy=false;
+ currentLevel=Math.max(1,Math.min(999,level));const p=makeLevel(currentLevel);starting=copy(p.bottles);board=copy(starting);levelProof=p.proof;threeStarTarget=p.minChallengeMoves+2;proofCursor=0;hintsUsed=0;moves=0;selected=null;hinted=null;undoStack=[];busy=false;
  const a=saved.active;
  if(restore&&a&&a.level===currentLevel&&Array.isArray(a.board)&&a.board.length===board.length&&Number.isInteger(a.moves)){
   const orig=colourCounts(board),fresh=colourCounts(a.board);
-  if(a.board.every(b=>Array.isArray(b)&&b.length<=CAPACITY&&b.every(c=>Number.isInteger(c)&&c>=0&&c<p.colors))&&JSON.stringify(Object.entries(orig).sort())===JSON.stringify(Object.entries(fresh).sort())){board=copy(a.board);moves=Math.max(0,a.moves);}
+  if(a.board.every(b=>Array.isArray(b)&&b.length<=CAPACITY&&b.every(c=>Number.isInteger(c)&&c>=0&&c<p.colors))&&JSON.stringify(Object.entries(orig).sort())===JSON.stringify(Object.entries(fresh).sort())){board=copy(a.board);moves=Math.max(0,a.moves);hintsUsed=Math.min(2,Math.max(0,Number(a.hintsUsed)||0));proofCursor=-1;}
  }
  render();save();
 }
@@ -129,6 +129,7 @@ function render(){
  $("filled").textContent=count+"/"+(board.length-2);
  $("stars").textContent=String(saved.stars||0);
  $("undo").disabled=undoStack.length===0||busy;
+ $("hintCount").textContent=String(Math.max(0,2-hintsUsed));$("hint").disabled=hintsUsed>=2||busy;
  const possible=selected===null?[]:board.map((_,i)=>i).filter(i=>canPour(board,selected,i));
  target.innerHTML=board.map((b,i)=>{
   const sealed=isSorted(b),pick=selected===i,tgt=possible.includes(i);
@@ -179,13 +180,13 @@ $("bottles").addEventListener("click",e=>{const button=e.target.closest("[data-i
 $("undo").addEventListener("click",()=>{if(!undoStack.length||busy||modal)return;const prior=undoStack.pop();board=copy(prior.board);moves=prior.moves;proofCursor=prior.proofCursor;selected=null;render();save();sound(300);});
 $("restart").addEventListener("click",()=>{if(busy||modal)return;loadLevel(currentLevel);toast("Fresh start!");sound(330);});
 $("hint").addEventListener("click",()=>{
- if(busy||modal)return;
+ if(busy||modal||hintsUsed>=2)return;
  const options=[];if(proofCursor>=0&&levelProof[proofCursor]&&canPour(board,levelProof[proofCursor].from,levelProof[proofCursor].to))options.push({...levelProof[proofCursor],score:100});for(let from=0;from<board.length;from++)for(let to=0;to<board.length;to++)if(canPour(board,from,to)){
  const dst=board[to],src=board[from];let score=(dst.length?20:0)+(dst.length+Math.min(CAPACITY-dst.length,src.length)===CAPACITY?5:0)+(src.length===1?2:0);
  if(dst.length===0&&isSorted(src))score-=20;
  options.push({from,to,score});}
  if(!options.length){toast("No legal pours. Undo or restart!");return;}
- options.sort((a,b)=>b.score-a.score);const p=options[0];const elements=$("bottles").children;elements[p.from]?.classList.add("hint-source");elements[p.to]?.classList.add("hint-target");toast("Try bottles "+(p.from+1)+" → "+(p.to+1));sound(580);
+ options.sort((a,b)=>b.score-a.score);const p=options[0];hintsUsed++;save();render();const elements=$("bottles").children;elements[p.from]?.classList.add("hint-source");elements[p.to]?.classList.add("hint-target");toast("Try bottles "+(p.from+1)+" → "+(p.to+1));sound(580);
  setTimeout(()=>{elements[p.from]?.classList.remove("hint-source");elements[p.to]?.classList.remove("hint-target");},1500);
 });
 $("menu").addEventListener("click",()=>{if(!busy)openDialog("menu")});
