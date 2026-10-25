@@ -7,7 +7,7 @@ export const COLORS=[
 {id:"pine",name:"Evergreen",light:"#b0f3ae",color:"#30b97a",dark:"#176f5e"},
 {id:"gold",name:"Starlight",light:"#fff0a2",color:"#ffd34d",dark:"#b57626"},
 {id:"frost",name:"Ice blue",light:"#c1f7ff",color:"#50bcf5",dark:"#236bab"},
-{id:"berry",name:"Candy pink",light:"#ffd2f3",color:"#f371c0",dark:"#a5368f"},
+{id:"berry",name:"Candy pink",symbol:"P",light:"#ffd2f3",color:"#f371c0",dark:"#a5368f"},
 {id:"plum",name:"Amethyst",light:"#ded1ff",color:"#9672ee",dark:"#5d3d9c"},
 {id:"orange",name:"Tangerine",light:"#ffd3a0",color:"#fb914d",dark:"#aa4327"},
 {id:"mint",name:"Winter mint",light:"#b9ffeb",color:"#50d3c3",dark:"#198781"},
