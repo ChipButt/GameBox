@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRun, startRun, steer, jump, duck, releaseDuck, advance, spawnRow} from './engine.mjs';
-test('all generated rows offer a safe route or a clearly actionable jump/duck route',()=>{
+test('every obstacle section always has a viable jumping, ducking or open route',()=>{
   const run=createRun(()=>0.49);
   run.rows=4; run.distance=500;
   for(let i=0;i<80;i++){
@@ -136,4 +136,63 @@ test('barricade-top present is collected on a successful jump but not on foot',(
   const success=advance(airborne,.03);
   assert.deepEqual(success.map(e=>e.type),['dodge','gift']);
   assert.equal(airborne.gifts,1);
+});
+
+test('the majority of sections now close all three lanes and force jump or duck',()=>{
+  // Fixed-seed sampling keeps the difficulty requirement measurable and repeatable.
+  const randomFor=seed=>{
+    let state=seed>>>0;
+    return ()=>((state=Math.imul(1664525,state)+1013904223|0)>>>0)/4294967296;
+  };
+  const samples=[];
+  for(let stage=0;stage<=5;stage++){
+    const run=createRun(randomFor(7907+stage*12317));
+    run.distance=25+stage*110;
+    let forcedCount=0,jumps=0,ducks=0,streak=0,maximum=0;
+    for(let i=0;i<400;i++){
+      run.objects=[];spawnRow(run);
+      const obstacles=run.objects.filter(o=>o.kind!=='gift');
+      const gifts=run.objects.filter(o=>o.kind==='gift');
+      const covered=new Set(obstacles.map(o=>o.lane));
+      const forced=covered.size===3;
+      if(forced){
+        forcedCount++;streak++;maximum=Math.max(maximum,streak);
+        const reward=obstacles.filter(o=>o.lane===gifts[0].lane);
+        assert.equal(reward.length,1,'every mandatory row has exactly one reward lane hazard');
+        assert.ok(['crate','arch'].includes(reward[0].kind),'mandatory lane must be jumpable or duckable');
+        if(reward[0].kind==='crate'){
+          jumps++;
+          assert.equal(gifts[1].z,reward[0].z);
+          assert.ok(gifts[1].height>=.9,'centre gift must be above barricade');
+        } else ducks++;
+      }else{
+        streak=0;
+      }
+      assert.ok(streak<=4,'after four forced sections the player needs breathing room');
+    }
+    samples.push(forcedCount/400);
+    assert.ok(jumps>40&&ducks>40,'mandatory routes need varied jump AND duck challenges');
+    assert.ok(maximum>1,'back-to-back mandatory moves must occur');
+  }
+  assert.ok(samples[0]>.5,'majority of the opening sections must require a move');
+  assert.ok(samples[2]>.72,'midgame must require jump or duck at least 72% of rows');
+  assert.ok(samples[5]>.8,'late game must require jump or duck at least 80% of rows');
+  assert.ok(samples[5]>samples[0]+.22,'later stages must be noticeably harder');
+});
+
+test('successive mandatory jumps leave enough time to land at the maximum pace',()=>{
+  const r=createRun(()=>0);startRun(r);
+  r.distance=1300;r.spawnIn=.001;
+  const events=advance(r,.01);
+  assert.ok(Array.isArray(events));
+  assert.equal(r.speed,43);
+  const rowSpacing=r.spawnIn + r.speed*.01-.001;
+  assert.ok(rowSpacing>=43*.72-1e-5,'spacing should be at least 0.72 seconds at maximum speed');
+  const jumpRun=createRun(()=>.99);startRun(jumpRun);jumpRun.spawnIn=99999;
+  jump(jumpRun);
+  let duration=0;
+  while(jumpRun.jumpY>0&&duration<1){
+    advance(jumpRun,.01);duration+=.01;
+  }
+  assert.ok(rowSpacing/43>duration+.1,'allow landing AND a short input window before the next forced barricade');
 });
