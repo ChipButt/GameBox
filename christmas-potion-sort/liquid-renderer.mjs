@@ -48,17 +48,18 @@ export function paintGlass(ctx,w,h,layers,{amount=layers.length,time=0,colors=[]
    const volume=clamp(visible-i,0,1);
    const upper=base-(i+volume)*unit,lower=base-i*unit+1.4;
    const isSurface=(i+1>=Math.ceil(visible));
-   const wave=isSurface?(Math.sin(time*.009+i*1.2)*h*.007):0;
+   const wave=isSurface?(Math.sin(time*.009+i*1.2)*h*.015):h*.006;
    ctx.beginPath();ctx.moveTo(w*.07,upper+wave);
-   ctx.bezierCurveTo(w*.27,upper-h*.009,w*.69,upper+h*.010,w*.93,upper-wave);
+   ctx.bezierCurveTo(w*.27,upper-h*.035,w*.69,upper+h*.033,w*.93,upper-wave);
    ctx.lineTo(w*.95,lower);ctx.lineTo(w*.05,lower);ctx.closePath();
    const liquid=grad(ctx,w*.08,w*.92,[[0,p.dark],[.19,p.color],[.39,p.light],[.55,p.color],[.79,p.color],[1,p.dark]]);
    ctx.fillStyle=liquid;ctx.fill();
    // Sinuous free surface with a bright capillary edge.
    ctx.beginPath();ctx.moveTo(w*.09,upper+wave);
-   ctx.bezierCurveTo(w*.27,upper-h*.009,w*.69,upper+h*.010,w*.91,upper-wave);
+   ctx.bezierCurveTo(w*.27,upper-h*.035,w*.69,upper+h*.033,w*.91,upper-wave);
    ctx.strokeStyle=isSurface?"#ffffffb4":"#ffffff34";
-   ctx.lineWidth=Math.max(.85,w*(isSurface?.027:.012));ctx.stroke();
+   ctx.lineWidth=Math.max(.85,w*(isSurface?.03:.012));ctx.stroke();
+   if(isSurface){ctx.save();ctx.globalAlpha=.35;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.ellipse(w*.49,upper+wave+h*.015,w*.18,Math.max(1.2,h*.012),-.08,0,TAU);ctx.fill();ctx.restore();}
    ctx.save();ctx.globalAlpha=isSurface?.58:.31;
    const beadSeed=(i*3+layers[i]*7)%13;
    for(let k=0;k<3;k++){
