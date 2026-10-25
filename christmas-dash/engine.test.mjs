@@ -49,7 +49,7 @@ test('gifts score only on lane-specific contact',()=>{
   assert.equal(r.gifts,1);assert.ok(r.score>=25);
 });
 test('the opening encounter is not empty and challenge escalates by 110 metres',()=>{
-  const r=createRun(()=>0.4);
+  const r=createRun(()=>0.2);
   spawnRow(r);
   assert.ok(r.objects.some(o=>o.kind!=='gift'),'first row must contain an obstacle');
   assert.ok(r.objects.every(o=>o.z<=-40),'hazards must remain visible with reaction time');
