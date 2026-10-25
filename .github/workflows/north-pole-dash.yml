@@ -29,6 +29,15 @@ jobs:
           node --check christmas-dash/game.js
           node --test christmas-dash/engine.test.mjs
           node --check christmas-dash/browser-smoke.cjs
+      - name: Inspect Quaternius elf skin materials and mesh structure
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('shared/asset-pool/quaternius/ultimate-animated-character/Elf.gltf','utf8'));
+          console.log('ELF_ASSET_MATERIALS',JSON.stringify((a.materials||[]).map((x,i)=>({i,name:x.name,pbr:x.pbrMetallicRoughness?.baseColorFactor,textures:x.pbrMetallicRoughness?.baseColorTexture}))));
+          console.log('ELF_ASSET_MESHES',JSON.stringify((a.meshes||[]).map((x,i)=>({i,name:x.name,primitives:x.primitives?.map(p=>({material:p.material,attrs:Object.keys(p.attributes||{})}))})).slice(0,35)));
+          console.log('ELF_ASSET_NODES',JSON.stringify((a.nodes||[]).filter(x=>x.mesh!==undefined).map(x=>({name:x.name,mesh:x.mesh,skin:x.skin})).slice(0,35)));
+          NODE
       - name: Verify original winter artwork and menu integration
         run: |
           test -f shared/asset-pool/quaternius/ultimate-animated-character/Elf.gltf
