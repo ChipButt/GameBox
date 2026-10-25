@@ -86,6 +86,7 @@ function refresh(){
   setLabel('slicesDone',pizza.cuts);setLabel('slicesNeeded',requiredCuts(order?.needed.slices||6));
   setLabel('tipText',{prep:'Spread sauce and cheese evenly. Aim for six pieces of other toppings — three on a half pizza.',oven:'Regular pizzas need a golden bake. Extra crispy ones need a deeper colour.',slice:'Each cut passes through the middle and creates two more slices.',ready:'A good pizza earns a tip. Wasted ingredients reduce your profit.'}[stage]);
   document.querySelectorAll('.ingredientBtn').forEach(b=>b.classList.toggle('selected',b.dataset.ingredient===selected));
+  updateLayerReadout();
   paint();
 }
 function startOrder(i){
@@ -95,6 +96,16 @@ function startOrder(i){
 // Each brush gesture is a single undoable step. Pointer capture allows
 // continuous spreading on touch screens without accidental page scrolling.
 let stroke=null,strokePaintPending=false;
+function updateLayerReadout(){
+  const sauce=Math.round(layerCoverage(pizza,'sauce')*100);
+  const cheese=Math.round(layerCoverage(pizza,'cheese')*100);
+  canvas.dataset.sauceCoverage=String(sauce);
+  canvas.dataset.cheeseCoverage=String(cheese);
+  if(stage==='prep'){
+    $('canvasHint').textContent=selected==='sauce'?'SAUCE '+sauce+'% · DRAG TO SPREAD':
+      selected==='cheese'?'CHEESE '+cheese+'% · DRAG TO SPRINKLE':'TAP TO ADD TOPPINGS';
+  }
+}
 function scheduleStrokePaint(){
   if(strokePaintPending)return;
   strokePaintPending=true;
@@ -102,9 +113,7 @@ function scheduleStrokePaint(){
     strokePaintPending=false;
     if(stage!=='prep')return;
     setLabel('ingredientCost',money(pizza.spend));
-    const sauce=layerCoverage(pizza,'sauce'),cheese=layerCoverage(pizza,'cheese');
-    $('canvasHint').textContent=selected==='sauce'?'SAUCE COVERAGE '+Math.round(sauce*100)+'% · DRAG':
-      selected==='cheese'?'CHEESE COVERAGE '+Math.round(cheese*100)+'% · DRAG':'TAP TO ADD TOPPINGS';
+    updateLayerReadout();
     paint();
   });
 }
@@ -123,11 +132,12 @@ function pointerPoint(event){
 canvas.addEventListener('pointerdown',event=>{
   if(paused||stage!=='prep'||stroke)return;
   const pos=pointerPoint(event),layer=selected==='sauce'||selected==='cheese';
-  if(!add(selected,pos.x,pos.y))return;
   if(layer){
-    stroke={pointerId:event.pointerId,ingredient:selected,last:pos};
+    // Even a drag starting on an already-painted spot must be allowed.
+    stroke={pointerId:event.pointerId,ingredient:selected,last:pos,before:structuredClone(pizza),captured:false};
+    if(add(selected,pos.x,pos.y,true)){history.push(stroke.before);stroke.captured=true;}
     try{canvas.setPointerCapture(event.pointerId)}catch{}
-  }else refresh();
+  }else if(add(selected,pos.x,pos.y))refresh();
   if(event.cancelable)event.preventDefault();
 });
 canvas.addEventListener('pointermove',event=>{
@@ -135,7 +145,11 @@ canvas.addEventListener('pointermove',event=>{
   const pos=pointerPoint(event),start=stroke.last;
   const distance=Math.hypot(pos.x-start.x,pos.y-start.y);
   const steps=Math.min(20,Math.ceil(distance/.028));
-  for(let i=1;i<=steps;i++)add(stroke.ingredient,start.x+(pos.x-start.x)*i/steps,start.y+(pos.y-start.y)*i/steps,true);
+  for(let i=1;i<=steps;i++){
+    if(add(stroke.ingredient,start.x+(pos.x-start.x)*i/steps,start.y+(pos.y-start.y)*i/steps,true)&&!stroke.captured){
+      history.push(stroke.before);stroke.captured=true;
+    }
+  }
   stroke.last=pos;
   if(event.cancelable)event.preventDefault();
 });
