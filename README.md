@@ -36,6 +36,13 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 
 ## Included games
 
+
+### North Pole Dash
+- Original three-lane, third-person 3D Christmas endless runner with progressive pace, moving festive scenery, swipe/keyboard/accessible on-screen controls, jump, slide, presents, collisions, pause/replay and locally saved high score.
+- Uses the bundled CC0 Quaternius rigged `Elf.gltf` and snow-covered `PineTree_Snow_2.fbx` / `_4.fbx` models from the GameBox shared asset pool. Existing Kenney holiday present sprites and Game Icons are reused for game menus and GameBox tiles.
+- Source is self-contained in `christmas-dash/`, with a rendering-independent engine and Node tests. WebGL/Three.js and the existing shared model loader power the scene; procedural seasonal fallback meshes are only used if a device cannot fetch the committed models.
+- Play at `christmas-dash/`. Check mechanics with `node --test christmas-dash/engine.test.mjs`.
+
 ### Snow Shoveller
 - Christmas snow-clearing progression game: drag on mobile or use WASD / arrow keys to move and automatically shovel.
 - Snow goes into a capacity-limited sack; coins are awarded **only** when loads are melted at the furnace.
