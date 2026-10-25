@@ -21,3 +21,141 @@
 .orderReminder b{font:900 10px Nunito;letter-spacing:1px;color:#bc6c43}
 .orderReminder span{font-size:12px;font-weight:900;line-height:1.35}
 @media(min-width:721px){.orderReminder{max-height:91px;overflow:auto}}
+
+/* Single-screen game layout.  The browser page is never vertically scrollable;
+   only the end-of-day modal may scroll if its contents do not fit. */
+html,body{height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none}
+.shell{height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.topbar,.scorestrip,.counter{flex-shrink:0}
+.topbar{height:58px}
+.scorestrip{height:52px;padding:7px 13px;gap:8px}
+.counter{height:142px;grid-template-columns:140px minmax(0,1fr);padding:8px 15px;gap:12px;min-height:0}
+.customerWindow{height:100%;max-height:none;width:100%}
+.customerPortrait{width:124px;height:134px}
+.orderTicket{height:100%;min-height:0;padding:10px 14px;display:flex;flex-direction:column;justify-content:space-around}
+.orderTicket p{margin:5px 0;min-height:0;font-size:clamp(13px,1.5vw,16px);line-height:1.23}
+.ticketBottom{margin-top:3px}
+.workspace{flex:1;min-height:0;overflow:hidden;padding:13px 15px 15px;gap:13px;align-items:stretch;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}
+.prepArea{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px}
+.stationHead,.costBar{width:100%;flex-shrink:0}
+.stationHead{padding-bottom:5px}
+.costBar{padding-top:5px}
+.boardWrap{flex:1 1 auto;min-height:0;min-width:0;height:0;width:auto;max-width:100%;aspect-ratio:1;align-self:center}
+.boardWrap #pizzaCanvas{width:100%;height:100%}
+.stationSide{min-height:0;overflow:hidden;gap:8px;padding:11px;justify-content:space-between}
+.stationSide .stageHeading{flex-shrink:0}
+.stationSide .orderReminder{flex-shrink:0;padding:6px 9px}
+.stationSide .orderReminder span{font-size:11px}
+.stationSide .stageInstructions{display:none}
+.stationSide .tipCard{display:none}
+.ingredients{flex:1;min-height:0;align-content:center;grid-auto-rows:minmax(0,1fr);gap:6px}
+.ingredientBtn{min-height:0;padding:4px 2px}
+.ingredientBtn .foodIcon{font-size:clamp(22px,3.2vh,31px)}
+.ingredientBtn span:last-child{font-size:10px}
+.actionPanel{flex-shrink:0;gap:5px}
+.littleActions{gap:5px}
+.littleActions button{min-height:32px;font-size:10px}
+.primaryBtn,.secondaryBtn{min-height:47px;font-size:21px}
+.ovenPanel{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.slicePanel{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.bottom{display:none}
+
+/* Phones: the order sits above a large touch pizza, then a compact tray of
+   ingredients/action controls. Everything is visible simultaneously. */
+@media(max-width:720px){
+  .topbar{height:47px;padding:0 9px}
+  .topbar:after{height:5px;bottom:-7px;background:repeating-linear-gradient(90deg,#d85248 0 20px,#f8e7cf 20px 40px)}
+  .brand{font-size:16px}.brand b{font-size:1.35em}
+  .back{font-size:19px;padding:5px 7px}.back span{font-size:9px}
+  .menuControl{height:33px;width:35px}
+  .scorestrip{height:44px;gap:5px;padding:5px 7px}
+  .scorestrip>div{min-width:0;padding:3px 4px;border-radius:9px;gap:4px}
+  .scorestrip small{font-size:8px;letter-spacing:0}
+  .scorestrip b{font-size:18px}
+  .counter{height:110px;grid-template-columns:82px minmax(0,1fr);gap:7px;padding:7px 7px 6px;border-bottom-width:2px}
+  .customerWindow{height:100%;min-height:0;border-width:4px;border-bottom-width:8px;border-radius:35px 35px 8px 8px}
+  .customerPortrait{height:102px;width:99px}
+  .orderTicket{padding:5px 7px;border-width:1px;border-radius:10px;box-shadow:0 2px 0 #b9a486}
+  .orderTicket:before{display:none}
+  .ticketTop,.ticketBottom{font-size:8px;letter-spacing:0}
+  .ticketTop span:last-child{font-size:8px}
+  .ticketBottom span:last-child{font-size:14px}
+  .orderTicket p{font-size:clamp(9px,2.65vw,11.5px);line-height:1.2;min-height:0;margin:2px 0}
+  .patienceTrack{height:5px;flex-shrink:0}
+  .workspace{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0;align-items:stretch;padding:6px 8px 7px;gap:5px}
+  .prepArea{height:100%;min-height:0;width:100%;max-width:none;margin:0;padding:4px 7px;border-radius:15px;box-shadow:0 3px 0 #8f5e3d}
+  .stationHead{padding-bottom:2px;font-size:10px}
+  .stationStamp{font-size:8px}
+  .costBar{padding-top:2px;font-size:9px}
+  .costBar b{font-size:11px}
+  .boardWrap{height:0;flex:1 1 auto;width:auto;max-width:100%;min-width:0;max-height:none;aspect-ratio:1;border-width:3px;border-radius:12px}
+  .canvasHint{font-size:8px;padding:3px 5px;bottom:1%;border-radius:6px}
+  .stationSide{width:100%;height:auto;min-height:0;padding:6px 8px;gap:5px;border-radius:13px;box-shadow:0 2px 0 #b7b99e}
+  .stageHeading{min-height:22px}
+  .stageHeading small,.stageHeading>span{display:none}
+  .stageHeading h2{font-size:20px;margin:0}
+  .stationSide .orderReminder{display:none}
+  .ingredients{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:52px;gap:5px;flex:none}
+  .ingredientBtn{height:52px;min-height:0;gap:0;border-radius:10px;padding:2px}
+  .ingredientBtn .foodIcon{font-size:23px;line-height:1}
+  .ingredientBtn span:last-child{font-size:9px}
+  .littleActions button{min-height:28px;font-size:10px}
+  .primaryBtn,.secondaryBtn{min-height:44px;font-size:20px}
+  .ovenPanel,.slicePanel{flex:none;min-height:0;padding:6px}
+  .ovenMouth{height:64px;border-width:5px}
+  .ovenPizza{height:18px;width:77px}
+  .ovenMouth i{font-size:9px;top:3px}
+  .ovenText{margin:4px 0 3px}
+  .ovenPanel p,.slicePanel p{display:none}
+  .sliceBadge{padding:5px}
+  .sliceBadge b{font-size:25px}
+}
+@media(max-width:720px) and (max-height:760px){
+  .topbar{height:42px}
+  .scorestrip{height:41px}
+  .counter{height:94px}
+  .customerPortrait{height:87px;width:92px}
+  .ticketTop,.ticketBottom{font-size:7.5px}
+  .orderTicket p{font-size:10px;line-height:1.13}
+  .workspace{padding:4px 7px 5px;gap:4px}
+  .prepArea{padding:3px 5px}
+  .stationHead{font-size:9px}
+  .stationSide{padding:4px 6px;gap:4px}
+  .stageHeading{min-height:20px}.stageHeading h2{font-size:18px}
+  .ingredients{grid-auto-rows:43px;gap:3px}
+  .ingredientBtn{height:43px;padding:1px}
+  .ingredientBtn .foodIcon{font-size:19px}
+  .ingredientBtn span:last-child{font-size:8px}
+  .actionPanel{gap:3px}
+  .littleActions button{min-height:26px;font-size:9px}
+  .primaryBtn,.secondaryBtn{min-height:39px;font-size:18px}
+  .ovenMouth{height:45px}.ovenText{font-size:12px}
+}
+@media(max-width:720px) and (max-height:610px){
+  .topbar{height:38px}
+  .scorestrip{height:35px}.scorestrip>div{padding:2px}.scorestrip small{font-size:7px}.scorestrip b{font-size:16px}
+  .counter{height:77px;padding:4px 5px}
+  .customerPortrait{width:78px;height:77px}
+  .orderTicket p{font-size:9px;line-height:1.1;margin:1px 0}
+  .ticketBottom{display:none}
+  .workspace{padding:3px 5px;gap:3px}
+  .stationHead{padding-bottom:0}.costBar{padding-top:0}
+  .stationSide{padding:3px 5px;gap:3px}
+  .stageHeading{min-height:18px}.stageHeading h2{font-size:16px}
+  .ingredients{grid-auto-rows:37px;gap:3px}
+  .ingredientBtn{height:37px;padding:1px}
+  .ingredientBtn .foodIcon{font-size:16px}
+  .ingredientBtn span:last-child{font-size:7.5px}
+  .littleActions button{min-height:23px;font-size:9px}
+  .primaryBtn,.secondaryBtn{min-height:37px;font-size:17px}
+  .ovenMouth{height:37px}.ovenPanel{padding:4px}
+}
+@media(min-width:721px) and (max-height:720px){
+  .topbar{height:49px}.scorestrip{height:44px}.counter{height:100px}
+  .workspace{padding:7px 12px;gap:9px}
+  .stationSide{gap:5px;padding:8px}
+  .orderReminder{display:none}
+  .ingredients{gap:4px}.ingredientBtn{min-height:0}
+  .primaryBtn{min-height:39px}.littleActions button{min-height:26px}
+  .tipCard{display:none}
+}
