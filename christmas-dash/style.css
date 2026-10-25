@@ -38,7 +38,7 @@ h2{font-size:clamp(50px,11vw,66px);line-height:.84}.lead{font-size:14px;font-wei
 .mobileActions .verticalActions{gap:7px}
 .mobileActions .verticalActions button{width:clamp(75px,20vw,99px);height:62px;background:linear-gradient(#277d75e8,#15544fe8);border-color:#e4f4c5b0}
 .mobileActions .verticalActions .controlArrow{font-size:26px}
-.mobileActions .verticalActions .controlLabel{font-size:13px}
+.mobileActions .verticalActions .controlLabel{font-size:18px;letter-spacing:1px;margin-top:0}
 .huddistance{flex:0 1 104px;min-width:87px;padding:5px 7px 4px}
 .huddistance .distanceNumber{display:flex;align-items:baseline;gap:2px;font:900 clamp(22px,5.8vw,31px)/1 'Barlow Condensed',sans-serif;letter-spacing:.3px;font-variant-numeric:tabular-nums}
 .huddistance .distanceNumber i{font-size:13px;font-style:normal;color:#fbde91}
