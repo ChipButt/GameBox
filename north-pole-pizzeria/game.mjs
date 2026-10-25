@@ -95,7 +95,7 @@ function startOrder(i){
 }
 // Each brush gesture is a single undoable step. Pointer capture allows
 // continuous spreading on touch screens without accidental page scrolling.
-let stroke=null,strokePaintPending=false;
+let activeBrush=null,strokePaintPending=false;
 function updateLayerReadout(){
   const sauce=Math.round(layerCoverage(pizza,'sauce')*100);
   const cheese=Math.round(layerCoverage(pizza,'cheese')*100);
@@ -130,32 +130,32 @@ function pointerPoint(event){
   return {x:(event.clientX-r.left)/r.width,y:(event.clientY-r.top)/r.height};
 }
 canvas.addEventListener('pointerdown',event=>{
-  if(paused||stage!=='prep'||stroke)return;
+  if(paused||stage!=='prep'||activeBrush)return;
   const pos=pointerPoint(event),layer=selected==='sauce'||selected==='cheese';
   if(layer){
     // Even a drag starting on an already-painted spot must be allowed.
-    stroke={pointerId:event.pointerId,ingredient:selected,last:pos,before:structuredClone(pizza),captured:false};
-    if(add(selected,pos.x,pos.y,true)){history.push(stroke.before);stroke.captured=true;}
+    activeBrush={pointerId:event.pointerId,ingredient:selected,last:pos,before:structuredClone(pizza),captured:false};
+    if(add(selected,pos.x,pos.y,true)){history.push(activeBrush.before);activeBrush.captured=true;}
     try{canvas.setPointerCapture(event.pointerId)}catch{}
   }else if(add(selected,pos.x,pos.y))refresh();
   if(event.cancelable)event.preventDefault();
 });
 canvas.addEventListener('pointermove',event=>{
-  if(!stroke||stroke.pointerId!==event.pointerId||paused||stage!=='prep')return;
-  const pos=pointerPoint(event),start=stroke.last;
+  if(!activeBrush||activeBrush.pointerId!==event.pointerId||paused||stage!=='prep')return;
+  const pos=pointerPoint(event),start=activeBrush.last;
   const distance=Math.hypot(pos.x-start.x,pos.y-start.y);
   const steps=Math.min(20,Math.ceil(distance/.028));
   for(let i=1;i<=steps;i++){
-    if(add(stroke.ingredient,start.x+(pos.x-start.x)*i/steps,start.y+(pos.y-start.y)*i/steps,true)&&!stroke.captured){
-      history.push(stroke.before);stroke.captured=true;
+    if(add(activeBrush.ingredient,start.x+(pos.x-start.x)*i/steps,start.y+(pos.y-start.y)*i/steps,true)&&!activeBrush.captured){
+      history.push(activeBrush.before);activeBrush.captured=true;
     }
   }
-  stroke.last=pos;
+  activeBrush.last=pos;
   if(event.cancelable)event.preventDefault();
 });
 function finishStroke(event){
-  if(!stroke||event.pointerId!==stroke.pointerId)return;
-  stroke=null;refresh();
+  if(!activeBrush||event.pointerId!==activeBrush.pointerId)return;
+  activeBrush=null;refresh();
 }
 canvas.addEventListener('pointerup',finishStroke);
 canvas.addEventListener('pointercancel',finishStroke);
@@ -169,7 +169,7 @@ canvas.addEventListener('keydown',event=>{
   const a=count*2.399963,rad=.21*Math.sqrt((count%36)/36);
   if(add(selected,.5+Math.cos(a)*rad,.5+Math.sin(a)*rad))refresh();
 });
-$('undoBtn').addEventListener('click',()=>{if(!history.length||stage!=='prep'||paused)return;stroke=null;pizza=history.pop();refresh()});
+$('undoBtn').addEventListener('click',()=>{if(!history.length||stage!=='prep'||paused)return;activeBrush=null;pizza=history.pop();refresh()});
 $('resetBtn').addEventListener('click',()=>{if(stage!=='prep'||paused)return;pizza=newPizza();history=[];refresh();toast('Fresh dough ready')});
 function serve(){
   const review=evaluate(order,pizza,remaining/customerSeconds(shop.upgrades),shop.upgrades);
