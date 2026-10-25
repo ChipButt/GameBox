@@ -7,7 +7,7 @@ export function createRun(random = Math.random) {
   let id = 0;
   return {
     status: 'ready', lane: 1, distance: 0, gifts: 0, score: 0,
-    speed: 21, jumpY: 0, jumpV: 0, slide: 0, seconds: 0,
+    speed: 21, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, seconds: 0,
     objects: [], spawnIn: 2, rows: 0, combo: 0, lastEvent: '',
     random, nextId: () => ++id
   };
@@ -28,14 +28,22 @@ export function steer(run, direction) {
 }
 export function jump(run) {
   if (run.status !== 'running' || run.jumpY > 0 || run.slide > 0) return false;
-  run.jumpV = 10.5;
+  // Roughly 0.54s in the air rather than 0.78s: snappy jump and landing.
+  run.jumpV = 10.8;
   run.jumpY = 0.01;
   return true;
 }
-export function duck(run) {
+export function duck(run, held = false) {
   if (run.status !== 'running' || run.jumpY > 0) return false;
-  run.slide = 1.05;
+  // A held Duck control stays active only while pressed; swipes are short taps.
+  run.slideHeld = Boolean(held);
+  run.slide = held ? 1 : 0.34;
   return true;
+}
+export function releaseDuck(run) {
+  run.slideHeld = false;
+  // Don't leave the player crouched for a second after releasing the button.
+  run.slide = Math.min(run.slide, 0.055);
 }
 export function spawnRow(run) {
   // All rows have at least one safe lane, including the dual-hazard rows.
@@ -55,19 +63,31 @@ export function spawnRow(run) {
     const lane = hazards.splice(Math.floor(run.random() * hazards.length), 1)[0];
     run.objects.push({ id: run.nextId(), kind: choose(run.random, kinds), lane, z: hazardZ, hit: false });
   }
-  // Reward the safe path without making the next route obvious too early.
+  // The reward lane sometimes demands a genuine jump OVER a barricade.
+  // A clear reward lane remains common early on; later layouts may require
+  // an arch duck instead. Snowmen never block all three lanes.
   const giftLane = safeLane;
-  // Advanced runs occasionally close all three lanes, but the third
-  // obstacle is always jumpable or duckable — never an unavoidable wall.
-  if (stage >= 3 && run.random() < 0.27 + (stage - 3) * 0.12) {
-    run.objects.push({
-      id: run.nextId(),
-      kind: choose(run.random, ['crate','arch']),
+  const barricadeChance = [0.26, 0.38, 0.47, 0.56, 0.63, 0.68][stage];
+  const guaranteedJumpRoute = run.random() < barricadeChance;
+  let rewardHazard = null;
+  if (guaranteedJumpRoute || (stage >= 3 && run.random() < 0.27 + (stage - 3) * 0.12)) {
+    rewardHazard = {
+      id: run.nextId(), kind: guaranteedJumpRoute ? 'crate' : choose(run.random(), ['crate','arch']),
       lane: safeLane, z: hazardZ, hit: false
-    });
+    };
+    run.objects.push(rewardHazard);
   }
+  // 1st: approach, 2nd: directly ABOVE the top of the barricade,
+  // 3rd: landing. Never put the centre gift *inside* the obstacle.
+  const offsets = rewardHazard?.kind === 'crate' ? [4.8, 0, -4.8]
+    : rewardHazard?.kind === 'arch' ? [4.8, -3.5, -6]
+    : [4.8, 2.4, 0];
   for (let n = 0; n < 3; n++) {
-    run.objects.push({ id: run.nextId(), kind: 'gift', lane: giftLane, z: hazardZ + 4.8 - n * 2.4, hit: false });
+    run.objects.push({
+      id: run.nextId(), kind: 'gift', lane: giftLane,
+      z: hazardZ + offsets[n], height: rewardHazard?.kind === 'crate' && n === 1 ? 1.0 : 0,
+      hit: false
+    });
   }
   run.rows++;
 }
@@ -86,10 +106,10 @@ export function advance(run, dt) {
   }
   if (run.jumpY > 0 || run.jumpV > 0) {
     run.jumpY += run.jumpV * dt;
-    run.jumpV -= 27 * dt;
+    run.jumpV -= 40 * dt;
     if (run.jumpY <= 0) { run.jumpY = 0; run.jumpV = 0; }
   }
-  run.slide = Math.max(0, run.slide - dt);
+  run.slide = run.slideHeld ? 1 : Math.max(0, run.slide - dt);
   const events = [];
   for (const o of run.objects) {
     const previousZ = o.z;
@@ -97,12 +117,14 @@ export function advance(run, dt) {
     if (o.hit || o.lane !== run.lane) continue;
     if (previousZ <= PLAYER_Z + 0.65 && o.z >= PLAYER_Z - 0.65) {
       if (o.kind === 'gift') {
+        // Elevated presents above barricades can only be claimed in the air.
+        if ((o.height || 0) > 0 && run.jumpY < 0.7) continue;
         o.hit = true;
         run.gifts++;
         run.combo++;
         events.push({type:'gift', id:o.id});
       } else {
-        const avoided = (o.kind === 'crate' && run.jumpY > 1.12)
+        const avoided = (o.kind === 'crate' && run.jumpY > 0.7)
           || (o.kind === 'arch' && run.slide > 0.12);
         o.hit = true;
         if (avoided) {
