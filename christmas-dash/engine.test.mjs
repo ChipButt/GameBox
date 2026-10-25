@@ -52,7 +52,7 @@ test('the opening encounter is not empty and challenge escalates by 110 metres',
   const r=createRun(()=>0.2);
   spawnRow(r);
   assert.ok(r.objects.some(o=>o.kind!=='gift'),'first row must contain an obstacle');
-  assert.ok(r.objects.every(o=>o.z<=-40),'hazards must remain visible with reaction time');
+  assert.ok(r.objects.every(o=>o.z<=-30),'snowmen have a visible lead-in; other hazards remain at the original safe distance');
   r.distance=240;
   r.objects=[];
   spawnRow(r);
@@ -195,4 +195,77 @@ test('successive mandatory jumps leave enough time to land at the maximum pace',
     advance(jumpRun,.01);duration+=.01;
   }
   assert.ok(rowSpacing/43>duration+.1,'allow landing AND a short input window before the next forced barricade');
+});
+
+test('impassable snowmen always crash even when jumping or ducking',()=>{
+  for(const action of [jump,duck]){
+    const r=createRun(()=>0.99);startRun(r);r.spawnIn=9999;
+    action(r);
+    if(action===jump)for(let i=0;i<3;i++)advance(r,.05);
+    r.objects=[{id:998,kind:'snowman',lane:r.lane,z:4.8,hit:false}];
+    assert.equal(advance(r,.03)[0].type,'crash','no move may pass through a snowman');
+    assert.equal(r.status,'over');
+  }
+});
+test('rewards never overlap an impassable snowman already occupying the gift lane',()=>{
+  const r=createRun(()=>0.1);
+  // Force an old obstacle into the next selected gift route. All three gifts
+  // must disappear rather than form a misleading trail through that snowman.
+  r.objects=[{id:999,kind:'snowman',lane:0,z:-45,hit:false}];
+  spawnRow(r);
+  assert.equal(r.objects.filter(o=>o.kind==='gift').length,0);
+  assert.equal(r.rows,1);
+  assert.ok(r.objects.some(o=>o.kind==='snowman'&&o.id===999),'do not erase a real obstacle');
+});
+test('presents and snowmen stay separated across thousands of consecutive sections',()=>{
+  const randomFor=seed=>{
+    let state=seed>>>0;
+    return ()=>((state=Math.imul(1664525,state)+1013904223|0)>>>0)/4294967296;
+  };
+  let snowmanCount=0, giftCount=0, sections=0;
+  for(let seed=1;seed<=48;seed++){
+    const r=createRun(randomFor(seed));
+    let active=[],distance=0;
+    for(let row=0;row<240;row++){
+      const speed=Math.min(43,21+distance/57);
+      const spacing=Math.max(23,speed*.72)+r.random()*4;
+      for(const o of active)o.z+=spacing;
+      active=active.filter(o=>o.z<13);
+      r.objects=active;r.distance=distance;
+      spawnRow(r);
+      active=r.objects;
+      const snowmen=active.filter(o=>o.kind==='snowman');
+      const gifts=active.filter(o=>o.kind==='gift');
+      for(const gift of gifts){
+        for(const snowman of snowmen){
+          assert.ok(
+            gift.lane!==snowman.lane||Math.abs(gift.z-snowman.z)>=4,
+            'an impassable snowman intersects a present trail at row '+row
+          );
+        }
+      }
+      snowmanCount+=snowmen.length;giftCount+=gifts.length;sections++;
+      distance+=spacing;
+    }
+  }
+  assert.ok(sections>11000 && snowmanCount>1000 && giftCount>1000,'test needs real snowman and gift coverage');
+});
+test('snowmen render at a distinct depth from presents in the same encounter',()=>{
+  const randomFor=seed=>{
+    let state=seed>>>0;
+    return ()=>((state=Math.imul(1664525,state)+1013904223|0)>>>0)/4294967296;
+  };
+  let found=0;
+  for(let seed=1;seed<=120;seed++){
+    const r=createRun(randomFor(seed));
+    spawnRow(r);
+    const snowmen=r.objects.filter(o=>o.kind==='snowman');
+    const gifts=r.objects.filter(o=>o.kind==='gift');
+    for(const snowman of snowmen){
+      found++;
+      assert.ok(gifts.every(g=>snowman.lane!==g.lane),'never put present and snowman in the same lane');
+      assert.ok(gifts.every(g=>Math.abs(g.z-snowman.z)>7),'snowman should be visually separated from the gift sequence');
+    }
+  }
+  assert.ok(found>10,'random encounters must actually include snowmen');
 });
