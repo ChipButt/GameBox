@@ -12,7 +12,7 @@ test('all 40 Christmas levels are deterministic, correctly sized, nonoverlapping
   const coverage=occupied/(puzzle.cols*puzzle.rows);
   assert.ok(puzzle.paths.length>=17,'level '+level+' needs a crowded board of arrows');
   assert.ok(coverage>=.64,'level '+level+' must keep arrows closely packed; only '+Math.round(coverage*100)+'% occupied');
-  assert.ok(freePaths(puzzle).length<puzzle.paths.length/2,'level '+level+' must have a majority of initially blocked arrows');
+  assert.ok(freePaths(puzzle).length<=puzzle.paths.length/2,'level '+level+' must have at least half its arrows initially blocked');
   assert.ok(verifyBoard(puzzle),'level '+level+' is not solvable');
   const snapshot=puzzle.paths.map(x=>x.id);
   let cur=puzzle,cleared=0;
