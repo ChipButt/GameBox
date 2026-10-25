@@ -6,16 +6,16 @@ function random(seed){let s=seed>>>0||1;return ()=>{s^=s<<13;s^=s>>>17;s^=s<<5;r
 const integer=(rng,max)=>Math.floor(rng()*max);
 export function dimensions(level){
   const tier=Math.min(6,Math.floor((Math.max(1,level)-1)/6));
-  return {cols:9+tier,rows:12+tier,target:12+tier*4+Math.min(3,(level-1)%6)};
+  return {cols:9+tier,rows:12+tier,target:19+tier*5+Math.min(3,(level-1)%6)};
 }
-export function generateLevel(level){
+function generateCandidate(level,salt=0){
   const n=Math.max(1,Math.floor(level));
   const {cols,rows,target}=dimensions(n);
-  const rng=random((n*2654435761+982451653)>>>0);
+  const rng=random((n*2654435761+982451653+salt*1013904223)>>>0);
   const occupied=new Set(),paths=[];
   // Reverse-construct: every added arrow is guaranteed a route off the board,
   // irrespective of arrows already present. Removing in reverse always wins.
-  for(let attempt=0;attempt<Math.max(2200,target*150)&&paths.length<target;attempt++){
+  for(let attempt=0;attempt<Math.max(3400,target*195)&&paths.length<target;attempt++){
     const d=integer(rng,4),[dx,dy]=DIRECTIONS[d];
     const hx=integer(rng,cols),hy=integer(rng,rows);
     if(occupied.has(key(hx,hy)))continue;
@@ -60,13 +60,30 @@ export function generateLevel(level){
         if(candidateCells.has(key(qx,qy))){blocks++;break;}
       }
     }
-    if(blocks===0&&paths.length>1&&attempt<Math.max(2200,target*150)*.7&&rng()<(n<=4?.78:.91))continue;
+    if(blocks===0&&paths.length>1&&attempt<Math.max(3400,target*195)*.7&&rng()<(n<=4?.78:.91))continue;
     nodes.reverse();
     const id=paths.length;
     paths.push({id,points:nodes,color:id%5});
     for(const [px,py] of nodes)occupied.add(key(px,py));
   }
   return {level:n,cols,rows,paths};
+}
+// Select a tightly packed, interlocked board deterministically from five
+// reverse-solvable candidates. Prefer filled space and fewer initially open
+// exits so clearing the first obvious arrows is no longer enough.
+export function generateLevel(level){
+  const n=Math.max(1,Math.floor(level));
+  let best=null,bestScore=-Infinity;
+  for(let salt=0;salt<5;salt++){
+    const candidate=generateCandidate(n,salt);
+    const used=candidate.paths.reduce((sum,path)=>sum+path.points.length,0);
+    const open=freePaths(candidate).length;
+    const fill=used/(candidate.cols*candidate.rows);
+    const freeRatio=open/Math.max(1,candidate.paths.length);
+    const score=fill*100-freeRatio*80+candidate.paths.length*.22;
+    if(score>bestScore){bestScore=score;best=candidate;}
+  }
+  return best;
 }
 export function direction(path){
   const a=path.points.at(-2),b=path.points.at(-1);
