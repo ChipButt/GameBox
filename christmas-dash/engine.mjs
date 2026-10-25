@@ -73,16 +73,17 @@ export function spawnRow(run) {
   // Alternate actions in consecutive forced sections for real jump/duck
   // variety. Clear reward lanes still appear as intentional breathing space.
   const giftLane = safeLane;
-  const optionalActionChance = [0.12, 0.18, 0.22, 0.24, 0.27, 0.30][stage];
   let rewardHazard = null;
-  if (forced || run.random() < optionalActionChance) {
-    const kind = forced && run.forcedStreak > 0
+  if (forced) {
+    const kind = run.forcedStreak > 0
       ? (run.lastForcedKind === 'crate' ? 'arch' : 'crate')
       : (run.random() < 0.55 ? 'crate' : 'arch');
     rewardHazard = { id: run.nextId(), kind, lane: safeLane, z: hazardZ, hit: false };
     run.objects.push(rewardHazard);
-    if (forced) run.lastForcedKind = kind;
+    run.lastForcedKind = kind;
   }
+  // Non-forced sections genuinely leave a clear lane, so a fifth
+  // compulsory move cannot sneak in via an "optional" reward obstacle.
   run.forcedStreak = forced ? run.forcedStreak + 1 : 0;
   if (forced) run.forcedRows++;
   // 1st: approach, 2nd: directly ABOVE the top of the barricade,
