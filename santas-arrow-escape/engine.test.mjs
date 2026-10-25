@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {generateLevel,dimensions,verifyBoard,freePaths,isFree,removeArrow,blockerIds} from './engine.mjs';
 
 test('all 40 Christmas levels are deterministic, correctly sized, nonoverlapping and solvable',()=>{
- let previous=0;
  for(let level=1;level<=40;level++){
   const puzzle=generateLevel(level);
   assert.deepEqual(puzzle,generateLevel(level),'level '+level+' must be stable across reloads');
@@ -11,8 +10,6 @@ test('all 40 Christmas levels are deterministic, correctly sized, nonoverlapping
   assert.deepEqual([puzzle.cols,puzzle.rows],[dimensions(level).cols,dimensions(level).rows]);
   assert.ok(puzzle.paths.length>=8,'level '+level+' should have a substantial puzzle');
   assert.ok(verifyBoard(puzzle),'level '+level+' is not solvable');
-  if(level%6===1&&level>1)assert.ok(puzzle.paths.length>=previous,'a new chapter should not shrink');
-  if(level%6===6)previous=puzzle.paths.length;
   const snapshot=puzzle.paths.map(x=>x.id);
   let cur=puzzle,cleared=0;
   while(cur.paths.length){
