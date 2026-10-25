@@ -1,0 +1,40 @@
+name: North Pole Dash
+
+on:
+  push:
+    paths:
+      - 'christmas-dash/**'
+      - 'hub/index.html'
+      - 'index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/north-pole-dash.yml'
+  pull_request:
+    paths:
+      - 'christmas-dash/**'
+      - 'hub/index.html'
+      - 'index.html'
+      - '.github/workflows/north-pole-dash.yml'
+
+jobs:
+  runner-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run North Pole Dash mechanics and syntax tests
+        run: |
+          node --check christmas-dash/engine.mjs
+          node --check christmas-dash/game.js
+          node --test christmas-dash/engine.test.mjs
+      - name: Verify original winter artwork and menu integration
+        run: |
+          test -f shared/asset-pool/quaternius/ultimate-animated-character/Elf.gltf
+          test -f shared/asset-pool/quaternius/ultimate-nature/PineTree_Snow_2.fbx
+          test -f shared/asset-pool/quaternius/ultimate-nature/PineTree_Snow_4.fbx
+          test -f assets/gamebox/kenney/2d/Platformer\ Assets\ Holiday/present_small_red.png
+          test -f assets/gamebox/kenney/icons/Game\ Icons/White/2x/home.png
+          grep -q 'href="christmas-dash/"' index.html
+          grep -q 'href="christmas-dash/"' hub/index.html
+          python3 tools/sync-entry-points.py --check
