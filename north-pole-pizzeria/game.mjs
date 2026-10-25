@@ -88,7 +88,7 @@ function refresh(){
 }
 function startOrder(i){
   orderIndex=i;order=makeOrder(shop.day,i);pizza=newPizza();history=[];stage='prep';remaining=customerSeconds(shop.upgrades);selected='pepperoni';if(!availableToppings(shop.day).includes(selected))selected=availableToppings(shop.day)[0];
-  ingredientsUI();show(null);refresh();sound(610);
+  ingredientsUI();setLabel('bakePercent','0%');$('ovenFill').style.width='0%';setLabel('heatLabel','WARMING UP');show(null);refresh();sound(610);
 }
 function add(id,x,y){
   if(stage!=='prep'||paused)return;
@@ -120,7 +120,7 @@ function serve(){
 }
 $('mainBtn').addEventListener('click',()=>{
   if(paused)return;
-  if(stage==='prep'){stage='oven';pizza.bake=0;refresh();sound(290);}
+  if(stage==='prep'){stage='oven';pizza.bake=0;setLabel('bakePercent','0%');$('ovenFill').style.width='0%';setLabel('heatLabel','WARMING UP');refresh();sound(290);}
   else if(stage==='oven'){if(pizza.bake<.62)return;stage='slice';refresh();sound(540);}
   else if(stage==='slice'||stage==='ready')serve();
 });
