@@ -87,7 +87,7 @@ function refresh(){
   paint();
 }
 function startOrder(i){
-  orderIndex=i;order=makeOrder(shop.day,i);pizza=newPizza();history=[];stage='prep';remaining=customerSeconds(shop.upgrades);selected='pepperoni';if(!availableToppings(shop.day).includes(selected))selected=availableToppings(shop.day)[0];
+  orderIndex=i;order=makeOrder(shop.day,i);pizza=newPizza();history=[];stage='prep';remaining=customerSeconds(shop.upgrades);selected='sauce';
   ingredientsUI();setLabel('bakePercent','0%');$('ovenFill').style.width='0%';setLabel('heatLabel','WARMING UP');show(null);refresh();sound(610);
 }
 function add(id,x,y){
@@ -215,7 +215,15 @@ function paint(){
     for(let j=0;j<74;j++){let a=r()*TWO_PI,dist=Math.sqrt(r())*189;circle(cx+Math.cos(a)*dist,cy+Math.sin(a)*dist,1+r()*3,r()>.5?'#f17c4c':'#ae342a')}
   }
   if(pizza.cheese){
-    circle(cx,cy,pizza.sauce?191:197,'#f5d77bbb');
+    circle(cx,cy,pizza.sauce?191:197,pizza.sauce?'#f9dca28c':'#f6db9ad7');
+    // Uneven melted mozzarella islands leave the red tomato sauce visible.
+    for(let j=0;j<27;j++){
+      const angle=r()*TWO_PI,dist=Math.sqrt(r())*164;
+      const px=cx+Math.cos(angle)*dist,py=cy+Math.sin(angle)*dist;
+      ctx.save();ctx.translate(px,py);ctx.rotate(r()*TWO_PI);
+      ctx.beginPath();ctx.ellipse(0,0,8+r()*20,6+r()*13,0,0,TWO_PI);
+      ctx.fillStyle=r()>.35?'#fff0b5da':'#f6d17cbb';ctx.fill();ctx.restore();
+    }
     for(let j=0;j<290;j++){
       let a=r()*TWO_PI,dist=Math.sqrt(r())*184,x=cx+Math.cos(a)*dist,y=cy+Math.sin(a)*dist;
       ctx.save();ctx.translate(x,y);ctx.rotate(r()*TWO_PI);ctx.fillStyle=r()>.36?'#fff0ac':'#e6ae57';
