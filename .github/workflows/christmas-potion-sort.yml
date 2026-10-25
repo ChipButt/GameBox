@@ -1,0 +1,52 @@
+name: Santa's Potion Sort checks
+on:
+  push:
+    paths:
+      - 'christmas-potion-sort/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - 'hub/chipin-gamebox.css'
+      - '.github/workflows/christmas-potion-sort.yml'
+  pull_request:
+    paths:
+      - 'christmas-potion-sort/**'
+      - 'index.html'
+      - 'hub/index.html'
+      - '.github/workflows/christmas-potion-sort.yml'
+  workflow_dispatch:
+jobs:
+  unit-and-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify generated puzzles and GameBox listing
+        run: |
+          node --check christmas-potion-sort/engine.mjs
+          node --check christmas-potion-sort/browser-smoke.cjs
+          node --test christmas-potion-sort/engine.test.mjs
+          python3 tools/sync-entry-points.py --check
+          grep -q 'href="christmas-potion-sort/"' index.html
+          grep -q 'href="christmas-potion-sort/"' hub/index.html
+          test -f 'assets/gamebox/kenney/2d/Background Elements Remastered/treePineSnow.png'
+          test -f 'assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_red.png'
+      - name: Install browser testing
+        run: npm install --no-save --no-package-lock playwright-core@1.56.1
+      - name: Verify Chromium
+        run: which google-chrome || which chromium
+      - name: Start local GameBox
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 >/tmp/potion-http.log 2>&1 &
+          sleep 2
+      - name: Test three mobile sizes and play to victory
+        run: node christmas-potion-sort/browser-smoke.cjs
+      - name: Collect screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: christmas-potion-sort-mobile
+          path: christmas-potion-sort/*.png
+          if-no-files-found: ignore
