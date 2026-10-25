@@ -168,16 +168,16 @@ test('the majority of sections now close all three lanes and force jump or duck'
       }else{
         streak=0;
       }
-      assert.ok(streak<=4,'after four forced sections the player needs breathing room');
+      assert.ok(streak<=6,'after six forced sections the player needs breathing room');
     }
     samples.push(forcedCount/400);
     assert.ok(jumps>40&&ducks>40,'mandatory routes need varied jump AND duck challenges');
     assert.ok(maximum>1,'back-to-back mandatory moves must occur');
   }
-  assert.ok(samples[0]>.5,'majority of the opening sections must require a move');
-  assert.ok(samples[2]>.72,'midgame must require jump or duck at least 72% of rows');
-  assert.ok(samples[5]>.8,'late game must require jump or duck at least 80% of rows');
-  assert.ok(samples[5]>samples[0]+.22,'later stages must be noticeably harder');
+  assert.ok(samples[0]>.57,'the majority of opening sections must require a move');
+  assert.ok(samples[2]>.75,'midgame must require jump or duck in at least 75% of rows');
+  assert.ok(samples[5]>.82,'late game must require jump or duck in at least 82% of rows');
+  assert.ok(samples[5]>samples[0]+.20,'later stages must be noticeably harder');
 });
 
 test('successive mandatory jumps leave enough time to land at the maximum pace',()=>{
