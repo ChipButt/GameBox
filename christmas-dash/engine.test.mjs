@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRun, startRun, steer, jump, duck, advance, spawnRow} from './engine.mjs';
-test('all generated rows have a hazard-free, gift-bearing route',()=>{
+test('all generated rows offer a safe route or a clearly actionable jump/duck route',()=>{
   const run=createRun(()=>0.49);
   run.rows=4; run.distance=500;
   for(let i=0;i<80;i++){
@@ -9,7 +9,10 @@ test('all generated rows have a hazard-free, gift-bearing route',()=>{
     const hazardLanes = new Set(run.objects.filter(o=>o.kind!=='gift').map(o=>o.lane));
     const giftLanes = new Set(run.objects.filter(o=>o.kind==='gift').map(o=>o.lane));
     assert.equal(run.objects.filter(o=>o.kind==='gift').length,3);
-    assert.ok([0,1,2].some(l=>!hazardLanes.has(l)&&giftLanes.has(l)));
+    assert.ok([0,1,2].some(l=>{
+      const hazards=run.objects.filter(o=>o.kind!=='gift'&&o.lane===l);
+      return giftLanes.has(l) && (hazards.length===0 || (hazards.length===1 && ['crate','arch'].includes(hazards[0].kind)));
+    }));
   }
 });
 test('lane changes stay inside the three lanes',()=>{
@@ -44,4 +47,28 @@ test('gifts score only on lane-specific contact',()=>{
   r.objects=[{id:1,kind:'gift',lane:1,z:4.8,hit:false},{id:2,kind:'gift',lane:0,z:4.8,hit:false}];
   assert.equal(advance(r,.03)[0].type,'gift');
   assert.equal(r.gifts,1);assert.ok(r.score>=25);
+});
+test('the opening encounter is not empty and challenge escalates by 110 metres',()=>{
+  const r=createRun(()=>0.4);
+  spawnRow(r);
+  assert.ok(r.objects.some(o=>o.kind!=='gift'),'first row must contain an obstacle');
+  assert.ok(r.objects.every(o=>o.z<=-40),'hazards must remain visible with reaction time');
+  r.distance=240;
+  r.objects=[];
+  spawnRow(r);
+  assert.equal(r.objects.filter(o=>o.kind!=='gift').length,2,'midgame must have two hazard lanes');
+  r.distance=480;
+  r.objects=[];
+  spawnRow(r);
+  assert.equal(r.objects.filter(o=>o.kind!=='gift').length,3,'advanced stages occasionally require jumping or ducking');
+});
+test('pace rises quickly and the distance accumulator updates accurately',()=>{
+  const r=createRun(()=>0.99);
+  startRun(r);
+  r.spawnIn=99999;
+  for(let i=0;i<100;i++)advance(r,.02);
+  assert.ok(r.distance>=41 && r.distance<45,'first two seconds should cover about 42m');
+  r.distance=700;
+  advance(r,.02);
+  assert.ok(r.speed>31,'late game should be substantially faster');
 });
