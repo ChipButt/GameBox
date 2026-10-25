@@ -54,7 +54,9 @@ if(!executable)throw Error('Chromium binary unavailable');
     };
     await drag(size.width*.68,size.width*.32,size.height*.44,size.height*.44);
     await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='0',null,{timeout:1500});
+    console.log('SWIPE LEFT',await page.locator('#world').evaluate(el=>({lane:el.dataset.lane,status:el.dataset.status,pose:el.dataset.pose,distance:document.querySelector('#distance').textContent})));
     await drag(size.width*.32,size.width*.68,size.height*.44,size.height*.44);
+    console.log('SWIPE RIGHT',await page.locator('#world').evaluate(el=>({lane:el.dataset.lane,status:el.dataset.status,pose:el.dataset.pose,distance:document.querySelector('#distance').textContent})));
     await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='1',null,{timeout:1500});
     // A tap or vertical swipe must NOT trigger Jump or Duck.
     await page.mouse.click(size.width*.5,size.height*.44);
