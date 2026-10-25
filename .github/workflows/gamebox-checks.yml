@@ -32,6 +32,9 @@ jobs:
           node --check snowball-knockdown/game.js
           node --test snowball-knockdown/engine.test.cjs
           node --test snow-shoveller/game.test.cjs
+          node --check santas-arrow-escape/engine.mjs
+          node --check santas-arrow-escape/game.mjs
+          node --test santas-arrow-escape/engine.test.mjs
           node --check gift-bubble-shooter/game.js
           node --test gift-bubble-shooter/game.test.cjs
           node --check santa-invaders/game.js
@@ -67,6 +70,11 @@ jobs:
           test -f snowball-knockdown/style.css
           test -f snowball-knockdown/engine.js
           test -f snowball-knockdown/game.js
+          test -f santas-arrow-escape/index.html
+          test -f santas-arrow-escape/style.css
+          test -f santas-arrow-escape/game.mjs
+          test -f santas-arrow-escape/engine.mjs
+          test -f santas-arrow-escape/engine.test.mjs
           test -f gift-bubble-shooter/index.html
           test -f gift-bubble-shooter/style.css
           test -f gift-bubble-shooter/game.js
