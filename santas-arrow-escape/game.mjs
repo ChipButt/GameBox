@@ -1,13 +1,13 @@
 import {generateLevel,removeArrow,isFree,freePaths,direction} from './engine.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('board'),ctx=canvas.getContext('2d',{alpha:true});
-const STORAGE='gamebox-santas-arrow-escape-v1',MAX_LEVEL=40;
+const STORAGE='gamebox-santas-arrow-escape-v1',MAX_LEVEL=40,MAX_HEARTS=3,MAX_HINTS=1;
 const COLORS=['#b74758','#2f8373','#507cb5','#91608d','#be8538'];
 const LABELS=['Snowfall','Twinkling Trees','Toy Workshop','Candy Cane Lane','Winter Wonderland','North Pole Night','Blizzard'];
 const overlays=['intro','menu','levelPicker','result'].map($);
 const saved=(()=>{try{return JSON.parse(localStorage.getItem(STORAGE)||'{}')}catch{return {}}})();
 let progress={unlocked:Math.min(MAX_LEVEL,Math.max(1,saved.unlocked||1)),best:saved.best||{},seen:!!saved.seen,sound:saved.sound!==false,level:Math.min(MAX_LEVEL,Math.max(1,saved.level||1))};
-let board,lives=5,hints=3,usedHint=false,originalCount=0,animation=null,hintTarget=null,hintUntil=0,selected=null,highlightBad=null,shakeUntil=0,particles=[];
+let board,lives=MAX_HEARTS,hints=MAX_HINTS,usedHint=false,originalCount=0,animation=null,hintTarget=null,hintUntil=0,selected=null,highlightBad=null,shakeUntil=0,particles=[];
 let geometry={width:0,height:0,cell:20,ox:0,oy:0},toastTimer=0,actx=null,winning=false;
 const store=()=>{try{localStorage.setItem(STORAGE,JSON.stringify(progress));}catch{}};
 function sound(type){
@@ -49,7 +49,7 @@ function resize(){
 const point=([x,y])=>[geometry.ox+(x+.5)*geometry.cell,geometry.oy+(y+.5)*geometry.cell];
 function roundLine(pts,color,emphasis=false,opacity=1){
  if(pts.length<2)return;
- const cell=geometry.cell,thick=Math.max(3.2,cell*.27);
+ const cell=geometry.cell,thick=Math.max(3.2,cell*.33);
  ctx.save();ctx.globalAlpha=opacity;
  ctx.lineCap='round';ctx.lineJoin='round';
  ctx.beginPath();pts.forEach((p,i)=>{const [x,y]=point(p);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
@@ -138,7 +138,7 @@ function updateHud(){
 }
 function loadLevel(n){
  const level=Math.min(MAX_LEVEL,Math.max(1,n));
- board=generateLevel(level);originalCount=board.paths.length;lives=5;hints=3;usedHint=false;winning=false;
+ board=generateLevel(level);originalCount=board.paths.length;lives=MAX_HEARTS;hints=MAX_HINTS;usedHint=false;winning=false;
  animation=null;selected=null;highlightBad=null;hintTarget=null;particles=[];
  progress.level=level;store();updateHud();resize();
  $('footerTip').textContent='Tap a clear arrow to free its route.';
@@ -151,7 +151,7 @@ function finish(won){
  $('resultTitle').textContent=won?'All arrows escaped!':'Oh snow!';
  let stars=0;
  if(won){
-   stars=lives===5&&!usedHint?3:lives>=3?2:1;
+   stars=lives===MAX_HEARTS&&!usedHint?3:lives>=2?2:1;
    progress.best[board.level]=Math.max(progress.best[board.level]||0,stars);
    progress.unlocked=Math.max(progress.unlocked,Math.min(MAX_LEVEL,board.level+1));
    progress.level=Math.min(MAX_LEVEL,board.level+1);store();
