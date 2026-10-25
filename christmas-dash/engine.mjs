@@ -44,8 +44,8 @@ export function spawnRow(run) {
   const hazards = lanes.filter(l => l !== safeLane);
   // The first row contains a real obstacle. Two-lane pressure begins
   // in the first 100m and becomes normal as the player's skill grows.
-  const stage = Math.min(5, Math.floor(run.distance / 120));
-  const twoHazardChance = [0.22, 0.7, 0.9, 1, 1, 1][stage];
+  const stage = Math.min(5, Math.floor(run.distance / 110));
+  const twoHazardChance = [0.46, 0.78, 0.94, 1, 1, 1][stage];
   const count = run.random() < twoHazardChance ? 2 : 1;
   const kinds = run.distance < 50
     ? ['crate', 'snowman']
@@ -57,6 +57,15 @@ export function spawnRow(run) {
   }
   // Reward the safe path without making the next route obvious too early.
   const giftLane = safeLane;
+  // Advanced runs occasionally close all three lanes, but the third
+  // obstacle is always jumpable or duckable — never an unavoidable wall.
+  if (stage >= 3 && run.random() < 0.27 + (stage - 3) * 0.12) {
+    run.objects.push({
+      id: run.nextId(),
+      kind: choose(run.random, ['crate','arch']),
+      lane: safeLane, z: hazardZ, hit: false
+    });
+  }
   for (let n = 0; n < 3; n++) {
     run.objects.push({ id: run.nextId(), kind: 'gift', lane: giftLane, z: hazardZ + 4.8 - n * 2.4, hit: false });
   }
