@@ -42,12 +42,31 @@ if(!exe)throw Error('Chromium unavailable');
           return measurements;
         }
         await assertOneScreen('prep');
+        // Move the physical mouse/finger across the canvas as a human would.
+        // Choosing sauce or cheese alone must not magically fill the pizza.
+        const brush=async ingredient=>{
+          await page.locator('[data-ingredient="'+ingredient+'"]').click();
+          const rect=await page.locator('#pizzaCanvas').boundingBox();
+          for(const [y,a,b] of [[.27,.34,.66],[.36,.26,.74],[.46,.24,.76],[.56,.24,.76],[.65,.27,.73]]){
+            await page.mouse.move(rect.x+rect.width*a,rect.y+rect.height*y);
+            await page.mouse.down();
+            await page.mouse.move(rect.x+rect.width*b,rect.y+rect.height*y,{steps:18});
+            await page.mouse.up();
+          }
+          await page.waitForFunction(ingredient=>Number(document.querySelector('#pizzaCanvas').dataset[ingredient+'Coverage'])>=74,ingredient,{timeout:3000});
+        };
         const rounds=size.width===390?ORDERS_PER_DAY:1;
         for(let i=0;i<rounds;i++){
           const o=makeOrder(1,i);
           assert.equal(await page.locator('#customerName').innerText(),o.customer.toUpperCase());
-          if(o.needed.sauce)await page.locator('[data-ingredient="sauce"]').click();
-          if(o.needed.cheese)await page.locator('[data-ingredient="cheese"]').click();
+          if(i===0){
+            const startCost=await page.locator('#ingredientCost').innerText();
+            await page.locator('[data-ingredient="sauce"]').click();
+            await page.locator('[data-ingredient="cheese"]').click();
+            assert.equal(await page.locator('#ingredientCost').innerText(),startCost,'Selecting a base ingredient must not auto-apply it');
+          }
+          if(o.needed.sauce)await brush('sauce');
+          if(o.needed.cheese)await brush('cheese');
           for(const kind of o.needed.toppings){
             await page.locator('[data-ingredient="'+kind+'"]').click();
             const canvasBox=await page.locator('#pizzaCanvas').boundingBox();
