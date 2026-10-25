@@ -74,8 +74,8 @@ export function paintGlass(ctx,w,h,layers,{amount=layers.length,time=0,colors=[]
      ctx.textAlign="center";ctx.textBaseline="middle";
      ctx.lineWidth=2.2;ctx.strokeStyle="#122b45";ctx.fillStyle="#ffffff";
      const ly=lower-volume*unit*.55;
-     ctx.strokeText((colors[layers[i]]?.name||"?")[0].toUpperCase(),w*.5,ly);
-     ctx.fillText((colors[layers[i]]?.name||"?")[0].toUpperCase(),w*.5,ly);
+     ctx.strokeText((colors[layers[i]]?.symbol||(colors[layers[i]]?.name||"?")[0]).toUpperCase(),w*.5,ly);
+     ctx.fillText((colors[layers[i]]?.symbol||(colors[layers[i]]?.name||"?")[0]).toUpperCase(),w*.5,ly);
    }
  }
  // Glass curvature, specular strip, tiny scattered reflections.
