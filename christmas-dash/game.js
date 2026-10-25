@@ -13,7 +13,8 @@ $('startBest').textContent = best.toLocaleString('en-GB');
 
 let renderer, scene, camera, clock, player, elfModel, mixer, currentRun = createRun();
 let sound = true, audio, loaded = false, lastUi = 0, toastTimeout = 0;
-const visuals = new Map(), snowTrees = [], groundStripes = [], snowflakes = [], decorations = [];
+const visuals = new Map(), snowTrees = [], groundStripes = [], decorations = [];
+let snowField;
 const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({color, roughness:0.78, metalness:0, ...opts});
 const M = {
   snow:mat('#f1fbf8'), snowBlue:mat('#d7ebec'), icy:mat('#b8e9ef', {roughness:.24}),
@@ -99,10 +100,11 @@ function setup() {
       scene.add(post);decorations.push(post);
     }
   }
-  for(let i=0;i<200;i++){
-    const f=ball(scene,M.white, (Math.random()-.5)*50,Math.random()*23, -150+Math.random()*180,.032+Math.random()*.056);
-    f.castShadow=false;snowflakes.push(f);
-  }
+  const snowPositions = new Float32Array(260*3);
+  for(let i=0;i<260;i++){const n=i*3;snowPositions[n]=(Math.random()-.5)*48;snowPositions[n+1]=Math.random()*23;snowPositions[n+2]=-150+Math.random()*180;}
+  const snowGeo=new THREE.BufferGeometry();snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPositions,3));
+  snowField=new THREE.Points(snowGeo,new THREE.PointsMaterial({color:'#ffffff',size:.17,opacity:.85,transparent:true,depthWrite:false}));
+  snowField.frustumCulled=false;scene.add(snowField);
   player=new THREE.Group();player.position.set(0,0,PLAYER_Z);scene.add(player);
   elfModel=makeFallbackElf();player.add(elfModel);
   resize();
@@ -330,10 +332,14 @@ function moveWorld(dt,travel){
   for(const s of groundStripes){s.position.z+=travel;if(s.position.z>20)s.position.z-=280;}
   for(const t of snowTrees){t.position.z+=travel;if(t.position.z>22)t.position.z-=160;}
   for(const d of decorations){d.position.z+=travel;if(d.position.z>22)d.position.z-=169;}
-  for(const f of snowflakes){
-    f.position.y-=dt*.52;f.position.z+=travel*.42;
-    if(f.position.y<0)f.position.y=20+Math.random()*4;
-    if(f.position.z>20)f.position.z=-150;
+  if(snowField){
+    const attribute=snowField.geometry.attributes.position,points=attribute.array;
+    for(let i=0;i<points.length;i+=3){
+      points[i+1]-=dt*.52;points[i+2]+=travel*.42;
+      if(points[i+1]<0)points[i+1]=20+Math.random()*4;
+      if(points[i+2]>20)points[i+2]=-150;
+    }
+    attribute.needsUpdate=true;
   }
 }
 function frame(){
