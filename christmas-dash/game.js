@@ -426,6 +426,7 @@ function frame(){
   }
   // Read-only lane state lets mobile browser smoke tests verify real swipes.
   canvas.dataset.lane=String(currentRun.lane);
+  canvas.dataset.status=currentRun.status;
   const tx=LANES[currentRun.lane];
   player.position.x+=(tx-player.position.x)*Math.min(1,dt*12);
   player.position.y=currentRun.jumpY;
