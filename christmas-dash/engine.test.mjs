@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRun, startRun, steer, jump, duck, advance, spawnRow} from './engine.mjs';
+import {createRun, startRun, steer, jump, duck, releaseDuck, advance, spawnRow} from './engine.mjs';
 test('all generated rows offer a safe route or a clearly actionable jump/duck route',()=>{
   const run=createRun(()=>0.49);
   run.rows=4; run.distance=500;
@@ -71,4 +71,67 @@ test('pace rises quickly and the distance accumulator updates accurately',()=>{
   r.distance=700;
   advance(r,.02);
   assert.ok(r.speed>31,'late game should be substantially faster');
+});
+
+test('jump lands in under 0.6 seconds yet comfortably clears a wooden barricade',()=>{
+  const r=createRun(()=>0.99);startRun(r);r.spawnIn=9999;
+  assert.equal(jump(r),true);
+  let time=0,peak=0;
+  while(r.jumpY>0&&time<1){
+    advance(r,.01);time+=.01;peak=Math.max(peak,r.jumpY);
+  }
+  assert.ok(time>=.48&&time<.6,'jump lasted '+time.toFixed(2)+' seconds');
+  assert.ok(peak>1.2,'elf should clearly rise over the barricade');
+  assert.equal(r.jumpY,0);
+  assert.equal(jump(r),true,'can jump again immediately on landing');
+});
+test('Duck is held while pressed, stands quickly when released, and quick taps are playable',()=>{
+  const held=createRun(()=>0.99);startRun(held);held.spawnIn=9999;
+  duck(held,true);
+  for(let i=0;i<25;i++)advance(held,.02);
+  assert.equal(held.slide,1,'button held for half a second must still duck');
+  releaseDuck(held);
+  for(let i=0;i<4;i++)advance(held,.02);
+  assert.equal(held.slide,0,'release from long hold must stand in under 0.1 seconds');
+  duck(held,true);releaseDuck(held);
+  assert.ok(held.slide>=.2,'very short tap should remain playable');
+  for(let i=0;i<13;i++)advance(held,.02);
+  assert.equal(held.slide,0,'short tap should expire within 0.3 seconds');
+  duck(held);
+  for(let i=0;i<18;i++)advance(held,.02);
+  assert.equal(held.slide,0,'swipe down crouch should end quickly');
+});
+test('middle of three Christmas presents sits directly on top of the jump barricade',()=>{
+  const run=createRun(()=>0.1);spawnRow(run);
+  const gifts=run.objects.filter(o=>o.kind==='gift');
+  const centre=gifts[1];
+  const barricade=run.objects.find(o=>o.kind==='crate'&&o.lane===centre.lane);
+  assert.ok(barricade,'reward lane must sometimes require jumping');
+  assert.equal(gifts.length,3);
+  assert.equal(centre.z,barricade.z,'middle present must be directly above the barricade');
+  assert.ok(centre.height>=.9,'gift should have a real world-space vertical offset');
+  assert.ok(centre.height+.85-.445>1.24,'present bottom must be higher than the top of the barricade');
+  assert.ok(gifts[0].z>centre.z&&gifts[2].z<centre.z,'other gifts lead in and out');
+  assert.equal(gifts[0].height,0);
+  assert.equal(gifts[2].height,0);
+});
+test('barricade-top present is collected on a successful jump but not on foot',()=>{
+  const create=()=>{
+    const r=createRun(()=>.99);startRun(r);r.spawnIn=9999;
+    r.objects=[
+      {id:1,kind:'crate',lane:1,z:4.9,hit:false},
+      {id:2,kind:'gift',lane:1,z:4.9,height:1,hit:false}
+    ];
+    return r;
+  };
+  const standing=create();
+  const fail=advance(standing,.03);
+  assert.equal(fail[0].type,'crash');
+  assert.equal(standing.gifts,0,'cannot walk through crate to receive its gift');
+  const airborne=create();
+  jump(airborne);
+  for(let i=0;i<3;i++)advance(airborne,.05);
+  const success=advance(airborne,.03);
+  assert.deepEqual(success.map(e=>e.type),['dodge','gift']);
+  assert.equal(airborne.gifts,1);
 });
