@@ -27,7 +27,7 @@ export function generateLevel(level){
     if(!clear)continue;
     let x=hx,y=hy,dir=(d+2)%4,forward=0;
     const nodes=[[x,y]],seen=new Set([key(x,y)]);
-    const maxLength=4+integer(rng,5)+Math.min(5,Math.floor(n/10));
+    const maxLength=4+integer(rng,4)+Math.min(2,Math.floor(n/12));
     const minLength=3+integer(rng,2);
     for(let z=1;z<maxLength;z++){
       const choices=[dir];
@@ -43,6 +43,18 @@ export function generateLevel(level){
       if(nodes.length>=minLength&&rng()<(n<7?.24:.16))break;
     }
     if(nodes.length<minLength)continue;
+    // Prefer paths which actually block currently open exit lanes.
+    // This makes extraction order matter more as the campaign progresses.
+    const candidateCells=new Set(nodes.map(([px,py])=>key(px,py)));
+    let blocks=0;
+    for(const existing of paths){
+      if(!isFree({cols,rows,paths},existing))continue;
+      const [ex,ey]=direction(existing),[ehx,ehy]=existing.points.at(-1);
+      for(let qx=ehx+ex,qy=ehy+ey;qx>=0&&qx<cols&&qy>=0&&qy<rows;qx+=ex,qy+=ey){
+        if(candidateCells.has(key(qx,qy))){blocks++;break;}
+      }
+    }
+    if(blocks===0&&paths.length>1&&attempt<Math.max(2200,target*150)*.7&&rng()<(n<=4?.78:.91))continue;
     nodes.reverse();
     const id=paths.length;
     paths.push({id,points:nodes,color:id%5});
