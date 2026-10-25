@@ -34,6 +34,9 @@ async function hit(page,puzzle,path){
    assert.ok(dimensions.footer<=dimensions.vh+3,"Buttons beneath the viewport: "+JSON.stringify(dimensions));
    let state=generateLevel(1),initial=state.paths.length;
    assert.equal(Number(await page.locator("#remaining").innerText()),initial);
+   assert.ok(initial>=18,"Early-level board should be noticeably more crowded");
+   assert.equal(await page.locator(".lives svg").count(),3,"Challenge mode should start with three hearts");
+   assert.equal(await page.locator("#hintCount").innerText(),"1 LEFT","Challenge mode should allow one hint");
    const blocked=state.paths.find(p=>!isFree(state,p));
    if(blocked){
     await hit(page,state,blocked);
