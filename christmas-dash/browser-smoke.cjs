@@ -7,7 +7,7 @@ if(!executable)throw Error('Chromium binary unavailable');
 (async()=>{
  const browser=await chromium.launch({executablePath:executable,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
  try{
-  for(const size of [{width:390,height:844},{width:360,height:740}]){
+  for(const size of [{width:390,height:844},{width:360,height:740},{width:320,height:568}]){
    const page=await browser.newPage({viewport:size,isMobile:true,hasTouch:true,deviceScaleFactor:1});
    const errors=[],missing=[],assets=new Set();
    page.on('pageerror',e=>errors.push(e.message));
@@ -26,22 +26,41 @@ if(!executable)throw Error('Chromium binary unavailable');
     assert.ok(assets.has('PineTree_Snow_2.fbx'),'Real snow-covered pine asset did not load');
     assert.ok(Number(await page.locator('#world').getAttribute('data-skin-corrected'))>0,'Actual imported elf Skin material must be recoloured');
     const actionLabels=await page.locator('[data-action]').allTextContents();
-    for(const label of ['LEFT','RIGHT','JUMP','DUCK'])assert.ok(actionLabels.some(text=>text.includes(label)),'Missing labelled '+label+' button');
-    // Keep all four controls on one ergonomic row (Jump and Duck adjacent).
+    assert.equal(actionLabels.length,2,'There should be only TWO action buttons: Jump and Duck');
+    for(const label of ['JUMP','DUCK'])assert.ok(actionLabels.some(text=>text.includes(label)),'Missing '+label+' button');
+    assert.equal(await page.locator('[data-action="left"],[data-action="right"],.steerControl').count(),0,
+      'Steering must use swipes, not left/right buttons');
     const boxes={};
-    for(const action of ['left','jump','slide','right'])
+    for(const action of ['jump','slide'])
       boxes[action]=await page.locator('[data-action="'+action+'"]').boundingBox();
-    assert.ok(boxes.left&&boxes.jump&&boxes.slide&&boxes.right,'All controls visible');
-    assert.ok(boxes.left.x<boxes.jump.x&&boxes.jump.x<boxes.slide.x&&boxes.slide.x<boxes.right.x,
-      'Expected LEFT | JUMP | DUCK | RIGHT controls');
-    assert.ok(Math.abs(boxes.jump.y-boxes.slide.y)<3,'Jump and Duck must be side by side');
-    assert.ok(boxes.jump.x+boxes.jump.width<=boxes.slide.x+2,'Jump and Duck must not overlap');
+    assert.ok(boxes.jump&&boxes.slide,'Both action buttons must be visible');
+    assert.ok(boxes.jump.width>=90&&boxes.jump.height>=90&&boxes.slide.width>=90&&boxes.slide.height>=90,
+      'Jump and Duck must be large thumb-friendly targets');
+    assert.ok(boxes.jump.x<=30,'Jump must be in the bottom-left corner');
+    assert.ok(boxes.slide.x+boxes.slide.width>=size.width-30,'Duck must be in the bottom-right corner');
+    assert.ok(Math.abs(boxes.jump.y-boxes.slide.y)<3,'Jump and Duck must share the lower corners');
+    assert.ok(boxes.jump.y>size.height-165&&boxes.slide.y>size.height-165,'Both action buttons must be near the bottom');
+    assert.ok(boxes.jump.x+boxes.jump.width+35<boxes.slide.x,'Leave the middle of the screen clear for swiping');
     const dimensions=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,screenWidth:innerWidth,canvas:document.querySelector('canvas').getBoundingClientRect().toJSON()}));
     assert.ok(dimensions.scrollWidth<=dimensions.screenWidth+3,'Horizontal overflow');
     assert.ok(dimensions.canvas.width>=dimensions.screenWidth-3,'Game fills width');
     await page.screenshot({path:'christmas-dash/menu-'+size.width+'.png'});
     await page.locator('#startBtn').click();
     assert.equal(await page.locator('#startOverlay').isVisible(),false);
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='1');
+    const drag=async(fromX,toX,fromY,toY)=>{
+      await page.mouse.move(fromX,fromY);await page.mouse.down();
+      await page.mouse.move(toX,toY,{steps:5});await page.mouse.up();
+    };
+    await drag(size.width*.68,size.width*.32,size.height*.44,size.height*.44);
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='0',null,{timeout:1500});
+    await drag(size.width*.32,size.width*.68,size.height*.44,size.height*.44);
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.lane==='1',null,{timeout:1500});
+    // A tap or vertical swipe must NOT trigger Jump or Duck.
+    await page.mouse.click(size.width*.5,size.height*.44);
+    await drag(size.width*.5,size.width*.5,size.height*.3,size.height*.52);
+    assert.equal(await page.locator('#world').getAttribute('data-lane'),'1');
+    assert.equal(await page.locator('#world').getAttribute('data-pose'),'run');
     // A held Duck stays down, then returns to RUN immediately on button release.
     await page.mouse.move(boxes.slide.x+boxes.slide.width/2,boxes.slide.y+boxes.slide.height/2);
     await page.mouse.down();
@@ -50,10 +69,11 @@ if(!executable)throw Error('Chromium binary unavailable');
     assert.equal(await page.locator('#world').getAttribute('data-pose'),'duck','Duck should remain held');
     await page.mouse.up();
     await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='run',null,{timeout:1200});
-    // A jump must return to running automatically rather than hanging mid-air.
-    await page.keyboard.down('Space');
-    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='jump',null,{timeout:1000});
-    await page.keyboard.up('Space');
+    // Jump's prominent LEFT-CORNER button initiates a quick complete jump.
+    await page.mouse.move(boxes.jump.x+boxes.jump.width/2,boxes.jump.y+boxes.jump.height/2);
+    await page.mouse.down();
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='jump',null,{timeout:1200});
+    await page.mouse.up();
     await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='run',null,{timeout:1500});
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('Space');
