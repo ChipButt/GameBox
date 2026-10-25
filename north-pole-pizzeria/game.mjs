@@ -296,14 +296,20 @@ function paint(){
     const x=mark.x*560,y=mark.y*560,rr=63;
     const seeded=rand(i*641+193);
     ctx.save();ctx.translate(x,y);ctx.rotate(seeded()*TWO_PI);
-    ctx.beginPath();ctx.ellipse(0,0,rr*.95,rr*.81,0,0,TWO_PI);
-    ctx.fillStyle='#f8da88d0';ctx.fill();
-    for(let k=0;k<19;k++){
+    // Scattered shreds and small melted islands, not an automatic yellow disc.
+    // The hand-spread tomato sauce should remain visible between them.
+    for(let k=0;k<4;k++){
+      const a=seeded()*TWO_PI,dist=Math.sqrt(seeded())*39;
+      ctx.beginPath();ctx.ellipse(Math.cos(a)*dist,Math.sin(a)*dist,
+        9+seeded()*11,6+seeded()*7,seeded()*TWO_PI,0,TWO_PI);
+      ctx.fillStyle=seeded()>.32?'#fff0b5ad':'#f7cc79a1';ctx.fill();
+    }
+    for(let k=0;k<13;k++){
       const a=seeded()*TWO_PI,dist=Math.sqrt(seeded())*53;
       ctx.save();ctx.translate(Math.cos(a)*dist,Math.sin(a)*dist);
       ctx.rotate(seeded()*TWO_PI);
-      ctx.fillStyle=seeded()>.4?'#fff2b9':'#eab65c';
-      ctx.fillRect(-3,-1.5,6+seeded()*8,3+seeded()*4);ctx.restore();
+      ctx.fillStyle=seeded()>.38?'#fff5c5':'#f4cb71';
+      ctx.fillRect(-3,-1.5,6+seeded()*8,2.5+seeded()*3.5);ctx.restore();
     }
     ctx.restore();
   }
