@@ -54,6 +54,7 @@ function updateTop(){
   setLabel('ingredientCost',money(pizza.spend));
   setLabel('customerName',order?.customer.toUpperCase()||'CUSTOMER');
   setLabel('orderText',order?.description||'');
+  setLabel('orderReminder',order?.description||'');
   setLabel('orderPrice',money(order?.price||0));
   if(order)$('customerPortrait').innerHTML=portrait(order.portrait);
   const pct=Math.max(0,Math.round(100*remaining/customerSeconds(shop.upgrades)));
