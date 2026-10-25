@@ -27,6 +27,7 @@ async function hit(page,puzzle,path){
    assert.equal(await page.locator("#intro").isVisible(),false);
    await page.locator("#board").waitFor({state:"visible"});
    const box=await page.locator("#board").boundingBox();
+   console.log("LAYOUT",size,await page.evaluate(()=>Object.fromEntries([".gameShell",".playZone",".boardFrame",".iceBoard","#board"].map(q=>{const r=document.querySelector(q).getBoundingClientRect();return [q,{x:r.x,y:r.y,w:r.width,h:r.height}]}))),"innerWidth",await page.evaluate(()=>innerWidth));
    assert.ok(box.width>245&&box.height>230,"Board should dominate phone: "+JSON.stringify(box));
    const dimensions=await page.evaluate(()=>({width:document.documentElement.scrollWidth,vw:innerWidth,footer:document.querySelector(".bottomBar").getBoundingClientRect().bottom,vh:innerHeight}));
    assert.ok(dimensions.width<=dimensions.vw+3,"Horizontal scrolling: "+JSON.stringify(dimensions));
