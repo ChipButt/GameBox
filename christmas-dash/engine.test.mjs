@@ -31,7 +31,7 @@ test('a standing runner collides with an unavoidable snowman in their lane',()=>
 test('jump clears crate; slide clears arch; incorrect move crashes',()=>{
   for(const [kind,action] of [['crate',jump],['arch',duck]]){
     const r=createRun(()=>0);startRun(r);r.spawnIn=999;
-    action(r);if(kind==='crate')advance(r,.12);
+    action(r);if(kind==='crate')for(let t=0;t<3;t++)advance(r,.05);
     r.objects=[{id:1,kind,lane:1,z:4.9,hit:false}];
     assert.equal(advance(r,.03)[0].type,'dodge',kind);
   }
