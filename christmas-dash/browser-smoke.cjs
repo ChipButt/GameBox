@@ -27,12 +27,34 @@ if(!executable)throw Error('Chromium binary unavailable');
     assert.ok(Number(await page.locator('#world').getAttribute('data-skin-corrected'))>0,'Actual imported elf Skin material must be recoloured');
     const actionLabels=await page.locator('[data-action]').allTextContents();
     for(const label of ['LEFT','RIGHT','JUMP','DUCK'])assert.ok(actionLabels.some(text=>text.includes(label)),'Missing labelled '+label+' button');
+    // Keep all four controls on one ergonomic row (Jump and Duck adjacent).
+    const boxes={};
+    for(const action of ['left','jump','slide','right'])
+      boxes[action]=await page.locator('[data-action="'+action+'"]').boundingBox();
+    assert.ok(boxes.left&&boxes.jump&&boxes.slide&&boxes.right,'All controls visible');
+    assert.ok(boxes.left.x<boxes.jump.x&&boxes.jump.x<boxes.slide.x&&boxes.slide.x<boxes.right.x,
+      'Expected LEFT | JUMP | DUCK | RIGHT controls');
+    assert.ok(Math.abs(boxes.jump.y-boxes.slide.y)<3,'Jump and Duck must be side by side');
+    assert.ok(boxes.jump.x+boxes.jump.width<=boxes.slide.x+2,'Jump and Duck must not overlap');
     const dimensions=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,screenWidth:innerWidth,canvas:document.querySelector('canvas').getBoundingClientRect().toJSON()}));
     assert.ok(dimensions.scrollWidth<=dimensions.screenWidth+3,'Horizontal overflow');
     assert.ok(dimensions.canvas.width>=dimensions.screenWidth-3,'Game fills width');
     await page.screenshot({path:'christmas-dash/menu-'+size.width+'.png'});
     await page.locator('#startBtn').click();
     assert.equal(await page.locator('#startOverlay').isVisible(),false);
+    // A held Duck stays down, then returns to RUN immediately on button release.
+    await page.mouse.move(boxes.slide.x+boxes.slide.width/2,boxes.slide.y+boxes.slide.height/2);
+    await page.mouse.down();
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='duck',null,{timeout:2500});
+    await page.waitForTimeout(210);
+    assert.equal(await page.locator('#world').getAttribute('data-pose'),'duck','Duck should remain held');
+    await page.mouse.up();
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='run',null,{timeout:1200});
+    // A jump must return to running automatically rather than hanging mid-air.
+    await page.keyboard.down('Space');
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='jump',null,{timeout:1000});
+    await page.keyboard.up('Space');
+    await page.waitForFunction(()=>document.querySelector('#world').dataset.pose==='run',null,{timeout:1500});
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('Space');
     // The revised game is deliberately much harder. Freeze before the
