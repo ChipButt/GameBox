@@ -42,7 +42,10 @@ async function hit(page,puzzle,path){
    }
    await page.screenshot({path:"santas-arrow-escape/play-"+size.width+".png"});
    const free=freePaths(state)[0];
+   console.log("DEBUG free path",free.id,free.points,"board",box);
    await hit(page,state,free);
+   await page.waitForTimeout(900);
+   console.log("DEBUG after tap",await page.evaluate(()=>({remaining:document.querySelector("#remaining").textContent,emptyHearts:document.querySelectorAll(".lives svg.empty").length,toast:document.querySelector("#boardToast").textContent,footer:document.querySelector("#footerTip").textContent})));
    await page.waitForFunction(n=>Number(document.querySelector("#remaining").textContent)===n-1,initial,{timeout:3000});
    state=removeArrow(state,free.id).board;
    assert.equal(Number(await page.locator("#remaining").innerText()),initial-1);
