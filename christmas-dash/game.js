@@ -271,15 +271,24 @@ function inputs(){
     else if(e.code==='Enter'&&!e.repeat&&currentRun.status==='ready')begin();
   });
   window.addEventListener('keyup',e=>{if(e.code==='ArrowDown'||e.code==='KeyS')releaseDuck(currentRun);});
+  // Mobile steering is entirely swipe-based. Never treat canvas taps as jumps
+  // or vertical swipes as ducks: those actions belong to the corner buttons.
+  // Match pointer IDs so a second finger pressing Jump/Duck cannot steer.
   let gesture=null;
-  canvas.addEventListener('pointerdown',e=>{gesture={x:e.clientX,y:e.clientY};},{passive:true});
-  canvas.addEventListener('pointerup',e=>{
-    if(!gesture)return;
-    const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;
-    if(Math.max(Math.abs(dx),Math.abs(dy))<28){action('jump');return;}
-    action(Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'jump':'slide'));
+  canvas.addEventListener('pointerdown',e=>{
+    if(gesture || currentRun.status!=='running')return;
+    gesture={id:e.pointerId,x:e.clientX,y:e.clientY};
   },{passive:true});
-  canvas.addEventListener('pointercancel',()=>gesture=null,{passive:true});
+  canvas.addEventListener('pointerup',e=>{
+    if(!gesture || gesture.id!==e.pointerId)return;
+    const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
+    gesture=null;
+    if(Math.abs(dx)>=32 && Math.abs(dx)>Math.abs(dy)*1.25)
+      action(dx<0?'left':'right');
+  },{passive:true});
+  canvas.addEventListener('pointercancel',e=>{
+    if(gesture?.id===e.pointerId)gesture=null;
+  },{passive:true});
   let duckPointerId=null;
   for(const b of document.querySelectorAll('[data-action]')){
     b.addEventListener('pointerdown',e=>{
@@ -415,6 +424,8 @@ function frame(){
   for(const [id,visual] of visuals){
     if(!currentRun.objects.some(o=>o.id===id)){scene.remove(visual);visuals.delete(id);}
   }
+  // Read-only lane state lets mobile browser smoke tests verify real swipes.
+  canvas.dataset.lane=String(currentRun.lane);
   const tx=LANES[currentRun.lane];
   player.position.x+=(tx-player.position.x)*Math.min(1,dt*12);
   player.position.y=currentRun.jumpY;
