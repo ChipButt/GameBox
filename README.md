@@ -233,3 +233,23 @@ The interface is designed for phones first, with large touch targets and layouts
 ## Run
 
 Deploy the repository with GitHub Pages or another HTTPS static host. No application backend, API key or external database is required. Saved setups and single-device progression use browser `localStorage`, so they remain on that browser/device.
+
+## Advent 2026 and standalone collections
+
+The public `GameBox` home now contains two intentionally separated collections:
+**Advent 2026 (20 mini-games)** and **Standalone GameBox (16 independent games)**.
+The Advent collection also has a dedicated page at `advent-2026/`, branded as
+the **North Pole Playroom**, with the same mini-game labels and artwork frames.
+`advent-2026/catalog.json` is the approved, ordered catalogue.
+
+**Compatibility rule:** Categorising or styling a game does not move its
+original source directory, change an entry URL, rewrite storage keys, change
+game scoring or assign Advent unlock dates. Those concerns remain with each
+game. The standalone Card Deck and Coin Flip share their existing GameBox player
+roster and controls. My Place is listed as standalone; Christmas Elf Test remains
+directly accessible to developers but is not on either public catalogue.
+
+Run `node --test tools/check-gamebox-collections.test.mjs` and
+`python3 tools/sync-entry-points.py --check` when updating the collection.
+The dedicated `GameBox Collections` GitHub workflow also tests actual mobile
+and desktop page navigation and checks that all 20 original Advent URLs load.

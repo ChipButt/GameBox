@@ -1,0 +1,46 @@
+name: GameBox Collections
+on:
+  push:
+    paths:
+      - 'hub/index.html'
+      - 'index.html'
+      - 'hub/gamebox-collections.css'
+      - 'advent-2026/**'
+      - 'tools/check-gamebox-collections.test.mjs'
+      - 'tools/collections-browser-smoke.cjs'
+      - '.github/workflows/gamebox-collections.yml'
+  pull_request:
+    paths:
+      - 'hub/index.html'
+      - 'index.html'
+      - 'hub/gamebox-collections.css'
+      - 'advent-2026/**'
+      - 'tools/check-gamebox-collections.test.mjs'
+      - 'tools/collections-browser-smoke.cjs'
+jobs:
+  verify-collections:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify user-approved game mapping, original URLs and synced home
+        run: |
+          node --test tools/check-gamebox-collections.test.mjs
+          python3 tools/sync-entry-points.py --check
+      - name: Prepare real browser checks
+        run: |
+          npm install --no-save --no-package-lock playwright-core@1.56.1
+          which google-chrome || which chromium
+          python3 -m http.server 8787 --bind 127.0.0.1 > /tmp/gamebox-collections-http.log 2>&1 &
+          sleep 2
+      - name: Check mobile and desktop navigation, collection identity and all 20 live game routes
+        run: node tools/collections-browser-smoke.cjs
+      - name: Upload layout screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gamebox-collections-screenshots
+          path: tools/collection-*.png
+          if-no-files-found: ignore
