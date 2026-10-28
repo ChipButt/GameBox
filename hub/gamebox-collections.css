@@ -53,3 +53,14 @@
 .portalFooter a{color:#2b6855;text-decoration:none}
 @media(max-width:620px){.collectionWelcome{padding:19px 15px}.collectionChooser{grid-template-columns:1fr}.collectionPane{padding:14px 8px 10px;border-radius:19px}.collectionHeader{display:block;padding:1px 8px 16px}.collectionVisit{margin-top:11px}.collectionPane .collectionGrid{padding:22px 10px 18px;gap:13px}.collectionAdvent .collectionGrid .toyGame::before{font-size:8px}.portalHero{padding:24px 13px}.portalHeroStars{font-size:18px;letter-spacing:12px}.portalBrand{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.collectionChoice{transition:none}}
+
+/* Restore readable typography on every light-backed catalogue tile. */
+.collectionPane .toyBox :is(.toyGameSantaSort,.toyGameNorthPole,.toyGameGiftShooter,.toyGameAncient,.toyGameCore,.toyGameSweet,.toyGameXmasLights,.toyGamePipe,.toyGameBingo,.toyGameChristmas,.toyGameMarble) .gameTile strong{
+  color:#163b51;text-shadow:none
+}
+.collectionPane .toyBox :is(.toyGameSantaSort,.toyGameNorthPole,.toyGameGiftShooter,.toyGameAncient,.toyGameCore,.toyGameSweet,.toyGameXmasLights,.toyGamePipe,.toyGameBingo,.toyGameChristmas,.toyGameMarble) .gameTile small{
+  color:#446776;text-shadow:none
+}
+/* The previous logo referenced a file that is not in the repository.
+   Show the real brand name in text instead of a broken image icon. */
+.brandSource{display:inline-flex;align-items:center;flex-shrink:0;color:#234a74;font:900 12px/1.1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;border:2px solid #bad8ce;border-radius:9px;padding:9px;background:#fffdf4}
