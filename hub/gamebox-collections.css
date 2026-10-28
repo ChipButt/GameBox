@@ -1,0 +1,55 @@
+/* Advent 2026 / Standalone GameBox — shared collection identity */
+.collectionWelcome{border-radius:26px;padding:24px;margin-bottom:20px;color:#fff6de;background:radial-gradient(circle at 90% 5%,#347566 0,transparent 38%),linear-gradient(145deg,#123846,#1a5141);border:3px solid #ca9b62;box-shadow:0 12px 28px #123e4725}
+.collectionEyebrow{margin:0 0 8px;font:900 10px Inter,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;color:#b36c4f}
+.collectionWelcome .collectionEyebrow,.portalHero .collectionEyebrow{color:#f1c28c}
+.collectionWelcome h2{margin:0 0 10px;font-size:clamp(28px,6vw,44px);line-height:1.05;color:#fff7d8}
+.collectionWelcome>p:not(.collectionEyebrow){max-width:450px;margin:0 0 18px;font-size:13px;line-height:1.55;color:#dcefe4}
+.collectionChooser{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.collectionChoice{display:flex;align-items:center;gap:11px;padding:14px 12px;min-height:72px;border:2px solid #f4d2a499;border-radius:16px;color:#fff9ee;text-decoration:none;box-shadow:0 5px 0 #0c262c9c}
+.collectionChoice:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.choiceAdvent{background:linear-gradient(125deg,#bf494e,#903a45)}.choiceStandalone{background:linear-gradient(125deg,#2d568e,#183962)}
+.choiceArtwork{font-size:28px;min-width:35px;text-align:center;color:#f6d892}
+.collectionChoice>span:nth-child(2){min-width:0;flex:1}
+.collectionChoice b{display:block;font-size:17px;line-height:1.1}.collectionChoice small{display:block;font-size:10px;line-height:1.3;margin-top:4px;color:#fff0d2}
+.collectionChoice>span:last-child{font-size:21px;font-weight:900;color:#ffdb93}
+.collectionSections{gap:24px}
+.collectionPane{border:2px solid #b7d4c0;border-radius:26px;padding:19px 14px 16px;background:linear-gradient(#eef9ef,#fdf7e8 21%);box-shadow:0 13px 31px #1c4d4421;scroll-margin-top:13px}
+.collectionStandalone{border-color:#b6cde0;background:linear-gradient(#ecf4fc,#fff 23%)}
+.collectionHeader{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:2px 5px 17px}
+.collectionHeader h2{margin:0 0 7px;color:#215849;font-size:clamp(26px,5vw,35px);line-height:1}
+.collectionStandalone .collectionHeader h2{color:#244d80}
+.collectionHeader p:not(.collectionEyebrow){max-width:520px;margin:0;color:#536c67;font-size:12px;line-height:1.5;font-weight:650}
+.collectionVisit{flex:none;display:inline-flex;justify-content:center;align-items:center;gap:8px;padding:11px 13px;border:2px solid #deb07c;border-radius:12px;background:#a34044;color:#fff8e7;text-align:center;text-decoration:none;font-size:12px;line-height:1.3;font-weight:900;box-shadow:0 3px 0 #755045}
+.collectionStandalone .collectionVisit{background:#23517d;border-color:#b1c8dc;box-shadow:0 3px 0 #6d879a}
+.collectionSections .homeRoster{margin:0 3px 18px;background:#fff;box-shadow:none}
+.collectionPane .collectionGrid{margin:0;border-width:6px;border-radius:22px;gap:17px;padding:25px 15px 21px}
+.collectionAdvent .collectionGrid{background:repeating-linear-gradient(135deg,#2d6658 0 15px,#295e50 15px 30px);border-color:#b88a58}
+.collectionStandalone .collectionGrid{background:linear-gradient(150deg,#264a73,#142e53);border-color:#7795af}
+.collectionAdvent .collectionGrid{counter-reset:adventMini}
+.collectionAdvent .collectionGrid .toyGame{position:relative;padding-top:18px;counter-increment:adventMini}
+.collectionAdvent .collectionGrid .toyGame::before{content:"ADVENT 2026 · MINI-GAME " counter(adventMini,decimal-leading-zero);position:absolute;z-index:4;top:0;left:5px;right:5px;padding:4px 2px;border:2px solid #b78a51;border-radius:100px;background:#fff0c7;color:#6c4a31;box-shadow:0 2px 3px #092a2340;text-align:center;font:900 9px/1.15 Inter,system-ui,sans-serif;letter-spacing:.04em;pointer-events:none}
+.collectionPane .toyBox .toyGame:nth-child(5){width:100%}
+.collectionPane .toyGameMaze,.collectionPane .toyGameRelic{width:100%}
+.collectionPane .toyGame .gameTile{min-width:0}
+.collectionPane .gameTile strong{overflow-wrap:anywhere}
+.collectionPane .toyGamePizzeria .gameTile{background:linear-gradient(145deg,#e6f1d5,#faecca)}
+.collectionPane .toyGamePizzeria .gameTile strong{color:#526747;text-shadow:none}
+.collectionPane .toyGamePizzeria .gameTile small{color:#785439;text-shadow:none}
+.collectionPane .toyGameMyPlace .gameTile{background:linear-gradient(130deg,#493b59,#272c48)}
+.collectionPane .toyGameMyPlace .gameTile strong{color:#fff5da}
+.collectionChoice:focus-visible,.collectionVisit:focus-visible,.portalBack:focus-visible,.portalStart:focus-visible{outline:3px solid #f7d66d;outline-offset:4px}
+.adventPortal{background:linear-gradient(180deg,#e1f1e7,#faf3e4 60%,#dbece3)}
+.adventPortal .app{width:min(100%,1020px)}
+.portalTopBar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.portalBack{border-radius:999px;border:2px solid #aac9b6;background:#fffdf4;padding:11px 14px;text-decoration:none;color:#225b4a;font-size:13px;font-weight:900}
+.portalBrand{font-size:13px;color:#285e4d;font-weight:1000;letter-spacing:.08em}.portalBrand b{color:#b34449}
+.portalHero{text-align:center;overflow:hidden;border-radius:28px;border:4px solid #bd8b54;background:radial-gradient(circle at 50% 4%,#42796f 0,transparent 43%),linear-gradient(145deg,#12394d,#195344 74%);color:#f9efd4;padding:32px 20px;margin-bottom:21px;box-shadow:0 10px 0 #b4d2ba,0 20px 30px #24393126}
+.portalHeroStars{font-size:24px;letter-spacing:20px;color:#ffe29c;margin-bottom:12px}
+.portalHero h1{font-size:clamp(42px,8vw,69px);line-height:.95;margin:0 0 14px;color:#fff5d3;text-shadow:0 4px 0 #0b2925}
+.portalHero h1 em{font-style:normal;color:#f5c084}
+.portalHero>p:not(.collectionEyebrow){max-width:550px;margin:0 auto 19px;font-size:14px;line-height:1.6;color:#e0ede3}
+.portalStart{display:inline-block;padding:12px 19px;border:2px solid #fff2c2;border-radius:999px;background:#f1ce85;color:#275140;text-decoration:none;font-size:13px;font-weight:900;box-shadow:0 4px 0 #ae7547}
+.portalFooter{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:24px 5px;color:#668178;font-size:11px;font-weight:800}
+.portalFooter a{color:#2b6855;text-decoration:none}
+@media(max-width:620px){.collectionWelcome{padding:19px 15px}.collectionChooser{grid-template-columns:1fr}.collectionPane{padding:14px 8px 10px;border-radius:19px}.collectionHeader{display:block;padding:1px 8px 16px}.collectionVisit{margin-top:11px}.collectionPane .collectionGrid{padding:22px 10px 18px;gap:13px}.collectionAdvent .collectionGrid .toyGame::before{font-size:8px}.portalHero{padding:24px 13px}.portalHeroStars{font-size:18px;letter-spacing:12px}.portalBrand{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.collectionChoice{transition:none}}
