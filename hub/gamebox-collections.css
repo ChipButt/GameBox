@@ -64,3 +64,85 @@
 /* The previous logo referenced a file that is not in the repository.
    Show the real brand name in text instead of a broken image icon. */
 .brandSource{display:inline-flex;align-items:center;flex-shrink:0;color:#234a74;font:900 12px/1.1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;border:2px solid #bad8ce;border-radius:9px;padding:9px;background:#fffdf4}
+
+
+/* The twenty Advent mini-game selectors share a single Christmas bauble
+   design; this does not affect the unrelated standalone GameBox shelf. */
+.collectionAdvent .collectionGrid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ align-items:start;justify-items:center;column-gap:15px;row-gap:29px;
+ padding:26px 16px 23px;background:radial-gradient(ellipse at 50% 0%,#366a5f,#1a4247 70%,#14383e);
+ border-color:#c99c61;
+}
+.collectionAdvent .collectionGrid .adventBaubleItem{
+ display:block;grid-column:auto!important;width:100%;max-width:220px;min-width:0;
+ transform:none!important;padding:22px 0 0;counter-increment:adventMini;
+}
+.collectionAdvent .collectionGrid .adventBaubleItem::before{display:none}
+.collectionAdvent .collectionGrid .adventBaubleItem .gameGrid{display:flex;justify-content:center;width:100%}
+.collectionAdvent .collectionGrid .adventBauble{
+ --bauble-main:#b83e50;--bauble-light:#ec6774;--bauble-dark:#692b43;
+ box-sizing:border-box;display:block;position:relative;width:min(100%,210px);max-width:210px;
+ height:auto;min-height:0;aspect-ratio:1;border:0;border-radius:50%;
+ padding:0;margin:0;background:transparent;overflow:visible;
+ text-align:center;text-decoration:none;color:#fff8e5;isolation:isolate;
+ box-shadow:none;transform:none;transition:transform .18s ease,filter .18s ease;
+}
+.collectionAdvent .collectionGrid .adventBaubleItem:nth-child(4n+2) .adventBauble{--bauble-main:#308976;--bauble-light:#70c39f;--bauble-dark:#154e58}
+.collectionAdvent .collectionGrid .adventBaubleItem:nth-child(4n+3) .adventBauble{--bauble-main:#377ba8;--bauble-light:#77bdd4;--bauble-dark:#253f72}
+.collectionAdvent .collectionGrid .adventBaubleItem:nth-child(4n) .adventBauble{--bauble-main:#a35c9b;--bauble-light:#dba7ce;--bauble-dark:#593765}
+.collectionAdvent .collectionGrid .adventBauble::before,.collectionAdvent .collectionGrid .adventBauble::after{display:none}
+.collectionAdvent .collectionGrid .adventBauble .baubleCap{
+ position:absolute;left:50%;top:-20px;width:34px;height:22px;transform:translateX(-50%);
+ border:3px solid #936239;border-bottom:0;border-radius:7px 7px 2px 2px;
+ background:repeating-linear-gradient(90deg,#f5d79d 0 5px,#ad7a47 5px 8px,#e5bc7a 8px 12px);
+ box-shadow:inset 0 1px #fff4bf;z-index:3;pointer-events:none;
+}
+.collectionAdvent .collectionGrid .adventBauble .baubleCap::before{
+ content:"";position:absolute;left:5px;top:-16px;width:18px;height:16px;
+ border:4px solid #e8c78e;border-bottom:0;border-radius:12px 12px 0 0;
+}
+.collectionAdvent .collectionGrid .adventBauble .baubleGlobe{
+ box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:center;
+ position:relative;isolation:isolate;width:100%;height:100%;aspect-ratio:1;
+ border:5px solid #e9c182;border-radius:50%;overflow:hidden;padding:17px 8px 12px;
+ background:radial-gradient(ellipse at 30% 20%,#ffffff66,transparent 34%),radial-gradient(ellipse at 43% 26%,var(--bauble-light),var(--bauble-main) 46%,var(--bauble-dark) 94%);
+ box-shadow:inset 3px 5px 7px #fff4c75a,inset -12px -16px 18px #1a20345c,0 7px 1px #0b262d99,0 16px 19px #08293080;
+}
+.collectionAdvent .collectionGrid .adventBauble .baubleShine{
+ position:absolute;left:13%;top:11%;width:24%;height:13%;transform:rotate(-31deg);
+ border-top:4px solid #fff8dfa8;border-radius:80%;filter:blur(.4px);
+}
+.collectionAdvent .collectionGrid .adventBauble .baubleIcon{
+ width:37%;height:37%;flex:none;position:relative;z-index:1;margin:-1% 0 5%;
+ color:#fff4d9;filter:drop-shadow(0 3px 2px #11303e60);stroke-width:3.5;
+}
+.collectionAdvent .collectionGrid .adventBauble strong{
+ display:block;position:relative;z-index:2;max-width:100%;margin:0;color:#fff9e9;
+ font-family:Fredoka,Inter,system-ui,sans-serif;font-size:clamp(11px,1.55vw,17px);
+ font-weight:900;line-height:1.05;letter-spacing:0;text-wrap:balance;overflow-wrap:normal;
+ text-shadow:0 2px 3px #1c253aa8;
+}
+.collectionAdvent .collectionGrid .adventBauble small{
+ display:block;position:relative;z-index:2;margin:5px 0 0;color:#ffe1a8;
+ font-family:Inter,system-ui,sans-serif;font-size:clamp(7px,.85vw,10px);
+ font-weight:950;letter-spacing:.06em;line-height:1.1;text-shadow:0 1px 2px #142e449b;
+}
+.collectionAdvent .collectionGrid .adventBauble:hover,.collectionAdvent .collectionGrid .adventBauble:focus-visible{transform:translateY(-5px) rotate(-2deg);filter:brightness(1.07)}
+.collectionAdvent .collectionGrid .adventBauble:focus-visible{outline:3px solid #fff2c0;outline-offset:7px}
+.collectionAdvent .collectionGrid .adventBauble:active{transform:translateY(1px) scale(.98);box-shadow:none}
+@media(max-width:760px){
+ .collectionAdvent .collectionGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:25px 13px}
+ .collectionAdvent .collectionGrid .adventBauble strong{font-size:clamp(11px,2.25vw,16px)}
+ .collectionAdvent .collectionGrid .adventBauble small{font-size:clamp(7px,1.35vw,9px)}
+}
+@media(max-width:560px){
+ .collectionAdvent .collectionGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:23px 11px;padding:23px 8px 16px}
+ .collectionAdvent .collectionGrid .adventBaubleItem{max-width:190px;padding-top:19px}
+ .collectionAdvent .collectionGrid .adventBauble .baubleCap{top:-18px;width:30px;height:20px}
+ .collectionAdvent .collectionGrid .adventBauble .baubleCap::before{left:4px;width:16px}
+ .collectionAdvent .collectionGrid .adventBauble .baubleGlobe{border-width:4px;padding:14px 7px 9px}
+ .collectionAdvent .collectionGrid .adventBauble strong{font-size:clamp(10px,3vw,14px)}
+ .collectionAdvent .collectionGrid .adventBauble small{font-size:7px;letter-spacing:.04em;margin-top:4px}
+}
+@media(prefers-reduced-motion:reduce){.collectionAdvent .collectionGrid .adventBauble{transition:none}}
