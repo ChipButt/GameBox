@@ -7,8 +7,8 @@ export function createRun(random = Math.random) {
   let id = 0;
   return {
     status: 'ready', lane: 1, distance: 0, gifts: 0, score: 0,
-    speed: 21, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, slideHeldTime: 0, seconds: 0,
-    objects: [], spawnIn: 2, rows: 0, forcedRows: 0, forcedStreak: 0,
+    speed: 14, jumpY: 0, jumpV: 0, slide: 0, slideHeld: false, slideHeldTime: 0, seconds: 0,
+    objects: [], spawnIn: 5, rows: 0, forcedRows: 0, forcedStreak: 0,
     lastForcedKind: null, combo: 0, lastEvent: '',
     random, nextId: () => ++id
   };
@@ -50,19 +50,19 @@ export function releaseDuck(run) {
   run.slide = Math.min(run.slide, run.slideHeldTime < 0.12 ? 0.24 : 0.055);
 }
 export function spawnRow(run) {
-  // Most encounters now CLOSE ALL THREE LANES. No amount of side-stepping
-  // can bypass them: the reward route needs an intentional jump or duck.
-  // A breather after six mandatory actions prevents unfair endless chains.
+  // Ease into each run. The first 110m teaches steering with open routes;
+  // mandatory jumps/ducks appear gradually, then return to the fast and
+  // demanding advanced patterns. After six forced moves, give a breather.
   const lanes = [0, 1, 2];
   const safeLane = choose(run.random, lanes);
   const hazards = lanes.filter(l => l !== safeLane);
-  const stage = Math.min(5, Math.floor(run.distance / 110));
-  const forceChance = [0.65, 0.79, 0.87, 0.94, 0.97, 0.985][stage];
+  const stage = Math.min(6, Math.floor(run.distance / 110));
+  const forceChance = [0, 0.10, 0.30, 0.55, 0.78, 0.92, 0.985][stage];
   const forced = run.forcedStreak < 6 && run.random() < forceChance;
-  const twoHazardChance = [0.46, 0.78, 0.94, 1, 1, 1][stage];
-  const count = forced || run.random() < twoHazardChance ? 2 : 1;
-  const kinds = run.distance < 50
-    ? ['crate', 'snowman']
+  const twoHazardChance = [0.10, 0.35, 0.62, 0.80, 0.95, 1, 1][stage];
+  const count = forced || (run.rows >= 3 && run.random() < twoHazardChance) ? 2 : 1;
+  const kinds = run.rows < 3 ? ['crate']
+    : run.distance < 160 ? ['crate', 'snowman']
     : ['crate', 'snowman', 'arch', 'arch'];
   const hazardZ = -45;
   // Snowmen are impassable. Place them clearly ahead of the gift sequence,
@@ -116,7 +116,8 @@ export function advance(run, dt) {
   if (run.status !== 'running') return [];
   dt = clamp(dt, 0, 0.05);
   run.seconds += dt;
-  run.speed = Math.min(43, 21 + run.distance / 57);
+  // A readable opening (~14m/s), with the former 43m/s top speed restored later.
+  run.speed = Math.min(43, 14 + run.distance / 37);
   const travel = run.speed * dt;
   run.distance += travel;
   run.spawnIn -= travel;
@@ -125,7 +126,9 @@ export function advance(run, dt) {
     // Two consecutive compulsory jumps must remain physically achievable
     // even at top speed (0.55s airtime); preserve a little input/reaction
     // margin rather than spawning the next unavoidable barricade too soon.
-    run.spawnIn += Math.max(23, run.speed * 0.72) + run.random() * 4;
+    // More time to react at first; spacing tapers to the original hard pace.
+    const beginnerGap = Math.max(23, 37 - run.distance / 18);
+    run.spawnIn += Math.max(beginnerGap, run.speed * 0.72) + run.random() * 4;
   }
   if (run.jumpY > 0 || run.jumpV > 0) {
     run.jumpY += run.jumpV * dt;
