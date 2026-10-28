@@ -8,6 +8,7 @@ on:
       - 'advent-2026/**'
       - 'tools/check-gamebox-collections.test.mjs'
       - 'tools/collections-browser-smoke.cjs'
+      - 'tools/advent-runtime-audit.cjs'
       - '.github/workflows/gamebox-collections.yml'
   pull_request:
     paths:
@@ -37,6 +38,17 @@ jobs:
           sleep 2
       - name: Check mobile and desktop navigation, collection identity and all 20 live game routes
         run: node tools/collections-browser-smoke.cjs
+      - name: Audit all 20 games in an actual browser on phones and desktop
+        run: node tools/advent-runtime-audit.cjs
+      - name: Upload individual game audit and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advent-20-games-runtime-audit
+          path: |
+            tools/advent-runtime-audit.json
+            tools/advent-*.png
+          if-no-files-found: ignore
       - name: Upload layout screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -14,6 +14,8 @@ if(!bin)throw new Error('Chrome or Chromium required');
     let response=await page.goto(origin,{waitUntil:'domcontentloaded'});assert.equal(response.status(),200);
     assert.equal(await page.locator('#advent-collection .toyGame').count(),20);
     assert.equal(await page.locator('#standalone-collection .toyGame').count(),16);
+    assert.equal(await page.locator('#advent-collection .adventBauble').count(),20);
+    assert.equal(await page.locator('#advent-collection .adventBauble img').count(),0,'The home Advent collection should also use only matching line art');
     assert.equal(await page.locator('#standalone-collection #homePlayers').count(),1);
     assert.equal(await page.locator('a[href="character-playground/"]').count(),0);
     const metrics=await page.evaluate(()=>({pageWidth:document.documentElement.scrollWidth,viewport:innerWidth}));
@@ -28,8 +30,15 @@ if(!bin)throw new Error('Chrome or Chromium required');
     assert.equal(await page.locator('#advent-games .toyGame').count(),20);
     assert.equal(await page.locator('#advent-games a[href="maze-shift.html"]').count(),1);
     assert.equal(await page.locator('#advent-games a[href="north-pole-pizzeria/"]').count(),1);
-    const cssCounter=await page.locator('#advent-games .toyGame').first().evaluate(el=>getComputedStyle(el,'::before').content);
-    assert.match(cssCounter,/ADVENT 2026/,'All mini-game tiles should share visible Advent identity');
+    // All mini-games must render as true equal-size circular baubles, never
+    // the previous mixture of square tiles and unrelated image styles.
+    const baubles=await page.locator('#advent-games .adventBauble').evaluateAll(els=>els.map(el=>{
+      const a=el.getBoundingClientRect(),globe=el.querySelector('.baubleGlobe'),g=globe?.getBoundingClientRect();
+      return {width:a.width,height:a.height,corner:getComputedStyle(globe).borderRadius,icon:!!el.querySelector('svg.baubleIcon'),label:!!el.querySelector('strong'),images:el.querySelectorAll('img').length,globeWidth:g?.width,globeHeight:g?.height};
+    }));
+    assert.equal(baubles.length,20);
+    assert.ok(baubles.every(b=>Math.abs(b.width-b.height)<2&&b.width>115&&Math.abs(b.globeWidth-b.globeHeight)<2&&b.corner==='50%'&&b.icon&&b.label&&b.images===0),'Every ornament must be equally round, readable and use a unified line icon: '+JSON.stringify(baubles));
+    assert.ok(Math.max(...baubles.map(b=>b.width))-Math.min(...baubles.map(b=>b.width))<3,'Every bauble must have the same diameter');
     const allLinks=await page.locator('#advent-games a.gameTile').evaluateAll(els=>els.map(el=>el.href));
     assert.equal(allLinks.length,20);
     for(const href of allLinks){const result=await page.request.get(href);assert.equal(result.status(),200,'Existing Advent game must still load: '+href)}
