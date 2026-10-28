@@ -15,6 +15,26 @@ test('every obstacle section always has a viable jumping, ducking or open route'
     }));
   }
 });
+test('opening 110 metres always offers a clear lane and readable row spacing',()=>{
+  const r=createRun(()=>.15);
+  startRun(r);
+  assert.equal(r.speed,14,'opening speed must be substantially slower than late game');
+  assert.equal(r.spawnIn,5,'opening hazard must have a short approach delay');
+  r.distance=0;
+  for(let i=0;i<6;i++){
+    r.objects=[];spawnRow(r);
+    const hazards=r.objects.filter(o=>o.kind!=='gift');
+    assert.ok(hazards.length<=2);
+    assert.ok(new Set(hazards.map(o=>o.lane)).size<=2,'there is always a clear lane');
+    assert.ok(!hazards.some(o=>o.kind==='arch'),'ducking is introduced later');
+  }
+  r.spawnIn=.001;
+  advance(r,.01);
+  assert.ok(r.spawnIn>34,'opening rows must be spaced far enough apart to allow reaction time');
+  const at150=createRun(()=>.95);at150.distance=150;startRun(at150);advance(at150,.01);
+  assert.ok(at150.speed>=18&&at150.speed<19,'speed should increase progressively, not instantly');
+});
+
 test('lane changes stay inside the three lanes',()=>{
   const r=createRun(); startRun(r);
   for(let i=0;i<9;i++)steer(r,-1);assert.equal(r.lane,0);
@@ -48,29 +68,34 @@ test('gifts score only on lane-specific contact',()=>{
   assert.equal(advance(r,.03)[0].type,'gift');
   assert.equal(r.gifts,1);assert.ok(r.score>=25);
 });
-test('the opening encounter is not empty and challenge escalates by 110 metres',()=>{
+test('the first three rows teach steering; obstacle difficulty ramps every 110 metres',()=>{
   const r=createRun(()=>0.2);
   spawnRow(r);
-  assert.ok(r.objects.some(o=>o.kind!=='gift'),'first row must contain an obstacle');
-  assert.ok(r.objects.every(o=>o.z<=-30),'snowmen have a visible lead-in; other hazards remain at the original safe distance');
+  assert.equal(r.objects.filter(o=>o.kind!=='gift').length,1,'start with a single obstacle and a clear escape');
+  assert.ok(r.objects.filter(o=>o.kind!=='gift').every(o=>o.kind==='crate'),'the first encounter must use a simple crate');
+  assert.equal(r.objects.filter(o=>o.kind==='arch').length,0,'no compulsory ducking at the start');
+  assert.ok(r.objects.every(o=>o.z<=-30),'obstacles have a visible lead-in before reaching the player');
   r.distance=240;
   r.objects=[];
   spawnRow(r);
-  assert.ok(r.objects.filter(o=>o.kind!=='gift').length>=2,'midgame must have at least two hazards');
+  assert.ok(r.objects.filter(o=>o.kind!=='gift').length>=2,'midgame must add extra hazards');
   r.distance=480;
   r.objects=[];
   spawnRow(r);
   assert.equal(r.objects.filter(o=>o.kind!=='gift').length,3,'advanced stages occasionally require jumping or ducking');
 });
-test('pace rises quickly and the distance accumulator updates accurately',()=>{
+test('pace starts gently and ramps to the existing late-game top speed',()=>{
   const r=createRun(()=>0.99);
   startRun(r);
   r.spawnIn=99999;
   for(let i=0;i<100;i++)advance(r,.02);
-  assert.ok(r.distance>=41 && r.distance<45,'first two seconds should cover about 42m');
+  assert.ok(r.distance>=28 && r.distance<30,'first two seconds should cover about 28m');
   r.distance=700;
   advance(r,.02);
   assert.ok(r.speed>31,'late game should be substantially faster');
+  r.distance=1300;
+  advance(r,.02);
+  assert.equal(r.speed,43,'keep the original challenging top speed');
 });
 
 test('jump lands in under 0.6 seconds yet comfortably clears a wooden barricade',()=>{
@@ -102,7 +127,7 @@ test('Duck is held while pressed, stands quickly when released, and quick taps a
   assert.equal(held.slide,0,'swipe down crouch should end quickly');
 });
 test('middle of three Christmas presents sits directly on top of the jump barricade',()=>{
-  const run=createRun(()=>0.1);spawnRow(run);
+  const run=createRun(()=>0.1);run.distance=700;run.rows=7;spawnRow(run);
   const gifts=run.objects.filter(o=>o.kind==='gift');
   const centre=gifts[1];
   const barricade=run.objects.find(o=>o.kind==='crate'&&o.lane===centre.lane);
@@ -138,16 +163,16 @@ test('barricade-top present is collected on a successful jump but not on foot',(
   assert.equal(airborne.gifts,1);
 });
 
-test('the majority of sections now close all three lanes and force jump or duck',()=>{
+test('mandatory jumps and ducks ramp in gradually instead of overwhelming beginners',()=>{
   // Fixed-seed sampling keeps the difficulty requirement measurable and repeatable.
   const randomFor=seed=>{
     let state=seed>>>0;
     return ()=>((state=Math.imul(1664525,state)+1013904223|0)>>>0)/4294967296;
   };
   const samples=[];
-  for(let stage=0;stage<=5;stage++){
+  for(let stage=0;stage<=6;stage++){
     const run=createRun(randomFor(7907+stage*12317));
-    run.distance=25+stage*110;
+    run.distance=25+stage*110;run.rows=4;
     let forcedCount=0,jumps=0,ducks=0,streak=0,maximum=0;
     for(let i=0;i<400;i++){
       run.objects=[];spawnRow(run);
@@ -171,13 +196,15 @@ test('the majority of sections now close all three lanes and force jump or duck'
       assert.ok(streak<=6,'after six forced sections the player needs breathing room');
     }
     samples.push(forcedCount/400);
-    assert.ok(jumps>40&&ducks>40,'mandatory routes need varied jump AND duck challenges');
-    assert.ok(maximum>1,'back-to-back mandatory moves must occur');
+    if(stage>=2)assert.ok(jumps>40&&ducks>40,'developed stages need varied jump AND duck challenges');
+    if(stage>=2)assert.ok(maximum>1,'back-to-back mandatory moves must occur beyond the introduction');
   }
-  assert.ok(samples[0]>.57,'the majority of opening sections must require a move');
-  assert.ok(samples[2]>.75,'midgame must require jump or duck in at least 75% of rows');
-  assert.ok(samples[5]>.82,'late game must require jump or duck in at least 82% of rows');
-  assert.ok(samples[5]>samples[0]+.20,'later stages must be noticeably harder');
+  assert.equal(samples[0],0,'first 110 metres must never require a mandatory jump or duck');
+  assert.ok(samples[1]<.2,'second section introduces forced moves occasionally');
+  assert.ok(samples[2]>.2&&samples[2]<.45,'midgame builds up to more mandatory moves');
+  assert.ok(samples[5]>.8,'late game must still demand jump or duck in at least 80% of rows');
+  assert.ok(samples[6]>.83,'advanced stages must retain high challenge');
+  assert.ok(samples[5]>samples[2]+.45,'later stages must be noticeably harder');
 });
 
 test('successive mandatory jumps leave enough time to land at the maximum pace',()=>{
@@ -258,6 +285,7 @@ test('snowmen render at a distinct depth from presents in the same encounter',()
   let found=0;
   for(let seed=1;seed<=120;seed++){
     const r=createRun(randomFor(seed));
+    r.rows=4;r.distance=240;
     spawnRow(r);
     const snowmen=r.objects.filter(o=>o.kind==='snowman');
     const gifts=r.objects.filter(o=>o.kind==='gift');
