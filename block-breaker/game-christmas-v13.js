@@ -42,11 +42,11 @@ const ASSET={
   giftIce:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_lightBlue.png',
   baublesBlue:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/balls_blue.png',
   baubleIce:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/ball_lightBlue.png',
-  larger:'../assets/gamebox/kenney/icons/Game Icons/White/2x/larger.png',
-  smaller:'../assets/gamebox/kenney/icons/Game Icons/White/2x/smaller.png',
-  fast:'../assets/gamebox/kenney/icons/Game Icons/White/2x/fastForward.png',
-  plus:'../assets/gamebox/kenney/icons/Game Icons/White/2x/plus.png',
-  power:'../assets/gamebox/kenney/icons/Game Icons/White/2x/power.png',
+  larger:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_green.png',
+  smaller:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_lightBlue.png',
+  fast:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_yellow.png',
+  plus:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_blue.png',
+  power:'../assets/gamebox/kenney/2d/Platformer Assets Holiday/present_small_orange.png',
   target:'../assets/gamebox/kenney/icons/Game Icons/White/2x/target.png'
 };
 const img={};

@@ -220,7 +220,7 @@ function draw(t){
 }
 function refreshHud(){
  $('score').textContent=String(game.score).padStart(5,'0');
- $('best').textContent=String(Math.max(best,game.score)).padStart(5,'0');
+ if($('best'))$('best').textContent=String(Math.max(best,game.score)).padStart(5,'0');
  $('shift').textContent=String(game.level).padStart(2,'0');
  $('lines').textContent=String(game.lines).padStart(2,'0');
  $('hearts').textContent=Array.from({length:3},(_,i)=>i<game.lives?'♥':'♡').join(' ');

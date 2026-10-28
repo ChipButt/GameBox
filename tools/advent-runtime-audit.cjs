@@ -53,7 +53,7 @@ function delay(t){return new Promise(resolve=>setTimeout(resolve,t))}
         return {vw:innerWidth,vh:innerHeight,scrollW:document.documentElement.scrollWidth,bodyW:document.body.scrollWidth,scrollH:document.documentElement.scrollHeight,title:document.title,bodyText:document.body.innerText.trim().slice(0,250),visibleCanvases:visible,brokenImages:broken,fatal};
       });
       Object.assign(info,{title:layout.title,overflow:Math.max(layout.scrollW,layout.bodyW)-layout.vw,visibleCanvases:layout.visibleCanvases.length,brokenImages:layout.brokenImages,exceptions,consoleErrors,failedRequests,fatal:layout.fatal});
-      info.ok=info.status===200&&!!info.title&&layout.bodyText.length>20&&info.overflow<15&&info.fatal.length===0&&exceptions.length===0;
+      info.ok=info.status===200&&!!info.title&&layout.bodyText.length>20&&info.overflow<15&&info.fatal.length===0&&exceptions.length===0&&layout.brokenImages.length===0;
       if(!info.ok)failures.push(info);
       if(dims.width===390){
         const f='tools/advent-'+String(game.index).padStart(2,'0')+'.png';
