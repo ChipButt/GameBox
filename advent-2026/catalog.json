@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "name": "Advent 2026",
+  "advent": [
+    {
+      "index": 1,
+      "name": "Tiny Ski Run",
+      "href": "tiny-ski-run/"
+    },
+    {
+      "index": 2,
+      "name": "Jigsaw",
+      "href": "jigsaw/"
+    },
+    {
+      "index": 3,
+      "name": "Workshop Watch",
+      "href": "workshop-watch/"
+    },
+    {
+      "index": 4,
+      "name": "Block Breaker",
+      "href": "block-breaker/?build=christmas-v13"
+    },
+    {
+      "index": 5,
+      "name": "Santa Invaders",
+      "href": "santa-invaders/"
+    },
+    {
+      "index": 6,
+      "name": "Festive Blocks",
+      "href": "festive-blocks/?build=v1"
+    },
+    {
+      "index": 7,
+      "name": "Santa’s Letter Sort",
+      "href": "santa-letter-sort/"
+    },
+    {
+      "index": 8,
+      "name": "North Pole Dash",
+      "href": "christmas-dash/"
+    },
+    {
+      "index": 9,
+      "name": "North Pole Pizzeria",
+      "href": "north-pole-pizzeria/"
+    },
+    {
+      "index": 10,
+      "name": "Snowy Crossing",
+      "href": "snowy-crossing/"
+    },
+    {
+      "index": 11,
+      "name": "Santa's Present Stack",
+      "href": "present-stack/"
+    },
+    {
+      "index": 12,
+      "name": "Chimney Drop-In",
+      "href": "chimney-drop-in/"
+    },
+    {
+      "index": 13,
+      "name": "Santa's Sorting Shift",
+      "href": "santas-sorting-shift/"
+    },
+    {
+      "index": 14,
+      "name": "Snow Shoveller",
+      "href": "snow-shoveller/"
+    },
+    {
+      "index": 15,
+      "name": "Snowball Knockdown",
+      "href": "snowball-knockdown/"
+    },
+    {
+      "index": 16,
+      "name": "Santa's Arrow Escape",
+      "href": "santas-arrow-escape/"
+    },
+    {
+      "index": 17,
+      "name": "Santa's Potion Sort",
+      "href": "christmas-potion-sort/"
+    },
+    {
+      "index": 18,
+      "name": "Gift Bubble Shooter",
+      "href": "gift-bubble-shooter/"
+    },
+    {
+      "index": 19,
+      "name": "Snowy Sweets",
+      "href": "snowy-sweets/"
+    },
+    {
+      "index": 20,
+      "name": "Shift In Maze",
+      "href": "maze-shift.html"
+    }
+  ],
+  "standalone": [
+    {
+      "name": "Unfinished Business",
+      "href": "unfinished-business/"
+    },
+    {
+      "name": "Ancient Dominion",
+      "href": "ancient-dominion/"
+    },
+    {
+      "name": "Core Empires",
+      "href": "core-empires/"
+    },
+    {
+      "name": "Sweet Truck Fever",
+      "href": "sweet-truck-fever/"
+    },
+    {
+      "name": "Christmas Lights",
+      "href": "christmas-lights/"
+    },
+    {
+      "name": "Pipeworks",
+      "href": "pipeworks/"
+    },
+    {
+      "name": "Card Deck",
+      "href": "#cards-setup"
+    },
+    {
+      "name": "Coin Flip",
+      "href": "#coins-setup"
+    },
+    {
+      "name": "Heads Up",
+      "href": "heads.html"
+    },
+    {
+      "name": "Disc Rally",
+      "href": "disc-rally.html"
+    },
+    {
+      "name": "Bingo",
+      "href": "bingo/"
+    },
+    {
+      "name": "Gridline Racing",
+      "href": "race-manager/index.html"
+    },
+    {
+      "name": "Relic",
+      "href": "relic-trail/"
+    },
+    {
+      "name": "Christmas Quest",
+      "href": "christmas-quest/"
+    },
+    {
+      "name": "Marble Race",
+      "href": "marble-race/?v=4edacd2"
+    },
+    {
+      "name": "My Place",
+      "href": "my-place/"
+    }
+  ]
+}
