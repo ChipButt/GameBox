@@ -26,7 +26,7 @@ test('the 20 confirmed Advent titles are grouped, unique and in the approved ord
 });
 test('the 16 independent titles remain outside Advent, including Card Deck, Coin Flip and My Place',()=>{
  assert.equal(catalog.standalone.length,16);
- assert.deepEqual(catalog.standalone.map(g=>short(g.href)),standalone);
+ assert.deepEqual(catalog.standalone.map(g=>g.href.startsWith('#')?g.href:short(g.href)),standalone);
  assert.deepEqual(tiles(standalonePart).map(route),catalog.standalone.map(g=>g.href));
  assert.equal((home.match(/id="homePlayers"/g)||[]).length,1,'shared roster remains intact');
  assert.match(standalonePart,/data-go="cards-setup"/);
