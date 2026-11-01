@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#142b38">
+<title>Office Hunt · GameBox</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#fff;background:#172e3a}
+*{box-sizing:border-box}html,body{height:100%;height:100dvh;margin:0;overflow:hidden;overscroll-behavior:none}
+button,a{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid #ffc46c;outline-offset:3px}
+#game{height:100%;height:100dvh;width:100%;position:relative;overflow:hidden;touch-action:none;background:linear-gradient(#a9d9dd,#d5e9e7)}
+#world{width:100%;height:100%;display:block;touch-action:none}
+#vignette{pointer-events:none;position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,28,38,.28),transparent 30%,transparent 60%,rgba(10,26,32,.22));}
+.hud{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:flex-start;gap:10px;padding:calc(env(safe-area-inset-top) + 12px) clamp(12px,2.5vw,30px) 0;pointer-events:none}
+.hud>*{pointer-events:auto}
+.back,.iconbtn{border:1px solid #ffffff4a;background:#162f3cdd;color:white;backdrop-filter:blur(12px);border-radius:15px;text-decoration:none;display:grid;place-items:center;min-width:46px;height:46px;font-size:22px;box-shadow:0 6px 20px #10263036}
+.brand{min-width:0;margin-top:1px;background:#142f3bdc;border:1px solid #ffffff28;padding:6px 13px 7px;border-radius:14px;backdrop-filter:blur(12px)}
+.brand small,.progress small{display:block;color:#9ed9d3;font-size:9px;font-weight:900;letter-spacing:.13em}
+.brand strong{font-size:clamp(13px,2.7vw,19px);font-weight:950;letter-spacing:-.045em;white-space:nowrap}
+.progress{margin-left:auto;background:#142f3bf0;border:1px solid #ffffff30;padding:8px 12px 9px;border-radius:14px;min-width:80px;text-align:center;box-shadow:0 6px 20px #10263036}
+.progress strong{font-size:23px;line-height:1.1;letter-spacing:-.04em}
+.progress em{font-style:normal;color:#badbd8;font-size:13px}
+.hud #listBtn{font-size:19px}
+.zone{position:absolute;z-index:3;top:calc(env(safe-area-inset-top) + 84px);left:50%;transform:translateX(-50%);border-radius:50px;background:#0e3036d9;color:#e6f2e9;border:1px solid #ffffff40;backdrop-filter:blur(8px);padding:8px 16px;letter-spacing:.11em;font-size:10px;font-weight:850;white-space:nowrap;pointer-events:none}
+.mini{position:absolute;top:calc(env(safe-area-inset-top) + 91px);right:17px;width:120px;height:120px;border-radius:16px;background:#102e38e6;border:1px solid #ffffff55;backdrop-filter:blur(7px);padding:7px;z-index:2;pointer-events:none}
+#map{width:100%;height:100%}
+.searchPrompt{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 116px);left:50%;transform:translateX(-50%) translateY(14px);width:max-content;max-width:80vw;text-align:center;border:1px solid #fff4ba70;background:#15343bf0;border-radius:15px;padding:11px 18px;color:#fff;font-weight:750;z-index:4;box-shadow:0 9px 22px #11293280;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none}
+.searchPrompt.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.searchPrompt small{display:block;color:#b5d9d5;font-weight:500;font-size:11px;margin-top:3px}
+.toast{position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 145px);left:50%;transform:translateX(-50%) translateY(-10px);width:max-content;max-width:80vw;background:#f9c76d;color:#223541;padding:13px 21px;border-radius:14px;font-weight:900;box-shadow:0 10px 30px #09232e70;opacity:0;transition:all .24s;pointer-events:none;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.controls{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 18px);display:flex;align-items:end;justify-content:space-between;padding:0 21px;pointer-events:none;z-index:4}
+.joy{width:112px;height:112px;border-radius:50%;background:#17374278;border:1.5px solid #ffffff90;box-shadow:inset 0 0 0 8px #ffffff09,0 10px 22px #10263240;position:relative;pointer-events:auto;touch-action:none}
+.joy:after{content:'MOVE';position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;font-weight:850;letter-spacing:.1em;text-shadow:0 1px 4px #142b38}
+.joyKnob{position:absolute;width:49px;height:49px;top:50%;left:50%;margin:-24.5px;transform:translate(0,0);border-radius:50%;background:linear-gradient(155deg,#ebfaf1,#c2e3dc);box-shadow:0 4px 12px #10252f88}
+.actions{display:flex;align-items:end;gap:12px;pointer-events:auto}
+.action{height:74px;width:74px;background:#f9c66c;border:3px solid #fff3d0;border-radius:22px;color:#243843;box-shadow:0 7px 19px #10263285;font-size:12px;font-weight:950;letter-spacing:.04em}
+.action span{display:block;font-size:23px;line-height:1.25}
+#jumpBtn{height:69px;width:69px;background:#e7f0e9;border-color:#fff;}
+#takeBtn:disabled{opacity:.42;filter:grayscale(.35)}
+#lookHint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 10px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:650;color:#e4f7f4;text-align:center;text-shadow:0 1px 5px #162d32;pointer-events:none}
+.overlay{position:absolute;z-index:12;inset:0;display:grid;place-items:center;padding:24px;overflow-y:auto;background:linear-gradient(130deg,#0c2531d9,#1a434ac7);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.overlay.hidden{display:none}
+.panel{width:min(440px,100%);background:#f5f2e8;color:#233845;border-radius:26px;padding:clamp(22px,5vw,37px);box-shadow:0 20px 80px #09202c9e;border:1px solid #fff;position:relative;text-align:center}
+.eyebrow{font-size:11px;letter-spacing:.18em;font-weight:900;color:#39877e}
+.illustration{height:82px;margin:10px auto 16px;display:flex;justify-content:center;align-items:end;gap:8px}
+.illustration .desk{height:45px;width:110px;border-radius:6px 6px 2px 2px;background:#bd8058;position:relative;border-bottom:7px solid #875944;box-shadow:0 10px 0 -6px #526872}
+.illustration .desk:before{content:'';position:absolute;left:37px;top:-39px;width:41px;height:32px;border:5px solid #243c49;border-radius:3px;background:linear-gradient(140deg,#7cb7b7,#d0ece0)}
+.illustration .desk:after{content:'';position:absolute;left:54px;top:-8px;height:10px;width:8px;background:#526872}
+.illustration .plant{height:38px;width:29px;border-radius:4px 4px 10px 10px;background:#e5ac72;position:relative}
+.illustration .plant:after{content:'';position:absolute;top:-29px;left:0;width:35px;height:36px;border-radius:60% 30% 70% 40%;transform:rotate(-20deg);background:#478a73}
+.panel h1,.panel h2{font-size:clamp(34px,7vw,51px);letter-spacing:-.07em;line-height:.97;margin:10px 0 18px;font-weight:950}
+.panel h1 span{color:#d78c51}
+.panel p{font-size:14px;line-height:1.6;color:#52646a;max-width:340px;margin:0 auto 19px}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:17px auto 23px}
+.tips div{padding:12px 5px;background:#e5e9de;border-radius:12px;font-size:11px;font-weight:800;color:#4c6666}
+.tips b{display:block;color:#294b4d;font-size:15px;margin-bottom:3px}
+.primary{border:0;border-radius:15px;padding:16px 18px;background:#183e49;color:#fff;width:100%;font-weight:900;font-size:16px;box-shadow:0 5px 0 #0b2730}
+.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #0b2730}
+.secondary{border:1px solid #b1c2bd;color:#24424c;background:transparent;border-radius:13px;padding:13px 20px;font-weight:800;display:block;width:100%;margin-top:10px}
+.small{font-size:11px;color:#7f918d;margin-top:15px}
+#checklist{position:absolute;z-index:9;right:17px;top:calc(env(safe-area-inset-top) + 76px);width:min(285px,calc(100% - 34px));background:#f5f2e8;border:1px solid #fff;border-radius:20px;color:#233c43;box-shadow:0 12px 35px #0c2532aa;padding:18px;display:none}
+#checklist.open{display:block}
+#checklist header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#checklist header strong{font-size:18px;letter-spacing:-.04em}
+#checklist button{background:#dfebe4;border:0;border-radius:8px;color:#28464b;height:32px;min-width:32px}
+#checklist ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#checklist li{font-size:12px;padding:8px 9px;border-radius:9px;background:#e8ece3;color:#5f6e6d}
+#checklist li.found{background:#c5e7d6;color:#275849;font-weight:800}
+#checklist li.found:before{content:'✓ ';font-weight:900}
+@media(min-width:800px){.controls{padding:0 38px 20px}.joy{opacity:.48}.zone{top:calc(env(safe-area-inset-top) + 20px)}#lookHint{bottom:14px}}
+@media(max-width:550px){.brand{padding:8px 9px}.brand small{font-size:8px}.brand strong{font-size:14px}.back,.iconbtn{min-width:42px;height:42px}.hud{gap:6px}.progress{min-width:65px;padding:7px}.progress strong{font-size:19px}.mini{top:calc(env(safe-area-inset-top) + 75px);right:10px;width:94px;height:94px}.searchPrompt{bottom:calc(env(safe-area-inset-bottom) + 142px)}.controls{padding:0 16px 17px}#lookHint{display:none}.tips{gap:5px}.tips div{font-size:10px}}
+@media(max-height:620px){.panel{padding:16px}.panel h1{font-size:36px}.illustration{display:none}.tips{margin:8px auto}.panel p{margin-bottom:8px}.controls{bottom:calc(env(safe-area-inset-bottom) + 4px)}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script>
+</head>
+<body>
+<main id="game">
+<canvas id="world" aria-label="Explore the 3D office as an animated character"></canvas>
+<div id="vignette"></div>
+<header class="hud">
+<a class="back" href="../" aria-label="Back to GameBox">⌂</a>
+<div class="brand"><small>GAMEBOX · OFFICE ADVENTURE</small><strong>OFFICE HUNT</strong></div>
+<button id="listBtn" class="iconbtn" aria-label="Show items to find">☷</button>
+<div class="progress"><small>FOUND</small><strong><span id="count">0</span><em>/10</em></strong></div>
+</header>
+<div class="zone" id="zone">RECEPTION</div>
+<div class="mini"><canvas id="map" width="208" height="208" aria-label="Office mini-map"></canvas></div>
+<div class="toast" id="toast" aria-live="polite"></div>
+<div class="searchPrompt" id="prompt">SEARCH <small>Press E or FIND</small></div>
+<section class="controls" aria-label="Mobile game controls">
+<div class="joy" id="joystick" aria-label="Movement joystick" role="application"><div class="joyKnob" id="knob"></div></div>
+<div class="actions"><button class="action" id="jumpBtn" aria-label="Jump"><span>↥</span>JUMP</button><button class="action" id="takeBtn" aria-label="Find nearby object" disabled><span>✦</span>FIND</button></div>
+</section>
+<div id="lookHint">WASD / ARROWS MOVE · SPACE JUMP · E FIND · DRAG TO LOOK</div>
+<section id="checklist" aria-label="Items checklist">
+<header><strong>Lost & found</strong><button type="button" id="closeList" aria-label="Close checklist">✕</button></header><ul id="items"></ul>
+</section>
+<section class="overlay" id="start">
+ <div class="panel">
+  <div class="eyebrow">AN OFFICE ADVENTURE</div>
+  <div class="illustration" aria-hidden="true"><div class="plant"></div><div class="desk"></div><div class="plant"></div></div>
+  <h1>OFFICE<br><span>HUNT.</span></h1>
+  <p>Somebody has misplaced ten everyday office items. Explore the whole floor, investigate desks and corners, and recover every last one.</p>
+  <div class="tips"><div><b>↖ ↑ ↗</b>Move</div><div><b>SPACE / ↥</b>Jump</div><div><b>E / FIND</b>Collect</div></div>
+  <button class="primary" id="startBtn" type="button">LET'S SEARCH THE OFFICE</button>
+  <div class="small">Drag anywhere outside the joystick to turn the camera</div>
+ </div>
+</section>
+<section class="overlay hidden" id="won">
+ <div class="panel"><div class="eyebrow">ALL ITEMS RECOVERED</div><div class="illustration" aria-hidden="true"><div class="plant"></div><div class="desk"></div><div class="plant"></div></div><h2>CASE<br>CLOSED.</h2><p>You found all ten lost office items. The office can finally get back to work.</p><p id="timeResult"></p><button class="primary" id="againBtn">SEARCH AGAIN</button><a class="secondary" href="../" style="text-decoration:none">BACK TO GAMEBOX</a></div>
+</section>
+<section class="overlay hidden" id="paused">
+ <div class="panel"><div class="eyebrow">OFFICE HUNT</div><h2>PAUSED</h2><p>Ten hidden objects. One rather large office.</p><button class="primary" id="resumeBtn">KEEP SEARCHING</button><button class="secondary" id="restartBtn">RESTART SEARCH</button></div>
+</section>
+</main>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+import {loadThreeAsset} from '../shared/asset-pool/gamebox-asset-pool.js';
+
+const $=id=>document.getElementById(id);
+const canvas=$('world'),map=$('map'),ctx=map.getContext('2d');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.36;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d3d5');scene.fog=new THREE.Fog('#a9d3d5',34,71);
+const camera=new THREE.PerspectiveCamera(62,1,.09,130);
+scene.add(new THREE.HemisphereLight('#e0faf9','#98a5a3',2.2));
+const key=new THREE.DirectionalLight('#fff5d5',2.65);key.position.set(-13,23,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-35;key.shadow.camera.right=35;key.shadow.camera.top=35;key.shadow.camera.bottom=-35;key.shadow.bias=-.00045;scene.add(key);
+const material=(c,more={})=>new THREE.MeshStandardMaterial({color:c,roughness:.86,metalness:0,...more});
+const M={floor:material('#e0ded2'),wall:material('#edf0e8'),trim:material('#284952'),glass:material('#9ac9ca',{transparent:true,opacity:.35,roughness:.17,metalness:.1,depthWrite:false}),oak:material('#c58d63'),wood:material('#8b5c4b'),leg:material('#344e57'),cream:material('#f8f2e5'),blue:material('#4d818b'),teal:material('#31776e'),green:material('#518c6d'),leaf:material('#418669'),gold:material('#f3c575',{metalness:.14}),screen:material('#345b6b',{emissive:'#1a5267',emissiveIntensity:.25}),dark:material('#243640'),steel:material('#9faeb0',{metalness:.35,roughness:.45}),red:material('#cb6655'),paper:material('#faf5e9')};
+const geo={box:new THREE.BoxGeometry(1,1,1),sphere:new THREE.SphereGeometry(1,14,10),cylinder:new THREE.CylinderGeometry(1,1,1,12),cone:new THREE.ConeGeometry(1,1,10),torus:new THREE.TorusGeometry(.4,.09,7,20)};
+const mesh=(parent,shape,mat,x,y,z,sx=1,sy=sx,sz=sx)=>{const o=new THREE.Mesh(shape,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;};
+const box=(p,m,x,y,z,sx,sy,sz)=>mesh(p,geo.box,m,x,y,z,sx,sy,sz);
+const ball=(p,m,x,y,z,r)=>mesh(p,geo.sphere,m,x,y,z,r);
+const cyl=(p,m,x,y,z,r,h)=>mesh(p,geo.cylinder,m,x,y,z,r,h,r);
+const colliders=[];
+const block=(x,z,hx,hz)=>colliders.push({x,z,hx,hz});
+const world=new THREE.Group();scene.add(world);
+const floor=mesh(world,new THREE.PlaneGeometry(36,38),M.floor,0,-.03,-1);floor.rotation.x=-Math.PI/2;floor.castShadow=false;
+for(let x=-17;x<=17;x+=2) {const line=box(world,M.cream,x,.006,-1,.022,.006,38);line.castShadow=false}
+for(let z=-19;z<=17;z+=2) {const line=box(world,M.cream,0,.007,z,36,.006,.022);line.castShadow=false}
+const receptionMat=material('#b7d8d0'),meetingMat=material('#d6d9b9'),kitchenMat=material('#e2d1b4');
+for(const [x,z,w,d,m] of [[0,11,32,8,receptionMat],[-10,-10,11,12,meetingMat],[10,-10,12,12,kitchenMat]]){
+ const patch=mesh(world,new THREE.PlaneGeometry(w,d),m,x,.009,z);patch.rotation.x=-Math.PI/2;patch.castShadow=false;
+}
+function wall(x,z,sx,sz,h=2.7,glass=false){const a=box(world,glass?M.glass:M.wall,x,h/2,z,sx,h,sz);a.castShadow=!glass;return a}
+wall(-18,-1,.26,37);wall(18,-1,.26,37);
+wall(0,-19,36,.3);wall(0,17,36,.3,2.3,true);
+for(let z=-14;z<16;z+=5){box(world,M.trim,-17.8,1.0,z,.17,2.2,.17);box(world,M.trim,17.8,1,z,.17,2.2,.17)}
+for(let x=-14;x<16;x+=6){box(world,M.trim,x,1.1,16.9,.18,2.3,.2);}
+for(const [x,z,sx,sz] of [[-12,-6,8,.15],[12,-6,8,.15],[-5,-12,.14,5],[5,-12,.14,5]]){
+ wall(x,z,sx,sz,1.25,true);
+}
+function label(x,z,text){const c=document.createElement('canvas');c.width=384;c.height=80;const q=c.getContext('2d');q.fillStyle='#315860';q.fillRect(0,0,384,80);q.fillStyle='#f3eddc';q.font='bold 32px Arial';q.textAlign='center';q.fillText(text,192,51);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const pl=mesh(world,new THREE.PlaneGeometry(3.3,.69),new THREE.MeshBasicMaterial({map:tex,transparent:true}),x,2.67,z);return pl;}
+label(0,-5.95,'OPEN PLAN');label(-10,-17.5,'MEETING ROOM');label(10,-17.5,'BREAK ROOM');
+function desk(x,z,turn=0){
+ const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=turn;world.add(g);
+ box(g,M.oak,0,.91,0,2.75,.16,1.25);for(const a of [-1.13,1.13])for(const b of [-.46,.46])box(g,M.leg,a,.43,b,.1,.85,.11);
+ box(g,M.cream,0,1.01,.25,.84,.035,.34);
+ const screen=box(g,M.dark,0,1.54,-.2,1.18,.75,.09);screen.rotation.x=-.09;
+ box(g,M.screen,0,1.54,-.14,1.02,.6,.025);
+ box(g,M.steel,0,1.12,-.2,.09,.27,.07);box(g,M.steel,0,1.03,-.18,.47,.04,.31);
+ box(g,M.dark,.77,1.02,.25,.13,.035,.19);
+ box(g,M.paper,-.85,1.02,.17,.35,.025,.43);
+ block(x,z,1.54,.79);
+ return g;
+}
+const deskPositions=[[-6,6,0],[1.3,6,0],[8.4,6,0],[-6,0,0],[1.3,0,0],[8.4,0,0]];
+deskPositions.forEach(p=>desk(...p));
+function cabinet(x,z){const g=new THREE.Group();g.position.set(x,0,z);world.add(g);box(g,M.steel,0,.87,0,1.5,1.72,.75);for(let i=0;i<3;i++){box(g,M.cream,0,.37+i*.51,.39,1.35,.45,.04);box(g,M.leg,0,.38+i*.51,.44,.37,.055,.05)}block(x,z,.84,.49);return g;}
+for(const x of [-3.7,-1.1,1.5])cabinet(x,-15.7);
+function kitchen(){box(world,M.oak,12,1.02,-11,1.5,.17,6.7);box(world,M.cream,12,.48,-11,1.4,.94,6.55);
+box(world,M.steel,12,1.12,-10.8,.95,.05,1.2);box(world,M.cream,12,1.09,-10.8,.68,.07,.8);
+box(world,M.dark,12.0,1.1,-13,.78,.12,.5);box(world,M.steel,12.0,1.25,-13,.25,.34,.19);
+block(12,-11,.92,3.57);
+}
+kitchen();
+function meeting(){const g=new THREE.Group();g.position.set(-10.1,0,-10.3);world.add(g);
+box(g,M.oak,0,.86,0,4.15,.18,1.75);box(g,M.leg,-1.53,.43,0,.17,.86,1.3);box(g,M.leg,1.53,.43,0,.17,.86,1.3);
+box(g,M.cream,0,.99,-.15,1.3,.03,.8);block(-10.1,-10.3,2.3,1.2)}
+meeting();
+function couch(){const g=new THREE.Group();g.position.set(-12.3,0,12.4);g.rotation.y=Math.PI/2;world.add(g);
+box(g,M.blue,0,.55,0,3.5,.55,1.1);box(g,M.blue,0,1.16,-.48,3.5,.95,.28);
+for(const x of [-1.65,1.65])box(g,M.blue,x,.75,0,.23,1.05,1.25);
+block(-12.3,12.4,.85,2.06)} couch();
+function plant(x,z){const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+cyl(g,M.wood,0,.35,0,.4,.7);cyl(g,M.leg,0,.68,0,.3,.06);
+for(let i=0;i<7;i++){const a=i*Math.PI*2/7,px=Math.sin(a)*.31,pz=Math.cos(a)*.31;const leaf=mesh(g,geo.cone,i%2?M.green:M.leaf,px,1.13+((i%3)*.14),pz,.25,.8,.25);leaf.rotation.z=Math.sin(a)*.37;leaf.rotation.x=Math.cos(a)*.37;}
+}
+[[-15,14],[15,14],[-15,-3],[15,-3],[-15,-16],[15,-16]].forEach(p=>plant(...p));
+for(const z of [-4,4,12]) {box(world,M.gold,-17.9,1.8,z,.09,.72,2.7);box(world,M.gold,17.9,1.8,z,.09,.72,2.7)}
+for(const x of [-9,0,9]){const light=box(world,M.cream,x,4,-2,3.4,.16,.5);light.castShadow=false;}
+function makeItem(kind){
+ const g=new THREE.Group();const paper=M.paper,metal=M.steel,dark=M.dark;
+ switch(kind){
+ case 'keycard':box(g,paper,0,.06,0,.47,.08,.33);box(g,M.teal,0,.115,-.09,.39,.012,.07);break;
+ case 'usb':box(g,dark,0,.07,0,.21,.14,.36);box(g,metal,0,.07,-.24,.15,.09,.15);break;
+ case 'notebook':box(g,M.red,0,.08,0,.49,.14,.64);box(g,paper,0,.16,0,.41,.025,.55);break;
+ case 'headphones':{const band=mesh(g,geo.torus,dark,0,.29,0,.4,.3,.4);band.rotation.x=Math.PI;box(g,dark,-.4,.18,0,.16,.36,.26);box(g,dark,.4,.18,0,.16,.36,.26);break}
+ case 'mug':cyl(g,paper,0,.17,0,.19,.35);const handle=mesh(g,geo.torus,M.gold,.22,.21,0,.17,.14,.07);handle.rotation.y=Math.PI/2;break;
+ case 'calculator':box(g,dark,0,.09,0,.38,.14,.56);box(g,M.screen,0,.169,-.16,.29,.012,.12);for(let i=0;i<9;i++)box(g,metal,-.1+(i%3)*.1,.17,-.0+Math.floor(i/3)*.12,.064,.02,.07);break;
+ case 'stapler':box(g,dark,0,.06,0,.19,.1,.48);box(g,metal,0,.15,-.02,.15,.11,.44).rotation.x=-.14;break;
+ case 'badge':box(g,M.teal,0,.055,0,.4,.08,.55);box(g,paper,0,.105,.07,.3,.012,.32);ball(g,M.steel,0,.11,-.17,.055);break;
+ case 'phone':box(g,dark,0,.07,0,.32,.12,.59);box(g,M.screen,0,.133,0,.26,.012,.46);break;
+ case 'scissors':for(const a of [-.35,.35]){const b=box(g,metal,a*.25,.08,-.1,.055,.08,.44);b.rotation.y=a;const ring=mesh(g,geo.torus,M.red,Math.sin(a)*.19,.08,.24,.15,.15,.08);ring.rotation.x=Math.PI/2;}break;
+ }
+ return g;
+}
+const itemDefs=[
+ {kind:'keycard',name:'Keycard',x:-11.2,z:10.2,y:.05},
+ {kind:'usb',name:'USB drive',x:6.4,z:7.1,y:1.03},
+ {kind:'notebook',name:'Notebook',x:-4.8,z:1.25,y:1.04},
+ {kind:'headphones',name:'Headphones',x:10.3,z:1.2,y:.06},
+ {kind:'mug',name:'Coffee mug',x:10.0,z:-9.6,y:.06},
+ {kind:'calculator',name:'Calculator',x:-9.4,z:-8.6,y:1.02},
+ {kind:'stapler',name:'Stapler',x:2.8,z:-14.6,y:.04},
+ {kind:'badge',name:'Staff badge',x:7.0,z:-4.3,y:.04},
+ {kind:'phone',name:'Mobile phone',x:-4.7,z:-13.8,y:.07},
+ {kind:'scissors',name:'Scissors',x:-15.1,z:2.5,y:.06}
+];
+const items=itemDefs.map((def,i)=>{const group=makeItem(def.kind);group.position.set(def.x,def.y,def.z);world.add(group);const halo=mesh(group,new THREE.TorusGeometry(.45,.026,6,22),M.gold,0,-def.y+.08,0);halo.rotation.x=-Math.PI/2;halo.castShadow=false;return {...def,group,halo,found:false,i}});
+const checklist=()=>$('items').innerHTML=items.map(v=>'<li class="'+(v.found?'found':'')+'">'+v.name+'</li>').join('');
+checklist();
+const player=new THREE.Group();scene.add(player);player.position.set(0,0,13.5);
+let model=new THREE.Group();player.add(model);
+let mixer=null,clips={},activeClip='',loadedCharacter=false;
+function heroFallback(){const g=new THREE.Group();
+box(g,M.blue,0,1.4,0,.7,.85,.36);ball(g,material('#ddb798'),0,2.12,0,.3);
+for(const x of [-.23,.23])box(g,M.leg,x,.55,0,.24,1.04,.28);
+for(const x of [-.5,.5])box(g,M.blue,x,1.34,0,.19,.75,.23);return g}
+let fallback=heroFallback();model.add(fallback);
+async function loadCharacter(){
+ try{
+  const a=await loadThreeAsset('quaternius:ultimate-animated-character:Suit_Male',{GLTFLoader});
+  const o=a.object;if(!o)throw Error('Character scene missing');
+  o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});
+  let bounds=new THREE.Box3().setFromObject(o),size=bounds.getSize(new THREE.Vector3());
+  if(size.y<.01)throw Error('Character has no visible geometry');
+  o.scale.multiplyScalar(2.35/size.y);
+  bounds=new THREE.Box3().setFromObject(o);
+  o.position.set(-(bounds.min.x+bounds.max.x)/2,-bounds.min.y,-(bounds.min.z+bounds.max.z)/2);
+  const holder=new THREE.Group();holder.add(o);holder.rotation.y=Math.PI;
+  player.remove(model);model=holder;player.add(model);loadedCharacter=true;
+  if(a.animations.length){
+   mixer=new THREE.AnimationMixer(o);
+   for(const clip of a.animations)clips[clip.name.toLowerCase()]=clip;
+   setAnim('idle');
+  }
+ }catch(err){console.warn('Quaternius office character could not load',err);showToast('Using basic character while model is unavailable');}
+}
+function setAnim(mode){
+ if(!mixer)return;
+ if(mode===activeClip)return;
+ const all=Object.values(clips);
+ let search=mode==='run'?[/run/i,/walk/i]:mode==='jump'?[/jump/i]:[/idle/i,/stand/i];
+ let clip=search.reduce((found,rx)=>found||all.find(c=>rx.test(c.name)),null)||all[0];
+ if(!clip)return;
+ if(mode===activeClip)return;
+ for(const a of mixer._actions)a.fadeOut(.16);
+ const action=mixer.clipAction(clip);action.reset().fadeIn(.15).play();activeClip=mode;
+}
+const propPlans=[
+ ['Chair_1',-6,7.55,1.05,Math.PI],['Chair_1',1.3,7.55,1.05,Math.PI],['Chair_1',8.4,7.55,1.05,Math.PI],
+ ['Chair_2',-6,1.5,1.05,Math.PI],['Chair_2',1.3,1.5,1.05,Math.PI],['Chair_2',8.4,1.5,1.05,Math.PI],
+ ['Chair_3',-12.6,-8.6,1.05,0],['Chair_3',-7.7,-11.8,1.05,Math.PI],
+ ['Bookshelf',-15.1,-11.4,2.4,Math.PI/2],['Bookshelf',-15.1,-8.6,2.4,Math.PI/2],
+ ['Houseplant_4',-14.6,5.5,2,0],['Houseplant_4',14.7,7,2,0],
+ ['Drawer_3',-13.5,-1.2,1.25,Math.PI/2],
+ ['Couch_Small2',-2.8,12.2,1.18,Math.PI],['Light_Desk',-6.9,5.9,.47,0],
+ ['Table_RoundSmall',9.2,-14.7,.85,0],['Chair_2',7.9,-14.8,1.05,-1.4]
+];
+async function loadFurniture(){
+ const types=[...new Set(propPlans.map(p=>p[0]))];
+ await Promise.all(types.map(async name=>{
+  try{
+   const a=await loadThreeAsset('quaternius:ultimate-house-interior:'+name,{FBXLoader});
+   const original=a.object;
+   const targets=propPlans.filter(p=>p[0]===name);
+   for(const [_,x,z,height,rot] of targets){
+    const clone=original.clone(true);clone.rotation.set(0,0,0);
+    const b=new THREE.Box3().setFromObject(clone),s=b.getSize(new THREE.Vector3());
+    if(s.y<.001)continue;
+    clone.scale.multiplyScalar(height/s.y);
+    const b2=new THREE.Box3().setFromObject(clone);
+    clone.position.set(-(b2.min.x+b2.max.x)/2,-b2.min.y,-(b2.min.z+b2.max.z)/2);
+    clone.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
+    const holder=new THREE.Group();holder.position.set(x,0,z);holder.rotation.y=rot;holder.add(clone);world.add(holder);
+   }
+  }catch(err){console.warn('Furniture asset unavailable:',name,err);}
+ }));
+}
+const state={started:false,paused:false,completed:false,seconds:0,found:0,near:null,lastZone:'',jumpV:0,y:0,yaw:0,moveX:0,moveZ:0,lookPointer:null,joyPointer:null,joyX:0,joyY:0,toastT:0};
+const pressed=new Set();
+const clock=new THREE.Clock();
+let cameraReady=false;
+let lastMinimap=0;
+const length=(x,y)=>Math.hypot(x,y);
+function nearItem(){let best=null,d=999;for(const v of items){if(v.found)continue;const t=length(v.x-player.position.x,v.z-player.position.z);if(t<d){d=t;best=v;}}return d<2.05?best:null;}
+function showToast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');state.toastT=2.3}
+function collect(){if(!state.started||state.paused)return;const item=nearItem();if(!item)return;
+ item.found=true;world.remove(item.group);state.found++;
+ $('count').textContent=state.found;checklist();
+ showToast(item.name+' found!  '+state.found+'/10');
+ if(navigator.vibrate)navigator.vibrate(30);
+ if(state.found===10){state.completed=true;state.started=false;const time=Math.round(state.seconds);const min=Math.floor(time/60);$('timeResult').textContent='Search completed in '+min+'m '+String(time%60).padStart(2,'0')+'s';$('won').classList.remove('hidden');}
+}
+function startGame(reset=false){
+ if(reset){items.forEach(v=>{if(v.found){v.found=false;world.add(v.group);}});state.found=0;$('count').textContent=0;checklist();player.position.set(0,0,13.5);state.yaw=0;state.seconds=0;state.jumpV=0;state.y=0;}
+ state.started=true;state.paused=false;state.completed=false;
+ $('start').classList.add('hidden');$('won').classList.add('hidden');$('paused').classList.add('hidden');
+}
+$('startBtn').onclick=()=>startGame(true);
+$('againBtn').onclick=()=>startGame(true);
+$('resumeBtn').onclick=()=>{state.paused=false;$('paused').classList.add('hidden');};
+$('restartBtn').onclick=()=>startGame(true);
+$('takeBtn').onclick=collect;
+$('jumpBtn').onclick=()=>jump();
+$('listBtn').onclick=()=>$('checklist').classList.toggle('open');
+$('closeList').onclick=()=>$('checklist').classList.remove('open');
+function jump(){if(!state.started||state.paused||state.y>.02)return;state.jumpV=6.7;}
+function togglePause(){if(!state.started)return;state.paused=!state.paused;$('paused').classList.toggle('hidden',!state.paused);}
+window.addEventListener('keydown',e=>{
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+ if(e.repeat&&['KeyE','Space','KeyP','Escape'].includes(e.code))return;
+ pressed.add(e.code);
+ if(e.code==='KeyE')collect();if(e.code==='Space')jump();if(e.code==='KeyP'||e.code==='Escape')togglePause();
+});
+window.addEventListener('keyup',e=>pressed.delete(e.code));
+window.addEventListener('blur',()=>{pressed.clear();state.joyX=state.joyY=0});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.started&&!state.paused)togglePause();});
+const joy=$('joystick'),knob=$('knob');
+function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ const dx=e.clientX-cx,dy=e.clientY-cy,d=Math.min(43,length(dx,dy)),a=Math.atan2(dy,dx);
+ state.joyX=Math.cos(a)*d/43;state.joyY=-Math.sin(a)*d/43;
+ knob.style.transform='translate('+(state.joyX*43)+'px,'+(-state.joyY*43)+'px)';
+}
+joy.addEventListener('pointerdown',e=>{state.joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e);e.preventDefault();});
+joy.addEventListener('pointermove',e=>{if(state.joyPointer===e.pointerId)joyMove(e);});
+const releaseJoy=e=>{if(state.joyPointer===e.pointerId){state.joyPointer=null;state.joyX=state.joyY=0;knob.style.transform='translate(0px,0px)';}};
+joy.addEventListener('pointerup',releaseJoy);joy.addEventListener('pointercancel',releaseJoy);
+let lastLook=0;
+canvas.addEventListener('pointerdown',e=>{if(!state.started)return;state.lookPointer=e.pointerId;lastLook=e.clientX;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(state.lookPointer!==e.pointerId)return;state.yaw-=((e.clientX-lastLook)/Math.max(canvas.clientWidth,350))*3.8;lastLook=e.clientX;});
+canvas.addEventListener('pointerup',e=>{if(state.lookPointer===e.pointerId)state.lookPointer=null;});
+canvas.addEventListener('pointercancel',e=>{if(state.lookPointer===e.pointerId)state.lookPointer=null;});
+function resize(){const w=canvas.clientWidth||innerWidth,h=canvas.clientHeight||innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?72:59;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);resize();
+function zoneName(){const x=player.position.x,z=player.position.z;
+ if(z>8.3)return 'RECEPTION';
+ if(z<-6&&x<-5)return 'MEETING ROOM';
+ if(z<-6&&x>5)return 'BREAK ROOM';
+ if(z<-12)return 'RECORDS';
+ return 'OPEN-PLAN OFFICE';
+}
+function minimap(){
+ const w=map.width,h=map.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#e9e9dc';ctx.fillRect(5,5,w-10,h-10);
+ const X=x=>8+(x+18)/36*(w-16), Z=z=>8+(z+19)/38*(h-16);
+ ctx.fillStyle='#9ac5b5';ctx.fillRect(X(-16),Z(8),X(16)-X(-16),Z(15)-Z(8));
+ ctx.fillStyle='#b4caa8';ctx.fillRect(X(-16),Z(-16),X(-5)-X(-16),Z(-7)-Z(-16));
+ ctx.fillStyle='#dbc39f';ctx.fillRect(X(5),Z(-16),X(16)-X(5),Z(-7)-Z(-16));
+ ctx.fillStyle='#385c65';for(const [x,z] of deskPositions)ctx.fillRect(X(x-1.25),Z(z-.5),X(x+1.25)-X(x-1.25),Z(z+.5)-Z(z-.5));
+ const px=X(player.position.x),py=Z(player.position.z);ctx.save();ctx.translate(px,py);ctx.rotate(state.yaw);
+ ctx.fillStyle='#f5ab60';ctx.strokeStyle='#fff';ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(-6,6);ctx.lineTo(6,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+ ctx.strokeStyle='#335a63';ctx.lineWidth=3;ctx.strokeRect(5,5,w-10,h-10);
+}
+function canMove(x,z){if(x< -17.25||x>17.25||z< -18.2||z>16.1)return false;
+ const r=.37;for(const c of colliders)if(Math.abs(x-c.x)<c.hx+r&&Math.abs(z-c.z)<c.hz+r)return false;
+ return true;
+}
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05);
+ if(state.started&&!state.paused){
+  state.seconds+=dt;
+  const mx=(pressed.has('KeyD')||pressed.has('ArrowRight')?1:0)-(pressed.has('KeyA')||pressed.has('ArrowLeft')?1:0)+state.joyX;
+  const mz=(pressed.has('KeyW')||pressed.has('ArrowUp')?1:0)-(pressed.has('KeyS')||pressed.has('ArrowDown')?1:0)+state.joyY;
+  const md=Math.min(1,length(mx,mz));
+  const nx=md?mx/length(mx,mz):0,nz=md?mz/length(mx,mz):0;
+  const dx=(nx*Math.cos(state.yaw)-nz*Math.sin(state.y))*dt*4.15*md;
+  const dz=(-nx*Math.sin(state.y)-nz*Math.cos(state.y))*dt*4.15*md;
+  if(canMove(player.position.x+dx,player.position.z))player.position.x+=dx;
+  if(canMove(player.position.x,player.position.z+dz))player.position.z+=dz;
+  if(md>.08)player.rotation.y+=(Math.atan2(-dx,-dz)-player.rotation.y+Math.PI*3)%(2*Math.PI)*Math.min(1,dt*10)-Math.PI*Math.min(1,dt*10);
+  state.y=Math.max(0,state.y+state.jumpV*dt);
+  if(state.jumpV!==0||state.y>0){state.jumpV-=15.8*dt;if(state.y<=0){state.y=0;state.jumpV=0}}
+  player.position.y=state.y;
+  if(mixer){setAnim(state.y>.03?'jump':md>.07?'run':'idle');mixer.update(dt);}
+  else{fallback.position.y=md>.07&&state.y===0?Math.sin(state.seconds*12)*.055:0;}
+  const near=nearItem();state.near=near;$('takeBtn').disabled=!near;
+  $('prompt').classList.toggle('show',!!near);
+  if(near){$('prompt').firstChild.textContent='FIND '+near.name.toUpperCase();}
+  const zone=zoneName();if(state.lastZone!==zone){$('zone').textContent=zone;state.lastZone=zone;}
+ }else if(mixer){setAnim('idle');mixer.update(dt);}
+ for(const it of items){if(it.found)continue;it.group.rotation.y+=dt*.33;it.group.position.y=it.y+Math.sin(performance.now()*.002+it.i)*.025;it.halo.visible=length(it.x-player.position.x,it.z-player.position.z)<4;}
+ if(state.toastT>0){state.toastT-=dt;if(state.toastT<=0)$('toast').classList.remove('show');}
+ const look=new THREE.Vector3(-Math.sin(state.yaw),0,-Math.cos(state.yaw));
+ const mobile=innerWidth<680;
+ const distance=mobile?6.8:8.9,up=mobile?4.75:5.85;
+ const target=new THREE.Vector3(player.position.x-look.x*distance,player.position.y+up,player.position.z-look.z*distance);
+ if(!cameraReady){camera.position.copy(target);cameraReady=true;}
+ else camera.position.lerp(target,Math.min(1,dt*5));
+ const gaze=new THREE.Vector3(player.position.x+look.x*3.9,player.position.y+1.45,player.position.z+look.z*3.9);
+ camera.lookAt(gaze);
+ if(performance.now()-lastMinimap>100){minimap();lastMinimap=performance.now();}
+ renderer.render(scene,camera);
+}
+animate();
+loadCharacter();loadFurniture();
+</script>
+</body>
+</html>
