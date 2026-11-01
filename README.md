@@ -43,6 +43,12 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - Reuses local Kenney Christmas trees, presents and snow art alongside original game rendering. No third-party art downloads are needed.
 - Source: `santas-arrow-escape/`. Run `node --test santas-arrow-escape/engine.test.mjs` or the dedicated Chromium mobile workflow.
 
+### Office Hunt
+- Third-person 3D scavenger hunt in an office, with ten discoverable desk and workplace items, collect interactions, jumping, camera rotation, desktop keyboard and mobile joystick/touch controls.
+- Reuses Quaternius CC0 animated Suit_Male character and interior furniture models already committed to the GameBox asset pool. The office architecture, desks, computer stations and collectible meshes are original in-game geometry.
+- The game is a playable visual prototype, not a demo of every advanced physics interaction or Mixamo motion identified in research.
+- Play at `office-hunt/`.
+
 ### North Pole Dash
 - Original three-lane, third-person 3D Christmas endless runner with progressive pace, moving festive scenery, swipe/keyboard/accessible on-screen controls, jump, slide, presents, collisions, pause/replay and locally saved high score.
 - Uses the bundled CC0 Quaternius rigged `Elf.gltf` and snow-covered `PineTree_Snow_2.fbx` / `_4.fbx` models from the GameBox shared asset pool. Existing Kenney holiday present sprites and Game Icons are reused for game menus and GameBox tiles.
@@ -237,7 +243,7 @@ Deploy the repository with GitHub Pages or another HTTPS static host. No applica
 ## Advent 2026 and standalone collections
 
 The public `GameBox` home now contains two intentionally separated collections:
-**Advent 2026 (20 mini-games)** and **Standalone GameBox (16 independent games)**.
+**Advent 2026 (20 mini-games)** and **Standalone GameBox (17 independent games)**.
 The Advent collection also has a dedicated page at `advent-2026/`, branded as
 the **North Pole Playroom**, with the same mini-game labels and artwork frames.
 `advent-2026/catalog.json` is the approved, ordered catalogue.
