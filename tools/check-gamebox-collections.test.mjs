@@ -10,7 +10,7 @@ const catalog=JSON.parse(read('advent-2026/catalog.json'));
 const home=read('hub/index.html'),rootHome=read('index.html'),portal=read('advent-2026/index.html');
 const short=href=>href.split('?')[0].split('#')[0];
 const chosen=['tiny-ski-run/','jigsaw/','workshop-watch/','block-breaker/','santa-invaders/','festive-blocks/','santa-letter-sort/','christmas-dash/','north-pole-pizzeria/','snowy-crossing/','present-stack/','chimney-drop-in/','santas-sorting-shift/','snow-shoveller/','snowball-knockdown/','santas-arrow-escape/','christmas-potion-sort/','gift-bubble-shooter/','snowy-sweets/','maze-shift.html'];
-const standalone=['unfinished-business/','ancient-dominion/','core-empires/','sweet-truck-fever/','christmas-lights/','pipeworks/','#cards-setup','#coins-setup','heads.html','disc-rally.html','bingo/','race-manager/index.html','relic-trail/','christmas-quest/','marble-race/','office-hunt/','my-place/'];
+const standalone=['unfinished-business/','ancient-dominion/','core-empires/','sweet-truck-fever/','christmas-lights/','pipeworks/','#cards-setup','#coins-setup','heads.html','disc-rally.html','bingo/','race-manager/index.html','fourfold/','relic-trail/','christmas-quest/','marble-race/','office-hunt/','my-place/'];
 const tiles=content=>[...content.matchAll(/<section\b[^>]*class="toyGame [^"]+"[^>]*>[\s\S]*?<\/section>/g)].map(x=>x[0]);
 const route=tile=>tile.match(/<a[^>]*href="([^"]+)"/)?.[1] || ('#'+tile.match(/data-go="([^"]+)"/)?.[1]);
 const adventPart=home.slice(home.indexOf('id="advent-collection"'),home.indexOf('id="standalone-collection"'));
@@ -24,8 +24,8 @@ test('the 20 confirmed Advent titles are grouped, unique and in the approved ord
  assert.equal((portal.match(/data-mini-index="\d\d"/g)||[]).length,20);
  assert.equal((home.match(/data-mini-index="\d\d"/g)||[]).length,20);
 });
-test('the 17 independent titles remain outside Advent, including Card Deck, Coin Flip and My Place',()=>{
- assert.equal(catalog.standalone.length,17);
+test('the 18 independent titles remain outside Advent, including Card Deck, Coin Flip and My Place',()=>{
+ assert.equal(catalog.standalone.length,18);
  assert.deepEqual(catalog.standalone.map(g=>g.href.startsWith('#')?g.href:short(g.href)),standalone);
  assert.deepEqual(tiles(standalonePart).map(route),catalog.standalone.map(g=>g.href));
  assert.equal((home.match(/id="homePlayers"/g)||[]).length,1,'shared roster remains intact');
@@ -34,7 +34,7 @@ test('the 17 independent titles remain outside Advent, including Card Deck, Coin
 });
 test('no developer elf test or duplicated public game appears in either collection',()=>{
  const hrefs=[...catalog.advent,...catalog.standalone].map(g=>g.href);
- assert.equal(new Set(hrefs).size,37);
+ assert.equal(new Set(hrefs).size,38);
  assert.doesNotMatch(home,/href="character-playground\//);
  assert.doesNotMatch(portal,/href="character-playground\//);
  assert.ok(!catalog.advent.some(g=>standalone.includes(g.href)));
