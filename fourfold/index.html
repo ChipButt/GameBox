@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#12172b"><title>Fourfold — Word Connections · GameBox</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+:root{font-family:'DM Sans',system-ui,sans-serif;color:#f1f0ff;background:#12172b;--ink:#12172b;--border:#444b72;--gold:#ffd078;--teal:#95f4df;--muted:#aeb6d7}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#12172b}body{background:radial-gradient(ellipse 70% 30% at 50% -9%,#384774 0%,transparent 100%),#12172b}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #ffd078;outline-offset:3px}button:disabled{cursor:default;opacity:.48}
+[hidden]{display:none!important}
+.shell{max-width:660px;min-height:100vh;min-height:100dvh;padding:calc(13px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));margin:0 auto;display:flex;flex-direction:column}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:10px}.back{width:42px;height:42px;display:grid;place-items:center;text-decoration:none;border:1px solid #6a7398;border-radius:13px;background:#232c4e;color:#f1f0ff;font-size:24px}.wordmark{font:900 20px 'Outfit',system-ui,sans-serif;letter-spacing:.12em}.wordmark span{color:var(--gold)}.version{font-size:10px;letter-spacing:.12em;font-weight:900;color:#a7b8d7}
+.intro{margin:20px 0 22px;text-align:center}.eyebrow{text-transform:uppercase;letter-spacing:.18em;color:var(--teal);font-size:10px;font-weight:900}.intro h1{font:800 clamp(25px,6vw,37px)/1.08 'Outfit',system-ui,sans-serif;letter-spacing:-.035em;margin:7px 0}.intro p{font-size:12px;line-height:1.55;color:#b8c0dc;margin:0 auto;max-width:410px}.round{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 13px;font-size:12px;color:#e0e5f4}.round b{color:#ffd892}.pips{display:flex;gap:5px}.pip{width:18px;height:6px;border-radius:4px;background:#394266}.pip.done{background:#8de8d2}.pip.current{background:#ffcc73}
+.status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 13px}.status span{font-size:11px;font-weight:800;color:#bbc8e6}.lives{display:flex;gap:5px}.life{font-size:18px;color:#f3ad93;line-height:1}.life.lost{opacity:.2}.notice{min-height:25px;margin:3px 0 9px;font-size:12px;line-height:1.4;text-align:center;color:#c3d0e9;font-weight:700}.notice.success{color:#9bf1d8}.notice.error{color:#ffbcac}
+.solved{display:grid;gap:8px;margin-bottom:8px}.solvedRow{padding:10px 7px;border-radius:13px;text-align:center;color:#172036;animation:pop .28s ease backwards;box-shadow:inset 0 -3px #11183120}.solvedRow strong{display:block;font:800 15px 'Outfit',system-ui,sans-serif}.solvedRow small{font-size:10px;letter-spacing:.01em;font-weight:800}.solvedRow:nth-child(4n+1){background:#ffce81}.solvedRow:nth-child(4n+2){background:#95e7cc}.solvedRow:nth-child(4n+3){background:#bcb0fd}.solvedRow:nth-child(4n){background:#f7aeba}
+@keyframes pop{from{transform:scale(.96);opacity:.1}to{transform:scale(1);opacity:1}}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.tile{min-width:0;aspect-ratio:1/.88;min-height:61px;max-height:102px;border-radius:12px;border:2px solid #828bb1;background:linear-gradient(160deg,#e9e9f9,#c7d0e5);box-shadow:0 4px 0 #5b6788;color:#1e2642;font:900 clamp(10px,2.55vw,16px) 'Outfit',system-ui,sans-serif;letter-spacing:.015em;overflow-wrap:anywhere;padding:5px 3px;display:flex;justify-content:center;align-items:center;flex-direction:column;gap:4px;transition:transform .1s,border-color .1s,background .1s;touch-action:manipulation}
+.tile:active{transform:translateY(2px);box-shadow:0 2px 0 #5b6788}.tile.selected{border-color:#ffe0a2;color:#fff8de;background:linear-gradient(155deg,#515e96,#373e71);box-shadow:0 4px 0 #bd9a5d}.tile.locked{border:2px solid #e4be74;background:linear-gradient(155deg,#344270,#252e52);color:#ffd791}.tile .seal{font-size:21px;line-height:1}.tile .sealText{font-size:8px;letter-spacing:.11em;color:#b6c9db}.tile .wordIcon{font-size:12px;opacity:.6}
+.actions{display:flex;gap:9px;justify-content:space-between;align-items:center;margin:20px 0 9px}.control{border-radius:12px;border:1px solid #747fa6;background:#30395f;color:#f1f0ff;padding:13px 16px;font-size:12px;font-weight:900;min-height:47px}.control.primary{background:linear-gradient(#ffda97,#e5aa50);border:1px solid #ffdfac;box-shadow:0 4px 0 #8d683a;color:#202642;flex:1}.control.primary:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #8d683a}.foot{margin-top:auto;padding:23px 0 4px;text-align:center;color:#8f9cbe;font-size:10px;letter-spacing:.02em}.foot span{color:#d8b98b}
+.overlay{position:fixed;inset:0;background:#060b1bcc;display:grid;place-items:end center;z-index:100;padding:14px;overflow-y:auto;backdrop-filter:blur(4px)}.dialog{background:linear-gradient(160deg,#283455,#19243e);border:1px solid #8d96bd;border-radius:24px 24px 18px 18px;box-shadow:0 20px 70px #01030ccc;width:min(100%,540px);padding:22px 20px 23px;color:#fff;max-height:95vh;max-height:95dvh;overflow:auto}.dialogHeader{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.dialog h2{font:800 25px/1.1 'Outfit',system-ui,sans-serif;margin:6px 0 9px}.dialog p{font-size:12px;line-height:1.6;color:#c1cbe4;margin:0 0 14px}.close{border:1px solid #a7b0cf88;background:#3c4a70;color:#fff;border-radius:11px;min-width:42px;height:42px;font-size:22px}.miniClue{display:grid;grid-template-columns:minmax(0,1fr) minmax(92px,38%);align-items:center;gap:10px;margin:10px 0}.miniClue label{font-size:12px;line-height:1.3;color:#edf1fb}.miniClue input,.miniInput{font-size:16px;letter-spacing:.12em;font-weight:800;color:#212946;background:#f5f1ea;border:2px solid #a9c3ce;border-radius:10px;width:100%;height:43px;padding:8px;min-width:0;text-align:center;text-transform:uppercase}.miniClue input.good{border-color:#95edbe;background:#d7f4df}.extract{font-size:11px;color:#ffdfa4;margin:11px 0 17px;font-weight:800}.miniActions{display:flex;gap:9px}.miniActions .control.primary{width:100%}.miniError{min-height:18px;color:#ffb8a7;font-size:11px;margin:12px 0 0;font-weight:800}.cipher{padding:18px 13px;margin:17px 0;text-align:center;background:#111b35;border:1px dashed #829abd;border-radius:14px}.cipher .glyph{font:900 34px 'Outfit',system-ui,sans-serif;letter-spacing:.19em;color:#ffda8e}.cipher small{font-size:11px;color:#bbd1e6}.endTitle{font:900 32px/1.1 'Outfit',system-ui,sans-serif;margin:10px 0 7px}.endScore{font:800 50px 'Outfit',system-ui,sans-serif;color:#ffcf7a}.endActions{display:flex;gap:9px;margin-top:12px}.endActions .control{flex:1}
+@media(max-width:360px){.tile{min-height:56px;border-radius:9px}.board{gap:6px}.shell{padding-left:11px;padding-right:11px}.control{padding:10px 12px}.wordmark{font-size:17px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head><body>
+<div class="shell">
+<header class="nav"><a class="back" href="../" aria-label="Back to GameBox">‹</a><div class="wordmark">FOUR<span>FOLD</span></div><div class="version">V1 • GAMEBOX</div></header>
+<div class="intro"><span class="eyebrow">A word game with a twist</span><h1>One grid. Four hidden links.</h1><p>Find four groups of four. Some words are sealed behind mini-puzzles. Every word matters.</p></div>
+<main>
+<div class="round"><span id="roundName">BOARD 1 / 3</span><div class="pips" id="pips" aria-label="Board progression"></div><span id="roundDifficulty">THE WARM-UP</span></div>
+<div class="status"><span id="groupCount">0 OF 4 GROUPS FOUND</span><div class="lives" id="lives" aria-label="Mistakes remaining"></div></div>
+<div class="notice" id="notice" aria-live="polite">Choose four words that share a connection.</div>
+<div class="solved" id="solved"></div><div class="board" id="board" aria-label="16 word grouping tiles"></div>
+<div class="actions"><button class="control" type="button" id="shuffle">Shuffle</button><button class="control" type="button" id="clear">Deselect</button><button class="control primary" type="button" id="submit" disabled>Submit group</button></div>
+</main>
+<footer class="foot">Original hand-crafted puzzles · <span>No adverts. No artificial energy limits.</span></footer>
+</div>
+<div id="miniOverlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="miniTitle">
+<div class="dialogHeader"><div><div class="eyebrow">Sealed tile</div><h2 id="miniTitle">Unlock the word</h2></div><button id="closeMini" class="close" type="button" aria-label="Close puzzle">×</button></div>
+<p id="miniIntro"></p><div id="crossword" hidden></div><div id="cipher" hidden></div><div class="miniActions"><button class="control primary" id="miniSubmit" type="button">Unlock tile</button></div><div id="miniError" class="miniError" role="status"></div>
+</section></div>
+<div id="endOverlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+<div class="eyebrow" id="endEyebrow">Board completed</div><h2 id="endTitle" class="endTitle">Connections made.</h2><p id="endCopy"></p><div class="endScore" id="endScore">400</div><p>POINTS THIS BOARD</p><div class="endActions"><button class="control primary" id="endNext" type="button">Next board →</button></div>
+</section></div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const GAMES=[
+ {name:'THE WARM-UP',groups:[
+   {name:'___LIGHT',words:['DAY','MOON','SPOT','FLASH'],colour:0},
+   {name:'___ROOM',words:['CLASS','BALL','BED','COURT'],colour:1},
+   {name:'___LINE',words:['DEAD','PUNCH','FINISH','COAST'],colour:2},
+   {name:'___BOARD',words:['KEY','SCORE','CHESS','DART'],colour:3}
+ ],seals:{DAY:{kind:'cross',intro:'Solve the three clues. Read the highlighted third letter of each answer, from top to bottom.',items:[['Award worn on a ribbon','MEDAL'],['Elegance under pressure','GRACE'],['Louisiana wetland','BAYOU']]}}},
+ {name:'FALSE FRIENDS',groups:[
+   {name:'___HOUSE',words:['GREEN','WARE','LIGHT','CLUB'],colour:0},
+   {name:'___DROP',words:['RAIN','TEAR','BACK','EYE'],colour:1},
+   {name:'___PRINT',words:['BLUE','FINGER','FOOT','FINE'],colour:2},
+   {name:'___WORK',words:['HOME','FIELD','PAPER','NET'],colour:3}
+ ],seals:{FOOT:{kind:'cipher',intro:'An old cipher wheel is scratched with A → D. Use it to read the encrypted tile.',code:'IRRW',answer:'FOOT'}}},
+ {name:'HIDDEN IN PLAIN SIGHT',groups:[
+   {name:'___FALL',words:['WATER','NIGHT','SNOW','FREE'],colour:0},
+   {name:'___BOOK',words:['NOTE','TEXT','COOK','SCRAP'],colour:1},
+   {name:'___MARK',words:['TRADE','QUESTION','CHECK','BENCH'],colour:2},
+   {name:'___LIGHT',words:['STOP','STREET','STAR','CANDLE'],colour:3}
+ ],seals:{NIGHT:{kind:'cross',intro:'Solve the clues and take the third letter of each answer to reveal a tile.',items:[['Someone who serves customers at a café','DINER'],['To give off light','SHINE'],['Large bird of prey with broad wings','EAGLE'],['At the back of something','BEHIND'],['Following, later than','AFTER']]}}}
+];
+const SAVE='fourfold.v1.progress';
+function validate(){GAMES.forEach((b,i)=>{let words=b.groups.flatMap(g=>g.words);if(words.length!==16||new Set(words).size!==16||b.groups.some(g=>g.words.length!==4))throw Error('Invalid puzzle board '+i);Object.entries(b.seals).forEach(([word,p])=>{if(!words.includes(word))throw Error('Sealed word absent');if(p.kind==='cross'){let answer=p.items.map(x=>x[1][2]).join('');if(answer!==word)throw Error('Crossword extraction incorrect: '+word);}})})}
+validate();
+const randArr=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let level=0,order=[],selected=[],solved=[],unlocked=[],mistakes=0,wrong=[],miniWord=null,miniInputs=[],totalScore=0;
+function store(){try{localStorage.setItem(SAVE,JSON.stringify({level,order,solved,unlocked,mistakes,wrong,totalScore}))}catch{}}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE));if(!s||!Number.isInteger(s.level)||s.level<0||s.level>=GAMES.length)return false;
+let valid=new Set(GAMES[s.level].groups.flatMap(g=>g.words));
+if(!Array.isArray(s.order)||s.order.length!==16||new Set(s.order).size!==16||s.order.some(x=>!valid.has(x)))return false;
+level=s.level;order=s.order;solved=Array.isArray(s.solved)?s.solved.filter(x=>Number.isInteger(x)&&x>=0&&x<4):[];solved=[...new Set(solved)];unlocked=Array.isArray(s.unlocked)?s.unlocked.filter(x=>GAMES[level].seals[x]):[];mistakes=Math.max(0,Math.min(4,Number(s.mistakes)||0));wrong=Array.isArray(s.wrong)?s.wrong:[];totalScore=Number(s.totalScore)||0;return true
+}catch{return false}}
+function resetBoard(idx){level=idx;order=randArr(GAMES[level].groups.flatMap(g=>g.words));selected=[];solved=[];unlocked=[];mistakes=0;wrong=[];store();render()}
+function chosen(word){return selected.includes(word)}
+function remaining(){return order.filter(w=>!solved.some(g=>GAMES[level].groups[g].words.includes(w)))}
+function message(txt,klass=''){const n=$('notice');n.textContent=txt;n.className='notice '+klass}
+function render(){
+ $('roundName').textContent='BOARD '+(level+1)+' / '+GAMES.length;
+ $('roundDifficulty').textContent=GAMES[level].name;
+ $('groupCount').textContent=solved.length+' OF 4 GROUPS FOUND';
+ $('pips').textContent='';GAMES.forEach((g,i)=>{const b=document.createElement('span');b.className='pip'+(i<level?' done':i===level?' current':'');$('pips').appendChild(b)});
+ $('lives').textContent='';for(let i=0;i<4;i++){const d=document.createElement('span');d.className='life'+(i<mistakes?' lost':'');d.textContent='◆';$('lives').appendChild(d)}
+ $('solved').textContent='';solved.forEach(id=>{const g=GAMES[level].groups[id],row=document.createElement('div');row.className='solvedRow';const title=document.createElement('strong');title.textContent=g.name;const words=document.createElement('small');words.textContent=g.words.join(' · ');row.append(title,words);$('solved').append(row)});
+ $('board').textContent='';remaining().forEach(w=>{
+ const btn=document.createElement('button');btn.type='button';btn.className='tile'+(chosen(w)?' selected':'')+(GAMES[level].seals[w]&&!unlocked.includes(w)?' locked':'');
+ btn.setAttribute('aria-pressed',String(chosen(w)));
+ if(GAMES[level].seals[w]&&!unlocked.includes(w)){const icon=document.createElement('span');icon.className='seal';icon.textContent='✦';const label=document.createElement('span');label.className='sealText';label.textContent='SEALED';btn.append(icon,label);btn.setAttribute('aria-label','Unlock a sealed word')}
+ else{btn.textContent=w;btn.setAttribute('aria-label',w)}
+ btn.addEventListener('click',()=>clickTile(w));$('board').append(btn)
+ });
+ $('submit').disabled=selected.length!==4;$('submit').textContent=selected.length===4?'SUBMIT FOUR':'SELECT '+(4-selected.length)+' MORE';
+}
+function clickTile(w){if(GAMES[level].seals[w]&&!unlocked.includes(w)){openMini(w);return}if(chosen(w))selected=selected.filter(x=>x!==w);else if(selected.length<4)selected.push(w);render()}
+function submit(){
+ if(selected.length!==4)return;const key=[...selected].sort().join('|'),id=GAMES[level].groups.findIndex(g=>g.words.every(w=>selected.includes(w)));
+ if(id!==-1&&!solved.includes(id)){solved.push(id);selected=[];totalScore+=100;message('A connection found. Keep looking.','success');store();render();if(solved.length===4)setTimeout(()=>end(true),330);return}
+ if(wrong.includes(key)){message('You already tried those four.','error');return}
+ wrong.push(key);mistakes++;const near=GAMES[level].groups.some(g=>g.words.filter(w=>selected.includes(w)).length===3&&!solved.includes(GAMES[level].groups.indexOf(g)));
+ selected=[];message(near?'One away. Three belong together.':'Not a group. Look for another connection.','error');store();render();
+ if(mistakes>=4)setTimeout(()=>end(false),340)
+}
+function end(win){
+ const score=solved.length*100;
+ $('endEyebrow').textContent=win?'BOARD CLEARED':'NO TRIES LEFT';
+ $('endTitle').textContent=win?'Brilliant connections.':'The grid wins this time.';
+ $('endCopy').textContent=win?'You found all four hidden links. Ready for a tougher challenge?': 'You found '+solved.length+' of four groups. The answers are shown below so you can learn from the board.';
+ $('endScore').textContent=score;
+ $('endNext').textContent=win?(level===GAMES.length-1?'Play from the beginning ↻':'Next board →'):'Try this board again ↻';
+ if(!win){const detail=GAMES[level].groups.map(g=>g.name+': '+g.words.join(', ')).join('  •  ');$('endCopy').textContent+=' '+detail;}
+ $('endOverlay').hidden=false;
+}
+function openMini(w){miniWord=w;miniInputs=[];const p=GAMES[level].seals[w];$('miniIntro').textContent=p.intro;$('miniError').textContent='';$('crossword').textContent='';$('cipher').textContent='';$('crossword').hidden=p.kind!=='cross';$('cipher').hidden=p.kind!=='cipher';$('miniTitle').textContent=p.kind==='cross'?'The concealed crossword':'The cipher lock';
+ if(p.kind==='cross'){p.items.forEach(([clue,answer],i)=>{const row=document.createElement('div');row.className='miniClue';const label=document.createElement('label');label.textContent=(i+1)+'. '+clue+' ('+answer.length+')';const input=document.createElement('input');input.autocomplete='off';input.spellcheck=false;input.maxLength=answer.length;input.setAttribute('aria-label',clue);row.append(label,input);$('crossword').append(row);miniInputs.push(input)});const note=document.createElement('div');note.className='extract';note.textContent='The third letter of each answer forms the sealed word.';$('crossword').append(note)}
+ else{$('cipher').innerHTML='<div class="cipher"><small>WHEEL NOTATION: A → D</small><div class="glyph">'+p.code+'</div></div><label for="cipherAnswer" class="eyebrow">Decoded word</label><input id="cipherAnswer" class="miniInput" maxlength="8" autocomplete="off" spellcheck="false" autocapitalize="characters">';miniInputs=[$('cipherAnswer')]}
+ $('miniOverlay').hidden=false;miniInputs[0]?.focus()
+}
+function closeMini(){$('miniOverlay').hidden=true;miniWord=null;miniInputs=[]}
+function miniSubmit(){if(!miniWord)return;const p=GAMES[level].seals[miniWord];let ok=false;
+ if(p.kind==='cross'){ok=miniInputs.every((input,i)=>input.value.trim().toUpperCase()===p.items[i][1]);miniInputs.forEach((input,i)=>input.classList.toggle('good',input.value.trim().toUpperCase()===p.items[i][1]))}
+ else ok=miniInputs[0].value.trim().toUpperCase()===p.answer;
+ if(!ok){$('miniError').textContent='Not unlocked yet. Check your answers and try again.';return}
+ unlocked.push(miniWord);closeMini();message('Sealed tile unlocked. Now find its group.','success');store();render()
+}
+$('submit').addEventListener('click',submit);
+$('clear').addEventListener('click',()=>{selected=[];render();message('Selection cleared.')});
+$('shuffle').addEventListener('click',()=>{const rest=remaining();randArr(rest);order=[...rest,...order.filter(w=>!rest.includes(w))];selected=[];render();store();message('Tiles shuffled.')});
+$('closeMini').addEventListener('click',closeMini);$('miniOverlay').addEventListener('click',e=>{if(e.target===$('miniOverlay'))closeMini()});$('miniSubmit').addEventListener('click',miniSubmit);
+$('endNext').addEventListener('click',()=>{const win=solved.length===4;$('endOverlay').hidden=true;if(win&&level===GAMES.length-1){totalScore=0;resetBoard(0)}else resetBoard(win?level+1:level);message('Choose four words that share a connection.')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('miniOverlay').hidden)closeMini();if(e.key==='Enter'&&!$('miniOverlay').hidden&&document.activeElement?.tagName==='INPUT'){e.preventDefault();miniSubmit()}});
+if(!load())resetBoard(0);else{render();if(solved.length===4||mistakes===4)end(solved.length===4)}
+})();
+</script></body></html>
