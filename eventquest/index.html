@@ -146,7 +146,7 @@
   });
   $('cipherAnswer').addEventListener('keydown',e=>{if(e.key==='Enter'){$('completeButton').click()}});
   $('skipButton').addEventListener('click',()=>advance(false));$('exitButton').addEventListener('click',finish);
-  $('photoInput').addEventListener('change',()=>{revokePhoto();const file=$('photoInput').files?.[0];if(!file||!file.type.startsWith('image/'))return;
+  $('photoInput').addEventListener('change',()=>{if(photoUrl){URL.revokeObjectURL(photoUrl);photoUrl=null}const file=$('photoInput').files?.[0];if(!file||!file.type.startsWith('image/'))return;
     photoUrl=URL.createObjectURL(file);$('photoPreview').src=photoUrl;$('photoPreview').hidden=false;$('feedback').textContent='';
   });
   $('replayButton').addEventListener('click',start);$('homeButton').addEventListener('click',()=>{stopTimer();show(0)});
