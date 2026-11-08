@@ -28,7 +28,7 @@ function activePlayer(){return self()}
 function renderSolutions(){
  const target=node('solutionBody');if(!game||!library||!target)return;
  const p=activePlayer(),previous=previousPlayer(game,p.id),next=nextPlayer(game,p.id);
- const sig=game.id+'|'+p.id+'|'+p.name+'|'+p.puzzleSolved+'|'+p.talismansSolved;
+ const sig=game.id+'|'+p.id+'|'+p.name+'|'+p.puzzleSolved+'|'+p.talismansSolved+'|'+JSON.stringify(codeFor(library,next));
  if(lastSolutionSig===sig)return;
  lastSolutionSig=sig;
  const code=codeFor(library,p);
@@ -37,7 +37,7 @@ function renderSolutions(){
   '<span class="orientation">'+DIRECTIONS[item.rotation]+' '+arrows[item.rotation]+'</span></div>').join('');
  target.innerHTML='<p class="solution-legend"><strong>Playing as '+escapeHTML(p.name)+'</strong><br>'+
   'The restored picture held by <strong>'+escapeHTML(previous.name)+'</strong> shows the talisman order below. Your picture reveals the answer for <strong>'+escapeHTML(next.name)+'</strong>.</p>'+
-  '<details class="solution-preview"><summary>Show completed picture (spoiler)</summary><img src="'+imagePathFor(p)+'" alt="Completed picture clue for '+escapeHTML(next.name)+'"></details>'+
+  '<details class="solution-preview"><summary>Show completed picture (spoiler)</summary><img data-live-dungeon-clue alt="Live generated solution picture for '+escapeHTML(next.name)+'"></details>'+
   '<div class="solution-mini"><span>Image: '+(p.puzzleSolved?'Solved':'4×4 · 16 pieces')+'</span><span>Wall: '+(p.talismansSolved?'Unlocked':'12 sockets')+'</span></div>'+
   '<p class="solution-legend"><strong>12-socket answer · read left to right, top to bottom</strong></p>'+
   '<div class="solution-grid" aria-label="Twelve talisman positions and directions">'+slots+'</div>'+
