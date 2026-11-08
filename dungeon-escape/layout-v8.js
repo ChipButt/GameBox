@@ -175,7 +175,7 @@ const prevClose=closeView;
 closeView=function(){prevClose();if(state.open&&state.scene==='zoom'){state.scene='wide';syncControls();requestAnimationFrame(refreshHandles)}};
 const ed=document.createElement('section');ed.id='placementEditor';ed.className='placement-editor';ed.hidden=true;ed.setAttribute('aria-label','Dungeon asset positioning editor');
 ed.innerHTML=[
-'<div class="placement-head"><strong>POSITIONING EDITOR · V8.4 APPROVED</strong><button type="button" id="placementDone">Done</button></div>',
+'<div class="placement-head"><strong>POSITIONING EDITOR · V8.5 APPROVED</strong><button type="button" id="placementDone">Done</button></div>',
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
@@ -244,6 +244,15 @@ function targetParent(id){
 function boundsFor(id){
  const parent=targetParent(id),b=parent?.getBoundingClientRect(),o=item(state.scene,id);
  if(!b?.width||!b?.height||!o)return null;
+ if(id==='safeMark'){
+  const symbols=[...parent.querySelectorAll('.room-identity-seals.on-safe-door img')]
+   .map(el=>el.getBoundingClientRect()).filter(r=>r.width&&r.height);
+  if(symbols.length){
+   const left=Math.min(...symbols.map(r=>r.left)),top=Math.min(...symbols.map(r=>r.top));
+   return {left,top,width:Math.max(...symbols.map(r=>r.right))-left,
+    height:Math.max(...symbols.map(r=>r.bottom))-top,parent:b};
+  }
+ }
  if(id.startsWith('corner-'))return {left:b.left+o.x*b.width/100-11,top:b.top+o.y*b.height/100-11,
   width:22,height:22,parent:b};
  return {left:b.left+(o.x-o.w/2)*b.width/100,top:b.top+(o.y-o.h/2)*b.height/100,
@@ -404,7 +413,7 @@ function preview(){
  const kind=state.scene==='wide'?null:((state.area==='water'||state.area==='prizes')?'pipes':'talismans');
  if(kind&&view!==kind)setView(kind);
  else if(!kind&&view)closeView();
- applyWide();applyZoom();requestAnimationFrame(refreshHandles);
+ applyWide();applyZoom();requestAnimationFrame(refreshHandles);scheduleFrameRefresh(true);
 }
 function toggle(open){
  if(open&&!game){notify('Start the local dungeon test first.');return}
@@ -413,7 +422,7 @@ function toggle(open){
   state.device=mobile()?'mobile':'desktop';state.scene='wide';state.area='sockets';state.asset='socket-0';
   syncControls();$e('pJSON').value=JSON.stringify(layout,null,2);
  }else{
-  if(view)closeView();document.querySelectorAll('.placement-ghost').forEach(n=>n.remove());
+  if(view)closeView();document.querySelectorAll('.placement-ghost,.placement-safe-ghost').forEach(n=>n.remove());
   document.body.classList.remove('layout-preview-mobile','layout-preview-desktop');showMobileLayout();persist();
  }
  preview();
@@ -430,6 +439,23 @@ button.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagatio
 $e('placementDone').addEventListener('click',()=>toggle(false));
 for(const id of ['pDevice','pScene','pArea'])$e(id).addEventListener('change',selectContext);
 $e('pAsset').addEventListener('change',e=>{state.asset=e.target.value;syncFields();refreshHandles()});
+function resizeSelected(factor){
+ if(state.area!=='sockets'&&state.area!=='stones')return;
+ const o=item(state.scene,state.asset);if(!o)return;
+ o.w=Math.min(100,Math.max(.5,o.w*factor));
+ o.h=Math.min(100,Math.max(.5,o.h*factor));
+ persist();refreshHandles();note('Resized '+nameFor(state.asset));
+}
+$e('pSmaller').addEventListener('click',()=>resizeSelected(.95));
+$e('pLarger').addEventListener('click',()=>resizeSelected(1.05));
+$e('pMatchSize').addEventListener('click',()=>{
+ if(state.area!=='sockets'&&state.area!=='stones')return;
+ const chosen=item(state.scene,state.asset);if(!chosen)return;
+ const family=state.area==='sockets'?profile(state.scene).sockets:profile(state.scene).stones;
+ for(const item of family){item.w=chosen.w;item.h=chosen.h}
+ persist();refreshHandles();
+ note('Matched all 12 '+(state.area==='sockets'?'wall':'floor')+' talisman sizes to '+nameFor(state.asset));
+});
 for(const [key,id] of [['x','pX'],['y','pY'],['w','pW'],['h','pH'],['r','pR']]){
  $e(id).addEventListener('change',e=>{
   const n=Number(e.target.value),o=item(state.scene,state.asset);
@@ -437,6 +463,7 @@ for(const [key,id] of [['x','pX'],['y','pY'],['w','pW'],['h','pH'],['r','pR']]){
   const min=key==='r'?-720:key==='w'||key==='h'?0.5:-25;
   const max=key==='r'?720:key==='w'||key==='h'?100:125;
   o[key]=Math.max(min,Math.min(max,n));persist();refreshHandles();
+  if(state.area==='frame')scheduleFrameRefresh(true);
  });
 }
 $e('pCopy').addEventListener('click',async()=>{
@@ -455,7 +482,7 @@ $e('pReset').addEventListener('click',()=>{
 });
 $e('pDownload').addEventListener('click',()=>{
  const u=URL.createObjectURL(new Blob([JSON.stringify(layout,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_4.json';
+ const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_5.json';
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),600);
 });
 $('viewContent').addEventListener('click',e=>{if(state.open){e.preventDefault();e.stopImmediatePropagation()}},true);
