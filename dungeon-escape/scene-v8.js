@@ -39,61 +39,57 @@ function makeClue(target){
  if(existing)return existing;
  const result={url:null,promise:null};
  clueCache.set(target.index,result);
- result.promise=Promise.all(sealSymbols.map(symbol=>new Promise(resolve=>{
-  const img=new Image();img.onload=()=>resolve([symbol,img]);img.onerror=()=>resolve([symbol,null]);
-  img.src=AS+'talismans/'+symbol+'_front.webp';
- }))).then(items=>{
-  const icons=Object.fromEntries(items);
-  const canvas=document.createElement('canvas');
-  const W=960,ctx=canvas.getContext('2d');
+ result.promise=Promise.all([
+  ...sealSymbols.map(symbol=>new Promise(resolve=>{
+   const img=new Image();img.onload=()=>resolve([symbol,img]);img.onerror=()=>resolve([symbol,null]);
+   img.src=AS+'talismans/'+symbol+'_front.webp';
+  })),
+  new Promise(resolve=>{
+   const img=new Image();img.onload=()=>resolve(['panelArtwork',img]);img.onerror=()=>resolve(['panelArtwork',null]);
+   img.src=AS+'closeups/panel_12.webp';
+  })
+ ]).then(items=>{
+  const images=Object.fromEntries(items);
+  const canvas=document.createElement('canvas'),W=960;
   canvas.width=W;canvas.height=W;
+  const ctx=canvas.getContext('2d');
   if(!ctx)throw Error('Clue painting is unavailable on this device');
-  ctx.fillStyle='#2c201a';ctx.fillRect(0,0,W,W);
-  // A pictorial emblem identifies the destination safe. No player number is shown.
-  const identity=roomIdentity(target);
-  const halo=ctx.createRadialGradient(W/2,128,20,W/2,128,260);
-  halo.addColorStop(0,'rgba(241,199,121,.28)');
-  halo.addColorStop(.55,'rgba(212,153,76,.11)');
-  halo.addColorStop(1,'rgba(210,152,68,0)');
-  ctx.fillStyle=halo;ctx.fillRect(160,0,640,225);
-  ctx.strokeStyle='rgba(205,160,91,.6)';ctx.lineWidth=3;
-  ctx.beginPath();ctx.ellipse(W/2,128,253,94,0,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle='rgba(235,199,123,.45)';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(160,222);ctx.lineTo(800,222);ctx.stroke();
-  const seal=icons[identity.symbol],count=identity.count;
-  const sealSize=count===1?148:count===2?125:count===3?108:98;
-  const gapSeal=12,span=count*sealSize+(count-1)*gapSeal;
+  // The existing physical talisman board is the clue, not a fresh diagram.
+  // An aged, low-contrast recess behind the panel fills the square picture.
+  ctx.fillStyle='#211917';ctx.fillRect(0,0,W,W);
+  const vignette=ctx.createRadialGradient(480,520,110,480,520,680);
+  vignette.addColorStop(0,'#573b2c');vignette.addColorStop(1,'#1b1413');
+  ctx.fillStyle=vignette;ctx.fillRect(0,0,W,W);
+  const panel=images.panelArtwork;
+  const panelBox={x:45,y:246,w:870,h:652.5};
+  if(panel)ctx.drawImage(panel,panelBox.x,panelBox.y,panelBox.w,panelBox.h);
+  const identity=roomIdentity(target),seal=images[identity.symbol],count=identity.count;
+  const size=count===1?194:count===2?153:count===3?128:111;
+  const gap=10,span=count*size+(count-1)*gap;
   if(seal)for(let i=0;i<count;i++){
-   const centerX=(W-span)/2+i*(sealSize+gapSeal)+sealSize/2;
-   ctx.save();ctx.translate(centerX,127);
-   ctx.shadowColor='rgba(255,216,131,.55)';ctx.shadowBlur=24;
-   ctx.drawImage(seal,-sealSize/2,-sealSize/2,sealSize,sealSize);
+   const x=(W-span)/2+i*(size+gap)+size/2;
+   ctx.save();ctx.translate(x,126);
+   // Natural light on the original stone, without separate circles or stars.
+   ctx.shadowColor='rgba(255,198,91,.9)';ctx.shadowBlur=39;
+   ctx.drawImage(seal,-size/2,-size/2,size,size);
    ctx.restore();
   }
-  // Small glints make the stone motif read as an illuminated heading.
-  for(const [x,y,r] of [[135,70,7],[217,153,5],[314,44,4],[752,58,6],[832,156,7],[660,31,4],[103,191,4],[861,36,4]]){
-   ctx.save();ctx.strokeStyle='rgba(255,222,156,.85)';ctx.lineWidth=2;
-   ctx.shadowBlur=12;ctx.shadowColor='#ffdf9a';ctx.beginPath();
-   ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.moveTo(x,y-r);ctx.lineTo(x,y+r);ctx.stroke();ctx.restore();
-  }
-  const margin=43,cell=284,gap=10,rowHeight=159,rowGap=12,top=236;
-  const solutions=codeFor(library,target);
-  for(let i=0;i<12;i++){
-   const col=i%3,row=Math.floor(i/3),x=margin+col*(cell+gap),y=top+row*(rowHeight+rowGap);
-   const centerX=x+cell/2,centerY=y+rowHeight/2,part=solutions[i];
-   ctx.fillStyle='#1a1413';ctx.fillRect(x,y,cell,rowHeight);
-   ctx.strokeStyle='#98724b';ctx.lineWidth=3;ctx.strokeRect(x+2,y+2,cell-4,rowHeight-4);
-   ctx.strokeStyle='#473125';ctx.lineWidth=2;ctx.beginPath();ctx.arc(centerX,centerY,58,0,Math.PI*2);ctx.stroke();
-   const asset=icons[part.symbol];
-   if(asset){
-    ctx.save();ctx.translate(centerX,centerY);ctx.rotate(part.rotation*Math.PI/2);
-    ctx.drawImage(asset,-57,-57,114,114);
-    ctx.restore();
-   }else{
-    ctx.fillStyle='#b8956d';ctx.beginPath();ctx.arc(centerX,centerY,48,0,2*Math.PI);ctx.fill();
-   }
-  }
-  ctx.strokeStyle='#a27b4b';ctx.lineWidth=9;ctx.strokeRect(8,8,W-16,W-16);
+  // Use approved DESKTOP CLOSE-UP socket centres so the artwork and stones align.
+  const approved=window.DungeonPlacement?.get()?.zoom?.desktop?.sockets;
+  const sockets=Array.isArray(approved)&&approved.length===12?
+   approved:Array.from({length:12},(_,i)=>({x:[33.9,48.8,64][i%3],y:[24.2,42.2,60.5,78.5][Math.floor(i/3)],w:10.55,h:10.55}));
+  const solution=codeFor(library,target);
+  solution.forEach((part,i)=>{
+   const art=images[part.symbol],hole=sockets[i];
+   if(!art)return;
+   const x=panelBox.x+hole.x*panelBox.w/100;
+   const y=panelBox.y+hole.y*panelBox.h/100;
+   const diameter=Math.min(hole.w*panelBox.w/100,hole.h*panelBox.h/100)*.85;
+   ctx.save();ctx.translate(x,y);ctx.rotate(part.rotation*Math.PI/2);
+   ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=8;
+   ctx.drawImage(art,-diameter/2,-diameter/2,diameter,diameter);
+   ctx.restore();
+  });
   const url=canvas.toDataURL('image/png');
   result.url=url;return url;
  }).catch(error=>{
@@ -141,11 +137,90 @@ shareClue=function(g,id,lib){
  message.clueTarget=dest.index;
  return message.body;
 };
+
+/* The perspective frame in the WIDE room is not square. Render the exact
+   same jigsaw image in perspective, inside its engraved border, without
+   altering the close-up image or leaking the solution before completion. */
+const wideBoardVertices=[
+ [30,59],[194,163],[196,476],[30,501] // TL,TR,BR,BL in the existing 216x570 frame artwork
+];
+function warpFrameArt(source,player){
+ const W=216,H=570,size=512;
+ const tiles=document.createElement('canvas');tiles.width=tiles.height=size;
+ const t=tiles.getContext('2d',{willReadFrequently:true});
+ if(!t)throw Error('Wide frame preview canvas unavailable');
+ const parts=player.puzzleSolved?Array.from({length:16},(_,i)=>i):player.pieces;
+ for(let i=0;i<16;i++){
+  const src=parts[i],side=size/4,sz=source.width/4;
+  t.drawImage(source,(src%4)*sz,Math.floor(src/4)*sz,sz,sz,
+    (i%4)*side,Math.floor(i/4)*side,side,side);
+ }
+ const pixels=t.getImageData(0,0,size,size).data;
+ const out=document.createElement('canvas');out.width=W;out.height=H;
+ const ctx=out.getContext('2d',{willReadFrequently:true});
+ if(!ctx)throw Error('Wide frame preview canvas unavailable');
+ const im=ctx.createImageData(W,H),dest=im.data;
+ const [a,b,c,d]=wideBoardVertices;
+ // Bilinear inverse mapping accommodates the slanted top and bottom edges.
+ for(let y=58;y<504;y++)for(let x=29;x<198;x++){
+  let u=(x-30)/166,v=(y-60)/445;
+  for(let iteration=0;iteration<5;iteration++){
+   const px=(1-u)*(1-v)*a[0]+u*(1-v)*b[0]+u*v*c[0]+(1-u)*v*d[0];
+   const py=(1-u)*(1-v)*a[1]+u*(1-v)*b[1]+u*v*c[1]+(1-u)*v*d[1];
+   const dxdu=(1-v)*(b[0]-a[0])+v*(c[0]-d[0]);
+   const dxdv=(1-u)*(d[0]-a[0])+u*(c[0]-b[0]);
+   const dydu=(1-v)*(b[1]-a[1])+v*(c[1]-d[1]);
+   const dydv=(1-u)*(d[1]-a[1])+u*(c[1]-b[1]);
+   const determinant=dxdu*dydv-dxdv*dydu;
+   if(Math.abs(determinant)<1e-7)break;
+   const ex=px-x,ey=py-y;
+   u-=(ex*dydv-ey*dxdv)/determinant;
+   v-=(ey*dxdu-ex*dydu)/determinant;
+  }
+  if(u<0||u>1||v<0||v>1)continue;
+  const si=(Math.min(511,Math.floor(v*512))*size+Math.min(511,Math.floor(u*512)))*4;
+  const di=(y*W+x)*4;
+  dest[di]=pixels[si];dest[di+1]=pixels[si+1];dest[di+2]=pixels[si+2];
+  dest[di+3]=Math.round(pixels[si+3]*.93);
+ }
+ ctx.putImageData(im,0,0);
+ return out.toDataURL('image/png');
+}
+function refreshWideFrame(){
+ if(!game)return;
+ const player=self(),board=getHotspot('image');
+ if(!player||!board)return;
+ scramble(player);
+ const target=nextPlayer(game,player.id);
+ const key=player.id+':'+target.index+':'+(player.puzzleSolved?'solved':player.pieces.join(','));
+ let preview=board.querySelector('.wide-frame-clue');
+ if(!preview){
+  preview=document.createElement('img');preview.className='wide-frame-clue';
+  preview.alt='';preview.draggable=false;preview.setAttribute('aria-hidden','true');
+  board.append(preview);
+ }
+ if(preview.dataset.frameKey===key)return;
+ preview.dataset.frameKey=key;
+ const handle=makeClue(target);
+ const paint=url=>{
+  if(!url||!preview.isConnected||preview.dataset.frameKey!==key)return;
+  const original=new Image();
+  original.onload=()=>{
+   if(!preview.isConnected||preview.dataset.frameKey!==key)return;
+   try{preview.src=warpFrameArt(original,player)}
+   catch(err){console.error('[Dungeon Escape] Wide frame perspective failed',err)}
+  };
+  original.src=url;
+ };
+ if(handle.url)paint(handle.url);else handle.promise.then(paint);
+}
+
 const oldRender=render;
 render=function(){
  oldRender();
  refreshRoomMarkers();
  refreshSharedClues();
+ requestAnimationFrame(refreshWideFrame);
 };
 drawImagePuzzle=function(player){
  scramble(player);
