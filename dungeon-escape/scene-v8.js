@@ -57,21 +57,21 @@ function makeClue(target){
   canvas.width=W;canvas.height=W;
   const ctx=canvas.getContext('2d');
   if(!ctx)throw Error('Clue painting is unavailable on this device');
-  // The existing physical talisman board is the clue, not a fresh diagram.
+  // Twelve rotated stones appear above the destination room's glowing identity.
   // An aged, low-contrast recess behind the panel fills the square picture.
   ctx.fillStyle='#211917';ctx.fillRect(0,0,W,W);
   const vignette=ctx.createRadialGradient(480,520,110,480,520,680);
   vignette.addColorStop(0,'#573b2c');vignette.addColorStop(1,'#1b1413');
   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,W);
   const panel=images.panelArtwork;
-  const panelBox={x:45,y:246,w:870,h:652.5};
+  const panelBox={x:45,y:42,w:870,h:652.5};
   if(panel)ctx.drawImage(panel,panelBox.x,panelBox.y,panelBox.w,panelBox.h);
   const identity=roomIdentity(target),seal=images[identity.symbol],count=identity.count;
   const size=count===1?194:count===2?153:count===3?128:111;
   const gap=10,span=count*size+(count-1)*gap;
   if(seal)for(let i=0;i<count;i++){
    const x=(W-span)/2+i*(size+gap)+size/2;
-   ctx.save();ctx.translate(x,126);
+   ctx.save();ctx.translate(x,823);
    // Natural light on the original stone, without separate circles or stars.
    ctx.shadowColor='rgba(255,198,91,.9)';ctx.shadowBlur=39;
    ctx.drawImage(seal,-size/2,-size/2,size,size);
