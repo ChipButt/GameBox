@@ -279,7 +279,12 @@ document.body.append(ed);
 const $e=id=>document.getElementById(id);
 const handles=document.createElement('div');handles.id='placementHandles';handles.className='placement-handles';handles.hidden=true;document.body.append(handles);
 function note(msg){$e('pStatus').textContent=msg}
-function persist(){try{localStorage.setItem(STORE,JSON.stringify(layout))}catch{note('Storage unavailable. Copy your JSON to keep it.')}}
+function persist(){
+ try{localStorage.setItem(STORE,JSON.stringify(layout))}catch{note('Storage unavailable. Copy your JSON to keep it.')}
+ if(game&&state.scene==='zoom'&&state.device==='desktop'&&
+    (state.area==='sockets'||state.area==='panel'))
+  window.DungeonClueArt?.refreshGuide?.();
+}
 const ids=()=>{
  if(state.area==='panel')return ['panelArt'];
  if(state.area==='water')return ['waterLeft','waterRight'];
@@ -508,12 +513,14 @@ function preview(){
  if(!state.open){
   applyWide();applyZoom();
   window.DungeonWideFrameRefresh?.();
+  window.DungeonClueArt?.refreshGuide?.();
   return;
  }
  const kind=state.scene==='wide'?null:((state.area==='water'||state.area==='prizes')?'pipes':'talismans');
  if(kind&&view!==kind)setView(kind);
  else if(!kind&&view)closeView();
  applyWide();applyZoom();requestAnimationFrame(refreshHandles);scheduleFrameRefresh(true);
+ window.DungeonClueArt?.refreshGuide?.();
 }
 function toggle(open){
  if(open&&!game){notify('Start the local dungeon test first.');return}
