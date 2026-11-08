@@ -250,20 +250,60 @@ function boundsFor(id){
 }
 function ghost(parent,id,src){
  const image=document.createElement('img');image.className='placement-ghost';image.src=src;image.alt='';
- if(id.startsWith('stone-'))stoneStyle(image,id,state.scene);else prizeStyle(image,id,state.scene);
+ if(id.startsWith('stone-'))stoneStyle(image,id,state.scene);
+ else if(id.startsWith('socket-'))socketStyle(image,id,state.scene);
+ else prizeStyle(image,id,state.scene);
  parent.append(image);
 }
+function refreshGhostPositions(id){
+ document.querySelectorAll('.placement-ghost[data-layout-asset="'+id+'"]').forEach(node=>{
+  if(id.startsWith('stone-'))stoneStyle(node,id,state.scene);
+  else if(id.startsWith('socket-'))socketStyle(node,id,state.scene);
+  else prizeStyle(node,id,state.scene);
+ });
+ if(id==='safeMark')safeStyle(getHotspot('safe')?.querySelector('.room-identity-seals.on-safe-door'));
+}
 function editorGhosts(){
- document.querySelectorAll('.placement-ghost').forEach(n=>n.remove());
+ document.querySelectorAll('.placement-ghost,.placement-safe-ghost').forEach(n=>n.remove());
  if(!state.open||!game)return;
- if(state.area==='talismans'){
-  const p=self(),root=state.scene==='wide'?$('floorTalismans'):document.querySelector('.floor-inspection');
-  if(!p||!root)return;
+ const p=self();if(!p)return;
+ if(state.area==='stones'){
+  const root=state.scene==='wide'?$('floorTalismans'):document.querySelector('.floor-inspection');
+  if(!root)return;
   const all=codeFor(library,p).map((c,i)=>({symbol:c.symbol,position:i}));
   for(let i=all.length-1;i>0;i--){const j=(i*7+p.index*5+3)%(i+1);[all[i],all[j]]=[all[j],all[i]]}
-  all.forEach((c,i)=>{if(!root.querySelector('.floor-talisman[data-layout-asset="stone-'+i+'"]'))
-    ghost(root,'stone-'+i,AS+'talismans/'+c.symbol+'_angled.webp')});
- }else{
+  all.forEach((c,i)=>{
+   if(!root.querySelector('.floor-talisman[data-layout-asset="stone-'+i+'"]'))
+    ghost(root,'stone-'+i,AS+'talismans/'+c.symbol+'_angled.webp');
+  });
+ }else if(state.area==='sockets'){
+  const root=state.scene==='wide'?getHotspot('panel'):document.querySelector('.panel-stage');
+  if(!root)return;
+  const code=codeFor(library,p);
+  for(let i=0;i<12;i++){
+   const occupied=state.scene==='wide'?
+    root.querySelector('.room-wide-stone[data-socket-index="'+i+'"]'):
+    root.querySelector('.panel-socket[data-socket="'+i+'"] img');
+   if(!occupied){
+    ghost(root,'socket-'+i,AS+'talismans/'+(code[i]?.symbol||'raven')+'_front.webp');
+   }
+  }
+ }else if(state.area==='safe'){
+  const root=getHotspot('safe');if(!root)return;
+  let mark=root.querySelector('.room-identity-seals.on-safe-door:not(.placement-safe-ghost)');
+  if(!mark){
+   const identity=window.DungeonRoomIdentity?.(p)||{symbol:'raven',count:1};
+   mark=document.createElement('span');
+   mark.className='room-identity-seals on-safe-door placement-safe-ghost count-'+identity.count;
+   mark.setAttribute('aria-hidden','true');
+   for(let i=0;i<identity.count;i++){
+    const img=document.createElement('img');img.src=AS+'talismans/'+identity.symbol+'_front.webp';img.alt='';
+    mark.append(img);
+   }
+   root.append(mark);
+  }
+  safeStyle(mark);
+ }else if(state.area==='prizes'){
   const root=state.scene==='wide'?getHotspot('pipes'):document.querySelector('.pipes-stage');
   if(!root)return;
   for(const id of ['gold','shield']){
@@ -272,6 +312,11 @@ function editorGhosts(){
    if(!source||source.hidden)ghost(root,id,AS+'rewards/'+(id==='gold'?'gold_sack.webp':'brm-original-shield.svg'));
   }
  }
+}
+let frameRefreshTimer=0;
+function scheduleFrameRefresh(immediate=false){
+ clearTimeout(frameRefreshTimer);
+ frameRefreshTimer=setTimeout(()=>window.DungeonWideFrameRefresh?.(),immediate?0:65);
 }
 function refreshHandles(){
  if(!state.open)return;
