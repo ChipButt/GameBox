@@ -10,6 +10,50 @@ wideLayer.className='room-wide-sockets';
 wideLayer.setAttribute('aria-hidden','true');
 panel?.append(wideLayer);
 let dragging=null,ignoreClickUntil=0;
+
+/* Stable identities and per-player floor drop positions, separate from editor defaults. */
+function catalog(player){
+ const arr=codeFor(library,player).map((v,origin)=>({symbol:v.symbol,origin}));
+ for(let i=arr.length-1;i>0;i--){
+  const j=(i*7+player.index*5+3)%(i+1);
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+ }
+ return arr.map((v,position)=>({...v,position}));
+}
+function assignedStones(player){
+ const stones=catalog(player),used=new Set(),assigned=new Map();
+ (player.slots||[]).forEach((slot,i)=>{
+  const id=slot?.stoneId;
+  if(Number.isInteger(id)&&id>=0&&id<12&&stones[id].symbol===slot.symbol&&!used.has(id)){
+   used.add(id);assigned.set(i,id);
+  }
+ });
+ (player.slots||[]).forEach((slot,i)=>{
+  if(!slot||assigned.has(i))return;
+  const next=stones.find(v=>v.symbol===slot.symbol&&!used.has(v.position));
+  if(next){used.add(next.position);assigned.set(i,next.position);}
+ });
+ return {used,assigned};
+}
+function idOfSlot(player,index){return assignedStones(player).assigned.get(index)}
+floorPile=function(player){
+ if(!player||!library)return [];
+ const {used}=assignedStones(player);
+ return catalog(player).filter(v=>!used.has(v.position))
+   .map(v=>({...v,savedPosition:player.floorPositions?.[v.position]||null}));
+};
+function floorDrop(x,y){
+ const r=document.querySelector('.floor-inspection')?.getBoundingClientRect();
+ if(!r?.width||!r.height||x<r.left||x>r.right||y<r.top||y>r.bottom)return null;
+ return {x:Math.max(5,Math.min(95,(x-r.left)/r.width*100)),
+         y:Math.max(8,Math.min(92,(y-r.top)/r.height*100))};
+}
+function onWall(ctx,x,y){
+ if(ctx!=='inspection')return false;
+ const r=document.querySelector('.panel-stage')?.getBoundingClientRect();
+ return !!r?.width&&x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+}
+
 function wideWall(player){
  wideLayer.replaceChildren();
  if(!player)return;
@@ -21,7 +65,7 @@ function wideWall(player){
   img.className='room-wide-stone';img.alt='';img.dataset.socketIndex=String(i);
   img.style.left=xy.x+'%';img.style.top=xy.y+'%';
   img.style.rotate=(slot.rotation*90)+'deg';
-  attachPlacedStone(img,i,'room',player);
+  // Render only. Talisman manipulation is intentionally close-up only.
   frag.append(img);
  });
  wideLayer.append(frag);
@@ -53,11 +97,11 @@ function targets(ctx,player){
  }
  return output;
 }
-function nearest(ctx,player,x,y){
+function nearest(ctx,player,x,y,anyDistance=false){
  let best=null;
  for(const t of targets(ctx,player)){
   const distance=Math.hypot(t.x-x,t.y-y);
-  if(distance<=t.radius&&(!best||distance<best.distance))best={...t,distance};
+  if((anyDistance||distance<=t.radius)&&(!best||distance<best.distance))best={...t,distance};
  }
  return best;
 }
@@ -100,7 +144,7 @@ function attachDrag(button,piece,ctx,player){
   suppressThisClick=false;
  },true);
  button.addEventListener('pointerdown',event=>{
-  if(mobileEditing||player.talismansSolved||dragging||event.button>0)return;
+  if(ctx==='room'||mobileEditing||player.talismansSolved||dragging||event.button>0)return;
   if(!floorPile(player).some(x=>x.position===piece.position&&x.symbol===piece.symbol))return;
   const origin={x:event.clientX,y:event.clientY};
   const rect=button.getBoundingClientRect();
@@ -114,6 +158,7 @@ function attachDrag(button,piece,ctx,player){
     const ghost=document.createElement('img');
     ghost.src=AS+'talismans/'+piece.symbol+'_angled.webp';
     ghost.alt='';ghost.className='drag-stone-ghost';
+    if(piece.savedPosition)ghost.style.rotate=(piece.savedPosition.rotation*90)+'deg';
     ghost.style.width=Math.max(38,rect.width)+'px';
     ghost.style.height=Math.max(38,rect.height)+'px';
     document.body.append(ghost);
@@ -122,7 +167,7 @@ function attachDrag(button,piece,ctx,player){
    if(e.cancelable)e.preventDefault();
    d.ghost.style.left=e.clientX+'px';d.ghost.style.top=e.clientY+'px';
    const current=self();
-   const hit=current?.id===d.playerId?nearest(ctx,current,e.clientX,e.clientY):null;
+   const hit=current?.id===d.playerId?(onWall(ctx,e.clientX,e.clientY)?nearest(ctx,current,e.clientX,e.clientY,true):nearest(ctx,current,e.clientX,e.clientY)):null;
    highlight(ctx,hit);
    d.ghost.classList.toggle('near-socket',!!hit);
   };
@@ -137,15 +182,21 @@ function attachDrag(button,piece,ctx,player){
    e.stopPropagation();
    suppressThisClick=true;
    ignoreClickUntil=Date.now()+350;
-   if(!hit||!current){
+   if(!current||current.id!==d.playerId){removeGhost(d.ghost);return;}
+   if(!hit){
+    const point=ctx==='inspection'?floorDrop(e.clientX,e.clientY):null;
+    if(point){
+     current.floorPositions??={};
+     current.floorPositions[piece.position]={...point,rotation:piece.savedPosition?.rotation??0};
+     save();render();if(view)renderView();
+    }
     removeGhost(d.ghost);
-    notify('Release close to an empty socket to snap the stone into it.');
     return;
    }
    const stillOnFloor=floorPile(current).some(x=>x.position===piece.position&&x.symbol===piece.symbol);
    if(!stillOnFloor||current.slots[hit.index]){removeGhost(d.ghost);return}
    selected=null;selectedStoneId=-1;focusSocket=hit.index;
-   const placed=perform(()=>putTalisman(game,current.id,hit.index,piece.symbol,0));
+   const placed=perform(()=>putTalisman(game,current.id,hit.index,piece.symbol,piece.savedPosition?.rotation??0,piece.position));
    removeGhost(d.ghost,placed?hit:null);
    if(placed)notify(symbolName(piece.symbol)+' snapped into hole '+(hit.index+1)+'. Tap to rotate.');
   };
@@ -183,8 +234,12 @@ function tryUnlock(g,id){
  if(checkTalismans(g,id,library))notify(AUTO_UNLOCK_TEXT);
 }
 const originalPut=putTalisman,originalRotate=rotateTalisman;
-putTalisman=function(g,id,position,symbol,rotation=0){
+putTalisman=function(g,id,position,symbol,rotation=0,stoneId=null){
+ const p=playerFor(g,id);
+ const availableId=Number.isInteger(stoneId)?stoneId:
+   (selectedStoneId>=0?selectedStoneId:floorPile(p).find(v=>v.symbol===symbol)?.position);
  const value=originalPut(g,id,position,symbol,rotation);
+ if(Number.isInteger(availableId))value.stoneId=availableId;
  tryUnlock(g,id);
  return value;
 };
@@ -241,7 +296,7 @@ function attachPlacedStone(element,index,ctx,player){
   if(self()?.id!==player.id||!player.slots[index])return;
   const origin={x:event.clientX,y:event.clientY};
   const d={id:event.pointerId,playerId:player.id,index,ctx,element,
-   origin,held:false,moved:false,timer:null,ghost:null};
+   origin,held:false,moved:false,timer:null,ghost:null,stoneId:idOfSlot(player,index)};
   placedDrag=d;
   if(ctx==='room')event.stopPropagation();
   d.timer=setTimeout(()=>{
@@ -250,6 +305,7 @@ function attachPlacedStone(element,index,ctx,player){
    const ghost=document.createElement('img');
    ghost.src=AS+'talismans/'+player.slots[index].symbol+'_front.webp';
    ghost.alt='';ghost.className='drag-stone-ghost drag-wall-ghost';
+    ghost.style.rotate=(player.slots[index].rotation*90)+'deg';
    const r=element.getBoundingClientRect();
    ghost.style.width=Math.max(34,r.width)+'px';ghost.style.height=Math.max(34,r.height)+'px';
    ghost.style.left=origin.x+'px';ghost.style.top=origin.y+'px';
@@ -274,7 +330,7 @@ function attachPlacedStone(element,index,ctx,player){
   d.up=ev=>{
    if(placedDrag!==d||ev.pointerId!==d.id)return;
    const current=self(),wasHeld=d.held;
-   const target=wasHeld&&d.moved&&current?.id===d.playerId?nearest(ctx,current,ev.clientX,ev.clientY):null;
+   const target=wasHeld&&d.moved&&current?.id===d.playerId?(onWall(ctx,ev.clientX,ev.clientY)?nearest(ctx,current,ev.clientX,ev.clientY,true):nearest(ctx,current,ev.clientX,ev.clientY)):null;
    const onFloor=wasHeld&&d.moved&&insideFloor(ctx,ev.clientX,ev.clientY);
    const ghost=d.ghost;
    detachPlaced();
@@ -287,7 +343,7 @@ function attachPlacedStone(element,index,ctx,player){
     if(present){
      perform(()=>{
       clearTalisman(game,current.id,index);
-      putTalisman(game,current.id,target.index,present.symbol,present.rotation);
+      putTalisman(game,current.id,target.index,present.symbol,present.rotation,d.stoneId);
       return true;
      });
      focusSocket=target.index;
@@ -297,6 +353,11 @@ function attachPlacedStone(element,index,ctx,player){
     }
    }
    if(onFloor){
+    const point=floorDrop(ev.clientX,ev.clientY),present=current.slots[index];
+    if(point&&present&&Number.isInteger(d.stoneId)){
+     current.floorPositions??={};
+     current.floorPositions[d.stoneId]={...point,rotation:present.rotation};
+    }
     perform(()=>clearTalisman(game,current.id,index));
     selected=null;selectedStoneId=-1;focusSocket=-1;
     removeGhost(ghost);
