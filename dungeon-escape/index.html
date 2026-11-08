@@ -152,13 +152,13 @@ function status(game){return {
 };}
 
 const $=id=>document.getElementById(id);
-const AS='./assets/';const KEY='BRM_DUNGEON_TEST_V1';const LAYOUT_KEY='BRM_DUNGEON_MOBILE_LAYOUT_V2';const VIEW_LABELS={image:'Image Reveal Puzzle',talismans:'The Twelve Sockets',safe:'The Safe',pipes:'The Two Prizes'};
+const AS='./assets/';const KEY='BRM_DUNGEON_TEST_V1';const LAYOUT_KEY='BRM_DUNGEON_MOBILE_LAYOUT_V2_APPROVED_20261108';const VIEW_LABELS={image:'Image Reveal Puzzle',talismans:'The Twelve Sockets',safe:'The Safe',pipes:'The Two Prizes'};
 const symbolName=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const escapeHTML=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'£'+Number(n).toLocaleString('en-GB');
 let game=null,library=null,asPlayer='p1',view=null,selected='raven',focusSocket=-1,selectedTile=-1,pendingChoice=null,toastTimer=null,drainAnimation=false;
 let lastFocused=null;
-const editDefaults={image:{x:5,y:36,w:17,h:30},panel:{x:22,y:26,w:55,h:29},safe:{x:35,y:56,w:30,h:16},pipes:{x:81,y:42,w:15,h:27}};
+const editDefaults={"image":{"x":1.9718070652173914,"y":34.851195139194076,"w":6.724864130434783,"h":26.7962435752909},"panel":{"x":20.425611413043477,"y":15.676519479526915,"w":60.68019701086956,"h":37.15579800141391},"safe":{"x":39.92781929347825,"y":52.31665934233908,"w":26.77055027173913,"h":14.33578539083249},"pipes":{"x":68.24014945652173,"y":24.250606645394267,"w":29.966032608695656,"h":46.82673825400769}};
 const cloneLayout=()=>JSON.parse(JSON.stringify(editDefaults));
 const mobileOrder=['image','panel','safe','pipes'];
 let mobileLayout=cloneLayout(),mobileEditing=false,editSelection='image';
