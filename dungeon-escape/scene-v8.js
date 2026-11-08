@@ -144,10 +144,10 @@ shareClue=function(g,id,lib){
    same jigsaw image in perspective, inside its engraved border, without
    altering the close-up image or leaking the solution before completion. */
 const wideBoardVertices=[
- [30,59],[194,163],[196,476],[30,501] // TL,TR,BR,BL in the existing 216x570 frame artwork
+ [30,58],[192,161],[194,470],[30,495] // TL,TR,BR,BL in the 214x563 original frame artwork
 ];
 function warpFrameArt(source,player){
- const W=216,H=570,size=512;
+ const W=214,H=563,size=512;
  const tiles=document.createElement('canvas');tiles.width=tiles.height=size;
  const t=tiles.getContext('2d',{willReadFrequently:true});
  if(!t)throw Error('Wide frame preview canvas unavailable');
@@ -164,8 +164,8 @@ function warpFrameArt(source,player){
  const im=ctx.createImageData(W,H),dest=im.data;
  const [a,b,c,d]=wideBoardVertices;
  // Bilinear inverse mapping accommodates the slanted top and bottom edges.
- for(let y=58;y<504;y++)for(let x=29;x<198;x++){
-  let u=(x-30)/166,v=(y-60)/445;
+ for(let y=57;y<498;y++)for(let x=29;x<196;x++){
+  let u=(x-30)/164,v=(y-58)/437;
   for(let iteration=0;iteration<5;iteration++){
    const px=(1-u)*(1-v)*a[0]+u*(1-v)*b[0]+u*v*c[0]+(1-u)*v*d[0];
    const py=(1-u)*(1-v)*a[1]+u*(1-v)*b[1]+u*v*c[1]+(1-u)*v*d[1];
