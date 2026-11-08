@@ -146,3 +146,51 @@ body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4
 @media(prefers-reduced-motion:reduce){
  .drag-stone-ghost{transition:none!important}
 }
+
+/* V6 — natural talisman interaction: no labels, fake holes, controls or gold rings. */
+.talisman-mechanism{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+.talisman-mechanism .wall-and-floor{width:100%;max-width:min(100%,740px);gap:0;justify-content:center}
+.talisman-mechanism .panel-stage{
+  width:min(100%,720px,calc((95dvh - 330px) * 1.333333));
+  max-width:100%;height:auto;max-height:none;
+  aspect-ratio:1448 / 1086;
+  position:relative;flex:none;overflow:visible
+}
+.talisman-mechanism .panel-stage>img{
+ width:100%;height:100%;position:absolute;inset:0;object-fit:fill;pointer-events:none
+}
+.panel-socket,.panel-socket.empty,.panel-socket.selected,.panel-socket.snap-candidate{
+ width:10.55%;height:auto;aspect-ratio:1;min-height:0;min-width:0;
+ border:0!important;outline:0!important;border-radius:50%;background:transparent!important;
+ box-shadow:none!important;padding:0!important;z-index:3;
+ cursor:pointer;touch-action:none;user-select:none
+}
+.panel-socket img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.panel-socket span{display:none!important}
+.panel-socket:focus-visible{outline:1px solid rgba(242,220,178,.7)!important;outline-offset:-2px!important}
+.panel-socket.snap-candidate{filter:brightness(1.2)!important}
+.panel-socket.occupied.holding{filter:brightness(1.24);cursor:grabbing}
+.panel-socket.occupied.drag-source{opacity:.25}
+.h-panel .wide-snap-indicator{border:none;background:transparent;box-shadow:none;outline:none}
+.h-panel .wide-snap-indicator:after{content:'';position:absolute;inset:18%;border-radius:50%;background:rgba(255,229,163,.18)}
+.floor-talisman,.floor-talisman.selected,.floor-talisman:hover,.floor-talisman:focus-visible{
+ outline:0!important;outline-offset:0!important;border:0!important;box-shadow:none!important;
+ filter:drop-shadow(0 3px 3px #09060585)!important;
+}
+.floor-talisman.selected img{filter:drop-shadow(0 3px 3px #09060585)}
+.floor-talismans{overflow:hidden}
+.floor-inspection .floor-talisman{width:10.5%}
+.floor-inspection{background-position:center 96%}
+.room-floor-status{display:none}
+.h-panel .room-wide-stone{width:10.55%;height:auto;aspect-ratio:1}
+.h-panel .room-wide-stone.movable{pointer-events:auto;touch-action:none;cursor:grab}
+.h-panel .room-wide-stone.movable.drag-source{opacity:.26;cursor:grabbing}
+@media(min-width:631px){
+ .floor-talismans .floor-talisman{width:5.7%}
+}
+@media(max-width:630px){
+ .talisman-mechanism .panel-stage{width:min(98vw,calc(54dvh * 1.333333));max-height:none}
+ .floor-inspection{width:min(98vw,510px);height:clamp(140px,22dvh,210px)}
+ .floor-inspection .floor-talisman{width:10.2%}
+ .floor-talismans .floor-talisman{width:10.2%}
+}
