@@ -29,6 +29,7 @@ function refreshRoomMarkers(){
  if(safe){
   safe.querySelector('.room-identity-seals')?.remove();
   if(!player.safeOpen)safe.append(sealRow(player,'on-safe-door'));
+  window.DungeonPlacement?.applySafe?.();
  }
  if(frame){
   frame.querySelector('.room-identity-seals')?.remove();
@@ -143,9 +144,10 @@ shareClue=function(g,id,lib){
 /* The perspective frame in the WIDE room is not square. Render the exact
    same jigsaw image in perspective, inside its engraved border, without
    altering the close-up image or leaking the solution before completion. */
-const wideBoardVertices=[
- [30,58],[192,161],[194,470],[30,495] // TL,TR,BR,BL in the 214x563 original frame artwork
-];
+const defaultWideVertices=[[30,58],[192,161],[194,470],[30,495]];
+function frameVertices(){
+ return window.DungeonPlacement?.frameCorners?.()||defaultWideVertices;
+}
 function warpFrameArt(source,player){
  const W=214,H=563,size=512;
  const tiles=document.createElement('canvas');tiles.width=tiles.height=size;
@@ -162,10 +164,15 @@ function warpFrameArt(source,player){
  const ctx=out.getContext('2d',{willReadFrequently:true});
  if(!ctx)throw Error('Wide frame preview canvas unavailable');
  const im=ctx.createImageData(W,H),dest=im.data;
- const [a,b,c,d]=wideBoardVertices;
- // Bilinear inverse mapping accommodates the slanted top and bottom edges.
- for(let y=57;y<498;y++)for(let x=29;x<196;x++){
-  let u=(x-30)/164,v=(y-58)/437;
+ const corners=frameVertices(),[a,b,c,d]=corners;
+ // Work over the adjustable quadrilateral; no fixed pixel bounds to clip edits.
+ const xs=corners.map(c=>c[0]),ys=corners.map(c=>c[1]);
+ const left=Math.max(0,Math.floor(Math.min(...xs))-2),
+       right=Math.min(W-1,Math.ceil(Math.max(...xs))+2),
+       top=Math.max(0,Math.floor(Math.min(...ys))-2),
+       bottom=Math.min(H-1,Math.ceil(Math.max(...ys))+2);
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+  let u=(x-left)/Math.max(1,right-left),v=(y-top)/Math.max(1,bottom-top);
   for(let iteration=0;iteration<5;iteration++){
    const px=(1-u)*(1-v)*a[0]+u*(1-v)*b[0]+u*v*c[0]+(1-u)*v*d[0];
    const py=(1-u)*(1-v)*a[1]+u*(1-v)*b[1]+u*v*c[1]+(1-u)*v*d[1];
@@ -194,7 +201,8 @@ function refreshWideFrame(){
  if(!player||!board)return;
  scramble(player);
  const target=nextPlayer(game,player.id);
- const key=player.id+':'+target.index+':'+(player.puzzleSolved?'solved':player.pieces.join(','));
+ const key=player.id+':'+target.index+':'+(player.puzzleSolved?'solved':player.pieces.join(','))+
+  ':'+frameVertices().flat().map(n=>n.toFixed(3)).join(',');
  let preview=board.querySelector('.wide-frame-clue');
  if(!preview){
   preview=document.createElement('img');preview.className='wide-frame-clue';
@@ -217,6 +225,7 @@ function refreshWideFrame(){
  if(handle.url)paint(handle.url);else handle.promise.then(paint);
 }
 
+window.DungeonWideFrameRefresh=refreshWideFrame;
 const oldRender=render;
 render=function(){
  oldRender();
