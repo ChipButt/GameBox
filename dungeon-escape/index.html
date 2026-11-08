@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#211b1e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>BRM Traitors — Dungeon Escape V2</title><style>
+:root{--bg:#19171a;--panel:#241e20;--panel2:#332829;--gold:#d8b77b;--gold2:#fae0a4;--text:#f4e9da;--muted:#cdbca6;--red:#6e2b2d;--line:#b28b56aa;font-family:Georgia,'Times New Roman',serif;color:var(--text);color-scheme:dark}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{background:radial-gradient(ellipse at top,#423032,#141319 75%);font-size:15px}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f4d491;outline-offset:3px}img{max-width:100%}.app-shell{min-height:100dvh}.app-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px max(14px,3vw);min-height:70px;background:linear-gradient(95deg,#241a20,#433028,#21171a);border-bottom:1px solid #99714480}.brand{display:flex;gap:5px;flex-direction:column;line-height:1.1}.brand-kicker,.version,.eyebrow,.mission-label{color:var(--gold);letter-spacing:.18em;font-size:10px;font-weight:700}.brand strong{font-size:20px;letter-spacing:.08em;font-weight:400}.version{font:10px system-ui,sans-serif;color:#d5b6a7;letter-spacing:.09em}.header-actions{display:flex;align-items:center;gap:13px;flex-wrap:wrap}.player-label{display:flex;align-items:center;gap:8px;color:var(--gold);font-size:13px}select,input,textarea{background:#19171a;border:1px solid #a17c55;color:#fff1df;border-radius:6px;padding:10px;max-width:100%}button{border-radius:6px;border:1px solid #d1a56590;background:linear-gradient(#624636,#39272a);color:var(--text);padding:11px 15px;transition:filter .2s,transform .2s}button:hover:not(:disabled){filter:brightness(1.16)}.button-primary{background:linear-gradient(#b68b4c,#744b27);color:#fff9ea;font-weight:bold;border-color:#d4b478;min-height:48px}.button-ghost{background:transparent;font-size:12px}.setup-screen{min-height:calc(100dvh - 75px);display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,0.8fr);max-width:1700px;margin:auto}.setup-art{background:url("./assets/room/warm_desktop.webp") center/cover no-repeat;box-shadow:inset -50px 0 85px #17141b}.setup-panel{max-width:650px;padding:clamp(25px,5vw,65px);align-self:center}.setup-panel h1{font-weight:400;font-size:clamp(31px,4vw,53px);margin:15px 0}.setup-panel p{line-height:1.55;color:#ebddca}.demo-warning{border-left:3px solid var(--gold);background:#251e25;padding:12px 14px;border-radius:4px}.setup-panel form{display:flex;flex-direction:column;gap:9px;margin-top:22px}.setup-panel label{margin-top:10px;color:var(--gold);font-size:13px}.mission-bar{padding:10px clamp(12px,2vw,28px);border-bottom:1px solid #8d6c4980;background:#292023;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}.mission-bar>div:first-child{display:flex;gap:13px;align-items:center;flex-wrap:wrap}.mission-gold strong{color:#f5d18b;font-size:20px;font-weight:400;margin-left:8px}.game-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,330px);min-height:calc(100dvh - 125px);gap:0}.scene-panel{padding:10px 12px 16px;display:flex;flex-direction:column;justify-content:center;min-width:0}.room-wrapper{width:100%;max-width:1400px;margin:auto}.room-stage{position:relative;aspect-ratio:16/9;width:100%;background:url("./assets/room/warm_desktop.webp") center/100% 100% no-repeat;border:1px solid #947047;overflow:hidden;border-radius:5px;box-shadow:0 20px 50px #0007}.room-hotspot{position:absolute;border:0;background:none;border-radius:0;padding:0;min-width:0;min-height:0;overflow:visible;transform-origin:center;transition:filter .2s,scale .25s}.room-hotspot:hover{filter:drop-shadow(0 0 13px #f5cc82a3);scale:1.026}.room-hotspot img{display:block;width:100%;height:100%;object-fit:fill;pointer-events:none}.room-hotspot>.hotspot-label{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#261b21dd;border:1px solid #c49a63;border-radius:3px;padding:3px 6px;font:9px system-ui,sans-serif;color:#f3d19b;letter-spacing:.04em;pointer-events:none}.h-image{left:4%;top:16.23%;width:10.4%;height:48.78%}.h-panel{left:33.2%;top:5.73%;width:34.67%;height:46.35%}.h-safe{left:45.51%;top:52.08%;width:10.25%;height:18.4%}.h-pipes{left:82.32%;top:17.71%;width:13.23%;height:62.41%}.room-hint{padding:12px 0;text-align:center;color:var(--muted);font-style:italic;font-size:13px}.quick-inspect{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:auto}.quick-inspect button{background:#33262a;min-height:40px;padding:8px 12px;font:12px system-ui,sans-serif}.sidebar{background:#1c1920;border-left:1px solid #9271516b;display:flex;flex-direction:column;min-height:0}.mission-card,.chat-card{padding:15px}.mission-card{border-bottom:1px solid #aa82516b}.mission-card h2,.chat-title h2{font-weight:400;font-size:23px;margin:5px 0 10px}.mission-card ol{list-style:none;counter-reset:none;padding:0;margin:12px 0}.mission-card li{display:flex;gap:9px;margin:7px 0;align-items:center;color:#bbad9d;font-size:13px}.mission-card li:before{content:'○';color:#98764e}.mission-card li.done{color:#f2d6a2}.mission-card li.done:before{content:'✓';color:#e6c47e}.subtle{color:var(--muted);font-size:12px;line-height:1.5}.chat-card{display:flex;flex-direction:column;flex:1;min-height:250px}.chat-title{display:flex;justify-content:space-between;align-items:center}.chat-title h2{margin:0}.chat-title span{color:var(--muted);font:12px system-ui,sans-serif}.chat-messages{overflow:auto;flex:1;min-height:120px;max-height:55dvh;margin:13px 0;display:flex;flex-direction:column;gap:8px}.chat-bubble{border:1px solid #81614669;border-radius:9px;padding:9px 10px;background:#2d2528;font:12px/1.55 system-ui,sans-serif;overflow-wrap:anywhere;white-space:pre-wrap}.chat-bubble.own{background:#473327}.chat-bubble b{display:block;color:#efd2a1;margin-bottom:4px}.chat-composer{display:flex;gap:6px}.chat-composer input{width:100%;min-width:0;font:13px system-ui,sans-serif}.chat-composer button{font:13px system-ui,sans-serif;padding:9px 12px}.view-shell{position:fixed;inset:0;z-index:30;background:#0e0b11ee;display:flex;align-items:center;justify-content:center;padding:clamp(6px,2vw,18px)}.view-backdrop{position:absolute;inset:0;background:url("./assets/room/warm_desktop.webp") center/cover;filter:blur(12px) brightness(.24);transform:scale(1.1)}.view-panel{position:relative;display:flex;flex-direction:column;min-height:0;width:min(100%,1100px);height:min(95dvh,950px);background:linear-gradient(#302525,#17161a);border:1px solid #b38d5b;box-shadow:0 20px 65px #000;animation:approach .38s ease both;border-radius:6px;overflow:hidden}.view-top{padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #85664666;gap:12px}.view-top h2{font-weight:400;margin:4px 0;font-size:clamp(19px,3vw,29px)}.view-status{font:12px system-ui,sans-serif;color:var(--gold);max-width:44%;text-align:right}.view-content{overflow:auto;flex:1;min-height:0;padding:16px 18px;display:flex;align-items:center;justify-content:center}.view-footer{display:flex;align-items:center;justify-content:center;border-top:1px solid #8f6c476e;padding:9px;background:#1e181c}.button-back{min-width:min(90%,240px);font-size:15px}.mechanism-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(185px,320px);gap:20px;align-items:center;width:100%;max-height:100%;margin:auto}.art-stage{position:relative;max-width:100%;max-height:calc(95dvh - 185px);margin:auto;min-width:0}.art-stage>img{width:100%;height:100%;display:block;object-fit:contain}.mechanism-guide{align-self:center;line-height:1.55;color:#e9dbc8}.mechanism-guide h3{color:var(--gold2);font-weight:400;margin-top:0}.mechanism-guide p{font:13px/1.6 system-ui,sans-serif}.mechanism-guide button{width:100%;margin:6px 0}.mechanism-guide .success{color:#c8edbb}.image-scene .art-stage{width:min(100%,520px);aspect-ratio:1}.frame-display{position:relative;width:100%;aspect-ratio:1}.frame-display .frame-image{position:absolute;inset:0;width:100%;height:100%}.image-puzzle-inner{position:absolute;top:9%;left:9%;width:82%;height:82%;border:1px solid #7a5641;background:#201b1a}.jigsaw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));height:100%;width:100%;gap:2px}.jigsaw-tile{padding:0;border:1px solid #b6956c;border-radius:0;min-height:0;min-width:0;background-repeat:no-repeat;background-size:300% 300%;color:transparent}.jigsaw-tile.selected{outline:4px solid #f6ca70;outline-offset:-4px}.jigsaw-tile:hover{filter:brightness(1.1)}.jigsaw-reveal{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;background:#211b19}.panel-stage{aspect-ratio:1448 / 1086;width:min(100%,720px)}.panel-socket{position:absolute;width:10.8%;aspect-ratio:1;transform:translate(-50%,-50%);padding:0;border:1px solid #dab779;border-radius:50%;background:#34272180;display:grid;place-items:center;min-width:0;min-height:0}.panel-socket.empty{border-color:#885e40;box-shadow:inset 0 0 15px #080507aa}.panel-socket img{width:100%;height:100%;object-fit:contain}.panel-socket span{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#30201d;color:#fff1b9;font:10px system-ui,sans-serif;border-radius:7px;padding:0 4px}.panel-socket.selected{box-shadow:0 0 11px 4px #eed093}.talisman-tray{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:10px 0}.talisman-tray button{min-width:0;min-height:0;padding:2px;border:1px solid #a6814f;border-radius:50%;background:transparent;aspect-ratio:1}.talisman-tray button.selected{background:#dbad653f;border:2px solid #f8db93}.talisman-tray img{width:100%;height:100%;object-fit:contain}.socket-controls{display:flex;gap:6px;margin-top:8px}.socket-controls button{flex:1;font:11px system-ui,sans-serif}.safe-stage{width:min(100%,570px);aspect-ratio:940/790}.safe-wheel{position:absolute;top:32%;left:33%;width:21%;filter:drop-shadow(0 3px 6px #000a);animation:float 2.5s ease-in-out infinite}.pipes-stage{width:min(100%,420px);aspect-ratio:1086/1448}.pipe-water{position:absolute;z-index:1;top:22%;height:46%;width:20.7%;pointer-events:none;opacity:.62;overflow:hidden;border-radius:30px 30px 10px 10px;background:linear-gradient(180deg,#a5e4ed40 0%,#43a3c597 35%,#267e9eac 100%);transition:height 2.2s ease,top 2.2s ease}.pipe-water::after{content:'';position:absolute;top:-5px;height:18px;left:0;width:100%;border-radius:50%;background:#b6f7ff8c;filter:blur(3px)}.pipe-water.left{left:20.3%}.pipe-water.right{left:50.3%}.pipes-stage.drained-left .pipe-water.left,.pipes-stage.drained-right .pipe-water.right{height:0%;top:68%}.pipe-prize{position:absolute;z-index:2;top:27%;width:13%;height:12%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 3px 3px #000c)}.pipe-prize.left{left:24%}.pipe-prize.right{left:54%}.pipe-structure{position:absolute;z-index:3;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}.pipe-valve{position:absolute;z-index:4;bottom:17.8%;width:16%;filter:drop-shadow(0 4px 8px #000);animation:float 2s ease-in-out infinite}.pipe-valve.left{left:25.3%}.pipe-valve.right{left:55%}.pipe-valve.turning{animation:valveturn 1.3s ease both}.pipe-label{display:flex;gap:8px;justify-content:center;margin:12px 0}.pipe-label strong{padding:7px 12px;border:1px solid var(--line);border-radius:5px;color:var(--gold2);font:13px system-ui,sans-serif}.result-note{padding:10px;border-left:3px solid #d3b271;background:#2f2826;border-radius:4px}.confirm-choice{background:#2e2325;border:1px solid #d8ac64;border-radius:9px;padding:15px;margin-top:10px}.test-controls{margin-top:22px;border-top:1px solid #8b704b;padding:9px 0;font-size:12px;color:#bda38f}.test-controls summary{cursor:pointer}.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:80;background:#f3dfbb;color:#301d19;border:1px solid #d9a562;padding:12px 17px;border-radius:6px;max-width:90%;font:13px/1.4 system-ui,sans-serif;box-shadow:0 8px 40px #0008;opacity:0;pointer-events:none;transition:opacity .2s}.toast.show{opacity:1}.hidden,[hidden]{display:none!important}@keyframes approach{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}@keyframes float{50%{transform:translateY(-5px)}}@keyframes valveturn{to{transform:rotate(320deg)}}@media(max-width:970px){.game-layout{grid-template-columns:minmax(0,1fr)}.sidebar{border-left:0;border-top:1px solid #896f49}.chat-card{min-height:220px}.chat-messages{max-height:220px}.game-screen{padding-bottom:12px}.setup-screen{grid-template-columns:1fr}.setup-art{height:180px;box-shadow:inset 0 -55px 55px #19171b}.setup-panel{padding:20px}}@media(max-width:630px){.brand strong{font-size:16px}.app-header{align-items:flex-start}.player-label{flex-direction:column;align-items:flex-start;gap:3px}.player-label select{max-width:160px}.room-wrapper{max-width:min(100%,460px)}.room-stage{aspect-ratio:9/16;background-image:url("./assets/room/warm_mobile.webp")}.h-image{left:5%;top:36%;width:17%;height:30%}.h-panel{left:22%;top:26%;width:55%;height:29%}.h-safe{left:35%;top:56%;width:30%;height:16%}.h-pipes{left:81%;top:42%;width:15%;height:27%}.room-hotspot>.hotspot-label{bottom:-10px;font-size:8px;display:none}.mission-label{display:none}.scene-panel{padding:10px 5px}.quick-inspect{padding:0 5px}.quick-inspect button{flex:1 0 42%;min-height:44px}.view-shell{padding:0}.view-panel{height:100dvh;max-height:none;border:0;border-radius:0}.view-content{padding:10px 8px}.mechanism-layout{grid-template-columns:1fr;align-items:start;gap:10px}.art-stage{max-height:min(58dvh,600px)}.image-scene .art-stage{width:min(96vw,53dvh)}.panel-stage{width:min(97vw,56dvh)}.pipes-stage{width:min(65vw,33dvh)}.safe-stage{width:min(91vw,58dvh)}.mechanism-guide{padding:0 12px}.mechanism-guide h3{display:none}.mechanism-guide button{min-height:44px}.view-top{padding:10px 14px}.view-footer{padding:8px}.mission-bar{padding:9px 12px}.room-hint{font-size:11px}.chat-messages{max-height:230px}.setup-panel h1{font-size:32px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Independent prize and water overlays for the right-wall perspective. */
+.h-pipes .pipe-shell{position:absolute;inset:0;z-index:3;width:100%;height:100%;object-fit:fill}
+.h-pipes .wide-water{position:absolute;z-index:1;border-radius:20px 20px 6px 6px;background:linear-gradient(180deg,#78d8ed40,#1489a16e);pointer-events:none;transition:height 1.5s ease,top 1.5s ease}
+.h-pipes .ww-left{left:25%;top:24%;width:22%;height:48%}
+.h-pipes .ww-right{left:55%;top:20%;width:23%;height:52%}
+.h-pipes .wide-prize{position:absolute;z-index:2;width:20%;height:12%;object-fit:contain;filter:drop-shadow(0 2px 3px #000c);pointer-events:none}
+.h-pipes .wide-prize.gold{left:25%;top:29%}
+.h-pipes .wide-prize.shield{left:55%;top:25%}
+.h-pipes .hotspot-label{z-index:4}
+.h-pipes.drained-gold .ww-left{height:0;top:72%}
+.h-pipes.drained-shield .ww-right{height:0;top:72%}
+/* Glass is opaque in the approved drawing, so show independent game contents ABOVE that drawing,
+   with translucent tint; otherwise prizes disappear behind white glass pixels. */
+.h-pipes .wide-water{z-index:4;opacity:.44;mix-blend-mode:multiply}
+.h-pipes .wide-prize{z-index:5;opacity:.98}
+.h-pipes .hotspot-label{z-index:6}
+.pipes-stage .pipe-water{z-index:4;opacity:.49;mix-blend-mode:multiply}
+.pipes-stage .pipe-prize{z-index:5}
+.pipes-stage .pipe-valve{z-index:6}
+
+/* V2: artworks themselves are the controls; no rendered room navigation buttons. */
+.room-hotspot{appearance:none;-webkit-appearance:none;background:transparent;box-shadow:none;border:0;outline:none;touch-action:manipulation}
+.room-hotspot>.hotspot-label,.quick-inspect{display:none!important}
+.room-hotspot:focus-visible{outline:2px solid #e6c790;outline-offset:3px}
+.room-hotspot.h-image::after,.room-hotspot.h-panel::after,.room-hotspot.h-pipes::after{content:'';position:absolute;pointer-events:none;inset:0;border:1px solid rgba(255,226,150,.32);border-radius:5px;box-shadow:0 0 6px 1px rgba(246,202,118,.2),inset 0 0 5px rgba(243,205,138,.16);background:radial-gradient(circle at 0% 0%,rgba(255,251,216,.72) 0 1px,transparent 3px),radial-gradient(circle at 100% 100%,rgba(255,251,216,.68) 0 1px,transparent 4px),radial-gradient(circle at 100% 0%,rgba(255,244,182,.46) 0 1px,transparent 4px),radial-gradient(circle at 0% 100%,rgba(255,245,192,.4) 0 1px,transparent 3px);animation:edge-sparkle 4.4s ease-in-out infinite}
+.room-hotspot.h-panel::after{animation-delay:-1.5s}.room-hotspot.h-pipes::after{animation-delay:-3s}
+.room-hotspot.h-image::after{clip-path:polygon(2.3% 0,100% 25.3%,98.6% 95%,0 100%);border-radius:0}
+@keyframes edge-sparkle{0%,100%{opacity:.26;filter:brightness(.8)}45%{opacity:.65;filter:brightness(1.3)}65%{opacity:.3}}
+.room-safe-wheel{position:absolute;z-index:7;top:36%;left:23%;width:26%!important;height:29%!important;object-fit:contain!important;filter:drop-shadow(0 2px 3px #000);pointer-events:none}
+.h-safe{cursor:pointer}
+/* Mobile editor: independent layout data, fully interactive from desktop or phone. */
+.mobile-editor[hidden]{display:none!important}
+.mobile-editor{position:relative;z-index:12;width:min(100%,530px);margin:10px auto 20px;padding:13px 16px;border:1px solid #b98f59;border-radius:10px;background:#272023;color:#f5dfbe;box-shadow:0 4px 24px #0006;font:13px/1.5 system-ui,sans-serif}
+.mobile-editor h2{margin:0 0 5px;font:21px Georgia,serif;color:#f1d6a2}
+.mobile-editor p{margin:4px 0 9px;font-size:12px;color:#d8c6ac}
+.mobile-editor label{display:block;font-size:12px;color:#e4c99a}
+.mobile-editor select,.mobile-editor input{display:block;width:100%;margin:4px 0 8px;min-height:36px;padding:7px}
+.edit-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.edit-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:5px}
+.edit-actions button{flex:1 1 105px;font:12px system-ui,sans-serif;padding:10px 7px}
+.mobile-editor-stage{aspect-ratio:9/16!important;background-image:url("./assets/room/warm_mobile.webp")!important}
+body.layout-editing .room-wrapper{max-width:min(100%,460px)}
+body.layout-editing .room-hotspot{touch-action:none;cursor:grab;filter:none!important;scale:1!important}
+body.layout-editing .room-hotspot::after{display:none}
+body.layout-editing .room-hotspot.edit-selected{outline:2px solid #f1cc7f!important;outline-offset:0;box-shadow:0 0 0 1px #2c1d1e inset,0 0 18px #edc1687b}
+.resize-handle{display:none;position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;background:#f6d28d;border:2px solid #332322;border-radius:3px;z-index:11;cursor:nwse-resize;touch-action:none}
+body.layout-editing .resize-handle{display:block}
+body.layout-editing .room-hint{font-weight:bold;color:#f5d38d}
+body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;inset:0;outline:1px dashed #f5d38d}
+@media(min-width:631px){body.layout-editing .room-wrapper{max-width:460px}body.layout-editing .game-layout{grid-template-columns:minmax(0,1fr) minmax(270px,330px)}}
+@media(max-width:630px){.edit-values{gap:5px}.mobile-editor{margin:5px 8px 15px;width:auto}.app-header{gap:5px}.header-actions{gap:5px}.header-actions .button-ghost{padding:7px 9px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.room-hotspot::after{animation:none!important;opacity:.5}}
+
+</style></head>
+<body>
+<div class="app-shell" id="app">
+ <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V2 · EDITABLE MOBILE LAYOUT</span></div>
+ <div class="header-actions" id="headerActions" hidden><label class="player-label">View as <select id="playerSelect" aria-label="Switch simulated player"></select></label><button id="editMobile" class="button-ghost" type="button" title="Drag and resize all four room assets for portrait screens">Edit mobile layout</button><button id="resetGame" class="button-ghost" type="button">Reset test</button></div></header>
+ <main id="setupScreen" class="setup-screen"><div class="setup-art"></div><section class="setup-panel"><p class="eyebrow">COOPERATIVE MISSION</p><h1>Escape the Dungeon</h1><p>Every player holds the next player's secret. Solve the image, share the clue, unlock the safe and choose between personal protection or gold for the group.</p>
+ <p class="demo-warning">This is a playable <strong>local testing build</strong>. It does not connect to real players, chat, Shield Room or gold balances.</p>
+ <form id="newGameForm"><label for="teamSize">Players (2–20)</label><input id="teamSize" type="number" min="2" max="20" value="4" required><label for="goldEach">Gold added per gold choice (£)</label><input id="goldEach" type="number" min="0" max="100000" step="1" value="100" required><label for="playerNames">Player names (optional, one per line)</label><textarea id="playerNames" rows="4" placeholder="Leave blank for test players"></textarea><button class="button-primary" type="submit">Enter the Dungeon</button></form></section></main>
+ <section id="gameScreen" class="game-screen" hidden>
+  <div class="mission-bar"><div><span class="mission-label">TEAM MISSION</span><span id="missionProgress" aria-live="polite"></span></div><div class="mission-gold">Group pot <strong id="goldPot">£0</strong></div></div>
+  <div class="game-layout"><div class="scene-panel"><div class="room-wrapper"><div class="room-stage" id="roomStage" role="region" aria-label="Dungeon room with four interactive mechanisms">
+   <button type="button" class="room-hotspot h-image" data-view="image" aria-label="Approach the image puzzle"><img src="./assets/room/image_board_wide.webp" alt=""/></button>
+   <button type="button" class="room-hotspot h-panel" data-view="talismans" aria-label="Approach the twelve-hole talisman mechanism"><img src="./assets/room/panel_wide.webp" alt=""/></button>
+   <button type="button" class="room-hotspot h-safe" data-safe-action="true" aria-label="Open the safe or collect the valve wheel"><img id="roomSafe" src="./assets/closeups/safe_closed.webp" alt=""/><img id="roomSafeWheel" class="room-safe-wheel" src="./assets/rewards/wheel_intact.webp" alt="" hidden></button>
+   <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/shield_fallback.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
+  </div></div><div class="room-hint">Tap the glowing edges to inspect a puzzle. Tap the safe to open it or collect the wheel.</div>
+</div>
+  <aside class="sidebar"><section class="mission-card"><p class="eyebrow">YOUR PROGRESS</p><h2 id="currentName">Player</h2><ol id="stageProgress"></ol><p id="nextPlayerInfo" class="subtle"></p></section>
+   <section class="chat-card"><div class="chat-title"><h2>Team chat</h2><span id="chatCount"></span></div><div id="chatMessages" class="chat-messages" aria-live="polite"></div><form id="chatForm" class="chat-composer"><input id="chatInput" maxlength="1200" placeholder="Share clues with the team…" autocomplete="off" aria-label="Team chat message"><button type="submit">Send</button></form></section></aside>
+  </div>
+ </section>
+ <section id="mobileEditor" class="mobile-editor" hidden aria-label="Portrait layout editor">
+  <h2>Mobile layout · V2</h2><p>Drag an object to move it. Drag the bottom-right square to resize.</p>
+  <label>Selected area<select id="editAsset"><option value="image">Image puzzle</option><option value="panel">Talisman wall</option><option value="safe">Safe</option><option value="pipes">Water pipes</option></select></label>
+  <div class="edit-values"><label>X %<input id="editX" type="number" min="0" max="100" step="0.1"></label><label>Y %<input id="editY" type="number" min="0" max="100" step="0.1"></label><label>Width %<input id="editW" type="number" min="1" max="100" step="0.1"></label><label>Height %<input id="editH" type="number" min="1" max="100" step="0.1"></label></div>
+  <div class="edit-actions"><button type="button" id="saveLayout" class="button-primary">Save positions</button><button type="button" id="exportLayout">Export JSON</button><button type="button" id="resetLayout">Reset mobile</button><button type="button" id="closeMobileEditor">Finished</button></div>
+  <p class="editor-note" id="editorNote">Changes save on this device. Export JSON to move them into the final Workshop app.</p>
+ </section>
+ <div class="view-shell" id="viewShell" hidden role="dialog" aria-modal="true" aria-labelledby="viewTitle"><div class="view-backdrop"></div><section class="view-panel"><div class="view-top"><div><p class="eyebrow">APPROACH THE MECHANISM</p><h2 id="viewTitle"></h2></div><span id="viewStatus" class="view-status"></span></div><div id="viewContent" class="view-content"></div><footer class="view-footer"><button id="backRoom" type="button" class="button-back">← Back to room</button></footer></section></div>
+ <div id="toast" class="toast" role="status" aria-live="polite"></div>
+ </div>
+ 
+<script>
+window.__DUNGEON_LIBRARY={"version":1,"symbols":["raven","serpent","dagger","moon","sun"],"codes":[[{"symbol":"serpent","rotation":0},{"symbol":"serpent","rotation":3},{"symbol":"raven","rotation":3},{"symbol":"moon","rotation":1},{"symbol":"raven","rotation":2},{"symbol":"serpent","rotation":3},{"symbol":"moon","rotation":3},{"symbol":"dagger","rotation":0},{"symbol":"dagger","rotation":2},{"symbol":"sun","rotation":2},{"symbol":"moon","rotation":2},{"symbol":"dagger","rotation":3}],[{"symbol":"raven","rotation":2},{"symbol":"serpent","rotation":3},{"symbol":"raven","rotation":0},{"symbol":"serpent","rotation":3},{"symbol":"moon","rotation":3},{"symbol":"serpent","rotation":2},{"symbol":"sun","rotation":3},{"symbol":"sun","rotation":2},{"symbol":"serpent","rotation":3},{"symbol":"sun","rotation":3},{"symbol":"dagger","rotation":2},{"symbol":"sun","rotation":2}],[{"symbol":"sun","rotation":2},{"symbol":"raven","rotation":2},{"symbol":"moon","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"moon","rotation":1},{"symbol":"moon","rotation":3},{"symbol":"raven","rotation":2},{"symbol":"moon","rotation":3},{"symbol":"dagger","rotation":3},{"symbol":"serpent","rotation":3},{"symbol":"raven","rotation":0},{"symbol":"moon","rotation":2}],[{"symbol":"dagger","rotation":3},{"symbol":"sun","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"raven","rotation":0},{"symbol":"dagger","rotation":0},{"symbol":"sun","rotation":3},{"symbol":"serpent","rotation":2},{"symbol":"raven","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"sun","rotation":0},{"symbol":"raven","rotation":2},{"symbol":"moon","rotation":3}],[{"symbol":"moon","rotation":3},{"symbol":"moon","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"moon","rotation":2},{"symbol":"dagger","rotation":0},{"symbol":"dagger","rotation":2},{"symbol":"sun","rotation":3},{"symbol":"moon","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"sun","rotation":3},{"symbol":"moon","rotation":2},{"symbol":"moon","rotation":0}],[{"symbol":"sun","rotation":0},{"symbol":"sun","rotation":0},{"symbol":"dagger","rotation":2},{"symbol":"raven","rotation":0},{"symbol":"serpent","rotation":0},{"symbol":"dagger","rotation":2},{"symbol":"serpent","rotation":3},{"symbol":"dagger","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"serpent","rotation":3},{"symbol":"moon","rotation":3},{"symbol":"raven","rotation":0}],[{"symbol":"moon","rotation":2},{"symbol":"dagger","rotation":0},{"symbol":"sun","rotation":3},{"symbol":"serpent","rotation":3},{"symbol":"serpent","rotation":1},{"symbol":"raven","rotation":1},{"symbol":"moon","rotation":0},{"symbol":"sun","rotation":3},{"symbol":"dagger","rotation":1},{"symbol":"raven","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"serpent","rotation":0}],[{"symbol":"moon","rotation":1},{"symbol":"raven","rotation":2},{"symbol":"moon","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"dagger","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"sun","rotation":2},{"symbol":"serpent","rotation":1},{"symbol":"raven","rotation":0},{"symbol":"raven","rotation":2},{"symbol":"serpent","rotation":2}],[{"symbol":"sun","rotation":0},{"symbol":"serpent","rotation":2},{"symbol":"moon","rotation":3},{"symbol":"sun","rotation":3},{"symbol":"moon","rotation":3},{"symbol":"moon","rotation":2},{"symbol":"serpent","rotation":3},{"symbol":"sun","rotation":2},{"symbol":"raven","rotation":3},{"symbol":"raven","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"moon","rotation":1}],[{"symbol":"moon","rotation":1},{"symbol":"raven","rotation":3},{"symbol":"serpent","rotation":3},{"symbol":"raven","rotation":0},{"symbol":"serpent","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"raven","rotation":3},{"symbol":"moon","rotation":3},{"symbol":"serpent","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"sun","rotation":2}],[{"symbol":"moon","rotation":1},{"symbol":"raven","rotation":1},{"symbol":"raven","rotation":0},{"symbol":"sun","rotation":2},{"symbol":"moon","rotation":0},{"symbol":"raven","rotation":2},{"symbol":"dagger","rotation":0},{"symbol":"dagger","rotation":0},{"symbol":"serpent","rotation":3},{"symbol":"raven","rotation":3},{"symbol":"raven","rotation":1},{"symbol":"moon","rotation":2}],[{"symbol":"dagger","rotation":1},{"symbol":"raven","rotation":2},{"symbol":"raven","rotation":1},{"symbol":"dagger","rotation":0},{"symbol":"serpent","rotation":2},{"symbol":"moon","rotation":3},{"symbol":"dagger","rotation":0},{"symbol":"raven","rotation":2},{"symbol":"serpent","rotation":2},{"symbol":"serpent","rotation":1},{"symbol":"raven","rotation":2},{"symbol":"serpent","rotation":3}],[{"symbol":"sun","rotation":2},{"symbol":"raven","rotation":2},{"symbol":"raven","rotation":1},{"symbol":"raven","rotation":0},{"symbol":"raven","rotation":2},{"symbol":"dagger","rotation":3},{"symbol":"sun","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"sun","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"dagger","rotation":2}],[{"symbol":"sun","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"moon","rotation":3},{"symbol":"serpent","rotation":1},{"symbol":"sun","rotation":1},{"symbol":"raven","rotation":3},{"symbol":"dagger","rotation":2},{"symbol":"raven","rotation":3},{"symbol":"serpent","rotation":3},{"symbol":"moon","rotation":0},{"symbol":"sun","rotation":0},{"symbol":"sun","rotation":1}],[{"symbol":"dagger","rotation":3},{"symbol":"serpent","rotation":1},{"symbol":"dagger","rotation":1},{"symbol":"moon","rotation":3},{"symbol":"sun","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"sun","rotation":1},{"symbol":"sun","rotation":1},{"symbol":"dagger","rotation":1},{"symbol":"moon","rotation":0},{"symbol":"raven","rotation":3},{"symbol":"raven","rotation":0}],[{"symbol":"serpent","rotation":0},{"symbol":"moon","rotation":0},{"symbol":"sun","rotation":1},{"symbol":"moon","rotation":3},{"symbol":"serpent","rotation":3},{"symbol":"dagger","rotation":0},{"symbol":"raven","rotation":0},{"symbol":"serpent","rotation":0},{"symbol":"serpent","rotation":1},{"symbol":"raven","rotation":0},{"symbol":"moon","rotation":0},{"symbol":"dagger","rotation":2}],[{"symbol":"raven","rotation":2},{"symbol":"dagger","rotation":1},{"symbol":"sun","rotation":2},{"symbol":"raven","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"serpent","rotation":1},{"symbol":"moon","rotation":1},{"symbol":"serpent","rotation":0},{"symbol":"moon","rotation":2},{"symbol":"sun","rotation":2},{"symbol":"moon","rotation":2}],[{"symbol":"serpent","rotation":0},{"symbol":"raven","rotation":0},{"symbol":"dagger","rotation":1},{"symbol":"dagger","rotation":1},{"symbol":"serpent","rotation":1},{"symbol":"dagger","rotation":1},{"symbol":"sun","rotation":1},{"symbol":"moon","rotation":3},{"symbol":"dagger","rotation":1},{"symbol":"sun","rotation":2},{"symbol":"moon","rotation":0},{"symbol":"raven","rotation":3}],[{"symbol":"sun","rotation":2},{"symbol":"moon","rotation":3},{"symbol":"dagger","rotation":1},{"symbol":"serpent","rotation":0},{"symbol":"moon","rotation":3},{"symbol":"serpent","rotation":2},{"symbol":"dagger","rotation":0},{"symbol":"sun","rotation":2},{"symbol":"sun","rotation":1},{"symbol":"dagger","rotation":3},{"symbol":"dagger","rotation":2},{"symbol":"serpent","rotation":1}],[{"symbol":"serpent","rotation":2},{"symbol":"dagger","rotation":2},{"symbol":"moon","rotation":0},{"symbol":"sun","rotation":3},{"symbol":"moon","rotation":0},{"symbol":"sun","rotation":3},{"symbol":"dagger","rotation":1},{"symbol":"dagger","rotation":0},{"symbol":"serpent","rotation":2},{"symbol":"raven","rotation":1},{"symbol":"raven","rotation":1},{"symbol":"dagger","rotation":2}]]};
+/** BRM Dungeon Escape V1 — deterministic game rules; pure functions, no DOM. */
+const SYMBOLS=Object.freeze(['raven','serpent','dagger','moon','sun']);
+const DIRECTIONS=Object.freeze(['N','E','S','W']);
+const MIN_PLAYERS=2,MAX_PLAYERS=20;
+const clean=x=>String(x??'').trim();
+function ensure(condition,message){if(!condition)throw Error(message);}
+function bump(game,player){game.updated=Date.now();player.updated=game.updated;}
+function createGame(names,library,options={}){
+ ensure(Array.isArray(names)&&names.length>=MIN_PLAYERS&&names.length<=MAX_PLAYERS,'Choose 2–20 players.');
+ const participants=names.map(clean);
+ ensure(participants.every(n=>n.length>=1&&n.length<=32),'Every player needs a name (1–32 characters).');
+ ensure(new Set(participants.map(n=>n.toLowerCase())).size===participants.length,'Player names must be unique.');
+ ensure(Array.isArray(library?.codes)&&library.codes.length>=MAX_PLAYERS,'Clue library is missing its 20 solutions.');
+ const goldEach=Number(options.goldEach??100);
+ ensure(Number.isInteger(goldEach)&&goldEach>=0&&goldEach<=100000,'Gold reward must be 0–100,000.');
+ const seed=clean(options.seed)||'dungeon-v1';
+ const players=participants.map((name,i)=>({
+  id:`p${i+1}`,name,index:i,puzzleSolved:false,clueShared:false,
+  slots:Array.from({length:12},()=>null),talismansSolved:false,
+  safeOpen:false,wheelCollected:false,reward:null,updated:0
+ }));
+ return {schema:1,id:`demo-${seed}`,seed,goldEach,goldPot:0,created:Date.now(),updated:Date.now(),
+  players,chat:[],mode:'local-test',shieldRoomEligible:false};
+}
+function playerFor(game,id){const p=game.players.find(x=>x.id===id);ensure(p,'Unknown player.');return p;}
+function nextPlayer(game,id){const p=playerFor(game,id);return game.players[(p.index+1)%game.players.length];}
+function previousPlayer(game,id){const p=playerFor(game,id);return game.players[(p.index-1+game.players.length)%game.players.length];}
+function codeFor(library,player){const code=library.codes[player.index];ensure(code&&code.length===12,'Missing talisman solution.');return code;}
+function clueFor(game,id){return nextPlayer(game,id).index+1;}
+function completePuzzle(game,id){const p=playerFor(game,id);ensure(!p.puzzleSolved,'This image puzzle is already complete.');p.puzzleSolved=true;bump(game,p);return clueFor(game,id);}
+function postChat(game,id,message){const p=playerFor(game,id);const body=clean(message);ensure(body.length>=1&&body.length<=1200,'Message must contain 1–1200 characters.');
+ game.chat.push({id:game.chat.length+1,uid:p.id,name:p.name,body,at:Date.now()});game.updated=Date.now();return game.chat.at(-1);}
+function shareClue(game,id,library){const p=playerFor(game,id);ensure(p.puzzleSolved,'Solve the image puzzle before sharing the clue.');
+ const dest=nextPlayer(game,id);const details=codeFor(library,dest).map((s,i)=>`${i+1}: ${s.symbol.toUpperCase()} ${DIRECTIONS[s.rotation]}`).join(' · ');
+ const message=`For ${dest.name} — talisman order: ${details}`;
+ postChat(game,id,message);p.clueShared=true;bump(game,p);return message;}
+function putTalisman(game,id,position,symbol,rotation=0){const p=playerFor(game,id);
+ ensure(!p.talismansSolved,'The talisman mechanism is already unlocked.');
+ ensure(Number.isInteger(position)&&position>=0&&position<12,'Invalid socket.');
+ ensure(SYMBOLS.includes(symbol),'Unknown talisman.');
+ ensure(Number.isInteger(rotation)&&rotation>=0&&rotation<4,'Invalid orientation.');
+ p.slots[position]={symbol,rotation};bump(game,p);return p.slots[position];}
+function clearTalisman(game,id,position){const p=playerFor(game,id);ensure(!p.talismansSolved,'This mechanism is locked open.');ensure(position>=0&&position<12,'Invalid socket.');p.slots[position]=null;bump(game,p);}
+function rotateTalisman(game,id,position){const p=playerFor(game,id);ensure(!p.talismansSolved,'This mechanism is already open.');const slot=p.slots[position];ensure(slot,'Insert a talisman before rotating.');slot.rotation=(slot.rotation+1)%4;bump(game,p);return slot.rotation;}
+function checkTalismans(game,id,library){const p=playerFor(game,id);if(p.talismansSolved)return true;
+ const target=codeFor(library,p);const correct=p.slots.every((slot,i)=>slot&&slot.symbol===target[i].symbol&&slot.rotation===target[i].rotation);
+ if(correct){p.talismansSolved=true;bump(game,p);}return correct;}
+function openSafe(game,id){const p=playerFor(game,id);ensure(p.talismansSolved,'The talisman puzzle must be solved before opening the safe.');ensure(!p.safeOpen,'Safe is already open.');p.safeOpen=true;bump(game,p);}
+function collectWheel(game,id){const p=playerFor(game,id);ensure(p.safeOpen,'Open the safe first.');ensure(!p.wheelCollected,'Wheel already collected.');ensure(!p.reward,'Prize already claimed.');p.wheelCollected=true;bump(game,p);}
+function claimPrize(game,id,reward){const p=playerFor(game,id);ensure(reward==='gold'||reward==='shield','Choose gold or shield.');
+ ensure(p.talismansSolved&&p.safeOpen&&p.wheelCollected,'Collect the valve wheel first.');
+ ensure(p.reward===null,'The valve wheel broke. A second prize is impossible.');
+ p.reward=reward;if(reward==='gold')game.goldPot+=game.goldEach;bump(game,p);
+ return {reward,goldPot:game.goldPot,remaining:game.players.filter(x=>!x.reward).length};}
+function status(game){return {
+ players:game.players.length,imagesSolved:game.players.filter(p=>p.puzzleSolved).length,
+ mechanismsUnlocked:game.players.filter(p=>p.talismansSolved).length,
+ rewardsClaimed:game.players.filter(p=>p.reward).length,
+ shieldWinners:game.players.filter(p=>p.reward==='shield').map(p=>p.name),
+ goldPot:game.goldPot,complete:game.players.every(p=>p.reward!==null)
+};}
+
+const $=id=>document.getElementById(id);
+const AS='./assets/';const KEY='BRM_DUNGEON_TEST_V1';const LAYOUT_KEY='BRM_DUNGEON_MOBILE_LAYOUT_V2';const VIEW_LABELS={image:'Image Reveal Puzzle',talismans:'The Twelve Sockets',safe:'The Safe',pipes:'The Two Prizes'};
+const symbolName=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const escapeHTML=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'£'+Number(n).toLocaleString('en-GB');
+let game=null,library=null,asPlayer='p1',view=null,selected='raven',focusSocket=-1,selectedTile=-1,pendingChoice=null,toastTimer=null,drainAnimation=false;
+let lastFocused=null;
+const editDefaults={image:{x:5,y:36,w:17,h:30},panel:{x:22,y:26,w:55,h:29},safe:{x:35,y:56,w:30,h:16},pipes:{x:81,y:42,w:15,h:27}};
+const cloneLayout=()=>JSON.parse(JSON.stringify(editDefaults));
+const mobileOrder=['image','panel','safe','pipes'];
+let mobileLayout=cloneLayout(),mobileEditing=false,editSelection='image';
+function getHotspot(id){return id==='safe'?document.querySelector('[data-safe-action]'):document.querySelector(`.room-hotspot[data-view="${id==='panel'?'talismans':id}"]`)}
+function validateMobileLayout(candidate){
+ if(!candidate||typeof candidate!=='object')return cloneLayout();
+ const out=cloneLayout();for(const id of mobileOrder){const obj=candidate[id];if(!obj)continue;const o={};let valid=true;
+  for(const v of ['x','y','w','h']){const n=Number(obj[v]);if(!Number.isFinite(n)){valid=false;break}o[v]=Math.min(100,Math.max(v==='w'||v==='h'?1:0,n));}
+  if(valid){o.w=Math.min(o.w,100-o.x);o.h=Math.min(o.h,100-o.y);out[id]=o;}}
+ return out;
+}
+function loadMobileLayout(){try{mobileLayout=validateMobileLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||'null'));}catch{mobileLayout=cloneLayout()}}
+function saveMobileLayout(){try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(mobileLayout));}catch{notify('Browser storage blocked: use Export JSON.')}}
+function showMobileLayout(){const active=mobileEditing||window.matchMedia('(max-width:630px)').matches;
+ for(const id of mobileOrder){const el=getHotspot(id);if(!el)continue;el.classList.toggle('edit-selected',mobileEditing&&id===editSelection);
+  const o=mobileLayout[id];for(const prop of ['left','top','width','height']){if(active)el.style[prop]=String(o[({left:'x',top:'y',width:'w',height:'h'})[prop]])+'%';else el.style.removeProperty(prop)} }
+ $('roomStage').classList.toggle('mobile-editor-stage',mobileEditing);
+}
+function refreshEditFields(){const o=mobileLayout[editSelection];$('editAsset').value=editSelection;
+ for(const [suffix,key] of [['X','x'],['Y','y'],['W','w'],['H','h']])$('edit'+suffix).value=o[key].toFixed(1);
+ showMobileLayout();}
+function selectEdit(id){editSelection=id;refreshEditFields()}
+function startMobileEditor(){if(!game)return;closeViewIfOpen();mobileEditing=true;
+ $('mobileEditor').hidden=false;$('editMobile').textContent='Editing mobile…';document.body.classList.add('layout-editing');selectEdit(editSelection);
+ $('mobileEditor').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function stopMobileEditor(){mobileEditing=false;$('mobileEditor').hidden=true;$('editMobile').textContent='Edit mobile layout';document.body.classList.remove('layout-editing');saveMobileLayout();showMobileLayout();}
+function downloadLayout(){const data={editor:'Dungeon Escape Mobile Layout V2',canvas:{width:1440,height:2560},units:'percent',layers:mobileOrder.map(id=>({id,...mobileLayout[id]}))};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const href=URL.createObjectURL(blob);const a=document.createElement('a');a.href=href;a.download='dungeon_mobile_layout_v2.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),500);}
+function setupMobileEditor(){loadMobileLayout();showMobileLayout();$('editMobile').addEventListener('click',()=>mobileEditing?stopMobileEditor():startMobileEditor());
+ $('closeMobileEditor').onclick=stopMobileEditor;$('saveLayout').onclick=()=>{saveMobileLayout();notify('Mobile positions saved on this device')};
+ $('exportLayout').onclick=downloadLayout;$('resetLayout').onclick=()=>{if(!confirm('Reset the four mobile positions?'))return;mobileLayout=cloneLayout();saveMobileLayout();refreshEditFields()};
+ $('editAsset').onchange=e=>selectEdit(e.target.value);
+ for(const [suffix,key] of [['X','x'],['Y','y'],['W','w'],['H','h']])$('edit'+suffix).onchange=e=>{let v=Number(e.target.value);if(!Number.isFinite(v))return;let o=mobileLayout[editSelection];o[key]=Math.min(key==='w'||key==='h'?100:100,Math.max(key==='w'||key==='h'?1:0,v));o.w=Math.min(o.w,100-o.x);o.h=Math.min(o.h,100-o.y);saveMobileLayout();refreshEditFields()};
+ for(const id of mobileOrder){const el=getHotspot(id);const handle=document.createElement('span');handle.className='resize-handle';handle.setAttribute('aria-hidden','true');el.append(handle);
+  el.addEventListener('pointerdown',e=>{if(!mobileEditing)return;e.preventDefault();e.stopPropagation();selectEdit(id);
+   const mode=e.target===handle?'resize':'move';const bounds=$('roomStage').getBoundingClientRect();const start={x:e.clientX,y:e.clientY};const from={...mobileLayout[id]};
+   try{el.setPointerCapture(e.pointerId)}catch{}
+   const move=ev=>{if(!mobileEditing)return;const dx=(ev.clientX-start.x)/bounds.width*100,dy=(ev.clientY-start.y)/bounds.height*100;const o=mobileLayout[id];
+    if(mode==='move'){o.x=Math.max(0,Math.min(100-from.w,from.x+dx));o.y=Math.max(0,Math.min(100-from.h,from.y+dy))}
+    else{o.w=Math.max(3,Math.min(100-from.x,from.w+dx));o.h=Math.max(3,Math.min(100-from.y,from.h+dy))}refreshEditFields();};
+   const end=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',end);saveMobileLayout()};
+   el.addEventListener('pointermove',move);el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+  });
+ }
+ window.addEventListener('resize',showMobileLayout);
+}
+function interactWithSafe(){if(mobileEditing)return;const p=self();if(!p)return;
+ if(!p.talismansSolved){notify('Solve the twelve-hole talisman wall to unlock this safe.');return}
+ if(!p.safeOpen){perform(()=>openSafe(game,p.id));notify('The safe unlocks and opens. Tap the wheel inside to take it.');return}
+ if(!p.wheelCollected){perform(()=>collectWheel(game,p.id));notify('Valve wheel collected. Choose one water pipe.');return}
+ notify('The safe is empty. You have the wheel.');
+}
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(game))}catch(e){notify('Saving is blocked in this browser. Progress may not persist.')}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x?.schema===1&&Array.isArray(x.players))game=x}catch(e){game=null}}
+function self(){return game?.players.find(p=>p.id===asPlayer)||game?.players[0]}
+function notify(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500)}
+function perform(fn){try{const val=fn();save();render();if(view)renderView();return val}catch(e){notify(e.message);return null}}
+function showApp(){const exists=!!game;$('setupScreen').hidden=exists;$('gameScreen').hidden=!exists;$('headerActions').hidden=!exists;if(exists)render()}
+function render(){if(!game)return;const p=self();const s=status(game);
+ $('goldPot').textContent=money(game.goldPot);
+ $('missionProgress').textContent=`${s.rewardsClaimed} of ${s.players} prizes claimed`;
+ $('currentName').textContent=p.name;
+ $('nextPlayerInfo').textContent=`Your image hides the talisman solution for ${nextPlayer(game,p.id).name}. You need a clue from ${previousPlayer(game,p.id).name}.`;
+ $('stageProgress').innerHTML=[['Image puzzle',p.puzzleSolved],['Talisman mechanism',p.talismansSolved],['Safe and valve wheel',p.wheelCollected],['Prize choice',!!p.reward]].map(([label,done])=>`<li class="${done?'done':''}">${label}</li>`).join('');
+ $('roomSafe').src=AS+`closeups/safe_${p.safeOpen?'open':'closed'}.webp`; $('roomSafeWheel').hidden=!p.safeOpen||p.wheelCollected;
+ const pipes=document.querySelector('.h-pipes');pipes.classList.toggle('drained-gold',p.reward==='gold');pipes.classList.toggle('drained-shield',p.reward==='shield');
+ pipes.querySelector('.wide-prize.gold').hidden=p.reward==='gold';pipes.querySelector('.wide-prize.shield').hidden=p.reward==='shield';
+ const sel=$('playerSelect');if(sel.options.length!==game.players.length){sel.innerHTML='';for(const person of game.players){const option=document.createElement('option');option.value=person.id;option.textContent=person.name;sel.append(option)}}sel.value=p.id;
+ const chat=$('chatMessages');chat.replaceChildren();for(const m of game.chat.slice(-70)){const b=document.createElement('div');b.className='chat-bubble'+(m.uid===p.id?' own':'');const name=document.createElement('b');name.textContent=m.name;const msg=document.createElement('span');msg.textContent=m.body;b.append(name,msg);chat.append(b)}
+ $('chatCount').textContent=`${game.chat.length} messages`;
+ if(chat.dataset.lastCount!==String(game.chat.length)){chat.scrollTop=chat.scrollHeight;chat.dataset.lastCount=String(game.chat.length)}
+ if(s.complete){$('missionProgress').textContent=`Mission complete · ${game.players.length} prizes claimed`} showMobileLayout();
+}
+function setView(kind){if(mobileEditing||!game||!VIEW_LABELS[kind])return;lastFocused=document.activeElement;view=kind;selectedTile=-1;focusSocket=-1;pendingChoice=null;drainAnimation=false;
+ $('viewTitle').textContent=VIEW_LABELS[kind];$('viewShell').hidden=false;document.body.style.overflow='hidden';renderView();$('backRoom').focus({preventScroll:true});}
+function closeView(){view=null;$('viewShell').hidden=true;document.body.style.overflow='';$('viewContent').replaceChildren();lastFocused?.focus?.({preventScroll:true});}
+function renderView(){if(!view||!game)return;const p=self();$('viewTitle').textContent=VIEW_LABELS[view];$('viewStatus').textContent=({image:p.puzzleSolved?'Solved':'Incomplete',talismans:p.talismansSolved?'Unlocked':'Locked',safe:p.safeOpen?'Open':'Closed',pipes:p.reward?p.reward==='gold'?'Gold collected':'Shield collected':'Not chosen'})[view];
+ if(view==='image')drawImagePuzzle(p);else if(view==='talismans')drawTalismanPuzzle(p);else if(view==='safe')drawSafe(p);else if(view==='pipes')drawPipes(p);
+}
+function imagePathFor(p){const n=nextPlayer(game,p.id).index+1;return AS+`clues/clue_${String(n).padStart(2,'0')}.webp`}
+function scramble(player){if(!Array.isArray(player.pieces)||player.pieces.length!==9){player.pieces=[4,6,0,7,2,8,3,5,1];save()}}
+function drawImagePuzzle(p){const target=nextPlayer(game,p.id);scramble(p);const src=imagePathFor(p);
+ const scene=document.createElement('div');scene.className='mechanism-layout image-scene';
+ const art=document.createElement('div');art.className='art-stage';art.innerHTML=`<div class="frame-display"><img class="frame-image" src="${AS}closeups/image_frame_square.webp" alt="Engraved square stone frame"><div class="image-puzzle-inner">${p.puzzleSolved?`<img class="jigsaw-reveal" src="${src}" alt="Talisman order for ${escapeHTML(target.name)}">`:'<div class="jigsaw-grid" id="jigsawGrid"></div>'}</div></div>`;
+ const info=document.createElement('section');info.className='mechanism-guide';
+ info.innerHTML=p.puzzleSolved?`<h3>Image restored</h3><p>This reveals the precise order and direction of talismans needed by <strong>${escapeHTML(target.name)}</strong>.</p><p>Describe it in team chat. They cannot open their safe without the correct order.</p><button type="button" class="button-primary" id="shareClue">Send full clue to team chat</button>`:
+ `<h3>Restore the image</h3><p>Choose any two scrambled pieces to swap them. The completed artwork reveals the talisman solution for <strong>${escapeHTML(target.name)}</strong>.</p><p>All nine pieces must be in the correct position.</p><p id="tileHint" class="subtle">Choose the first tile.</p><details class="test-controls"><summary>Local test tools</summary><button type="button" id="qaSolvePuzzle">Mark puzzle complete (test only)</button></details>`;
+ scene.append(art,info);$('viewContent').replaceChildren(scene);
+ if(p.puzzleSolved){$('shareClue').addEventListener('click',()=>{perform(()=>shareClue(game,p.id,library));notify(`Clue sent for ${target.name}`)})}else{
+ const grid=$('jigsawGrid');const frag=document.createDocumentFragment();p.pieces.forEach((original,index)=>{
+  const tile=document.createElement('button');tile.type='button';tile.className='jigsaw-tile'+(index===selectedTile?' selected':'');tile.setAttribute('aria-label',`Tile position ${index+1}; image piece ${original+1}`);
+  const x=original%3,y=Math.floor(original/3);tile.style.backgroundImage=`url('${src}')`;tile.style.backgroundPosition=`${x*50}% ${y*50}%`;
+  tile.addEventListener('click',()=>{if(selectedTile<0){selectedTile=index;drawImagePuzzle(p);return}if(selectedTile===index){selectedTile=-1;drawImagePuzzle(p);return}const z=p.pieces[selectedTile];p.pieces[selectedTile]=p.pieces[index];p.pieces[index]=z;selectedTile=-1;
+   if(p.pieces.every((v,i)=>v===i)){perform(()=>completePuzzle(game,p.id));notify('Image restored. Share the revealed clue!')}else{save();drawImagePuzzle(p)}});frag.append(tile)});grid.append(frag);
+ $('qaSolvePuzzle').addEventListener('click',()=>{perform(()=>completePuzzle(game,p.id));notify('Puzzle marked complete for local testing.')});
+ }}
+function coords(i){const x=[33.2,48.5,63.8][i%3],y=[23.9,41.9,59.4,77.1][Math.floor(i/3)];return {x,y}}
+function socketButton(slot,i){const xy=coords(i);const b=document.createElement('button');b.type='button';b.className='panel-socket'+(slot?'':' empty')+(focusSocket===i?' selected':'');b.style.left=xy.x+'%';b.style.top=xy.y+'%';b.setAttribute('aria-label',`Socket ${i+1}: ${slot?slot.symbol+' facing '+DIRECTIONS[slot.rotation]:'empty'}`);
+ if(slot){const img=document.createElement('img');img.src=AS+`talismans/${slot.symbol}_front.webp`;img.alt='';img.style.transform=`rotate(${slot.rotation*90}deg)`;b.append(img);const lbl=document.createElement('span');lbl.textContent=DIRECTIONS[slot.rotation];b.append(lbl)}else{const txt=document.createElement('span');txt.textContent=i+1;b.append(txt)}
+ b.addEventListener('click',()=>{focusSocket=i;if(self().talismansSolved)return;
+  if(slot?.symbol===selected){perform(()=>rotateTalisman(game,pid(),i))}else{perform(()=>putTalisman(game,pid(),i,selected,0))}});return b}
+function pid(){return self().id}
+function drawTalismanPuzzle(p){const scene=document.createElement('div');scene.className='mechanism-layout';
+ const art=document.createElement('div');art.className='art-stage panel-stage';const img=document.createElement('img');img.src=AS+'closeups/panel_12.webp';img.alt='Twelve empty circular sockets on a medieval bronze wall panel';art.append(img);p.slots.forEach((s,i)=>art.append(socketButton(s,i)));
+ const info=document.createElement('section');info.className='mechanism-guide';
+ let heading=p.talismansSolved?'Mechanism unlocked':'Choose your talismans';
+ info.innerHTML=`<h3>${heading}</h3><p>${p.talismansSolved?'The safe is now unlocked. Return to the room and approach it.':'Read the clue sent by the previous player. Select a talisman then tap a socket to insert it. Tap the same piece again to rotate N → E → S → W.'}</p>`;
+ if(!p.talismansSolved){const tray=document.createElement('div');tray.className='talisman-tray';for(const sym of SYMBOLS){const b=document.createElement('button');b.className=sym===selected?'selected':'';b.type='button';b.setAttribute('aria-label',`Select ${sym} talisman`);b.innerHTML=`<img src="${AS}talismans/${sym}_front.webp" alt="${sym}">`;b.addEventListener('click',()=>{selected=sym;drawTalismanPuzzle(p)});tray.append(b)}info.append(tray);
+ const ctr=document.createElement('div');ctr.className='socket-controls';ctr.innerHTML='<button id="rotateSlot" type="button">Rotate selected</button><button id="removeSlot" type="button">Remove selected</button>';
+ info.append(ctr);const btn=document.createElement('button');btn.className='button-primary';btn.textContent='Test the mechanism';btn.type='button';btn.addEventListener('click',()=>{const done=perform(()=>checkTalismans(game,p.id,library));notify(done?'The safe has unlocked.':'The mechanism remains locked. Check every talisman and direction.')});info.append(btn);
+ }
+ scene.append(art,info);$('viewContent').replaceChildren(scene);
+ if(!p.talismansSolved){$('rotateSlot').onclick=()=>{if(focusSocket<0)return notify('Select a socket first.');perform(()=>rotateTalisman(game,p.id,focusSocket))};$('removeSlot').onclick=()=>{if(focusSocket<0)return notify('Select a socket first.');perform(()=>clearTalisman(game,p.id,focusSocket))}}
+}
+function drawSafe(p){const scene=document.createElement('div');scene.className='mechanism-layout';
+ const art=document.createElement('div');art.className='art-stage safe-stage';art.innerHTML=`<img src="${AS}closeups/safe_${p.safeOpen?'open':'closed'}.webp" alt="${p.safeOpen?'Open empty medieval safe':'Closed medieval safe'}">${p.safeOpen&&!p.wheelCollected?`<img class="safe-wheel" src="${AS}rewards/wheel_intact.webp" alt="Removable bronze valve wheel inside the safe">`:''}`;
+ const info=document.createElement('section');info.className='mechanism-guide';info.innerHTML=`<h3>${p.safeOpen?'The safe is open':'A heavy iron safe'}</h3><p>${p.safeOpen?(p.wheelCollected?'The wheel is in your possession. You may attach it to exactly one prize pipe.':'A single valve wheel lies inside. You can take it, but it will only open one pipe.'):(p.talismansSolved?'The talisman wall has released the locking mechanism.':'Twelve properly oriented talismans will release the lock.')}</p>`;
+ if(!p.safeOpen){const b=document.createElement('button');b.className='button-primary';b.textContent='Open the safe';b.disabled=!p.talismansSolved;b.addEventListener('click',()=>{perform(()=>openSafe(game,p.id));notify('The safe opens.')});info.append(b)}
+ else if(!p.wheelCollected){const b=document.createElement('button');b.className='button-primary';b.textContent='Take the valve wheel';b.addEventListener('click',()=>{perform(()=>collectWheel(game,p.id));notify('Valve wheel collected.')});info.append(b)}
+ else{const b=document.createElement('button');b.textContent='Approach the pipes';b.addEventListener('click',()=>setView('pipes'));info.append(b)}
+ scene.append(art,info);$('viewContent').replaceChildren(scene)}
+function drawPipes(p){const scene=document.createElement('div');scene.className='mechanism-layout';
+ const art=document.createElement('div');art.className='art-stage pipes-stage'+(p.reward==='gold'?' drained-left':p.reward==='shield'?' drained-right':'');
+ // Water tint is coded independently; the physical tube layer remains unchanged.
+ art.innerHTML=`<div class="pipe-water left"></div><div class="pipe-water right"></div>
+ ${p.reward==='gold'?'':`<img class="pipe-prize left" src="${AS}rewards/gold_sack.webp" alt="Closed gold sack with £ mark">`}
+ ${p.reward==='shield'?'':`<img class="pipe-prize right" src="${AS}rewards/shield_fallback.svg" alt="Golden protective shield">`}
+ <img class="pipe-structure" src="${AS}closeups/pipes.webp" alt="Two glass prize chambers with separate wheel sockets">
+ ${p.reward?`<img class="pipe-valve ${p.reward==='gold'?'left':'right'}" src="${AS}rewards/wheel_broken.webp" alt="Broken valve wheel">`:''}`;
+ const info=document.createElement('section');info.className='mechanism-guide';info.innerHTML=`<h3>One wheel. One decision.</h3><p>Left pipe: <strong>GOLD — ${money(game.goldEach)} for the team.</strong><br>Right pipe: <strong>SHIELD — protection for yourself.</strong></p><p>The water will drain from only the pipe you choose. Once turned, the valve wheel breaks. You cannot take the second prize.</p><p>No player in this dungeon mission enters the normal Shield Room afterwards.</p>`;
+ if(!p.wheelCollected)info.innerHTML+=`<p class="result-note">You must unlock the safe and collect the wheel before selecting either prize.</p>`;
+ else if(p.reward){info.innerHTML+=`<p class="result-note">${p.reward==='gold'?`${money(game.goldEach)} has been added to the team pot.`:'You claimed your personal shield.'} The wheel has broken. The other prize is unavailable.</p>`}
+ else{const choices=document.createElement('div');choices.className='pipe-label';choices.innerHTML='<button type="button" id="chooseGold">Attach wheel to GOLD</button><button type="button" id="chooseShield">Attach wheel to SHIELD</button>';info.append(choices);
+ if(pendingChoice){const conf=document.createElement('div');conf.className='confirm-choice';conf.innerHTML=`<p>Commit to <strong>${pendingChoice==='gold'?'GOLD for the pot':'PERSONAL SHIELD'}</strong>? This cannot be undone.</p><button id="confirmPipe" class="button-primary" type="button">Turn valve — final choice</button><button id="cancelPipe" type="button">Cancel</button>`;info.append(conf)}
+ }
+ scene.append(art,info);$('viewContent').replaceChildren(scene);
+ if(p.wheelCollected&&!p.reward){$('chooseGold').onclick=()=>{pendingChoice='gold';drawPipes(p)};$('chooseShield').onclick=()=>{pendingChoice='shield';drawPipes(p)};
+ if(pendingChoice){$('confirmPipe').onclick=()=>{let choice=pendingChoice;let result=perform(()=>claimPrize(game,p.id,choice));if(result){notify(choice==='gold'?'Gold added to the team pot.':'Shield claimed.');pendingChoice=null;
+  const stage=document.querySelector('.pipes-stage');const cls=choice==='gold'?'drained-left':'drained-right';
+  if(stage){stage.classList.remove(cls);void stage.offsetHeight;requestAnimationFrame(()=>{stage.classList.add(cls);const w=stage.querySelector('.pipe-valve');w?.classList.add('turning')})}
+ }};$('cancelPipe').onclick=()=>{pendingChoice=null;drawPipes(p)}}}
+}
+function bindEvents(){document.querySelectorAll('.room-hotspot[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));document.querySelector('[data-safe-action]').addEventListener('click',interactWithSafe);setupMobileEditor();
+ $('backRoom').addEventListener('click',closeView);
+ $('playerSelect').addEventListener('change',e=>{asPlayer=e.target.value;if(view)closeView();render()});
+ $('newGameForm').addEventListener('submit',e=>{e.preventDefault();const n=Number($('teamSize').value);let input=$('playerNames').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(input.length&&input.length!==n){notify(`Enter exactly ${n} names, or leave the field blank.`);return}
+ const names=input.length?input:Array.from({length:n},(_,i)=>`Test Player ${String(i+1).padStart(2,'0')}`);
+ try{game=createGame(names,library,{goldEach:Number($('goldEach').value),seed:String(Date.now())});asPlayer='p1';save();showApp()}catch(err){notify(err.message)}
+ });
+ $('chatForm').addEventListener('submit',e=>{e.preventDefault();const body=$('chatInput').value;const out=perform(()=>postChat(game,pid(),body));if(out)$('chatInput').value=''});
+ $('resetGame').addEventListener('click',()=>{if(!confirm('Discard this local dungeon test and all simulated player progress? Mobile layout stays saved.'))return;localStorage.removeItem(KEY);game=null;closeViewIfOpen();showApp()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&view)closeView()});
+ window.addEventListener('storage',e=>{if(e.key===KEY){load();showApp();if(view)renderView()}});
+}
+function closeViewIfOpen(){if(view)closeView()}
+async function start(){try{if(window.__DUNGEON_LIBRARY){library=window.__DUNGEON_LIBRARY;}else{const res=await fetch(AS+'clue_library.json');if(!res.ok)throw Error('Unable to load clue library.');library=await res.json();}load();bindEvents();showApp()}catch(e){$('setupScreen').hidden=false;$('setupScreen').querySelector('.demo-warning').textContent=`Game files could not load: ${e.message}. Open the game from its bundled preview or local web server, not directly from a file:// URL.`}}
+start();
+
+</script>
+</body></html>
