@@ -55,7 +55,9 @@ function renderSolutions(){
  const nextButton=node('nextPlayerBtn');
  if(nextButton){
   nextButton.hidden=!p.reward;
-  nextButton.textContent=status(game).complete?'See the completed mission':'Continue as '+next.name;
+  const waiting=game.players.filter(x=>!x.reward);
+  const upcoming=waiting.find(x=>x.index>p.index)||waiting[0];
+  nextButton.textContent=status(game).complete?'See the completed mission':'Continue as '+(upcoming?.name||next.name);
  }
 }
 function renderFinal(){
