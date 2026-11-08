@@ -20,6 +20,74 @@ function make(tag,cls,parent){
  return e;
 }
 function srcFor(prize){return AS+'rewards/'+(prize==='gold'?'gold_sack.webp':'brm-original-shield.svg')}
+/* Transparent foreground: pixel-for-pixel copy of the ORIGINAL pipes artwork,
+   masked to its middle bronze braces. The canvas is an RGBA PNG with true alpha
+   outside the metal; both foreground and base image use exactly the same stage. */
+let metalworkPNG=null,metalworkPending=null;
+function metalworkSourcePNG(){
+ if(metalworkPNG)return Promise.resolve(metalworkPNG);
+ if(metalworkPending)return metalworkPending;
+ metalworkPending=new Promise((resolve,reject)=>{
+  const source=new Image();
+  source.onload=()=>{
+   try{
+    const w=source.naturalWidth,h=source.naturalHeight;
+    if(!w||!h)throw Error('Pipe image has no dimensions');
+    const canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:true});
+    if(!ctx)throw Error('Cannot create transparent foreground');
+    ctx.clearRect(0,0,w,h);
+    ctx.drawImage(source,0,0,w,h);
+    const mask=document.createElement('canvas');mask.width=w;mask.height=h;
+    const m=mask.getContext('2d');
+    m.fillStyle='#000';
+    // Four linked bronze components in the central crossbeam. All vertices
+    // are native-image percentages, so no independent asset positioning.
+    const shapes=[
+     [[.201,.443],[.439,.442],[.455,.446],[.455,.487],[.443,.494],[.208,.494],[.200,.485]],
+     [[.432,.447],[.517,.447],[.524,.495],[.434,.495]],
+     [[.508,.445],[.745,.445],[.754,.456],[.753,.492],[.517,.494]],
+     [[.739,.431],[.807,.431],[.807,.519],[.735,.516]]
+    ];
+    for(const shape of shapes){
+     m.beginPath();
+     shape.forEach(([x,y],i)=>i?m.lineTo(x*w,y*h):m.moveTo(x*w,y*h));
+     m.closePath();m.fill();
+    }
+    ctx.globalCompositeOperation='destination-in';
+    ctx.drawImage(mask,0,0);
+    ctx.globalCompositeOperation='source-over';
+    // Transparent corners are verified from the actual canvas alpha data;
+    // no checkerboard or painted-in transparency is ever used.
+    if(ctx.getImageData(0,0,1,1).data[3]!==0||
+       ctx.getImageData(w-1,h-1,1,1).data[3]!==0)
+     throw Error('Pipe foreground alpha verification failed');
+    const url=canvas.toDataURL('image/png');
+    if(!url.startsWith('data:image/png;base64,'))
+     throw Error('Pipe foreground was not encoded as PNG');
+    metalworkPNG=url;resolve(url);
+   }catch(error){reject(error)}
+  };
+  source.onerror=()=>reject(Error('Original pipes artwork could not be loaded'));
+  source.src=AS+'closeups/pipes.webp';
+ }).catch(error=>{
+  console.warn('[Dungeon Escape] Transparent metalwork PNG failed; using clipped original.',error);
+  return null;
+ });
+ return metalworkPending;
+}
+function foregroundMetal(stage){
+ const overlay=make('img','pipe-metal-foreground',stage);
+ overlay.alt='';overlay.setAttribute('aria-hidden','true');
+ overlay.draggable=false;overlay.src=AS+'closeups/pipes.webp';
+ metalworkSourcePNG().then(url=>{
+  if(url&&overlay.isConnected){
+   overlay.src=url;
+   overlay.classList.add('alpha-ready');
+  }
+ });
+}
 function setGeometry(stage){
  for(const choice of ['gold','shield']){
   const p=pointFor(choice), id=choice==='gold'?'valveGold':'valveShield';
@@ -162,6 +230,7 @@ drawPipes=function(p){
  const structure=make('img','pipe-structure',stage);
  structure.src=AS+'closeups/pipes.webp';structure.alt='Twin copper and glass water chambers';
  structure.draggable=false;
+ foregroundMetal(stage);
  for(const choice of ['gold','shield']){
   const point=pointFor(choice);
   const dot=make('button','pipe-attachment-point '+choice,stage);dot.type='button';
