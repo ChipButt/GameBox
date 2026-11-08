@@ -28,7 +28,7 @@ function activePlayer(){return self()}
 function renderSolutions(){
  const target=node('solutionBody');if(!game||!library||!target)return;
  const p=activePlayer(),previous=previousPlayer(game,p.id),next=nextPlayer(game,p.id);
- const sig=p.id+'|'+p.puzzleSolved+'|'+p.talismansSolved;
+ const sig=game.id+'|'+p.id+'|'+p.name+'|'+p.puzzleSolved+'|'+p.talismansSolved;
  if(lastSolutionSig===sig)return;
  lastSolutionSig=sig;
  const code=codeFor(library,p);
