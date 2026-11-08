@@ -47,3 +47,11 @@
 @media(max-width:970px){.solution-card{padding:13px}.solution-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.sidebar{min-height:0}.chat-card{min-height:270px}}
 @media(max-width:630px){.gamebox-return{font-size:11px;padding:7px 8px}.header-actions{gap:5px}.solution-card{padding:13px 10px}.solution-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.solution-cell{min-height:53px}.solution-cell strong{font-size:10px}.setup-buttons{flex-direction:column;align-items:stretch}.setup-buttons button{width:100%}.view-top .eyebrow{font-size:8px}.mechanism-guide .next-turn{position:relative;min-height:46px}}
 @media(prefers-reduced-motion:reduce){.view-shell,.mechanism-guide .result-note{animation:none}}
+
+/* A readable solution stays beside the game without pushing team chat off-screen. */
+.solution-card{max-height:min(49dvh,500px);overflow-y:auto;overscroll-behavior:contain}
+.solution-preview{border:1px solid #715538;border-radius:4px;background:#241d20;padding:6px 8px;margin:8px 0}
+.solution-preview summary{cursor:pointer;font:12px system-ui,sans-serif;color:#ebd0a2;margin:0!important}
+.solution-preview img{display:block;max-width:min(100%,210px);max-height:275px;object-fit:contain;margin:9px auto 2px;border:1px solid #b78d55;border-radius:4px}
+body:not(.layout-editing) .room-hotspot.h-image::before{content:'';position:absolute;inset:-7px -10px;pointer-events:auto}
+@media(max-width:630px){.app-header{flex-wrap:wrap}.solution-card{max-height:55dvh}}
