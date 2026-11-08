@@ -59,10 +59,15 @@ function item(scene,id){
 }
 function stoneStyle(n,id,scene){
  const o=item(scene,id);if(!n||!o)return;
+ // A player's moved floor stone is a gameplay position, not an editor default.
+ const dropped=scene==='zoom'&&!state.open?self()?.floorPositions?.[Number(id.slice(6))]:null;
+ const valid=dropped&&Number.isFinite(dropped.x)&&Number.isFinite(dropped.y)&&
+   Number.isInteger(dropped.rotation)&&dropped.rotation>=0&&dropped.rotation<4;
  n.dataset.layoutAsset=id;
- n.style.left=o.x+'%';n.style.top=o.y+'%';
+ n.style.left=(valid?dropped.x:o.x)+'%';n.style.top=(valid?dropped.y:o.y)+'%';
  n.style.width=o.w+'%';n.style.height=o.h+'%';n.style.aspectRatio='auto';
- n.style.setProperty('--stone-rot',o.r+'deg');n.style.setProperty('--stone-size','1');
+ n.style.setProperty('--stone-rot',(valid?dropped.rotation*90:o.r)+'deg');
+ n.style.setProperty('--stone-size','1');
 }
 function socketStyle(n,id,scene){
  const o=item(scene,id);if(!n||!o)return;
