@@ -5,6 +5,7 @@
 'use strict';
 const sealSymbols=['raven','serpent','dagger','moon','sun'];
 const clueCache=new Map();
+let cachedGame=null;
 function roomIdentity(player){
  const i=player.index;
  return {symbol:sealSymbols[i%5],count:Math.floor(i/5)+1};
@@ -35,6 +36,7 @@ function refreshRoomMarkers(){
  }
 }
 function makeClue(target){
+ if(cachedGame!==game){clueCache.clear();cachedGame=game}
  const existing=clueCache.get(target.index);
  if(existing)return existing;
  const result={url:null,promise:null};
@@ -222,6 +224,8 @@ render=function(){
  refreshSharedClues();
  requestAnimationFrame(refreshWideFrame);
 };
+const previousCloseView=closeView;
+closeView=function(){previousCloseView();requestAnimationFrame(refreshWideFrame)};
 drawImagePuzzle=function(player){
  scramble(player);
  const target=nextPlayer(game,player.id);
