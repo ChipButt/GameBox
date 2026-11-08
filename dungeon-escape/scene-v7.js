@@ -24,7 +24,7 @@ drawImagePuzzle=function(player){
   tile.className='jigsaw-tile'+(selectedTile===index?' selected':'');
   tile.setAttribute('aria-label','Piece '+(original+1)+' in position '+(index+1));
   tile.style.backgroundImage="url('"+src+"')";
-  tile.style.backgroundPosition=(original%4*100/3)+'% '+(Math.floor(original/4)*100/3)+'%';
+  tile.style.backgroundPosition=(original%5*25)+'% '+(Math.floor(original/5)*25)+'%';
   tile.addEventListener('click',()=>{
    if(selectedTile<0){selectedTile=index;drawImagePuzzle(player);return}
    if(selectedTile===index){selectedTile=-1;drawImagePuzzle(player);return}
