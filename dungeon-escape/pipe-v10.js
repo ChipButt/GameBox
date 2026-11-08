@@ -140,7 +140,7 @@ drawPipes=function(p){
  if(owner!==key){owner=key;picked=null}
  if(p.pendingReward)picked=p.pendingReward;
  const canChoose=!!p.wheelCollected&&!p.reward&&!p.pendingReward;
- const settled=p.prizeReady&&p.pendingReward;
+ const settled=!!p.prizeReady&&!!p.pendingReward&&!p.reward;
  const spent=!!p.reward||!!p.pendingReward;
  const selected=p.pendingReward||picked;
  const side=selected==='gold'?'left':'right';
