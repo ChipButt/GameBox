@@ -703,3 +703,115 @@ body.layout-preview-mobile .view-shell .view-panel{
 .pipes-stage.drain-animating .pipe-water{
   transition:height 2.2s ease,top 2.2s ease!important;
 }
+
+
+/* V8.20 — choice by placing the physical valve wheel on either gold-lit pipe hole.
+   The first tap only moves the wheel; tapping the attached wheel confirms. */
+.pipe-attachment-point{
+ position:absolute;z-index:16;transform:translate(-50%,-50%);
+ padding:0!important;margin:0!important;min-width:0!important;min-height:0!important;
+ border:0!important;background:transparent!important;border-radius:50%!important;
+ cursor:pointer;touch-action:manipulation;box-shadow:none!important;
+}
+.pipe-attachment-point::after{
+ content:'';position:absolute;inset:15%;border-radius:50%;
+ background:radial-gradient(circle,#ffedac 0%,#eac271 16%,#b77a27 38%,rgba(157,95,19,.1) 66%,transparent 78%);
+ box-shadow:0 0 13px 5px rgba(255,202,77,.7),0 0 25px 9px rgba(255,170,43,.3);
+ opacity:0;pointer-events:none;
+}
+.pipe-attachment-point.available::after{
+ opacity:1;animation:dungeon-valve-glow 1.9s ease-in-out infinite;
+}
+.pipe-attachment-point.available.chosen::after{opacity:.18;animation:none}
+.pipe-attachment-point:disabled{cursor:default}
+body.placement-editing .pipe-attachment-point::after{opacity:1!important;animation:dungeon-valve-glow 1.9s ease-in-out infinite}
+@keyframes dungeon-valve-glow{
+ 0%,100%{transform:scale(.85);filter:brightness(.85)}
+ 50%{transform:scale(1.13);filter:brightness(1.35)}
+}
+.pipe-wheel{
+ position:absolute;z-index:22;transform:translate(-50%,-50%);
+ padding:0!important;margin:0!important;min-height:0!important;min-width:0!important;
+ border:0!important;background:transparent!important;box-shadow:none!important;
+ cursor:pointer;touch-action:manipulation;overflow:visible!important;
+ transition:left .36s ease-in-out,top .36s ease-in-out;
+}
+.pipe-wheel:disabled{opacity:1!important;cursor:default}
+.pipe-wheel-art,.pipe-wheel-spent{
+ display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;
+ filter:drop-shadow(0 3px 6px #000b);user-select:none;-webkit-user-drag:none;
+}
+.pipe-wheel-spent{position:absolute;z-index:20;transform:translate(-50%,-50%);}
+.pipe-wheel.turning .pipe-wheel-art{animation:dungeon-wheel-clockwise 3.2s ease-in-out both}
+@keyframes dungeon-wheel-clockwise{
+ from{transform:rotate(0deg)}
+ to{transform:rotate(720deg)}
+}
+.pipes-stage.drain-preparing .pipe-water.chosen{
+ border-radius:0!important;overflow:hidden!important;
+}
+.pipes-stage.drain-preparing .pipe-water.chosen::after{display:none!important}
+.pipes-stage.drain-motion .pipe-water.chosen{
+ transition:top 3.2s linear,height 3.2s linear!important;
+}
+.pipes-stage.drain-preparing .pipe-prize.chosen{
+ animation:none!important;transform:none!important;
+}
+.pipes-stage.drain-motion .pipe-prize.chosen{
+ transition:top 3.2s linear,opacity .4s linear 2.8s!important;
+ animation:none!important;
+}
+.pipe-choice-layer{
+ position:absolute;inset:0;z-index:48;
+ display:grid;place-items:center;background:rgba(9,5,8,.54);
+ padding:15px;
+}
+.pipe-choice-box{
+ width:min(90vw,430px);max-width:100%;padding:25px 21px;
+ text-align:center;border:1px solid #be9550;border-radius:8px;
+ background:linear-gradient(150deg,#392c29f5,#1f161bf8);
+ color:#f7e9cb;box-shadow:0 9px 45px #000e;
+}
+.pipe-choice-box h3{font:400 26px Georgia,serif;letter-spacing:.12em;color:#f5d092;margin:0 0 15px}
+.pipe-choice-box p{font:16px/1.6 Georgia,serif;margin:0 0 18px}
+.pipe-choice-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
+.pipe-choice-actions button{
+ min-height:46px;font:14px system-ui,sans-serif;
+ border:1px solid #c9a36b;border-radius:6px;padding:10px 16px;
+}
+.pipe-choice-yes{background:linear-gradient(#a47a36,#69451f);color:#fff5d5}
+.pipe-choice-no{background:linear-gradient(#413330,#221d20);color:#e8d6bb}
+.pipe-prize-reveal{
+ position:absolute;inset:0;z-index:45;display:grid;place-items:center;
+ background:radial-gradient(ellipse at center,rgba(41,25,12,.46),rgba(12,8,12,.9) 75%);
+}
+.pipe-prize-claim{
+ position:relative;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:12px;background:transparent!important;border:0!important;
+ min-width:min(62vw,360px);min-height:260px;cursor:pointer;touch-action:manipulation;
+ box-shadow:none!important;overflow:visible!important;
+}
+.pipe-reveal-light{
+ position:absolute;width:250px;height:250px;max-width:68vw;max-height:68vw;border-radius:50%;
+ background:radial-gradient(circle,rgba(255,230,150,.68),rgba(247,185,70,.23) 44%,transparent 70%);
+ box-shadow:0 0 65px 13px rgba(245,179,63,.2);
+ animation:dungeon-prize-shimmer 2.8s ease-in-out infinite;pointer-events:none;
+}
+.pipe-revealed-art{
+ position:relative;z-index:2;width:min(49vw,195px);height:min(49vw,195px);max-width:195px;
+ object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,208,118,.85)) drop-shadow(0 10px 18px #000a);
+ pointer-events:none;
+}
+.pipe-claim-caption{
+ position:relative;z-index:2;color:#ffe2a5;font:16px Georgia,serif;
+ text-shadow:0 2px 8px #000;text-align:center;
+}
+@keyframes dungeon-prize-shimmer{
+ 0%,100%{transform:scale(.95);opacity:.72}
+ 50%{transform:scale(1.1);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .pipe-attachment-point.available::after,.pipe-reveal-light{animation:none!important}
+ .pipe-wheel.turning .pipe-wheel-art{animation:none!important}
+ .pipe-wheel{transition:none!important}
+}
