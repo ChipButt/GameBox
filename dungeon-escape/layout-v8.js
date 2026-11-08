@@ -39,6 +39,7 @@ const defaults=()=>{
    p.waterLeft??=box(30.65,44.25,20.7,49.5);
    p.waterRight??=box(60.65,44.25,20.7,49.5);
   }
+  p.panelArt??=box(50,50,100,100);
   p.bobGold??=0.9;
   p.bobShield??=0.9;
  }
@@ -54,6 +55,18 @@ function validateBox(v,key){
  }
  return out;
 }
+function validatePanelArt(v,key){
+ if(!v||typeof v!=='object')throw Error(key+' is missing');
+ const out={};
+ for(const a of ['x','y','w','h','r']){
+  const n=v[a],minimum=(a==='x'||a==='y')?-100:a==='r'?-720:0.5;
+  const maximum=(a==='x'||a==='y')?200:a==='r'?720:250;
+  if(typeof n!=='number'||!Number.isFinite(n)||n<minimum||n>maximum)
+   throw Error(key+'.'+a+' is invalid');
+  out[a]=n;
+ }
+ return out;
+}
 function validate(data){
  if(data?.schema!==ID||data.version!==8)throw Error('Use V8 asset-position JSON, not the older mobile-layout JSON.');
  const result=defaults();
@@ -64,6 +77,7 @@ function validate(data){
   dst.stones=src.stones.map((v,i)=>validateBox(v,p+'.stones['+i+']'));
   dst.sockets=src.sockets.map((v,i)=>validateBox(v,p+'.sockets['+i+']'));
   dst.gold=validateBox(src.gold,p+'.gold');dst.shield=validateBox(src.shield,p+'.shield');
+  if(src.panelArt!==undefined)dst.panelArt=validatePanelArt(src.panelArt,p+'.panelArt');
    // V8.2 JSON without water remains fully importable.
    if(src.waterLeft!==undefined)dst.waterLeft=validateBox(src.waterLeft,p+'.waterLeft');
    if(src.waterRight!==undefined)dst.waterRight=validateBox(src.waterRight,p+'.waterRight');
@@ -167,7 +181,24 @@ function safeStyle(n){
  n.style.left=o.x+'%';n.style.top=o.y+'%';
  n.style.width=o.w+'%';n.style.height=o.h+'%';
 }
+function panelArtNode(scene){
+ return scene==='wide'?
+  getHotspot('panel')?.querySelector(':scope > img:first-child'):
+  document.querySelector('.panel-stage > img:first-child');
+}
+function panelArtStyle(scene){
+ const n=panelArtNode(scene),o=profile(scene).panelArt;
+ if(!n||!o)return;
+ n.dataset.layoutAsset='panelArt';
+ n.style.position='absolute';
+ n.style.left=o.x+'%';n.style.top=o.y+'%';
+ n.style.width=o.w+'%';n.style.height=o.h+'%';
+ n.style.transform='translate(-50%, -50%) rotate('+o.r+'deg)';
+ n.style.objectFit='contain';
+ n.style.pointerEvents='none';
+}
 function applyWide(){
+ panelArtStyle('wide');
  document.querySelectorAll('#floorTalismans .floor-talisman').forEach(n=>{
   if(n.dataset.layoutAsset)stoneStyle(n,n.dataset.layoutAsset,'wide');
  });
@@ -180,6 +211,7 @@ function applyWide(){
 }
 function applyZoom(){
  if(view==='talismans'){
+  panelArtStyle('zoom');
   document.querySelectorAll('.panel-stage .panel-socket').forEach((n,i)=>socketStyle(n,'socket-'+i,'zoom'));
   document.querySelectorAll('.floor-inspection .floor-talisman').forEach(n=>{
    if(n.dataset.layoutAsset)stoneStyle(n,n.dataset.layoutAsset,'zoom');
@@ -212,17 +244,18 @@ const prevClose=closeView;
 closeView=function(){prevClose();if(state.open&&state.scene==='zoom'){state.scene='wide';syncControls();requestAnimationFrame(refreshHandles)}};
 const ed=document.createElement('section');ed.id='placementEditor';ed.className='placement-editor';ed.hidden=true;ed.setAttribute('aria-label','Dungeon asset positioning editor');
 ed.innerHTML=[
-'<div class="placement-head"><strong>POSITIONING EDITOR · V8.8</strong><button type="button" id="placementDone">Done</button></div>',
+'<div class="placement-head"><strong>POSITIONING EDITOR · V8.9</strong><button type="button" id="placementDone">Done</button></div>',
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
-'<label>Position<select id="pArea"><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Whole frame corners</option><option value="picture">Picture inset (advanced)</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
+'<label>Position<select id="pArea"><option value="panel">Wall panel artwork</option><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Whole frame corners</option><option value="picture">Picture inset (advanced)</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
 '<label>Asset<select id="pAsset"></select></label></div>',
 '<div class="placement-fields"><label>X %<input type="number" step=".1" id="pX"></label>',
 '<label>Y %<input type="number" step=".1" id="pY"></label>',
 '<label>Width %<input type="number" step=".1" id="pW"></label>',
 '<label>Height %<input type="number" step=".1" id="pH"></label>',
 '<label>Angle °<input type="number" step="1" id="pR"></label></div>',
+'<div class="placement-panel-aspect" id="pPanelFields" hidden><button type="button" id="pPanelAspect">Fit original proportions</button><span>Wall background only; 12 talismans stay in place</span></div>',
 '<div class="placement-bob" id="pBobFields" hidden><label>Maximum upward bob (% of pipe)<input id="pBob" type="number" min="0" max="8" step=".1"></label><button type="button" id="pBobPreview">Preview bob</button></div>',
 '<div class="placement-sizing" id="pSizing"><button type="button" id="pSmaller">− Smaller</button><button type="button" id="pLarger">+ Larger</button><button type="button" id="pMatchSize">Match all 12 sizes</button></div>',
 '<div class="placement-actions"><button type="button" id="pCopy">Copy JSON</button>',
@@ -238,6 +271,7 @@ const handles=document.createElement('div');handles.id='placementHandles';handle
 function note(msg){$e('pStatus').textContent=msg}
 function persist(){try{localStorage.setItem(STORE,JSON.stringify(layout))}catch{note('Storage unavailable. Copy your JSON to keep it.')}}
 const ids=()=>{
+ if(state.area==='panel')return ['panelArt'];
  if(state.area==='water')return ['waterLeft','waterRight'];
  if(state.area==='prizes')return ['gold','shield'];
  if(state.area==='safe')return ['safeMark'];
@@ -247,6 +281,7 @@ const ids=()=>{
  return Array.from({length:12},(_,i)=>prefix+i);
 };
 function nameFor(id){
+ if(id==='panelArt')return 'Talisman wall background';
  if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';
  if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';
  if(id==='safeMark')return 'Room talisman on safe';
@@ -261,6 +296,7 @@ function syncControls(){
  for(const id of all){const o=document.createElement('option');o.value=id;o.textContent=nameFor(id);select.append(o)}
  select.value=state.asset;syncFields();
  $e('pSizing').hidden=!(state.area==='stones'||state.area==='sockets');
+ $e('pPanelFields').hidden=state.area!=='panel';
  $e('pBobFields').hidden=state.area!=='prizes';
  for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame'||state.area==='picture';
  $e('pBobPreview').textContent=document.body.classList.contains('preview-bobbing')?'Stop bob preview':'Preview bob';
@@ -276,6 +312,7 @@ function syncFields(){
  }
 }
 function targetParent(id){
+ if(id==='panelArt')return state.scene==='wide'?getHotspot('panel'):document.querySelector('.panel-stage');
  if(id.startsWith('corner-')||id.startsWith('inner-'))return getHotspot('image');
  if(state.scene==='wide'){
   if(id.startsWith('stone-'))return $('roomStage');
@@ -392,7 +429,7 @@ function refreshHandles(){
   let corner=null;
   if(!direct&&!cornersMode){
    const label=document.createElement('span');label.className='placement-handle-label';
-   label.textContent=id==='gold'?'£':id==='shield'?'S':id==='waterLeft'?'W£':'WS';
+   label.textContent=id==='panelArt'?'PANEL':id==='gold'?'£':id==='shield'?'S':id==='waterLeft'?'W£':'WS';
    corner=document.createElement('span');corner.className='placement-corner';
    h.append(label,corner);
   }
@@ -513,6 +550,18 @@ function resizeSelected(factor){
  o.h=Math.min(100,Math.max(.5,o.h*factor));
  persist();refreshHandles();note('Resized '+nameFor(state.asset));
 }
+$e('pPanelAspect').addEventListener('click',()=>{
+ if(state.area!=='panel')return;
+ const img=panelArtNode(state.scene),b=targetParent('panelArt')?.getBoundingClientRect();
+ if(!img||!img.naturalWidth||!img.naturalHeight||!b?.width||!b?.height){
+  note('Wall art is not loaded. Open this mechanism and retry.');return;
+ }
+ const o=item(state.scene,'panelArt');
+ const newHeight=o.w*b.width*img.naturalHeight/(img.naturalWidth*b.height);
+ o.h=Math.max(.5,Math.min(250,newHeight));o.r=0;
+ persist();refreshHandles();
+ note('Original panel proportions restored without moving any talismans.');
+});
 $e('pSmaller').addEventListener('click',()=>resizeSelected(.95));
 $e('pLarger').addEventListener('click',()=>resizeSelected(1.05));
 $e('pBob').addEventListener('change',event=>{
@@ -539,8 +588,8 @@ for(const [key,id] of [['x','pX'],['y','pY'],['w','pW'],['h','pH'],['r','pR']]){
  $e(id).addEventListener('change',e=>{
   const n=Number(e.target.value),o=item(state.scene,state.asset);
   if(!o||!Number.isFinite(n)){note('Enter a valid number');return}
-  const min=key==='r'?-720:key==='w'||key==='h'?0.5:-25;
-  const max=key==='r'?720:key==='w'||key==='h'?100:125;
+  const min=key==='r'?-720:key==='w'||key==='h'?0.5:(state.area==='panel'?-100:-25);
+  const max=key==='r'?720:key==='w'||key==='h'?(state.area==='panel'?250:100):(state.area==='panel'?200:125);
   o[key]=Math.max(min,Math.min(max,n));persist();refreshHandles();
   if(state.area==='frame')scheduleFrameRefresh(true);
  });
@@ -561,7 +610,7 @@ $e('pReset').addEventListener('click',()=>{
 });
 $e('pDownload').addEventListener('click',()=>{
  const u=URL.createObjectURL(new Blob([JSON.stringify(layout,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_8.json';
+ const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_9.json';
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),600);
 });
 $('viewContent').addEventListener('click',e=>{if(state.open){e.preventDefault();e.stopImmediatePropagation()}},true);
