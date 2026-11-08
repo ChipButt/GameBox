@@ -600,3 +600,31 @@ body.placement-editing .room-identity-seals.on-safe-door.placement-safe-ghost{di
  .preview-selector{gap:4px;font-size:11px}
  .preview-selector select{max-width:135px;padding:6px 5px;font-size:11px}
 }
+
+/* V8.7: submerged prizes gently drift independently of the static glass/tubes.
+   Animate transform only: editor layout coordinates remain exact and untouched. */
+@keyframes dungeon-water-prize-bob{
+  0%,100%{transform:translate3d(0,2px,0) rotate(-0.6deg)}
+  25%{transform:translate3d(1px,-2px,0) rotate(0.4deg)}
+  50%{transform:translate3d(0,var(--prize-bob-lift,-5px),0) rotate(0.9deg)}
+  75%{transform:translate3d(-1px,-1px,0) rotate(-0.2deg)}
+}
+body:not(.placement-editing):not(.layout-editing) .h-pipes .wide-prize:not([hidden]),
+body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize:not([hidden]){
+  transform-origin:50% 50%;
+  animation:dungeon-water-prize-bob 4.4s ease-in-out infinite;
+  will-change:transform;
+}
+.h-pipes .wide-prize{--prize-bob-lift:-5px}
+.pipes-stage .pipe-prize{--prize-bob-lift:-7px}
+body:not(.placement-editing):not(.layout-editing) .h-pipes .wide-prize.shield:not([hidden]),
+body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize.right:not([hidden]){
+  animation-duration:5.1s;
+  animation-delay:-2s;
+}
+@media(prefers-reduced-motion:reduce){
+  .h-pipes .wide-prize,.pipes-stage .pipe-prize{
+    animation:none!important;
+    will-change:auto;
+  }
+}
