@@ -200,19 +200,10 @@ drawPipes=function(p){
    confirmChoice(p,picked,scene);
   });
  }
- if((settled||p.reward)&&spent){
-  const broken=make('img','pipe-wheel-spent',stage);
-  broken.src=AS+'rewards/wheel_broken.webp';broken.alt='';broken.draggable=false;
-  broken.dataset.choice=p.pendingReward||p.reward;
- }
+ // The same intact wheel remains on the selected valve after turning.
+ // No broken-wheel asset or breakage animation is part of this sequence.
  $('viewContent').replaceChildren(scene);
  setGeometry(stage);
- const broken=stage.querySelector('.pipe-wheel-spent');
- if(broken){
-  const point=pointFor(p.pendingReward||p.reward);
-  broken.style.left=point.x+'%';broken.style.top=point.y+'%';
-  broken.style.width=point.w*1.8+'%';broken.style.height=point.h*1.8+'%';
- }
  if(settled)reveal(p,scene);
  else if(p.pendingReward&&!p.reward)requestAnimationFrame(()=>animateDrain(stage,p));
 };
