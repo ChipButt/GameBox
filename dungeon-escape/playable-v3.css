@@ -508,3 +508,14 @@ body.placement-editing .room-hotspot,.placement-editing .floor-talisman{
 }
 .pipes-stage .pipe-prize{z-index:5}
 .pipes-stage .pipe-valve{z-index:8}
+
+
+/* V8.4: the 16-piece framed image is visible on the angled WIDE frame,
+   mapped to its engraved quadrilateral instead of stretching a square asset. */
+.h-image>.wide-frame-clue{
+ position:absolute!important;inset:0!important;
+ display:block!important;width:100%!important;height:100%!important;
+ object-fit:fill!important;pointer-events:none!important;
+ background:transparent!important;animation:none!important;
+ filter:none!important;transform:none!important;z-index:2;
+}
