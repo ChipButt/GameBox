@@ -79,7 +79,7 @@ function validate(data){
 let layout=defaults();
 try{const saved=localStorage.getItem(STORE);if(saved)layout=validate(JSON.parse(saved))}
 catch(e){console.warn('Invalid asset positions ignored',e)}
-const state={open:false,device:'desktop',scene:'wide',area:'talismans',asset:'stone-0'};
+const state={open:false,device:'desktop',scene:'wide',area:'sockets',asset:'socket-0'};
 const mobile=()=>window.matchMedia('(max-width:630px)').matches;
 const device=()=>state.open?state.device:(mobile()?'mobile':'desktop');
 const profile=scene=>layout[scene][device()];
@@ -178,45 +178,62 @@ ed.innerHTML=[
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
-'<label>Mechanism<select id="pArea"><option value="talismans">Stones and holes</option><option value="pipes">Prizes and water</option></select></label>',
+'<label>Position<select id="pArea"><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Framed image corners</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
 '<label>Asset<select id="pAsset"></select></label></div>',
 '<div class="placement-fields"><label>X %<input type="number" step=".1" id="pX"></label>',
 '<label>Y %<input type="number" step=".1" id="pY"></label>',
 '<label>Width %<input type="number" step=".1" id="pW"></label>',
 '<label>Height %<input type="number" step=".1" id="pH"></label>',
 '<label>Angle °<input type="number" step="1" id="pR"></label></div>',
+'<div class="placement-sizing" id="pSizing"><button type="button" id="pSmaller">− Smaller</button><button type="button" id="pLarger">+ Larger</button><button type="button" id="pMatchSize">Match all 12 sizes</button></div>',
 '<div class="placement-actions"><button type="button" id="pCopy">Copy JSON</button>',
 '<button type="button" id="pImport">Apply pasted JSON</button>',
 '<button type="button" id="pReset">Reset this view</button>',
 '<button type="button" id="pDownload">Download JSON</button></div>',
 '<textarea id="pJSON" rows="5" spellcheck="false" aria-label="Copy or paste all four layouts as JSON"></textarea>',
-'<p role="status" id="pStatus">Drag an outline to move its asset; drag the corner to resize. Positions are saved automatically.</p>'
+'<p role="status" id="pStatus">Choose a section, drag the artwork itself, adjust its size above and copy the JSON.</p>'
 ].join('');
 document.body.append(ed);
 const $e=id=>document.getElementById(id);
 const handles=document.createElement('div');handles.id='placementHandles';handles.className='placement-handles';handles.hidden=true;document.body.append(handles);
 function note(msg){$e('pStatus').textContent=msg}
 function persist(){try{localStorage.setItem(STORE,JSON.stringify(layout))}catch{note('Storage unavailable. Copy your JSON to keep it.')}}
-const ids=()=>state.area==='pipes'?['gold','shield','waterLeft','waterRight']:
- Array.from({length:12},(_,i)=>'stone-'+i).concat(Array.from({length:12},(_,i)=>'socket-'+i));
-function nameFor(id){if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';return (id.startsWith('stone')?'Floor talisman ':'Wall socket ')+(Number(id.split('-')[1])+1)}
+const ids=()=>{
+ if(state.area==='water')return ['waterLeft','waterRight'];
+ if(state.area==='prizes')return ['gold','shield'];
+ if(state.area==='safe')return ['safeMark'];
+ if(state.area==='frame')return Array.from({length:4},(_,i)=>'corner-'+i);
+ const prefix=state.area==='stones'?'stone-':'socket-';
+ return Array.from({length:12},(_,i)=>prefix+i);
+};
+function nameFor(id){
+ if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';
+ if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';
+ if(id==='safeMark')return 'Room talisman on safe';
+ if(id.startsWith('corner-'))return ['Top left','Top right','Bottom right','Bottom left'][Number(id.slice(7))]+' corner';
+ return (id.startsWith('stone')?'Floor talisman ':'Wall talisman ')+(Number(id.split('-')[1])+1);
+}
 function syncControls(){
  $e('pDevice').value=state.device;$e('pScene').value=state.scene;$e('pArea').value=state.area;
  const all=ids();if(!all.includes(state.asset))state.asset=all[0];
  const select=$e('pAsset');select.replaceChildren();
  for(const id of all){const o=document.createElement('option');o.value=id;o.textContent=nameFor(id);select.append(o)}
  select.value=state.asset;syncFields();
+ $e('pSizing').hidden=!(state.area==='stones'||state.area==='sockets');
+ for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame';
 }
 function syncFields(){
  const o=item(state.scene,state.asset);if(!o)return;
  for(const [name,id] of [['x','pX'],['y','pY'],['w','pW'],['h','pH'],['r','pR']]){
-  if(document.activeElement!==$e(id))$e(id).value=o[name];
+  if(document.activeElement!==$e(id))$e(id).value=o[name]??'';
  }
 }
 function targetParent(id){
+ if(id.startsWith('corner-'))return getHotspot('image');
  if(state.scene==='wide'){
   if(id.startsWith('stone-'))return $('roomStage');
   if(id.startsWith('socket-'))return getHotspot('panel');
+   if(id==='safeMark')return getHotspot('safe');
   return getHotspot('pipes');
  }
  if(id.startsWith('stone-'))return document.querySelector('.floor-inspection');
@@ -226,6 +243,8 @@ function targetParent(id){
 function boundsFor(id){
  const parent=targetParent(id),b=parent?.getBoundingClientRect(),o=item(state.scene,id);
  if(!b?.width||!b?.height||!o)return null;
+ if(id.startsWith('corner-'))return {left:b.left+o.x*b.width/100-11,top:b.top+o.y*b.height/100-11,
+  width:22,height:22,parent:b};
  return {left:b.left+(o.x-o.w/2)*b.width/100,top:b.top+(o.y-o.h/2)*b.height/100,
   width:o.w*b.width/100,height:o.h*b.height/100,parent:b};
 }
@@ -306,7 +325,7 @@ function preview(){
   }
  }else showMobileLayout();
  if(!state.open)return;
- const kind=state.scene==='wide'?null:(state.area==='pipes'?'pipes':'talismans');
+ const kind=state.scene==='wide'?null:((state.area==='water'||state.area==='prizes')?'pipes':'talismans');
  if(kind&&view!==kind)setView(kind);
  else if(!kind&&view)closeView();
  applyWide();applyZoom();requestAnimationFrame(refreshHandles);
@@ -315,7 +334,7 @@ function toggle(open){
  if(open&&!game){notify('Start the local dungeon test first.');return}
  state.open=open;ed.hidden=!open;handles.hidden=!open;document.body.classList.toggle('placement-editing',open);
  if(open){
-  state.device=mobile()?'mobile':'desktop';state.scene='wide';state.area='talismans';state.asset='stone-0';
+  state.device=mobile()?'mobile':'desktop';state.scene='wide';state.area='sockets';state.asset='socket-0';
   syncControls();$e('pJSON').value=JSON.stringify(layout,null,2);
  }else{
   if(view)closeView();document.querySelectorAll('.placement-ghost').forEach(n=>n.remove());
@@ -325,7 +344,10 @@ function toggle(open){
 }
 function selectContext(){
  state.device=$e('pDevice').value;state.scene=$e('pScene').value;state.area=$e('pArea').value;
- state.asset=state.area==='pipes'?'gold':'stone-0';syncControls();preview();
+ if(state.scene==='zoom'&&(state.area==='safe'||state.area==='frame')){
+  state.scene='wide';$e('pScene').value='wide';
+ }
+ state.asset=ids()[0];syncControls();preview();
 }
 const button=$('editMobile');button.textContent='Position assets';button.title='Edit four layouts and copy or paste JSON';
 button.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();toggle(!state.open)},true);
