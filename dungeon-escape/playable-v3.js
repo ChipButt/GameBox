@@ -5,7 +5,7 @@
 const arrows=['↑','→','↓','←'];
 const K='gamebox.players.v1';
 const node=id=>document.getElementById(id);
-let isClosing=false,openSource='image';
+let activeZoom=null,zoomEpoch=0,lastSolutionSig=null;
 function prefersReduced(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)}
 function roster(){
  try{const items=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(items))return [];
@@ -28,6 +28,9 @@ function activePlayer(){return self()}
 function renderSolutions(){
  const target=node('solutionBody');if(!game||!library||!target)return;
  const p=activePlayer(),previous=previousPlayer(game,p.id),next=nextPlayer(game,p.id);
+ const sig=p.id+'|'+p.puzzleSolved+'|'+p.talismansSolved;
+ if(lastSolutionSig===sig)return;
+ lastSolutionSig=sig;
  const code=codeFor(library,p);
  const slots=code.map((item,i)=>'<div class="solution-cell" title="Socket '+(i+1)+'">'+
   '<span class="slot-index">'+String(i+1).padStart(2,'0')+'</span><strong>'+escapeHTML(symbolName(item.symbol))+'</strong>'+
@@ -99,42 +102,46 @@ function fillTestSolution(){
  });
  if(done){setView('talismans');notify('All 12 sockets set correctly. The safe has unlocked.')}
 }
+/* Animate only the puzzle artwork, never the full-screen modal or its controls.
+   Closing is synchronous: no stale Promise can reopen or freeze a hidden view. */
 function fromRoom(kind){return getHotspot(kind==='talismans'?'panel':kind)}
-function geometry(which){
- const el=fromRoom(which),panel=node('viewShell')?.querySelector('.view-panel');
- if(!el||!panel)return null;
- const a=el.getBoundingClientRect(),b=panel.getBoundingClientRect();
- const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
- const scale=Math.max(.06,Math.min(.66,Math.min(a.width/Math.max(1,b.width),a.height/Math.max(1,b.height))));
- return {dx,dy,scale,panel};
-}
-function zoomFrames(g,reverse){
- const from={opacity:.1,filter:'blur(3px)',transform:'translate('+g.dx+'px,'+g.dy+'px) scale('+g.scale+')'};
- const to={opacity:1,filter:'blur(0)',transform:'translate(0px,0px) scale(1)'};
- return reverse?[to,from]:[from,to];
+function stopZoom(){zoomEpoch++;if(activeZoom){try{activeZoom.cancel()}catch{}}activeZoom=null}
+function zoomGeometry(kind,stage){
+ const source=fromRoom(kind);
+ if(!stage||!source)return null;
+ const a=source.getBoundingClientRect(),b=stage.getBoundingClientRect();
+ if(!a.width||!a.height||!b.width||!b.height)return null;
+ const dx=Math.max(-180,Math.min(180,a.left+a.width/2-b.left-b.width/2));
+ const dy=Math.max(-170,Math.min(170,a.top+a.height/2-b.top-b.height/2));
+ return {dx,dy};
 }
 const oldSetView=setView;
 setView=function(kind){
- if(isClosing)return;
- const opening=!view;
+ if(!game||!VIEW_LABELS[kind]||kind==='safe')return;
+ stopZoom();
  oldSetView(kind);
- openSource=kind;
- if(opening){
-  const g=geometry(kind);
-  if(g&&!prefersReduced()&&g.panel.animate){
-   g.panel.animate(zoomFrames(g,false),{duration:490,easing:'cubic-bezier(.18,.85,.25,1)'});
-  }
- }
+ if(view!==kind||prefersReduced())return;
+ const epoch=zoomEpoch;
+ requestAnimationFrame(()=>{
+  if(epoch!==zoomEpoch||view!==kind)return;
+  const content=node('viewContent');
+  const stage=content?.querySelector(kind==='talismans'?'.wall-and-floor':'.art-stage');
+  const g=zoomGeometry(kind,stage);
+  if(!stage?.animate||!g)return;
+  try{
+   const motion=stage.animate([
+    {opacity:.72,filter:'blur(1px)',transform:'translate3d('+g.dx+'px,'+g.dy+'px,0) scale(.85)'},
+    {opacity:1,filter:'none',transform:'translate3d(0,0,0) scale(1)'}
+   ],{duration:300,easing:'cubic-bezier(.18,.82,.2,1)'});
+   activeZoom=motion;
+   // Cancellation rejects the finished promise; consume it so rapid taps are safe.
+   motion.finished.then(()=>{if(activeZoom===motion)activeZoom=null},()=>{if(activeZoom===motion)activeZoom=null});
+  }catch(error){console.warn('[Dungeon Escape] Zoom skipped:',error)}
+ });
 };
 const oldCloseView=closeView;
-closeView=function(){
- if(!view||isClosing)return;
- const g=geometry(openSource);
- if(!g||prefersReduced()||!g.panel.animate){oldCloseView();return}
- isClosing=true;
- const motion=g.panel.animate(zoomFrames(g,true),{duration:270,easing:'cubic-bezier(.55,0,.9,.45)',fill:'forwards'});
- motion.finished.then(()=>{oldCloseView();isClosing=false}).catch(()=>{oldCloseView();isClosing=false});
-};
+closeView=function(){stopZoom();oldCloseView()};
+
 const oldRender=render;
 render=function(){oldRender();renderSolutions();renderFinal();};
 const oldDrawSafe=drawSafe;
