@@ -58,7 +58,7 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
 </style><link rel="stylesheet" href="./playable-v3.css?v=1"></head>
 <body>
 <div class="app-shell" id="app">
- <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V3 · PLAYABLE GAMEBOX TEST</span></div><a class="gamebox-return" href="../">← GameBox</a>
+ <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V3.1 · TALISMAN FIX</span></div><a class="gamebox-return" href="../">← GameBox</a>
  <div class="header-actions" id="headerActions" hidden><label class="player-label">View as <select id="playerSelect" aria-label="Switch simulated player"></select></label><button id="editMobile" class="button-ghost" type="button" title="Drag and resize all four room assets for portrait screens">Edit mobile layout</button><button id="resetGame" class="button-ghost" type="button">Reset test</button></div></header>
  <main id="setupScreen" class="setup-screen"><div class="setup-art"></div><section class="setup-panel"><p class="eyebrow">COOPERATIVE MISSION</p><h1>Escape the Dungeon</h1><p>Every player holds the next player's secret. Solve the image, share the clue, unlock the safe and choose between personal protection or gold for the group.</p>
  <p class="demo-warning">This is a playable <strong>local testing build</strong>. It does not connect to real players, chat, Shield Room or gold balances.</p>
@@ -70,7 +70,7 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
    <button type="button" class="room-hotspot h-panel" data-view="talismans" aria-label="Approach the twelve-hole talisman mechanism"><img src="./assets/room/panel_wide.webp" alt=""/></button>
    <button type="button" class="room-hotspot h-safe" data-safe-action="true" aria-label="Open the safe or collect the valve wheel"><img id="roomSafe" src="./assets/closeups/safe_closed.webp" alt=""/><img id="roomSafeWheel" class="room-safe-wheel" src="./assets/rewards/wheel_intact.webp" alt="" hidden></button>
    <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/shield_fallback.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
-  </div></div><div class="room-hint">Tap the glowing edges to inspect a puzzle. Tap the safe to open it or collect the wheel.</div>
+  </div></div><div class="room-hint">Select a talisman from the dungeon floor, then tap a socket in the wall. The safe opens here without zooming.</div>
 </div>
   <aside class="sidebar"><section class="mission-card"><p class="eyebrow">YOUR PROGRESS</p><h2 id="currentName">Player</h2><ol id="stageProgress"></ol><p id="nextPlayerInfo" class="subtle"></p><p id="currentStepNote" class="subtle"></p><div class="turn-actions"><button id="nextPlayerBtn" type="button" hidden>Continue to next player</button></div></section><section class="solution-card" aria-label="Local testing solution guide"><details id="solutionDetails" open><summary>Solution guide <small>TEST BUILD</small></summary><div id="solutionBody"></div><div class="solution-actions"><button type="button" id="solveImageShortcut">Restore image (test shortcut)</button><button type="button" id="fillSolution">Fill the 12 sockets (test shortcut)</button></div></details></section><section id="missionResult" class="mission-result" hidden aria-label="Completed mission results"></section>
    <section class="chat-card"><div class="chat-title"><h2>Team chat</h2><span id="chatCount"></span></div><div id="chatMessages" class="chat-messages" aria-live="polite"></div><form id="chatForm" class="chat-composer"><input id="chatInput" maxlength="1200" placeholder="Share clues with the team…" autocomplete="off" aria-label="Team chat message"><button type="submit">Send</button></form></section></aside>
@@ -214,7 +214,9 @@ function interactWithSafe(){if(mobileEditing)return;const p=self();if(!p)return;
 }
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(game))}catch(e){notify('Saving is blocked in this browser. Progress may not persist.')}}
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x?.schema===1&&Array.isArray(x.players))game=x}catch(e){game=null}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x?.schema===1&&Array.isArray(x.players)&&x.players.length>=2&&x.players.length<=20){
+ x.players.forEach(p=>{if(!Array.isArray(p.slots))p.slots=[];p.slots=Array.from({length:12},(_,i)=>{const s=p.slots[i];return s&&SYMBOLS.includes(s.symbol)&&Number.isInteger(s.rotation)&&s.rotation>=0&&s.rotation<4?s:null});if(!Array.isArray(p.pieces)||p.pieces.length!==9||new Set(p.pieces).size!==9||p.pieces.some(n=>!Number.isInteger(n)||n<0||n>8))delete p.pieces;});game=x;
+ }else game=null}catch(e){game=null}}
 function self(){return game?.players.find(p=>p.id===asPlayer)||game?.players[0]}
 function notify(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500)}
 function perform(fn){try{const val=fn();save();render();if(view)renderView();return val}catch(e){notify(e.message);return null}}
@@ -234,8 +236,9 @@ function render(){if(!game)return;const p=self();const s=status(game);
  if(chat.dataset.lastCount!==String(game.chat.length)){chat.scrollTop=chat.scrollHeight;chat.dataset.lastCount=String(game.chat.length)}
  if(s.complete){$('missionProgress').textContent=`Mission complete · ${game.players.length} prizes claimed`} showMobileLayout();
 }
-function setView(kind){if(mobileEditing||!game||!VIEW_LABELS[kind])return;lastFocused=document.activeElement;view=kind;selectedTile=-1;focusSocket=-1;pendingChoice=null;drainAnimation=false;
- $('viewTitle').textContent=VIEW_LABELS[kind];$('viewShell').hidden=false;document.body.style.overflow='hidden';renderView();$('backRoom').focus({preventScroll:true});}
+function setView(kind){if(mobileEditing||!game||!VIEW_LABELS[kind]||kind==='safe')return;lastFocused=document.activeElement;view=kind;selectedTile=-1;focusSocket=-1;pendingChoice=null;drainAnimation=false;
+ $('viewTitle').textContent=VIEW_LABELS[kind];$('viewShell').hidden=false;document.body.style.overflow='hidden';
+ try{renderView();$('backRoom').focus({preventScroll:true});}catch(error){console.error('[Dungeon Escape] Failed opening '+kind,error);view=null;$('viewShell').hidden=true;document.body.style.overflow='';notify('The puzzle could not open. Your progress is preserved. '+(error?.message||''));}}
 function closeView(){view=null;$('viewShell').hidden=true;document.body.style.overflow='';$('viewContent').replaceChildren();lastFocused?.focus?.({preventScroll:true});}
 function renderView(){if(!view||!game)return;const p=self();$('viewTitle').textContent=VIEW_LABELS[view];$('viewStatus').textContent=({image:p.puzzleSolved?'Solved':'Incomplete',talismans:p.talismansSolved?'Unlocked':'Locked',safe:p.safeOpen?'Open':'Closed',pipes:p.reward?p.reward==='gold'?'Gold collected':'Shield collected':'Not chosen'})[view];
  if(view==='image')drawImagePuzzle(p);else if(view==='talismans')drawTalismanPuzzle(p);else if(view==='safe')drawSafe(p);else if(view==='pipes')drawPipes(p);
@@ -264,7 +267,10 @@ function socketButton(slot,i){const xy=coords(i);const b=document.createElement(
   if(slot?.symbol===selected){perform(()=>rotateTalisman(game,pid(),i))}else{perform(()=>putTalisman(game,pid(),i,selected,0))}});return b}
 function pid(){return self().id}
 function drawTalismanPuzzle(p){const scene=document.createElement('div');scene.className='mechanism-layout';
- const art=document.createElement('div');art.className='art-stage panel-stage';const img=document.createElement('img');img.src=AS+'closeups/panel_12.webp';img.alt='Twelve empty circular sockets on a medieval bronze wall panel';art.append(img);p.slots.forEach((s,i)=>art.append(socketButton(s,i)));
+ const art=document.createElement('div');art.className='art-stage panel-stage';const img=document.createElement('img');img.src=AS+'closeups/panel_12.webp';img.alt='Twelve empty circular sockets on a medieval bronze wall panel';art.append(img);
+ if(!Array.isArray(p.slots))p.slots=Array.from({length:12},()=>null);
+ p.slots=Array.from({length:12},(_,i)=>p.slots[i]&&SYMBOLS.includes(p.slots[i].symbol)&&Number.isInteger(p.slots[i].rotation)&&p.slots[i].rotation>=0&&p.slots[i].rotation<4?p.slots[i]:null);
+ p.slots.forEach((s,i)=>art.append(socketButton(s,i)));
  const info=document.createElement('section');info.className='mechanism-guide';
  let heading=p.talismansSolved?'Mechanism unlocked':'Choose your talismans';
  info.innerHTML=`<h3>${heading}</h3><p>${p.talismansSolved?'The safe is now unlocked. Return to the room and approach it.':'Read the clue sent by the previous player. Select a talisman then tap a socket to insert it. Tap the same piece again to rotate N → E → S → W.'}</p>`;
@@ -303,7 +309,7 @@ function drawPipes(p){const scene=document.createElement('div');scene.className=
   if(stage){stage.classList.remove(cls);void stage.offsetHeight;requestAnimationFrame(()=>{stage.classList.add(cls);const w=stage.querySelector('.pipe-valve');w?.classList.add('turning')})}
  }};$('cancelPipe').onclick=()=>{pendingChoice=null;drawPipes(p)}}}
 }
-function bindEvents(){document.querySelectorAll('.room-hotspot[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));document.querySelector('[data-safe-action]').addEventListener('click',()=>setView('safe'));setupMobileEditor();
+function bindEvents(){document.querySelectorAll('.room-hotspot[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));document.querySelector('[data-safe-action]').addEventListener('click',interactWithSafe);setupMobileEditor();
  $('backRoom').addEventListener('click',()=>closeView());
  $('playerSelect').addEventListener('change',e=>{asPlayer=e.target.value;if(view)closeView();render()});
  $('newGameForm').addEventListener('submit',e=>{e.preventDefault();const n=Number($('teamSize').value);let input=$('playerNames').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
