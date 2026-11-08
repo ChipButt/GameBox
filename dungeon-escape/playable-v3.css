@@ -690,3 +690,13 @@ body.layout-preview-mobile .view-shell .view-panel{
  .placement-panel-aspect{margin:4px 0 3px;gap:4px}
  .placement-panel-aspect span{font-size:10px}
 }
+
+
+/* V8.13: initial pipe water must not animate from CSS fallback geometry.
+   Only a deliberate valve choice may animate the water draining. */
+.pipes-stage .pipe-water{
+  transition:none!important;
+}
+.pipes-stage.drain-animating .pipe-water{
+  transition:height 2.2s ease,top 2.2s ease!important;
+}
