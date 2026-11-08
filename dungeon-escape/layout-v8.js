@@ -212,7 +212,7 @@ const prevClose=closeView;
 closeView=function(){prevClose();if(state.open&&state.scene==='zoom'){state.scene='wide';syncControls();requestAnimationFrame(refreshHandles)}};
 const ed=document.createElement('section');ed.id='placementEditor';ed.className='placement-editor';ed.hidden=true;ed.setAttribute('aria-label','Dungeon asset positioning editor');
 ed.innerHTML=[
-'<div class="placement-head"><strong>POSITIONING EDITOR · V8.5 APPROVED</strong><button type="button" id="placementDone">Done</button></div>',
+'<div class="placement-head"><strong>POSITIONING EDITOR · V8.8</strong><button type="button" id="placementDone">Done</button></div>',
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
@@ -561,7 +561,7 @@ $e('pReset').addEventListener('click',()=>{
 });
 $e('pDownload').addEventListener('click',()=>{
  const u=URL.createObjectURL(new Blob([JSON.stringify(layout,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_7.json';
+ const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_8.json';
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),600);
 });
 $('viewContent').addEventListener('click',e=>{if(state.open){e.preventDefault();e.stopImmediatePropagation()}},true);
