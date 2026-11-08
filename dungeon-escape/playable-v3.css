@@ -662,3 +662,28 @@ body.layout-preview-mobile .view-shell .view-panel{
 .h-image.whole-frame-composed>.wide-frame-clue{opacity:1!important}
 /* The entire frame and inset remain one non-interactive picture during play. */
 .h-image>.wide-frame-clue{pointer-events:none!important}
+
+
+/* V8.9: front and wide wall panel art preserve their intrinsic aspect ratio.
+   Artwork geometry is independent of the twelve socket placements. */
+.h-panel>img:first-child,
+.talisman-mechanism .panel-stage>img:first-child{
+ object-fit:contain!important;
+ pointer-events:none!important;
+ z-index:1;
+}
+.placement-panel-aspect{
+ display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ margin:8px 0 5px;
+}
+.placement-panel-aspect[hidden]{display:none!important}
+.placement-panel-aspect button{
+ flex:0 0 auto;font-weight:650;
+}
+.placement-panel-aspect span{
+ flex:1;min-width:110px;font:11px/1.35 system-ui,sans-serif;color:#e5c998;
+}
+@media(max-width:630px){
+ .placement-panel-aspect{margin:4px 0 3px;gap:4px}
+ .placement-panel-aspect span{font-size:10px}
+}
