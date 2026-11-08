@@ -603,25 +603,30 @@ body.placement-editing .room-identity-seals.on-safe-door.placement-safe-ghost{di
 
 /* V8.7: submerged prizes gently drift independently of the static glass/tubes.
    Animate transform only: editor layout coordinates remain exact and untouched. */
+/* One rise and one descent only: no horizontal movement or rotation. */
 @keyframes dungeon-water-prize-bob{
-  0%,100%{transform:translate3d(0,2px,0) rotate(-0.6deg)}
-  25%{transform:translate3d(1px,-2px,0) rotate(0.4deg)}
-  50%{transform:translate3d(0,var(--prize-bob-lift,-5px),0) rotate(0.9deg)}
-  75%{transform:translate3d(-1px,-1px,0) rotate(-0.2deg)}
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(0,calc(-1 * var(--prize-bob-rise,0px)),0)}
 }
 body:not(.placement-editing):not(.layout-editing) .h-pipes .wide-prize:not([hidden]),
-body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize:not([hidden]){
-  transform-origin:50% 50%;
-  animation:dungeon-water-prize-bob 4.4s ease-in-out infinite;
-  will-change:transform;
+body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize:not([hidden]),
+body.placement-editing.preview-bobbing .h-pipes .wide-prize:not([hidden]),
+body.placement-editing.preview-bobbing .pipes-stage .pipe-prize:not([hidden]){
+ transform-origin:50% 50%;
+ animation:dungeon-water-prize-bob 4.4s ease-in-out infinite;
+ will-change:transform;
 }
-.h-pipes .wide-prize{--prize-bob-lift:-5px}
-.pipes-stage .pipe-prize{--prize-bob-lift:-7px}
 body:not(.placement-editing):not(.layout-editing) .h-pipes .wide-prize.shield:not([hidden]),
-body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize.right:not([hidden]){
-  animation-duration:5.1s;
-  animation-delay:-2s;
+body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize.right:not([hidden]),
+body.placement-editing.preview-bobbing .h-pipes .wide-prize.shield:not([hidden]),
+body.placement-editing.preview-bobbing .pipes-stage .pipe-prize.right:not([hidden]){
+ animation-duration:5.1s;
+ animation-delay:-2s;
 }
+.placement-bob{display:flex;gap:8px;align-items:end;margin:7px 0}
+.placement-bob[hidden]{display:none!important}
+.placement-bob label{flex:1}
+.placement-bob button{flex:none;min-height:34px}
 @media(prefers-reduced-motion:reduce){
   .h-pipes .wide-prize,.pipes-stage .pipe-prize{
     animation:none!important;
