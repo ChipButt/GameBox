@@ -38,7 +38,7 @@ function renderSolutions(){
  target.innerHTML='<p class="solution-legend"><strong>Playing as '+escapeHTML(p.name)+'</strong><br>'+
   'The restored picture held by <strong>'+escapeHTML(previous.name)+'</strong> shows the talisman order below. Your picture reveals the answer for <strong>'+escapeHTML(next.name)+'</strong>.</p>'+
   '<details class="solution-preview"><summary>Show completed picture (spoiler)</summary><img src="'+imagePathFor(p)+'" alt="Completed picture clue for '+escapeHTML(next.name)+'"></details>'+
-  '<div class="solution-mini"><span>Image: '+(p.puzzleSolved?'Solved':'3×3 · tiles 1–9')+'</span><span>Wall: '+(p.talismansSolved?'Unlocked':'12 sockets')+'</span></div>'+
+  '<div class="solution-mini"><span>Image: '+(p.puzzleSolved?'Solved':'4×4 · 16 pieces')+'</span><span>Wall: '+(p.talismansSolved?'Unlocked':'12 sockets')+'</span></div>'+
   '<p class="solution-legend"><strong>12-socket answer · read left to right, top to bottom</strong></p>'+
   '<div class="solution-grid" aria-label="Twelve talisman positions and directions">'+slots+'</div>'+
   '<p class="subtle">Directions: N up, E right, S down, W left. This answer is deliberately visible in the local testing build, not to players in the final Traitors mission.</p>';
@@ -53,7 +53,7 @@ function renderSolutions(){
    p.safeOpen?'Collect the single valve wheel from the safe.':
    p.talismansSolved?'Open the unlocked safe and take its wheel.':
    p.puzzleSolved?'Share the image clue, then arrange the talismans using the previous player’s clue.':
-   'Restore the nine picture pieces, then share the revealed clue with the next player.';
+   'Restore the sixteen picture pieces, then share the revealed clue with the next player.';
  }
  const nextButton=node('nextPlayerBtn');
  if(nextButton){
