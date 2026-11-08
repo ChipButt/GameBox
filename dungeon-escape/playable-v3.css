@@ -72,3 +72,47 @@ body:not(.layout-editing) .room-hotspot.h-image::before{content:'';position:abso
 @media(min-width:631px){.floor-talismans .floor-talisman{width:7.7%}}
 @media(max-width:630px){.wall-and-floor{width:100%;gap:5px}.wall-and-floor .panel-stage{width:min(94vw,44dvh);max-height:46dvh}.floor-inspection{width:min(98vw,510px);height:clamp(125px,18dvh,190px)}.floor-inspection .floor-talisman{width:12.1%}.floor-talismans .floor-talisman{width:12%}}
 @media(prefers-reduced-motion:reduce){.floor-talisman{transition:none}}
+
+/* V3.2 — outline the ACTUAL alpha-cut artwork, never its rectangular hotspot. */
+.room-hotspot.h-image::after,
+.room-hotspot.h-panel::after,
+.room-hotspot.h-pipes::after{content:none!important;display:none!important}
+body:not(.layout-editing) .room-hotspot.h-image>img,
+body:not(.layout-editing) .room-hotspot.h-panel>img,
+body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{
+  animation:art-edge-glimmer 5.2s ease-in-out infinite;
+  will-change:filter;
+}
+body:not(.layout-editing) .room-hotspot.h-panel>img{animation-delay:-1.7s}
+body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4s}
+@keyframes art-edge-glimmer{
+  0%,100%{filter:drop-shadow(0 0 1px rgba(251,218,142,.12))}
+  46%{filter:drop-shadow(0 0 3px rgba(250,209,123,.38))}
+  72%{filter:drop-shadow(0 0 1px rgba(250,216,139,.15))}
+}
+
+/* Match the glass cavities in the original perspective pipe illustration.
+   The prizes rest below the horizontal bronze bands; neither covers metalwork. */
+.h-pipes .wide-prize.gold{
+  left:25.0%;top:52.0%;width:18%;height:7%;
+}
+.h-pipes .wide-prize.shield{
+  left:54.3%;top:52.0%;width:18%;height:7%;
+}
+
+/* Front view: actual tube interiors below the middle cross-brace. */
+.pipes-stage .pipe-prize.left{
+  left:24.4%;top:51.0%;width:17%;height:12.75%;
+}
+.pipes-stage .pipe-prize.right{
+  left:54.3%;top:51.8%;width:15.8%;height:11.75%;
+}
+/* The source shield is an exact lossless embed of BRM's 512px RGBA PNG. */
+.pipes-stage .pipe-prize,.h-pipes .wide-prize{
+  object-fit:contain;object-position:center;
+}
+@media(prefers-reduced-motion:reduce){
+  body:not(.layout-editing) .room-hotspot.h-image>img,
+  body:not(.layout-editing) .room-hotspot.h-panel>img,
+  body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation:none!important}
+}
