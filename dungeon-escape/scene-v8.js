@@ -12,7 +12,7 @@ function roomIdentity(player){
 function sealRow(player,location){
  const {symbol,count}=roomIdentity(player);
  const row=document.createElement('span');
- row.className='room-identity-seals '+location;
+ row.className='room-identity-seals '+location+' count-'+count;
  row.setAttribute('aria-label',count+' '+symbol+' room marker'+(count>1?'s':''));
  for(let i=0;i<count;i++){
   const img=document.createElement('img');
