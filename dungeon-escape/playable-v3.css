@@ -132,3 +132,17 @@ body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4
  .floor-talismans .floor-talisman{width:11.5%}
  .floor-inspection .floor-talisman{width:11.5%}
 }
+
+/* V5 — drag-and-snap talismans. The actual angled artwork stays unchanged. */
+.floor-talisman{touch-action:none!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
+.floor-talisman.drag-source{opacity:.28!important;cursor:grabbing;filter:none!important}
+.floor-talisman img{user-select:none;-webkit-user-drag:none;pointer-events:none}
+.drag-stone-ghost{position:fixed!important;z-index:99999;pointer-events:none!important;object-fit:contain;transform:translate(-50%,-50%) scale(1.08);filter:drop-shadow(0 8px 7px #0009) drop-shadow(0 0 5px #f0bb6866);will-change:left,top,transform,opacity;user-select:none}
+.drag-stone-ghost.near-socket{filter:drop-shadow(0 3px 5px #0008) drop-shadow(0 0 9px #ffe2a7)}
+.panel-socket.snap-candidate{outline:3px solid #ffe1a0!important;outline-offset:2px;background:#d1a96566!important;box-shadow:0 0 16px #f3d58cbb!important}
+.h-panel .room-wide-sockets{position:absolute;inset:0;z-index:8;pointer-events:none;display:block}
+.h-panel .room-wide-stone{position:absolute;width:10.8%;aspect-ratio:1;height:auto;object-fit:contain;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 1px 2px #000a)}
+.h-panel .wide-snap-indicator{position:absolute;width:11.5%;aspect-ratio:1;border:2px solid #ffe3a6;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 9px #e9c780aa,inset 0 0 4px #ffdf9aaa;background:#efca8533}
+@media(prefers-reduced-motion:reduce){
+ .drag-stone-ghost{transition:none!important}
+}
