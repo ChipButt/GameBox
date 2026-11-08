@@ -321,36 +321,66 @@ function scheduleFrameRefresh(immediate=false){
 function refreshHandles(){
  if(!state.open)return;
  applyWide();applyZoom();editorGhosts();syncFields();handles.replaceChildren();
+ const direct=state.area==='stones'||state.area==='sockets'||state.area==='safe';
+ const cornersMode=state.area==='frame';
  for(const id of ids()){
   const rect=boundsFor(id);if(!rect)continue;
-  const h=document.createElement('div');h.className='placement-handle'+(id===state.asset?' chosen':'');
-  h.dataset.id=id;h.style.left=rect.left+'px';h.style.top=rect.top+'px';
+  const h=document.createElement('div');
+  h.className='placement-handle'+(id===state.asset?' chosen':'')+
+   (direct?' direct-asset':'')+(cornersMode?' frame-corner':'')+
+   (state.area==='water'?' water-select':'');
+  h.dataset.id=id;h.title=nameFor(id);
+  h.style.left=rect.left+'px';h.style.top=rect.top+'px';
   h.style.width=Math.max(16,rect.width)+'px';h.style.height=Math.max(16,rect.height)+'px';
-  const label=document.createElement('span');label.className='placement-handle-label';
-  label.textContent=id.startsWith('stone-')?'T'+(Number(id.slice(6))+1):id.startsWith('socket-')?'H'+(Number(id.slice(7))+1):id==='gold'?'£':id==='shield'?'S':id==='waterLeft'?'W£':'WS';
-  const corner=document.createElement('span');corner.className='placement-corner';h.append(label,corner);
+  const canResize=!direct&&!cornersMode;
+  let corner=null;
+  if(!direct&&!cornersMode){
+   const label=document.createElement('span');label.className='placement-handle-label';
+   label.textContent=id==='gold'?'£':id==='shield'?'S':id==='waterLeft'?'W£':'WS';
+   corner=document.createElement('span');corner.className='placement-corner';
+   h.append(label,corner);
+  }
   h.addEventListener('pointerdown',ev=>{
-   if(ev.button>0)return;ev.preventDefault();ev.stopPropagation();
+   if(ev.button>0)return;
+   ev.preventDefault();ev.stopPropagation();
    state.asset=id;syncControls();
-   const base=targetParent(id)?.getBoundingClientRect();if(!base?.width||!base?.height)return;
+   handles.querySelectorAll('.chosen').forEach(other=>other.classList.remove('chosen'));
+   h.classList.add('chosen');
+   const base=targetParent(id)?.getBoundingClientRect();
+   if(!base?.width||!base?.height)return;
    const before={...item(state.scene,id)},px=ev.clientX,py=ev.clientY,pointer=ev.pointerId;
-   const resize=ev.target===corner;
+   const resizing=canResize&&ev.target===corner;
    try{h.setPointerCapture(pointer)}catch{}
    const move=e=>{
     if(e.pointerId!==pointer||!state.open)return;
-    const dx=(e.clientX-px)/base.width*100,dy=(e.clientY-py)/base.height*100,o=item(state.scene,id);
-    if(resize){o.w=Math.max(.5,Math.min(100,before.w+dx));o.h=Math.max(.5,Math.min(100,before.h+dy))}
-    else{o.x=Math.max(-25,Math.min(125,before.x+dx));o.y=Math.max(-25,Math.min(125,before.y+dy))}
-    applyWide();applyZoom();syncFields();
-    const b=boundsFor(id);if(b){h.style.left=b.left+'px';h.style.top=b.top+'px';h.style.width=Math.max(16,b.width)+'px';h.style.height=Math.max(16,b.height)+'px'}
+    const dx=(e.clientX-px)/base.width*100,dy=(e.clientY-py)/base.height*100;
+    const o=item(state.scene,id);if(!o)return;
+    if(resizing){
+     o.w=Math.max(.5,Math.min(100,before.w+dx));
+     o.h=Math.max(.5,Math.min(100,before.h+dy));
+    }else{
+     const limit=cornersMode?15:25;
+     o.x=Math.max(-limit,Math.min(100+limit,before.x+dx));
+     o.y=Math.max(-limit,Math.min(100+limit,before.y+dy));
+    }
+    applyWide();applyZoom();refreshGhostPositions(id);syncFields();
+    const b=boundsFor(id);
+    if(b){
+     h.style.left=b.left+'px';h.style.top=b.top+'px';
+     h.style.width=Math.max(16,b.width)+'px';h.style.height=Math.max(16,b.height)+'px';
+    }
+    if(cornersMode)scheduleFrameRefresh();
    };
    const end=e=>{
     if(e.pointerId!==pointer)return;
     h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',end);
-    h.removeEventListener('pointercancel',end);persist();refreshHandles();
+    h.removeEventListener('pointercancel',end);
+    persist();refreshHandles();
+    if(cornersMode)scheduleFrameRefresh(true);
     note('Saved '+nameFor(id)+' · '+state.scene+' · '+state.device);
    };
-   h.addEventListener('pointermove',move);h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+   h.addEventListener('pointermove',move);
+   h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
   });
   handles.append(h);
  }
