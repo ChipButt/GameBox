@@ -55,3 +55,20 @@
 .solution-preview img{display:block;max-width:min(100%,210px);max-height:275px;object-fit:contain;margin:9px auto 2px;border:1px solid #b78d55;border-radius:4px}
 body:not(.layout-editing) .room-hotspot.h-image::before{content:'';position:absolute;inset:-7px -10px;pointer-events:auto}
 @media(max-width:630px){.app-header{flex-wrap:wrap}.solution-card{max-height:55dvh}}
+
+/* V3.1: twelve tangible talismans scattered across the floor.
+   Reuse the original stone artwork as assets, never a fake checkerboard. */
+.floor-talismans{position:absolute;inset:0;z-index:12;pointer-events:none;isolation:isolate}
+.floor-talismans[hidden],body.layout-editing .floor-talismans{display:none!important}
+.floor-talisman{position:absolute;display:block;width:12.2%;height:auto;aspect-ratio:1;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:50%;background:transparent;pointer-events:auto;touch-action:manipulation;box-shadow:none;cursor:pointer;overflow:visible;transform:translate(-50%,-50%) perspective(450px) rotateX(24deg) rotate(var(--stone-rot,0deg)) scale(var(--stone-size,1));transition:filter .12s ease,transform .15s ease}
+.floor-talisman img{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 5px 5px #0a0707b5);pointer-events:none;-webkit-user-drag:none}
+.floor-talisman:hover,.floor-talisman.selected,.floor-talisman:focus-visible{filter:drop-shadow(0 0 10px #ffe2a5);outline:2px solid #eecb85;outline-offset:0;transform:translate(-50%,-50%) perspective(450px) rotateX(24deg) rotate(var(--stone-rot,0deg)) scale(calc(var(--stone-size,1) * 1.08))}
+.wall-and-floor{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:0}
+.wall-and-floor .panel-stage{flex:0 1 auto;max-height:calc(95dvh - 330px)}
+.floor-inspection{position:relative;width:min(100%,720px);height:clamp(140px,17dvh,205px);border-radius:6px;overflow:hidden;background:linear-gradient(#24161188,#110e0b49),url("./assets/room/warm_mobile.webp") center 92%/cover no-repeat;box-shadow:inset 0 16px 20px #07050599,inset 0 -10px 30px #150e0daa;border:1px solid #74523a}
+.floor-inspection .floor-talisman{width:12.5%}
+.floor-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:12px;text-align:center;font:13px Georgia,serif;color:#f1d7a8}
+.room-floor-status{font:11px system-ui,sans-serif;color:#dabd94}
+@media(min-width:631px){.floor-talismans .floor-talisman{width:7.7%}}
+@media(max-width:630px){.wall-and-floor{width:100%;gap:5px}.wall-and-floor .panel-stage{width:min(94vw,44dvh);max-height:46dvh}.floor-inspection{width:min(98vw,510px);height:clamp(125px,18dvh,190px)}.floor-inspection .floor-talisman{width:12.1%}.floor-talismans .floor-talisman{width:12%}}
+@media(prefers-reduced-motion:reduce){.floor-talisman{transition:none}}
