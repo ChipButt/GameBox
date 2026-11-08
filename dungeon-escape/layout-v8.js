@@ -138,6 +138,16 @@ function prizeStyle(n,id,scene){
  const o=item(scene,id);if(!n||!o)return;
  n.dataset.layoutAsset=id;n.style.left=(o.x-o.w/2)+'%';n.style.top=(o.y-o.h/2)+'%';
  n.style.width=o.w+'%';n.style.height=o.h+'%';n.style.rotate=o.r+'deg';
+ const profileData=profile(scene);
+ const requested=profileData[id==='gold'?'bobGold':'bobShield'];
+ // Keep the maximum movement inside the illustrated glass chamber.
+ // Values and safeguards are percentages of the mechanism, not of the prize.
+ const glassTop=18;
+ const available=Math.max(0,o.y-o.h/2-glassTop-.25);
+ const rise=Math.min(requested??.9,available);
+ const parentHeight=n.parentElement?.getBoundingClientRect().height||0;
+ n.style.setProperty('--prize-bob-rise',(rise*parentHeight/100).toFixed(3)+'px');
+ n.dataset.bobClamped=String(rise<requested);
 }
 function waterStyle(n,id,scene){
  const o=item(scene,id);if(!n||!o)return;
