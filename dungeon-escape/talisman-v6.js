@@ -64,7 +64,10 @@ function wideWall(player){
   img.src=AS+'talismans/'+slot.symbol+'_front.webp';
   img.className='room-wide-stone';img.alt='';img.dataset.socketIndex=String(i);
   img.style.left=xy.x+'%';img.style.top=xy.y+'%';
-  img.style.rotate=(slot.rotation*90)+'deg';
+  // Centre on the socket first, then rotate IN PLACE. Using the separate
+  // CSS rotate property rotates the -50% translation and makes stones orbit.
+  img.style.rotate='';
+  img.style.transform='translate(-50%,-50%) rotate('+(slot.rotation*90)+'deg)';
   // Render only. Talisman manipulation is intentionally close-up only.
   frag.append(img);
  });
