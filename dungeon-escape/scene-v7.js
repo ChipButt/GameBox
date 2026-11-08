@@ -3,20 +3,8 @@
    Mechanism artwork remains the interaction surface. */
 (()=>{
 'use strict';
-const oldCompletePuzzle=completePuzzle;
-completePuzzle=function(g,id){
- const result=oldCompletePuzzle(g,id);
- const player=playerFor(g,id);
- if(player.puzzleSolved&&!player.clueShared)shareClue(g,id,library);
- return result;
-};
-function ensureClueShared(player){
- if(!player.puzzleSolved||player.clueShared)return;
- try{shareClue(game,player.id,library);save()}catch(error){console.warn('[Dungeon Escape] Unable to share restored clue',error)}
-}
 drawImagePuzzle=function(player){
  scramble(player);
- ensureClueShared(player);
  const target=nextPlayer(game,player.id),src=imagePathFor(player);
  const scene=document.createElement('div');
  scene.className='closeup-image-scene';
