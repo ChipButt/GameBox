@@ -815,3 +815,26 @@ body.placement-editing .pipe-attachment-point::after{opacity:1!important;animati
  .pipe-wheel.turning .pipe-wheel-art{animation:none!important}
  .pipe-wheel{transition:none!important}
 }
+
+
+/* V8.23 — bronze middle-brace occlusion, sourced from the approved pipes asset.
+   This is exactly as large as .pipe-structure (no independently positioned crop).
+   The RGBA PNG image is made at runtime, with a clipped-source fallback. */
+.pipes-stage .pipe-metal-foreground{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;object-fit:contain!important;
+ max-width:none!important;max-height:none!important;
+ z-index:14!important;pointer-events:none!important;
+ user-select:none!important;-webkit-user-drag:none!important;
+ transform:none!important;animation:none!important;filter:none!important;
+ clip-path:polygon(19.8% 43%,81% 43%,81% 52%,19.8% 52%);
+}
+.pipes-stage .pipe-metal-foreground.alpha-ready{
+ clip-path:none!important;
+}
+/* Both prizes must remain below the middle brace but above the backdrop.
+   Gold valve glow (z16) and movable intact wheel (z22) stay interactive. */
+.pipes-stage .pipe-prize{z-index:5!important}
+.pipes-stage .pipe-water{z-index:6!important}
+.pipes-stage .pipe-attachment-point{z-index:16!important}
+.pipes-stage .pipe-wheel{z-index:22!important}
