@@ -6,6 +6,15 @@
 const sealSymbols=['raven','serpent','dagger','moon','sun'];
 const clueCache=new Map();
 let cachedGame=null;
+// Generated images are identified by the destination player's current saved
+// answer, not by a fixed clue number or screenshot file.
+function currentSolution(target){
+ return codeFor(library,target).map(({symbol,rotation})=>({symbol,rotation}));
+}
+function clueSignature(target){
+ return JSON.stringify({game:game?.id,player:target.id,code:currentSolution(target),
+  sockets:window.DungeonPlacement?.get()?.zoom?.desktop?.sockets||null});
+}
 function roomIdentity(player){
  const i=player.index;
  return {symbol:sealSymbols[i%5],count:Math.floor(i/5)+1};
@@ -38,10 +47,13 @@ function refreshRoomMarkers(){
 }
 function makeClue(target){
  if(cachedGame!==game){clueCache.clear();cachedGame=game}
- const existing=clueCache.get(target.index);
+ const signature=clueSignature(target);
+ const solution=currentSolution(target);
+ const sockets=window.DungeonPlacement?.get()?.zoom?.desktop?.sockets;
+ const existing=clueCache.get(signature);
  if(existing)return existing;
- const result={url:null,promise:null};
- clueCache.set(target.index,result);
+ const result={url:null,promise:null,signature};
+ clueCache.set(signature,result);
  result.promise=Promise.all([
   ...sealSymbols.map(symbol=>new Promise(resolve=>{
    const img=new Image();img.onload=()=>resolve([symbol,img]);img.onerror=()=>resolve([symbol,null]);
@@ -78,12 +90,10 @@ function makeClue(target){
    ctx.restore();
   }
   // Use approved DESKTOP CLOSE-UP socket centres so the artwork and stones align.
-  const approved=window.DungeonPlacement?.get()?.zoom?.desktop?.sockets;
-  const sockets=Array.isArray(approved)&&approved.length===12?
-   approved:Array.from({length:12},(_,i)=>({x:[33.9,48.8,64][i%3],y:[24.2,42.2,60.5,78.5][Math.floor(i/3)],w:10.55,h:10.55}));
-  const solution=codeFor(library,target);
+  const approved=Array.isArray(sockets)&&sockets.length===12?
+   sockets:Array.from({length:12},(_,i)=>({x:[33.9,48.8,64][i%3],y:[24.2,42.2,60.5,78.5][Math.floor(i/3)],w:10.55,h:10.55}));
   solution.forEach((part,i)=>{
-   const art=images[part.symbol],hole=sockets[i];
+   const art=images[part.symbol],hole=approved[i];
    if(!art)return;
    const x=panelBox.x+hole.x*panelBox.w/100;
    const y=panelBox.y+hole.y*panelBox.h/100;
@@ -97,14 +107,16 @@ function makeClue(target){
   result.url=url;return url;
  }).catch(error=>{
   console.error('[Dungeon Escape] Unable to render rotated clue',error);
-  clueCache.delete(target.index);return null;
+  clueCache.delete(signature);return null;
  });
  return result;
 }
 function paintClueWhenReady(player,target){
+ const requestedGame=game,requestedCode=clueSignature(target);
  const handle=makeClue(target);
  const apply=url=>{
-  if(!url||!game||view!=='image'||self()?.id!==player.id)return;
+  if(!url||game!==requestedGame||view!=='image'||self()?.id!==player.id||
+   clueSignature(nextPlayer(game,player.id))!==requestedCode)return;
   const root=$('viewContent');
   const reveal=root.querySelector('.jigsaw-reveal');
   if(reveal)reveal.src=url;
@@ -113,6 +125,25 @@ function paintClueWhenReady(player,target){
  if(handle.url)apply(handle.url);
  else handle.promise.then(apply);
 }
+// Use the same generated clue on the local testing guide as on the actual
+// frame and team chat. No pre-rendered clue_XX screenshots.
+function refreshSolutionGuide(){
+ if(!game)return;
+ const img=$('solutionBody')?.querySelector('img[data-live-dungeon-clue]');
+ if(!img)return;
+ const player=self(),target=nextPlayer(game,player.id),savedGame=game;
+ const signature=clueSignature(target);
+ if(img.dataset.clueSignature===signature&&img.getAttribute('src'))return;
+ img.dataset.clueSignature=signature;
+ img.removeAttribute('src');
+ const apply=url=>{
+  if(url&&img.isConnected&&img.dataset.clueSignature===signature&&
+    game===savedGame&&self()?.id===player.id)img.src=url;
+ };
+ const handle=makeClue(target);
+ if(handle.url)apply(handle.url);else handle.promise.then(apply);
+}
+window.DungeonClueArt={signature:clueSignature,make:makeClue};
 function refreshSharedClues(){
  if(!game)return;
  const entries=$('chatMessages')?.querySelectorAll('.chat-bubble');
@@ -126,9 +157,10 @@ function refreshSharedClues(){
   // The shared picture already contains the emblem.
   const img=document.createElement('img');img.alt='Rotated talisman solution artwork for '+target.name;
   display.append(img);element.append(display);
-  const handle=makeClue(target);
-  if(handle.url)img.src=handle.url;
-  else handle.promise.then(url=>{if(url&&img.isConnected)img.src=url});
+  const handle=makeClue(target),savedGame=game,signature=clueSignature(target);
+  const apply=url=>{if(url&&img.isConnected&&game===savedGame&&
+    clueSignature(target)===signature)img.src=url};
+  if(handle.url)apply(handle.url);else handle.promise.then(apply);
  });
 }
 const oldShare=shareClue;
@@ -138,6 +170,7 @@ shareClue=function(g,id,lib){
  const message=g.chat[g.chat.length-1];
  message.body='Restored talisman picture shared.';
  message.clueTarget=dest.index;
+ message.clueSignature=clueSignature(dest);
  return message.body;
 };
 
@@ -247,8 +280,8 @@ function refreshWideFrame(){
  const player=self(),board=getHotspot('image');
  if(!player||!board)return;
  scramble(player);
- const target=nextPlayer(game,player.id);
- const key=player.id+':'+target.index+':'+(player.puzzleSolved?'solved':player.pieces.join(','))+
+ const target=nextPlayer(game,player.id),loadedGame=game;
+ const key=clueSignature(target)+':'+player.id+':'+(player.puzzleSolved?'solved':player.pieces.join(','))+
   ':'+frameVertices().flat().map(n=>n.toFixed(3)).join(',')+
   ':'+outerFrameVertices().flat().map(n=>n.toFixed(3)).join(',');
  let preview=board.querySelector('.wide-frame-clue');
@@ -261,16 +294,16 @@ function refreshWideFrame(){
  preview.dataset.frameKey=key;
  const handle=makeClue(target);
  const paint=url=>{
-  if(!url||!preview.isConnected||preview.dataset.frameKey!==key)return;
+  if(!url||!preview.isConnected||preview.dataset.frameKey!==key||game!==loadedGame)return;
   const clue=new Image();
   clue.onload=async()=>{
-   if(!preview.isConnected||preview.dataset.frameKey!==key)return;
+   if(!preview.isConnected||preview.dataset.frameKey!==key||game!==loadedGame)return;
    try{
     const physical=await physicalFrameSource();
     if(!physical)throw Error('Original framed artwork did not load');
     const overlay=new Image();
     overlay.onload=()=>{
-     if(!preview.isConnected||preview.dataset.frameKey!==key)return;
+     if(!preview.isConnected||preview.dataset.frameKey!==key||game!==loadedGame)return;
      try{
       const composite=document.createElement('canvas');
       composite.width=214;composite.height=563;
@@ -297,6 +330,7 @@ const oldRender=render;
 render=function(){
  oldRender();
  refreshRoomMarkers();
+ refreshSolutionGuide();
  refreshSharedClues();
  requestAnimationFrame(refreshWideFrame);
 };
