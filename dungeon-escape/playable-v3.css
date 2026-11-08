@@ -519,3 +519,30 @@ body.placement-editing .room-hotspot,.placement-editing .floor-talisman{
  background:transparent!important;animation:none!important;
  filter:none!important;transform:none!important;z-index:2;
 }
+
+
+/* V8.4: safe-door emblems are centred on the door's physical face, enlarged
+   relative to movable stones. Size scales down as repeated symbols are added. */
+.room-identity-seals.on-safe-door{
+ left:50%;top:50%;transform:translate(-50%,-50%);
+ width:94%;height:76%;max-height:none;z-index:24;gap:0;
+ display:flex;align-items:center;justify-content:center;
+}
+.room-identity-seals.on-safe-door img{
+ height:auto;max-height:100%;min-width:0;min-height:0;aspect-ratio:1;
+ object-fit:contain;flex:0 0 auto;
+ filter:drop-shadow(0 3px 3px #000c) drop-shadow(0 0 8px rgba(255,213,124,.74));
+}
+.room-identity-seals.on-safe-door.count-1 img{width:70%}
+.room-identity-seals.on-safe-door.count-2 img{width:45%}
+.room-identity-seals.on-safe-door.count-3 img{width:30%}
+.room-identity-seals.on-safe-door.count-4 img{width:23%}
+/* Deeper blue water always sits in front of the gold bag / shield.
+   X/Y/width/height are controlled by the positioning editor, not fixed here. */
+.h-pipes .wide-water,.pipes-stage .pipe-water{
+ z-index:6;opacity:.66;mix-blend-mode:multiply;
+ background:linear-gradient(180deg,rgba(78,153,179,.67),rgba(38,102,135,.83) 48%,rgba(19,61,94,.88));
+ pointer-events:none;
+}
+.h-pipes .wide-prize,.pipes-stage .pipe-prize{z-index:5}
+.pipes-stage .pipe-valve{z-index:8}
