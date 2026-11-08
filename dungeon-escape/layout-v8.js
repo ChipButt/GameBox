@@ -231,9 +231,16 @@ function refreshHandles(){
 function preview(){
  document.body.classList.toggle('layout-preview-mobile',state.open&&state.device==='mobile');
  document.body.classList.toggle('layout-preview-desktop',state.open&&state.device==='desktop');
- if(state.open&&state.device==='mobile'){
-  for(const id of mobileOrder){const n=getHotspot(id),o=mobileLayout[id];if(!n||!o)continue;
-   n.style.left=o.x+'%';n.style.top=o.y+'%';n.style.width=o.w+'%';n.style.height=o.h+'%'}
+ if(state.open){
+  // Preview whichever device the editor selects, not the actual browser width.
+  for(const id of mobileOrder){
+   const n=getHotspot(id);if(!n)continue;
+   if(state.device==='mobile'){
+    const o=mobileLayout[id];if(!o)continue;
+    n.style.left=o.x+'%';n.style.top=o.y+'%';
+    n.style.width=o.w+'%';n.style.height=o.h+'%';
+   }else for(const field of ['left','top','width','height'])n.style.removeProperty(field);
+  }
  }else showMobileLayout();
  if(!state.open)return;
  const kind=state.scene==='wide'?null:(state.area==='pipes'?'pipes':'talismans');
