@@ -1,4 +1,4 @@
-/* Dungeon Escape V8.20 — choose a valve, turn it, drain the prize, then claim.
+/* Dungeon Escape V8.24 — choose a valve, turn it, drain the prize, then claim.
    No prize or gold is awarded until the final, central revealed object is tapped.
    Close-up only: existing wide-room composition and saved geometry are preserved. */
 (()=>{
@@ -117,7 +117,7 @@ function reveal(p,scene){
  win.setAttribute('aria-label',reward==='gold'?'Gold for the team pot is ready to claim':'Personal shield is ready to claim');
  const btn=make('button','pipe-prize-claim',win);btn.type='button';
  btn.setAttribute('aria-label',reward==='gold'?'Claim gold for the team pot':'Claim your shield');
- const glow=make('span','pipe-reveal-light',btn);glow.setAttribute('aria-hidden','true');
+ // The reward artwork supplies its own static gold shine; no pulsing halo.
  const img=make('img','pipe-revealed-art',btn);img.src=srcFor(reward);img.alt='';
  const label=make('span','pipe-claim-caption',btn);
  label.textContent=reward==='gold'?'Tap to claim gold for the pot':'Tap to claim your shield';
