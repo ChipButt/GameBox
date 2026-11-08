@@ -44,6 +44,8 @@ const defaults=()=>{
   p.panelImage??=(scene==='wide'&&dev==='mobile'?'front':'perspective');
   p.bobGold??=0.9;
   p.bobShield??=0.9;
+  p.valveGold??=box(32.8,82.6,10,7.5);
+  p.valveShield??=box(62.7,82.6,10,7.5);
  }
  return result;
 };
@@ -80,6 +82,8 @@ function validate(data){
   dst.sockets=src.sockets.map((v,i)=>validateBox(v,p+'.sockets['+i+']'));
   dst.gold=validateBox(src.gold,p+'.gold');dst.shield=validateBox(src.shield,p+'.shield');
   if(src.panelArt!==undefined)dst.panelArt=validatePanelArt(src.panelArt,p+'.panelArt');
+  for(const key of ['valveGold','valveShield'])
+   if(src[key]!==undefined)dst[key]=validateBox(src[key],p+'.'+key);
   if(src.panelImage!==undefined){
    if(!['front','perspective'].includes(src.panelImage))throw Error(p+'.panelImage must be front or perspective');
    dst.panelImage=src.panelImage;
@@ -231,9 +235,11 @@ function applyZoom(){
    prizeStyle(document.querySelector('.pipes-stage .pipe-prize.'+(id==='gold'?'left':'right')),id,'zoom');
   waterStyle(document.querySelector('.pipes-stage .pipe-water.left'),'waterLeft','zoom');
   waterStyle(document.querySelector('.pipes-stage .pipe-water.right'),'waterRight','zoom');
+  window.DungeonWheelUI?.apply?.(document.querySelector('.pipes-stage'));
  }
 }
-window.DungeonPlacement={coords:(scene,i)=>{const o=profile(scene).sockets[i];return {x:o.x,y:o.y}},
+window.DungeonPlacement={pipePoints:()=>({gold:{...profile('zoom').valveGold},shield:{...profile('zoom').valveShield}}),
+ coords:(scene,i)=>{const o=profile(scene).sockets[i];return {x:o.x,y:o.y}},
  frameCorners:()=>layout.wide[device()].frameCorners.map(pt=>[pt.x*214/100,pt.y*563/100]),
  frameOuterCorners:()=>layout.wide[device()].frameOuterCorners.map(pt=>[pt.x*214/100,pt.y*563/100]),
  applySafe:()=>safeStyle(getHotspot('safe')?.querySelector('.room-identity-seals.on-safe-door')),
@@ -254,11 +260,11 @@ const prevClose=closeView;
 closeView=function(){prevClose();if(state.open&&state.scene==='zoom'){state.scene='wide';syncControls();requestAnimationFrame(refreshHandles)}};
 const ed=document.createElement('section');ed.id='placementEditor';ed.className='placement-editor';ed.hidden=true;ed.setAttribute('aria-label','Dungeon asset positioning editor');
 ed.innerHTML=[
-'<div class="placement-head"><strong>POSITIONING EDITOR · V8.13</strong><button type="button" id="placementDone">Done</button></div>',
+'<div class="placement-head"><strong>POSITIONING EDITOR · V8.20</strong><button type="button" id="placementDone">Done</button></div>',
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
-'<label>Position<select id="pArea"><option value="panel">Wall panel artwork</option><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Whole frame corners</option><option value="picture">Picture inset (advanced)</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
+'<label>Position<select id="pArea"><option value="panel">Wall panel artwork</option><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Whole frame corners</option><option value="picture">Picture inset (advanced)</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option><option value="valves">Valve attachment points</option></select></label>',
 '<label>Asset<select id="pAsset"></select></label></div>',
 '<div class="placement-fields"><label>X %<input type="number" step=".1" id="pX"></label>',
 '<label>Y %<input type="number" step=".1" id="pY"></label>',
@@ -289,6 +295,7 @@ const ids=()=>{
  if(state.area==='panel')return ['panelArt'];
  if(state.area==='water')return ['waterLeft','waterRight'];
  if(state.area==='prizes')return ['gold','shield'];
+ if(state.area==='valves')return ['valveGold','valveShield'];
  if(state.area==='safe')return ['safeMark'];
  if(state.area==='frame')return Array.from({length:4},(_,i)=>'corner-'+i);
  if(state.area==='picture')return Array.from({length:4},(_,i)=>'inner-'+i);
@@ -298,6 +305,8 @@ const ids=()=>{
 function nameFor(id){
  if(id==='panelArt')return 'Talisman wall background';
  if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';
+ if(id==='valveGold')return 'Gold pipe wheel hole';
+ if(id==='valveShield')return 'Shield pipe wheel hole';
  if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';
  if(id==='safeMark')return 'Room talisman on safe';
  if(id.startsWith('corner-'))return ['Top left','Top right','Bottom right','Bottom left'][Number(id.slice(7))]+' frame corner';
@@ -315,6 +324,7 @@ function syncControls(){
  $e('pPanelImage').value=profile(state.scene).panelImage;
  $e('pBobFields').hidden=state.area!=='prizes';
  for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame'||state.area==='picture';
+ if(state.area==='valves')$e('pR').disabled=true;
  $e('pBobPreview').textContent=document.body.classList.contains('preview-bobbing')?'Stop bob preview':'Preview bob';
 }
 function syncFields(){
@@ -430,7 +440,7 @@ function scheduleFrameRefresh(immediate=false){
 function refreshHandles(){
  if(!state.open)return;
  applyWide();applyZoom();editorGhosts();syncFields();handles.replaceChildren();
- const direct=state.area==='stones'||state.area==='sockets'||state.area==='safe';
+ const direct=state.area==='stones'||state.area==='sockets'||state.area==='safe'||state.area==='valves';
  const cornersMode=state.area==='frame'||state.area==='picture';
  for(const id of ids()){
   const rect=boundsFor(id);if(!rect)continue;
@@ -516,7 +526,7 @@ function preview(){
   window.DungeonClueArt?.refreshGuide?.();
   return;
  }
- const kind=state.scene==='wide'?null:((state.area==='water'||state.area==='prizes')?'pipes':'talismans');
+ const kind=state.scene==='wide'?null:((state.area==='water'||state.area==='prizes'||state.area==='valves')?'pipes':'talismans');
  if(kind&&view!==kind)setView(kind);
  else if(!kind&&view)closeView();
  applyWide();applyZoom();requestAnimationFrame(refreshHandles);scheduleFrameRefresh(true);
@@ -537,6 +547,9 @@ function toggle(open){
 }
 function selectContext(){
  state.device=$e('pDevice').value;state.scene=$e('pScene').value;state.area=$e('pArea').value;
+ if(state.area==='valves'&&state.scene!=='zoom'){
+  state.scene='zoom';$e('pScene').value='zoom';
+ }
  if(state.scene==='zoom'&&(state.area==='safe'||state.area==='frame'||state.area==='picture')){
   state.scene='wide';$e('pScene').value='wide';
  }
