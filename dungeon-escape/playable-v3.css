@@ -333,3 +333,141 @@ body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4
 @media(prefers-reduced-motion:reduce){
  .view-shell .art-stage{transition:none!important}
 }
+
+/* V8: the WALL is painted on the zoom rig itself. The V3 transition now
+   animates the whole rig; background and mechanism cannot drift apart. */
+.view-shell .view-backdrop{display:none!important}
+.view-shell .view-panel{
+ background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_desktop.webp")!important;
+ background-position:center center!important;
+ background-size:100% 100%,190% auto!important;
+ background-repeat:no-repeat!important;
+ transform-origin:50% 50%;
+}
+@media(max-width:630px){
+ .view-shell .view-panel{
+  background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_mobile.webp")!important;
+  background-position:center center!important;background-size:100% 100%!important;
+ }
+}
+/* Fixed room identifiers: one motif for rooms 1–5; two for 6–10;
+   three for 11–15; four for 16–20. These follow their parent artwork. */
+.room-identity-seals{pointer-events:none;display:flex;align-items:center;justify-content:center;gap:clamp(2px,.3vw,5px);z-index:22}
+.room-identity-seals img{display:block;object-fit:contain;width:clamp(16px,2.3vw,34px);height:clamp(16px,2.3vw,34px);filter:drop-shadow(0 2px 3px #000b);flex:none}
+.room-identity-seals.under-safe{
+ position:absolute;left:50%;top:103%;transform:translateX(-50%);width:max-content;
+}
+.room-identity-seals.under-frame{
+ position:absolute;left:50%;top:101%;transform:translateX(-50%);width:max-content;
+}
+.room-identity-seals.on-frame{
+ position:absolute;bottom:-1%;left:50%;transform:translateX(-50%);
+ width:max-content;z-index:12;
+}
+.room-identity-seals.on-frame img{width:clamp(23px,3.3vw,47px);height:clamp(23px,3.3vw,47px)}
+.room-identity-seals.chat-identity{display:flex;gap:3px;margin:0 0 4px}
+.room-identity-seals.chat-identity img{width:22px;height:22px}
+@media(max-width:630px){
+ .room-identity-seals.under-safe img,.room-identity-seals.under-frame img{width:clamp(12px,4vw,22px);height:clamp(12px,4vw,22px)}
+ .room-identity-seals.on-frame img{width:clamp(17px,6.2vw,29px);height:clamp(17px,6.2vw,29px)}
+}
+.closeup-image-scene .frame-display{overflow:visible}
+.frame-share-action{
+ position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);
+ appearance:none;border:2px solid #ebcf8a;border-radius:5px;padding:15px 23px;
+ min-width:190px;max-width:78%;background:linear-gradient(#523723ee,#241711f3);
+ color:#fff0c0;font:bold clamp(13px,1.65vw,19px) Georgia,serif;letter-spacing:.025em;
+ box-shadow:0 6px 22px #000b;cursor:pointer;touch-action:manipulation;
+}
+.frame-share-action:hover,.frame-share-action:focus-visible{background:#67482b;outline:2px solid #eddbb6;outline-offset:3px}
+.shared-clue-picture{width:min(100%,265px);margin:7px 0}
+.shared-clue-picture>img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border:1px solid #8f7046;border-radius:4px}
+/* Editor owns the only visible text boxes while editing. None appear in gameplay. */
+.placement-editor{
+ position:fixed;z-index:230;top:12px;right:12px;max-height:calc(100dvh - 24px);
+ width:min(350px,calc(100vw - 24px));overflow:auto;overscroll-behavior:contain;
+ border:1px solid #bc9861;border-radius:8px;padding:11px;
+ background:#211a18f5;color:#f5dfb8;box-shadow:0 14px 45px #000b;
+ font:12px/1.45 system-ui,sans-serif;
+}
+.placement-editor[hidden],.placement-handles[hidden]{display:none!important}
+.placement-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:6px}
+.placement-head strong{font-size:13px;letter-spacing:.03em}
+.placement-editor button{cursor:pointer;background:#54422f;border:1px solid #a38a62;color:#fbe3ae;border-radius:4px;padding:7px 9px;font:12px system-ui,sans-serif}
+.placement-editor button:hover{background:#765936}
+.placement-selects{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 7px}
+.placement-editor label{display:flex;flex-direction:column;gap:3px;font:11px/1.4 system-ui,sans-serif}
+.placement-editor select,.placement-editor input,.placement-editor textarea{
+ background:#161310;color:#f9e5bd;border:1px solid #8d6b46;border-radius:3px;
+ font:12px system-ui,sans-serif;min-width:0;padding:6px;width:100%;
+}
+.placement-fields{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.placement-fields input{padding:5px 3px}
+.placement-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:9px 0}
+.placement-editor textarea{font:10px/1.35 ui-monospace,monospace;resize:vertical;min-height:70px;max-height:180px}
+.placement-editor #pStatus{margin:7px 1px 0;color:#e9cea0;font-size:11px}
+.placement-handles{position:fixed;inset:0;z-index:200;pointer-events:none}
+.placement-handle{
+ position:fixed;z-index:1;box-sizing:border-box;border:1.5px dashed rgba(250,214,136,.75);
+ background:rgba(140,110,62,.12);border-radius:3px;pointer-events:auto;
+ touch-action:none;cursor:grab;user-select:none;
+}
+.placement-handle.chosen{z-index:2;border:2px solid #fff0b3;background:rgba(207,165,85,.21);box-shadow:0 0 5px #0009}
+.placement-handle-label{
+ position:absolute;top:0;left:0;background:#1e170fe0;color:#f2d8a0;
+ font:10px/1.3 system-ui,sans-serif;padding:0 3px;pointer-events:none;
+}
+.placement-corner{
+ position:absolute;right:-5px;bottom:-5px;width:14px;height:14px;
+ border:1px solid #3c2917;background:#f5d08e;cursor:nwse-resize;pointer-events:auto;
+}
+.placement-ghost{position:absolute;object-fit:contain;pointer-events:none;opacity:.75;z-index:6}
+.placement-ghost[data-layout-asset^="stone-"]{
+ transform:translate(-50%,-50%) rotate(var(--stone-rot,0deg));
+ filter:drop-shadow(0 2px 3px #0009);
+}
+.placement-ghost[data-layout-asset="gold"],.placement-ghost[data-layout-asset="shield"]{z-index:5}
+.placement-editing .floor-talismans{display:block!important}
+.placement-editing .floor-talisman.selected{outline:none;filter:none}
+.placement-editing .room-hotspot:hover{scale:1!important}
+/* Simulated device preview works even when authoring on a desktop browser. */
+body.layout-preview-mobile .room-stage{
+ width:auto;max-width:min(46vw,460px);max-height:84dvh;
+ height:84dvh;aspect-ratio:9/16!important;margin:0 auto;
+ background-image:url("./assets/room/warm_mobile.webp")!important;
+}
+body.layout-preview-desktop .room-stage{
+ width:100%;height:auto;aspect-ratio:16/9!important;
+ background-image:url("./assets/room/warm_desktop.webp")!important;
+}
+body.layout-preview-mobile .view-shell{justify-content:flex-start;padding-left:clamp(6px,8vw,110px)!important}
+body.layout-preview-mobile .view-shell .view-panel{
+ width:min(460px,44vw)!important;height:85dvh!important;
+ max-height:85dvh!important;
+ background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_mobile.webp")!important;
+ background-size:100% 100%!important;
+}
+body.layout-preview-mobile .closeup-image-scene .art-stage{width:min(96%,55dvh)!important}
+body.layout-preview-mobile .talisman-mechanism .panel-stage{width:min(105%,51dvh)!important;top:8%!important}
+body.layout-preview-mobile .talisman-mechanism .floor-inspection{top:75%!important;height:25%!important}
+body.layout-preview-mobile .closeup-pipes-scene .pipes-stage{width:min(96%,52dvh)!important}
+body.layout-preview-desktop .view-shell .view-panel{
+ background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_desktop.webp")!important;
+ background-size:100% 100%,190% auto!important;
+}
+body.placement-editing .room-hotspot,.placement-editing .floor-talisman{
+ cursor:default!important;
+}
+@media(max-width:630px){
+ .placement-editor{left:8px;right:8px;top:5px;width:calc(100vw - 16px);max-height:36dvh;padding:7px}
+ .placement-selects{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+ .placement-selects select{font-size:10px;padding:4px 1px}
+ .placement-editor label{font-size:9px}
+ .placement-fields{gap:3px}
+ .placement-editor button{font-size:10px;padding:5px 3px}
+ .placement-editor textarea{min-height:32px;max-height:58px;font-size:9px}
+ .placement-editor #pStatus{font-size:10px}
+ body.layout-preview-mobile .room-stage{max-width:calc(100vw - 8px);height:auto;max-height:none;width:100%;aspect-ratio:9/16!important}
+ body.layout-preview-mobile .view-shell{justify-content:center!important;padding-left:0!important}
+ body.layout-preview-mobile .view-shell .view-panel{width:100vw!important;height:100dvh!important;max-height:100dvh!important}
+}
