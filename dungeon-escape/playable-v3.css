@@ -628,3 +628,25 @@ body:not(.placement-editing):not(.layout-editing) .pipes-stage .pipe-prize.right
     will-change:auto;
   }
 }
+
+/* V8.8 — all close-up mechanisms are mounted on the FRONT wall.
+   Both desktop and mobile use the same source wall image; mobile crops into
+   its central stonework rather than showing the full room/arches and floor. */
+.view-shell .view-panel,
+body.layout-preview-desktop .view-shell .view-panel,
+body.layout-preview-mobile .view-shell .view-panel{
+ background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_desktop.webp")!important;
+ background-repeat:no-repeat!important;
+ background-position:center center,center 47%!important;
+ background-size:100% 100%,190% auto!important;
+}
+@media(max-width:630px){
+ .view-shell .view-panel{
+  background-size:100% 100%,auto 170%!important;
+  background-position:center center,center 45%!important;
+ }
+}
+body.layout-preview-mobile .view-shell .view-panel{
+ background-size:100% 100%,auto 170%!important;
+ background-position:center center,center 45%!important;
+}
