@@ -282,7 +282,7 @@ function floorPile(p){
 function stoneNode(piece,ctx,player){
  const spot=FLOOR_SPOTS[piece.position];
  const button=document.createElement('button');button.type='button';button.className='floor-talisman';
- button.style.left=spot.x+'%';button.style.top=(ctx==='room'?spot.y:Math.max(5,(spot.y-73)*2.1))+'%';
+ button.style.left=spot.x+'%';button.style.top=(ctx==='room'?(window.matchMedia('(max-width:630px)').matches?spot.y:70+(spot.y-73)*.78):20+(spot.y-73)*2.65)+'%';
  button.style.setProperty('--stone-rot',spot.r+'deg');button.style.setProperty('--stone-size',spot.s);
  button.classList.toggle('selected',selected===piece.symbol);
  button.title='Select '+symbolName(piece.symbol)+' stone';
