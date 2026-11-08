@@ -51,13 +51,33 @@ function pipeHitZone(side,player){
   const p=self();
   if(!p||p.id!==player.id||p.reward||!p.wheelCollected)return;
   const choice=side==='left'?'gold':'shield';
+  // Save the fully positioned water before the reward rerenders the stage.
+  // The layout editor provides the correct geometry for this device/view.
+  const oldWater=$('viewContent').querySelector('.pipes-stage .pipe-water.'+side);
+  const filledTop=oldWater?.style.top||'19.5%';
+  const filledHeight=oldWater?.style.height||'49.5%';
   const result=perform(()=>claimPrize(game,p.id,choice));
   if(!result)return;
   const stage=$('viewContent').querySelector('.pipes-stage');
+  const water=stage?.querySelector('.pipe-water.'+side);
   const cssClass=choice==='gold'?'drained-left':'drained-right';
-  if(stage){
+  if(stage&&water){
+   // Restore the full tube instantly; never animate the initial layout.
    stage.classList.remove(cssClass);
-   requestAnimationFrame(()=>stage.classList.add(cssClass));
+   water.style.top=filledTop;
+   water.style.height=filledHeight;
+   void water.offsetHeight;
+   // Only the player turning the wheel should trigger the 2.2s drain.
+   stage.classList.add('drain-animating');
+   water.addEventListener('transitionend',event=>{
+    if(event.propertyName==='height')stage.classList.remove('drain-animating');
+   });
+   requestAnimationFrame(()=>{
+    if(!water.isConnected)return;
+    stage.classList.add(cssClass);
+    water.style.top='68%';
+    water.style.height='0%';
+   });
   }
  }
  zone.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();claim()});
