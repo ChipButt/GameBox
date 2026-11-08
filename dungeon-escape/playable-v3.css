@@ -471,3 +471,40 @@ body.placement-editing .room-hotspot,.placement-editing .floor-talisman{
  body.layout-preview-mobile .view-shell{justify-content:center!important;padding-left:0!important}
  body.layout-preview-mobile .view-shell .view-panel{width:100vw!important;height:100dvh!important;max-height:100dvh!important}
 }
+
+
+/* V8.3 — wide-view sockets and floor stones only display progress.
+   Players arrange and rotate stones in the front-on talisman close-up. */
+.h-panel .room-wide-stone,.h-panel .room-wide-stone.movable,
+.floor-talismans .floor-talisman{pointer-events:none!important;cursor:default!important}
+
+/* The room identifier is fixed to the closed safe DOOR, not below the safe. */
+.room-identity-seals.on-safe-door{
+ position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);
+ width:88%;max-height:55%;pointer-events:none;z-index:21;gap:2px;
+}
+.room-identity-seals.on-safe-door img{
+ height:auto;aspect-ratio:1;max-height:42px;min-width:0;flex:0 1 auto;
+ filter:drop-shadow(0 2px 2px #000b) drop-shadow(0 0 4px #e8bd66a8);
+}
+.room-identity-seals.on-safe-door.count-1 img{width:44%}
+.room-identity-seals.on-safe-door.count-2 img{width:32%}
+.room-identity-seals.on-safe-door.count-3 img{width:25%}
+.room-identity-seals.on-safe-door.count-4 img{width:20%}
+
+/* Submerge the actual prizes under transparent blue water, rather than
+   putting the prize images above the water effect. Keep the wheel operable. */
+.h-pipes .ww-left{left:23.4%;top:19%;width:24%;height:54%}
+.h-pipes .ww-right{left:53.2%;top:17%;width:26%;height:56%}
+.h-pipes .wide-prize{z-index:5;opacity:.96}
+.h-pipes .wide-water{
+ z-index:6;opacity:.48;mix-blend-mode:multiply;
+ background:linear-gradient(180deg,#c3f6fb7a 0%,#79c8e7aa 22%,#247caaab 100%);
+}
+.h-pipes .hotspot-label{z-index:7}
+.pipes-stage .pipe-water{
+ top:19.5%;height:49.5%;z-index:6;opacity:.48;mix-blend-mode:multiply;
+ background:linear-gradient(180deg,#c6f5f978 0%,#75cbe3af 25%,#26799fab 100%);
+}
+.pipes-stage .pipe-prize{z-index:5}
+.pipes-stage .pipe-valve{z-index:8}
