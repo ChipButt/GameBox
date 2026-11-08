@@ -546,3 +546,36 @@ body.placement-editing .room-hotspot,.placement-editing .floor-talisman{
 }
 .h-pipes .wide-prize,.pipes-stage .pipe-prize{z-index:5}
 .pipes-stage .pipe-valve{z-index:8}
+
+/* V8.5 — clean positioning surfaces: drag the actual talisman art,
+   not large dotted selection boxes. Size comes from editor fields/buttons. */
+.placement-sizing{display:flex;gap:5px;margin:8px 0 3px}
+.placement-sizing[hidden]{display:none!important}
+.placement-sizing button{flex:1;min-width:0;padding:8px 4px}
+.placement-sizing #pMatchSize{flex:2}
+.placement-handle.direct-asset,
+.placement-handle.direct-asset.chosen{
+ border:0!important;background:transparent!important;box-shadow:none!important;
+ outline:0!important;border-radius:50%;
+}
+.placement-handle.direct-asset .placement-handle-label,
+.placement-handle.direct-asset .placement-corner{display:none!important}
+.placement-handle.direct-asset:hover{filter:drop-shadow(0 0 6px #ebc680)}
+.placement-handle.frame-corner,
+.placement-handle.frame-corner.chosen{
+ width:22px!important;height:22px!important;border:2px solid #fff2c2!important;
+ border-radius:50%!important;background:#674526e8!important;
+ box-shadow:0 1px 5px #000d,0 0 7px #fff1ba!important;
+ cursor:move!important;
+}
+.placement-handle.water-select{border:1px solid #80d5e9; background:#27779a22}
+.placement-handle.water-select.chosen{border:2px solid #c5f5ff;background:#4bcee133}
+.placement-ghost[data-layout-asset^="socket-"]{
+ transform:translate(-50%,-50%);opacity:.92;
+ filter:drop-shadow(0 2px 3px #0008);
+}
+body.placement-editing .room-identity-seals.on-safe-door.placement-safe-ghost{display:flex!important}
+@media(max-width:630px){
+ .placement-sizing{gap:3px;margin:4px 0}
+ .placement-sizing button{font-size:10px;padding:5px 2px}
+}
