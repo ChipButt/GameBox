@@ -449,12 +449,13 @@ function refreshHandles(){
     const dx=(e.clientX-px)/base.width*100,dy=(e.clientY-py)/base.height*100;
     const o=item(state.scene,id);if(!o)return;
     if(resizing){
-     o.w=Math.max(.5,Math.min(100,before.w+dx));
-     o.h=Math.max(.5,Math.min(100,before.h+dy));
+     o.w=Math.max(.5,Math.min(state.area==='panel'?250:100,before.w+dx));
+     o.h=Math.max(.5,Math.min(state.area==='panel'?250:100,before.h+dy));
     }else{
-     const limit=cornersMode?15:25;
-     o.x=Math.max(-limit,Math.min(100+limit,before.x+dx));
-     o.y=Math.max(-limit,Math.min(100+limit,before.y+dy));
+     const min=cornersMode?-15:state.area==='panel'?-100:-25;
+     const max=cornersMode?115:state.area==='panel'?200:125;
+     o.x=Math.max(min,Math.min(max,before.x+dx));
+     o.y=Math.max(min,Math.min(max,before.y+dy));
     }
     applyWide();applyZoom();refreshGhostPositions(id);syncFields();
     const b=boundsFor(id);
