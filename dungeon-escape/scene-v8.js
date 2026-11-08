@@ -143,7 +143,7 @@ function refreshSolutionGuide(){
  const handle=makeClue(target);
  if(handle.url)apply(handle.url);else handle.promise.then(apply);
 }
-window.DungeonClueArt={signature:clueSignature,make:makeClue};
+window.DungeonClueArt={signature:clueSignature,make:makeClue,refreshGuide:refreshSolutionGuide};
 function refreshSharedClues(){
  if(!game)return;
  const entries=$('chatMessages')?.querySelectorAll('.chat-bubble');
