@@ -70,6 +70,7 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
    <button type="button" class="room-hotspot h-panel" data-view="talismans" aria-label="Approach the twelve-hole talisman mechanism"><img src="./assets/room/panel_wide.webp" alt=""/></button>
    <button type="button" class="room-hotspot h-safe" data-safe-action="true" aria-label="Open the safe or collect the valve wheel"><img id="roomSafe" src="./assets/closeups/safe_closed.webp" alt=""/><img id="roomSafeWheel" class="room-safe-wheel" src="./assets/rewards/wheel_intact.webp" alt="" hidden></button>
    <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/shield_fallback.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
+   <div class="floor-talismans" id="floorTalismans" aria-label="Loose talismans scattered across the dungeon floor"></div>
   </div></div><div class="room-hint">Select a talisman from the dungeon floor, then tap a socket in the wall. The safe opens here without zooming.</div>
 </div>
   <aside class="sidebar"><section class="mission-card"><p class="eyebrow">YOUR PROGRESS</p><h2 id="currentName">Player</h2><ol id="stageProgress"></ol><p id="nextPlayerInfo" class="subtle"></p><p id="currentStepNote" class="subtle"></p><div class="turn-actions"><button id="nextPlayerBtn" type="button" hidden>Continue to next player</button></div></section><section class="solution-card" aria-label="Local testing solution guide"><details id="solutionDetails" open><summary>Solution guide <small>TEST BUILD</small></summary><div id="solutionBody"></div><div class="solution-actions"><button type="button" id="solveImageShortcut">Restore image (test shortcut)</button><button type="button" id="fillSolution">Fill the 12 sockets (test shortcut)</button></div></details></section><section id="missionResult" class="mission-result" hidden aria-label="Completed mission results"></section>
@@ -227,6 +228,7 @@ function render(){if(!game)return;const p=self();const s=status(game);
  $('currentName').textContent=p.name;
  $('nextPlayerInfo').textContent=`Your image hides the talisman solution for ${nextPlayer(game,p.id).name}. You need a clue from ${previousPlayer(game,p.id).name}.`;
  $('stageProgress').innerHTML=[['Image puzzle',p.puzzleSolved],['Talisman mechanism',p.talismansSolved],['Safe and valve wheel',p.wheelCollected],['Prize choice',!!p.reward]].map(([label,done])=>`<li class="${done?'done':''}">${label}</li>`).join('');
+ drawFloorStones(p);
  $('roomSafe').src=AS+`closeups/safe_${p.safeOpen?'open':'closed'}.webp`; $('roomSafeWheel').hidden=!p.safeOpen||p.wheelCollected;
  const pipes=document.querySelector('.h-pipes');pipes.classList.toggle('drained-gold',p.reward==='gold');pipes.classList.toggle('drained-shield',p.reward==='shield');
  pipes.querySelector('.wide-prize.gold').hidden=p.reward==='gold';pipes.querySelector('.wide-prize.shield').hidden=p.reward==='shield';
@@ -260,11 +262,70 @@ function drawImagePuzzle(p){const target=nextPlayer(game,p.id);scramble(p);const
    if(p.pieces.every((v,i)=>v===i)){perform(()=>completePuzzle(game,p.id));notify('Image restored. Share the revealed clue!')}else{save();drawImagePuzzle(p)}});frag.append(tile)});grid.append(frag);
  $('qaSolvePuzzle').addEventListener('click',()=>{perform(()=>completePuzzle(game,p.id));notify('Puzzle marked complete for local testing.')});
  }}
+
+/* The physical talismans live on the floor, not in an inventory tray. */
+const FLOOR_SPOTS=[
+ {x:9,y:74,r:-24,s:.97},{x:30,y:76,r:18,s:1.03},{x:54,y:73,r:-9,s:.94},{x:76,y:77,r:31,s:1.02},
+ {x:18,y:82,r:36,s:.92},{x:41,y:85,r:-17,s:1.06},{x:65,y:83,r:12,s:.97},{x:84,y:85,r:-22,s:1},
+ {x:6,y:91,r:9,s:.98},{x:30,y:93,r:-34,s:1.06},{x:55,y:90,r:25,s:.94},{x:77,y:92,r:-12,s:1}
+];
+function floorPile(p){
+ if(!library||!p)return [];
+ const arr=codeFor(library,p).map((x,i)=>({symbol:x.symbol,origin:i}));
+ for(let i=arr.length-1;i>0;i--){const j=(i*7+p.index*5+3)%(i+1);[arr[i],arr[j]]=[arr[j],arr[i]]}
+ const occupied={};for(const slot of (Array.isArray(p.slots)?p.slots:[])){if(slot&&SYMBOLS.includes(slot.symbol))occupied[slot.symbol]=(occupied[slot.symbol]||0)+1}
+ return arr.map((item,i)=>{
+  if((occupied[item.symbol]||0)>0){occupied[item.symbol]--;return null}
+  return {...item,position:i};
+ }).filter(Boolean);
+}
+function stoneNode(piece,ctx,player){
+ const spot=FLOOR_SPOTS[piece.position];
+ const button=document.createElement('button');button.type='button';button.className='floor-talisman';
+ button.style.left=spot.x+'%';button.style.top=(ctx==='room'?spot.y:Math.max(5,(spot.y-73)*2.1))+'%';
+ button.style.setProperty('--stone-rot',spot.r+'deg');button.style.setProperty('--stone-size',spot.s);
+ button.classList.toggle('selected',selected===piece.symbol);
+ button.title='Select '+symbolName(piece.symbol)+' stone';
+ button.setAttribute('aria-label','Select '+symbolName(piece.symbol)+' talisman from dungeon floor');
+ const img=document.createElement('img');img.src=AS+'talismans/'+piece.symbol+'_front.webp';
+ img.alt='';img.loading='eager';img.decoding='async';button.append(img);
+ button.addEventListener('click',(event)=>{
+  event.preventDefault();event.stopPropagation();
+  if(mobileEditing||player.talismansSolved)return;
+  selected=piece.symbol;
+  if(ctx==='room')setView('talismans');else drawTalismanPuzzle(player);
+  notify(symbolName(piece.symbol)+' talisman selected. Tap a wall socket to insert it.');
+ });
+ return button;
+}
+function drawFloorStones(p){
+ const root=$('floorTalismans');if(!root)return;
+ root.replaceChildren();root.hidden=mobileEditing||p.talismansSolved;
+ if(root.hidden)return;
+ const frag=document.createDocumentFragment();
+ for(const item of floorPile(p))frag.append(stoneNode(item,'room',p));
+ root.append(frag);
+}
+function buildFloorInspection(p){
+ const root=document.createElement('div');root.className='floor-inspection';
+ root.setAttribute('aria-label','Loose talismans on the stone floor beside the wall');
+ if(p.talismansSolved){root.innerHTML='<p class="floor-empty">All stones are fitted. The safe is unlocked.</p>';return root}
+ const pieces=floorPile(p);
+ if(!pieces.length){root.innerHTML='<p class="floor-empty">All 12 stones are in the wall.</p>';return root}
+ const frag=document.createDocumentFragment();
+ for(const piece of pieces)frag.append(stoneNode(piece,'inspection',p));
+ root.append(frag);return root;
+}
+
 function coords(i){const x=[33.2,48.5,63.8][i%3],y=[23.9,41.9,59.4,77.1][Math.floor(i/3)];return {x,y}}
 function socketButton(slot,i){const xy=coords(i);const b=document.createElement('button');b.type='button';b.className='panel-socket'+(slot?'':' empty')+(focusSocket===i?' selected':'');b.style.left=xy.x+'%';b.style.top=xy.y+'%';b.setAttribute('aria-label',`Socket ${i+1}: ${slot?slot.symbol+' facing '+DIRECTIONS[slot.rotation]:'empty'}`);
  if(slot){const img=document.createElement('img');img.src=AS+`talismans/${slot.symbol}_front.webp`;img.alt='';img.style.transform=`rotate(${slot.rotation*90}deg)`;b.append(img);const lbl=document.createElement('span');lbl.textContent=DIRECTIONS[slot.rotation];b.append(lbl)}else{const txt=document.createElement('span');txt.textContent=i+1;b.append(txt)}
  b.addEventListener('click',()=>{focusSocket=i;if(self().talismansSolved)return;
-  if(slot?.symbol===selected){perform(()=>rotateTalisman(game,pid(),i))}else{perform(()=>putTalisman(game,pid(),i,selected,0))}});return b}
+  if(slot?.symbol===selected){perform(()=>rotateTalisman(game,pid(),i))}else{
+   const remaining=floorPile(self()).some(piece=>piece.symbol===selected);
+   if(!remaining){notify('No '+symbolName(selected)+' talismans remain on the floor. Remove a placed stone first.');return}
+   perform(()=>putTalisman(game,pid(),i,selected,0));
+  }});return b}
 function pid(){return self().id}
 function drawTalismanPuzzle(p){const scene=document.createElement('div');scene.className='mechanism-layout';
  const art=document.createElement('div');art.className='art-stage panel-stage';const img=document.createElement('img');img.src=AS+'closeups/panel_12.webp';img.alt='Twelve empty circular sockets on a medieval bronze wall panel';art.append(img);
@@ -273,12 +334,13 @@ function drawTalismanPuzzle(p){const scene=document.createElement('div');scene.c
  p.slots.forEach((s,i)=>art.append(socketButton(s,i)));
  const info=document.createElement('section');info.className='mechanism-guide';
  let heading=p.talismansSolved?'Mechanism unlocked':'Choose your talismans';
- info.innerHTML=`<h3>${heading}</h3><p>${p.talismansSolved?'The safe is now unlocked. Return to the room and approach it.':'Read the clue sent by the previous player. Select a talisman then tap a socket to insert it. Tap the same piece again to rotate N → E → S → W.'}</p>`;
- if(!p.talismansSolved){const tray=document.createElement('div');tray.className='talisman-tray';for(const sym of SYMBOLS){const b=document.createElement('button');b.className=sym===selected?'selected':'';b.type='button';b.setAttribute('aria-label',`Select ${sym} talisman`);b.innerHTML=`<img src="${AS}talismans/${sym}_front.webp" alt="${sym}">`;b.addEventListener('click',()=>{selected=sym;drawTalismanPuzzle(p)});tray.append(b)}info.append(tray);
+ info.innerHTML=`<h3>${heading}</h3><p>${p.talismansSolved?'The safe is now unlocked. Return to the room and approach it.':'Read the clue sent by the previous player. Pick a loose stone from the floor, then tap a socket to insert it. Tap the same piece again to rotate N → E → S → W.'}</p>`;
+ if(!p.talismansSolved){
  const ctr=document.createElement('div');ctr.className='socket-controls';ctr.innerHTML='<button id="rotateSlot" type="button">Rotate selected</button><button id="removeSlot" type="button">Remove selected</button>';
  info.append(ctr);const btn=document.createElement('button');btn.className='button-primary';btn.textContent='Test the mechanism';btn.type='button';btn.addEventListener('click',()=>{const done=perform(()=>checkTalismans(game,p.id,library));notify(done?'The safe has unlocked.':'The mechanism remains locked. Check every talisman and direction.')});info.append(btn);
  }
- scene.append(art,info);$('viewContent').replaceChildren(scene);
+ const floorAndWall=document.createElement('div');floorAndWall.className='wall-and-floor';floorAndWall.append(art,buildFloorInspection(p));
+ scene.append(floorAndWall,info);$('viewContent').replaceChildren(scene);
  if(!p.talismansSolved){$('rotateSlot').onclick=()=>{if(focusSocket<0)return notify('Select a socket first.');perform(()=>rotateTalisman(game,p.id,focusSocket))};$('removeSlot').onclick=()=>{if(focusSocket<0)return notify('Select a socket first.');perform(()=>clearTalisman(game,p.id,focusSocket))}}
 }
 function drawSafe(p){const scene=document.createElement('div');scene.className='mechanism-layout';
