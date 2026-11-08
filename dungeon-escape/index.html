@@ -26,10 +26,7 @@
 .room-hotspot{appearance:none;-webkit-appearance:none;background:transparent;box-shadow:none;border:0;outline:none;touch-action:manipulation}
 .room-hotspot>.hotspot-label,.quick-inspect{display:none!important}
 .room-hotspot:focus-visible{outline:2px solid #e6c790;outline-offset:3px}
-.room-hotspot.h-image::after,.room-hotspot.h-panel::after,.room-hotspot.h-pipes::after{content:'';position:absolute;pointer-events:none;inset:0;border:1px solid rgba(255,226,150,.32);border-radius:5px;box-shadow:0 0 6px 1px rgba(246,202,118,.2),inset 0 0 5px rgba(243,205,138,.16);background:radial-gradient(circle at 0% 0%,rgba(255,251,216,.72) 0 1px,transparent 3px),radial-gradient(circle at 100% 100%,rgba(255,251,216,.68) 0 1px,transparent 4px),radial-gradient(circle at 100% 0%,rgba(255,244,182,.46) 0 1px,transparent 4px),radial-gradient(circle at 0% 100%,rgba(255,245,192,.4) 0 1px,transparent 3px);animation:edge-sparkle 4.4s ease-in-out infinite}
-.room-hotspot.h-panel::after{animation-delay:-1.5s}.room-hotspot.h-pipes::after{animation-delay:-3s}
-.room-hotspot.h-image::after{clip-path:polygon(2.3% 0,100% 25.3%,98.6% 95%,0 100%);border-radius:0}
-@keyframes edge-sparkle{0%,100%{opacity:.26;filter:brightness(.8)}45%{opacity:.65;filter:brightness(1.3)}65%{opacity:.3}}
+/* Edge lighting moved to the transparent artwork pixels in playable-v3.css. */
 .room-safe-wheel{position:absolute;z-index:7;top:36%;left:23%;width:26%!important;height:29%!important;object-fit:contain!important;filter:drop-shadow(0 2px 3px #000);pointer-events:none}
 .h-safe{cursor:pointer}
 /* Mobile editor: independent layout data, fully interactive from desktop or phone. */
@@ -53,12 +50,12 @@ body.layout-editing .room-hint{font-weight:bold;color:#f5d38d}
 body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;inset:0;outline:1px dashed #f5d38d}
 @media(min-width:631px){body.layout-editing .room-wrapper{max-width:460px}body.layout-editing .game-layout{grid-template-columns:minmax(0,1fr) minmax(270px,330px)}}
 @media(max-width:630px){.edit-values{gap:5px}.mobile-editor{margin:5px 8px 15px;width:auto}.app-header{gap:5px}.header-actions{gap:5px}.header-actions .button-ghost{padding:7px 9px;font-size:11px}}
-@media(prefers-reduced-motion:reduce){.room-hotspot::after{animation:none!important;opacity:.5}}
+@media(prefers-reduced-motion:reduce){.room-hotspot img{animation:none!important}}
 
-</style><link rel="stylesheet" href="./playable-v3.css?v=31"></head>
+</style><link rel="stylesheet" href="./playable-v3.css?v=32"></head>
 <body>
 <div class="app-shell" id="app">
- <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V3.1 · TALISMAN FIX</span></div><a class="gamebox-return" href="../">← GameBox</a>
+ <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V3.2 · ASSET ALIGNMENT</span></div><a class="gamebox-return" href="../">← GameBox</a>
  <div class="header-actions" id="headerActions" hidden><label class="player-label">View as <select id="playerSelect" aria-label="Switch simulated player"></select></label><button id="editMobile" class="button-ghost" type="button" title="Drag and resize all four room assets for portrait screens">Edit mobile layout</button><button id="resetGame" class="button-ghost" type="button">Reset test</button></div></header>
  <main id="setupScreen" class="setup-screen"><div class="setup-art"></div><section class="setup-panel"><p class="eyebrow">COOPERATIVE MISSION</p><h1>Escape the Dungeon</h1><p>Every player holds the next player's secret. Solve the image, share the clue, unlock the safe and choose between personal protection or gold for the group.</p>
  <p class="demo-warning">This is a playable <strong>local testing build</strong>. It does not connect to real players, chat, Shield Room or gold balances.</p>
@@ -69,7 +66,7 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
    <button type="button" class="room-hotspot h-image" data-view="image" aria-label="Approach the image puzzle"><img src="./assets/room/image_board_wide.webp" alt=""/></button>
    <button type="button" class="room-hotspot h-panel" data-view="talismans" aria-label="Approach the twelve-hole talisman mechanism"><img src="./assets/room/panel_wide.webp" alt=""/></button>
    <button type="button" class="room-hotspot h-safe" data-safe-action="true" aria-label="Open the safe or collect the valve wheel"><img id="roomSafe" src="./assets/closeups/safe_closed.webp" alt=""/><img id="roomSafeWheel" class="room-safe-wheel" src="./assets/rewards/wheel_intact.webp" alt="" hidden></button>
-   <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/shield_fallback.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
+   <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/brm-original-shield.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
    <div class="floor-talismans" id="floorTalismans" aria-label="Loose talismans scattered across the dungeon floor"></div>
   </div></div><div class="room-hint">Select a talisman from the dungeon floor, then tap a socket in the wall. The safe opens here without zooming.</div>
 </div>
@@ -317,7 +314,7 @@ function buildFloorInspection(p){
  root.append(frag);return root;
 }
 
-function coords(i){const x=[33.2,48.5,63.8][i%3],y=[23.9,41.9,59.4,77.1][Math.floor(i/3)];return {x,y}}
+function coords(i){const x=[33.9,48.8,64.0][i%3],y=[24.2,42.2,60.5,78.5][Math.floor(i/3)];return {x,y}}
 function socketButton(slot,i){const xy=coords(i);const b=document.createElement('button');b.type='button';b.className='panel-socket'+(slot?'':' empty')+(focusSocket===i?' selected':'');b.style.left=xy.x+'%';b.style.top=xy.y+'%';b.setAttribute('aria-label',`Socket ${i+1}: ${slot?slot.symbol+' facing '+DIRECTIONS[slot.rotation]:'empty'}`);
  if(slot){const img=document.createElement('img');img.src=AS+`talismans/${slot.symbol}_front.webp`;img.alt='';img.style.transform=`rotate(${slot.rotation*90}deg)`;b.append(img);const lbl=document.createElement('span');lbl.textContent=DIRECTIONS[slot.rotation];b.append(lbl)}else{const txt=document.createElement('span');txt.textContent=i+1;b.append(txt)}
  b.addEventListener('click',()=>{focusSocket=i;if(self().talismansSolved)return;
@@ -355,7 +352,7 @@ function drawPipes(p){const scene=document.createElement('div');scene.className=
  // Water tint is coded independently; the physical tube layer remains unchanged.
  art.innerHTML=`<div class="pipe-water left"></div><div class="pipe-water right"></div>
  ${p.reward==='gold'?'':`<img class="pipe-prize left" src="${AS}rewards/gold_sack.webp" alt="Closed gold sack with £ mark">`}
- ${p.reward==='shield'?'':`<img class="pipe-prize right" src="${AS}rewards/shield_fallback.svg" alt="Golden protective shield">`}
+ ${p.reward==='shield'?'':`<img class="pipe-prize right" src="${AS}rewards/brm-original-shield.svg" alt="Golden protective shield">`}
  <img class="pipe-structure" src="${AS}closeups/pipes.webp" alt="Two glass prize chambers with separate wheel sockets">
  ${p.reward?`<img class="pipe-valve ${p.reward==='gold'?'left':'right'}" src="${AS}rewards/wheel_broken.webp" alt="Broken valve wheel">`:''}`;
  const info=document.createElement('section');info.className='mechanism-guide';info.innerHTML=`<h3>One wheel. One decision.</h3><p>Left pipe: <strong>GOLD — ${money(game.goldEach)} for the team.</strong><br>Right pipe: <strong>SHIELD — protection for yourself.</strong></p><p>The water will drain from only the pipe you choose. Once turned, the valve wheel breaks. You cannot take the second prize.</p><p>No player in this dungeon mission enters the normal Shield Room afterwards.</p>`;
