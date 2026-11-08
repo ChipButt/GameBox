@@ -2,7 +2,7 @@
    gold bag and shield; independently editable for desktop/mobile and wide/zoom. */
 (()=>{
 'use strict';
-const STORE='BRM_DUNGEON_ASSET_LAYOUT_V8_13_APPROVED_20261108_164222',ID='brm-dungeon-asset-positions';
+const STORE='BRM_DUNGEON_ASSET_LAYOUT_V8_14_APPROVED_20261108',ID='brm-dungeon-asset-positions';
 const xs=[33.9,48.8,64],ys=[24.2,42.2,60.5,78.5];
 const wideD=[[20,79],[41,78],[61,80],[80,79],[13,87],[33,86],[53,87],[73,86],[23,94],[44,93],[65,94],[86,93]];
 const wideM=[[20,77],[40,76],[61,77],[81,78],[12,85],[36,84],[60,85],[85,84],[21,93],[44,92],[67,93],[85,92]];
@@ -40,6 +40,8 @@ const defaults=()=>{
    p.waterRight??=box(60.65,44.25,20.7,49.5);
   }
   p.panelArt??=box(50,50,100,100);
+  // The mobile wide-wall panel may use a genuine front-on plate (round recesses).
+  p.panelImage??=(scene==='wide'&&dev==='mobile'?'front':'perspective');
   p.bobGold??=0.9;
   p.bobShield??=0.9;
  }
@@ -78,6 +80,10 @@ function validate(data){
   dst.sockets=src.sockets.map((v,i)=>validateBox(v,p+'.sockets['+i+']'));
   dst.gold=validateBox(src.gold,p+'.gold');dst.shield=validateBox(src.shield,p+'.shield');
   if(src.panelArt!==undefined)dst.panelArt=validatePanelArt(src.panelArt,p+'.panelArt');
+  if(src.panelImage!==undefined){
+   if(!['front','perspective'].includes(src.panelImage))throw Error(p+'.panelImage must be front or perspective');
+   dst.panelImage=src.panelImage;
+  }
    // V8.2 JSON without water remains fully importable.
    if(src.waterLeft!==undefined)dst.waterLeft=validateBox(src.waterLeft,p+'.waterLeft');
    if(src.waterRight!==undefined)dst.waterRight=validateBox(src.waterRight,p+'.waterRight');
@@ -190,6 +196,10 @@ function panelArtStyle(scene){
  const n=panelArtNode(scene),o=profile(scene).panelArt;
  if(!n||!o)return;
  n.dataset.layoutAsset='panelArt';
+ // Swap only the wall background; never modify stone artwork, sizes or socket coordinates.
+ const source=scene==='wide'&&profile(scene).panelImage==='front'?
+  AS+'closeups/panel_12.webp':scene==='wide'?AS+'room/panel_wide.webp':AS+'closeups/panel_12.webp';
+ if(n.getAttribute('src')!==source)n.setAttribute('src',source);
  n.style.position='absolute';
  n.style.left=o.x+'%';n.style.top=o.y+'%';
  n.style.width=o.w+'%';n.style.height=o.h+'%';
@@ -255,7 +265,7 @@ ed.innerHTML=[
 '<label>Width %<input type="number" step=".1" id="pW"></label>',
 '<label>Height %<input type="number" step=".1" id="pH"></label>',
 '<label>Angle °<input type="number" step="1" id="pR"></label></div>',
-'<div class="placement-panel-aspect" id="pPanelFields" hidden><button type="button" id="pPanelAspect">Fit original proportions</button><span>Wall background only; 12 talismans stay in place</span></div>',
+'<div class="placement-panel-aspect" id="pPanelFields" hidden><label>Wall artwork<select id="pPanelImage"><option value="perspective">Original angled panel</option><option value="front">Front-facing panel (round holes)</option></select></label><button type="button" id="pPanelAspect">Fit original proportions</button><span>Background only; talismans remain in position</span></div>',
 '<div class="placement-bob" id="pBobFields" hidden><label>Maximum upward bob (% of pipe)<input id="pBob" type="number" min="0" max="8" step=".1"></label><button type="button" id="pBobPreview">Preview bob</button></div>',
 '<div class="placement-sizing" id="pSizing"><button type="button" id="pSmaller">− Smaller</button><button type="button" id="pLarger">+ Larger</button><button type="button" id="pMatchSize">Match all 12 sizes</button></div>',
 '<div class="placement-actions"><button type="button" id="pCopy">Copy JSON</button>',
@@ -297,6 +307,7 @@ function syncControls(){
  select.value=state.asset;syncFields();
  $e('pSizing').hidden=!(state.area==='stones'||state.area==='sockets');
  $e('pPanelFields').hidden=state.area!=='panel';
+ $e('pPanelImage').value=profile(state.scene).panelImage;
  $e('pBobFields').hidden=state.area!=='prizes';
  for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame'||state.area==='picture';
  $e('pBobPreview').textContent=document.body.classList.contains('preview-bobbing')?'Stop bob preview':'Preview bob';
@@ -551,6 +562,14 @@ function resizeSelected(factor){
  o.h=Math.min(100,Math.max(.5,o.h*factor));
  persist();refreshHandles();note('Resized '+nameFor(state.asset));
 }
+$e('pPanelImage').addEventListener('change',event=>{
+ if(state.area!=='panel')return;
+ const selection=event.target.value;
+ if(!['front','perspective'].includes(selection))return;
+ profile(state.scene).panelImage=selection;
+ persist();applyWide();applyZoom();refreshHandles();
+ note('Changed '+state.device+' '+state.scene+' wall artwork without moving the stones.');
+});
 $e('pPanelAspect').addEventListener('click',()=>{
  if(state.area!=='panel')return;
  const img=panelArtNode(state.scene),b=targetParent('panelArt')?.getBoundingClientRect();
