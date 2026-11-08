@@ -55,14 +55,14 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
 @media(max-width:630px){.edit-values{gap:5px}.mobile-editor{margin:5px 8px 15px;width:auto}.app-header{gap:5px}.header-actions{gap:5px}.header-actions .button-ghost{padding:7px 9px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.room-hotspot::after{animation:none!important;opacity:.5}}
 
-</style></head>
+</style><link rel="stylesheet" href="./playable-v3.css?v=1"></head>
 <body>
 <div class="app-shell" id="app">
- <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V2 · EDITABLE MOBILE LAYOUT</span></div>
+ <header class="app-header"><div class="brand"><span class="brand-kicker">BRM TRAITORS</span><strong>DUNGEON ESCAPE</strong><span class="version">V3 · PLAYABLE GAMEBOX TEST</span></div><a class="gamebox-return" href="../">← GameBox</a>
  <div class="header-actions" id="headerActions" hidden><label class="player-label">View as <select id="playerSelect" aria-label="Switch simulated player"></select></label><button id="editMobile" class="button-ghost" type="button" title="Drag and resize all four room assets for portrait screens">Edit mobile layout</button><button id="resetGame" class="button-ghost" type="button">Reset test</button></div></header>
  <main id="setupScreen" class="setup-screen"><div class="setup-art"></div><section class="setup-panel"><p class="eyebrow">COOPERATIVE MISSION</p><h1>Escape the Dungeon</h1><p>Every player holds the next player's secret. Solve the image, share the clue, unlock the safe and choose between personal protection or gold for the group.</p>
  <p class="demo-warning">This is a playable <strong>local testing build</strong>. It does not connect to real players, chat, Shield Room or gold balances.</p>
- <form id="newGameForm"><label for="teamSize">Players (2–20)</label><input id="teamSize" type="number" min="2" max="20" value="4" required><label for="goldEach">Gold added per gold choice (£)</label><input id="goldEach" type="number" min="0" max="100000" step="1" value="100" required><label for="playerNames">Player names (optional, one per line)</label><textarea id="playerNames" rows="4" placeholder="Leave blank for test players"></textarea><button class="button-primary" type="submit">Enter the Dungeon</button></form></section></main>
+ <form id="newGameForm"><label for="teamSize">Players (2–20)</label><input id="teamSize" type="number" min="2" max="20" value="4" required><label for="goldEach">Gold added per gold choice (£)</label><input id="goldEach" type="number" min="0" max="100000" step="1" value="100" required><label for="playerNames">Player names (optional, one per line)</label><textarea id="playerNames" rows="4" placeholder="Leave blank for test players"></textarea><div class="setup-buttons"><button class="button-primary" type="submit">Enter the Dungeon</button><button class="roster-button" type="button" id="useGameboxRoster" hidden>Use GameBox players</button></div></form></section></main>
  <section id="gameScreen" class="game-screen" hidden>
   <div class="mission-bar"><div><span class="mission-label">TEAM MISSION</span><span id="missionProgress" aria-live="polite"></span></div><div class="mission-gold">Group pot <strong id="goldPot">£0</strong></div></div>
   <div class="game-layout"><div class="scene-panel"><div class="room-wrapper"><div class="room-stage" id="roomStage" role="region" aria-label="Dungeon room with four interactive mechanisms">
@@ -72,7 +72,7 @@ body.layout-editing .room-hotspot.h-image::before{content:'';position:absolute;i
    <button type="button" class="room-hotspot h-pipes" data-view="pipes" aria-label="Approach the twin water pipes"><div class="wide-water ww-left"></div><div class="wide-water ww-right"></div><img class="wide-prize gold" src="./assets/rewards/gold_sack.webp" alt=""><img class="wide-prize shield" src="./assets/rewards/shield_fallback.svg" alt=""><img class="pipe-shell" src="./assets/room/pipes_wide.webp" alt=""></button>
   </div></div><div class="room-hint">Tap the glowing edges to inspect a puzzle. Tap the safe to open it or collect the wheel.</div>
 </div>
-  <aside class="sidebar"><section class="mission-card"><p class="eyebrow">YOUR PROGRESS</p><h2 id="currentName">Player</h2><ol id="stageProgress"></ol><p id="nextPlayerInfo" class="subtle"></p></section>
+  <aside class="sidebar"><section class="mission-card"><p class="eyebrow">YOUR PROGRESS</p><h2 id="currentName">Player</h2><ol id="stageProgress"></ol><p id="nextPlayerInfo" class="subtle"></p><p id="currentStepNote" class="subtle"></p><div class="turn-actions"><button id="nextPlayerBtn" type="button" hidden>Continue to next player</button></div></section><section class="solution-card" aria-label="Local testing solution guide"><details id="solutionDetails" open><summary>Solution guide <small>TEST BUILD</small></summary><div id="solutionBody"></div><div class="solution-actions"><button type="button" id="fillSolution">Fill the 12 sockets (test shortcut)</button></div></details></section><section id="missionResult" class="mission-result" hidden aria-label="Completed mission results"></section>
    <section class="chat-card"><div class="chat-title"><h2>Team chat</h2><span id="chatCount"></span></div><div id="chatMessages" class="chat-messages" aria-live="polite"></div><form id="chatForm" class="chat-composer"><input id="chatInput" maxlength="1200" placeholder="Share clues with the team…" autocomplete="off" aria-label="Team chat message"><button type="submit">Send</button></form></section></aside>
   </div>
  </section>
@@ -152,13 +152,13 @@ function status(game){return {
 };}
 
 const $=id=>document.getElementById(id);
-const AS='./assets/';const KEY='BRM_DUNGEON_TEST_V1';const LAYOUT_KEY='BRM_DUNGEON_MOBILE_LAYOUT_V2_APPROVED_20261108';const VIEW_LABELS={image:'Image Reveal Puzzle',talismans:'The Twelve Sockets',safe:'The Safe',pipes:'The Two Prizes'};
+const AS='./assets/';const KEY='BRM_DUNGEON_TEST_V1';const LAYOUT_KEY='BRM_DUNGEON_MOBILE_LAYOUT_V3_FINAL_20261108';const VIEW_LABELS={image:'Image Reveal Puzzle',talismans:'The Twelve Sockets',safe:'The Safe',pipes:'The Two Prizes'};
 const symbolName=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const escapeHTML=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'£'+Number(n).toLocaleString('en-GB');
 let game=null,library=null,asPlayer='p1',view=null,selected='raven',focusSocket=-1,selectedTile=-1,pendingChoice=null,toastTimer=null,drainAnimation=false;
 let lastFocused=null;
-const editDefaults={"image":{"x":1.9718070652173914,"y":34.851195139194076,"w":6.724864130434783,"h":26.7962435752909},"panel":{"x":20.425611413043477,"y":15.676519479526915,"w":60.68019701086956,"h":37.15579800141391},"safe":{"x":39.92781929347825,"y":52.31665934233908,"w":26.77055027173913,"h":14.33578539083249},"pipes":{"x":68.24014945652173,"y":24.250606645394267,"w":29.966032608695656,"h":46.82673825400769}};
+const editDefaults={"image":{"x":1.9718070652173914,"y":34.851195139194076,"w":6.724864130434783,"h":26.7962435752909},"panel":{"x":20.553838315217387,"y":16.898408391768733,"w":60.712466032608695,"h":34.667118864283395},"safe":{"x":39.919327445652165,"y":51.77641056996008,"w":26.77055027173913,"h":14.33578539083249},"pipes":{"x":68.32336956521739,"y":24.18182165580755,"w":29.966032608695656,"h":46.82673825400769}};
 const cloneLayout=()=>JSON.parse(JSON.stringify(editDefaults));
 const mobileOrder=['image','panel','safe','pipes'];
 let mobileLayout=cloneLayout(),mobileEditing=false,editSelection='image';
@@ -303,8 +303,8 @@ function drawPipes(p){const scene=document.createElement('div');scene.className=
   if(stage){stage.classList.remove(cls);void stage.offsetHeight;requestAnimationFrame(()=>{stage.classList.add(cls);const w=stage.querySelector('.pipe-valve');w?.classList.add('turning')})}
  }};$('cancelPipe').onclick=()=>{pendingChoice=null;drawPipes(p)}}}
 }
-function bindEvents(){document.querySelectorAll('.room-hotspot[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));document.querySelector('[data-safe-action]').addEventListener('click',interactWithSafe);setupMobileEditor();
- $('backRoom').addEventListener('click',closeView);
+function bindEvents(){document.querySelectorAll('.room-hotspot[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));document.querySelector('[data-safe-action]').addEventListener('click',()=>setView('safe'));setupMobileEditor();
+ $('backRoom').addEventListener('click',()=>closeView());
  $('playerSelect').addEventListener('change',e=>{asPlayer=e.target.value;if(view)closeView();render()});
  $('newGameForm').addEventListener('submit',e=>{e.preventDefault();const n=Number($('teamSize').value);let input=$('playerNames').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  if(input.length&&input.length!==n){notify(`Enter exactly ${n} names, or leave the field blank.`);return}
@@ -321,4 +321,5 @@ async function start(){try{if(window.__DUNGEON_LIBRARY){library=window.__DUNGEON
 start();
 
 </script>
+<script src="./playable-v3.js?v=1"></script>
 </body></html>
