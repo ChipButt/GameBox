@@ -1,5 +1,5 @@
 /* Dungeon Escape V8 — physical, rotated clue artwork and room identity seals.
-   The 16-piece puzzle itself remains a swap puzzle, with the clue revealed only at completion.
+   The 25-piece (5 by 5) puzzle remains a swap puzzle, revealed only at completion.
    Deliberately local/test-only: the existing GameBox simulated chat is retained. */
 (()=>{
 'use strict';
@@ -64,6 +64,10 @@ function makeClue(target){
   new Promise(resolve=>{
    const img=new Image();img.onload=()=>resolve(['panelArtwork',img]);img.onerror=()=>resolve(['panelArtwork',null]);
    img.src=AS+'closeups/panel_12.webp';
+  }),
+  new Promise(resolve=>{
+   const img=new Image();img.onload=()=>resolve(['wallArtwork',img]);img.onerror=()=>resolve(['wallArtwork',null]);
+   img.src=AS+'room/warm_desktop.webp';
   })
  ]).then(items=>{
   const images=Object.fromEntries(items);
@@ -71,11 +75,22 @@ function makeClue(target){
   canvas.width=W;canvas.height=W;
   const ctx=canvas.getContext('2d');
   if(!ctx)throw Error('Clue painting is unavailable on this device');
-  // Twelve rotated stones appear above the destination room's glowing identity.
-  // An aged, low-contrast recess behind the panel fills the square picture.
-  ctx.fillStyle='#211917';ctx.fillRect(0,0,W,W);
-  const vignette=ctx.createRadialGradient(480,520,110,480,520,680);
-  vignette.addColorStop(0,'#573b2c');vignette.addColorStop(1,'#1b1413');
+  // Every one of the 25 picture tiles needs real visual information.
+  // Use the existing close-up stone wall rather than untextured brown fill
+  // around the bronze talisman panel and the glowing room identity.
+  const wall=images.wallArtwork;
+  ctx.fillStyle='#30231c';ctx.fillRect(0,0,W,W);
+  if(wall){
+   const iw=wall.naturalWidth||wall.width,ih=wall.naturalHeight||wall.height;
+   // Central dungeon stone wall, cropped square like a close-up view.
+   const side=Math.min(iw*.52,ih*.87);
+   const sx=(iw-side)/2,sy=Math.max(0,Math.min(ih-side,ih*.045));
+   ctx.drawImage(wall,sx,sy,side,side,0,0,W,W);
+   ctx.fillStyle='rgba(19,11,10,.28)';ctx.fillRect(0,0,W,W);
+  }
+  const vignette=ctx.createRadialGradient(480,500,180,480,520,760);
+  vignette.addColorStop(0,'rgba(0,0,0,0)');
+  vignette.addColorStop(1,'rgba(6,3,4,.5)');
   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,W);
   const panel=images.panelArtwork;
   const panelBox={x:45,y:42,w:870,h:652.5};
@@ -142,7 +157,9 @@ function makeClue(target){
    const cosine=Math.cos(drawnPanel.rotation),sine=Math.sin(drawnPanel.rotation);
    const x=drawnPanel.cx+localX*cosine-localY*sine;
    const y=drawnPanel.cy+localX*sine+localY*cosine;
-   const diameter=Math.min(hole.w*drawnPanel.w/100,hole.h*drawnPanel.h/100)*.85;
+   // The front stone images include transparent margins, so the drawn image
+   // must be large enough for its visible circle to reach the inner bronze lip.
+   const diameter=Math.min(hole.w*drawnPanel.w/100,hole.h*drawnPanel.h/100)*1.4;
    ctx.save();ctx.translate(x,y);ctx.rotate(drawnPanel.rotation+part.rotation*Math.PI/2);
    ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=8;
    ctx.drawImage(art,-diameter/2,-diameter/2,diameter,diameter);
@@ -231,11 +248,12 @@ function warpFrameArt(source,player){
  const tiles=document.createElement('canvas');tiles.width=tiles.height=size;
  const t=tiles.getContext('2d',{willReadFrequently:true});
  if(!t)throw Error('Wide frame preview canvas unavailable');
- const parts=player.puzzleSolved?Array.from({length:16},(_,i)=>i):player.pieces;
- for(let i=0;i<16;i++){
-  const src=parts[i],side=size/4,sz=source.width/4;
-  t.drawImage(source,(src%4)*sz,Math.floor(src/4)*sz,sz,sz,
-    (i%4)*side,Math.floor(i/4)*side,side,side);
+ const piecesPerSide=5;
+ const parts=player.puzzleSolved?Array.from({length:25},(_,i)=>i):player.pieces;
+ for(let i=0;i<25;i++){
+  const src=parts[i],side=size/piecesPerSide,sz=source.width/piecesPerSide;
+  t.drawImage(source,(src%piecesPerSide)*sz,Math.floor(src/piecesPerSide)*sz,sz,sz,
+    (i%piecesPerSide)*side,Math.floor(i/piecesPerSide)*side,side,side);
  }
  const pixels=t.getImageData(0,0,size,size).data;
  const out=document.createElement('canvas');out.width=W;out.height=H;
@@ -408,11 +426,11 @@ drawImagePuzzle=function(player){
  }else{
   const grid=document.createElement('div');grid.className='jigsaw-grid';grid.id='jigsawGrid';
   const frag=document.createDocumentFragment();
-  for(let position=0;position<16;position++){
+  for(let position=0;position<25;position++){
    const original=player.pieces[position];
    const tile=document.createElement('button');tile.type='button';tile.className='jigsaw-tile'+(selectedTile===position?' selected':'');
    tile.setAttribute('aria-label','Puzzle piece in position '+(position+1));
-   tile.style.backgroundPosition=(original%4*100/3)+'% '+(Math.floor(original/4)*100/3)+'%';
+   tile.style.backgroundPosition=(original%5*25)+'% '+(Math.floor(original/5)*25)+'%';
    tile.addEventListener('click',()=>{
     if(self()?.id!==player.id)return;
     if(selectedTile<0){selectedTile=position;drawImagePuzzle(player);return}
