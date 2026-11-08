@@ -194,3 +194,142 @@ body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4
  .floor-inspection .floor-talisman{width:10.2%}
  .floor-talismans .floor-talisman{width:10.2%}
 }
+
+/* V7 — all zoom-ins are full-screen scenes on the same front-facing wall.
+   Absolutely no visible modal chrome, panels, instructions, buttons or labels. */
+.view-shell[hidden]{display:none!important}
+.view-shell{
+ position:fixed!important;inset:0!important;padding:0!important;
+ width:100vw;height:100dvh;max-height:100dvh;overflow:hidden;
+ background:#211912!important;z-index:100!important;
+}
+.view-shell .view-backdrop{
+ position:absolute!important;inset:0!important;
+ background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_desktop.webp")!important;
+ background-position:center center!important;
+ background-size:100% 100%,190% auto!important;
+ background-repeat:no-repeat!important;
+ filter:none!important;transform:none!important;
+ opacity:1!important;pointer-events:none!important;
+}
+.view-shell .view-panel{
+ position:relative!important;z-index:1!important;
+ inset:auto!important;width:100vw!important;max-width:none!important;
+ height:100dvh!important;max-height:100dvh!important;
+ min-height:0!important;padding:0!important;margin:0!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ background:transparent!important;animation:none!important;
+}
+.view-shell .view-top,.view-shell .view-footer,.view-shell .mechanism-guide{
+ display:none!important
+}
+.view-shell .view-content{
+ position:relative!important;display:block!important;
+ flex:1 1 auto!important;width:100%!important;height:100%!important;
+ min-height:0!important;max-width:none!important;
+ overflow:hidden!important;padding:0!important;margin:0!important;
+ background:transparent!important;border:0!important;
+}
+.view-shell .closeup-image-scene,.view-shell .closeup-pipes-scene,
+.view-shell .talisman-mechanism{
+ position:relative;display:flex;align-items:center;justify-content:center;
+ width:100%;height:100%;margin:0;padding:0;max-width:none;max-height:none;
+ background:transparent;border:0;box-shadow:none;overflow:hidden;
+}
+.closeup-image-scene .art-stage{
+ position:relative!important;display:block;flex:none;
+ width:min(78vw,76dvh,860px)!important;max-height:none!important;
+ height:auto!important;aspect-ratio:1;
+ margin:auto!important;overflow:visible;
+ filter:drop-shadow(0 7px 10px rgba(0,0,0,.5));
+}
+.closeup-image-scene .frame-display{position:absolute;inset:0;width:100%;height:100%}
+.closeup-image-scene .jigsaw-tile{
+ border:1px solid rgba(50,29,19,.58);border-radius:0;
+ box-shadow:none;padding:0;touch-action:manipulation;
+}
+.closeup-image-scene .jigsaw-tile.selected{
+ outline:2px solid rgba(245,210,153,.65);outline-offset:-2px
+}
+/* The engraved wall is mounted directly on the front-facing background wall. */
+.talisman-mechanism .wall-and-floor{
+ position:relative!important;display:block!important;flex:none;
+ width:100%!important;height:100%!important;max-width:none!important;
+ max-height:none!important;overflow:hidden;
+}
+.talisman-mechanism .panel-stage{
+ position:absolute!important;left:50%!important;top:3.5%!important;
+ transform:translateX(-50%)!important;
+ width:min(80vw,calc(70dvh * 1.333333),1100px)!important;
+ max-width:none!important;max-height:none!important;
+ height:auto!important;aspect-ratio:1448 / 1086!important;
+ margin:0!important;flex:none!important;
+}
+.talisman-mechanism .panel-stage>img{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ object-fit:fill!important;pointer-events:none!important;
+}
+.talisman-mechanism .floor-inspection{
+ position:absolute!important;left:4%!important;top:76%!important;
+ width:92%!important;height:24%!important;
+ min-height:0!important;max-width:none!important;
+ padding:0!important;margin:0!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;background:none!important;
+ overflow:visible!important;pointer-events:none;
+}
+.talisman-mechanism .floor-inspection .floor-talisman{
+ pointer-events:auto;width:clamp(38px,5.8vw,85px);
+}
+.talisman-mechanism .floor-empty{display:none!important}
+/* Pipes: glass chambers themselves accept touch/click when a valve wheel is held. */
+.closeup-pipes-scene .pipes-stage{
+ position:relative!important;flex:none;
+ width:min(60vw,calc(88dvh * .75),770px)!important;
+ max-width:none!important;max-height:none!important;
+ height:auto!important;aspect-ratio:1086 / 1448!important;
+ margin:auto!important;filter:drop-shadow(0 6px 9px #0b0909a0);
+}
+.closeup-pipes-scene .pipe-touch-zone{
+ position:absolute;top:19.5%;height:55%;width:27%;z-index:15;
+ background:transparent;border:0;border-radius:0;
+ cursor:pointer;touch-action:manipulation;
+}
+.closeup-pipes-scene .pipe-touch-zone.left{left:19.5%}
+.closeup-pipes-scene .pipe-touch-zone.right{left:49%}
+.closeup-pipes-scene .pipe-touch-zone[aria-disabled="true"]{cursor:default}
+.closeup-pipes-scene .pipe-touch-zone:focus-visible{
+ outline:1px solid rgba(235,210,168,.6);outline-offset:-4px
+}
+.closeup-pipes-scene .pipe-available-wheel{
+ position:absolute;bottom:9%;left:43%;z-index:8;
+ width:17%;height:12%;object-fit:contain;
+ pointer-events:none;filter:drop-shadow(0 3px 4px #0009);
+}
+.view-shell:not([hidden]) ~ .toast{display:none!important}
+@media(max-width:630px){
+ .view-shell .view-backdrop{
+  background-image:linear-gradient(rgba(20,11,8,.15),rgba(18,10,10,.3)),url("./assets/room/warm_mobile.webp")!important;
+  background-position:center center!important;
+  background-size:100% 100%!important;
+ }
+ .closeup-image-scene .art-stage{
+  width:min(96vw,64dvh)!important;
+ }
+ .talisman-mechanism .panel-stage{
+  top:11%!important;width:min(104vw,calc(68dvh * 1.33333))!important;
+ }
+ .talisman-mechanism .floor-inspection{
+  top:75%!important;height:25%!important;
+ }
+ .talisman-mechanism .floor-inspection .floor-talisman{
+  width:clamp(30px,10.4vw,48px);
+ }
+ .closeup-pipes-scene .pipes-stage{
+  width:min(96vw,calc(86dvh * .75))!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .view-shell .art-stage{transition:none!important}
+}
