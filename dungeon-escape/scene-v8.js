@@ -27,11 +27,11 @@ function refreshRoomMarkers(){
  const safe=getHotspot('safe'),frame=getHotspot('image');
  if(safe){
   safe.querySelector('.room-identity-seals')?.remove();
-  safe.append(sealRow(player,'under-safe'));
+  if(!player.safeOpen)safe.append(sealRow(player,'on-safe-door'));
  }
  if(frame){
   frame.querySelector('.room-identity-seals')?.remove();
-  frame.append(sealRow(nextPlayer(game,player.id),'under-frame'));
+  // No marker beneath the picture: the clue identifies its destination.
  }
 }
 function makeClue(target){
@@ -49,22 +49,48 @@ function makeClue(target){
   canvas.width=W;canvas.height=W;
   if(!ctx)throw Error('Clue painting is unavailable on this device');
   ctx.fillStyle='#2c201a';ctx.fillRect(0,0,W,W);
-  const margin=43,cell=284,gap=10;
+  // A pictorial emblem identifies the destination safe. No player number is shown.
+  const identity=roomIdentity(target);
+  const halo=ctx.createRadialGradient(W/2,128,20,W/2,128,260);
+  halo.addColorStop(0,'rgba(241,199,121,.28)');
+  halo.addColorStop(.55,'rgba(212,153,76,.11)');
+  halo.addColorStop(1,'rgba(210,152,68,0)');
+  ctx.fillStyle=halo;ctx.fillRect(160,0,640,225);
+  ctx.strokeStyle='rgba(205,160,91,.6)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(W/2,128,253,94,0,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='rgba(235,199,123,.45)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(160,222);ctx.lineTo(800,222);ctx.stroke();
+  const seal=icons[identity.symbol],count=identity.count;
+  const sealSize=count===1?148:count===2?125:count===3?108:98;
+  const gapSeal=12,span=count*sealSize+(count-1)*gapSeal;
+  if(seal)for(let i=0;i<count;i++){
+   const centerX=(W-span)/2+i*(sealSize+gapSeal)+sealSize/2;
+   ctx.save();ctx.translate(centerX,127);
+   ctx.shadowColor='rgba(255,216,131,.55)';ctx.shadowBlur=24;
+   ctx.drawImage(seal,-sealSize/2,-sealSize/2,sealSize,sealSize);
+   ctx.restore();
+  }
+  // Small glints make the stone motif read as an illuminated heading.
+  for(const [x,y,r] of [[135,70,7],[217,153,5],[314,44,4],[752,58,6],[832,156,7],[660,31,4],[103,191,4],[861,36,4]]){
+   ctx.save();ctx.strokeStyle='rgba(255,222,156,.85)';ctx.lineWidth=2;
+   ctx.shadowBlur=12;ctx.shadowColor='#ffdf9a';ctx.beginPath();
+   ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.moveTo(x,y-r);ctx.lineTo(x,y+r);ctx.stroke();ctx.restore();
+  }
+  const margin=43,cell=284,gap=10,rowHeight=159,rowGap=12,top=236;
   const solutions=codeFor(library,target);
   for(let i=0;i<12;i++){
-   const col=i%3,row=Math.floor(i/3),x=margin+col*(cell+gap),y=margin+row*(214+gap);
-   const centerX=x+cell/2,centerY=y+107,part=solutions[i];
-   ctx.fillStyle='#1a1413';ctx.fillRect(x,y,cell,214);
-   ctx.strokeStyle='#98724b';ctx.lineWidth=4;ctx.strokeRect(x+2,y+2,cell-4,210);
-   ctx.strokeStyle='#473125';ctx.lineWidth=3;ctx.beginPath();ctx.arc(centerX,centerY,83,0,Math.PI*2);ctx.stroke();
+   const col=i%3,row=Math.floor(i/3),x=margin+col*(cell+gap),y=top+row*(rowHeight+rowGap);
+   const centerX=x+cell/2,centerY=y+rowHeight/2,part=solutions[i];
+   ctx.fillStyle='#1a1413';ctx.fillRect(x,y,cell,rowHeight);
+   ctx.strokeStyle='#98724b';ctx.lineWidth=3;ctx.strokeRect(x+2,y+2,cell-4,rowHeight-4);
+   ctx.strokeStyle='#473125';ctx.lineWidth=2;ctx.beginPath();ctx.arc(centerX,centerY,58,0,Math.PI*2);ctx.stroke();
    const asset=icons[part.symbol];
    if(asset){
     ctx.save();ctx.translate(centerX,centerY);ctx.rotate(part.rotation*Math.PI/2);
-    ctx.drawImage(asset,-79,-79,158,158);
+    ctx.drawImage(asset,-57,-57,114,114);
     ctx.restore();
    }else{
-    // Icon-load failures are reported rather than silently substituting direction labels.
-    ctx.fillStyle='#b8956d';ctx.beginPath();ctx.arc(centerX,centerY,74,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#b8956d';ctx.beginPath();ctx.arc(centerX,centerY,48,0,2*Math.PI);ctx.fill();
    }
   }
   ctx.strokeStyle='#a27b4b';ctx.lineWidth=9;ctx.strokeRect(8,8,W-16,W-16);
@@ -98,7 +124,7 @@ function refreshSharedClues(){
   if(element.querySelector('.shared-clue-picture'))return;
   const target=game.players[entry.clueTarget];if(!target)return;
   const display=document.createElement('div');display.className='shared-clue-picture';
-  display.append(sealRow(target,'chat-identity'));
+  // The shared picture already contains the emblem.
   const img=document.createElement('img');img.alt='Rotated talisman solution artwork for '+target.name;
   display.append(img);element.append(display);
   const handle=makeClue(target);
@@ -111,7 +137,7 @@ shareClue=function(g,id,lib){
  const dest=nextPlayer(g,id);
  oldShare(g,id,lib);
  const message=g.chat[g.chat.length-1];
- message.body='Talisman picture shared for '+dest.name+'. Match the fixed symbols beneath their safe.';
+ message.body='Restored talisman picture shared.';
  message.clueTarget=dest.index;
  return message.body;
 };
@@ -169,7 +195,7 @@ drawImagePuzzle=function(player){
   grid.append(frag);inner.append(grid);
  }
  frame.append(inner);
- frame.append(sealRow(target,'on-frame'));
+ // The destination emblem is painted inside the completed clue itself.
  art.append(frame);scene.append(art);
  $('viewContent').replaceChildren(scene);
  paintClueWhenReady(player,target);
