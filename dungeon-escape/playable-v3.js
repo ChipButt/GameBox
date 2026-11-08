@@ -49,7 +49,7 @@ function renderSolutions(){
  const note=node('currentStepNote');
  if(note){
   note.textContent=p.reward?'Prize claimed: '+(p.reward==='gold'?'gold for the pot.':'personal shield.'):
-   p.wheelCollected?'Choose one of the two prizes. The wheel breaks after use.':
+   p.wheelCollected?'Attach the wheel to one valve, confirm, then tap the revealed prize to claim it.':
    p.safeOpen?'Collect the single valve wheel from the safe.':
    p.talismansSolved?'Open the unlocked safe and take its wheel.':
    p.puzzleSolved?'Share the image clue, then arrange the talismans using the previous player’s clue.':
