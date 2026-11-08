@@ -1,5 +1,8 @@
 
-/* Dungeon Escape V3 — GameBox playable preview. */
+/* Dungeon Escape V8.17 — 5 × 5 image puzzle and enlarged live clue artwork. */
+.jigsaw-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(0,1fr))!important}
+.jigsaw-tile{background-size:500% 500%!important}
+
 .gamebox-return{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:#efd4a0;border:1px solid #8b6947;border-radius:5px;padding:8px 12px;font:12px system-ui,sans-serif;white-space:nowrap}
 .gamebox-return:hover,.gamebox-return:focus-visible{background:#4a332a;color:#fff}
 .setup-buttons{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
