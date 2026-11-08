@@ -125,10 +125,12 @@ setView=function(kind){
  requestAnimationFrame(()=>{
   if(epoch!==zoomEpoch||view!==kind)return;
   const content=node('viewContent');
-  const stage=content?.querySelector(kind==='talismans'?'.wall-and-floor':'.art-stage');
-  const g=zoomGeometry(kind,stage);
+  const artwork=content?.querySelector(kind==='talismans'?'.wall-and-floor':'.art-stage');
+  const stage=node('viewShell')?.querySelector('.view-panel');
+  const g=zoomGeometry(kind,artwork);
   if(!stage?.animate||!g)return;
   try{
+   // Animate the panel carrying BOTH the wall texture and mechanism, as one rig.
    const motion=stage.animate([
     {opacity:.72,filter:'blur(1px)',transform:'translate3d('+g.dx+'px,'+g.dy+'px,0) scale(.85)'},
     {opacity:1,filter:'none',transform:'translate3d(0,0,0) scale(1)'}
