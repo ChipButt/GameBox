@@ -216,13 +216,14 @@ ed.innerHTML=[
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
-'<label>Position<select id="pArea"><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Framed image corners</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
+'<label>Position<select id="pArea"><option value="sockets">Wall talismans</option><option value="stones">Loose floor stones</option><option value="safe">Safe room symbol</option><option value="frame">Whole frame corners</option><option value="picture">Picture inset (advanced)</option><option value="water">Water overlays</option><option value="prizes">Gold and shield</option></select></label>',
 '<label>Asset<select id="pAsset"></select></label></div>',
 '<div class="placement-fields"><label>X %<input type="number" step=".1" id="pX"></label>',
 '<label>Y %<input type="number" step=".1" id="pY"></label>',
 '<label>Width %<input type="number" step=".1" id="pW"></label>',
 '<label>Height %<input type="number" step=".1" id="pH"></label>',
 '<label>Angle °<input type="number" step="1" id="pR"></label></div>',
+'<div class="placement-bob" id="pBobFields" hidden><label>Maximum upward bob (% of pipe)<input id="pBob" type="number" min="0" max="8" step=".1"></label><button type="button" id="pBobPreview">Preview bob</button></div>',
 '<div class="placement-sizing" id="pSizing"><button type="button" id="pSmaller">− Smaller</button><button type="button" id="pLarger">+ Larger</button><button type="button" id="pMatchSize">Match all 12 sizes</button></div>',
 '<div class="placement-actions"><button type="button" id="pCopy">Copy JSON</button>',
 '<button type="button" id="pImport">Apply pasted JSON</button>',
@@ -241,6 +242,7 @@ const ids=()=>{
  if(state.area==='prizes')return ['gold','shield'];
  if(state.area==='safe')return ['safeMark'];
  if(state.area==='frame')return Array.from({length:4},(_,i)=>'corner-'+i);
+ if(state.area==='picture')return Array.from({length:4},(_,i)=>'inner-'+i);
  const prefix=state.area==='stones'?'stone-':'socket-';
  return Array.from({length:12},(_,i)=>prefix+i);
 };
@@ -248,7 +250,8 @@ function nameFor(id){
  if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';
  if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';
  if(id==='safeMark')return 'Room talisman on safe';
- if(id.startsWith('corner-'))return ['Top left','Top right','Bottom right','Bottom left'][Number(id.slice(7))]+' corner';
+ if(id.startsWith('corner-'))return ['Top left','Top right','Bottom right','Bottom left'][Number(id.slice(7))]+' frame corner';
+ if(id.startsWith('inner-'))return ['Top left','Top right','Bottom right','Bottom left'][Number(id.slice(6))]+' image inset';
  return (id.startsWith('stone')?'Floor talisman ':'Wall talisman ')+(Number(id.split('-')[1])+1);
 }
 function syncControls(){
@@ -258,16 +261,22 @@ function syncControls(){
  for(const id of all){const o=document.createElement('option');o.value=id;o.textContent=nameFor(id);select.append(o)}
  select.value=state.asset;syncFields();
  $e('pSizing').hidden=!(state.area==='stones'||state.area==='sockets');
- for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame';
+ $e('pBobFields').hidden=state.area!=='prizes';
+ for(const id of ['pW','pH','pR'])$e(id).disabled=state.area==='frame'||state.area==='picture';
+ $e('pBobPreview').textContent=document.body.classList.contains('preview-bobbing')?'Stop bob preview':'Preview bob';
 }
 function syncFields(){
  const o=item(state.scene,state.asset);if(!o)return;
  for(const [name,id] of [['x','pX'],['y','pY'],['w','pW'],['h','pH'],['r','pR']]){
   if(document.activeElement!==$e(id))$e(id).value=o[name]??'';
  }
+ if(state.area==='prizes'){
+  const key=state.asset==='gold'?'bobGold':'bobShield';
+  if(document.activeElement!==$e('pBob'))$e('pBob').value=profile(state.scene)[key];
+ }
 }
 function targetParent(id){
- if(id.startsWith('corner-'))return getHotspot('image');
+ if(id.startsWith('corner-')||id.startsWith('inner-'))return getHotspot('image');
  if(state.scene==='wide'){
   if(id.startsWith('stone-'))return $('roomStage');
   if(id.startsWith('socket-'))return getHotspot('panel');
@@ -290,7 +299,7 @@ function boundsFor(id){
     height:Math.max(...symbols.map(r=>r.bottom))-top,parent:b};
   }
  }
- if(id.startsWith('corner-'))return {left:b.left+o.x*b.width/100-11,top:b.top+o.y*b.height/100-11,
+ if(id.startsWith('corner-')||id.startsWith('inner-'))return {left:b.left+o.x*b.width/100-11,top:b.top+o.y*b.height/100-11,
   width:22,height:22,parent:b};
  return {left:b.left+(o.x-o.w/2)*b.width/100,top:b.top+(o.y-o.h/2)*b.height/100,
   width:o.w*b.width/100,height:o.h*b.height/100,parent:b};
@@ -369,7 +378,7 @@ function refreshHandles(){
  if(!state.open)return;
  applyWide();applyZoom();editorGhosts();syncFields();handles.replaceChildren();
  const direct=state.area==='stones'||state.area==='sockets'||state.area==='safe';
- const cornersMode=state.area==='frame';
+ const cornersMode=state.area==='frame'||state.area==='picture';
  for(const id of ids()){
   const rect=boundsFor(id);if(!rect)continue;
   const h=document.createElement('div');
@@ -465,13 +474,14 @@ function toggle(open){
   syncControls();$e('pJSON').value=JSON.stringify(layout,null,2);
  }else{
   if(view)closeView();document.querySelectorAll('.placement-ghost,.placement-safe-ghost').forEach(n=>n.remove());
+  document.body.classList.remove('preview-bobbing');
   persist();
  }
  preview();
 }
 function selectContext(){
  state.device=$e('pDevice').value;state.scene=$e('pScene').value;state.area=$e('pArea').value;
- if(state.scene==='zoom'&&(state.area==='safe'||state.area==='frame')){
+ if(state.scene==='zoom'&&(state.area==='safe'||state.area==='frame'||state.area==='picture')){
   state.scene='wide';$e('pScene').value='wide';
  }
  state.asset=ids()[0];syncControls();preview();
@@ -505,6 +515,18 @@ function resizeSelected(factor){
 }
 $e('pSmaller').addEventListener('click',()=>resizeSelected(.95));
 $e('pLarger').addEventListener('click',()=>resizeSelected(1.05));
+$e('pBob').addEventListener('change',event=>{
+ if(state.area!=='prizes')return;
+ const value=Number(event.target.value);
+ if(!Number.isFinite(value)||value<0||value>8){note('Bob height must be 0–8%');syncFields();return}
+ profile(state.scene)[state.asset==='gold'?'bobGold':'bobShield']=value;
+ persist();applyWide();applyZoom();
+ note('Saved '+nameFor(state.asset)+' maximum rise: '+value+'% (clamped to pipe rim).');
+});
+$e('pBobPreview').addEventListener('click',()=>{
+ document.body.classList.toggle('preview-bobbing');
+ syncControls();
+});
 $e('pMatchSize').addEventListener('click',()=>{
  if(state.area!=='sockets'&&state.area!=='stones')return;
  const chosen=item(state.scene,state.asset);if(!chosen)return;
