@@ -60,9 +60,9 @@ body:not(.layout-editing) .room-hotspot.h-image::before{content:'';position:abso
    Reuse the original stone artwork as assets, never a fake checkerboard. */
 .floor-talismans{position:absolute;inset:0;z-index:12;pointer-events:none;isolation:isolate}
 .floor-talismans[hidden],body.layout-editing .floor-talismans{display:none!important}
-.floor-talisman{position:absolute;display:block;width:12.2%;height:auto;aspect-ratio:1;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:50%;background:transparent;pointer-events:auto;touch-action:manipulation;box-shadow:none;cursor:pointer;overflow:visible;transform:translate(-50%,-50%) perspective(450px) rotateX(24deg) rotate(var(--stone-rot,0deg)) scale(var(--stone-size,1));transition:filter .12s ease,transform .15s ease}
+.floor-talisman{position:absolute;display:block;width:12.2%;height:auto;aspect-ratio:1;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:50%;background:transparent;pointer-events:auto;touch-action:manipulation;box-shadow:none;cursor:pointer;overflow:visible;transform:translate(-50%,-50%) rotate(var(--stone-rot,0deg)) scale(var(--stone-size,1));transition:filter .12s ease,transform .15s ease}
 .floor-talisman img{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 5px 5px #0a0707b5);pointer-events:none;-webkit-user-drag:none}
-.floor-talisman:hover,.floor-talisman.selected,.floor-talisman:focus-visible{filter:drop-shadow(0 0 10px #ffe2a5);outline:2px solid #eecb85;outline-offset:0;transform:translate(-50%,-50%) perspective(450px) rotateX(24deg) rotate(var(--stone-rot,0deg)) scale(calc(var(--stone-size,1) * 1.08))}
+.floor-talisman:hover,.floor-talisman.selected,.floor-talisman:focus-visible{filter:drop-shadow(0 0 10px #ffe2a5);outline:2px solid #eecb85;outline-offset:0;transform:translate(-50%,-50%) rotate(var(--stone-rot,0deg)) scale(calc(var(--stone-size,1) * 1.08))}
 .wall-and-floor{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:0}
 .wall-and-floor .panel-stage{flex:0 1 auto;max-height:calc(95dvh - 330px)}
 .floor-inspection{position:relative;width:min(100%,720px);height:clamp(140px,17dvh,205px);border-radius:6px;overflow:hidden;background:linear-gradient(#24161188,#110e0b49),url("./assets/room/warm_mobile.webp") center 92%/cover no-repeat;box-shadow:inset 0 16px 20px #07050599,inset 0 -10px 30px #150e0daa;border:1px solid #74523a}
@@ -115,4 +115,20 @@ body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation-delay:-3.4
   body:not(.layout-editing) .room-hotspot.h-image>img,
   body:not(.layout-editing) .room-hotspot.h-panel>img,
   body:not(.layout-editing) .room-hotspot.h-pipes>.pipe-shell{animation:none!important}
+}
+
+/* V4: the floor sprites are already rendered in perspective; never tilt them twice. */
+.floor-talismans .floor-talisman,
+.floor-inspection .floor-talisman{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.floor-talisman img{filter:drop-shadow(0 4px 4px #0a07079a)}
+.floor-talisman:focus-visible{outline:2px solid #ffdfa0;outline-offset:2px}
+.panel-socket{touch-action:manipulation;z-index:2}
+.panel-socket:focus-visible{outline:2px solid #ffdf9f;outline-offset:3px}
+.wall-and-floor .art-stage>img{pointer-events:none}
+@media(min-width:631px){
+ .floor-talismans .floor-talisman{width:6.4%}
+}
+@media(max-width:630px){
+ .floor-talismans .floor-talisman{width:11.5%}
+ .floor-inspection .floor-talisman{width:11.5%}
 }
