@@ -298,7 +298,7 @@ $e('pDownload').addEventListener('click',()=>{
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),600);
 });
 $('viewContent').addEventListener('click',e=>{if(state.open){e.preventDefault();e.stopImmediatePropagation()}},true);
-window.addEventListener('resize',()=>{if(state.open)requestAnimationFrame(refreshHandles);else applyWide()});
+window.addEventListener('resize',()=>{if(state.open)requestAnimationFrame(refreshHandles);else{applyWide();applyZoom()}});
 window.addEventListener('scroll',()=>{if(state.open)requestAnimationFrame(refreshHandles)},{passive:true});
 if(game){applyWide();if(view)applyZoom()}
 })();
