@@ -442,7 +442,7 @@ body.layout-preview-desktop .room-stage{
 }
 body.layout-preview-mobile .view-shell{justify-content:flex-start;padding-left:clamp(6px,8vw,110px)!important}
 body.layout-preview-mobile .view-shell .view-panel{
- width:min(460px,44vw)!important;height:85dvh!important;
+ width:min(460px,44vw,calc(85dvh * 9 / 16))!important;height:85dvh!important;
  max-height:85dvh!important;
  background-image:linear-gradient(rgba(22,13,11,.12),rgba(18,12,12,.26)),url("./assets/room/warm_mobile.webp")!important;
  background-size:100% 100%!important;
