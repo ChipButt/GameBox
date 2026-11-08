@@ -34,11 +34,13 @@ function renderSolutions(){
   '<span class="orientation">'+DIRECTIONS[item.rotation]+' '+arrows[item.rotation]+'</span></div>').join('');
  target.innerHTML='<p class="solution-legend"><strong>Playing as '+escapeHTML(p.name)+'</strong><br>'+
   'The restored picture held by <strong>'+escapeHTML(previous.name)+'</strong> shows the talisman order below. Your picture reveals the answer for <strong>'+escapeHTML(next.name)+'</strong>.</p>'+
+  '<details class="solution-preview"><summary>Show completed picture (spoiler)</summary><img src="'+imagePathFor(p)+'" alt="Completed picture clue for '+escapeHTML(next.name)+'"></details>'+
   '<div class="solution-mini"><span>Image: '+(p.puzzleSolved?'Solved':'3×3 · tiles 1–9')+'</span><span>Wall: '+(p.talismansSolved?'Unlocked':'12 sockets')+'</span></div>'+
   '<p class="solution-legend"><strong>12-socket answer · read left to right, top to bottom</strong></p>'+
   '<div class="solution-grid" aria-label="Twelve talisman positions and directions">'+slots+'</div>'+
   '<p class="subtle">Directions: N up, E right, S down, W left. This answer is deliberately visible in the local testing build, not to players in the final Traitors mission.</p>';
  const fill=node('fillSolution');
+ const imageButton=node('solveImageShortcut'); if(imageButton){imageButton.disabled=!!p.puzzleSolved;imageButton.textContent=p.puzzleSolved?'Image restored':'Restore image (test shortcut)';}
  fill.disabled=!!p.talismansSolved;
  fill.textContent=p.talismansSolved?'Talisman wall unlocked':'Fill the 12 sockets (test shortcut)';
  const note=node('currentStepNote');
@@ -78,6 +80,12 @@ function nextTurn(){
  window.scrollTo?.({top:0,behavior:'smooth'});
  notify('Now playing as '+activePlayer().name);
 }
+function solveTestImage(){
+ if(!game)return;const p=activePlayer();
+ if(p.puzzleSolved){notify('Image already restored.');return}
+ const result=perform(()=>completePuzzle(game,p.id));
+ if(result){setView('image');notify('Image restored. Share its clue with the next player.');}
+}
 function fillTestSolution(){
  if(!game||!library)return;
  const p=activePlayer();
@@ -108,8 +116,8 @@ setView=function(kind){
  if(isClosing)return;
  const opening=!view;
  oldSetView(kind);
+ openSource=kind;
  if(opening){
-  openSource=kind;
   const g=geometry(kind);
   if(g&&!prefersReduced()&&g.panel.animate){
    g.panel.animate(zoomFrames(g,false),{duration:490,easing:'cubic-bezier(.18,.85,.25,1)'});
@@ -159,6 +167,7 @@ drawPipes=function(p){
 function init(){
  setupGameBoxRoster();
  node('fillSolution')?.addEventListener('click',fillTestSolution);
+ node('solveImageShortcut')?.addEventListener('click',solveTestImage);
  node('nextPlayerBtn')?.addEventListener('click',nextTurn);
  if(game)render();
 }
