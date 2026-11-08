@@ -13,7 +13,8 @@ function currentSolution(target){
 }
 function clueSignature(target){
  return JSON.stringify({game:game?.id,player:target.id,code:currentSolution(target),
-  sockets:window.DungeonPlacement?.get()?.zoom?.desktop?.sockets||null});
+  sockets:window.DungeonPlacement?.get()?.zoom?.desktop?.sockets||null,
+  panelArt:window.DungeonPlacement?.get()?.zoom?.desktop?.panelArt||null});
 }
 function roomIdentity(player){
  const i=player.index;
@@ -50,6 +51,7 @@ function makeClue(target){
  const signature=clueSignature(target);
  const solution=currentSolution(target);
  const sockets=window.DungeonPlacement?.get()?.zoom?.desktop?.sockets;
+ const panelArt=window.DungeonPlacement?.get()?.zoom?.desktop?.panelArt;
  const existing=clueCache.get(signature);
  if(existing)return existing;
  const result={url:null,promise:null,signature};
@@ -77,7 +79,19 @@ function makeClue(target){
   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,W);
   const panel=images.panelArtwork;
   const panelBox={x:45,y:42,w:870,h:652.5};
-  if(panel)ctx.drawImage(panel,panelBox.x,panelBox.y,panelBox.w,panelBox.h);
+  if(panel){
+   // Recreate the actual editable close-up wall background (position, size,
+   // aspect ratio and rotation) rather than reusing a pre-made screenshot.
+   const o=panelArt||{x:50,y:50,w:100,h:100,r:0};
+   const boxW=panelBox.w*o.w/100,boxH=panelBox.h*o.h/100;
+   const ratio=(panel.naturalWidth||panel.width)/(panel.naturalHeight||panel.height);
+   const drawW=Math.min(boxW,boxH*ratio),drawH=Math.min(boxH,boxW/ratio);
+   ctx.save();
+   ctx.translate(panelBox.x+panelBox.w*o.x/100,panelBox.y+panelBox.h*o.y/100);
+   ctx.rotate((o.r||0)*Math.PI/180);
+   ctx.drawImage(panel,-drawW/2,-drawH/2,drawW,drawH);
+   ctx.restore();
+  }
   const identity=roomIdentity(target),seal=images[identity.symbol],count=identity.count;
   const size=count===1?194:count===2?153:count===3?128:111;
   const gap=10,span=count*size+(count-1)*gap;
