@@ -20,7 +20,21 @@ function defaultsFor(scene,device){
 }
 // Approved positions exported after desktop, mobile close-up and mobile wide-view alignment.
 const APPROVED_LAYOUT={"schema":"brm-dungeon-asset-positions","version":8,"units":"percent","coordinates":"centres","wide":{"desktop":{"stones":[{"x":32.647042410714285,"y":78.06001984126983,"w":6.4,"h":10.9,"r":0},{"x":46.765625,"y":79.98164682539682,"w":6.4,"h":10.9,"r":-17},{"x":60.305245535714285,"y":82.9186507936508,"w":6.4,"h":10.9,"r":8},{"x":68.39927455357143,"y":80.17857142857143,"w":6.4,"h":10.9,"r":27},{"x":25.945591517857146,"y":85.42857142857143,"w":6.4,"h":10.9,"r":-10},{"x":39.16880580357143,"y":81.07242063492063,"w":6.4,"h":10.9,"r":18},{"x":53,"y":87,"w":6.4,"h":10.9,"r":-15},{"x":78.86690848214286,"y":88.52132936507937,"w":6.4,"h":10.9,"r":11},{"x":34.304129464285715,"y":92.92113095238095,"w":6.4,"h":10.9,"r":23},{"x":44,"y":93,"w":6.4,"h":10.9,"r":-12},{"x":65,"y":94,"w":6.4,"h":10.9,"r":6},{"x":85.97712053571429,"y":92.98561507936508,"w":6.4,"h":10.9,"r":-21}],"sockets":[{"x":34.350807368064736,"y":24.179966659156257,"w":10,"h":10,"r":0},{"x":50.14137796592411,"y":24.22574996781254,"w":8.177097806989265,"h":9.907128516479979,"r":0},{"x":65.87841020825945,"y":24.012960683017894,"w":7.637106188948709,"h":9.430402061606797,"r":0},{"x":33.9,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":64,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":33.9,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":64,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":33.9,"y":78.5,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":78.5,"w":9.4,"h":9.4,"r":0},{"x":64,"y":78.5,"w":9.4,"h":9.4,"r":0}],"gold":{"x":35.90293148601842,"y":26.654459106266337,"w":22.158570583762778,"h":8.782526933129342,"r":0},"shield":{"x":68.81237644673482,"y":24.71176770574361,"w":14.92278448931317,"h":6.1681009753298905,"r":0}},"mobile":{"stones":[{"x":26.965204183782667,"y":75.39666420721525,"w":11.5,"h":7.4,"r":0},{"x":44.821533363250374,"y":74.56267717758534,"w":11.5,"h":7.4,"r":-17},{"x":62.062342504056055,"y":74.89668362393694,"w":11.5,"h":7.4,"r":8},{"x":76.10252338706894,"y":76.65539202361073,"w":11.5,"h":7.4,"r":27},{"x":24.816286375090613,"y":83.9738262591744,"w":11.5,"h":7.4,"r":-10},{"x":44.497877040974835,"y":81.76659158867618,"w":11.5,"h":7.4,"r":18},{"x":60,"y":85,"w":11.5,"h":7.4,"r":-15},{"x":78.0045911146398,"y":84.47959302551357,"w":11.5,"h":7.4,"r":11},{"x":21,"y":93,"w":11.5,"h":7.4,"r":23},{"x":40.28223273154061,"y":92.18542969205079,"w":11.5,"h":7.4,"r":-12},{"x":67,"y":93,"w":11.5,"h":7.4,"r":6},{"x":85,"y":92,"w":11.5,"h":7.4,"r":-21}],"sockets":[{"x":33.9,"y":24.2,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":24.2,"w":9.4,"h":9.4,"r":0},{"x":64,"y":24.2,"w":9.4,"h":9.4,"r":0},{"x":33.9,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":64,"y":42.2,"w":9.4,"h":9.4,"r":0},{"x":33.9,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":64,"y":60.5,"w":9.4,"h":9.4,"r":0},{"x":33.9,"y":78.5,"w":9.4,"h":9.4,"r":0},{"x":48.8,"y":78.5,"w":9.4,"h":9.4,"r":0},{"x":64,"y":78.5,"w":9.4,"h":9.4,"r":0}],"gold":{"x":35.49271002082851,"y":27.14844529431327,"w":19.420388798889146,"h":8.155636847356169,"r":0},"shield":{"x":68.62862763249247,"y":23.299093781177252,"w":15.274936357324695,"h":6.012720319255072,"r":0}}},"zoom":{"desktop":{"stones":[{"x":20,"y":25.4,"w":9.7,"h":24,"r":0},{"x":40,"y":22.7,"w":9.7,"h":24,"r":-17},{"x":61,"y":25.4,"w":9.7,"h":24,"r":8},{"x":81,"y":28.1,"w":9.7,"h":24,"r":27},{"x":12,"y":47,"w":9.7,"h":24,"r":-10},{"x":36,"y":44.3,"w":9.7,"h":24,"r":18},{"x":60,"y":47,"w":9.7,"h":24,"r":-15},{"x":85,"y":44.3,"w":9.7,"h":24,"r":11},{"x":21,"y":68.6,"w":9.7,"h":24,"r":23},{"x":44,"y":65.9,"w":9.7,"h":24,"r":-12},{"x":67,"y":68.6,"w":9.7,"h":24,"r":6},{"x":85,"y":65.9,"w":9.7,"h":24,"r":-21}],"sockets":[{"x":34.25430938067944,"y":22.571895242089564,"w":10.55,"h":10.55,"r":0},{"x":50.009719698028796,"y":22.580632834708044,"w":10.55,"h":10.55,"r":0},{"x":65.76149867188592,"y":22.99537723099865,"w":10,"h":10.55,"r":0},{"x":34.21935901020551,"y":40.59752551377045,"w":10.55,"h":10.55,"r":0},{"x":49.971711170138406,"y":40.56548767416935,"w":10.55,"h":10.55,"r":0},{"x":65.74839228295819,"y":40.81188778601053,"w":10.55,"h":10.55,"r":0},{"x":34.23246539913323,"y":58.84684747658325,"w":10.55,"h":10.55,"r":0},{"x":49.98394379980427,"y":58.71345356260776,"w":10.55,"h":10.55,"r":0},{"x":65.78509017195583,"y":58.92898084719698,"w":10.55,"h":10.55,"r":0},{"x":34.194456871242835,"y":77.1596532923249,"w":10.55,"h":10.55,"r":0},{"x":50.04073815182441,"y":77.13518803299316,"w":10.55,"h":10.55,"r":0},{"x":65.62956102334685,"y":77.19110862575144,"w":10.55,"h":10.55,"r":0}],"gold":{"x":31.70514024465587,"y":26.525004546781457,"w":21.50327443469665,"h":16.851254795840823,"r":0},"shield":{"x":62.531807966761406,"y":26.354224423340682,"w":15.8,"h":11.75,"r":0}},"mobile":{"stones":[{"x":23.267761791753188,"y":13.732821614983111,"w":11.5,"h":20,"r":0},{"x":41.867027588252746,"y":2.1270033773411114,"w":11.5,"h":20,"r":-17},{"x":59.99510530999704,"y":4.272428615290142,"w":11.5,"h":20,"r":8},{"x":76.71992732126965,"y":15.321753147067856,"w":11.5,"h":20,"r":27},{"x":18.322307920498368,"y":37.87926005526558,"w":11.5,"h":20,"r":-10},{"x":38.498331355680804,"y":28.64333742708013,"w":11.5,"h":20,"r":18},{"x":60.08806733906852,"y":29.165336198956094,"w":11.5,"h":20,"r":-15},{"x":84.67554138237912,"y":37.65085968682837,"w":11.5,"h":20,"r":11},{"x":24.446677543755563,"y":60.33510899600859,"w":11.5,"h":20,"r":23},{"x":39.97764016612281,"y":57.230211851396994,"w":11.5,"h":20,"r":-12},{"x":58.007861168792644,"y":55.794887933681295,"w":11.5,"h":20,"r":6},{"x":71.54516463957283,"y":52.75331593490943,"w":11.5,"h":20,"r":-21}],"sockets":[{"x":34.308557782903925,"y":22.35131692947496,"w":10.55,"h":10.55,"r":0},{"x":49.95419604275642,"y":22.473696066539596,"w":10.55,"h":10.55,"r":0},{"x":65.7625653854901,"y":22.562502166002425,"w":10.55,"h":10.55,"r":0},{"x":34.37597387829364,"y":40.432542020447066,"w":10.55,"h":10.55,"r":0},{"x":49.97450209558465,"y":40.46828106047479,"w":10.55,"h":10.55,"r":0},{"x":65.74875726956691,"y":40.65239126667822,"w":10.55,"h":10.55,"r":0},{"x":34.28906397218883,"y":58.81376711141917,"w":10.55,"h":10.55,"r":0},{"x":50.041918190974364,"y":58.57117483971582,"w":10.55,"h":10.55,"r":0},{"x":65.97780954546931,"y":58.836510136891356,"w":10.55,"h":10.55,"r":0},{"x":34.034832190779426,"y":76.94264425576156,"w":10.55,"h":10.55,"r":0},{"x":50.02729783293804,"y":77.27620862935366,"w":10.55,"h":10.55,"r":0},{"x":65.72845121673869,"y":77.11700745104835,"w":10.55,"h":10.55,"r":0}],"gold":{"x":31.82150243417078,"y":25.018458205071823,"w":17,"h":12.75,"r":0},"shield":{"x":63.074169361429945,"y":25.679589304989204,"w":12.234917024981344,"h":9.038851576450522,"r":0}}}};
-const defaults=()=>JSON.parse(JSON.stringify(APPROVED_LAYOUT));
+// Add water boxes without changing any previously approved stone/prize coordinates.
+const defaults=()=>{
+ const result=JSON.parse(JSON.stringify(APPROVED_LAYOUT));
+ for(const scene of ['wide','zoom'])for(const dev of ['desktop','mobile']){
+  const p=result[scene][dev];
+  if(scene==='wide'){
+   p.waterLeft=box(35.4,46,24,54);
+   p.waterRight=box(66.2,45,26,56);
+  }else{
+   p.waterLeft=box(30.65,44.25,20.7,49.5);
+   p.waterRight=box(60.65,44.25,20.7,49.5);
+  }
+ }
+ return result;
+};
 function validateBox(v,key){
  if(!v||typeof v!=='object')throw Error(key+' is missing');
  const out={};
@@ -41,6 +55,9 @@ function validate(data){
   dst.stones=src.stones.map((v,i)=>validateBox(v,p+'.stones['+i+']'));
   dst.sockets=src.sockets.map((v,i)=>validateBox(v,p+'.sockets['+i+']'));
   dst.gold=validateBox(src.gold,p+'.gold');dst.shield=validateBox(src.shield,p+'.shield');
+   // V8.2 JSON without water remains fully importable.
+   if(src.waterLeft!==undefined)dst.waterLeft=validateBox(src.waterLeft,p+'.waterLeft');
+   if(src.waterRight!==undefined)dst.waterRight=validateBox(src.waterRight,p+'.waterRight');
  }
  return result;
 }
@@ -79,6 +96,17 @@ function prizeStyle(n,id,scene){
  n.dataset.layoutAsset=id;n.style.left=(o.x-o.w/2)+'%';n.style.top=(o.y-o.h/2)+'%';
  n.style.width=o.w+'%';n.style.height=o.h+'%';n.style.rotate=o.r+'deg';
 }
+function waterStyle(n,id,scene){
+ const o=item(scene,id);if(!n||!o)return;
+ n.dataset.layoutAsset=id;
+ n.style.left=(o.x-o.w/2)+'%';n.style.top=(o.y-o.h/2)+'%';
+ n.style.width=o.w+'%';n.style.height=o.h+'%';
+ // Retain the existing drain state even when the editor updates coordinates.
+ const drained=scene==='wide'?
+  n.closest('.h-pipes')?.classList.contains(id==='waterLeft'?'drained-gold':'drained-shield'):
+  n.closest('.pipes-stage')?.classList.contains(id==='waterLeft'?'drained-left':'drained-right');
+ if(drained){n.style.height='0%';n.style.top=(scene==='wide'?72:68)+'%'}
+}
 function applyWide(){
  document.querySelectorAll('#floorTalismans .floor-talisman').forEach(n=>{
   if(n.dataset.layoutAsset)stoneStyle(n,n.dataset.layoutAsset,'wide');
@@ -86,6 +114,8 @@ function applyWide(){
  document.querySelectorAll('.room-wide-stone').forEach((n,i)=>socketStyle(n,'socket-'+(Number(n.dataset.socketIndex)||i),'wide'));
  const p=getHotspot('pipes');
  for(const id of ['gold','shield'])prizeStyle(p?.querySelector('.wide-prize.'+id),id,'wide');
+ waterStyle(p?.querySelector('.wide-water.ww-left'),'waterLeft','wide');
+ waterStyle(p?.querySelector('.wide-water.ww-right'),'waterRight','wide');
 }
 function applyZoom(){
  if(view==='talismans'){
@@ -96,6 +126,8 @@ function applyZoom(){
  }else if(view==='pipes'){
   for(const id of ['gold','shield'])
    prizeStyle(document.querySelector('.pipes-stage .pipe-prize.'+(id==='gold'?'left':'right')),id,'zoom');
+  waterStyle(document.querySelector('.pipes-stage .pipe-water.left'),'waterLeft','zoom');
+  waterStyle(document.querySelector('.pipes-stage .pipe-water.right'),'waterRight','zoom');
  }
 }
 window.DungeonPlacement={coords:(scene,i)=>{const o=profile(scene).sockets[i];return {x:o.x,y:o.y}},
@@ -116,11 +148,11 @@ const prevClose=closeView;
 closeView=function(){prevClose();if(state.open&&state.scene==='zoom'){state.scene='wide';syncControls();requestAnimationFrame(refreshHandles)}};
 const ed=document.createElement('section');ed.id='placementEditor';ed.className='placement-editor';ed.hidden=true;ed.setAttribute('aria-label','Dungeon asset positioning editor');
 ed.innerHTML=[
-'<div class="placement-head"><strong>POSITIONING EDITOR · V8.2 APPROVED</strong><button type="button" id="placementDone">Done</button></div>',
+'<div class="placement-head"><strong>POSITIONING EDITOR · V8.4 APPROVED</strong><button type="button" id="placementDone">Done</button></div>',
 '<div class="placement-selects">',
 '<label>Screen<select id="pDevice"><option value="desktop">Desktop</option><option value="mobile">Mobile portrait</option></select></label>',
 '<label>Perspective<select id="pScene"><option value="wide">Wide room</option><option value="zoom">Close-up</option></select></label>',
-'<label>Mechanism<select id="pArea"><option value="talismans">Stones and holes</option><option value="pipes">Gold and shield</option></select></label>',
+'<label>Mechanism<select id="pArea"><option value="talismans">Stones and holes</option><option value="pipes">Prizes and water</option></select></label>',
 '<label>Asset<select id="pAsset"></select></label></div>',
 '<div class="placement-fields"><label>X %<input type="number" step=".1" id="pX"></label>',
 '<label>Y %<input type="number" step=".1" id="pY"></label>',
@@ -139,9 +171,9 @@ const $e=id=>document.getElementById(id);
 const handles=document.createElement('div');handles.id='placementHandles';handles.className='placement-handles';handles.hidden=true;document.body.append(handles);
 function note(msg){$e('pStatus').textContent=msg}
 function persist(){try{localStorage.setItem(STORE,JSON.stringify(layout))}catch{note('Storage unavailable. Copy your JSON to keep it.')}}
-const ids=()=>state.area==='pipes'?['gold','shield']:
+const ids=()=>state.area==='pipes'?['gold','shield','waterLeft','waterRight']:
  Array.from({length:12},(_,i)=>'stone-'+i).concat(Array.from({length:12},(_,i)=>'socket-'+i));
-function nameFor(id){if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';return (id.startsWith('stone')?'Floor talisman ':'Wall socket ')+(Number(id.split('-')[1])+1)}
+function nameFor(id){if(id==='gold')return 'Gold bag';if(id==='shield')return 'Shield';if(id==='waterLeft')return 'Gold tube water';if(id==='waterRight')return 'Shield tube water';return (id.startsWith('stone')?'Floor talisman ':'Wall socket ')+(Number(id.split('-')[1])+1)}
 function syncControls(){
  $e('pDevice').value=state.device;$e('pScene').value=state.scene;$e('pArea').value=state.area;
  const all=ids();if(!all.includes(state.asset))state.asset=all[0];
@@ -205,7 +237,7 @@ function refreshHandles(){
   h.dataset.id=id;h.style.left=rect.left+'px';h.style.top=rect.top+'px';
   h.style.width=Math.max(16,rect.width)+'px';h.style.height=Math.max(16,rect.height)+'px';
   const label=document.createElement('span');label.className='placement-handle-label';
-  label.textContent=id.startsWith('stone-')?'T'+(Number(id.slice(6))+1):id.startsWith('socket-')?'H'+(Number(id.slice(7))+1):id==='gold'?'£':'S';
+  label.textContent=id.startsWith('stone-')?'T'+(Number(id.slice(6))+1):id.startsWith('socket-')?'H'+(Number(id.slice(7))+1):id==='gold'?'£':id==='shield'?'S':id==='waterLeft'?'W£':'WS';
   const corner=document.createElement('span');corner.className='placement-corner';h.append(label,corner);
   h.addEventListener('pointerdown',ev=>{
    if(ev.button>0)return;ev.preventDefault();ev.stopPropagation();
@@ -299,7 +331,7 @@ $e('pReset').addEventListener('click',()=>{
 });
 $e('pDownload').addEventListener('click',()=>{
  const u=URL.createObjectURL(new Blob([JSON.stringify(layout,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8.json';
+ const a=document.createElement('a');a.href=u;a.download='dungeon_escape_asset_positions_v8_4.json';
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),600);
 });
 $('viewContent').addEventListener('click',e=>{if(state.open){e.preventDefault();e.stopImmediatePropagation()}},true);
