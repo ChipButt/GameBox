@@ -114,6 +114,7 @@ function confirmChoice(p,choice,scene){
  const layer=make('div','pipe-choice-layer',scene);
  layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');
  layer.setAttribute('aria-label','Confirm valve selection');
+ layer.addEventListener('click',event=>event.stopPropagation());
  const box=make('div','pipe-choice-box',layer);
  const heading=make('h3','',box);heading.textContent='ARE YOU SURE?';
  const question=make('p','',box);
@@ -199,7 +200,7 @@ drawPipes=function(p){
    confirmChoice(p,picked,scene);
   });
  }
- if(spent){
+ if((settled||p.reward)&&spent){
   const broken=make('img','pipe-wheel-spent',stage);
   broken.src=AS+'rewards/wheel_broken.webp';broken.alt='';broken.draggable=false;
   broken.dataset.choice=p.pendingReward||p.reward;
