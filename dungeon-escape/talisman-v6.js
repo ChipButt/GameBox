@@ -16,9 +16,9 @@ function wideWall(player){
  const frag=document.createDocumentFragment();
  (player.slots||[]).forEach((slot,i)=>{
   if(!slot)return;
-  const xy=coords(i),img=document.createElement('img');
+  const xy=window.DungeonPlacement?.coords('wide',i)||coords(i),img=document.createElement('img');
   img.src=AS+'talismans/'+slot.symbol+'_front.webp';
-  img.className='room-wide-stone';img.alt='';
+  img.className='room-wide-stone';img.alt='';img.dataset.socketIndex=String(i);
   img.style.left=xy.x+'%';img.style.top=xy.y+'%';
   img.style.rotate=(slot.rotation*90)+'deg';
   attachPlacedStone(img,i,'room',player);
@@ -44,7 +44,7 @@ function targets(ctx,player){
   if(r.width<=0||r.height<=0)return output;
   for(let i=0;i<12;i++){
    if(player.slots?.[i])continue;
-   const xy=coords(i);
+   const xy=window.DungeonPlacement?.coords('wide',i)||coords(i);
    output.push({
     index:i,x:r.left+xy.x*r.width/100,y:r.top+xy.y*r.height/100,
     radius:Math.max(23,Math.min(47,r.width*.082)),element:null
@@ -67,7 +67,7 @@ function highlight(ctx,target){
  if(!target)return;
  if(ctx==='inspection')target.element?.classList.add('snap-candidate');
  else{
-  const xy=coords(target.index),marker=document.createElement('span');
+  const xy=window.DungeonPlacement?.coords('wide',target.index)||coords(target.index),marker=document.createElement('span');
   marker.className='wide-snap-indicator';
   marker.style.left=xy.x+'%';marker.style.top=xy.y+'%';
   wideLayer.append(marker);
