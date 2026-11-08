@@ -195,6 +195,53 @@ function warpFrameArt(source,player){
  ctx.putImageData(im,0,0);
  return out.toDataURL('image/png');
 }
+
+/* The outer four corners control the ENTIRE physical framed asset.
+   The old frameCorners control only the internal clue inset; both are mapped
+   into one rendered image before the final perspective transform. */
+const defaultOuterVertices=[[0,0],[214,0],[214,563],[0,563]];
+function outerFrameVertices(){
+ return window.DungeonPlacement?.frameOuterCorners?.()||defaultOuterVertices;
+}
+let frameSourcePromise=null;
+function physicalFrameSource(){
+ if(!frameSourcePromise)frameSourcePromise=new Promise(resolve=>{
+  const img=new Image();img.onload=()=>resolve(img);
+  img.onerror=()=>{frameSourcePromise=null;resolve(null)};
+  img.src=AS+'room/image_board_wide.webp';
+ });
+ return frameSourcePromise;
+}
+function warpWholeFrame(source){
+ const W=214,H=563,corners=outerFrameVertices(),[a,b,c,d]=corners;
+ const src=source.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;
+ const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Frame perspective canvas unavailable');
+ const out=ctx.createImageData(W,H),dest=out.data;
+ const xs=corners.map(v=>v[0]),ys=corners.map(v=>v[1]);
+ const left=Math.max(0,Math.floor(Math.min(...xs))-2),right=Math.min(W-1,Math.ceil(Math.max(...xs))+2);
+ const top=Math.max(0,Math.floor(Math.min(...ys))-2),bottom=Math.min(H-1,Math.ceil(Math.max(...ys))+2);
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+  let u=(x-left)/Math.max(1,right-left),v=(y-top)/Math.max(1,bottom-top);
+  for(let n=0;n<6;n++){
+   const fx=(1-u)*(1-v)*a[0]+u*(1-v)*b[0]+u*v*c[0]+(1-u)*v*d[0]-x;
+   const fy=(1-u)*(1-v)*a[1]+u*(1-v)*b[1]+u*v*c[1]+(1-u)*v*d[1]-y;
+   const ux=(1-v)*(b[0]-a[0])+v*(c[0]-d[0]);
+   const uy=(1-v)*(b[1]-a[1])+v*(c[1]-d[1]);
+   const vx=(1-u)*(d[0]-a[0])+u*(c[0]-b[0]);
+   const vy=(1-u)*(d[1]-a[1])+u*(c[1]-b[1]);
+   const det=ux*vy-vx*uy;
+   if(Math.abs(det)<1e-7)break;
+   u-=(fx*vy-fy*vx)/det;v-=(fy*ux-fx*uy)/det;
+  }
+  if(u<0||u>1||v<0||v>1)continue;
+  const si=(Math.min(H-1,Math.floor(v*H))*W+Math.min(W-1,Math.floor(u*W)))*4;
+  const di=(y*W+x)*4;
+  for(let k=0;k<4;k++)dest[di+k]=src[si+k];
+ }
+ ctx.putImageData(out,0,0);
+ return canvas.toDataURL('image/png');
+}
 function refreshWideFrame(){
  if(!game)return;
  const player=self(),board=getHotspot('image');
@@ -202,7 +249,8 @@ function refreshWideFrame(){
  scramble(player);
  const target=nextPlayer(game,player.id);
  const key=player.id+':'+target.index+':'+(player.puzzleSolved?'solved':player.pieces.join(','))+
-  ':'+frameVertices().flat().map(n=>n.toFixed(3)).join(',');
+  ':'+frameVertices().flat().map(n=>n.toFixed(3)).join(',')+
+  ':'+outerFrameVertices().flat().map(n=>n.toFixed(3)).join(',');
  let preview=board.querySelector('.wide-frame-clue');
  if(!preview){
   preview=document.createElement('img');preview.className='wide-frame-clue';
@@ -214,13 +262,32 @@ function refreshWideFrame(){
  const handle=makeClue(target);
  const paint=url=>{
   if(!url||!preview.isConnected||preview.dataset.frameKey!==key)return;
-  const original=new Image();
-  original.onload=()=>{
+  const clue=new Image();
+  clue.onload=async()=>{
    if(!preview.isConnected||preview.dataset.frameKey!==key)return;
-   try{preview.src=warpFrameArt(original,player)}
-   catch(err){console.error('[Dungeon Escape] Wide frame perspective failed',err)}
+   try{
+    const physical=await physicalFrameSource();
+    if(!physical)throw Error('Original framed artwork did not load');
+    const overlay=new Image();
+    overlay.onload=()=>{
+     if(!preview.isConnected||preview.dataset.frameKey!==key)return;
+     try{
+      const composite=document.createElement('canvas');
+      composite.width=214;composite.height=563;
+      const ctx=composite.getContext('2d');
+      if(!ctx)throw Error('Cannot render original frame');
+      ctx.drawImage(physical,0,0,214,563);
+      ctx.drawImage(overlay,0,0,214,563);
+      // A single transform moves the picture AND its carved frame together.
+      preview.src=warpWholeFrame(composite);
+      board.classList.add('whole-frame-composed');
+     }catch(error){console.error('[Dungeon Escape] Whole frame warp failed',error);board.classList.remove('whole-frame-composed')}
+    };
+    overlay.onerror=()=>console.error('[Dungeon Escape] Clue overlay unavailable');
+    overlay.src=warpFrameArt(clue,player);
+   }catch(error){console.error('[Dungeon Escape] Framed image generation failed',error)}
   };
-  original.src=url;
+  clue.src=url;
  };
  if(handle.url)paint(handle.url);else handle.promise.then(paint);
 }
