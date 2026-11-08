@@ -1,0 +1,49 @@
+
+/* Dungeon Escape V3 — GameBox playable preview. */
+.gamebox-return{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:#efd4a0;border:1px solid #8b6947;border-radius:5px;padding:8px 12px;font:12px system-ui,sans-serif;white-space:nowrap}
+.gamebox-return:hover,.gamebox-return:focus-visible{background:#4a332a;color:#fff}
+.setup-buttons{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.setup-buttons button{flex:1 1 210px}
+.setup-buttons .roster-button{background:#3b2d2e;flex:0 1 180px}
+.solution-card{border-bottom:1px solid #aa82516b;padding:14px 15px;background:linear-gradient(170deg,#322824,#211b22)}
+.solution-card summary{cursor:pointer;color:#eacb98;font:17px Georgia,serif;list-style-position:inside}
+.solution-card summary::marker{color:#dcb579}
+.solution-card summary small{font:9px system-ui,sans-serif;letter-spacing:.06em;color:#b79c7c;margin-left:6px;vertical-align:middle}
+.solution-card .subtle{margin:7px 0 10px}
+.solution-card details[open] summary{margin-bottom:9px}
+.solution-legend{font:11px/1.45 system-ui,sans-serif;color:#dac8ad}
+.solution-legend strong{color:#fae0a4}
+.solution-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:10px 0}
+.solution-cell{min-height:52px;padding:5px 3px;border:1px solid #97714c;border-radius:4px;background:#1d1a1e;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px}
+.solution-cell .slot-index{font:9px system-ui,sans-serif;color:#af9676}
+.solution-cell strong{font:11px Georgia,serif;color:#f4dfbc}
+.solution-cell .orientation{font:10px system-ui,sans-serif;color:#eac48b}
+.solution-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.solution-actions button{flex:1 1 130px;padding:9px 7px;font:11px system-ui,sans-serif}
+.solution-mini{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.solution-mini span{background:#312525;border:1px solid #755c42;border-radius:4px;padding:4px 7px;font:11px system-ui,sans-serif}
+.turn-actions{margin-top:10px}
+.turn-actions button{width:100%;background:linear-gradient(110deg,#876332,#4e3429);font:13px system-ui,sans-serif}
+.mission-result{border-bottom:1px solid #9b784b;padding:16px;background:linear-gradient(155deg,#453223,#231c1d)}
+.mission-result h2{margin:3px 0 8px;color:#f7db9b;font:22px Georgia,serif}
+.mission-result strong{color:#ffe3a3}
+.mission-result ul{padding-left:18px;font:12px/1.7 system-ui,sans-serif}
+.mission-result p{font:12px/1.6 system-ui,sans-serif}
+.mechanism-guide .next-turn{background:linear-gradient(115deg,#94733d,#564028);margin-top:12px}
+.mechanism-guide .solution-reminder{font:12px/1.6 system-ui,sans-serif;border:1px solid #785e3d;border-radius:5px;padding:10px;color:#dbcbaa}
+.view-panel{animation:none}
+.view-shell{animation:veil-in .27s ease-out}
+.view-top{background:#271f20}
+.art-stage{transform-origin:center center}
+.h-safe{outline-offset:2px}
+.h-safe:hover,.h-safe:focus-visible{filter:drop-shadow(0 0 14px #e9c48560)}
+.safe-stage{cursor:pointer}
+.safe-stage img{user-select:none;-webkit-user-drag:none}
+.safe-stage .safe-wheel{cursor:pointer}
+.mechanism-guide .result-note{animation:reveal-echo .48s ease-out}
+.pipes-stage.drained-left .pipe-water.left,.pipes-stage.drained-right .pipe-water.right{transition:height 2.2s ease,top 2.2s ease}
+@keyframes veil-in{from{background:#0e0b1100}to{background:#0e0b11ee}}
+@keyframes reveal-echo{from{filter:brightness(1.6);transform:scale(.98)}to{filter:brightness(1);transform:scale(1)}}
+@media(max-width:970px){.solution-card{padding:13px}.solution-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.sidebar{min-height:0}.chat-card{min-height:270px}}
+@media(max-width:630px){.gamebox-return{font-size:11px;padding:7px 8px}.header-actions{gap:5px}.solution-card{padding:13px 10px}.solution-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.solution-cell{min-height:53px}.solution-cell strong{font-size:10px}.setup-buttons{flex-direction:column;align-items:stretch}.setup-buttons button{width:100%}.view-top .eyebrow{font-size:8px}.mechanism-guide .next-turn{position:relative;min-height:46px}}
+@media(prefers-reduced-motion:reduce){.view-shell,.mechanism-guide .result-note{animation:none}}
