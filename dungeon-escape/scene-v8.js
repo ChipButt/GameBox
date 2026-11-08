@@ -79,17 +79,24 @@ function makeClue(target){
   ctx.fillStyle=vignette;ctx.fillRect(0,0,W,W);
   const panel=images.panelArtwork;
   const panelBox={x:45,y:42,w:870,h:652.5};
+  // Record the exact fitted image rectangle and rotation used for the wall art.
+  // Both the bronze panel and the twelve inserted talismans share this space.
+  const panelPosition=panelArt||{x:50,y:50,w:100,h:100,r:0};
+  const boxW=panelBox.w*panelPosition.w/100;
+  const boxH=panelBox.h*panelPosition.h/100;
+  const ratio=panel?(panel.naturalWidth||panel.width)/(panel.naturalHeight||panel.height):4/3;
+  const drawnPanel={
+   cx:panelBox.x+panelBox.w*panelPosition.x/100,
+   cy:panelBox.y+panelBox.h*panelPosition.y/100,
+   w:Math.min(boxW,boxH*ratio),
+   h:Math.min(boxH,boxW/ratio),
+   rotation:panelPosition.r*Math.PI/180
+  };
   if(panel){
-   // Recreate the actual editable close-up wall background (position, size,
-   // aspect ratio and rotation) rather than reusing a pre-made screenshot.
-   const o=panelArt||{x:50,y:50,w:100,h:100,r:0};
-   const boxW=panelBox.w*o.w/100,boxH=panelBox.h*o.h/100;
-   const ratio=(panel.naturalWidth||panel.width)/(panel.naturalHeight||panel.height);
-   const drawW=Math.min(boxW,boxH*ratio),drawH=Math.min(boxH,boxW/ratio);
    ctx.save();
-   ctx.translate(panelBox.x+panelBox.w*o.x/100,panelBox.y+panelBox.h*o.y/100);
-   ctx.rotate((o.r||0)*Math.PI/180);
-   ctx.drawImage(panel,-drawW/2,-drawH/2,drawW,drawH);
+   ctx.translate(drawnPanel.cx,drawnPanel.cy);
+   ctx.rotate(drawnPanel.rotation);
+   ctx.drawImage(panel,-drawnPanel.w/2,-drawnPanel.h/2,drawnPanel.w,drawnPanel.h);
    ctx.restore();
   }
   const identity=roomIdentity(target),seal=images[identity.symbol],count=identity.count;
@@ -103,16 +110,40 @@ function makeClue(target){
    ctx.drawImage(seal,-size/2,-size/2,size,size);
    ctx.restore();
   }
-  // Use approved DESKTOP CLOSE-UP socket centres so the artwork and stones align.
+  // The actual engraved recess centres in panel_12.webp are fractionally
+  // lower than the historic on-screen hotspot centres. Anchor the completed
+  // picture to the REAL round recesses, while preserving any user-edited
+  // offsets from the approved desktop close-up layout.
+  const artHoleXs=[34.35,50.00,65.65];
+  const artHoleYs=[24.35,42.55,60.65,78.85];
+  const originalSockets=[
+   [34.25430938067944,22.571895242089564],
+   [50.009719698028796,22.580632834708044],
+   [65.76149867188592,22.99537723099865],
+   [34.21935901020551,40.59752551377045],
+   [49.971711170138406,40.56548767416935],
+   [65.74839228295819,40.81188778601053],
+   [34.23246539913323,58.84684747658325],
+   [49.98394379980427,58.71345356260776],
+   [65.78509017195583,58.92898084719698],
+   [34.194456871242835,77.1596532923249],
+   [50.04073815182441,77.13518803299316],
+   [65.62956102334685,77.19110862575144]
+  ];
   const approved=Array.isArray(sockets)&&sockets.length===12?
-   sockets:Array.from({length:12},(_,i)=>({x:[33.9,48.8,64][i%3],y:[24.2,42.2,60.5,78.5][Math.floor(i/3)],w:10.55,h:10.55}));
+   sockets:originalSockets.map(([x,y])=>({x,y,w:10.55,h:10.55}));
   solution.forEach((part,i)=>{
    const art=images[part.symbol],hole=approved[i];
    if(!art)return;
-   const x=panelBox.x+hole.x*panelBox.w/100;
-   const y=panelBox.y+hole.y*panelBox.h/100;
-   const diameter=Math.min(hole.w*panelBox.w/100,hole.h*panelBox.h/100)*.85;
-   ctx.save();ctx.translate(x,y);ctx.rotate(part.rotation*Math.PI/2);
+   const xPercent=artHoleXs[i%3]+hole.x-originalSockets[i][0];
+   const yPercent=artHoleYs[Math.floor(i/3)]+hole.y-originalSockets[i][1];
+   const localX=(xPercent/100-.5)*drawnPanel.w;
+   const localY=(yPercent/100-.5)*drawnPanel.h;
+   const cosine=Math.cos(drawnPanel.rotation),sine=Math.sin(drawnPanel.rotation);
+   const x=drawnPanel.cx+localX*cosine-localY*sine;
+   const y=drawnPanel.cy+localX*sine+localY*cosine;
+   const diameter=Math.min(hole.w*drawnPanel.w/100,hole.h*drawnPanel.h/100)*.85;
+   ctx.save();ctx.translate(x,y);ctx.rotate(drawnPanel.rotation+part.rotation*Math.PI/2);
    ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=8;
    ctx.drawImage(art,-diameter/2,-diameter/2,diameter,diameter);
    ctx.restore();
