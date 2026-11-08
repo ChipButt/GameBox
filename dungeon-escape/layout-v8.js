@@ -8,6 +8,8 @@ const wideD=[[20,79],[41,78],[61,80],[80,79],[13,87],[33,86],[53,87],[73,86],[23
 const wideM=[[20,77],[40,76],[61,77],[81,78],[12,85],[36,84],[60,85],[85,84],[21,93],[44,92],[67,93],[85,92]];
 const angles=[0,-17,8,27,-10,18,-15,11,23,-12,6,-21];
 const box=(x,y,w,h,r=0)=>({x,y,w,h,r});
+const DEFAULT_FRAME_CORNERS=[[30,58],[192,161],[194,470],[30,495]]
+ .map(([x,y])=>({x:x/214*100,y:y/563*100}));
 function defaultsFor(scene,device){
  const wide=scene==='wide',mobile=device==='mobile';
  const positions=wide?(mobile?wideM:wideD):wideM;
@@ -26,6 +28,8 @@ const defaults=()=>{
  for(const scene of ['wide','zoom'])for(const dev of ['desktop','mobile']){
   const p=result[scene][dev];
   if(scene==='wide'){
+   p.frameCorners=DEFAULT_FRAME_CORNERS.map(c=>({...c}));
+   p.safeMark=box(50,50,94,76);
    p.waterLeft=box(35.4,46,24,54);
    p.waterRight=box(66.2,45,26,56);
   }else{
@@ -58,6 +62,17 @@ function validate(data){
    // V8.2 JSON without water remains fully importable.
    if(src.waterLeft!==undefined)dst.waterLeft=validateBox(src.waterLeft,p+'.waterLeft');
    if(src.waterRight!==undefined)dst.waterRight=validateBox(src.waterRight,p+'.waterRight');
+   if(scene==='wide'){
+    if(src.safeMark!==undefined)dst.safeMark=validateBox(src.safeMark,p+'.safeMark');
+    if(src.frameCorners!==undefined){
+     if(!Array.isArray(src.frameCorners)||src.frameCorners.length!==4)throw Error(p+'.frameCorners needs four points');
+     dst.frameCorners=src.frameCorners.map((point,i)=>{
+      if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y)||point.x < -15||point.x>115||point.y < -15||point.y>115)
+       throw Error(p+'.frameCorners['+i+'] must contain valid X/Y percentages');
+      return {x:point.x,y:point.y};
+     });
+    }
+   }
  }
  return result;
 }
@@ -72,6 +87,7 @@ function item(scene,id){
  const p=profile(scene);
  if(id.startsWith('stone-'))return p.stones[Number(id.slice(6))];
  if(id.startsWith('socket-'))return p.sockets[Number(id.slice(7))];
+ if(id.startsWith('corner-'))return layout.wide[device()].frameCorners[Number(id.slice(7))];
  return p[id];
 }
 function stoneStyle(n,id,scene){
@@ -107,6 +123,13 @@ function waterStyle(n,id,scene){
   n.closest('.pipes-stage')?.classList.contains(id==='waterLeft'?'drained-left':'drained-right');
  if(drained){n.style.height='0%';n.style.top=(scene==='wide'?72:68)+'%'}
 }
+function safeStyle(n){
+ if(!n)return;
+ const o=item('wide','safeMark');if(!o)return;
+ n.dataset.layoutAsset='safeMark';
+ n.style.left=o.x+'%';n.style.top=o.y+'%';
+ n.style.width=o.w+'%';n.style.height=o.h+'%';
+}
 function applyWide(){
  document.querySelectorAll('#floorTalismans .floor-talisman').forEach(n=>{
   if(n.dataset.layoutAsset)stoneStyle(n,n.dataset.layoutAsset,'wide');
@@ -116,6 +139,7 @@ function applyWide(){
  for(const id of ['gold','shield'])prizeStyle(p?.querySelector('.wide-prize.'+id),id,'wide');
  waterStyle(p?.querySelector('.wide-water.ww-left'),'waterLeft','wide');
  waterStyle(p?.querySelector('.wide-water.ww-right'),'waterRight','wide');
+ safeStyle(getHotspot('safe')?.querySelector('.room-identity-seals.on-safe-door'));
 }
 function applyZoom(){
  if(view==='talismans'){
@@ -131,6 +155,8 @@ function applyZoom(){
  }
 }
 window.DungeonPlacement={coords:(scene,i)=>{const o=profile(scene).sockets[i];return {x:o.x,y:o.y}},
+ frameCorners:()=>layout.wide[device()].frameCorners.map(pt=>[pt.x*214/100,pt.y*563/100]),
+ applySafe:()=>safeStyle(getHotspot('safe')?.querySelector('.room-identity-seals.on-safe-door')),
  get:()=>JSON.parse(JSON.stringify(layout))};
 const prevStone=stoneNode;
 stoneNode=function(piece,context,p){
