@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#112d35">
+<meta name="description" content="Hunt for Christmas presents in a snowy 3D village while monsters chase you.">
+<title>Christmas Village Hunt V1 · GameBox</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script>
+<style>
+:root{color-scheme:dark;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#142c34;color:#fff}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+button,a{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid #fbd991;outline-offset:2px}
+#game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;touch-action:none}
+#world{width:100%;height:100%;display:block;touch-action:none;background:#b7dce5}
+#vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#112b4245,transparent 27%,transparent 70%,#071a2166);transition:background .15s}
+#vignette.hurt{background:#bd233344}
+.hud{position:absolute;z-index:3;top:0;left:0;right:0;display:flex;gap:8px;align-items:start;padding:calc(env(safe-area-inset-top) + 10px) 11px 0;pointer-events:none}
+.hud>*{pointer-events:auto}
+.home,.hbtn{display:grid;place-items:center;text-decoration:none;color:#fff;border:1px solid #e4f7f463;background:#16343de9;border-radius:13px;height:44px;min-width:44px;font-size:23px;backdrop-filter:blur(9px)}
+.brand,.stat{background:#16343df0;border:1px solid #e4f7f43d;border-radius:12px;padding:6px 10px;backdrop-filter:blur(7px);box-shadow:0 5px 18px #102b3460}
+.brand{min-width:0;flex:1}
+.brand small,.stat small{display:block;font-size:9px;letter-spacing:.12em;font-weight:900;color:#b6e0db}
+.brand strong{display:block;font-size:clamp(11px,2.6vw,17px);line-height:1.15;white-space:nowrap}
+.brand em{font-style:normal;color:#f4c978}
+.stat{text-align:center;min-width:65px}.stat b{display:block;font-size:19px;line-height:1.25}
+.stat.heart b{font-size:15px;color:#ff888a;letter-spacing:1px}
+.sidehud{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 78px);z-index:3;width:min(118px,25vw);pointer-events:none}
+.mini{width:100%;aspect-ratio:1;border:2px solid #e7ffff90;border-radius:13px;background:#e4f1edcf;box-shadow:0 7px 20px #122d3b44}
+#map{width:100%;height:100%;display:block}
+.sidehud .legend{color:#fff;font-size:10px;text-align:center;text-shadow:0 2px 5px #102f3a;font-weight:800}
+.stamina{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 79px);z-index:3;width:min(165px,40vw);border-radius:12px;background:#153944dd;border:1px solid #fff4;padding:6px 9px}
+.stamina small{font-size:10px;font-weight:850;letter-spacing:.07em}
+.track{height:7px;border-radius:9px;background:#10252b;margin-top:3px;overflow:hidden}
+#staminaFill{display:block;width:100%;height:100%;background:#bce9db}
+#danger{position:absolute;z-index:5;top:calc(env(safe-area-inset-top) + 155px);left:50%;transform:translateX(-50%);border-radius:30px;border:1px solid #ff9c96;background:#6e2028eb;color:#fff;text-align:center;font-size:11px;font-weight:950;padding:9px 15px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+#danger.visible{opacity:1}
+#toast{position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 205px);left:50%;transform:translateX(-50%) translateY(-10px);opacity:0;pointer-events:none;background:#f8d78e;color:#1c3a3e;border-radius:16px;padding:12px 16px;font-size:13px;font-weight:950;white-space:nowrap;box-shadow:0 9px 30px #14272c77;transition:opacity .18s,transform .18s}
+#toast.visible{opacity:1;transform:translateX(-50%)}
+#prompt{position:absolute;z-index:4;bottom:calc(env(safe-area-inset-bottom) + 139px);left:50%;transform:translateX(-50%);font-size:12px;font-weight:900;background:#143e46ec;border:1px solid #f4dba4;border-radius:30px;padding:10px 13px;opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .15s}
+#prompt.visible{opacity:1}
+.controls{position:absolute;z-index:4;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 15px);padding:0 clamp(12px,3vw,34px);display:flex;align-items:end;justify-content:space-between;pointer-events:none}
+.joy{width:120px;height:120px;border-radius:100%;position:relative;pointer-events:auto;touch-action:none;background:#1436429c;border:2px solid #d0e7e7a8;box-shadow:inset 0 0 0 9px #fff1}
+.joy:after{content:'MOVE';position:absolute;bottom:-14px;left:0;right:0;text-align:center;font-size:10px;font-weight:900;letter-spacing:.1em;text-shadow:0 2px 5px #173640}
+.knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:#d8f3ed;box-shadow:0 5px 16px #071d2899}
+.buttons{display:flex;align-items:end;gap:8px;pointer-events:auto}
+.action{border:2px solid #f9efd2;border-radius:20px;background:#f6ce73;color:#1b3c41;font-weight:950;font-size:12px;min-width:67px;height:70px;box-shadow:0 6px 0 #192f35af}
+.action span{display:block;font-size:21px;margin-bottom:2px}
+#runBtn{background:#cff0e4}
+#jumpBtn{background:#e3e8ff}
+#takeBtn:disabled{opacity:.48;filter:saturate(.45)}
+#hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);pointer-events:none;text-shadow:0 2px 4px #081f2b;font-size:10px;white-space:nowrap;color:#e5fff6}
+.overlay{position:absolute;z-index:10;inset:0;display:grid;place-items:center;padding:19px;overflow:auto;background:#0b2631cb;backdrop-filter:blur(10px)}
+.overlay.hidden{display:none}
+.panel{width:min(460px,100%);max-height:calc(100dvh - 38px);overflow:auto;text-align:center;border-radius:24px;padding:clamp(20px,4vw,35px);background:#f4f1e7;color:#163a44;border:2px solid #fff;box-shadow:0 20px 75px #10242fbd}
+.eyebrow{font-size:10px;font-weight:950;letter-spacing:.16em;color:#7b3b42}
+.title{font-family:Georgia,serif;font-weight:900;letter-spacing:-.045em;font-size:clamp(34px,8vw,56px);line-height:.95;margin:10px auto 14px}
+.title em{font-style:normal;color:#af3f49}
+.panel p{line-height:1.45;color:#425960;font-size:14px}
+.decor{display:flex;gap:9px;justify-content:center;margin:16px auto;font-size:13px;font-weight:800}
+.decor span{border-radius:10px;background:#e0e6dc;padding:10px 8px;min-width:85px}
+.primary,.secondary{width:100%;display:block;margin-top:9px;border:0;border-radius:14px;padding:15px;font-size:15px;font-weight:900;text-decoration:none}
+.primary{background:#19525d;color:#fff;box-shadow:0 4px 0 #113943}
+.primary:disabled{opacity:.6;cursor:default}
+.secondary{background:#e2e7e1;border:1px solid #c2d2cb;color:#1c4a50}
+.note{display:block;font-size:11px;color:#64777a;margin-top:12px}
+.result{font-size:32px;color:#9b423f;font-weight:950;margin:12px 0}
+@media(max-width:550px){
+ .hud{gap:5px;padding-left:7px;padding-right:7px}
+ .home,.hbtn{min-width:37px;height:42px}
+ .brand{padding:7px 6px}.brand small{font-size:7px;letter-spacing:.04em}.brand strong{font-size:11px}
+ .stat{min-width:52px;padding:7px 5px}.stat small{font-size:8px}.stat b{font-size:15px}.stat.heart b{font-size:11px}
+ .sidehud{top:calc(env(safe-area-inset-top) + 113px);right:9px;width:88px}
+ .stamina{top:calc(env(safe-area-inset-top) + 80px)}
+ .controls{padding:0 9px 11px}.joy{width:104px;height:104px}
+ .buttons{gap:5px}.action{height:64px;min-width:53px;font-size:10px;border-radius:16px}.action span{font-size:17px}
+ #hint{display:none}
+ .decor span{min-width:0;font-size:11px}
+}
+@media(max-height:670px){.panel{padding:17px}.title{font-size:33px}.panel p{margin:8px auto}.decor{margin:8px auto}.decor span{padding:7px}}
+</style></head>
+<body><main id="game">
+<canvas id="world" aria-label="Third-person Christmas village exploration and gift collecting game"></canvas>
+<div id="vignette"></div>
+<header class="hud">
+<a class="home" href="../" aria-label="Back to GameBox" title="GameBox">⌂</a>
+<div class="brand"><small>GAMEBOX · ADVENT CANDIDATE · V1</small><strong>CHRISTMAS <em>VILLAGE HUNT</em></strong></div>
+<div class="stat"><small>TIME</small><b id="timer">4:00</b></div>
+<div class="stat"><small>GIFTS</small><b id="gifts">0</b></div>
+<div class="stat"><small>SCORE</small><b id="score">0</b></div>
+<div class="stat heart"><small>LIVES</small><b id="hearts">♥♥♥</b></div>
+<button class="hbtn" id="pauseBtn" title="Pause" aria-label="Pause">Ⅱ</button>
+</header>
+<div class="stamina"><small>SPRINT</small><div class="track"><i id="staminaFill"></i></div></div>
+<div class="sidehud"><div class="mini"><canvas id="map" width="160" height="160" aria-label="Village minimap showing gifts and monsters"></canvas></div><div class="legend">GOLD GIFTS · RED MONSTERS</div></div>
+<div id="danger" role="status"></div><div id="toast" role="status"></div><div id="prompt">PRESENT NEARBY · FIND</div>
+<div class="controls">
+<div id="joystick" class="joy" aria-label="Move the character"><div id="knob" class="knob"></div></div>
+<div class="buttons">
+<button class="action" id="runBtn" aria-label="Hold to sprint"><span>»</span>RUN</button>
+<button class="action" id="jumpBtn" aria-label="Jump"><span>↑</span>JUMP</button>
+<button class="action" id="takeBtn" aria-label="Collect gift" disabled><span>✦</span>GIFT</button>
+</div></div>
+<div id="hint">WASD / ARROWS MOVE · SHIFT RUN · SPACE JUMP · E PICK UP · DRAG TO LOOK</div>
+<section id="startOverlay" class="overlay"><div class="panel">
+<div class="eyebrow">A CHRISTMAS GAMEBOX ADVENTURE · V1</div>
+<h1 class="title">CHRISTMAS<br><em>VILLAGE HUNT</em></h1>
+<p>A snowy village has been overrun by goblins, a witch and the undead. Gather as many enchanted presents as you can before the bells ring — but don't let the monsters catch you.</p>
+<div class="decor"><span>✦ Find gifts</span><span>♜ Evade monsters</span><span>⌛ Four minutes</span></div>
+<p>Gifts keep appearing around the village. Collect each one for 60 points, plus 15 if you're being chased. You have three lives and a sprint bar.</p>
+<button class="primary" id="startBtn" disabled>LOADING CHRISTMAS ARTWORK...</button>
+<span id="loading" class="note">Loading real animated 3D artwork and snow-covered trees.</span>
+<span class="note">Personal best: <b id="introBest">0</b> · Test scoring only. Advent leaderboard not connected.</span>
+</div></section>
+<section id="pauseOverlay" class="overlay hidden"><div class="panel">
+<div class="eyebrow">CHRISTMAS VILLAGE HUNT</div><h2 class="title">PAUSED</h2>
+<p>Run from the monsters, find the gifts and stay alive.</p>
+<button class="primary" id="resumeBtn">RESUME</button>
+<button class="secondary" id="restartBtn">RESTART RUN</button>
+<button class="secondary" id="helpBtn">CONTROLS: WASD / JOYSTICK · DRAG TO LOOK</button>
+</div></section>
+<section id="endOverlay" class="overlay hidden"><div class="panel">
+<div class="eyebrow">YOUR VILLAGE RUN</div><h2 class="title" id="endTitle">THE BELLS HAVE RUNG</h2>
+<p id="endDetail">Four minutes of festive mayhem!</p>
+<div class="result"><span id="finalScore">0</span> POINTS</div>
+<p>Gifts collected: <strong id="finalGifts">0</strong></p>
+<p id="newBest">PERSONAL BEST: 0</p>
+<button class="primary" id="retryBtn">PLAY AGAIN</button>
+<a href="../" class="secondary">BACK TO GAMEBOX</a>
+</div></section>
+</main>
+<script type="module" src="./game.js?v=1"></script>
+</body></html>
