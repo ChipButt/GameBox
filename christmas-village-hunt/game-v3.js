@@ -81,7 +81,8 @@ let hero=null,ready=false,lookPointer=null,joyPointer=null,toastSecs=0,lastMap=0
 let canvasYaw=0,joyX=0,joyY=0,keySprint=false,touchSprint=false;
 const keys=new Set();
 const state={mode:'menu',time:240,elapsed:0,score:0,gifts:0,lives:3,stamina:100,
- invulnerable:0,jump:0,jumpVel:0,near:null,chase:false,hitTime:0,deathTime:0,chain:0,lastPickup:-50};
+ invulnerable:0,jump:0,jumpVel:0,near:null,chase:false,hitTime:0,deathTime:0,chain:0,lastPickup:-50,
+ playMode:'explore',insideSecret:false,nearSecret:null,freezeUntil:0,hiddenUntil:0,nextSurprise:55};
 const bestKey='gamebox.christmasVillageGiftHunt.best.v1';
 let best=0;
 try{best=Math.max(0,Number(localStorage.getItem(bestKey))||0);}catch{}
@@ -464,6 +465,7 @@ function makeGift(i){
  return g;
 }
 function canWalk(x,z,r=.38){
+ if(state.insideSecret)return x>-6.85+r&&x<6.85-r&&z>68.1+r&&z<89.8-r;
  if(x<-33+r||x>33-r||z<-33+r||z>33-r)return false;
  for(const b of buildings){
   const dx=Math.max(Math.abs(x-b.x)-b.hx,0);
@@ -499,7 +501,7 @@ function setUpGifts(){
 function nearGift(){
  if(!hero)return null;
  let found=null,dist=2.2;
- for(const g of gifts)if(g.active){
+ for(const g of (state.insideSecret?workshopGifts:[...gifts,...bonusGifts]))if(g.active){
   const d=Math.hypot(g.x-hero.group.position.x,g.z-hero.group.position.z);
   if(d<dist){dist=d;found=g;}
  }
@@ -509,7 +511,8 @@ function toast(str,duration=1.6){
  $('toast').textContent=str;$('toast').classList.add('visible');toastSecs=duration;
 }
 function updateHud(){
- $('timer').textContent=Math.floor(state.time/60)+':'+String(Math.ceil(state.time%60)).padStart(2,'0');
+ $('timerLabel').textContent=state.playMode==='explore'?'MODE':'TIME';
+ $('timer').textContent=state.playMode==='explore'?'WANDER':Math.floor(state.time/60)+':'+String(Math.ceil(state.time%60)).padStart(2,'0');
  $('gifts').textContent=state.gifts;
  $('score').textContent=state.score.toLocaleString('en-GB');
  $('hearts').textContent='♥'.repeat(state.lives)+'♡'.repeat(3-state.lives);
@@ -519,7 +522,7 @@ function updateHud(){
 function collect(g=state.near){
  if(!g||!g.active||state.mode!=='running')return;
  if(Math.hypot(g.x-hero.group.position.x,g.z-hero.group.position.z)>2.45)return;
- g.active=false;g.group.visible=false;g.respawnAt=state.elapsed+5+Math.random()*5;
+ g.active=false;g.group.visible=false;g.respawnAt=g.secretOnly||g.bonus?Infinity:state.elapsed+5+Math.random()*5;
  state.chain=state.elapsed-state.lastPickup<19?Math.min(state.chain+1,5):1;
  state.lastPickup=state.elapsed;
  state.gifts++;
@@ -534,7 +537,7 @@ function collect(g=state.near){
 function finishRun(reason){
  state.mode='ended';
  $('endTitle').textContent=reason==='caught'?'THE MONSTERS GOT YOU':'THE BELLS HAVE RUNG';
- $('endDetail').textContent=reason==='caught'?'Your elf fell defending the village.':'Four minutes of festive mayhem!';
+ $('endDetail').textContent=reason==='caught'?'Your elf fell defending the village.':'Your timed expedition is complete.';
  $('finalScore').textContent=state.score.toLocaleString('en-GB');
  $('finalGifts').textContent=state.gifts;
  if(state.score>best){
@@ -556,11 +559,19 @@ function endRun(reason){
  }
  finishRun(reason);
 }
-function resetRun(){
+function resetRun(chosenMode=state.playMode){
+ state.playMode=typeof chosenMode==='string'?chosenMode:state.playMode;
  state.mode='running';state.time=240;state.elapsed=0;state.score=0;state.gifts=0;state.lives=3;
  state.stamina=100;state.invulnerable=0;state.jump=0;state.jumpVel=0;
- state.near=null;state.chase=false;state.hitTime=0;state.deathTime=0;state.chain=0;state.lastPickup=-50;
- $('combo').textContent='SAVE THE PRESENTS';
+ state.near=null;state.nearSecret=null;state.chase=false;state.hitTime=0;state.deathTime=0;state.chain=0;state.lastPickup=-50;
+ state.freezeUntil=0;state.hiddenUntil=0;state.nextSurprise=44+Math.random()*27;state.insideSecret=false;
+ scene.background.set('#abcdd7');
+ for(const bonus of bonusGifts)scene.remove(bonus.group);
+ bonusGifts.length=0;
+ for(const treasure of workshopGifts){treasure.active=true;treasure.group.visible=true;}
+ $('encounterOverlay').classList.add('hidden');$('journalOverlay').classList.add('hidden');
+ $('secretsCount').textContent=discovered.size;
+ $('combo').textContent=state.playMode==='explore'?'FOLLOW YOUR CURIOSITY':'COLLECT WHAT YOU CAN';
  hero.face.rotation.z=0;hero.face.rotation.x=0;hero.face.position.set(0,0,0);
  hero.playing='';playAnim(hero,'idle');
  hero.group.position.set(0,0,23);
@@ -576,6 +587,7 @@ function resetRun(){
  });
  gifts.forEach(g=>{g.active=false;g.group.visible=false;});gifts.forEach(activateGift);
  $('startOverlay').classList.add('hidden');$('pauseOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
+ $('zoneLabel').textContent='THE VILLAGE';
  updateHud();clock.getDelta();
 }
 function pause(){
@@ -631,6 +643,14 @@ function damageHero(f){
 }
 function updateFoes(dt){
  if(!hero)return;
+ if(state.insideSecret||state.elapsed<state.freezeUntil||state.elapsed<state.hiddenUntil){
+  for(const f of foes){
+   f.attackTime=0;f.chasing=false;
+   if(f.swipe)f.swipe.visible=false;
+   f.mixer?.update(dt*.23);
+  }
+  state.chase=false;$('danger').classList.remove('visible');return;
+ }
  let nearest=99,anyChase=false;
  const px=hero.group.position.x,pz=hero.group.position.z;
  for(const f of foes){
@@ -775,7 +795,7 @@ canvas.addEventListener('pointermove',e=>{
 });
 canvas.addEventListener('pointerup',e=>{if(e.pointerId===lookPointer)lookPointer=null;});
 canvas.addEventListener('pointercancel',e=>{if(e.pointerId===lookPointer)lookPointer=null;});
-$('takeBtn').addEventListener('click',()=>collect(nearGift()));
+$('takeBtn').addEventListener('click',interact);
 $('jumpBtn').addEventListener('click',()=>jump());
 const runBtn=$('runBtn');
 runBtn.addEventListener('pointerdown',e=>{
@@ -788,16 +808,19 @@ function jump(){
 }
 $('pauseBtn').addEventListener('click',togglePause);
 $('resumeBtn').addEventListener('click',resume);
-$('restartBtn').addEventListener('click',resetRun);
-$('retryBtn').addEventListener('click',resetRun);
-$('startBtn').addEventListener('click',()=>{if(ready)resetRun();});
+$('restartBtn').addEventListener('click',()=>resetRun(state.playMode));
+$('retryBtn').addEventListener('click',()=>resetRun(state.playMode));
+$('startBtn').addEventListener('click',()=>{if(ready)resetRun('explore');});
+$('challengeBtn').addEventListener('click',()=>{if(ready)resetRun('challenge');});
 $('helpBtn').addEventListener('click',()=>{if(state.mode==='running')pause();});
 window.addEventListener('keydown',e=>{
  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
  keys.add(e.code);
  if(e.repeat)return;
- if(e.code==='KeyE'||e.code==='KeyF')collect(nearGift());
+ if(e.code==='KeyE'||e.code==='KeyF')interact();
  if(e.code==='Space')jump();
+ if(e.code==='Escape'&&state.mode==='encounter'){closeEncounter();return;}
+ if(e.code==='Escape'&&state.mode==='journal'){closeJournal();return;}
  if(e.code==='Escape'||e.code==='KeyP')togglePause();
  if(e.code==='Enter'&&state.mode==='menu'&&ready)resetRun();
 });
@@ -809,8 +832,11 @@ function tick(){
  requestAnimationFrame(tick);
  const dt=Math.min(clock.getDelta(),.045);
  if(state.mode==='running'){
-  state.elapsed+=dt;state.time=Math.max(0,240-state.elapsed);
-  if(state.time<=0)endRun('time');
+  state.elapsed+=dt;
+  if(state.playMode==='challenge'){
+   state.time=Math.max(0,240-state.elapsed);
+   if(state.time<=0)endRun('time');
+  }
   if(state.invulnerable>0)state.invulnerable-=dt;
   if(state.hitTime>0)state.hitTime=Math.max(0,state.hitTime-dt);
   const mx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joyX;
@@ -837,9 +863,13 @@ function tick(){
   hero.face.rotation.z=state.hitTime>0?Math.sin(state.hitTime/.58*Math.PI)*.2:0;
   playAnim(hero,state.hitTime>0?'hit':state.jump>.02?'jump':magnitude>.07?'run':'idle');
   hero.mixer?.update(dt*(sprint?1.3:1));
-  state.near=nearGift();
-  $('takeBtn').disabled=!state.near;
-  $('prompt').classList.toggle('visible',Boolean(state.near));
+  state.near=nearGift();state.nearSecret=nearSecret();
+  const available=state.near||state.nearSecret;
+  $('takeBtn').disabled=!available;
+  $('actionWord').textContent=state.near?'GIFT':'LOOK';
+  $('actionGlyph').textContent=state.near?'✦':'⌕';
+  $('prompt').textContent=state.near?'A PRESENT · PRESS E / GIFT':state.nearSecret?'SOMETHING UNUSUAL · PRESS E / LOOK':'';
+  $('prompt').classList.toggle('visible',Boolean(available));
   if(state.near&&Math.hypot(state.near.x-hero.group.position.x,state.near.z-hero.group.position.z)<1.0)collect(state.near);
   for(const g of gifts){
    if(!g.active){
@@ -850,6 +880,9 @@ function tick(){
    g.group.position.y=Math.sin(state.elapsed*3+g.i)*.12;
   }
   updateFoes(dt);
+  if(!state.insideSecret&&state.elapsed>state.nextSurprise){
+   unexpectedEncounter();state.nextSurprise=state.elapsed+43+Math.random()*30;
+  }
   updateHud();
  }else if(state.mode==='dying'&&hero){
   state.deathTime+=dt;
@@ -929,9 +962,12 @@ async function boot(){
   });
   await populateTrees();
   setUpGifts();
+  buildSecretWorkshop();
+  $('secretsCount').textContent=discovered.size;
   populateReindeer();
   ready=true;
-  $('startBtn').disabled=false;$('startBtn').textContent='ENTER THE VILLAGE';
+  $('startBtn').disabled=false;$('startBtn').textContent='EXPLORE THE VILLAGE';
+  $('challengeBtn').disabled=false;
   $('loading').textContent='All 3D character and village artwork loaded.';
  }catch(err){
   console.error('Christmas Village artwork failed:',err);
