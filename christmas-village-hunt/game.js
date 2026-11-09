@@ -212,7 +212,28 @@ function playAnim(actor,mode){
 async function loadActor(kind,x,z,height=2.15){
  const a=await loadThreeAsset('quaternius:ultimate-animated-character:'+kind,{GLTFLoader});
  const asset=normalized(a,height);
- // Repair a known incorrectly dark material in the original elf asset.
+ // Keep Quaternius' real elf mesh, skeleton and animations; recolour costume materials.
+  if(kind==='Elf')asset.traverse(n=>{
+   if(!n.isMesh)return;
+   const festive=m=>{
+    const c=m.clone(),name=(m.name+' '+n.name).toLowerCase();
+    if(/skin|face|hair|eye|nose|mouth|ear/.test(name)){
+     if(/skin/.test(name))c.color.set('#efb990');return c;
+    }
+    if(/boot|shoe|belt|leather/.test(name)){c.color.set('#49362f');c.map=null;}
+    else if(/trim|fur|white|wool/.test(name)){c.color.set('#fff4e0');c.map=null;}
+    else if(/hat|tunic|jacket|robe|shirt|coat|cloth|fabric|outfit|body/.test(name)){
+     c.color.set(/hat|sleeve|trouser|pant/.test(name)?'#176247':'#be2f3b');c.map=null;
+    }else if(m.color){
+     const {r,g,b}=m.color;
+     if(b>r*1.2&&b>g*1.06&&b>.21){c.color.set('#be3040');c.map=null;}
+     else if(g>r*1.12&&g>b*.88&&g>.16){c.color.set('#1b6547');c.map=null;}
+    }
+    c.needsUpdate=true;return c;
+   };
+   n.material=Array.isArray(n.material)?n.material.map(festive):festive(n.material);
+  });
+  // Repair a known incorrectly dark material in the original elf asset.
  if(kind==='Elf')asset.traverse(n=>{
   if(!n.isMesh)return;
   const repair=m=>{
@@ -450,6 +471,40 @@ function updateFoes(dt){
  $('danger').textContent=nearest<5?'MONSTER RIGHT BEHIND YOU':nearest<9?'A MONSTER IS CLOSE':'';
  $('vignette').classList.toggle('hurt',state.invulnerable>0&&Math.floor(state.invulnerable*5)%2===0);
 }
+// Sightline cutaway: keep the player and chasing creatures visible through cottages.
+function crossesHouse(a,b,h){
+ const dx=b.x-a.x,dz=b.z-a.z;
+ let low=0,high=1;
+ for(const [start,d,min,max] of [[a.x,dx,h.x-h.hx-.12,h.x+h.hx+.12],[a.z,dz,h.z-h.hz-.12,h.z+h.hz+.12]]){
+  if(Math.abs(d)<.0001){if(start<min||start>max)return false;continue;}
+  const t1=(min-start)/d,t2=(max-start)/d;
+  low=Math.max(low,Math.min(t1,t2));high=Math.min(high,Math.max(t1,t2));
+  if(low>high)return false;
+ }
+ return low<=1&&high>=0;
+}
+function updateVisibility(dt){
+ if(!hero)return;
+ const eye={x:camera.position.x,z:camera.position.z};
+ const player={x:hero.group.position.x,z:hero.group.position.z};
+ for(const h of translucentHouses){
+  let occludes=crossesHouse(eye,player,h);
+  if(!occludes)for(const foe of foes){
+   const point={x:foe.group.position.x,z:foe.group.position.z};
+   if(Math.hypot(point.x-player.x,point.z-player.z)<13&&crossesHouse(eye,point,h)){occludes=true;break;}
+  }
+  const target=occludes?.17:1;
+  const next=h.opacity+(target-h.opacity)*Math.min(1,dt*12);
+  if(Math.abs(next-h.opacity)<.001)continue;
+  h.opacity=next;
+  for(const part of h.parts){
+   for(const m of (Array.isArray(part.material)?part.material:[part.material])){
+    m.opacity=next;m.depthWrite=next>.97;
+   }
+   part.castShadow=next>.7;
+  }
+ }
+}
 function drawMap(){
  const w=map.width,h=map.height,X=x=>(x+34)/68*w,Z=z=>(z+34)/68*h;
  ctx.clearRect(0,0,w,h);
@@ -593,6 +648,7 @@ function tick(){
   if(!cameraReady){camera.position.copy(aim);cameraReady=true;}
   else camera.position.lerp(aim,Math.min(1,dt*5));
   camera.lookAt(pos.x+look.x*3.7,pos.y+1.45,pos.z+look.z*3.7);
+   updateVisibility(dt);
  }
  if(performance.now()-lastMap>110){drawMap();lastMap=performance.now();}
  renderer.render(scene,camera);
