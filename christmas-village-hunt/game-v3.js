@@ -507,6 +507,173 @@ function nearGift(){
  }
  return found;
 }
+
+function nearSecret(){
+ if(!hero||state.mode!=='running')return null;
+ const x=hero.group.position.x,z=hero.group.position.z;
+ if(state.insideSecret){
+  return Math.hypot(x,z-88.3)<2.55?{id:'exit',name:'The doorway home'}:null;
+ }
+ let found=null,best=999;
+ for(const secret of secrets){
+  const d=Math.hypot(x-secret.x,z-secret.z);
+  if(d<secret.r&&d<best){found=secret;best=d;}
+ }
+ return found;
+}
+function spawnBonusGifts(x,z,count=4){
+ if(state.insideSecret)return;
+ let created=0;
+ for(let i=0;i<count*4&&created<count;i++){
+  const angle=(i*.84+Math.random()*.35)*Math.PI;
+  const radius=2.3+Math.random()*3.1;
+  const gx=x+Math.cos(angle)*radius,gz=z+Math.sin(angle)*radius;
+  if(!canWalk(gx,gz,1.05))continue;
+  if(Math.hypot(gx-hero.group.position.x,gz-hero.group.position.z)<1.4)continue;
+  const meshGroup=makeGift(30+bonusGifts.length);
+  meshGroup.position.set(gx,0,gz);scene.add(meshGroup);
+  bonusGifts.push({group:meshGroup,x:gx,z:gz,i:30+bonusGifts.length,
+   bonus:true,active:true,respawnAt:Infinity,expiresAt:state.elapsed+35});
+  created++;
+ }
+}
+function trailTo(x0,z0,x1,z1){
+ for(let n=0;n<13;n++){
+  const t=(n+1)/14;
+  const px=x0+(x1-x0)*t,pz=z0+(z1-z0)*t;
+  if(!canWalk(px,pz,.3))continue;
+  const orb=ball(world,n%2?M.gold:M.glass,px,.21,pz,.10);
+  orb.castShadow=false;
+  mysteryLights.push({o:orb,x:px,y:.21,z:pz,phase:n*.63,expiresAt:state.elapsed+38});
+ }
+}
+function rememberSecret(secret){
+ if(discovered.has(secret.id))return false;
+ discovered.add(secret.id);
+ try{localStorage.setItem(mysteryKey,JSON.stringify([...discovered]));}catch{}
+ $('secretsCount').textContent=discovered.size;
+ state.score+=120;
+ pickupSparkles(secret.x,secret.z);
+ return true;
+}
+function interact(){
+ if(state.mode!=='running')return;
+ const gift=nearGift();
+ if(gift){collect(gift);return;}
+ const secret=nearSecret();
+ if(!secret)return;
+ if(secret.id==='exit'){exitSecretWorkshop();return;}
+ openEncounter(secret);
+}
+function openEncounter(secret){
+ if(state.mode!=='running')return;
+ lastEncounter=secret;encounterReturn='running';state.mode='encounter';
+ $('encounterEyebrow').textContent=discovered.has(secret.id)?'A FAMILIAR MYSTERY':'YOU FOUND SOMETHING';
+ $('encounterTitle').textContent=secret.name.toUpperCase();
+ $('encounterText').textContent=secret.text;
+ $('encounterIllustration').textContent=secret.icon;
+ $('encounterAction').textContent=discovered.has(secret.id)&&secret.id==='workshop'?'GO INSIDE AGAIN':secret.action;
+ $('encounterLeave').textContent='NOT YET';
+ $('encounterOverlay').classList.remove('hidden');
+}
+function closeEncounter(){
+ $('encounterOverlay').classList.add('hidden');
+ if(state.mode==='encounter'){state.mode='running';state.invulnerable=Math.max(state.invulnerable,1.5);}
+}
+function enterSecretWorkshop(){
+ state.insideSecret=true;state.invulnerable=3;
+ hero.group.position.set(0,0,82);hero.group.rotation.y=0;
+ canvasYaw=0;cameraReady=false;
+ state.near=null;state.nearSecret=null;state.chase=false;
+ $('combo').textContent='AN IMPOSSIBLY LARGE TOYROOM';
+ toast('THE WALLS SHIMMER. YOU ARE SOMEWHERE ELSE...',3);
+}
+function exitSecretWorkshop(){
+ state.insideSecret=false;state.invulnerable=3;
+ hero.group.position.set(16,0,-10.3);hero.group.rotation.y=0;
+ canvasYaw=Math.PI;cameraReady=false;
+ $('combo').textContent=state.playMode==='explore'?'FOLLOW YOUR CURIOSITY':'COLLECT WHAT YOU CAN';
+ toast('THE SECRET DOOR CLOSES BEHIND YOU...',2.5);
+}
+function resolveEncounter(){
+ if(!lastEncounter)return;
+ const secret=lastEncounter;closeEncounter();
+ const first=rememberSecret(secret);
+ if(secret.id==='snowman'){
+  if(first){trailTo(-3,16,-8,-26);toast('GOLDEN FOOTPRINTS APPEAR IN THE SNOW',3);}
+  else toast('THE SNOWMAN WHISPERS: FOLLOW THE LIGHTS',2);
+ }else if(secret.id==='pond'){
+  state.freezeUntil=state.elapsed+16;
+  spawnBonusGifts(-8,-26,4);
+  toast('THE BELL RINGS! ALL MONSTERS FREEZE FOR 16 SECONDS',3);
+ }else if(secret.id==='tree'){
+  state.hiddenUntil=state.elapsed+22;
+  state.lives=Math.min(3,state.lives+1);
+  toast('WINTER MAGIC HIDES YOU FROM MONSTERS FOR 22 SECONDS',3);
+ }else if(secret.id==='workshop'){
+  enterSecretWorkshop();
+ }else if(secret.id==='postbox'){
+  spawnBonusGifts(25,6,4);
+  toast('THE LETTER TURNS INTO SPARKLING GIFTS',2.6);
+ }
+ updateHud();
+}
+function showJournal(){
+ if(state.mode!=='paused')return;
+ state.mode='journal';
+ const entries=$('journalEntries');entries.replaceChildren();
+ const found=secrets.filter(secret=>discovered.has(secret.id));
+ $('journalIntro').textContent=found.length+
+  ' of '+secrets.length+' mysteries found. Nothing is marked on the village map.';
+ if(!found.length){
+  const note=document.createElement('p');note.textContent='No secrets discovered yet. Follow odd sounds, examine unusual objects and explore the village corners.';
+  entries.appendChild(note);
+ }
+ for(const secret of found){
+  const card=document.createElement('div');card.className='journalEntry';
+  const title=document.createElement('strong');title.textContent=secret.name;
+  const body=document.createElement('p');body.textContent=secret.hint;
+  card.append(title,body);entries.append(card);
+ }
+ $('pauseOverlay').classList.add('hidden');
+ $('journalOverlay').classList.remove('hidden');
+}
+function closeJournal(){
+ $('journalOverlay').classList.add('hidden');
+ if(state.mode==='journal'){
+  state.mode='paused';
+  $('pauseOverlay').classList.remove('hidden');
+ }
+}
+function unexpectedEncounter(){
+ if(state.mode!=='running'||state.insideSecret)return;
+ const x=hero.group.position.x,z=hero.group.position.z;
+ const type=Math.floor(Math.random()*5);
+ if(type===0){
+  spawnBonusGifts(x,z,4);toast('A HIDDEN SACK BURSTS! PRESENTS SCATTER IN THE SNOW!',3);
+ }else if(type===1){
+  state.freezeUntil=state.elapsed+9;
+  toast('DISTANT BELLS RING. THE MONSTERS STAND COMPLETELY STILL...',3);
+ }else if(type===2){
+  const unknown=secrets.filter(secret=>!discovered.has(secret.id));
+  if(unknown.length){
+   const secret=unknown[Math.floor(Math.random()*unknown.length)];
+   trailTo(x,z,secret.x,secret.z);
+   toast('STRANGE LIGHTS DANCE THROUGH THE SNOW. FOLLOW THEM?',3);
+  }else spawnBonusGifts(x,z,3);
+ }else if(type===3){
+  state.hiddenUntil=state.elapsed+10;
+  toast('A SILVER REINDEER SHADOW CROSSES THE STREET. YOU VANISH FROM MONSTER SIGHT.',3);
+ }else{
+  spawnBonusGifts(x,z,2);
+  toast('A TRAPDOOR CLATTERS SOMEWHERE NEARBY...',3);
+ }
+}
+$('encounterAction').addEventListener('click',resolveEncounter);
+$('encounterLeave').addEventListener('click',closeEncounter);
+$('journalBtn').addEventListener('click',showJournal);
+$('journalClose').addEventListener('click',closeJournal);
+
 function toast(str,duration=1.6){
  $('toast').textContent=str;$('toast').classList.add('visible');toastSecs=duration;
 }
@@ -587,7 +754,7 @@ function resetRun(chosenMode=state.playMode){
  });
  gifts.forEach(g=>{g.active=false;g.group.visible=false;});gifts.forEach(activateGift);
  $('startOverlay').classList.add('hidden');$('pauseOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
- $('zoneLabel').textContent='THE VILLAGE';
+ 
  updateHud();clock.getDelta();
 }
 function pause(){
@@ -645,7 +812,7 @@ function updateFoes(dt){
  if(!hero)return;
  if(state.insideSecret||state.elapsed<state.freezeUntil||state.elapsed<state.hiddenUntil){
   for(const f of foes){
-   f.attackTime=0;f.chasing=false;
+   f.attackTime=0;f.chasing=false;f.face.position.z=0;f.face.rotation.x=0;f.face.rotation.z=0;
    if(f.swipe)f.swipe.visible=false;
    f.mixer?.update(dt*.23);
   }
