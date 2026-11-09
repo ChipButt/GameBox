@@ -84,7 +84,7 @@ const keys=new Set();
 const state={mode:'menu',time:240,elapsed:0,score:0,gifts:0,lives:3,stamina:100,
  invulnerable:0,jump:0,jumpVel:0,near:null,chase:false,hitTime:0,deathTime:0,chain:0,lastPickup:-50,
  playMode:'explore',insideSecret:false,nearSecret:null,freezeUntil:0,hiddenUntil:0,nextSurprise:55};
-const bestKey='gamebox.christmasVillageGiftHunt.best.v1';
+const bestKey='gamebox.christmasVillageGiftHunt.bestChallenge.v3';
 let best=0;
 try{best=Math.max(0,Number(localStorage.getItem(bestKey))||0);}catch{}
 $('best').textContent=best.toLocaleString('en-GB');
@@ -684,7 +684,7 @@ function toast(str,duration=1.6){
 }
 function updateHud(){
  $('timerLabel').textContent=state.playMode==='explore'?'MODE':'TIME';
- $('timer').textContent=state.playMode==='explore'?'WANDER':Math.floor(state.time/60)+':'+String(Math.ceil(state.time%60)).padStart(2,'0');
+ $('timer').textContent=state.playMode==='explore'?'FREE':Math.floor(state.time/60)+':'+String(Math.ceil(state.time%60)).padStart(2,'0');
  $('gifts').textContent=state.gifts;
  $('score').textContent=state.score.toLocaleString('en-GB');
  $('hearts').textContent='♥'.repeat(state.lives)+'♡'.repeat(3-state.lives);
@@ -712,10 +712,12 @@ function finishRun(reason){
  $('endDetail').textContent=reason==='caught'?'Your elf fell defending the village.':'Your timed expedition is complete.';
  $('finalScore').textContent=state.score.toLocaleString('en-GB');
  $('finalGifts').textContent=state.gifts;
- if(state.score>best){
+ if(state.playMode==='challenge'&&state.score>best){
   best=state.score;try{localStorage.setItem(bestKey,String(best));}catch{}
-  $('newBest').textContent='NEW PERSONAL BEST';
- }else $('newBest').textContent='PERSONAL BEST: '+best.toLocaleString('en-GB');
+  $('newBest').textContent='NEW CHALLENGE BEST';
+ }else if(state.playMode==='explore'){
+  $('newBest').textContent='EXPLORE MODE · DISCOVERIES SAVED: '+discovered.size+'/'+secrets.length;
+ }else $('newBest').textContent='CHALLENGE BEST: '+best.toLocaleString('en-GB');
  $('best').textContent=best.toLocaleString('en-GB');
  $('introBest').textContent=best.toLocaleString('en-GB');
  $('endOverlay').classList.remove('hidden');
