@@ -178,7 +178,48 @@ function snowSurface(){
  }
  treeSites.push([0,0,1],[-5,12,1],[5,12,2],[-5,-12,2],[5,-12,1]);
 }
+// Christmas street dressing: snow families, lantern arches and overhead
+// garlands. All posts are collidable and the arch remains walkable.
+function populateChristmasScenery(){
+ for(const [x,z] of [[-3,16],[5,-16],[-30,25],[30,27]]){
+  const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+  ball(g,M.snowLight,0,.69,0,.67);
+  ball(g,M.snowLight,0,1.61,0,.47);
+  for(const eye of [-.16,.16])ball(g,M.iron,eye,1.74,.43,.065);
+  const nose=cone(g,M.gold,0,1.57,.51,.12,.42);nose.rotation.x=Math.PI/2;
+  for(let i=0;i<3;i++)ball(g,M.iron,0,.58+i*.33,.61,.062);
+  cylinder(g,M.iron,0,2.13,0,.35,.43);
+  cylinder(g,M.iron,0,1.95,0,.58,.09);
+  box(g,M.red,0,1.28,0,1.05,.17,.2);
+  for(const side of [-1,1]){
+   const twig=cylinder(g,M.wood,side*.65,1.25,0,.067,.95);
+   twig.rotation.z=side*.88;
+  }
+  treeBlockers.push({x,z,radius:.55});
+ }
+ // A gateway in an open street, with clearance for sprinting underneath.
+ for(const x of [-2.75,2.75]){
+  cylinder(world,M.cream,x,1.72,-9,.22,3.44);
+  for(let y=.4;y<3.4;y+=.48)cylinder(world,M.red,x,y,-9,.25,.12);
+  ball(world,M.gold,x,3.53,-9,.31);
+  treeBlockers.push({x,z:-9,radius:.25});
+ }
+ box(world,M.red,0,3.37,-9,5.65,.25,.35);
+ for(let i=0;i<11;i++)ball(world,i%2?M.gold:M.glass,-2.5+i*.5,3.37,-8.76,.10);
+ stamp(world,'GIFT HUNT',0,4.12,-9,3.0);
+ // Festive strands drawn at real height, without blocking walking routes.
+ for(const z of [-22,-5,12,28]){
+  const cable=box(world,M.iron,0,6.55,z,50,.024,.024);
+  cable.castShadow=false;
+  for(let i=0;i<26;i++){
+   const x=-25+i*2,y=6.52-Math.sin(i*Math.PI/25)*.3;
+   const bulb=ball(world,[M.red,M.green,M.gold,M.glass][i%4],x,y,z,.135);
+   bulb.castShadow=false;
+  }
+ }
+}
 snowSurface();
+populateChristmasScenery();
 const snowGeo=new THREE.BufferGeometry();
 const snowP=new Float32Array(350*3);
 for(let i=0;i<350;i++){
@@ -728,6 +769,12 @@ function tick(){
    p.o.scale.setScalar(Math.max(0,1-p.time));
    if(p.time>=1){scene.remove(p.o);sparkles.splice(k,1);}
   }
+  for(const deer of ambientAnimals){
+   deer.phase+=dt*.27;
+   deer.group.position.set(deer.origin[0]+Math.cos(deer.phase)*1.1,0,deer.origin[1]+Math.sin(deer.phase)*1.1);
+   deer.group.rotation.y=deer.phase+Math.PI*.5;
+   deer.mixer?.update(dt);
+  }
  if(hero){
   const look=new THREE.Vector3(-Math.sin(canvasYaw),0,-Math.cos(canvasYaw));
   const mobile=innerWidth<700,distance=mobile?7.7:10.1,up=mobile?5.0:6.15;
@@ -740,6 +787,20 @@ function tick(){
  }
  if(performance.now()-lastMap>110){drawMap();lastMap=performance.now();}
  renderer.render(scene,camera);
+}
+async function populateReindeer(){
+ // Real Quaternius animated deer, loaded independently so each has its own rig.
+ for(const [x,z,phase] of [[-7,26,0],[8,27,1.5]]){
+  try{
+   const a=await loadThreeAsset('quaternius:ultimate-animated-animals:Deer',{GLTFLoader});
+   const asset=normalized(a,2.05);
+   const holder=new THREE.Group();holder.position.set(x,0,z);
+   holder.add(asset);scene.add(holder);
+   const mixer=a.animations.length?new THREE.AnimationMixer(asset):null;
+   if(mixer)mixer.clipAction(a.animations.find(v=>/walk|idle/i.test(v.name))||a.animations[0]).play();
+   ambientAnimals.push({group:holder,mixer,phase,origin:[x,z]});
+  }catch(err){console.warn('Deer artwork could not load:',err);}
+ }
 }
 async function boot(){
  $('startBtn').disabled=true;$('startBtn').textContent='LOADING CHRISTMAS ARTWORK...';
@@ -762,6 +823,7 @@ async function boot(){
   });
   await populateTrees();
   setUpGifts();
+  populateReindeer();
   ready=true;
   $('startBtn').disabled=false;$('startBtn').textContent='ENTER THE VILLAGE';
   $('loading').textContent='All 3D character and village artwork loaded.';
