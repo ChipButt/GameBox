@@ -58,7 +58,7 @@ let hero=null,ready=false,lookPointer=null,joyPointer=null,toastSecs=0,lastMap=0
 let canvasYaw=0,joyX=0,joyY=0,keySprint=false,touchSprint=false;
 const keys=new Set();
 const state={mode:'menu',time:240,elapsed:0,score:0,gifts:0,lives:3,stamina:100,
- invulnerable:0,jump:0,jumpVel:0,near:null,chase:false};
+ invulnerable:0,jump:0,jumpVel:0,near:null,chase:false,hitTime:0,deathTime:0,chain:0,lastPickup:-50};
 const bestKey='gamebox.christmasVillageGiftHunt.best.v1';
 let best=0;
 try{best=Math.max(0,Number(localStorage.getItem(bestKey))||0);}catch{}
@@ -202,11 +202,19 @@ function playAnim(actor,mode){
  if(!actor.mixer)return;
  if(actor.playing===mode)return;
  const a=actor.assetAnimations;
- const patterns=mode==='run'?[/run/i,/walk/i]:mode==='jump'?[/jump/i,/run/i]:[/idle/i,/stand/i,/walk/i];
+ const patterns=mode==='run'?[/run/i,/walk/i]:
+  mode==='jump'?[/jump/i,/run/i]:
+  mode==='attack'?[/attack/i,/punch/i,/slash/i,/strike/i,/run/i]:
+  mode==='hit'?[/hit/i,/hurt/i,/damage/i,/idle/i]:
+  mode==='death'?[/death/i,/die/i,/dying/i,/fall/i,/idle/i]:
+  [/idle/i,/stand/i,/walk/i];
  const target=patterns.map(p=>a.find(c=>p.test(c.name))).find(Boolean)||a[0];
  if(!target)return;
  if(actor.action)actor.action.fadeOut(.17);
- actor.action=actor.mixer.clipAction(target);actor.action.reset().fadeIn(.17).play();
+ actor.action=actor.mixer.clipAction(target);actor.action.reset();
+ actor.action.setLoop(mode==='attack'||mode==='death'?THREE.LoopOnce:THREE.LoopRepeat,mode==='attack'||mode==='death'?1:Infinity);
+ actor.action.clampWhenFinished=mode==='death';
+ actor.action.fadeIn(.17).play();
  actor.playing=mode;
 }
 async function loadActor(kind,x,z,height=2.15){
@@ -356,11 +364,10 @@ function collect(g=state.near){
  if(navigator.vibrate)navigator.vibrate(32);
  updateHud();
 }
-function endRun(reason){
- if(state.mode==='ended')return;
+function finishRun(reason){
  state.mode='ended';
  $('endTitle').textContent=reason==='caught'?'THE MONSTERS GOT YOU':'THE BELLS HAVE RUNG';
- $('endDetail').textContent=reason==='caught'?'Your village escape is over.':'Four minutes of festive mayhem!';
+ $('endDetail').textContent=reason==='caught'?'Your elf fell defending the village.':'Four minutes of festive mayhem!';
  $('finalScore').textContent=state.score.toLocaleString('en-GB');
  $('finalGifts').textContent=state.gifts;
  if(state.score>best){
@@ -371,15 +378,33 @@ function endRun(reason){
  $('introBest').textContent=best.toLocaleString('en-GB');
  $('endOverlay').classList.remove('hidden');
 }
+function endRun(reason){
+ if(state.mode==='ended'||state.mode==='dying')return;
+ if(reason==='caught'){
+  state.mode='dying';state.deathTime=0;
+  hero.face.rotation.z=0;hero.face.position.y=0;
+  playAnim(hero,'death');
+  toast('THE ELF HAS FALLEN!',1.4);
+  return;
+ }
+ finishRun(reason);
+}
 function resetRun(){
  state.mode='running';state.time=240;state.elapsed=0;state.score=0;state.gifts=0;state.lives=3;
- state.stamina=100;state.invulnerable=0;state.jump=0;state.jumpVel=0;state.near=null;state.chase=false;
+ state.stamina=100;state.invulnerable=0;state.jump=0;state.jumpVel=0;
+ state.near=null;state.chase=false;state.hitTime=0;state.deathTime=0;state.chain=0;state.lastPickup=-50;
+ hero.face.rotation.z=0;hero.face.rotation.x=0;hero.face.position.set(0,0,0);
+ hero.playing='';playAnim(hero,'idle');
  hero.group.position.set(0,0,23);
  hero.group.rotation.y=0;canvasYaw=0;
  foes.forEach((f,i)=>{
   const sites=[[-25,-17],[25,-17],[-26,15],[26,17]];
   f.group.position.set(sites[i][0],0,sites[i][1]);
   f.patrol=i;f.path=[];f.pathTimer=0;f.chasing=false;f.lost=0;
+   f.cooldown=0;f.attackTime=0;f.attackElapsed=0;f.didStrike=false;
+   f.face.rotation.x=0;f.face.rotation.z=0;f.face.position.set(0,0,0);
+   if(f.swipe)f.swipe.visible=false;
+   f.playing='';playAnim(f,'idle');
  });
  gifts.forEach(g=>{g.active=false;g.group.visible=false;});gifts.forEach(activateGift);
  $('startOverlay').classList.add('hidden');$('pauseOverlay').classList.add('hidden');$('endOverlay').classList.add('hidden');
@@ -422,6 +447,20 @@ function findRoute(ax,az,bx,bz){
  }
  result.reverse();result.push([bx,bz]);return result;
 }
+function damageHero(f){
+ if(state.mode!=='running'||state.invulnerable>0)return;
+ const p=hero.group.position,q=f.group.position;
+ const distance=Math.hypot(p.x-q.x,p.z-q.z);
+ if(distance>2.12)return; // attacks can miss if the player escaped the swipe
+ state.invulnerable=2.3;state.hitTime=.58;state.lives--;
+ const nx=(p.x-q.x)/Math.max(distance,.001),nz=(p.z-q.z)/Math.max(distance,.001);
+ const bx=p.x+nx*2.2,bz=p.z+nz*2.2;
+ if(canWalk(bx,bz))p.set(bx,p.y,bz);
+ playAnim(hero,'hit');
+ if(navigator.vibrate)navigator.vibrate([110,60,125]);
+ if(state.lives<=0){endRun('caught');return;}
+ toast('MONSTER ATTACK! '+state.lives+' HEART'+(state.lives===1?'':'S')+' LEFT',1.6);
+}
 function updateFoes(dt){
  if(!hero)return;
  let nearest=99,anyChase=false;
@@ -430,46 +469,58 @@ function updateFoes(dt){
   const x=f.group.position.x,z=f.group.position.z;
   const d=Math.hypot(px-x,pz-z);
   nearest=Math.min(nearest,d);
-  if(d<12.8){f.chasing=true;f.lost=0;}
-  else if(f.chasing){f.lost+=dt;if(f.lost>4.5&&d>18)f.chasing=false;}
+  if(d<13.3){f.chasing=true;f.lost=0;}
+  else if(f.chasing){f.lost+=dt;if(f.lost>4.5&&d>19)f.chasing=false;}
   if(f.chasing)anyChase=true;
+  f.cooldown=Math.max(0,(f.cooldown||0)-dt);
   const patrol=[[24,-26],[24,24],[-24,24],[-24,-26],[0,-18],[0,18]];
   const current=patrol[f.patrol%patrol.length];
   const target=f.chasing?[px,pz]:current;
   if(!f.chasing&&Math.hypot(current[0]-x,current[1]-z)<2.3)f.patrol=(f.patrol+1+f.index)%patrol.length;
-  f.pathTimer-=dt;
-  if(f.pathTimer<=0||!f.path.length){
-   f.path=findRoute(x,z,target[0],target[1]);
-   f.pathTimer=f.chasing?.68:1.8;
+  if(!f.attackTime&&d<2.02&&f.cooldown<=0){
+   f.attackTime=.67;f.attackElapsed=0;f.didStrike=false;f.cooldown=2.1;
   }
-  while(f.path.length&&Math.hypot(f.path[0][0]-x,f.path[0][1]-z)<.7)f.path.shift();
-  const to=f.path[0]||target;
-  const dx=to[0]-x,dz=to[1]-z,len=Math.hypot(dx,dz);
-  if(len>.08){
-   const speed=f.chasing?Math.min(4.25,2.7+state.elapsed/130):1.5;
-   const stepx=dx/len*speed*dt,stepz=dz/len*speed*dt;
-   if(canWalk(x+stepx,z,.6))f.group.position.x+=stepx;
-   if(canWalk(f.group.position.x,z+stepz,.6))f.group.position.z+=stepz;
-   const angle=Math.atan2(-stepx,-stepz);
-   f.group.rotation.y+=Math.atan2(Math.sin(angle-f.group.rotation.y),Math.cos(angle-f.group.rotation.y))*Math.min(1,dt*7);
+  if(f.attackTime>0){
+   f.attackElapsed+=dt;f.attackTime=Math.max(0,f.attackTime-dt);
+   const progress=Math.min(1,f.attackElapsed/.67),lunge=Math.sin(Math.PI*progress);
+   f.face.position.z=-lunge*.65;
+   f.face.rotation.x=-lunge*.36;
+   f.face.rotation.z=Math.sin(progress*Math.PI*2)*.12;
+   if(f.swipe){
+    f.swipe.visible=progress>.28&&progress<.77;
+    f.swipe.rotation.z=-1.2+progress*2.8;
+    f.swipe.material.opacity=Math.max(0,1-Math.abs(progress-.5)*3);
+   }
+   if(!f.didStrike&&f.attackElapsed>=.33){
+    f.didStrike=true;damageHero(f);
+   }
+   if(f.attackTime===0){
+    f.face.position.z=0;f.face.rotation.x=0;f.face.rotation.z=0;
+    if(f.swipe)f.swipe.visible=false;
+   }
+  }else{
+   f.pathTimer-=dt;
+   if(f.pathTimer<=0||!f.path.length){
+    f.path=findRoute(x,z,target[0],target[1]);f.pathTimer=f.chasing?.53:1.8;
+   }
+   while(f.path.length&&Math.hypot(f.path[0][0]-x,f.path[0][1]-z)<.7)f.path.shift();
+   const to=f.path[0]||target,dx=to[0]-x,dz=to[1]-z,len=Math.hypot(dx,dz);
+   if(len>.08){
+    const speed=f.chasing?Math.min(4.55,3.1+state.elapsed/130):1.75;
+    const stepx=dx/len*speed*dt,stepz=dz/len*speed*dt;
+    if(canWalk(x+stepx,z,.52))f.group.position.x+=stepx;
+    if(canWalk(f.group.position.x,z+stepz,.52))f.group.position.z+=stepz;
+    const angle=Math.atan2(-stepx,-stepz);
+    f.group.rotation.y+=Math.atan2(Math.sin(angle-f.group.rotation.y),Math.cos(angle-f.group.rotation.y))*Math.min(1,dt*8);
+   }
   }
-  playAnim(f,f.chasing?'run':'run');
-  f.mixer?.update(dt*(f.chasing?1.05:.65));
-  const danger=Math.hypot(px-f.group.position.x,pz-f.group.position.z);
-  if(danger<1.25&&state.invulnerable<=0){
-   state.invulnerable=2.7;state.lives--;
-   const nx=(px-f.group.position.x)/Math.max(danger,.001),nz=(pz-f.group.position.z)/Math.max(danger,.001);
-   const bx=px+nx*2.2,bz=pz+nz*2.2;
-   if(canWalk(bx,bz))hero.group.position.set(bx,state.jump,bz);
-   toast('CAUGHT! '+state.lives+' HEART'+(state.lives===1?'':'S')+' LEFT',2.2);
-   if(navigator.vibrate)navigator.vibrate([110,70,110]);
-   if(state.lives<=0){endRun('caught');break;}
-  }
+  playAnim(f,f.attackTime>0?'attack':'run');
+  f.mixer?.update(dt*(f.chasing?1.13:.7));
  }
  state.chase=anyChase;
  $('danger').classList.toggle('visible',nearest<9);
- $('danger').textContent=nearest<5?'MONSTER RIGHT BEHIND YOU':nearest<9?'A MONSTER IS CLOSE':'';
- $('vignette').classList.toggle('hurt',state.invulnerable>0&&Math.floor(state.invulnerable*5)%2===0);
+ $('danger').textContent=nearest<4.8?'MONSTER RIGHT BEHIND YOU':nearest<9?'A MONSTER IS CLOSE':'';
+ $('vignette').classList.toggle('hurt',state.hitTime>0);
 }
 // Sightline cutaway: keep the player and chasing creatures visible through cottages.
 function crossesHouse(a,b,h){
@@ -593,6 +644,7 @@ function tick(){
   state.elapsed+=dt;state.time=Math.max(0,240-state.elapsed);
   if(state.time<=0)endRun('time');
   if(state.invulnerable>0)state.invulnerable-=dt;
+  if(state.hitTime>0)state.hitTime=Math.max(0,state.hitTime-dt);
   const mx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joyX;
   const mz=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0)+joyY;
   const magnitude=Math.min(1,Math.hypot(mx,mz));
@@ -614,7 +666,8 @@ function tick(){
    if(state.jump<=0){state.jump=0;state.jumpVel=0;}
   }
   hero.group.position.y=state.jump;
-  playAnim(hero,state.jump>.02?'jump':magnitude>.07?'run':'idle');
+  hero.face.rotation.z=state.hitTime>0?Math.sin(state.hitTime/.58*Math.PI)*.2:0;
+  playAnim(hero,state.hitTime>0?'hit':state.jump>.02?'jump':magnitude>.07?'run':'idle');
   hero.mixer?.update(dt*(sprint?1.3:1));
   state.near=nearGift();
   $('takeBtn').disabled=!state.near;
@@ -630,6 +683,14 @@ function tick(){
   }
   updateFoes(dt);
   updateHud();
+ }else if(state.mode==='dying'&&hero){
+  state.deathTime+=dt;
+  const p=Math.min(1,state.deathTime/1.18);
+  // Physical collapse remains visible even on models that have no death clip.
+  hero.face.rotation.z=p*Math.PI*.47;
+  hero.face.position.y=-p*.35;
+  hero.mixer?.update(dt);
+  if(state.deathTime>=1.55)finishRun('caught');
  }else if(hero){hero.mixer?.update(dt);}
  if(toastSecs>0){toastSecs-=dt;if(toastSecs<=0)$('toast').classList.remove('visible');}
  // Drift snow rather than using an unrelated repeating screen effect.
@@ -664,7 +725,13 @@ async function boot(){
   const [p,a,b,c,d]=await Promise.all(actorPromises);
   hero=p;
   [a,b,c,d].forEach((f,i)=>{
-   f.index=i;f.patrol=i;f.path=[];f.pathTimer=0;f.chasing=false;f.lost=0;foes.push(f);
+   f.index=i;f.patrol=i;f.path=[];f.pathTimer=0;f.chasing=false;f.lost=0;
+    f.attackTime=0;f.attackElapsed=0;f.cooldown=0;f.didStrike=false;
+    const arc=new THREE.Mesh(new THREE.TorusGeometry(.57,.06,6,27,Math.PI*1.45),
+     new THREE.MeshBasicMaterial({color:'#ffdfbb',transparent:true,opacity:.88,depthWrite:false,side:THREE.DoubleSide}));
+    arc.position.set(0,1.35,-.85);arc.visible=false;arc.rotation.z=-.9;
+    f.face.add(arc);f.swipe=arc;
+    foes.push(f);
   });
   await populateTrees();
   setUpGifts();
