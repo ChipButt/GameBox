@@ -47,12 +47,13 @@ const ball=(p,m,x,y,z,r)=>mesh(p,geometries.ball,m,x,y,z,r);
 const cone=(p,m,x,y,z,r,h)=>mesh(p,geometries.cone,m,x,y,z,r,h,r);
 const cylinder=(p,m,x,y,z,r,h)=>mesh(p,geometries.cylinder,m,x,y,z,r,h,r);
 const world=new THREE.Group();scene.add(world);
-const buildings=[],treeSites=[],giftSites=[
+const buildings=[],treeSites=[],treeBlockers=[],giftSites=[
  [-25,-25],[-16,-26],[-7,-21],[8,-22],[23,-25],[27,-8],[24,8],[24,25],
  [10,22],[-6,25],[-23,24],[-27,8],[-25,-8],[-11,-9],[9,-9],[-11,7],[11,7],
  [-2,1],[18,-2],[-18,1]
 ];
 const gifts=[],foes=[],sfx={};
+const translucentHouses=[];
 let hero=null,ready=false,lookPointer=null,joyPointer=null,toastSecs=0,lastMap=0;
 let canvasYaw=0,joyX=0,joyY=0,keySprint=false,touchSprint=false;
 const keys=new Set();
@@ -119,7 +120,16 @@ function buildCottage(x,z,variant=0,rot=0){
  const porch=box(g,M.wood,0,.2,4,2.45,.25,1.95);porch.castShadow=false;
  const snowbank=ball(g,M.snowShade,-3.5,.25,3.25,.6);
  snowbank.scale.y=.32;
- buildings.push({x,z,hx:4.3,hz:4.3});
+ // Collide with actual walls, not roof or porch overhang.
+  const turned=Math.abs(Math.sin(rot))>.7;
+  const house={x,z,hx:turned?3.3:3.9,hz:turned?3.9:3.3,group:g,opacity:1,parts:[]};
+  g.traverse(part=>{
+   if(!part.isMesh)return;
+   const unique=m=>{const c=m.clone();c.transparent=true;c.depthWrite=true;return c;};
+   part.material=Array.isArray(part.material)?part.material.map(unique):unique(part.material);
+   house.parts.push(part);
+  });
+  buildings.push(house);translucentHouses.push(house);
  return g;
 }
 function lamp(x,z){
@@ -163,7 +173,7 @@ function snowSurface(){
  stamp(world,'NORTH POLE',0,2.55,-31,5.4);
  for(let i=0;i<25;i++){
   const a=(i*61.7)% (Math.PI*2),dist=23+i%4*2.1,x=Math.cos(a)*dist,z=Math.sin(a)*dist;
-  if(!buildings.some(b=>Math.abs(x-b.x)<5&&Math.abs(z-b.z)<5))treeSites.push([x,z,i%2?1:2]);
+  if(!buildings.some(b=>Math.abs(x-b.x)<b.hx+3&&Math.abs(z-b.z)<b.hz+3))treeSites.push([x,z,i%2?1:2]);
  }
  treeSites.push([0,0,1],[-5,12,1],[5,12,2],[-5,-12,2],[5,-12,1]);
 }
@@ -222,6 +232,7 @@ async function populateTrees(){
  const types=await Promise.all(['PineTree_Snow_2','PineTree_Snow_4'].map(n=>loadThreeAsset('quaternius:ultimate-nature:'+n,{FBXLoader})));
  const templates=types.map((a,i)=>normalized(a,4.1+i*.45));
  for(const [x,z,k] of treeSites){
+   treeBlockers.push({x,z,radius:k===1?.8:.95});
   const tree=templates[k-1].clone(true);
   tree.position.set(x,tree.position.y,z);
   tree.scale.multiplyScalar(.78+(Math.abs(x*7+z*11)%5)*.07);
@@ -231,6 +242,7 @@ async function populateTrees(){
  }
  // Brighter central village tree: real model plus individual bauble/lamp artwork.
  const center=templates[0].clone(true);
+  treeBlockers.push({x:0,z:0,radius:1.65});
  center.position.set(0,center.position.y,0);center.scale.multiplyScalar(2.05);
  scene.add(center);
  for(let i=0;i<32;i++){
@@ -260,9 +272,19 @@ function makeGift(i){
  halo.rotation.x=-Math.PI/2;halo.castShadow=false;
  g.userData.halo=halo;return g;
 }
-function canWalk(x,z,r=.45){
+function canWalk(x,z,r=.38){
  if(x<-33+r||x>33-r||z<-33+r||z>33-r)return false;
- return !buildings.some(b=>Math.abs(x-b.x)<b.hx+r&&Math.abs(z-b.z)<b.hz+r);
+ for(const b of buildings){
+  const dx=Math.max(Math.abs(x-b.x)-b.hx,0);
+  const dz=Math.max(Math.abs(z-b.z)-b.hz,0);
+  if(dx*dx+dz*dz<r*r)return false;
+  if(Math.abs(x-b.x)<b.hx&&Math.abs(z-b.z)<b.hz)return false;
+ }
+ for(const t of treeBlockers){
+  const dx=x-t.x,dz=z-t.z;
+  if(dx*dx+dz*dz<(t.radius+r)*(t.radius+r))return false;
+ }
+ return true;
 }
 function activateGift(item){
  const choices=giftSites.filter(([x,z])=>canWalk(x,z,1.1)&&
