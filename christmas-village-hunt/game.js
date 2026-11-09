@@ -52,7 +52,8 @@ const buildings=[],treeSites=[],treeBlockers=[],giftSites=[
  [10,22],[-6,25],[-23,24],[-27,8],[-25,-8],[-11,-9],[9,-9],[-11,7],[11,7],
  [-2,1],[18,-2],[-18,1]
 ];
-const gifts=[],foes=[],sfx={};
+const gifts=[],foes=[],sfx={},sparkles=[];
+const ambientAnimals=[];
 const translucentHouses=[];
 let hero=null,ready=false,lookPointer=null,joyPointer=null,toastSecs=0,lastMap=0;
 let canvasYaw=0,joyX=0,joyY=0,keySprint=false,touchSprint=false;
@@ -282,9 +283,17 @@ async function populateTrees(){
  const star=mesh(world,new THREE.OctahedronGeometry(.58),M.gold,0,9.1,0);
  star.rotation.z=.3;
 }
+function pickupSparkles(x,z){
+ for(let k=0;k<10;k++){
+  const angle=k*Math.PI*2/10;
+  const o=ball(scene,k%3?M.gold:M.snowLight,x,.7,z,.08);
+  o.castShadow=false;
+  sparkles.push({o,x,z,angle,time:0});
+ }
+}
 function makeGift(i){
  const g=new THREE.Group(),hues=[M.red,M.green,M.blueRoof,M.rooftop];
- const body=hues[i%hues.length];
+ const body=i%5===0?M.gold:hues[i%hues.length];
  box(g,body,0,.55,0,1.05,.86,.91);
  box(g,M.ribbon,0,.58,.48,.22,.94,.07);
  box(g,M.ribbon,0,.58,-.48,.22,.94,.07);
@@ -299,7 +308,13 @@ function makeGift(i){
  }
  const halo=mesh(g,new THREE.RingGeometry(.75,.86,32),new THREE.MeshBasicMaterial({color:'#ffe5a2',transparent:true,opacity:.72,side:THREE.DoubleSide}),0,.06,0);
  halo.rotation.x=-Math.PI/2;halo.castShadow=false;
- g.userData.halo=halo;return g;
+ g.userData.halo=halo;
+ if(i%5===0){
+  const beacon=mesh(g,new THREE.CylinderGeometry(.08,.56,2.6,10,1,true),
+   new THREE.MeshBasicMaterial({color:'#ffecaa',transparent:true,opacity:.19,depthWrite:false,side:THREE.DoubleSide}),0,1.83,0);
+  beacon.castShadow=false;
+ }
+ return g;
 }
 function canWalk(x,z,r=.38){
  if(x<-33+r||x>33-r||z<-33+r||z>33-r)return false;
@@ -358,9 +373,14 @@ function collect(g=state.near){
  if(!g||!g.active||state.mode!=='running')return;
  if(Math.hypot(g.x-hero.group.position.x,g.z-hero.group.position.z)>2.45)return;
  g.active=false;g.group.visible=false;g.respawnAt=state.elapsed+5+Math.random()*5;
- state.gifts++;const bonus=state.chase?15:0;
- state.score+=60+bonus;
- toast('PRESENT SAVED!  +'+(60+bonus));
+ state.chain=state.elapsed-state.lastPickup<19?Math.min(state.chain+1,5):1;
+ state.lastPickup=state.elapsed;
+ state.gifts++;
+ const chase=state.chase?15:0,streak=(state.chain-1)*10,rare=g.i%5===0?45:0;
+ const earned=60+chase+streak+rare;
+ state.score+=earned;pickupSparkles(g.x,g.z);
+ toast((rare?'GOLDEN GIFT! ':'PRESENT SAVED! ')+(state.chain>1?' ×'+state.chain+' STREAK':'')+' +'+earned,1.35);
+ $('combo').textContent=state.chain>1?'STREAK ×'+state.chain+' · KEEP COLLECTING!':'SAVE THE PRESENTS';
  if(navigator.vibrate)navigator.vibrate(32);
  updateHud();
 }
@@ -393,6 +413,7 @@ function resetRun(){
  state.mode='running';state.time=240;state.elapsed=0;state.score=0;state.gifts=0;state.lives=3;
  state.stamina=100;state.invulnerable=0;state.jump=0;state.jumpVel=0;
  state.near=null;state.chase=false;state.hitTime=0;state.deathTime=0;state.chain=0;state.lastPickup=-50;
+ $('combo').textContent='SAVE THE PRESENTS';
  hero.face.rotation.z=0;hero.face.rotation.x=0;hero.face.position.set(0,0,0);
  hero.playing='';playAnim(hero,'idle');
  hero.group.position.set(0,0,23);
@@ -701,6 +722,12 @@ function tick(){
   pa.setY(i,y);
  }
  pa.needsUpdate=true;snowfall.rotation.y+=dt*.003;
+  for(let k=sparkles.length-1;k>=0;k--){
+   const p=sparkles[k];p.time+=dt;const dist=p.time*2.1;
+   p.o.position.set(p.x+Math.cos(p.angle)*dist,.7+p.time*2.8,p.z+Math.sin(p.angle)*dist);
+   p.o.scale.setScalar(Math.max(0,1-p.time));
+   if(p.time>=1){scene.remove(p.o);sparkles.splice(k,1);}
+  }
  if(hero){
   const look=new THREE.Vector3(-Math.sin(canvasYaw),0,-Math.cos(canvasYaw));
   const mobile=innerWidth<700,distance=mobile?7.7:10.1,up=mobile?5.0:6.15;
