@@ -54,6 +54,7 @@ const buildings=[],treeSites=[],treeBlockers=[],giftSites=[
 ];
 const gifts=[],foes=[],sfx={},sparkles=[];
 const workshopGifts=[],bonusGifts=[],mysteryLights=[];
+let secretRoom=null;
 const mysteryKey='gamebox.christmasVillage.discoveries.v3';
 let discovered=new Set();
 try{discovered=new Set(JSON.parse(localStorage.getItem(mysteryKey)||'[]'));}catch{}
@@ -302,7 +303,7 @@ function buildMysteryLandmarks(){
 function buildSecretWorkshop(){
  // This room occupies its own remote piece of world, not the walkable village.
  // Open sky prevents the third-person camera from clipping a low ceiling.
- const room=new THREE.Group();room.position.set(0,0,79);scene.add(room);
+ const room=new THREE.Group();room.position.set(0,0,79);scene.add(room);secretRoom=room;room.visible=false;
  const floor=mesh(room,new THREE.PlaneGeometry(15,23),M.wood,0,-.02,0);
  floor.rotation.x=-Math.PI/2;floor.castShadow=false;
  for(const x of [-7.5,7.5])box(room,M.woodDark,x,2.25,0,.3,4.5,23);
@@ -332,7 +333,7 @@ function buildSecretWorkshop(){
  const light=new THREE.PointLight('#f6d68a',7,23,2);light.position.set(0,3.5,0);room.add(light);
  for(const [x,z] of [[-4,-4],[4,-4],[0,2]]){
   const g=makeGift(20+workshopGifts.length);g.position.set(x,0,79+z);
-  scene.add(g);
+  scene.add(g);g.visible=false;
   workshopGifts.push({group:g,x,z:79+z,i:20+workshopGifts.length,active:true,secretOnly:true,respawnAt:Infinity});
  }
 }
@@ -581,7 +582,9 @@ function closeEncounter(){
  if(state.mode==='encounter'){state.mode='running';state.invulnerable=Math.max(state.invulnerable,1.5);}
 }
 function enterSecretWorkshop(){
- state.insideSecret=true;state.invulnerable=3;
+ state.insideSecret=true;
+ if(secretRoom)secretRoom.visible=true;
+ for(const item of workshopGifts)item.group.visible=item.active;state.invulnerable=3;
  hero.group.position.set(0,0,82);hero.group.rotation.y=0;
  canvasYaw=0;cameraReady=false;
  state.near=null;state.nearSecret=null;state.chase=false;
@@ -589,7 +592,9 @@ function enterSecretWorkshop(){
  toast('THE WALLS SHIMMER. YOU ARE SOMEWHERE ELSE...',3);
 }
 function exitSecretWorkshop(){
- state.insideSecret=false;state.invulnerable=3;
+ state.insideSecret=false;
+ if(secretRoom)secretRoom.visible=false;
+ for(const item of workshopGifts)item.group.visible=false;state.invulnerable=3;
  hero.group.position.set(16,0,-10.3);hero.group.rotation.y=0;
  canvasYaw=Math.PI;cameraReady=false;
  $('combo').textContent=state.playMode==='explore'?'FOLLOW YOUR CURIOSITY':'COLLECT WHAT YOU CAN';
@@ -735,7 +740,8 @@ function resetRun(chosenMode=state.playMode){
  scene.background.set('#abcdd7');
  for(const bonus of bonusGifts)scene.remove(bonus.group);
  bonusGifts.length=0;
- for(const treasure of workshopGifts){treasure.active=true;treasure.group.visible=true;}
+ for(const treasure of workshopGifts){treasure.active=true;treasure.group.visible=false;}
+ if(secretRoom)secretRoom.visible=false;
  $('encounterOverlay').classList.add('hidden');$('journalOverlay').classList.add('hidden');
  $('secretsCount').textContent=discovered.size;
  $('combo').textContent=state.playMode==='explore'?'FOLLOW YOUR CURIOSITY':'COLLECT WHAT YOU CAN';
@@ -912,6 +918,21 @@ function updateVisibility(dt){
  }
 }
 function drawMap(){
+ if(state.insideSecret){
+  const w=map.width,h=map.height,xx=x=>(x+7.5)/15*w,zz=z=>(z-67.5)/23*h;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#684a45';ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#aa816e';ctx.fillRect(8,8,w-16,h-16);
+  ctx.strokeStyle='#ffdf8a';ctx.lineWidth=4;ctx.strokeRect(7,7,w-14,h-14);
+  ctx.fillStyle='#f3dc82';
+  for(const gift of workshopGifts)if(gift.active){
+   ctx.beginPath();ctx.arc(xx(gift.x),zz(gift.z),4,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle='#b3e9dd';ctx.fillRect(xx(0)-5,zz(88.3)-5,10,10);
+  ctx.fillStyle='#173e49';ctx.beginPath();
+  ctx.arc(xx(hero.group.position.x),zz(hero.group.position.z),5,0,Math.PI*2);ctx.fill();
+  return;
+ }
  const w=map.width,h=map.height,X=x=>(x+34)/68*w,Z=z=>(z+34)/68*h;
  ctx.clearRect(0,0,w,h);
  ctx.fillStyle='#d8e9e8';ctx.fillRect(0,0,w,h);
@@ -1038,9 +1059,13 @@ function tick(){
   $('prompt').textContent=state.near?'A PRESENT · PRESS E / GIFT':state.nearSecret?'SOMETHING UNUSUAL · PRESS E / LOOK':'';
   $('prompt').classList.toggle('visible',Boolean(available));
   if(state.near&&Math.hypot(state.near.x-hero.group.position.x,state.near.z-hero.group.position.z)<1.0)collect(state.near);
-  for(const g of gifts){
+  for(const g of [...gifts,...bonusGifts,...workshopGifts]){
+   if(g.bonus&&state.elapsed>g.expiresAt){
+    scene.remove(g.group);g.active=false;continue;
+   }
+   if(g.secretOnly&&!state.insideSecret)continue;
    if(!g.active){
-    if(state.elapsed>=g.respawnAt)activateGift(g);
+    if(!g.secretOnly&&!g.bonus&&state.elapsed>=g.respawnAt)activateGift(g);
     continue;
    }
    g.group.rotation.y+=dt*.65;
@@ -1074,6 +1099,11 @@ function tick(){
    p.o.position.set(p.x+Math.cos(p.angle)*dist,.7+p.time*2.8,p.z+Math.sin(p.angle)*dist);
    p.o.scale.setScalar(Math.max(0,1-p.time));
    if(p.time>=1){scene.remove(p.o);sparkles.splice(k,1);}
+  }
+  for(const light of mysteryLights){
+   const elapsed=state.elapsed;
+   if(light.expiresAt&&elapsed>light.expiresAt){light.o.visible=false;continue;}
+   light.o.position.y=light.y+Math.sin(elapsed*2.4+light.phase)*.15;
   }
   for(const deer of ambientAnimals){
    deer.phase+=dt*.27;
