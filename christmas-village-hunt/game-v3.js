@@ -53,6 +53,28 @@ const buildings=[],treeSites=[],treeBlockers=[],giftSites=[
  [-2,1],[18,-2],[-18,1]
 ];
 const gifts=[],foes=[],sfx={},sparkles=[];
+const workshopGifts=[],bonusGifts=[],mysteryLights=[];
+const mysteryKey='gamebox.christmasVillage.discoveries.v3';
+let discovered=new Set();
+try{discovered=new Set(JSON.parse(localStorage.getItem(mysteryKey)||'[]'));}catch{}
+const secrets=[
+ {id:'snowman',x:-3,z:16,r:2.7,name:'The Whispering Snowman',icon:'❄',
+  text:'The snowman turns its head and whispers: “Before the village fell silent, someone lost a bell beneath the frozen water. Follow the dancing lights and listen for the ice.”',
+  action:'FOLLOW THE WHISPER',hint:'A snowman spoke of something hidden beneath the ice.'},
+ {id:'pond',x:-8,z:-26,r:3,name:'The Bell Beneath the Ice',icon:'✧',
+  text:'Under the clear ice lies a golden bell. It rings without being touched. Across the village, every monster stops moving... but only briefly.',
+  action:'RING THE BELL',hint:'The frozen pond hides a bell that can halt the monsters.'},
+ {id:'tree',x:2.0,z:1.7,r:2.5,name:'The Hollow Christmas Tree',icon:'✦',
+  text:'Behind the ornaments is a tiny hollow full of silver snow. A soft voice offers you the protection of the old forest.',
+  action:'TAKE THE WINTER BLESSING',hint:'The tree in the square contains an old protective spell.'},
+ {id:'workshop',x:16,z:-11.5,r:2.3,name:'The Door That Shouldn’t Be There',icon:'⌂',
+  text:'Behind the cottage, a small golden keyhole appears. The door creaks open onto a room much larger than the house could possibly hold...',
+  action:'STEP THROUGH THE DOOR',hint:'An ordinary cottage conceals an impossible toy workshop.'},
+ {id:'postbox',x:25,z:6,r:2.6,name:'A Letter From Tomorrow',icon:'✉',
+  text:'Inside the red postbox is a letter addressed to you. It reads: “Do not worry about the monsters. Worry about what they are trying to keep you from finding.”',
+  action:'READ THE REST',hint:'A strange letter suggests the monsters are guarding more than gifts.'}
+];
+let lastEncounter=null,previousMode='running',encounterReturn='running',previousPage='pause';
 const ambientAnimals=[];
 const translucentHouses=[];
 let hero=null,ready=false,lookPointer=null,joyPointer=null,toastSecs=0,lastMap=0;
@@ -230,6 +252,90 @@ for(let i=0;i<350;i++){
 snowGeo.setAttribute('position',new THREE.BufferAttribute(snowP,3));
 const snowfall=new THREE.Points(snowGeo,new THREE.PointsMaterial({color:0xffffff,size:.15,transparent:true,opacity:.83,depthWrite:false}));
 scene.add(snowfall);
+
+function buildMysteryLandmarks(){
+ // All mysteries have world-space physical landmarks. They do NOT appear on the minimap.
+ const glow=new THREE.MeshBasicMaterial({color:'#ffdf86',transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide});
+ // A warm music-box glow near the whispering snowman.
+ for(let i=0;i<4;i++){
+  const a=i*Math.PI/2;
+  const fire=ball(world,i%2?M.gold:M.glass,-3+Math.sin(a)*1.1,1.8,16+Math.cos(a)*1.1,.095);
+  mysteryLights.push({o:fire,x:fire.position.x,y:fire.position.y,z:fire.position.z,phase:i});
+ }
+ // Sunken pond with visible concentric ice, a little crack and a snowflake beneath the surface.
+ const pond=new THREE.Group();pond.position.set(-8,0,-26);world.add(pond);
+ const ice=mesh(pond,new THREE.CircleGeometry(3.35,40),
+  new THREE.MeshStandardMaterial({color:'#b1e7ee',emissive:'#5ab6c4',emissiveIntensity:.23,metalness:.13,roughness:.23,transparent:true,opacity:.88,side:THREE.DoubleSide}),
+  0,.013,0);ice.rotation.x=-Math.PI/2;ice.castShadow=false;
+ const ring=mesh(pond,new THREE.TorusGeometry(2.9,.13,6,40),M.snowLight,0,.09,0);ring.rotation.x=Math.PI/2;
+ for(let i=0;i<6;i++){
+  const angle=i*Math.PI/3;
+  const crack=box(pond,M.snowLight,Math.cos(angle)*1.1,.06,Math.sin(angle)*1.1,.04,.015,1.28);
+  crack.rotation.y=angle+.3;crack.castShadow=false;
+ }
+ const bell=mesh(pond,new THREE.SphereGeometry(.46,16,10,0,Math.PI*2,0,Math.PI*.75),M.gold,0,.17,0);
+ bell.rotation.x=Math.PI;bell.castShadow=false;
+ // Bright but low-profile door at the actual face of the cottage.
+ const door=new THREE.Group();door.position.set(16,0,-12.47);world.add(door);
+ box(door,M.woodDark,0,1.5,.09,1.62,3.0,.13);
+ box(door,M.blueRoof,0,1.45,.17,1.27,2.76,.12);
+ const outline=mesh(door,new THREE.TorusGeometry(.66,.062,6,28,Math.PI),M.gold,0,2.35,.26);
+ outline.rotation.z=Math.PI;outline.castShadow=false;
+ ball(door,M.gold,.33,1.43,.28,.12);
+ for(let k=0;k<6;k++)ball(door,k%2?M.glass:M.gold,-.5+k*.2,2.85,.18,.066);
+ // A letterbox with a physically visible slot and envelope.
+ const post=new THREE.Group();post.position.set(25,0,6);world.add(post);
+ cylinder(post,M.iron,0,.25,0,.58,.5);
+ cylinder(post,M.red,0,1.16,0,.45,1.5);
+ ball(post,M.red,0,1.98,0,.46);
+ box(post,M.gold,0,1.32,.45,.65,.16,.08);
+ box(post,M.cream,0,1.08,.48,.42,.27,.04);
+ box(post,M.woodDark,0,2.43,0,.75,.12,.75);
+ treeBlockers.push({x:25,z:6,radius:.42});
+ // The big tree's inner hollow is signalled with a tiny hanging golden bell.
+ const treeBell=cylinder(world,M.gold,1.1,1.15,1.1,.25,.48);
+ ball(world,M.gold,1.1,.89,1.1,.15);
+ const treeAura=mesh(world,new THREE.TorusGeometry(1.1,.042,6,32),glow,0,.17,0);
+ treeAura.rotation.x=Math.PI/2;treeAura.castShadow=false;
+}
+function buildSecretWorkshop(){
+ // This room occupies its own remote piece of world, not the walkable village.
+ // Open sky prevents the third-person camera from clipping a low ceiling.
+ const room=new THREE.Group();room.position.set(0,0,79);scene.add(room);
+ const floor=mesh(room,new THREE.PlaneGeometry(15,23),M.wood,0,-.02,0);
+ floor.rotation.x=-Math.PI/2;floor.castShadow=false;
+ for(const x of [-7.5,7.5])box(room,M.woodDark,x,2.25,0,.3,4.5,23);
+ for(const z of [-11.5,11.5])box(room,M.woodDark,0,2.25,z,15,4.5,.3);
+ for(let i=0;i<8;i++){
+  const x=-6.2+(i%4)*4.15,z=-8+Math.floor(i/4)*7.2;
+  box(room,i%2?M.green:M.red,x,.75,z,1.48,1.4,1.3);
+  box(room,M.gold,x,1.46,z,1.64,.18,1.45);
+  box(room,M.ribbon,x,1.55,z,.17,.12,1.47);
+ }
+ for(const x of [-5,5]){
+  box(room,M.wood,x,2.0,-4,.8,3.5,10.2);
+  for(let n=0;n<5;n++){
+   box(room,n%2?M.green:M.gold,x,1.0+n*.57,-4,.52,.32,1.7);
+  }
+ }
+ for(let i=0;i<9;i++){
+  const x=-5+(i%3)*5,z=-9+Math.floor(i/3)*7;
+  ball(room,[M.glass,M.gold,M.snowLight][i%3],x,4.0,z,.23);
+ }
+ const rug=mesh(room,new THREE.CircleGeometry(3.6,36),M.red,0,.02,-1);
+ rug.rotation.x=-Math.PI/2;rug.castShadow=false;
+ stamp(room,'THE FORGOTTEN TOYROOM',0,3.65,-11.23,7);
+ // Exit portal in the back of the hidden room.
+ const exit=mesh(room,new THREE.TorusGeometry(1.05,.12,10,32),M.gold,0,1.45,9.3);
+ exit.castShadow=false;
+ const light=new THREE.PointLight('#f6d68a',7,23,2);light.position.set(0,3.5,0);room.add(light);
+ for(const [x,z] of [[-4,-4],[4,-4],[0,2]]){
+  const g=makeGift(20+workshopGifts.length);g.position.set(x,0,79+z);
+  scene.add(g);
+  workshopGifts.push({group:g,x,z:79+z,i:20+workshopGifts.length,active:true,secretOnly:true,respawnAt:Infinity});
+ }
+}
+buildMysteryLandmarks();
 function normalized(asset,height){
  const root=asset.object;
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
