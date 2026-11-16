@@ -51,6 +51,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-vis
 <div id="endOverlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="endTitle">
 <div class="eyebrow" id="endEyebrow">Board completed</div><h2 id="endTitle" class="endTitle">Connections made.</h2><p id="endCopy"></p><div class="endScore" id="endScore">400</div><p>POINTS THIS BOARD</p><div class="endActions"><button class="control primary" id="endNext" type="button">Next board →</button></div>
 </section></div>
+<script src="./wordle-words.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -179,7 +180,9 @@ function miniSubmit(){if(!miniWord)return;const p=GAMES[level].seals[miniWord];
    let guesses=wordleTries[miniWord]||[];
    if(guesses.length>=6){wordleTries[miniWord]=[];miniEntry='';$('miniError').textContent='New attempt started.';store();renderWordle();return}
    if(miniEntry.length!==5){$('miniError').textContent='Enter five letters first.';return}
-   const guess=miniEntry;guesses.push(guess);wordleTries[miniWord]=guesses;miniEntry='';
+   const guess=miniEntry;
+   if(window.FOURFOLD_WORDLE_WORDS&&!window.FOURFOLD_WORDLE_WORDS.has(guess)){$('miniError').textContent='Not in the five-letter word list. Try another word.';return}
+   guesses.push(guess);wordleTries[miniWord]=guesses;miniEntry='';
    if(guess===miniWord){unlocked.push(miniWord);delete wordleTries[miniWord];closeMini();message('Wordle solved! Sealed tile unlocked.','success');store();render();return}
    store();$('miniError').textContent=guesses.length===6?'Six guesses used. Tap Try again for a fresh attempt.':'Keep going. The colours show how close you are.';renderWordle();return
  }
