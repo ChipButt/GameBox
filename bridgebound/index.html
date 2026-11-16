@@ -234,9 +234,8 @@ function generate(level){
    var result=solutionCount(graph,18000);
    if(!result.aborted&&result.count===1)return graph;
  }
- // A connected, correctly numbered fallback is always solvable even if it has multiple solutions.
- if(fallback)return fallback;
- throw Error('Could not generate a puzzle. Please retry.');
+ // Never present a puzzle whose unique solution has not been proved.
+ throw Error('Could not generate a unique puzzle. Reload to retry.');
 }
 var state=null,selected=-1,dragStart=null,pendingAction=null,toastTimer=null;
 function blank(level){
