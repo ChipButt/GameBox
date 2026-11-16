@@ -33,30 +33,33 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-vis
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style></head><body>
 <div class="shell">
-<header class="nav"><a class="back" href="../" aria-label="Back to GameBox">‹</a><div class="wordmark">FOUR<span>FOLD</span></div><div class="version">V3 • GAMEBOX</div></header>
-<div class="intro"><span class="eyebrow">A word game with a twist</span><h1>One grid. Four hidden links.</h1><p>Find four groups of four. Some words are sealed behind mini-puzzles. Every word matters.</p></div>
+<header class="nav"><a class="back" href="../" aria-label="Back to GameBox">‹</a><div class="wordmark">FOUR<span>FOLD</span></div><div class="version">V4 • GAMEBOX</div></header>
+<div class="intro"><span class="eyebrow">A word game with a twist</span><h1>One grid. Four hidden links.</h1><p>Every board is a fresh mix of connections. Unlock sealed words, then find four groups of four.</p></div>
 <main>
-<div class="round"><span id="roundName">BOARD 1 / 3</span><div class="pips" id="pips" aria-label="Board progression"></div><span id="roundDifficulty">THE WARM-UP</span></div>
+<div class="round"><span id="roundName">BOARD 1</span><div class="pips" id="pips" aria-label="Board progression"></div><span id="roundDifficulty">MIXED CONNECTIONS</span></div>
 <div class="status"><span id="groupCount">0 OF 4 GROUPS FOUND</span><div class="lives" id="lives" aria-label="Mistakes remaining"></div></div>
 <div class="notice" id="notice" aria-live="polite">Choose four words that share a connection.</div>
 <div class="solved" id="solved"></div><div class="board" id="board" aria-label="16 word grouping tiles"></div>
 <div class="actions"><button class="control" type="button" id="shuffle">Shuffle</button><button class="control" type="button" id="clear">Deselect</button><button class="control primary" type="button" id="submit" disabled>Submit group</button></div>
 </main>
-<footer class="foot">Original hand-crafted puzzles · <span>No adverts. No artificial energy limits.</span></footer>
+<footer class="foot">Unlimited mixed boards from a growing connection library · <span>No adverts.</span></footer>
 </div>
 <div id="miniOverlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="miniTitle">
 <div class="dialogHeader"><div><div class="eyebrow">Sealed tile</div><h2 id="miniTitle">Unlock the word</h2></div><button id="closeMini" class="close" type="button" aria-label="Close puzzle">×</button></div>
 <p id="miniIntro"></p><div id="crossword" hidden></div><div id="cipher" hidden></div><div id="wordle" hidden></div><div class="miniActions"><button class="control primary" id="miniSubmit" type="button">Unlock tile</button></div><div id="miniError" class="miniError" role="status"></div>
 </section></div>
 <div id="endOverlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="endTitle">
-<div class="eyebrow" id="endEyebrow">Board completed</div><h2 id="endTitle" class="endTitle">Connections made.</h2><p id="endCopy"></p><div class="endScore" id="endScore">400</div><p>POINTS THIS BOARD</p><div class="endActions"><button class="control primary" id="endNext" type="button">Next board →</button></div>
+<div class="eyebrow" id="endEyebrow">Board completed</div><h2 id="endTitle" class="endTitle">Connections made.</h2><p id="endCopy"></p><div class="endScore" id="endScore">400</div><p>POINTS THIS BOARD</p><div class="endActions"><button class="control" id="endRetry" type="button" hidden>Retry this board</button><button class="control primary" id="endNext" type="button">New board →</button></div>
 </section></div>
 <script src="./wordle-words.js"></script>
+<script src="./puzzle-bank.js"></script>
+<script src="./puzzle-engine.js"></script>
 <script>
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const GAMES=[
+/* Classic boards are kept ONLY to resume saved V3 sessions; every new board uses the bank. */
+const CLASSIC_GAMES=[
  {name:'THE WARM-UP',groups:[
    {name:'CALENDAR UNITS',type:'category',words:['DAY','WEEK','MONTH','YEAR'],colour:0},
    {name:'DANCES',type:'category',words:['SALSA','TANGO','WALTZ','POLKA'],colour:1},
@@ -76,47 +79,74 @@ const GAMES=[
    {name:'___MARK',type:'compound',words:['TRADE','QUESTION','CHECK','BENCH'],colour:3}
  ],seals:{NIGHT:{kind:'cross',intro:'Solve the clues and take the third letter of each answer to reveal a tile.',items:[['Someone eating in a restaurant','DINER'],['To give off light','SHINE'],['Large bird of prey with broad wings','EAGLE'],['At the back of something','BEHIND'],['Following, later than','AFTER']]}}}
 ];
-const SAVE='fourfold.v2.progress';
-const LEGACY_SAVE='fourfold.v1.progress';
-function validate(){GAMES.forEach((b,i)=>{let words=b.groups.flatMap(g=>g.words);if(words.length!==16||new Set(words).size!==16||b.groups.some(g=>g.words.length!==4))throw Error('Invalid puzzle board '+i);if(new Set(b.groups.map(g=>g.type)).size<3||b.groups.filter(g=>g.type==='compound').length>1)throw Error('Insufficient connection variety on board '+i);Object.entries(b.seals).forEach(([word,p])=>{if(!words.includes(word))throw Error('Sealed word absent');if(p.kind==='cross'){let answer=p.items.map(x=>x[1][2]).join('');if(answer!==word)throw Error('Crossword extraction incorrect: '+word);}if(p.kind==='wordle'&&!/^[A-Z]{5}$/.test(word))throw Error('Wordle seals must be five-letter words: '+word);})})}
-validate();
-const randArr=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-let level=0,order=[],selected=[],solved=[],unlocked=[],mistakes=0,wrong=[],miniWord=null,miniInputs=[],totalScore=0,wordleTries={},miniEntry='';
-function store(){try{localStorage.setItem(SAVE,JSON.stringify({level,order,solved,unlocked,mistakes,wrong,totalScore,wordleTries}))}catch{}}
-function load(){try{const s=JSON.parse(localStorage.getItem(SAVE));if(!s||!Number.isInteger(s.level)||s.level<0||s.level>=GAMES.length)return false;
-let valid=new Set(GAMES[s.level].groups.flatMap(g=>g.words));
-if(!Array.isArray(s.order)||s.order.length!==16||new Set(s.order).size!==16||s.order.some(x=>!valid.has(x)))return false;
-level=s.level;order=s.order;solved=Array.isArray(s.solved)?s.solved.filter(x=>Number.isInteger(x)&&x>=0&&x<4):[];solved=[...new Set(solved)];unlocked=Array.isArray(s.unlocked)?s.unlocked.filter(x=>GAMES[level].seals[x]):[];mistakes=Math.max(0,Math.min(4,Number(s.mistakes)||0));wrong=Array.isArray(s.wrong)?s.wrong:[];totalScore=Number(s.totalScore)||0;
-wordleTries={};const savedTries=s.wordleTries&&typeof s.wordleTries==='object'?s.wordleTries:{};
-Object.entries(savedTries).forEach(([word,guesses])=>{if(GAMES[level].seals[word]?.kind==='wordle'&&Array.isArray(guesses))wordleTries[word]=guesses.filter(g=>typeof g==='string'&&/^[A-Z]{5}$/.test(g)).slice(0,6)});
-return true
-}catch{return false}}
-function resetBoard(idx){level=idx;order=randArr(GAMES[level].groups.flatMap(g=>g.words));selected=[];solved=[];unlocked=[];mistakes=0;wrong=[];wordleTries={};miniEntry='';store();render()}
+const ENGINE=window.FOURFOLD_ENGINE, BANK=window.FOURFOLD_BANK;
+if(!ENGINE||!BANK)throw Error('FourFold puzzle library did not load');
+ENGINE.bankCheck(BANK);
+const SAVE='fourfold.v4.progress',PREVIOUS_SAVE='fourfold.v2.progress';
+const randArr=a=>ENGINE.shuffle(a);
+let level=0,board=null,history=[],order=[],selected=[],solved=[],unlocked=[],mistakes=0,wrong=[],miniWord=null,miniInputs=[],totalScore=0,wordleTries={},miniEntry='';
+
+function store(){try{localStorage.setItem(SAVE,JSON.stringify({level,board,history,order,solved,unlocked,mistakes,wrong,totalScore,wordleTries}))}catch{}}
+function restoreFrom(s){
+ if(!s||!ENGINE.validBoard(s.board))return false;
+ const valid=new Set(s.board.groups.flatMap(g=>g.words));
+ if(!Array.isArray(s.order)||s.order.length!==16||new Set(s.order).size!==16||s.order.some(w=>!valid.has(w)))return false;
+ board=s.board;level=Number.isInteger(s.level)&&s.level>=0?Math.min(s.level,99999999):0;
+ order=s.order.slice();selected=[];history=Array.isArray(s.history)?s.history.slice(-100):[];
+ solved=Array.isArray(s.solved)?[...new Set(s.solved.filter(x=>Number.isInteger(x)&&x>=0&&x<4))]:[];
+ unlocked=Array.isArray(s.unlocked)?[...new Set(s.unlocked.filter(x=>board.seals[x]))]:[];
+ mistakes=Math.max(0,Math.min(4,Number(s.mistakes)||0));wrong=Array.isArray(s.wrong)?s.wrong.filter(x=>typeof x==='string').slice(-80):[];
+ totalScore=Number.isFinite(s.totalScore)?Math.max(0,s.totalScore):0;
+ wordleTries={};const saved=s.wordleTries&&typeof s.wordleTries==='object'?s.wordleTries:{};
+ Object.entries(saved).forEach(([word,guesses])=>{if(board.seals[word]?.kind==='wordle'&&Array.isArray(guesses))wordleTries[word]=guesses.filter(g=>typeof g==='string'&&/^[A-Z]{5}$/.test(g)).slice(0,6)});
+ return true
+}
+function load(){try{return restoreFrom(JSON.parse(localStorage.getItem(SAVE)))}catch{return false}}
+function migrateClassic(){
+ try{
+  const s=JSON.parse(localStorage.getItem(PREVIOUS_SAVE));
+  if(!s||!Number.isInteger(s.level)||s.level<0||s.level>=CLASSIC_GAMES.length)return false;
+  const candidate={...CLASSIC_GAMES[s.level],key:'classic-'+s.level};
+  if(!ENGINE.validBoard(candidate))return false;
+  if(!restoreFrom({...s,board:candidate,history:[]}))return false;
+  store();return true
+ }catch{return false}
+}
+function resetBoard(newPuzzle=true){
+ if(newPuzzle){
+  const next=ENGINE.generate(BANK,history,window.FOURFOLD_WORDLE_WORDS);
+  if(board)level++;
+  board=next;history=ENGINE.record(history,next);
+ }
+ if(!board)throw Error('Cannot start without a FourFold board');
+ order=randArr(board.groups.flatMap(g=>g.words));selected=[];solved=[];unlocked=[];mistakes=0;wrong=[];wordleTries={};miniEntry='';
+ store();render()
+}
 function chosen(word){return selected.includes(word)}
-function remaining(){return order.filter(w=>!solved.some(g=>GAMES[level].groups[g].words.includes(w)))}
+function remaining(){return order.filter(w=>!solved.some(g=>board.groups[g].words.includes(w)))}
 function message(txt,klass=''){const n=$('notice');n.textContent=txt;n.className='notice '+klass}
 function render(){
- $('roundName').textContent='BOARD '+(level+1)+' / '+GAMES.length;
- $('roundDifficulty').textContent=GAMES[level].name;
+ $('roundName').textContent='BOARD '+(level+1);
+ $('roundDifficulty').textContent=board.name;
  $('groupCount').textContent=solved.length+' OF 4 GROUPS FOUND';
- $('pips').textContent='';GAMES.forEach((g,i)=>{const b=document.createElement('span');b.className='pip'+(i<level?' done':i===level?' current':'');$('pips').appendChild(b)});
+ $('pips').textContent='';for(let i=0;i<4;i++){const b=document.createElement('span');b.className='pip'+(i<solved.length?' done':'');$('pips').appendChild(b)};
  $('lives').textContent='';for(let i=0;i<4;i++){const d=document.createElement('span');d.className='life'+(i<mistakes?' lost':'');d.textContent='◆';$('lives').appendChild(d)}
- $('solved').textContent='';solved.forEach(id=>{const g=GAMES[level].groups[id],row=document.createElement('div');row.className='solvedRow';const title=document.createElement('strong');title.textContent=g.name;const words=document.createElement('small');words.textContent=g.words.join(' · ');row.append(title,words);$('solved').append(row)});
+ $('solved').textContent='';solved.forEach(id=>{const g=board.groups[id],row=document.createElement('div');row.className='solvedRow';const title=document.createElement('strong');title.textContent=g.name;const words=document.createElement('small');words.textContent=g.words.join(' · ');row.append(title,words);$('solved').append(row)});
  $('board').textContent='';remaining().forEach(w=>{
- const btn=document.createElement('button');btn.type='button';btn.className='tile'+(chosen(w)?' selected':'')+(GAMES[level].seals[w]&&!unlocked.includes(w)?' locked':'');
+ const btn=document.createElement('button');btn.type='button';btn.className='tile'+(chosen(w)?' selected':'')+(board.seals[w]&&!unlocked.includes(w)?' locked':'');
  btn.setAttribute('aria-pressed',String(chosen(w)));
- if(GAMES[level].seals[w]&&!unlocked.includes(w)){const icon=document.createElement('span');icon.className='seal';icon.textContent='✦';const label=document.createElement('span');label.className='sealText';label.textContent='SEALED';btn.append(icon,label);btn.setAttribute('aria-label','Unlock a sealed word')}
+ if(board.seals[w]&&!unlocked.includes(w)){const icon=document.createElement('span');icon.className='seal';icon.textContent='✦';const label=document.createElement('span');label.className='sealText';label.textContent='SEALED';btn.append(icon,label);btn.setAttribute('aria-label','Unlock a sealed word')}
  else{btn.textContent=w;btn.setAttribute('aria-label',w)}
  btn.addEventListener('click',()=>clickTile(w));$('board').append(btn)
  });
  $('submit').disabled=selected.length!==4;$('submit').textContent=selected.length===4?'SUBMIT FOUR':'SELECT '+(4-selected.length)+' MORE';
 }
-function clickTile(w){if(GAMES[level].seals[w]&&!unlocked.includes(w)){openMini(w);return}if(chosen(w))selected=selected.filter(x=>x!==w);else if(selected.length<4)selected.push(w);render()}
+function clickTile(w){if(board.seals[w]&&!unlocked.includes(w)){openMini(w);return}if(chosen(w))selected=selected.filter(x=>x!==w);else if(selected.length<4)selected.push(w);render()}
 function submit(){
- if(selected.length!==4)return;const key=[...selected].sort().join('|'),id=GAMES[level].groups.findIndex(g=>g.words.every(w=>selected.includes(w)));
+ if(selected.length!==4)return;const key=[...selected].sort().join('|'),id=board.groups.findIndex(g=>g.words.every(w=>selected.includes(w)));
  if(id!==-1&&!solved.includes(id)){solved.push(id);selected=[];totalScore+=100;message('A connection found. Keep looking.','success');store();render();if(solved.length===4)setTimeout(()=>end(true),330);return}
  if(wrong.includes(key)){message('You already tried those four.','error');return}
- wrong.push(key);mistakes++;const near=GAMES[level].groups.some(g=>g.words.filter(w=>selected.includes(w)).length===3&&!solved.includes(GAMES[level].groups.indexOf(g)));
+ wrong.push(key);mistakes++;const near=board.groups.some(g=>g.words.filter(w=>selected.includes(w)).length===3&&!solved.includes(board.groups.indexOf(g)));
  selected=[];message(near?'One away. Three belong together.':'Not a group. Look for another connection.','error');store();render();
  if(mistakes>=4)setTimeout(()=>end(false),340)
 }
@@ -126,8 +156,8 @@ function end(win){
  $('endTitle').textContent=win?'Brilliant connections.':'The grid wins this time.';
  $('endCopy').textContent=win?'You found all four hidden links. Ready for a tougher challenge?': 'You found '+solved.length+' of four groups. The answers are shown below so you can learn from the board.';
  $('endScore').textContent=score;
- $('endNext').textContent=win?(level===GAMES.length-1?'Play from the beginning ↻':'Next board →'):'Try this board again ↻';
- if(!win){const detail=GAMES[level].groups.map(g=>g.name+': '+g.words.join(', ')).join('  •  ');$('endCopy').textContent+=' '+detail;}
+ $('endNext').textContent='New board →';$('endRetry').hidden=win;
+ if(!win){const detail=board.groups.map(g=>g.name+': '+g.words.join(', ')).join('  •  ');$('endCopy').textContent+=' '+detail;}
  $('endOverlay').hidden=false;
 }
 function wordleColours(guess,target){
@@ -163,20 +193,20 @@ function renderWordle(){
  $('miniSubmit').textContent=failed?'Try again':'Submit guess';$('miniSubmit').disabled=!failed&&miniEntry.length!==5
 }
 function wordleInput(key){
- if(!miniWord||GAMES[level].seals[miniWord]?.kind!=='wordle'||(wordleTries[miniWord]||[]).length>=6)return;
+ if(!miniWord||board.seals[miniWord]?.kind!=='wordle'||(wordleTries[miniWord]||[]).length>=6)return;
  if(key==='ENTER'){miniSubmit();return}
  if(key==='BACKSPACE')miniEntry=miniEntry.slice(0,-1);
  else if(/^[A-Z]$/.test(key)&&miniEntry.length<5)miniEntry+=key;
  $('miniError').textContent='';renderWordle()
 }
-function openMini(w){miniWord=w;miniInputs=[];miniEntry='';const p=GAMES[level].seals[w];$('miniIntro').textContent=p.intro;$('miniError').textContent='';$('crossword').textContent='';$('cipher').textContent='';$('wordle').textContent='';$('crossword').hidden=p.kind!=='cross';$('cipher').hidden=p.kind!=='cipher';$('wordle').hidden=p.kind!=='wordle';$('miniTitle').textContent=p.kind==='cross'?'The concealed crossword':p.kind==='cipher'?'The cipher lock':'The Wordle lock';$('miniSubmit').textContent='Unlock tile';$('miniSubmit').disabled=false;
+function openMini(w){miniWord=w;miniInputs=[];miniEntry='';const p=board.seals[w];$('miniIntro').textContent=p.intro;$('miniError').textContent='';$('crossword').textContent='';$('cipher').textContent='';$('wordle').textContent='';$('crossword').hidden=p.kind!=='cross';$('cipher').hidden=p.kind!=='cipher';$('wordle').hidden=p.kind!=='wordle';$('miniTitle').textContent=p.kind==='cross'?'The concealed crossword':p.kind==='cipher'?'The cipher lock':'The Wordle lock';$('miniSubmit').textContent='Unlock tile';$('miniSubmit').disabled=false;
  if(p.kind==='cross'){p.items.forEach(([clue,answer],i)=>{const row=document.createElement('div');row.className='miniClue';const label=document.createElement('label');label.textContent=(i+1)+'. '+clue+' ('+answer.length+')';const input=document.createElement('input');input.autocomplete='off';input.spellcheck=false;input.maxLength=answer.length;input.setAttribute('aria-label',clue);row.append(label,input);$('crossword').append(row);miniInputs.push(input)});const note=document.createElement('div');note.className='extract';note.textContent='The third letter of each answer forms the sealed word.';$('crossword').append(note)}
  else if(p.kind==='cipher'){$('cipher').innerHTML='<div class="cipher"><small>WHEEL NOTATION: A → D</small><div class="glyph">'+p.code+'</div></div><label for="cipherAnswer" class="eyebrow">Decoded word</label><input id="cipherAnswer" class="miniInput" maxlength="8" autocomplete="off" spellcheck="false" autocapitalize="characters">';miniInputs=[$('cipherAnswer')]}
  else if(p.kind==='wordle')renderWordle();
  $('miniOverlay').hidden=false;miniInputs[0]?.focus()
 }
 function closeMini(){$('miniOverlay').hidden=true;miniWord=null;miniInputs=[];miniEntry=''}
-function miniSubmit(){if(!miniWord)return;const p=GAMES[level].seals[miniWord];
+function miniSubmit(){if(!miniWord)return;const p=board.seals[miniWord];
  if(p.kind==='wordle'){
    let guesses=wordleTries[miniWord]||[];
    if(guesses.length>=6){wordleTries[miniWord]=[];miniEntry='';$('miniError').textContent='New attempt started.';store();renderWordle();return}
@@ -197,21 +227,16 @@ $('submit').addEventListener('click',submit);
 $('clear').addEventListener('click',()=>{selected=[];render();message('Selection cleared.')});
 $('shuffle').addEventListener('click',()=>{const rest=remaining();randArr(rest);order=[...rest,...order.filter(w=>!rest.includes(w))];selected=[];render();store();message('Tiles shuffled.')});
 $('closeMini').addEventListener('click',closeMini);$('miniOverlay').addEventListener('click',e=>{if(e.target===$('miniOverlay'))closeMini()});$('miniSubmit').addEventListener('click',miniSubmit);
-$('endNext').addEventListener('click',()=>{const win=solved.length===4;$('endOverlay').hidden=true;if(win&&level===GAMES.length-1){totalScore=0;resetBoard(0)}else resetBoard(win?level+1:level);message('Choose four words that share a connection.')});
+$('endNext').addEventListener('click',()=>{$('endOverlay').hidden=true;resetBoard(true);message('Choose four words that share a connection.')});
+$('endRetry').addEventListener('click',()=>{$('endOverlay').hidden=true;resetBoard(false);message('A new attempt at this board.')});
 document.addEventListener('keydown',e=>{
  if($('miniOverlay').hidden)return;
  if(e.key==='Escape'){closeMini();return}
- if(miniWord&&GAMES[level].seals[miniWord]?.kind==='wordle'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+ if(miniWord&&board.seals[miniWord]?.kind==='wordle'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
    if(e.key==='Enter'||e.key==='Backspace'||/^[a-z]$/i.test(e.key)){e.preventDefault();wordleInput(e.key==='Enter'?'ENTER':e.key==='Backspace'?'BACKSPACE':e.key.toUpperCase())}
  }else if(e.key==='Enter'&&document.activeElement?.tagName==='INPUT'){e.preventDefault();miniSubmit()}
 });
-if(!load()){
- let previous=null;
- try{previous=JSON.parse(localStorage.getItem(LEGACY_SAVE))}catch{}
- const priorLevel=Number.isInteger(previous?.level)&&previous.level>=0&&previous.level<GAMES.length?previous.level:0;
- resetBoard(priorLevel);
- if(Array.isArray(previous?.unlocked)){unlocked=[...new Set(previous.unlocked.filter(word=>GAMES[level].seals[word]))];store();render()}
- if(previous)message('FourFold puzzles refreshed with new connection types.','success');
-}else{render();if(solved.length===4||mistakes===4)end(solved.length===4)}
+if(!load()&&!migrateClassic())resetBoard(true);
+else{render();if(solved.length===4||mistakes===4)end(solved.length===4)}
 })();
 </script></body></html>
