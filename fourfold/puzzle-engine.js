@@ -39,11 +39,12 @@ function buildCipher(word,rng=Math.random,history=[]){
  }
  throw Error('Unable to make new cipher')
 }
-function constructCrossword(rng=Math.random,avoid=[]){
- const SIZE=11, recent=new Set(avoid);
+function constructCrossword(rng=Math.random,avoid=[],excludedWords=[]){
+ const SIZE=11, recent=new Set(avoid),excluded=new Set(excludedWords),pool=CROSSWORDS.filter(x=>!excluded.has(x.answer));
+ if(pool.length<50)throw Error('Not enough crossword clue variety remaining');
  for(let attempt=0;attempt<65;attempt++){
   const grid=Array.from({length:SIZE},()=>Array.from({length:SIZE},()=>null));
-  const entries=[], choices=shuffle(CROSSWORDS.filter(w=>w.answer.length>=4&&w.answer.length<=6),rng);
+  const entries=[], choices=shuffle(pool.filter(w=>w.answer.length>=4&&w.answer.length<=6),rng);
   const first=choices[Math.floor(rng()*Math.min(50,choices.length))], sr=5, sc=Math.floor((SIZE-first.answer.length)/2);
   function fits(entry,r,c,dir,initial=false){
    const dr=dir==='down'?1:0,dc=dir==='across'?1:0;
@@ -70,7 +71,7 @@ function constructCrossword(rng=Math.random,avoid=[]){
    }
   }
   add(first,sr,sc,'across');
-  const remaining=shuffle(CROSSWORDS.filter(x=>x.answer!==first.answer),rng);
+  const remaining=shuffle(pool.filter(x=>x.answer!==first.answer),rng);
   for(let pass=0;pass<6;pass++){
    const candidates=[],counts={across:entries.filter(e=>e.dir==='across').length,down:entries.filter(e=>e.dir==='down').length};
    for(const candidate of remaining){
@@ -136,7 +137,8 @@ function crosswordCheck(layout){
 }
 function buildCrossword(history=[],rng=Math.random){
  const avoid=history.slice(-100).flatMap(h=>h.sealSignatures||[]).filter(x=>x.startsWith('cross:'));
- const layout=constructCrossword(rng,avoid);
+ const excluded=avoid.slice(-10).flatMap(signature=>signature.slice(6).split(','));
+ const layout=constructCrossword(rng,avoid,excluded);
  return {kind:'cross',layout,signature:layout.signature,intro:'Fill the numbered Across and Down clues. Each crossing shares a letter. Finish the crossword to reveal the hidden tile.'}
 }
 function validBoard(board){
