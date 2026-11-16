@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#153d39"><meta name="description" content="North Pole Bridges — festive island logic for GameBox Advent 2026.">
-<title>North Pole Bridges · Advent 2026 · GameBox</title>
+<meta name="theme-color" content="#101e3c"><meta name="description" content="Elflympics Ice Links — a winter sports arena logic event in GameBox Advent 2026.">
+<title>Ice Links · Elflympics 2026 · GameBox</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
 :root{color-scheme:dark;font-family:'DM Sans',system-ui,-apple-system,sans-serif;--deep:#071d29;--sea:#0c3c4b;--mint:#8be4c7;--gold:#edc179;--cream:#f9e8be;--muted:#a5bec7;--red:#ff948a}
@@ -51,22 +51,65 @@ body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%
 .menuBtn.primary{background:linear-gradient(#ffe8a8,#dfb470);color:#3c312d}
 .winSeal{background:radial-gradient(#71b79d,#266b60);color:#fff4d9;border-color:#fff2ce;box-shadow:0 0 0 6px #efffea24,0 0 45px #adf6dd66}.winTime{color:#ffebae}
 @media(max-width:390px){.brand h1{font-size:20px}.version{font-size:8px}}
+
+/* ELFLYMPICS ARENA V3 - competition broadcast presentation */
+:root{--deep:#0c1733;--mint:#bcf0ea;--gold:#ffc978}
+html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%,#20457d 0,#0b2146 50%,transparent 88%),#09162b;color:#eef7ff}
+.app{width:min(100%,870px);padding:calc(8px + env(safe-area-inset-top)) 12px calc(8px + env(safe-area-inset-bottom))}
+.topbar{min-height:51px;padding:0 2px;gap:12px}.topbar:after{display:none}
+.brand h1{font:900 clamp(27px,6vw,37px)/1 'Outfit',system-ui;letter-spacing:-.055em;color:#fff;text-shadow:0 2px 0 #0f4770}.brand .eyebrow{font-size:10px;letter-spacing:.16em;color:#ffdc93}
+.iconBtn{background:#192b55;border-color:#668ac3;box-shadow:0 3px 0 #07112a;border-radius:12px}
+.version{font:900 10px 'DM Sans',sans-serif;letter-spacing:.10em;color:#a1c2ed}
+.rule{height:2px;background:linear-gradient(90deg,#477bcc,#e8f4ff,#e6ae53,#477bcc);box-shadow:0 0 15px #76cde355;margin:10px 0}
+.hud{grid-template-columns:1.15fr .98fr .88fr;gap:5px;margin-bottom:8px}
+.hudCell{border-radius:5px;min-height:58px;background:linear-gradient(#142c59,#0e244a);border:1px solid #3a6aab;border-bottom:2px solid #5a9fcc;box-shadow:inset 0 1px #c7e4ff12;position:relative;padding:8px 10px}
+.hudCell small{font-size:9px;letter-spacing:.10em;color:#a4bfd9}
+.hudCell strong{font:900 clamp(17px,4vw,23px)/1.15 'Outfit',sans-serif;letter-spacing:-.02em;color:#fff}
+.difficulty strong{font-size:clamp(15px,3.6vw,21px);text-transform:uppercase}.difficulty strong:after{color:#f8cb7e}
+.boardArea{align-items:center;justify-content:center;min-height:0;flex:1;overflow:visible}
+.arenaShell{position:relative;width:min(100%,690px,calc((100dvh - 208px)*1.05));min-height:0;aspect-ratio:1.05;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 9px 8px;overflow:hidden;border:2px solid #b0d0e4;border-radius:14px;background:#123f73;box-shadow:0 0 0 4px #071731,0 18px 48px #0009}
+.arenaShell:before{content:'';position:absolute;inset:0;z-index:0;background-image:linear-gradient(to bottom,#05235424 0%,#0c3a6260 44%,#0a2650b8 100%);pointer-events:none}
+.arenaShell:after{content:'';position:absolute;inset:2px;z-index:3;pointer-events:none;border:1px solid #e1f7fd52;border-radius:10px}
+.arenaBroadcast{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;align-self:stretch;margin:0 2px;padding:7px 10px;background:#0a1b3be8;border:1px solid #9db7d9;border-left:4px solid #f2c16d;border-radius:4px;color:#ecf5ff;font-size:10px;font-weight:900;letter-spacing:.08em;box-shadow:0 3px 12px #07143177}
+.liveMark,.medalPace{white-space:nowrap;display:flex;align-items:center;gap:6px}.livePulse{width:7px;height:7px;background:#f2cc85;border-radius:50%;box-shadow:0 0 0 3px #efca6d2a}.medalPace{color:#b6d0e8}.medalPace b{font:900 14px 'Outfit';color:#ffdc90}
+.boardFrame{position:relative;flex:1;max-height:calc(100% - 77px);aspect-ratio:1;width:auto;max-width:100%;margin:auto;border:0;border-radius:0;box-shadow:none;background:radial-gradient(ellipse,#e4f6ff8a 0%,#c5e7fa68 55%,#b5def72b 85%,transparent 100%)}
+.boardFrame:before,.boardFrame:after{display:none}.boardOrnament{display:none}
+#board{z-index:2;overflow:visible}.island .islandOuter{filter:drop-shadow(0 3px 2px #06395d99)}
+.island.complete .islandFace{fill:url(#finished)}.island.over .islandFace{fill:url(#overfilled)}
+.island.active .islandOuter{filter:drop-shadow(0 0 5px #ffe7ad)}
+.island text{font:900 19px 'Outfit',system-ui;stroke:none;paint-order:normal}
+.arenaFooter{z-index:3;position:relative;align-self:stretch;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 10px;min-height:32px;background:#071b39d9;border:1px solid #6c9cc0;border-radius:4px;color:#d0e9fb;font:900 9px 'DM Sans',sans-serif;letter-spacing:.1em}
+.arenaFooter b{color:#f4cd82}.arenaFooter #arenaState{color:#f2dba8}
+.progressLine{padding:6px 0 2px;min-height:24px;font-size:11px;color:#a9c5df}.progressLine b{color:#aaf4d8}
+.actions{padding-top:5px;gap:8px}.action{border-radius:6px;min-height:49px;background:linear-gradient(#254775,#142d57);border:1px solid #608cbe;box-shadow:0 3px 0 #061a3d;color:#fff;font-size:12px}.action.gold{background:linear-gradient(#fbe4ab,#e7ba6e);border:1px solid #ffe8bb;box-shadow:0 3px 0 #986a33;color:#203656}
+.microcopy{margin:9px auto 0;color:#93b1cd;font-size:9px}.microcopy strong{color:#c0dbef}
+.overlay{background:#031126dc}.sheet{background:linear-gradient(160deg,#1c396d,#101f43);border:1px solid #7fa7d7;border-radius:15px}.sheet h2{color:#fff}.sheet p,.ruleList{color:#d1e4fa}.sheet h3{color:#c0daff}
+.closeBtn,.menuBtn{background:#233f6b;border:1px solid #6794c9;color:#fff;border-radius:6px}.menuBtn.primary{background:linear-gradient(#fee3ac,#e6b96b);color:#1a3456}.choice{background:#112b52;border-color:#4e82b8;border-radius:7px}.choice.chosen{background:#204979;border-color:#f3c978;color:#fff}.stat{background:#102849;border-color:#3a6ea6;border-radius:6px}
+.podiumSpot{height:130px;position:relative;display:flex;align-items:center;justify-content:center}.medalDisc{position:relative;display:grid;place-items:center;width:104px;height:104px;border-radius:50%;border:6px double #fffffba0;box-shadow:0 7px 0 #111a3b77,inset 0 3px 8px #fff7,0 0 27px #f2e7c34d;color:#806027;background:radial-gradient(circle at 35% 25%,#fff6c5,#f1ce67 55%,#be8027)}.medalDisc svg{width:78px;height:78px}
+.medalDisc.silver{background:radial-gradient(circle at 35% 25%,#fff,#b9d6ec 55%,#7594a7);color:#44657f}.medalDisc.bronze{background:radial-gradient(circle at 35% 25%,#fdd6a8,#c99256 55%,#855336);color:#70411e}.winLabel{color:#8cdef2}.winTime{color:#ffe3a6}
+.toast{background:#0d214eea;border-color:#83c1e9;border-radius:5px;color:#fff}
+@media(max-height:720px){.arenaShell{width:min(100%,620px,calc((100dvh - 192px)*1.04));padding:9px 7px 6px}.hudCell{min-height:50px}.rule{margin:6px 0}.arenaBroadcast{padding:5px 8px}.arenaFooter{padding:5px 8px;min-height:26px}.boardFrame{max-height:calc(100% - 62px)}.action{min-height:44px}.microcopy{margin-top:4px}.app{padding-top:calc(5px + env(safe-area-inset-top))}}
+@media(max-width:380px){.app{padding-left:7px;padding-right:7px}.arenaShell{padding:6px 4px 4px}.arenaBroadcast{padding:5px 5px;font-size:8px}.medalPace b{font-size:12px}.hudCell{padding:6px}.hudCell strong{font-size:15px}.brand h1{font-size:25px}.brand .eyebrow{font-size:8px}.version{font-size:8px}.microcopy{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.livePulse{box-shadow:none}}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
     <a class="iconBtn" href="../" aria-label="Back to GameBox">‹</a>
-    <div class="brand"><span class="eyebrow">Advent 2026 · Winter Puzzle</span><h1>North Pole Bridges</h1></div>
-    <div class="topright"><span class="version">V2 · CHRISTMAS</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
+    <div class="brand"><span class="eyebrow">ELFLYMPICS 2026 · WINTER GAMES</span><h1>ICE LINKS</h1></div>
+    <div class="topright"><span class="version">V3 · ARENA</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
   </header>
   <div class="rule"></div>
   <section class="hud" aria-label="Puzzle status">
-    <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>DIFFICULTY</small><strong id="difficultyLabel">Easy</strong></button>
-    <div class="hudCell"><small>OUTPOSTS READY</small><strong id="countLabel">0 / 9</strong></div>
-    <div class="hudCell"><small>TIME</small><strong id="timeLabel">00:00</strong></div>
+    <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>EVENT HEAT</small><strong id="difficultyLabel">QUALIFIER</strong></button>
+    <div class="hudCell"><small>CHECKPOINTS</small><strong id="countLabel">0 / 9</strong></div>
+    <div class="hudCell"><small>RACE CLOCK</small><strong id="timeLabel">00:00</strong></div>
   </section>
   <main class="boardArea">
+    <div class="arenaShell" id="arenaShell">
+      <div class="arenaBroadcast"><span class="liveMark"><span class="livePulse"></span> EVENT 21 · ICE LINKS</span><span class="medalPace">GOLD TARGET <b id="medalTarget">02:00</b></span></div>
     <div class="boardFrame" id="boardFrame">
       <svg id="board" role="group" aria-label="Bridges puzzle board. Tap one island and then a visible neighbour, or drag between islands." viewBox="0 0 322 322">
         <defs>
@@ -75,26 +118,28 @@ body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%
           <linearGradient id="overfilled" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd2be"/><stop offset="1" stop-color="#ef826e"/></linearGradient>
         </defs>
       </svg>
-      <div class="boardOrnament" aria-hidden="true">✦<br>❄</div>
+      <div class="boardOrnament" aria-hidden="true">ELFLYMPICS · 2026</div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
+      <div class="arenaFooter"><span>WINTER GAMES <b>2026</b></span><span id="arenaState">AWAITING START</span></div>
+    </div>
   </main>
-  <div id="progressLine" class="progressLine" role="status" aria-live="polite">Choose two islands to make a bridge.</div>
+  <div id="progressLine" class="progressLine" role="status" aria-live="polite">Connect checkpoints to complete the course.</div>
   <div class="actions">
     <button id="undoBtn" class="action" type="button" disabled><span aria-hidden="true">↶</span> Undo</button>
-    <button id="hintBtn" class="action" type="button"><span aria-hidden="true">✧</span> Hint</button>
-    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">✦</span> New puzzle</button>
+    <button id="hintBtn" class="action" type="button"><span aria-hidden="true">◎</span> Hint</button>
+    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">✦</span> New heat</button>
   </div>
-  <div class="microcopy">ONE OR TWO FESTIVE BRIDGES · NO CROSSINGS · <strong>CONNECT EVERY SNOWY OUTPOST</strong></div>
+  <div class="microcopy">CONNECT EVERY CHECKPOINT · MAXIMUM TWO ICE TRACKS · <strong>NO CROSSINGS</strong></div>
 </div>
 <div id="menuOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
-    <div class="sheetTop"><div><span class="eyebrow">North Pole Bridges · Settings</span><h2 id="menuTitle">Choose your challenge.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
-    <p>Select a challenge. Each new puzzle has a unique logical solution.</p>
+    <div class="sheetTop"><div><span class="eyebrow">ELFLYMPICS · EVENT SETTINGS</span><h2 id="menuTitle">Choose your heat.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
+    <p>Each heat has a unique logical solution. Complete the checkpoint course to earn a medal.</p>
     <div class="difficultyOptions" id="difficultyOptions">
-      <button type="button" class="choice" data-difficulty="easy"><b>Easy</b><small>5 × 5 waters</small></button>
-      <button type="button" class="choice" data-difficulty="medium"><b>Medium</b><small>7 × 7 waters</small></button>
-      <button type="button" class="choice" data-difficulty="hard"><b>Hard</b><small>9 × 9 waters</small></button>
+      <button type="button" class="choice" data-difficulty="easy"><b>Qualifier</b><small>5 × 5 course</small></button>
+      <button type="button" class="choice" data-difficulty="medium"><b>Semifinal</b><small>7 × 7 course</small></button>
+      <button type="button" class="choice" data-difficulty="hard"><b>Final</b><small>9 × 9 course</small></button>
     </div>
     <h3>Your voyage log</h3>
     <div class="statGrid"><div class="stat"><strong id="statWins">0</strong><small>Completed</small></div><div class="stat"><strong id="statBest">—</strong><small>Fastest clean</small></div><div class="stat"><strong id="statHints">0</strong><small>Hints this board</small></div></div>
@@ -103,7 +148,7 @@ body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%
 </div>
 <div id="rulesOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-    <div class="sheetTop"><div><span class="eyebrow">Santa's guide</span><h2 id="rulesTitle">Bridge the North Pole.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close rules">×</button></div>
+    <div class="sheetTop"><div><span class="eyebrow">EVENT RULES</span><h2 id="rulesTitle">Link the checkpoints.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close rules">×</button></div>
     <ol class="ruleList">
       <li>Join islands in a <strong>straight horizontal or vertical line</strong>, to the next island in that direction.</li>
       <li>An island's number tells you exactly <strong>how many bridges touch it</strong>.</li>
@@ -111,7 +156,7 @@ body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%
       <li><strong>Bridges never cross</strong> or pass through an island.</li>
       <li>To win, <strong>all the islands must be connected</strong> in one network, with every count satisfied.</li>
     </ol>
-    <p>Tap two islands, drag from one island to another, or tap a bridge to change it. Islands turn green when their counts match; red means too many bridges. Undo and hints are available below the board.</p>
+    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Checkpoints glow green when their counts match; red means too many tracks. Every checkpoint must connect into one course. Hints cap your medal at bronze.</p>
     <button id="rulesDone" class="menuBtn primary" style="width:100%" type="button">Back to the islands</button>
   </section>
 </div>
@@ -124,16 +169,17 @@ body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%
 </div>
 <div id="winOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-    <div class="winSeal" aria-hidden="true">❄</div><span class="eyebrow winLabel" style="display:block">Every snowy outpost connected</span><h2 id="winTitle" style="text-align:center">Christmas connected!</h2>
+    <div class="podiumSpot"><span class="ribbonLeft"></span><div class="medalDisc" id="winMedalDisc"><svg viewBox="0 0 80 80" width="58" height="58" aria-hidden="true"><path d="M25 2h12l3 31H29zM44 2h12L48 33H37z" fill="#98B7D5"/><circle cx="40" cy="49" r="26" fill="none" stroke="currentColor" stroke-width="5"/><path d="m40 30 6 12 13 2-10 9 3 13-12-7-12 7 3-13-10-9 13-2z" fill="currentColor"/></svg></div><span class="ribbonRight"></span></div><span class="eyebrow winLabel" style="display:block">ALL CHECKPOINTS CONNECTED</span><h2 id="winTitle" style="text-align:center">GOLD MEDAL</h2>
     <div id="winTime" class="winTime">00:00</div><div id="winSub" class="winSub">Beautifully done.</div>
-    <div class="menuActions"><button id="viewBoardBtn" class="menuBtn" type="button">View board</button><button id="nextBtn" class="menuBtn primary" type="button">Next puzzle</button></div>
+    <div class="menuActions"><button id="viewBoardBtn" class="menuBtn" type="button">View board</button><button id="nextBtn" class="menuBtn primary" type="button">Next heat</button></div>
   </section>
 </div>
 <script>
 (function(){
 'use strict';
 var SAVE='gamebox.bridgebound.v1', RECORDS='gamebox.bridgebound.records.v1';
-var SETTINGS={easy:{size:5,n:9,extra:.25,doubles:.27,label:'Easy'},medium:{size:7,n:15,extra:.40,doubles:.33,label:'Medium'},hard:{size:9,n:23,extra:.48,doubles:.38,label:'Hard'}};
+var SETTINGS={easy:{size:5,n:9,extra:.25,doubles:.27,label:'Qualifier'},medium:{size:7,n:15,extra:.40,doubles:.33,label:'Semifinal'},hard:{size:9,n:23,extra:.48,doubles:.38,label:'Final'}};
+var MEDALS={easy:{gold:120,silver:240},medium:{gold:240,silver:420},hard:{gold:480,silver:780}};
 var $=function(id){return document.getElementById(id);};
 var rand=function(n){return Math.floor(Math.random()*n);};
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rand(i+1),tmp=a[i];a[i]=a[j];a[j]=tmp;}return a;}
@@ -317,17 +363,19 @@ function render(){
  var graph=state.graph,nodes=graph.nodes,edges=graph.edges,sz=SETTINGS[state.level].size,cell=60,pad=41,extent=pad*2+(sz-1)*cell;
  $('board').setAttribute('viewBox','0 0 '+extent+' '+extent);
  $('difficultyLabel').textContent=SETTINGS[state.level].label;
+ $('medalTarget').textContent=timeText(MEDALS[state.level].gold);
+ $('arenaState').textContent=state.won?'COURSE COMPLETE':state.started?'HEAT IN PROGRESS':'AWAITING START';
  var counts=sums(),complete=counts.filter(function(n,i){return n===nodes[i].n;}).length;
  $('countLabel').textContent=complete+' / '+nodes.length;$('timeLabel').textContent=timeText(state.seconds);
  $('undoBtn').disabled=state.won||state.history.length===0;
  $('hintBtn').disabled=state.won;
  var line=$('progressLine');
- if(state.won)line.innerHTML='<b>Every snowy outpost connected. Merry Christmas!</b>';
+ if(state.won)line.innerHTML='<b>Course complete. Medal awarded.</b>';
  else if(counts.some(function(n,i){return n>nodes[i].n;}))line.textContent='An island has too many bridges. Try removing one.';
  else if(complete===nodes.length&&!connected())line.textContent='Counts complete — join the separate island groups.';
  else if(selected>=0)line.textContent='Choose a neighbouring island to build a bridge.';
- else if(state.moves===0)line.textContent='Join the snowy outposts with festive bridges.';
- else line.textContent=complete+' of '+nodes.length+' islands ready · Keep connecting.';
+ else if(state.moves===0)line.textContent='Link the numbered checkpoints to start your heat.';
+ else line.textContent=complete+' of '+nodes.length+' checkpoints linked · Keep going.';
  var board=$('board'),defs=board.querySelector('defs');
  board.replaceChildren();
  board.appendChild(defs);
@@ -363,7 +411,7 @@ function notify(message){
 function record(){state.history.push(state.values.slice());if(state.history.length>80)state.history.shift();}
 function updateEdge(index,newValue){
  if(state.won||!Number.isInteger(index)||index<0||index>=state.values.length)return;
- if(newValue>0&&state.graph.edges[index].cross.some(function(i){return state.values[i]>0;})){notify('Bridges cannot cross.');return;}
+ if(newValue>0&&state.graph.edges[index].cross.some(function(i){return state.values[i]>0;})){notify('Ice tracks cannot cross.');return;}
  if(state.values[index]===newValue)return;
  record();state.values[index]=newValue;state.started=true;state.moves++;selected=-1;save();render();checkWin();
 }
@@ -388,19 +436,29 @@ function hint(){
  if(!wrong.length){notify('Every bridge is correct.');return;}
  var chosen=wrong[rand(wrong.length)],answer=edges[chosen].answer;
  record();state.values[chosen]=answer;state.hints++;state.started=true;state.moves++;selected=-1;save();render();
- notify(answer?'A correct route has been revealed.':'An incorrect bridge was cleared.');
+ notify(answer?'A correct ice track has been revealed.':'An incorrect track was cleared.');
  checkWin();
 }
 function checkWin(){
  if(state.won||!isSolved())return;
  state.won=true;var stats=getRecords(),level=state.level,r=stats[level]||{wins:0,best:null};
+ r.medals=r.medals||{gold:0,silver:0,bronze:0};r.medals[medalForResult()]++;
  r.wins=(r.wins||0)+1;
  if(!state.hints&&(r.best==null||state.seconds<r.best))r.best=state.seconds;
  stats[level]=r;setRecords(stats);save();render();showWin();
 }
+function medalForResult(){
+ if(state.hints)return 'bronze';
+ if(state.seconds<=MEDALS[state.level].gold)return 'gold';
+ if(state.seconds<=MEDALS[state.level].silver)return 'silver';
+ return 'bronze';
+}
 function showWin(){
+ var medal=medalForResult(),names={gold:'GOLD MEDAL',silver:'SILVER MEDAL',bronze:'BRONZE MEDAL'};
+ $('winTitle').textContent=names[medal];
+ $('winMedalDisc').className='medalDisc '+medal;
  $('winTime').textContent=timeText(state.seconds);
- $('winSub').textContent=state.hints?('Solved with '+state.hints+' hint'+(state.hints===1?'':'s')+'. Try again without hints for a clean record.'):('Clean solve · '+SETTINGS[state.level].label+' difficulty');
+ $('winSub').textContent=state.hints?('Completed with '+state.hints+' hint'+(state.hints===1?'':'s')+' · Hints cap your award at bronze.'):('Clean finish · '+SETTINGS[state.level].label+' heat');
  open('winOverlay');
 }
 function initNew(level){state=blank(level);selected=-1;pendingAction=null;save();render();}
