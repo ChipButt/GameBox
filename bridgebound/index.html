@@ -300,11 +300,16 @@ function drawBridge(group,a,b,mult){
  var dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len,ax=a.x+ux*22,ay=a.y+uy*22,bx=b.x-ux*22,by=b.y-uy*22;
  var px=-uy,py=ux;
  for(var t=0;t<mult;t++){
-   var shift=mult===2?(t===0?-5.5:5.5):0;
+   var shift=mult===2?(t===0?-6.2:6.2):0;
    var x1=ax+px*shift,y1=ay+py*shift,x2=bx+px*shift,y2=by+py*shift;
-   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#042532','stroke-width':10,'stroke-linecap':'round','class':'bridge'}));
-   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#e5ba71','stroke-width':7,'stroke-linecap':'butt','class':'bridge'}));
-   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#fff0bf','stroke-width':2,'stroke-dasharray':'7 4','class':'bridge'}));
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#143e3c','stroke-width':10,'stroke-linecap':'round','class':'bridge'}));
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#f5e9cc','stroke-width':7,'stroke-linecap':'butt','class':'bridge'}));
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#b73e48','stroke-width':3,'stroke-dasharray':'6 8','class':'bridge'}));
+   var span=Math.hypot(x2-x1,y2-y1), bulbs=Math.floor(span/17);
+   for(var j=1;j<=bulbs;j++){
+     var fraction=j/(bulbs+1);
+     group.appendChild(svgEl('circle',{cx:x1+(x2-x1)*fraction,cy:y1+(y2-y1)*fraction,r:2.0,fill:j%2?'#e6424c':'#2eab6c',stroke:'#fff7c8','stroke-width':.6,'class':'bridge'}));
+   }
  }
 }
 function render(){
@@ -317,11 +322,11 @@ function render(){
  $('undoBtn').disabled=state.won||state.history.length===0;
  $('hintBtn').disabled=state.won;
  var line=$('progressLine');
- if(state.won)line.innerHTML='<b>All islands connected. Voyage complete.</b>';
+ if(state.won)line.innerHTML='<b>Every snowy outpost connected. Merry Christmas!</b>';
  else if(counts.some(function(n,i){return n>nodes[i].n;}))line.textContent='An island has too many bridges. Try removing one.';
  else if(complete===nodes.length&&!connected())line.textContent='Counts complete — join the separate island groups.';
  else if(selected>=0)line.textContent='Choose a neighbouring island to build a bridge.';
- else if(state.moves===0)line.textContent='Tap two islands or drag between them.';
+ else if(state.moves===0)line.textContent='Join the snowy outposts with festive bridges.';
  else line.textContent=complete+' of '+nodes.length+' islands ready · Keep connecting.';
  var board=$('board'),defs=board.querySelector('defs');
  board.replaceChildren();
@@ -342,10 +347,11 @@ function render(){
  nodes.forEach(function(node,i){
    var p=point(node),klass='island'+(counts[i]===node.n?' complete':'')+(counts[i]>node.n?' over':'')+(selected===i?' active':'');
    var g=svgEl('g',{transform:'translate('+p.x+' '+p.y+')','class':klass,'data-island':i,'role':'button','tabindex':state.won?'-1':'0','aria-label':'Island '+node.n+', '+counts[i]+' bridges, '+(selected===i?'selected':'tap to select')});
-   g.appendChild(svgEl('circle',{r:24,fill:'#072c33',stroke:'#215d61','stroke-width':1.5,'class':'islandOuter'}));
-   g.appendChild(svgEl('circle',{r:19.5,fill:'url(#sand)',stroke:'#795b3b','stroke-width':1.5,'class':'islandFace'}));
-   g.appendChild(svgEl('path',{d:'M -12 -8 Q -3 -14 9 -10',stroke:'#fff8d9','stroke-width':2,opacity:.6,fill:'none','stroke-linecap':'round'}));
-   var text=svgEl('text',{x:0,y:1,fill:'#183d43'});text.textContent=node.n;g.appendChild(text);islands.appendChild(g);
+   g.appendChild(svgEl('circle',{r:24,fill:'#a83143',stroke:'#f9f8e8','stroke-width':2,'class':'islandOuter'}));
+   g.appendChild(svgEl('circle',{r:21.4,fill:'none',stroke:'#f8e8d1','stroke-width':3.4,'stroke-dasharray':'5 5'}));
+   g.appendChild(svgEl('circle',{r:19,fill:'url(#sand)',stroke:'#8eaaba','stroke-width':1.7,'class':'islandFace'}));
+   g.appendChild(svgEl('path',{d:'M -13 -8 Q -5 -13 2 -9 Q 8 -13 12 -7',stroke:'#fff','stroke-width':2.1,opacity:.9,fill:'none','stroke-linecap':'round'}));
+   var text=svgEl('text',{x:0,y:1,fill:'#263e48'});text.textContent=node.n;g.appendChild(text);islands.appendChild(g);
  });
 }
 function notify(message){
