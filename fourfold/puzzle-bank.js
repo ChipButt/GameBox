@@ -1440,10 +1440,10 @@
   "type": "phrase",
   "name": "THINGS THAT CAN CRACK",
   "words": [
-   "CODE",
-   "JOKE",
-   "EGG",
-   "VOICE"
+   "GLASS",
+   "ICE",
+   "VOICE",
+   "EGG"
   ]
  },
  {
