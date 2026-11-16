@@ -33,7 +33,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-vis
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style></head><body>
 <div class="shell">
-<header class="nav"><a class="back" href="../" aria-label="Back to GameBox">‹</a><div class="wordmark">FOUR<span>FOLD</span></div><div class="version">V2 • GAMEBOX</div></header>
+<header class="nav"><a class="back" href="../" aria-label="Back to GameBox">‹</a><div class="wordmark">FOUR<span>FOLD</span></div><div class="version">V3 • GAMEBOX</div></header>
 <div class="intro"><span class="eyebrow">A word game with a twist</span><h1>One grid. Four hidden links.</h1><p>Find four groups of four. Some words are sealed behind mini-puzzles. Every word matters.</p></div>
 <main>
 <div class="round"><span id="roundName">BOARD 1 / 3</span><div class="pips" id="pips" aria-label="Board progression"></div><span id="roundDifficulty">THE WARM-UP</span></div>
@@ -58,26 +58,27 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-vis
 const $=id=>document.getElementById(id);
 const GAMES=[
  {name:'THE WARM-UP',groups:[
-   {name:'___LIGHT',words:['DAY','MOON','SPOT','FLASH'],colour:0},
-   {name:'___ROOM',words:['CLASS','BALL','BED','COURT'],colour:1},
-   {name:'___LINE',words:['DEAD','PUNCH','FINISH','COAST'],colour:2},
-   {name:'___BOARD',words:['KEY','SCORE','CHESS','DART'],colour:3}
- ],seals:{DAY:{kind:'cross',intro:'Solve the three clues. Read the highlighted third letter of each answer, from top to bottom.',items:[['Award worn on a ribbon','MEDAL'],['Elegance under pressure','GRACE'],['Louisiana wetland','BAYOU']]}}},
+   {name:'CALENDAR UNITS',type:'category',words:['DAY','WEEK','MONTH','YEAR'],colour:0},
+   {name:'DANCES',type:'category',words:['SALSA','TANGO','WALTZ','POLKA'],colour:1},
+   {name:'THINGS YOU CAN DRAW',type:'idiom',words:['BATH','CURTAIN','CARD','SWORD'],colour:2},
+   {name:'___BOARD',type:'compound',words:['KEY','SCORE','CHESS','DART'],colour:3}
+ ],seals:{DAY:{kind:'cross',intro:'Solve the three clues. The third letter of each answer, from top to bottom, reveals the tile.',items:[['Award worn on a ribbon','MEDAL'],['What you mow in a garden','GRASS'],['The fifth month of the year','MAY']]}}},
  {name:'FALSE FRIENDS',groups:[
-   {name:'___HOUSE',words:['GREEN','WARE','LIGHT','CLUB'],colour:0},
-   {name:'___DROP',words:['RAIN','TEAR','BACK','EYE'],colour:1},
-   {name:'___PRINT',words:['BLUE','FINGER','FOOT','FINE'],colour:2},
-   {name:'___WORK',words:['HOME','FIELD','PAPER','NET'],colour:3}
+   {name:'TYPES OF TEA',type:'category',words:['GREEN','BLACK','WHITE','OOLONG'],colour:0},
+   {name:'UNITS OF LENGTH',type:'category',words:['FOOT','INCH','YARD','MILE'],colour:1},
+   {name:'THINGS YOU CAN BREAK',type:'idiom',words:['PROMISE','SILENCE','RECORD','HABIT'],colour:2},
+   {name:'___LINE',type:'compound',words:['DEAD','PUNCH','FINISH','COAST'],colour:3}
  ],seals:{GREEN:{kind:'wordle',intro:'Guess the hidden five-letter word in six tries. Green means the right letter in the right position; gold means a letter is in the word but in another position.'},FOOT:{kind:'cipher',intro:'An old cipher wheel is scratched with A → D. Use it to read the encrypted tile.',code:'IRRW',answer:'FOOT'}}},
  {name:'HIDDEN IN PLAIN SIGHT',groups:[
-   {name:'___FALL',words:['WATER','NIGHT','SNOW','FREE'],colour:0},
-   {name:'___BOOK',words:['NOTE','TEXT','COOK','SCRAP'],colour:1},
-   {name:'___MARK',words:['TRADE','QUESTION','CHECK','BENCH'],colour:2},
-   {name:'___LIGHT',words:['STOP','STREET','STAR','CANDLE'],colour:3}
- ],seals:{NIGHT:{kind:'cross',intro:'Solve the clues and take the third letter of each answer to reveal a tile.',items:[['Someone who serves customers at a café','DINER'],['To give off light','SHINE'],['Large bird of prey with broad wings','EAGLE'],['At the back of something','BEHIND'],['Following, later than','AFTER']]}}}
+   {name:'THINGS THAT FALL',type:'idiom',words:['NIGHT','RAIN','LEAVES','DOMINOES'],colour:0},
+   {name:'PALINDROMES',type:'spelling',words:['LEVEL','RADAR','CIVIC','KAYAK'],colour:1},
+   {name:'SILENT FIRST LETTER',type:'spelling',words:['KNIFE','WRIST','GNOME','PSALM'],colour:2},
+   {name:'___MARK',type:'compound',words:['TRADE','QUESTION','CHECK','BENCH'],colour:3}
+ ],seals:{NIGHT:{kind:'cross',intro:'Solve the clues and take the third letter of each answer to reveal a tile.',items:[['Someone eating in a restaurant','DINER'],['To give off light','SHINE'],['Large bird of prey with broad wings','EAGLE'],['At the back of something','BEHIND'],['Following, later than','AFTER']]}}}
 ];
-const SAVE='fourfold.v1.progress';
-function validate(){GAMES.forEach((b,i)=>{let words=b.groups.flatMap(g=>g.words);if(words.length!==16||new Set(words).size!==16||b.groups.some(g=>g.words.length!==4))throw Error('Invalid puzzle board '+i);Object.entries(b.seals).forEach(([word,p])=>{if(!words.includes(word))throw Error('Sealed word absent');if(p.kind==='cross'){let answer=p.items.map(x=>x[1][2]).join('');if(answer!==word)throw Error('Crossword extraction incorrect: '+word);}if(p.kind==='wordle'&&!/^[A-Z]{5}$/.test(word))throw Error('Wordle seals must be five-letter words: '+word);})})}
+const SAVE='fourfold.v2.progress';
+const LEGACY_SAVE='fourfold.v1.progress';
+function validate(){GAMES.forEach((b,i)=>{let words=b.groups.flatMap(g=>g.words);if(words.length!==16||new Set(words).size!==16||b.groups.some(g=>g.words.length!==4))throw Error('Invalid puzzle board '+i);if(new Set(b.groups.map(g=>g.type)).size<3||b.groups.filter(g=>g.type==='compound').length>1)throw Error('Insufficient connection variety on board '+i);Object.entries(b.seals).forEach(([word,p])=>{if(!words.includes(word))throw Error('Sealed word absent');if(p.kind==='cross'){let answer=p.items.map(x=>x[1][2]).join('');if(answer!==word)throw Error('Crossword extraction incorrect: '+word);}if(p.kind==='wordle'&&!/^[A-Z]{5}$/.test(word))throw Error('Wordle seals must be five-letter words: '+word);})})}
 validate();
 const randArr=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 let level=0,order=[],selected=[],solved=[],unlocked=[],mistakes=0,wrong=[],miniWord=null,miniInputs=[],totalScore=0,wordleTries={},miniEntry='';
@@ -204,6 +205,13 @@ document.addEventListener('keydown',e=>{
    if(e.key==='Enter'||e.key==='Backspace'||/^[a-z]$/i.test(e.key)){e.preventDefault();wordleInput(e.key==='Enter'?'ENTER':e.key==='Backspace'?'BACKSPACE':e.key.toUpperCase())}
  }else if(e.key==='Enter'&&document.activeElement?.tagName==='INPUT'){e.preventDefault();miniSubmit()}
 });
-if(!load())resetBoard(0);else{render();if(solved.length===4||mistakes===4)end(solved.length===4)}
+if(!load()){
+ let previous=null;
+ try{previous=JSON.parse(localStorage.getItem(LEGACY_SAVE))}catch{}
+ const priorLevel=Number.isInteger(previous?.level)&&previous.level>=0&&previous.level<GAMES.length?previous.level:0;
+ resetBoard(priorLevel);
+ if(Array.isArray(previous?.unlocked)){unlocked=[...new Set(previous.unlocked.filter(word=>GAMES[level].seals[word]))];store();render()}
+ if(previous)message('FourFold puzzles refreshed with new connection types.','success');
+}else{render();if(solved.length===4||mistakes===4)end(solved.length===4)}
 })();
 </script></body></html>
