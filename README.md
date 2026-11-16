@@ -40,7 +40,10 @@ This organisation changes resource paths only: game logic, storage keys, multipl
 - The original connection bank currently holds **266 curated four-word groups across eight styles**: categories, phrases, spelling, compound words, wordplay, synonyms, culture and geography.
 - `fourfold/puzzle-bank.js` is the extensible source of answer groups. Every category remains eligible at every board number.
 - `fourfold/puzzle-engine.js` draws four distinct types per board, rejects repeated tiles, favours less recently seen groups and tracks recent board combinations.
-- Crossword-style extraction, cipher and five-letter Wordle seals are generated for eligible tiles. The local Wordle dictionary is separately MIT-licensed.
+- Mini-game tiles display a visual preview (Wordle letter squares, a miniature crossword, or a cipher wheel) instead of a generic 'Sealed' label.
+- Genuine numbered **Across/Down mini-crosswords** are generated from 273 authored answer clues, with intersecting cells; the last ten crosswords' clues are excluded from fresh puzzle selection.
+- Cipher puzzles use rotating Caesar shifts (1–25), alphabet mirroring (Atbash), or shift-and-reverse. The paired alphabet guide is divided into 13-letter strips for mobile legibility.
+- Five-letter Wordle remains a six-guess puzzle with a local MIT-licensed answer dictionary. Mini-game types alternate between generated boards, and recent exact mini-puzzles are excluded.
 - Progress saves the actual board and its seals; existing V3 games can be completed before switching into endless mode.
 - After clearing or losing a board, players can advance. After a loss they can also retry the same puzzle.
 - Run `node --test fourfold/engine.test.cjs` to verify the bank, endless variety and mini-puzzle generation.
