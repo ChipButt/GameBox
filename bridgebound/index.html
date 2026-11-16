@@ -141,6 +141,21 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
 .boardFrame:before,.boardFrame:after{display:none}
 .boardOrnament{display:none}
 
+
+/* ELFLYMPICS V5 — endless event scoring without blocking game flow */
+.endlessScoreboard{display:grid;grid-template-columns:1.6fr .6fr 1fr 1fr;gap:8px;align-items:end;padding:6px 12px 9px;margin:0 0 7px;background:linear-gradient(90deg,#102a55e3,#122c55b8);border-left:4px solid #f2cc87;border-bottom:1px solid #6ea4c8;border-radius:4px}
+.endlessScoreboard small{display:block;font:900 9px 'DM Sans',sans-serif;letter-spacing:.1em;color:#a9cce9;white-space:nowrap}
+.endlessScoreboard strong{font:900 clamp(15px,3.5vw,23px) 'Outfit',system-ui;color:#fff4d8;font-variant-numeric:tabular-nums}
+.endlessScoreboard .scorePrimary strong{font-size:clamp(25px,5vw,34px);color:#ffdd8c}
+.endlessScoreboard .scoreSecondary{text-align:right}
+.heatResult{position:absolute;z-index:7;top:46%;left:8%;right:8%;transform:translateY(-50%);padding:17px 11px;border:2px solid #ffda93;border-radius:8px;background:#102c54f0;box-shadow:0 12px 35px #09213c9e;text-align:center;pointer-events:none;animation:iceResult .23s ease-out both}
+.heatResult strong{display:block;font:900 clamp(24px,7vw,44px) 'Outfit',system-ui;color:#ffdc87}
+.heatResult span{display:block;margin-top:6px;color:#edf6ff;font:900 11px 'DM Sans',sans-serif;letter-spacing:.08em}
+.heatResult.silver{border-color:#c9e1f2}.heatResult.bronze{border-color:#c99b7b}
+@keyframes iceResult{from{opacity:0;transform:translateY(-44%) scale(.96)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+@media(max-width:390px){.endlessScoreboard{grid-template-columns:1.4fr .5fr 1fr;gap:5px;padding:6px}.endlessScoreboard .scoreSecondary:last-child{display:none}.endlessScoreboard small{font-size:8px}}
+@media(max-height:700px){.endlessScoreboard{padding-top:3px;padding-bottom:4px}.arenaShell{width:min(100%,620px,calc((100dvh - 224px)*1.04))}}
+@media(prefers-reduced-motion:reduce){.heatResult{animation:none!important}}
 </style>
 </head>
 <body>
@@ -148,10 +163,16 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
   <header class="topbar">
     <a class="iconBtn" href="../advent-2026/" aria-label="Back to Advent Playroom">‹</a>
     <div class="brand"><span class="eyebrow">ELFLYMPICS 2026 · WINTER GAMES</span><h1>ICE LINKS</h1></div>
-    <div class="topright"><span class="version">V4 · ICE</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
+    <div class="topright"><span class="version">V5 · ENDLESS</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
   </header>
   <div class="rule"></div>
-  <section class="hud" aria-label="Puzzle status">
+  <div class="endlessScoreboard" aria-label="Event scoring">
+ <div class="scorePrimary"><small>EVENT SCORE</small><strong id="scoreLabel">0</strong></div>
+ <div class="scoreSecondary"><small>HEAT</small><strong id="heatLabel">1</strong></div>
+ <div class="scoreSecondary"><small>PERSONAL BEST</small><strong id="bestScoreLabel">0</strong></div>
+ <div class="scoreSecondary"><small>CLEAN STREAK</small><strong id="streakLabel">0</strong></div>
+ </div>
+ <section class="hud" aria-label="Puzzle status">
     <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>EVENT HEAT</small><strong id="difficultyLabel">QUALIFIER</strong></button>
     <div class="hudCell"><small>CHECKPOINTS</small><strong id="countLabel">0 / 9</strong></div>
     <div class="hudCell"><small>RACE CLOCK</small><strong id="timeLabel">00:00</strong></div>
@@ -170,29 +191,31 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
       <div class="boardOrnament" aria-hidden="true">ELFLYMPICS · 2026</div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
-      <div class="arenaFooter"><span>WINTER GAMES <b>2026</b></span><span id="arenaState">AWAITING START</span></div>
+      <div class="heatResult" id="heatResult" role="status" aria-live="assertive" hidden><strong id="heatPoints">+0 POINTS</strong><span id="heatAward">GOLD · HEAT COMPLETE</span></div>
+ <div class="arenaFooter"><span>WINTER GAMES <b>2026</b></span><span id="arenaState">AWAITING START</span></div>
     </div>
   </main>
   <div id="progressLine" class="progressLine" role="status" aria-live="polite">Connect checkpoints to complete the course.</div>
   <div class="actions">
     <button id="undoBtn" class="action" type="button" disabled><span aria-hidden="true">↶</span> Undo</button>
     <button id="hintBtn" class="action" type="button"><span aria-hidden="true">◎</span> Hint</button>
-    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">✦</span> New heat</button>
+    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">↠</span> Skip heat</button>
   </div>
   <div class="microcopy">CONNECT EVERY CHECKPOINT · MAXIMUM TWO ICE TRACKS · <strong>NO CROSSINGS</strong></div>
 </div>
 <div id="menuOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
     <div class="sheetTop"><div><span class="eyebrow">ELFLYMPICS · EVENT SETTINGS</span><h2 id="menuTitle">Choose your heat.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
-    <p>Each heat has a unique logical solution. Complete the checkpoint course to earn a medal.</p>
+    <p>Link every checkpoint to earn points. The next puzzle starts automatically, and the competition never ends. Difficulty progresses from Qualifiers through Semifinals to endless Finals.</p>
     <div class="difficultyOptions" id="difficultyOptions">
       <button type="button" class="choice" data-difficulty="easy"><b>Qualifier</b><small>5 × 5 course</small></button>
       <button type="button" class="choice" data-difficulty="medium"><b>Semifinal</b><small>7 × 7 course</small></button>
       <button type="button" class="choice" data-difficulty="hard"><b>Final</b><small>9 × 9 course</small></button>
     </div>
-    <h3>Event results</h3>
-    <div class="statGrid"><div class="stat"><strong id="statWins">0</strong><small>Completed</small></div><div class="stat"><strong id="statBest">—</strong><small>Fastest clean heat</small></div><div class="stat"><strong id="statHints">0</strong><small>Hints this board</small></div></div>
-    <div class="menuActions"><button id="rulesBtn" class="menuBtn" type="button">How to play</button><button id="restartBtn" class="menuBtn warning" type="button">Restart board</button></div>
+    <h3>Your current run</h3>
+    <div class="statGrid"><div class="stat"><strong id="statWins">0</strong><small>Heats completed</small></div><div class="stat"><strong id="statBest">0</strong><small>Best score</small></div><div class="stat"><strong id="statHints">0</strong><small>Hints this heat</small></div></div>
+ <p style="font-size:11px;margin:14px 0 0">Qualifier 100 base points · Semifinal 200 · Final 350. Fast clean finishes earn extra points; consecutive clean heats earn a streak bonus. One hint halves the base award, two or more score zero. Skips earn zero points and reset the streak.</p>
+    <div class="menuActions"><button id="rulesBtn" class="menuBtn" type="button">How to play</button><button id="restartBtn" class="menuBtn warning" type="button">New scoring run</button></div>
   </section>
 </div>
 <div id="rulesOverlay" class="overlay" hidden>
@@ -205,7 +228,7 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
       <li><strong>Bridges never cross</strong> or pass through an island.</li>
       <li>To win, <strong>all the islands must be connected</strong> in one network, with every count satisfied.</li>
     </ol>
-    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Checkpoints glow green when their counts match; red means too many tracks. Every checkpoint must connect into one course. Hints cap your medal at bronze.</p>
+    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Checkpoints glow green when their counts match; red means too many tracks. Every checkpoint must connect into one course. Hints reduce the points earned, and a new heat starts automatically.</p>
     <button id="rulesDone" class="menuBtn primary" style="width:100%" type="button">Back to the islands</button>
   </section>
 </div>
@@ -354,10 +377,23 @@ function generate(level){
  // Never present a puzzle whose unique solution has not been proved.
  throw Error('Could not generate a unique puzzle. Reload to retry.');
 }
-var state=null,selected=-1,dragStart=null,pendingAction=null,toastTimer=null;
-function blank(level){
- var graph=generate(level);
- return {level:level,graph:graph,values:graph.edges.map(function(){return 0;}),seconds:0,started:false,won:false,hints:0,moves:0,history:[]};
+var state=null,selected=-1,dragStart=null,pendingAction=null,toastTimer=null,advanceTimer=null;
+function blank(level,progress){
+ var graph=generate(level),p=progress||{};
+ return {level:level,graph:graph,values:graph.edges.map(function(){return 0;}),seconds:0,started:false,won:false,hints:0,moves:0,history:[],
+ score:Math.max(0,Number(p.score)||0),completed:Math.max(0,Number(p.completed)||0),streak:Math.max(0,Number(p.streak)||0),startLevel:SETTINGS[p.startLevel]?p.startLevel:level};
+}
+function heatLevel(completed,startLevel){
+ if(startLevel==='hard')return 'hard';
+ if(startLevel==='medium')return completed<3?'medium':'hard';
+ return completed<3?'easy':completed<6?'medium':'hard';
+}
+function personalBest(){return Math.max(0,Number(getRecords().bestScore)||0);}
+function heatPoints(level,seconds,hints,streak){
+ var base={easy:100,medium:200,hard:350}[level],par=MEDALS[level].gold;
+ if(hints>=2)return 0;
+ if(hints===1)return Math.floor(base/2);
+ return base+Math.round(base*.75*Math.max(0,(par-seconds)/par))+Math.min(100,streak*20);
 }
 function validSaved(s){
  return s&&SETTINGS[s.level]&&s.graph&&Array.isArray(s.graph.nodes)&&s.graph.nodes.length===SETTINGS[s.level].n&&
@@ -373,6 +409,10 @@ function load(){
    if(!validSaved(s))return null;
    s.seconds=Math.max(0,Math.floor(Number(s.seconds)||0));
    s.started=!!s.started;s.won=!!s.won;s.hints=Math.max(0,Number(s.hints)||0);s.moves=Math.max(0,Number(s.moves)||0);
+   s.score=Math.max(0,Math.floor(Number(s.score)||0));
+   s.completed=Math.max(0,Math.floor(Number(s.completed)||0));
+   s.streak=Math.max(0,Math.floor(Number(s.streak)||0));
+   s.startLevel=SETTINGS[s.startLevel]?s.startLevel:s.level;
    s.history=Array.isArray(s.history)?s.history.filter(function(a){return Array.isArray(a)&&a.length===s.values.length&&a.every(function(x){return Number.isInteger(x)&&x>=0&&x<=2;});}).slice(-80):[];
    return s;
  }catch(e){return null;}
@@ -416,13 +456,17 @@ function render(){
  $('board').setAttribute('viewBox','0 0 '+extent+' '+extent);
  $('difficultyLabel').textContent=SETTINGS[state.level].label;
  $('medalTarget').textContent=timeText(MEDALS[state.level].gold);
- $('arenaState').textContent=state.won?'COURSE COMPLETE':state.started?'HEAT IN PROGRESS':'AWAITING START';
+ $('arenaState').textContent=state.won?'NEXT HEAT LOADING':state.started?'HEAT IN PROGRESS':'READY TO COMPETE';
+ $('scoreLabel').textContent=state.score.toLocaleString('en-GB');
+ $('heatLabel').textContent=state.completed+1;
+ $('bestScoreLabel').textContent=Math.max(personalBest(),state.score).toLocaleString('en-GB');
+ $('streakLabel').textContent=state.streak;
  var counts=sums(),complete=counts.filter(function(n,i){return n===nodes[i].n;}).length;
  $('countLabel').textContent=complete+' / '+nodes.length;$('timeLabel').textContent=timeText(state.seconds);
  $('undoBtn').disabled=state.won||state.history.length===0;
  $('hintBtn').disabled=state.won;
  var line=$('progressLine');
- if(state.won)line.innerHTML='<b>Every checkpoint linked · Medal awarded.</b>';
+ if(state.won)line.innerHTML='<b>Points awarded · Next heat incoming.</b>';
  else if(counts.some(function(n,i){return n>nodes[i].n;}))line.textContent='An island has too many bridges. Try removing one.';
  else if(complete===nodes.length&&!connected())line.textContent='Counts complete — join the separate island groups.';
  else if(selected>=0)line.textContent='Choose a neighbouring island to build a bridge.';
@@ -493,48 +537,68 @@ function hint(){
  notify(answer?'A correct ice track has been revealed.':'An incorrect track was cleared.');
  checkWin();
 }
-function checkWin(){
- if(state.won||!isSolved())return;
- state.won=true;var stats=getRecords(),level=state.level,r=stats[level]||{wins:0,best:null};
- r.medals=r.medals||{gold:0,silver:0,bronze:0};r.medals[medalForResult()]++;
- r.wins=(r.wins||0)+1;
- if(!state.hints&&(r.best==null||state.seconds<r.best))r.best=state.seconds;
- stats[level]=r;setRecords(stats);save();render();showWin();
-}
+
 function medalForResult(){
  if(state.hints)return 'bronze';
  if(state.seconds<=MEDALS[state.level].gold)return 'gold';
  if(state.seconds<=MEDALS[state.level].silver)return 'silver';
  return 'bronze';
 }
-function showWin(){
- var medal=medalForResult(),names={gold:'GOLD MEDAL',silver:'SILVER MEDAL',bronze:'BRONZE MEDAL'};
- $('winTitle').textContent=names[medal];
- $('winMedalDisc').className='medalDisc '+medal;
- $('winTime').textContent=timeText(state.seconds);
- $('winSub').textContent=state.hints?('Completed with '+state.hints+' hint'+(state.hints===1?'':'s')+' · Hints cap your award at bronze.'):('Clean finish · '+SETTINGS[state.level].label+' heat');
- open('winOverlay');
+function cancelAdvance(){if(advanceTimer!==null){clearTimeout(advanceTimer);advanceTimer=null;}}
+function nextHeat(){
+ cancelAdvance();
+ if(!state||!state.won)return;
+ var progress={score:state.score,completed:state.completed,streak:state.streak,startLevel:state.startLevel};
+ initNew(heatLevel(progress.completed,progress.startLevel),progress);
 }
-function initNew(level){state=blank(level);selected=-1;pendingAction=null;save();render();}
+function checkWin(){
+ if(state.won||!isSolved())return;
+ var medal=medalForResult(),award=heatPoints(state.level,state.seconds,state.hints,state.streak);
+ state.won=true;state.score+=award;state.completed+=1;
+ state.streak=state.hints?0:state.streak+1;
+ var records=getRecords(),level=state.level,entry=records[level]||{wins:0,best:null};
+ entry.medals=entry.medals||{gold:0,silver:0,bronze:0};entry.medals[medal]++;
+ entry.wins=(entry.wins||0)+1;
+ if(!state.hints&&(entry.best==null||state.seconds<entry.best))entry.best=state.seconds;
+ records[level]=entry;records.bestScore=Math.max(personalBest(),state.score);
+ setRecords(records);save();render();
+ var result=$('heatResult');
+ $('heatPoints').textContent='+'+award.toLocaleString('en-GB')+' POINTS';
+ $('heatAward').textContent=medal.toUpperCase()+' · HEAT '+state.completed+' COMPLETE';
+ result.className='heatResult '+medal;result.hidden=false;
+ cancelAdvance();
+ advanceTimer=setTimeout(nextHeat,1300);
+}
+function initNew(level,progress){
+ cancelAdvance();
+ state=blank(level,progress);selected=-1;dragStart=null;pendingAction=null;
+ $('heatResult').hidden=true;save();render();
+}
 function request(action){
  closeAll();
- if(!state.won&&state.moves>0){
-   pendingAction=action;$('confirmMessage').textContent=action.type==='restart'?'Restarting will clear all bridges on this board.':'The current unfinished puzzle will be replaced.';
+ if(!state.won&&(state.moves>0||state.score>0)){
+   pendingAction=action;
+   $('confirmMessage').textContent=action.type==='restart'?'Start a new run? Your accumulated points will reset.':
+     action.type==='mode'?'Starting at a different event heat resets your score and streak.':
+     'Skip this puzzle? You keep your score, but earn no points and lose your clean streak.';
    open('confirmOverlay');
  }else perform(action);
 }
 function perform(action){
- closeAll();
- if(action.type==='restart'){state.values=state.values.map(function(){return 0;});state.seconds=0;state.started=false;state.won=false;state.hints=0;state.moves=0;state.history=[];selected=-1;save();render();}
- else initNew(action.level||state.level);
+ closeAll();cancelAdvance();
+ if(action.type==='restart'||action.type==='mode'){initNew(action.level||state.startLevel);}
+ else if(action.type==='new'){
+   var p={score:state.score,completed:state.completed,streak:0,startLevel:state.startLevel};
+   initNew(heatLevel(p.completed,p.startLevel),p);
+ }
 }
 function open(id){closeAll();$(id).hidden=false;}
 function closeAll(){document.querySelectorAll('.overlay').forEach(function(e){e.hidden=true;});}
 function showMenu(){
- var stats=getRecords()[state.level]||{wins:0,best:null};
- $('statWins').textContent=stats.wins||0;$('statBest').textContent=stats.best==null?'—':timeText(stats.best);
+ $('statWins').textContent=state.completed;
+ $('statBest').textContent=personalBest().toLocaleString('en-GB');
  $('statHints').textContent=state.hints;
- document.querySelectorAll('[data-difficulty]').forEach(function(b){b.classList.toggle('chosen',b.dataset.difficulty===state.level);b.setAttribute('aria-pressed',String(b.dataset.difficulty===state.level));});
+ document.querySelectorAll('[data-difficulty]').forEach(function(b){b.classList.toggle('chosen',b.dataset.difficulty===state.startLevel);b.setAttribute('aria-pressed',String(b.dataset.difficulty===state.startLevel));});
  open('menuOverlay');
 }
 var board=$('board');
@@ -559,20 +623,20 @@ board.addEventListener('keydown',function(e){
 });
 $('menuBtn').addEventListener('click',showMenu);$('difficultyBtn').addEventListener('click',showMenu);
 $('undoBtn').addEventListener('click',undo);$('hintBtn').addEventListener('click',hint);
-$('newBtn').addEventListener('click',function(){request({type:'new',level:state.level});});
+$('newBtn').addEventListener('click',function(){request({type:'new'});});
 $('restartBtn').addEventListener('click',function(){request({type:'restart'});});
 $('rulesBtn').addEventListener('click',function(){open('rulesOverlay');});
 $('rulesDone').addEventListener('click',closeAll);
 $('cancelBtn').addEventListener('click',function(){pendingAction=null;closeAll();});
 $('confirmBtn').addEventListener('click',function(){if(pendingAction){var act=pendingAction;pendingAction=null;perform(act);}});
 $('viewBoardBtn').addEventListener('click',closeAll);
-$('nextBtn').addEventListener('click',function(){request({type:'new',level:state.level});});
-document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.difficulty===state.level){closeAll();return;}request({type:'new',level:b.dataset.difficulty});});});
+$('nextBtn').addEventListener('click',function(){nextHeat();});
+document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.difficulty===state.startLevel&&state.completed===0){closeAll();return;}request({type:'mode',level:b.dataset.difficulty});});});
 document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeAll);});
 document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('pointerdown',function(e){if(e.target===el)closeAll();});});
 window.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAll();return;}if(e.target instanceof HTMLElement&&e.target.closest('.overlay:not([hidden])'))return;if((e.key==='z'&&(e.ctrlKey||e.metaKey))||e.key==='Backspace'){if(e.key==='Backspace'&&e.target.tagName==='INPUT')return;e.preventDefault();undo();}});
 setInterval(function(){if(state&&state.started&&!state.won&&!document.hidden&&!document.querySelector('.overlay:not([hidden])')){state.seconds++;$('timeLabel').textContent=timeText(state.seconds);save();}},1000);
-try{state=load()||blank('easy');save();render();if(state.won)showWin();}
+try{state=load()||blank('easy');save();render();if(state.won)nextHeat();}
 catch(err){$('progressLine').textContent='Unable to create a puzzle. Reload the page to retry.';console.error('Bridgebound puzzle generation error',err);}
 })();
 </script>
