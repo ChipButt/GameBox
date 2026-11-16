@@ -101,6 +101,11 @@
       "index": 20,
       "name": "Shift In Maze",
       "href": "maze-shift.html"
+    },
+    {
+      "index": 21,
+      "name": "North Pole Bridges",
+      "href": "bridgebound/"
     }
   ],
   "standalone": [
