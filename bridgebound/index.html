@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#092d38">
+<title>Bridgebound — Island Logic · GameBox</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
+:root{color-scheme:dark;font-family:'DM Sans',system-ui,-apple-system,sans-serif;--deep:#071d29;--sea:#0c3c4b;--mint:#8be4c7;--gold:#edc179;--cream:#f9e8be;--muted:#a5bec7;--red:#ff948a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--deep)}body{background:radial-gradient(ellipse 95% 47% at 50% -17%,#196779 0%,transparent 80%),linear-gradient(#092c39,#061c2a);color:#eef7f4}
+button,a{font:inherit}button{cursor:pointer}button:disabled{opacity:.37;cursor:default}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gold);outline-offset:3px}[hidden]{display:none!important}
+.app{width:min(100%,730px);min-height:100vh;min-height:100dvh;margin:auto;padding:calc(11px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;min-height:48px}.iconBtn{height:42px;width:42px;flex:0 0 42px;border:1px solid #577d83;border-radius:13px;background:#143e4b;color:#f6eaca;display:grid;place-items:center;font-size:22px;text-decoration:none;box-shadow:0 3px 0 #03131d}.iconBtn:active:not(:disabled),.action:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+.brand{flex:1;min-width:0}.eyebrow{font-size:9px;letter-spacing:.18em;font-weight:900;color:var(--mint);text-transform:uppercase}.brand h1{font:900 clamp(21px,5vw,29px)/1.02 'Outfit',system-ui,sans-serif;letter-spacing:-.035em;margin:3px 0 0;color:#ffe3a0}.topright{display:flex;align-items:center;gap:9px}.version{font-size:9px;color:#a4bcc2;letter-spacing:.15em;font-weight:900}
+.rule{height:1px;background:linear-gradient(90deg,transparent,#6c918b70,transparent);margin:13px 0 10px}
+.hud{display:grid;grid-template-columns:1.18fr .86fr .8fr;gap:8px;margin-bottom:11px}.hudCell{min-width:0;background:linear-gradient(155deg,#194957,#113542);border:1px solid #487783;border-radius:14px;min-height:59px;padding:9px 10px;text-align:left;box-shadow:inset 0 1px #8cc7bf20}.hudCell small{display:block;color:#a1c2c4;font-size:9px;font-weight:800;letter-spacing:.12em;margin-bottom:3px}.hudCell strong{font:800 19px/1.1 'Outfit',sans-serif;color:#fff1cc;white-space:nowrap}.difficulty{cursor:pointer;color:inherit}.difficulty strong{font-size:17px}.difficulty strong:after{content:'⌄';color:#a6d6c7;font:18px system-ui;margin-left:8px}
+.boardArea{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}.boardFrame{position:relative;width:min(100%,640px,calc(100dvh - 245px));aspect-ratio:1;min-width:0;min-height:0;border:3px solid #8caeaa;border-radius:25px;overflow:hidden;box-shadow:0 0 0 5px #092733,0 12px 34px #0007,inset 0 0 50px #051c2c;isolation:isolate;background:radial-gradient(ellipse at 20% 17%,#24647a60 0%,transparent 43%),radial-gradient(ellipse at 89% 93%,#26657a66 0%,transparent 44%),repeating-linear-gradient(145deg,#0a3a4b 0px,#0a3a4b 12px,#0c4053 15px,#0b394c 27px)}
+.boardFrame:before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 24px,#c1e6dc06 25px 26px),repeating-linear-gradient(90deg,transparent 0 24px,#c1e6dc05 25px 26px);z-index:0}
+.boardFrame:after{content:'';position:absolute;inset:0;border:1px solid #d1d9a480;border-radius:22px;pointer-events:none;z-index:2}
+#board{position:relative;z-index:1;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.bridge{pointer-events:none}.routeHit{cursor:pointer;pointer-events:stroke}.island{cursor:pointer;outline:none}.island text{pointer-events:none;font:900 19px 'Outfit',system-ui,sans-serif;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#fffae4aa;stroke-width:.3px}.island.active .islandOuter{stroke:#ffe4a3;stroke-width:4}.island.complete .islandFace{fill:url(#finished)}.island.over .islandFace{fill:url(#overfilled)}.island.active .islandFace{stroke:#fff0bf;stroke-width:2}.island .islandOuter{filter:drop-shadow(0px 3px 2px #00151b88)}.island:focus-visible .islandOuter{stroke:#fff;stroke-width:4}
+.boardOrnament{position:absolute;z-index:1;right:15px;bottom:8px;color:#a4d4c35c;font-size:10px;line-height:1.1;font-family:Georgia,serif;letter-spacing:.15em;pointer-events:none}
+.progressLine{min-height:24px;display:flex;justify-content:center;align-items:center;gap:9px;color:#a7c7ca;font-size:11px;text-align:center;font-weight:700;padding:7px 0 5px}.progressLine b{color:var(--mint)}
+.actions{display:grid;grid-template-columns:1fr 1fr 1.52fr;gap:9px;align-items:stretch;padding-top:8px}.action{min-width:0;min-height:54px;border:1px solid #668f94;border-radius:14px;box-shadow:0 4px 0 #031820;background:linear-gradient(#214e5e,#123a49);color:#f2f6f3;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}.action span{font-size:19px}.action.gold{border:1px solid #ffe0a4;background:linear-gradient(#ffe2a3,#dfac5f);color:#263c43;box-shadow:0 4px 0 #8b6339}.action.gold:active:not(:disabled){box-shadow:0 1px 0 #8b6339}
+.microcopy{margin:13px auto 3px;text-align:center;max-width:500px;color:#749ba7;font-size:10px;letter-spacing:.025em}.microcopy strong{color:#b7cecb}
+.toast{position:absolute;left:8%;right:8%;top:12px;z-index:4;padding:10px 12px;border-radius:12px;text-align:center;background:#0b2836ef;box-shadow:0 8px 25px #00141b99;border:1px solid #dcb878;color:#fff0cf;font-size:12px;font-weight:800;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .15s,transform .15s}.toast.show{opacity:1;transform:none}
+.overlay{position:fixed;inset:0;background:#03121bdb;z-index:30;display:grid;place-items:end center;padding:15px;backdrop-filter:blur(5px)}.sheet{width:min(100%,500px);max-height:min(90dvh,750px);overflow-y:auto;border-radius:25px 25px 20px 20px;border:1px solid #8bb6ae;background:linear-gradient(155deg,#204a56,#0b2938 67%);box-shadow:0 24px 85px #000a;padding:24px 21px 22px}.sheetTop{display:flex;gap:14px;align-items:start;justify-content:space-between}.sheet h2{font:900 clamp(26px,7vw,34px)/1.09 'Outfit',sans-serif;letter-spacing:-.02em;color:#ffe3a4;margin:5px 0 14px}.sheet p{font-size:13px;line-height:1.6;color:#b9d4d4;margin:0 0 15px}.sheet h3{font:800 13px 'Outfit',sans-serif;color:#c6eedd;margin:18px 0 10px}.closeBtn{height:39px;width:39px;border:1px solid #71979a;border-radius:11px;background:#1e4b57;color:white;font-size:23px;flex:none}.difficultyOptions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.choice{min-height:77px;padding:12px 5px;border:1px solid #527b83;border-radius:14px;background:#143844;color:#e8f3ed;text-align:center}.choice b{display:block;font:900 17px 'Outfit',sans-serif;margin-bottom:5px}.choice small{font-size:10px;color:#aac5c9}.choice.chosen{border:2px solid var(--gold);background:#325256;color:#ffe6ad}.menuActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.menuBtn{min-height:49px;padding:11px;border:1px solid #71969b;border-radius:12px;background:#204858;color:#f3f3ed;font-size:12px;font-weight:900}.menuBtn.primary{background:linear-gradient(#f7d694,#d7a55a);border-color:#ffdfa9;color:#293d41}.menuBtn.warning{border-color:#996b65;color:#ffd0c9}.statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#0d303d;border:1px solid #426b72;border-radius:12px;padding:11px 8px;text-align:center}.stat strong{display:block;font:900 20px 'Outfit',sans-serif;color:#fce0a0}.stat small{font-size:10px;color:#9ec0c3}.ruleList{padding-left:22px;color:#cce2df;font-size:13px;line-height:1.75}.ruleList li{margin-bottom:7px}.winSeal{margin:8px auto 13px;width:94px;height:94px;display:grid;place-items:center;border:3px double #ffe4ac;border-radius:50%;background:radial-gradient(#28685d,#103947);box-shadow:0 0 0 6px #d6b47f27,0 0 40px #71d9a646;font-size:41px;color:#ffe4a4}.winTime{font:900 54px/1 'Outfit',sans-serif;text-align:center;color:#ffe1a0}.winSub{text-align:center;color:#c7e6d7;font-size:12px;margin:8px 0 15px}.winLabel{text-align:center}
+@media(max-height:690px){.app{padding-top:calc(7px + env(safe-area-inset-top));padding-bottom:calc(7px + env(safe-area-inset-bottom))}.topbar{min-height:42px}.rule{margin:7px 0}.hud{margin-bottom:6px}.hudCell{min-height:48px;padding:6px 9px}.boardFrame{width:min(100%,620px,calc(100dvh - 217px))}.actions{padding-top:5px}.action{min-height:47px}.microcopy{margin-top:8px}}
+@media(max-width:370px){.app{padding-left:9px;padding-right:9px}.hud{gap:5px}.hudCell{padding:8px 7px}.hudCell strong{font-size:17px}.difficulty strong{font-size:15px}.actions{gap:6px}.action{font-size:11px}.topbar{gap:8px}.boardFrame{border-radius:17px}.sheet{padding:19px 15px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="iconBtn" href="../" aria-label="Back to GameBox">‹</a>
+    <div class="brand"><span class="eyebrow">Chip In Games · Island Logic</span><h1>Bridgebound</h1></div>
+    <div class="topright"><span class="version">V1</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
+  </header>
+  <div class="rule"></div>
+  <section class="hud" aria-label="Puzzle status">
+    <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>DIFFICULTY</small><strong id="difficultyLabel">Easy</strong></button>
+    <div class="hudCell"><small>ISLANDS READY</small><strong id="countLabel">0 / 9</strong></div>
+    <div class="hudCell"><small>TIME</small><strong id="timeLabel">00:00</strong></div>
+  </section>
+  <main class="boardArea">
+    <div class="boardFrame" id="boardFrame">
+      <svg id="board" role="group" aria-label="Bridges puzzle board. Tap one island and then a visible neighbour, or drag between islands." viewBox="0 0 322 322">
+        <defs>
+          <linearGradient id="sand" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#fff0bf"/><stop offset=".65" stop-color="#f1c777"/><stop offset="1" stop-color="#c69251"/></linearGradient>
+          <linearGradient id="finished" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7f7d0"/><stop offset="1" stop-color="#69c9a7"/></linearGradient>
+          <linearGradient id="overfilled" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd2be"/><stop offset="1" stop-color="#ef826e"/></linearGradient>
+        </defs>
+      </svg>
+      <div class="boardOrnament" aria-hidden="true">N<br>✧</div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+  </main>
+  <div id="progressLine" class="progressLine" role="status" aria-live="polite">Choose two islands to make a bridge.</div>
+  <div class="actions">
+    <button id="undoBtn" class="action" type="button" disabled><span aria-hidden="true">↶</span> Undo</button>
+    <button id="hintBtn" class="action" type="button"><span aria-hidden="true">✧</span> Hint</button>
+    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">✦</span> New puzzle</button>
+  </div>
+  <div class="microcopy">ONE OR TWO BRIDGES · NO CROSSINGS · <strong>ONE CONNECTED NETWORK</strong></div>
+</div>
+<div id="menuOverlay" class="overlay" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <div class="sheetTop"><div><span class="eyebrow">Bridgebound · Settings</span><h2 id="menuTitle">Chart your course.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
+    <p>Select a challenge. Each new puzzle has a unique logical solution.</p>
+    <div class="difficultyOptions" id="difficultyOptions">
+      <button type="button" class="choice" data-difficulty="easy"><b>Easy</b><small>5 × 5 waters</small></button>
+      <button type="button" class="choice" data-difficulty="medium"><b>Medium</b><small>7 × 7 waters</small></button>
+      <button type="button" class="choice" data-difficulty="hard"><b>Hard</b><small>9 × 9 waters</small></button>
+    </div>
+    <h3>Your voyage log</h3>
+    <div class="statGrid"><div class="stat"><strong id="statWins">0</strong><small>Completed</small></div><div class="stat"><strong id="statBest">—</strong><small>Fastest clean</small></div><div class="stat"><strong id="statHints">0</strong><small>Hints this board</small></div></div>
+    <div class="menuActions"><button id="rulesBtn" class="menuBtn" type="button">How to play</button><button id="restartBtn" class="menuBtn warning" type="button">Restart board</button></div>
+  </section>
+</div>
+<div id="rulesOverlay" class="overlay" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="sheetTop"><div><span class="eyebrow">Captain's guide</span><h2 id="rulesTitle">The rules of the sea.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close rules">×</button></div>
+    <ol class="ruleList">
+      <li>Join islands in a <strong>straight horizontal or vertical line</strong>, to the next island in that direction.</li>
+      <li>An island's number tells you exactly <strong>how many bridges touch it</strong>.</li>
+      <li>You may build <strong>one or two bridges</strong> between the same pair of islands. Tap the pair again to cycle through one, two and none.</li>
+      <li><strong>Bridges never cross</strong> or pass through an island.</li>
+      <li>To win, <strong>all the islands must be connected</strong> in one network, with every count satisfied.</li>
+    </ol>
+    <p>Tap two islands, drag from one island to another, or tap a bridge to change it. Islands turn green when their counts match; red means too many bridges. Undo and hints are available below the board.</p>
+    <button id="rulesDone" class="menuBtn primary" style="width:100%" type="button">Back to the islands</button>
+  </section>
+</div>
+<div id="confirmOverlay" class="overlay" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="sheetTop"><div><span class="eyebrow">Leave this puzzle?</span><h2 id="confirmTitle">Your bridges will be lost.</h2></div><button type="button" class="closeBtn" data-close aria-label="Cancel">×</button></div>
+    <p id="confirmMessage">Your unfinished board will be replaced. Continue?</p>
+    <div class="menuActions"><button id="cancelBtn" class="menuBtn" type="button">Keep playing</button><button id="confirmBtn" class="menuBtn primary" type="button">Continue</button></div>
+  </section>
+</div>
+<div id="winOverlay" class="overlay" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="winSeal" aria-hidden="true">✧</div><span class="eyebrow winLabel" style="display:block">Every island connected</span><h2 id="winTitle" style="text-align:center">Bridgebound!</h2>
+    <div id="winTime" class="winTime">00:00</div><div id="winSub" class="winSub">Beautifully done.</div>
+    <div class="menuActions"><button id="viewBoardBtn" class="menuBtn" type="button">View board</button><button id="nextBtn" class="menuBtn primary" type="button">Next puzzle</button></div>
+  </section>
+</div>
+<script>
+(function(){
+'use strict';
+var SAVE='gamebox.bridgebound.v1', RECORDS='gamebox.bridgebound.records.v1';
+var SETTINGS={easy:{size:5,n:9,extra:.25,doubles:.27,label:'Easy'},medium:{size:7,n:15,extra:.40,doubles:.33,label:'Medium'},hard:{size:9,n:23,extra:.48,doubles:.38,label:'Hard'}};
+var $=function(id){return document.getElementById(id);};
+var rand=function(n){return Math.floor(Math.random()*n);};
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rand(i+1),tmp=a[i];a[i]=a[j];a[j]=tmp;}return a;}
+function getRecords(){try{var x=JSON.parse(localStorage.getItem(RECORDS));return x&&typeof x==='object'?x:{};}catch(e){return {};}}
+function setRecords(o){try{localStorage.setItem(RECORDS,JSON.stringify(o));}catch(e){}}
+function makeGraph(level){
+ var cfg=SETTINGS[level],nodes=[{x:rand(cfg.size),y:rand(cfg.size)}],used=new Set([nodes[0].x+','+nodes[0].y]),i=0;
+ while(nodes.length<cfg.n&&i++<3000){
+   var anchor=nodes[rand(nodes.length)],horizontal=Math.random()<.5,x=horizontal?rand(cfg.size):anchor.x,y=horizontal?anchor.y:rand(cfg.size),key=x+','+y;
+   if(used.has(key)||Math.abs(x-anchor.x)+Math.abs(y-anchor.y)<2)continue;
+   var crowd=nodes.filter(function(p){return Math.abs(x-p.x)+Math.abs(y-p.y)<2;}).length;
+   if(crowd&&Math.random()<.8)continue;
+   used.add(key);nodes.push({x:x,y:y});
+ }
+ if(nodes.length<cfg.n)return null;
+ nodes.sort(function(a,b){return a.y-b.y||a.x-b.x;});
+ var edges=[];
+ for(var a=0;a<nodes.length;a++)for(var b=a+1;b<nodes.length;b++){
+   var p=nodes[a],q=nodes[b];if(p.x!==q.x&&p.y!==q.y)continue;
+   if(nodes.some(function(r,k){return k!==a&&k!==b&&(p.x===q.x?r.x===p.x&&r.y>p.y&&r.y<q.y:r.y===p.y&&r.x>p.x&&r.x<q.x);}))continue;
+   edges.push({a:a,b:b,answer:0,cross:[]});
+ }
+ for(var e=0;e<edges.length;e++){
+   var edge=edges[e],p1=nodes[edge.a],q1=nodes[edge.b];
+   for(var f=0;f<edges.length;f++){
+     if(f===e)continue;
+     var other=edges[f],p2=nodes[other.a],q2=nodes[other.b];if((p1.x===q1.x)===(p2.x===q2.x))continue;
+     var v=p1.x===q1.x?{a:p1,b:q1}:{a:p2,b:q2},h=p1.y===q1.y?{a:p1,b:q1}:{a:p2,b:q2};
+     if(v.a.x>Math.min(h.a.x,h.b.x)&&v.a.x<Math.max(h.a.x,h.b.x)&&h.a.y>Math.min(v.a.y,v.b.y)&&h.a.y<Math.max(v.a.y,v.b.y))edge.cross.push(f);
+   }
+ }
+ for(var attempt=0;attempt<45;attempt++){
+   edges.forEach(function(edge){edge.answer=0;});
+   var parent=nodes.map(function(_,n){return n;});
+   function root(n){while(parent[n]!==n)n=parent[n]=parent[parent[n]];return n;}
+   var count=0,order=shuffle(edges.map(function(_,n){return n;}));
+   for(var k=0;k<order.length;k++){
+     var edge=edges[order[k]],ra=root(edge.a),rb=root(edge.b);
+     if(ra===rb||edge.cross.some(function(j){return edges[j].answer>0;}))continue;
+     edge.answer=1;parent[ra]=rb;count++;
+   }
+   if(count!==nodes.length-1)continue;
+   order=shuffle(edges.map(function(_,n){return n;}));
+   for(var z=0;z<order.length;z++){
+     var edge2=edges[order[z]];
+     if(!edge2.answer&&!edge2.cross.some(function(j){return edges[j].answer>0;})&&Math.random()<cfg.extra)edge2.answer=1;
+   }
+   edges.forEach(function(edge){if(edge.answer&&Math.random()<cfg.doubles)edge.answer=2;});
+   var sums=nodes.map(function(){return 0;});
+   edges.forEach(function(edge){sums[edge.a]+=edge.answer;sums[edge.b]+=edge.answer;});
+   if(sums.some(function(n){return n<1||n>8;}))continue;
+   nodes.forEach(function(node,n){node.n=sums[n];});
+   return {nodes:nodes,edges:edges};
+ }
+ return null;
+}
+function solutionCount(graph,maxSteps){
+ var nodes=graph.nodes,edges=graph.edges,inc=nodes.map(function(){return [];});
+ edges.forEach(function(edge,i){inc[edge.a].push(i);inc[edge.b].push(i);});
+ var minV=[0,0,1,0,2,0,1,0],maxV=[0,0,1,1,2,2,2,2],steps=0,aborted=false;
+ function propagate(d){
+   var changed=true;
+   while(changed){
+     changed=false;
+     for(var n=0;n<nodes.length;n++){
+       var incident=inc[n],lo=0,hi=0;
+       for(var k=0;k<incident.length;k++){lo+=minV[d[incident[k]]];hi+=maxV[d[incident[k]]];}
+       if(nodes[n].n<lo||nodes[n].n>hi)return false;
+       for(var j=0;j<incident.length;j++){
+         var i=incident[j],mask=0,otherLo=lo-minV[d[i]],otherHi=hi-maxV[d[i]];
+         for(var val=0;val<=2;val++)if((d[i]&(1<<val))&&otherLo+val<=nodes[n].n&&otherHi+val>=nodes[n].n)mask|=1<<val;
+         if(!mask)return false;
+         if(mask!==d[i]){d[i]=mask;changed=true;}
+       }
+     }
+     for(var e=0;e<edges.length;e++)if(!(d[e]&1))for(var c=0;c<edges[e].cross.length;c++){
+       var other=edges[e].cross[c];if(!(d[other]&1))return false;
+       if(d[other]!==1){d[other]=1;changed=true;}
+     }
+   }
+   var seen=new Set([0]),stack=[0];
+   while(stack.length){
+     var node=stack.pop();
+     for(var ii=0;ii<inc[node].length;ii++){
+       var edgeIndex=inc[node][ii];
+       if(d[edgeIndex]&6){
+         var edge=edges[edgeIndex],next=edge.a===node?edge.b:edge.a;
+         if(!seen.has(next)){seen.add(next);stack.push(next);}
+       }
+     }
+   }
+   return seen.size===nodes.length;
+ }
+ function dfs(dom){
+   if(++steps>maxSteps){aborted=true;return 0;}
+   if(!propagate(dom))return 0;
+   var best=-1,bestScore=-1;
+   for(var i=0;i<dom.length;i++){
+     if(dom[i]===1||dom[i]===2||dom[i]===4)continue;
+     var e=edges[i],score=inc[e.a].length+inc[e.b].length+e.cross.length*2;
+     if(score>bestScore){bestScore=score;best=i;}
+   }
+   if(best<0)return 1;
+   var count=0;
+   for(var bit=1;bit<=4;bit*=2)if(dom[best]&bit){
+     var copy=dom.slice();copy[best]=bit;count+=dfs(copy);
+     if(count>=2||aborted)return count;
+   }
+   return count;
+ }
+ var count=dfs(edges.map(function(){return 7;}));
+ return {count:count,aborted:aborted};
+}
+function generate(level){
+ var fallback=null;
+ for(var t=0;t<90;t++){
+   var graph=makeGraph(level);
+   if(!graph)continue;
+   fallback=graph;
+   var result=solutionCount(graph,18000);
+   if(!result.aborted&&result.count===1)return graph;
+ }
+ // A connected, correctly numbered fallback is always solvable even if it has multiple solutions.
+ if(fallback)return fallback;
+ throw Error('Could not generate a puzzle. Please retry.');
+}
+var state=null,selected=-1,dragStart=null,pendingAction=null,toastTimer=null;
+function blank(level){
+ var graph=generate(level);
+ return {level:level,graph:graph,values:graph.edges.map(function(){return 0;}),seconds:0,started:false,won:false,hints:0,moves:0,history:[]};
+}
+function validSaved(s){
+ return s&&SETTINGS[s.level]&&s.graph&&Array.isArray(s.graph.nodes)&&s.graph.nodes.length===SETTINGS[s.level].n&&
+ Array.isArray(s.graph.edges)&&s.graph.edges.length>0&&
+ Array.isArray(s.values)&&s.values.length===s.graph.edges.length&&
+ s.values.every(function(n){return Number.isInteger(n)&&n>=0&&n<=2;})&&
+ s.graph.edges.every(function(e,i){return Number.isInteger(e.a)&&Number.isInteger(e.b)&&e.a>=0&&e.b>=0&&e.a<s.graph.nodes.length&&e.b<s.graph.nodes.length&&Array.isArray(e.cross)&&Number.isInteger(e.answer)&&e.answer>=0&&e.answer<=2;})&&
+ s.graph.nodes.every(function(n){return Number.isInteger(n.x)&&Number.isInteger(n.y)&&Number.isInteger(n.n)&&n.n>=1&&n.n<=8;});
+}
+function load(){
+ try{
+   var s=JSON.parse(localStorage.getItem(SAVE));
+   if(!validSaved(s))return null;
+   s.seconds=Math.max(0,Math.floor(Number(s.seconds)||0));
+   s.started=!!s.started;s.won=!!s.won;s.hints=Math.max(0,Number(s.hints)||0);s.moves=Math.max(0,Number(s.moves)||0);
+   s.history=Array.isArray(s.history)?s.history.filter(function(a){return Array.isArray(a)&&a.length===s.values.length&&a.every(function(x){return Number.isInteger(x)&&x>=0&&x<=2;});}).slice(-80):[];
+   return s;
+ }catch(e){return null;}
+}
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(state));}catch(e){}}
+function timeText(sec){sec=Math.max(0,Math.floor(sec||0));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
+function sums(){var n=state.graph.nodes.map(function(){return 0;});state.graph.edges.forEach(function(e,i){n[e.a]+=state.values[i];n[e.b]+=state.values[i];});return n;}
+function connected(){
+ var edges=state.graph.edges,seen=new Set([0]),stack=[0];
+ while(stack.length){var n=stack.pop();edges.forEach(function(e,i){if(state.values[i]<1)return;var dest=e.a===n?e.b:e.b===n?e.a:-1;if(dest>=0&&!seen.has(dest)){seen.add(dest);stack.push(dest);}});}
+ return seen.size===state.graph.nodes.length;
+}
+function isSolved(){var sum=sums();return sum.every(function(n,i){return n===state.graph.nodes[i].n;})&&connected();}
+function svgEl(tag,attrs){
+ var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+ Object.keys(attrs||{}).forEach(function(k){el.setAttribute(k,attrs[k]);});
+ return el;
+}
+function drawBridge(group,a,b,mult){
+ var dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len,ax=a.x+ux*22,ay=a.y+uy*22,bx=b.x-ux*22,by=b.y-uy*22;
+ var px=-uy,py=ux;
+ for(var t=0;t<mult;t++){
+   var shift=mult===2?(t===0?-5.5:5.5):0;
+   var x1=ax+px*shift,y1=ay+py*shift,x2=bx+px*shift,y2=by+py*shift;
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#042532','stroke-width':10,'stroke-linecap':'round','class':'bridge'}));
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#e5ba71','stroke-width':7,'stroke-linecap':'butt','class':'bridge'}));
+   group.appendChild(svgEl('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:'#fff0bf','stroke-width':2,'stroke-dasharray':'7 4','class':'bridge'}));
+ }
+}
+function render(){
+ if(!state)return;
+ var graph=state.graph,nodes=graph.nodes,edges=graph.edges,sz=SETTINGS[state.level].size,cell=60,pad=41,extent=pad*2+(sz-1)*cell;
+ $('board').setAttribute('viewBox','0 0 '+extent+' '+extent);
+ $('difficultyLabel').textContent=SETTINGS[state.level].label;
+ var counts=sums(),complete=counts.filter(function(n,i){return n===nodes[i].n;}).length;
+ $('countLabel').textContent=complete+' / '+nodes.length;$('timeLabel').textContent=timeText(state.seconds);
+ $('undoBtn').disabled=state.won||state.history.length===0;
+ $('hintBtn').disabled=state.won;
+ var line=$('progressLine');
+ if(state.won)line.innerHTML='<b>All islands connected. Voyage complete.</b>';
+ else if(counts.some(function(n,i){return n>nodes[i].n;}))line.textContent='An island has too many bridges. Try removing one.';
+ else if(complete===nodes.length&&!connected())line.textContent='Counts complete — join the separate island groups.';
+ else if(selected>=0)line.textContent='Choose a neighbouring island to build a bridge.';
+ else if(state.moves===0)line.textContent='Tap two islands or drag between them.';
+ else line.textContent=complete+' of '+nodes.length+' islands ready · Keep connecting.';
+ var board=$('board'),defs=board.querySelector('defs');
+ board.replaceChildren();
+ board.appendChild(defs);
+ var trail=svgEl('g',{'aria-hidden':'true'}),bridges=svgEl('g',{'aria-hidden':'true'}),hits=svgEl('g'),islands=svgEl('g');
+ board.append(trail,bridges,hits,islands);
+ function point(node){return {x:pad+node.x*cell,y:pad+node.y*cell};}
+ edges.forEach(function(e,i){
+   var a=point(nodes[e.a]),b=point(nodes[e.b]);
+   if(selected===e.a||selected===e.b){
+     var available=!e.cross.some(function(j){return state.values[j]>0;});
+     if(available)trail.appendChild(svgEl('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#b4dbc1','stroke-width':2,'stroke-dasharray':'3 9','opacity':'.62'}));
+   }
+   if(state.values[i])drawBridge(bridges,a,b,state.values[i]);
+   var hit=svgEl('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'transparent','stroke-width':21,'data-edge':i,'class':'routeHit','aria-label':'Bridge between island '+nodes[e.a].n+' and island '+nodes[e.b].n});
+   hits.appendChild(hit);
+ });
+ nodes.forEach(function(node,i){
+   var p=point(node),klass='island'+(counts[i]===node.n?' complete':'')+(counts[i]>node.n?' over':'')+(selected===i?' active':'');
+   var g=svgEl('g',{transform:'translate('+p.x+' '+p.y+')','class':klass,'data-island':i,'role':'button','tabindex':state.won?'-1':'0','aria-label':'Island '+node.n+', '+counts[i]+' bridges, '+(selected===i?'selected':'tap to select')});
+   g.appendChild(svgEl('circle',{r:24,fill:'#072c33',stroke:'#215d61','stroke-width':1.5,'class':'islandOuter'}));
+   g.appendChild(svgEl('circle',{r:19.5,fill:'url(#sand)',stroke:'#795b3b','stroke-width':1.5,'class':'islandFace'}));
+   g.appendChild(svgEl('path',{d:'M -12 -8 Q -3 -14 9 -10',stroke:'#fff8d9','stroke-width':2,opacity:.6,fill:'none','stroke-linecap':'round'}));
+   var text=svgEl('text',{x:0,y:1,fill:'#183d43'});text.textContent=node.n;g.appendChild(text);islands.appendChild(g);
+ });
+}
+function notify(message){
+ $('toast').textContent=message;
+ $('toast').classList.add('show');
+ if(toastTimer)clearTimeout(toastTimer);
+ toastTimer=setTimeout(function(){$('toast').classList.remove('show');},1900);
+}
+function record(){state.history.push(state.values.slice());if(state.history.length>80)state.history.shift();}
+function updateEdge(index,newValue){
+ if(state.won||!Number.isInteger(index)||index<0||index>=state.values.length)return;
+ if(newValue>0&&state.graph.edges[index].cross.some(function(i){return state.values[i]>0;})){notify('Bridges cannot cross.');return;}
+ if(state.values[index]===newValue)return;
+ record();state.values[index]=newValue;state.started=true;state.moves++;selected=-1;save();render();checkWin();
+}
+function cycle(index){updateEdge(index,(state.values[index]+1)%3);}
+function chooseIsland(index){
+ if(state.won)return;
+ if(selected<0){selected=index;render();return;}
+ if(selected===index){selected=-1;render();return;}
+ var edgeIndex=state.graph.edges.findIndex(function(e){return (e.a===selected&&e.b===index)||(e.a===index&&e.b===selected);});
+ if(edgeIndex<0){selected=index;render();notify('Choose the next island in the same row or column.');return;}
+ cycle(edgeIndex);
+}
+function undo(){
+ if(!state.history.length||state.won)return;
+ state.values=state.history.pop();state.moves=Math.max(0,state.moves-1);selected=-1;save();render();
+}
+function hint(){
+ if(state.won)return;
+ var edges=state.graph.edges,wrong=[];
+ for(var i=0;i<edges.length;i++)if(state.values[i]!==edges[i].answer&&state.values[i]>0)wrong.push(i);
+ if(!wrong.length)for(var j=0;j<edges.length;j++)if(state.values[j]!==edges[j].answer)wrong.push(j);
+ if(!wrong.length){notify('Every bridge is correct.');return;}
+ var chosen=wrong[rand(wrong.length)],answer=edges[chosen].answer;
+ record();state.values[chosen]=answer;state.hints++;state.started=true;state.moves++;selected=-1;save();render();
+ notify(answer?'A correct route has been revealed.':'An incorrect bridge was cleared.');
+ checkWin();
+}
+function checkWin(){
+ if(state.won||!isSolved())return;
+ state.won=true;var stats=getRecords(),level=state.level,r=stats[level]||{wins:0,best:null};
+ r.wins=(r.wins||0)+1;
+ if(!state.hints&&(r.best==null||state.seconds<r.best))r.best=state.seconds;
+ stats[level]=r;setRecords(stats);save();render();showWin();
+}
+function showWin(){
+ $('winTime').textContent=timeText(state.seconds);
+ $('winSub').textContent=state.hints?('Solved with '+state.hints+' hint'+(state.hints===1?'':'s')+'. Try again without hints for a clean record.'):('Clean solve · '+SETTINGS[state.level].label+' difficulty');
+ open('winOverlay');
+}
+function initNew(level){state=blank(level);selected=-1;pendingAction=null;save();render();}
+function request(action){
+ closeAll();
+ if(!state.won&&state.moves>0){
+   pendingAction=action;$('confirmMessage').textContent=action.type==='restart'?'Restarting will clear all bridges on this board.':'The current unfinished puzzle will be replaced.';
+   open('confirmOverlay');
+ }else perform(action);
+}
+function perform(action){
+ closeAll();
+ if(action.type==='restart'){state.values=state.values.map(function(){return 0;});state.seconds=0;state.started=false;state.won=false;state.hints=0;state.moves=0;state.history=[];selected=-1;save();render();}
+ else initNew(action.level||state.level);
+}
+function open(id){closeAll();$(id).hidden=false;}
+function closeAll(){document.querySelectorAll('.overlay').forEach(function(e){e.hidden=true;});}
+function showMenu(){
+ var stats=getRecords()[state.level]||{wins:0,best:null};
+ $('statWins').textContent=stats.wins||0;$('statBest').textContent=stats.best==null?'—':timeText(stats.best);
+ $('statHints').textContent=state.hints;
+ document.querySelectorAll('[data-difficulty]').forEach(function(b){b.classList.toggle('chosen',b.dataset.difficulty===state.level);b.setAttribute('aria-pressed',String(b.dataset.difficulty===state.level));});
+ open('menuOverlay');
+}
+var board=$('board');
+board.addEventListener('pointerdown',function(e){
+ var island=e.target.closest('[data-island]');dragStart=island?Number(island.dataset.island):null;
+});
+board.addEventListener('pointerup',function(e){
+ if(state.won)return;
+ var target=document.elementFromPoint(e.clientX,e.clientY),island=target&&target.closest('[data-island]'),edge=target&&target.closest('[data-edge]');
+ if(dragStart!==null){
+   var start=dragStart;dragStart=null;
+   if(island){var end=Number(island.dataset.island);if(start!==end){selected=start;chooseIsland(end);}else chooseIsland(start);}
+   else if(edge&&selected>=0){cycle(Number(edge.dataset.edge));}
+ }else if(edge){cycle(Number(edge.dataset.edge));}
+});
+board.addEventListener('pointercancel',function(){dragStart=null;});
+board.addEventListener('keydown',function(e){
+ if(e.key!=='Enter'&&e.key!==' ')return;
+ var island=e.target.closest('[data-island]'),edge=e.target.closest('[data-edge]');
+ if(island){e.preventDefault();chooseIsland(Number(island.dataset.island));}
+ else if(edge){e.preventDefault();cycle(Number(edge.dataset.edge));}
+});
+$('menuBtn').addEventListener('click',showMenu);$('difficultyBtn').addEventListener('click',showMenu);
+$('undoBtn').addEventListener('click',undo);$('hintBtn').addEventListener('click',hint);
+$('newBtn').addEventListener('click',function(){request({type:'new',level:state.level});});
+$('restartBtn').addEventListener('click',function(){request({type:'restart'});});
+$('rulesBtn').addEventListener('click',function(){open('rulesOverlay');});
+$('rulesDone').addEventListener('click',closeAll);
+$('cancelBtn').addEventListener('click',function(){pendingAction=null;closeAll();});
+$('confirmBtn').addEventListener('click',function(){if(pendingAction){var act=pendingAction;pendingAction=null;perform(act);}});
+$('viewBoardBtn').addEventListener('click',closeAll);
+$('nextBtn').addEventListener('click',function(){request({type:'new',level:state.level});});
+document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.difficulty===state.level){closeAll();return;}request({type:'new',level:b.dataset.difficulty});});});
+document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeAll);});
+document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('pointerdown',function(e){if(e.target===el)closeAll();});});
+window.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAll();return;}if(e.target instanceof HTMLElement&&e.target.closest('.overlay:not([hidden])'))return;if((e.key==='z'&&(e.ctrlKey||e.metaKey))||e.key==='Backspace'){if(e.key==='Backspace'&&e.target.tagName==='INPUT')return;e.preventDefault();undo();}});
+setInterval(function(){if(state&&state.started&&!state.won&&!document.hidden&&!document.querySelector('.overlay:not([hidden])')){state.seconds++;$('timeLabel').textContent=timeText(state.seconds);save();}},1000);
+try{state=load()||blank('easy');save();render();if(state.won)showWin();}
+catch(err){$('progressLine').textContent='Unable to create a puzzle. Reload the page to retry.';console.error('Bridgebound puzzle generation error',err);}
+})();
+</script>
+</body>
+</html>
