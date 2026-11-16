@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101e3c"><meta name="description" content="Elflympics Ice Links — a winter sports logic event on pure ice in GameBox Advent 2026.">
-<title>Ice Links · Elflympics 2026 · GameBox</title>
+<title>Ice Links · Elflympics 2026 · Advent Event</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
 :root{color-scheme:dark;font-family:'DM Sans',system-ui,-apple-system,sans-serif;--deep:#071d29;--sea:#0c3c4b;--mint:#8be4c7;--gold:#edc179;--cream:#f9e8be;--muted:#a5bec7;--red:#ff948a}
@@ -156,6 +156,15 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
 @media(max-width:390px){.endlessScoreboard{grid-template-columns:1.4fr .5fr 1fr;gap:5px;padding:6px}.endlessScoreboard .scoreSecondary:last-child{display:none}.endlessScoreboard small{font-size:8px}}
 @media(max-height:700px){.endlessScoreboard{padding-top:3px;padding-bottom:4px}.arenaShell{width:min(100%,620px,calc((100dvh - 224px)*1.04))}}
 @media(prefers-reduced-motion:reduce){.heatResult{animation:none!important}}
+
+/* Ranked Advent result: one cumulative total after five consecutive puzzles */
+.resultSheet{text-align:center}.resultSheet h2{font-size:clamp(28px,7vw,40px)}
+.finalScorePanel{margin:15px 0;padding:20px 12px;border:1px solid #86bcdd;border-radius:8px;background:linear-gradient(130deg,#12375f,#0b2448)}
+.finalScorePanel small{display:block;font-size:10px;font-weight:900;letter-spacing:.17em;color:#bbdaf4}
+.finalScorePanel strong{display:block;margin:5px 0;font:900 clamp(42px,13vw,65px)/1.1 'Outfit',system-ui;color:#ffe2a0;font-variant-numeric:tabular-nums}
+.finalScorePanel span{font-size:13px;font-weight:800;color:#e0f4ff}
+.speedTarget{display:flex;align-items:center;gap:6px;white-space:nowrap;color:#b6d0e8}
+.speedTarget b{font:900 14px 'Outfit';color:#ffdc90}
 </style>
 </head>
 <body>
@@ -163,23 +172,23 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
   <header class="topbar">
     <a class="iconBtn" href="../advent-2026/" aria-label="Back to Advent Playroom">‹</a>
     <div class="brand"><span class="eyebrow">ELFLYMPICS 2026 · WINTER GAMES</span><h1>ICE LINKS</h1></div>
-    <div class="topright"><span class="version">V5 · ENDLESS</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
+    <div class="topright"><span class="version">V6 · ADVENT</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
   </header>
   <div class="rule"></div>
   <div class="endlessScoreboard" aria-label="Event scoring">
  <div class="scorePrimary"><small>EVENT SCORE</small><strong id="scoreLabel">0</strong></div>
- <div class="scoreSecondary"><small>HEAT</small><strong id="heatLabel">1</strong></div>
+ <div class="scoreSecondary"><small>PUZZLE</small><strong id="heatLabel">1 / 5</strong></div>
  <div class="scoreSecondary"><small>PERSONAL BEST</small><strong id="bestScoreLabel">0</strong></div>
  <div class="scoreSecondary"><small>CLEAN STREAK</small><strong id="streakLabel">0</strong></div>
  </div>
  <section class="hud" aria-label="Puzzle status">
-    <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>EVENT HEAT</small><strong id="difficultyLabel">QUALIFIER</strong></button>
+    <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>DIFFICULTY</small><strong id="difficultyLabel">QUALIFIER</strong></button>
     <div class="hudCell"><small>CHECKPOINTS</small><strong id="countLabel">0 / 9</strong></div>
     <div class="hudCell"><small>RACE CLOCK</small><strong id="timeLabel">00:00</strong></div>
   </section>
   <main class="boardArea">
     <div class="arenaShell" id="arenaShell">
-      <div class="arenaBroadcast"><span class="liveMark"><span class="livePulse"></span> EVENT 21 · ICE LINKS</span><span class="medalPace">GOLD TARGET <b id="medalTarget">02:00</b></span></div>
+      <div class="arenaBroadcast"><span class="liveMark"><span class="livePulse"></span> EVENT 21 · ICE LINKS</span><span class="speedTarget">PACE TARGET <b id="targetTime">02:00</b></span></div>
     <div class="boardFrame" id="boardFrame">
       <svg id="board" role="group" aria-label="Bridges puzzle board. Tap one island and then a visible neighbour, or drag between islands." viewBox="0 0 322 322">
         <defs>
@@ -191,7 +200,7 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
       <div class="boardOrnament" aria-hidden="true">ELFLYMPICS · 2026</div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
-      <div class="heatResult" id="heatResult" role="status" aria-live="assertive" hidden><strong id="heatPoints">+0 POINTS</strong><span id="heatAward">GOLD · HEAT COMPLETE</span></div>
+      <div class="heatResult" id="heatResult" role="status" aria-live="assertive" hidden><strong id="heatPoints">+0 POINTS</strong><span id="heatAward">PUZZLE COMPLETE</span></div>
  <div class="arenaFooter"><span>WINTER GAMES <b>2026</b></span><span id="arenaState">AWAITING START</span></div>
     </div>
   </main>
@@ -199,23 +208,23 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
   <div class="actions">
     <button id="undoBtn" class="action" type="button" disabled><span aria-hidden="true">↶</span> Undo</button>
     <button id="hintBtn" class="action" type="button"><span aria-hidden="true">◎</span> Hint</button>
-    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">↠</span> Skip heat</button>
+    <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">↠</span> Skip puzzle</button>
   </div>
   <div class="microcopy">CONNECT EVERY CHECKPOINT · MAXIMUM TWO ICE TRACKS · <strong>NO CROSSINGS</strong></div>
 </div>
 <div id="menuOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
     <div class="sheetTop"><div><span class="eyebrow">ELFLYMPICS · EVENT SETTINGS</span><h2 id="menuTitle">Choose your heat.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
-    <p>Link every checkpoint to earn points. The next puzzle starts automatically, and the competition never ends. Difficulty progresses from Qualifiers through Semifinals to endless Finals.</p>
+    <p>Complete five puzzles in a continuous run, then receive one final Advent score. Choose Easy, Medium or Hard before you start; harder puzzles are worth more. Elflympics ranks your final score against other competitors.</p>
     <div class="difficultyOptions" id="difficultyOptions">
-      <button type="button" class="choice" data-difficulty="easy"><b>Qualifier</b><small>5 × 5 course</small></button>
-      <button type="button" class="choice" data-difficulty="medium"><b>Semifinal</b><small>7 × 7 course</small></button>
-      <button type="button" class="choice" data-difficulty="hard"><b>Final</b><small>9 × 9 course</small></button>
+      <button type="button" class="choice" data-difficulty="easy"><b>Easy</b><small>100 points / puzzle</small></button>
+      <button type="button" class="choice" data-difficulty="medium"><b>Medium</b><small>200 points / puzzle</small></button>
+      <button type="button" class="choice" data-difficulty="hard"><b>Hard</b><small>350 points / puzzle</small></button>
     </div>
-    <h3>Your current run</h3>
+    <h3>Your five-puzzle run</h3>
     <div class="statGrid"><div class="stat"><strong id="statWins">0</strong><small>Heats completed</small></div><div class="stat"><strong id="statBest">0</strong><small>Best score</small></div><div class="stat"><strong id="statHints">0</strong><small>Hints this heat</small></div></div>
- <p style="font-size:11px;margin:14px 0 0">Qualifier 100 base points · Semifinal 200 · Final 350. Fast clean finishes earn extra points; consecutive clean heats earn a streak bonus. One hint halves the base award, two or more score zero. Skips earn zero points and reset the streak.</p>
-    <div class="menuActions"><button id="rulesBtn" class="menuBtn" type="button">How to play</button><button id="restartBtn" class="menuBtn warning" type="button">New scoring run</button></div>
+ <p style="font-size:11px;margin:14px 0 0">Easy 100 · Medium 200 · Hard 350 base points per puzzle. Fast clean finishes earn more, and clean streaks add points. One hint halves the base score; two or more earn zero. Skips earn zero and break streaks. Only the final five-puzzle total enters Advent standings.</p>
+    <div class="menuActions"><button id="rulesBtn" class="menuBtn" type="button">How to play</button><button id="restartBtn" class="menuBtn warning" type="button">Restart run</button></div>
   </section>
 </div>
 <div id="rulesOverlay" class="overlay" hidden>
@@ -228,23 +237,41 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
       <li><strong>Bridges never cross</strong> or pass through an island.</li>
       <li>To win, <strong>all the islands must be connected</strong> in one network, with every count satisfied.</li>
     </ol>
-    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Green checkpoints are complete; red means too many tracks. Every checkpoint must connect into one course. Points are awarded at the finish, and the next heat starts automatically.</p>
+    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Green checkpoints are complete, red means too many tracks. Every checkpoint must connect. Solve five consecutive puzzles to finish; the next board appears automatically. There are no separate medals.</p>
     <button id="rulesDone" class="menuBtn primary" style="width:100%" type="button">Back to the islands</button>
   </section>
 </div>
 <div id="confirmOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="sheetTop"><div><span class="eyebrow">Leave this puzzle?</span><h2 id="confirmTitle">Your bridges will be lost.</h2></div><button type="button" class="closeBtn" data-close aria-label="Cancel">×</button></div>
+    <div class="sheetTop"><div><span class="eyebrow">Change your run?</span><h2 id="confirmTitle">Confirm this change</h2></div><button type="button" class="closeBtn" data-close aria-label="Cancel">×</button></div>
     <p id="confirmMessage">Your unfinished board will be replaced. Continue?</p>
     <div class="menuActions"><button id="cancelBtn" class="menuBtn" type="button">Keep playing</button><button id="confirmBtn" class="menuBtn primary" type="button">Continue</button></div>
   </section>
 </div>
+<div id="finalOverlay" class="overlay" hidden>
+ <section class="sheet resultSheet" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
+  <span class="eyebrow">ELFLYMPICS 2026 · ICE LINKS</span>
+  <h2 id="finalTitle">Event complete</h2>
+  <p>Five puzzles finished. Your total score is the result that Elflympics compares with other competitors.</p>
+  <div class="finalScorePanel"><small>FINAL SCORE</small><strong id="finalScore">0</strong><span id="finalBreakdown">Easy · 5 puzzles</span></div>
+  <p id="adventStatus">Event positions are calculated by Elflympics after official results are recorded.</p>
+  <div class="menuActions">
+   <a class="menuBtn" href="../advent-2026/" id="returnAdvent" style="text-align:center;text-decoration:none;display:grid;place-items:center">Advent Playroom</a>
+   <button id="playAgainBtn" class="menuBtn primary" type="button">New practice run</button>
+  </div>
+ </section>
+</div>
 <script>
 (function(){
 'use strict';
-var SAVE='gamebox.bridgebound.v1', RECORDS='gamebox.bridgebound.records.v1';
-var SETTINGS={easy:{size:5,n:9,extra:.25,doubles:.27,label:'Qualifier'},medium:{size:7,n:15,extra:.40,doubles:.33,label:'Semifinal'},hard:{size:9,n:23,extra:.48,doubles:.38,label:'Final'}};
-var MEDALS={easy:{gold:120,silver:240},medium:{gold:240,silver:420},hard:{gold:480,silver:780}};
+var mode=new URLSearchParams(location.search).get('elfMode');
+if(mode!=='official'&&mode!=='practice')mode='standalone';
+var attempt=new URLSearchParams(location.search).get('elfAttempt')||'';
+attempt=/^[0-9a-f-]{8,50}$/i.test(attempt)?attempt:'local';
+var SAVE=mode==='official'?'elflympics.ice-links.official.'+attempt:'gamebox.ice-links.advent-run.v1';
+var RECORDS='gamebox.ice-links.records.v2',RUN_LENGTH=5;
+var SETTINGS={easy:{size:5,n:9,extra:.25,doubles:.27,label:'Easy'},medium:{size:7,n:15,extra:.40,doubles:.33,label:'Medium'},hard:{size:9,n:23,extra:.48,doubles:.38,label:'Hard'}};
+var PACE={easy:120,medium:240,hard:480};
 var $=function(id){return document.getElementById(id);};
 var rand=function(n){return Math.floor(Math.random()*n);};
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rand(i+1),tmp=a[i];a[i]=a[j];a[j]=tmp;}return a;}
@@ -373,17 +400,12 @@ function generate(level){
 var state=null,selected=-1,dragStart=null,pendingAction=null,toastTimer=null,advanceTimer=null;
 function blank(level,progress){
  var graph=generate(level),p=progress||{};
- return {level:level,graph:graph,values:graph.edges.map(function(){return 0;}),seconds:0,started:false,won:false,hints:0,moves:0,history:[],
- score:Math.max(0,Number(p.score)||0),completed:Math.max(0,Number(p.completed)||0),streak:Math.max(0,Number(p.streak)||0),startLevel:SETTINGS[p.startLevel]?p.startLevel:level};
-}
-function heatLevel(completed,startLevel){
- if(startLevel==='hard')return 'hard';
- if(startLevel==='medium')return completed<3?'medium':'hard';
- return completed<3?'easy':completed<6?'medium':'hard';
+ return {level:level,graph:graph,values:graph.edges.map(function(){return 0;}),seconds:0,startedAt:0,started:false,won:false,finished:false,hints:0,moves:0,history:[],
+ score:Math.max(0,Math.floor(Number(p.score)||0)),completed:Math.min(RUN_LENGTH,Math.max(0,Math.floor(Number(p.completed)||0))),streak:Math.max(0,Math.floor(Number(p.streak)||0)),startLevel:SETTINGS[p.startLevel]?p.startLevel:level};
 }
 function personalBest(){return Math.max(0,Number(getRecords().bestScore)||0);}
 function heatPoints(level,seconds,hints,streak){
- var base={easy:100,medium:200,hard:350}[level],par=MEDALS[level].gold;
+ var base={easy:100,medium:200,hard:350}[level],par=PACE[level];
  if(hints>=2)return 0;
  if(hints===1)return Math.floor(base/2);
  return base+Math.round(base*.75*Math.max(0,(par-seconds)/par))+Math.min(100,streak*20);
@@ -401,11 +423,13 @@ function load(){
    var s=JSON.parse(localStorage.getItem(SAVE));
    if(!validSaved(s))return null;
    s.seconds=Math.max(0,Math.floor(Number(s.seconds)||0));
-   s.started=!!s.started;s.won=!!s.won;s.hints=Math.max(0,Number(s.hints)||0);s.moves=Math.max(0,Number(s.moves)||0);
+   s.started=!!s.started;s.won=!!s.won;s.finished=!!s.finished;s.hints=Math.max(0,Number(s.hints)||0);s.moves=Math.max(0,Number(s.moves)||0);
+   s.startedAt=Number.isFinite(Number(s.startedAt))?Math.max(0,Number(s.startedAt)):0;
    s.score=Math.max(0,Math.floor(Number(s.score)||0));
    s.completed=Math.max(0,Math.floor(Number(s.completed)||0));
    s.streak=Math.max(0,Math.floor(Number(s.streak)||0));
    s.startLevel=SETTINGS[s.startLevel]?s.startLevel:s.level;
+   s.level=s.startLevel;s.completed=Math.min(RUN_LENGTH,s.completed);
    s.history=Array.isArray(s.history)?s.history.filter(function(a){return Array.isArray(a)&&a.length===s.values.length&&a.every(function(x){return Number.isInteger(x)&&x>=0&&x<=2;});}).slice(-80):[];
    return s;
  }catch(e){return null;}
@@ -448,10 +472,10 @@ function render(){
  var graph=state.graph,nodes=graph.nodes,edges=graph.edges,sz=SETTINGS[state.level].size,cell=60,pad=41,extent=pad*2+(sz-1)*cell;
  $('board').setAttribute('viewBox','0 0 '+extent+' '+extent);
  $('difficultyLabel').textContent=SETTINGS[state.level].label;
- $('medalTarget').textContent=timeText(MEDALS[state.level].gold);
- $('arenaState').textContent=state.won?'NEXT HEAT LOADING':state.started?'HEAT IN PROGRESS':'READY TO COMPETE';
+ $('targetTime').textContent=timeText(PACE[state.level]);
+ $('arenaState').textContent=state.finished?'FINAL RESULT':state.won?'NEXT PUZZLE LOADING':state.started?'PUZZLE IN PROGRESS':'READY TO COMPETE';
  $('scoreLabel').textContent=state.score.toLocaleString('en-GB');
- $('heatLabel').textContent=state.completed+1;
+ $('heatLabel').textContent=(state.finished?RUN_LENGTH:state.completed+1)+' / '+RUN_LENGTH;
  $('bestScoreLabel').textContent=Math.max(personalBest(),state.score).toLocaleString('en-GB');
  $('streakLabel').textContent=state.streak;
  var counts=sums(),complete=counts.filter(function(n,i){return n===nodes[i].n;}).length;
@@ -459,7 +483,7 @@ function render(){
  $('undoBtn').disabled=state.won||state.history.length===0;
  $('hintBtn').disabled=state.won;
  var line=$('progressLine');
- if(state.won)line.innerHTML='<b>Points awarded · Next heat incoming.</b>';
+ if(state.won)line.innerHTML=state.finished?'<b>Event complete · Final score recorded locally.</b>':'<b>Points awarded · Next puzzle incoming.</b>';
  else if(counts.some(function(n,i){return n>nodes[i].n;}))line.textContent='An island has too many bridges. Try removing one.';
  else if(complete===nodes.length&&!connected())line.textContent='Counts complete — join the separate island groups.';
  else if(selected>=0)line.textContent='Choose a neighbouring island to build a bridge.';
@@ -500,11 +524,13 @@ function notify(message){
  toastTimer=setTimeout(function(){$('toast').classList.remove('show');},1900);
 }
 function record(){state.history.push(state.values.slice());if(state.history.length>80)state.history.shift();}
+function startClock(){if(!state.started){state.started=true;state.startedAt=Date.now();}}
+function refreshClock(){if(state&&state.started&&!state.won&&!state.finished&&state.startedAt){state.seconds=Math.max(state.seconds,Math.floor((Date.now()-state.startedAt)/1000));}}
 function updateEdge(index,newValue){
  if(state.won||!Number.isInteger(index)||index<0||index>=state.values.length)return;
  if(newValue>0&&state.graph.edges[index].cross.some(function(i){return state.values[i]>0;})){notify('Ice tracks cannot cross.');return;}
  if(state.values[index]===newValue)return;
- record();state.values[index]=newValue;state.started=true;state.moves++;selected=-1;save();render();checkWin();
+ record();state.values[index]=newValue;startClock();state.moves++;selected=-1;save();render();checkWin();
 }
 function cycle(index){updateEdge(index,(state.values[index]+1)%3);}
 function chooseIsland(index){
@@ -526,70 +552,78 @@ function hint(){
  if(!wrong.length)for(var j=0;j<edges.length;j++)if(state.values[j]!==edges[j].answer)wrong.push(j);
  if(!wrong.length){notify('Every bridge is correct.');return;}
  var chosen=wrong[rand(wrong.length)],answer=edges[chosen].answer;
- record();state.values[chosen]=answer;state.hints++;state.started=true;state.moves++;selected=-1;save();render();
+ record();state.values[chosen]=answer;state.hints++;startClock();state.moves++;selected=-1;save();render();
  notify(answer?'A correct ice track has been revealed.':'An incorrect track was cleared.');
  checkWin();
 }
 
-function medalForResult(){
- if(state.hints)return 'bronze';
- if(state.seconds<=MEDALS[state.level].gold)return 'gold';
- if(state.seconds<=MEDALS[state.level].silver)return 'silver';
- return 'bronze';
-}
+
 function cancelAdvance(){if(advanceTimer!==null){clearTimeout(advanceTimer);advanceTimer=null;}}
 function nextHeat(){
  cancelAdvance();
- if(!state||!state.won)return;
- var progress={score:state.score,completed:state.completed,streak:state.streak,startLevel:state.startLevel};
- initNew(heatLevel(progress.completed,progress.startLevel),progress);
+ if(!state||!state.won||state.finished)return;
+ var p={score:state.score,completed:state.completed,streak:state.streak,startLevel:state.startLevel};
+ initNew(p.startLevel,p);
+}
+function showFinal(){
+ cancelAdvance();
+ var records=getRecords();
+ if(mode!=='official'){records.bestScore=Math.max(Math.floor(Number(records.bestScore)||0),state.score);setRecords(records);}
+ $('finalScore').textContent=state.score.toLocaleString('en-GB');
+ $('finalBreakdown').textContent=SETTINGS[state.startLevel].label+' · '+RUN_LENGTH+' puzzles · '+state.streak+' clean streak';
+ $('adventStatus').textContent=mode==='official'?'Final score sent to Elflympics. The event window confirms whether it was saved.':mode==='practice'?'Practice score only — official rankings are unaffected.':'Official scores are ranked by Elflympics against other competitors.';
+ $('playAgainBtn').hidden=mode==='official';
+ $('returnAdvent').textContent=mode==='standalone'?'Advent Playroom':'Back to Elflympics';
+ $('returnAdvent').setAttribute('href',mode==='standalone'?'../advent-2026/':'../../');
+ open('finalOverlay');
+ if(mode!=='standalone'&&window.parent!==window){
+  window.parent.postMessage({type:'elflympics-finish',game:'ice-links',score:state.score,details:{difficulty:state.startLevel,puzzles:RUN_LENGTH,completed:state.completed}},location.origin);
+ }
 }
 function checkWin(){
- if(state.won||!isSolved())return;
- var medal=medalForResult(),award=heatPoints(state.level,state.seconds,state.hints,state.streak);
- state.won=true;state.score+=award;state.completed+=1;
- state.streak=state.hints?0:state.streak+1;
- var records=getRecords(),level=state.level,entry=records[level]||{wins:0,best:null};
- entry.medals=entry.medals||{gold:0,silver:0,bronze:0};entry.medals[medal]++;
- entry.wins=(entry.wins||0)+1;
- if(!state.hints&&(entry.best==null||state.seconds<entry.best))entry.best=state.seconds;
- records[level]=entry;records.bestScore=Math.max(personalBest(),state.score);
- setRecords(records);save();render();
- var result=$('heatResult');
+ if(state.won||state.finished||!isSolved())return;
+ refreshClock();
+ var award=heatPoints(state.level,state.seconds,state.hints,state.streak);
+ state.won=true;state.score+=award;state.completed++;
+ state.streak=state.hints?0:state.streak+1;state.finished=state.completed>=RUN_LENGTH;
+ save();render();
+ if(state.finished){showFinal();return;}
  $('heatPoints').textContent='+'+award.toLocaleString('en-GB')+' POINTS';
- $('heatAward').textContent=medal.toUpperCase()+' · HEAT '+state.completed+' COMPLETE';
- result.className='heatResult '+medal;result.hidden=false;
- cancelAdvance();
- advanceTimer=setTimeout(nextHeat,1300);
+ $('heatAward').textContent='PUZZLE '+state.completed+' / '+RUN_LENGTH+' COMPLETE';
+ $('heatResult').hidden=false;
+ cancelAdvance();advanceTimer=setTimeout(nextHeat,1000);
 }
 function initNew(level,progress){
- cancelAdvance();
- state=blank(level,progress);selected=-1;dragStart=null;pendingAction=null;
- $('heatResult').hidden=true;save();render();
+ cancelAdvance();state=blank(level,progress);selected=-1;dragStart=null;pendingAction=null;
+ $('heatResult').hidden=true;closeAll();save();render();
 }
 function request(action){
+ if(mode==='official'&&(state.started||state.completed>0||state.finished)&&action.type!=='skip'){notify('Official difficulty is locked for this attempt.');closeAll();return;}
  closeAll();
- if(!state.won&&(state.moves>0||state.score>0)){
-   pendingAction=action;
-   $('confirmMessage').textContent=action.type==='restart'?'Start a new run? Your accumulated points will reset.':
-     action.type==='mode'?'Starting at a different event heat resets your score and streak.':
-     'Skip this puzzle? You keep your score, but earn no points and lose your clean streak.';
-   open('confirmOverlay');
+ if(state.finished){if(mode!=='official')perform(action);return;}
+ if((state.moves>0||state.score>0)&&action.type!=='skip'){
+  pendingAction=action;
+  $('confirmMessage').textContent=action.type==='mode'?'Changing difficulty restarts this five-puzzle run with zero points.':'Restart this run? Your accumulated points will be cleared.';
+  open('confirmOverlay');
  }else perform(action);
 }
 function perform(action){
  closeAll();cancelAdvance();
  if(action.type==='restart'||action.type==='mode'){initNew(action.level||state.startLevel);}
- else if(action.type==='new'){
-   var p={score:state.score,completed:state.completed,streak:0,startLevel:state.startLevel};
-   initNew(heatLevel(p.completed,p.startLevel),p);
+ else if(action.type==='skip'){
+  if(state.finished)return;
+  state.completed++;state.streak=0;state.won=true;state.finished=state.completed>=RUN_LENGTH;
+  save();render();
+  if(state.finished){showFinal();return;}
+  $('heatPoints').textContent='+0 POINTS';$('heatAward').textContent='PUZZLE '+state.completed+' SKIPPED';
+  $('heatResult').hidden=false;advanceTimer=setTimeout(nextHeat,650);
  }
 }
 function open(id){closeAll();$(id).hidden=false;}
 function closeAll(){document.querySelectorAll('.overlay').forEach(function(e){e.hidden=true;});}
 function showMenu(){
- $('statWins').textContent=state.completed;
- $('statBest').textContent=personalBest().toLocaleString('en-GB');
+ $('statWins').textContent=state.completed+' / '+RUN_LENGTH;
+ $('statBest').textContent=Math.max(personalBest(),state.finished?state.score:0).toLocaleString('en-GB');
  $('statHints').textContent=state.hints;
  document.querySelectorAll('[data-difficulty]').forEach(function(b){b.classList.toggle('chosen',b.dataset.difficulty===state.startLevel);b.setAttribute('aria-pressed',String(b.dataset.difficulty===state.startLevel));});
  open('menuOverlay');
@@ -616,18 +650,19 @@ board.addEventListener('keydown',function(e){
 });
 $('menuBtn').addEventListener('click',showMenu);$('difficultyBtn').addEventListener('click',showMenu);
 $('undoBtn').addEventListener('click',undo);$('hintBtn').addEventListener('click',hint);
-$('newBtn').addEventListener('click',function(){request({type:'new'});});
+$('newBtn').addEventListener('click',function(){request({type:'skip'});});
 $('restartBtn').addEventListener('click',function(){request({type:'restart'});});
+$('playAgainBtn').addEventListener('click',function(){if(mode!=='official')initNew(state.startLevel);});
 $('rulesBtn').addEventListener('click',function(){open('rulesOverlay');});
 $('rulesDone').addEventListener('click',closeAll);
 $('cancelBtn').addEventListener('click',function(){pendingAction=null;closeAll();});
 $('confirmBtn').addEventListener('click',function(){if(pendingAction){var act=pendingAction;pendingAction=null;perform(act);}});
-document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.difficulty===state.startLevel&&state.completed===0){closeAll();return;}request({type:'mode',level:b.dataset.difficulty});});});
+document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(mode==='official'&&(state.started||state.completed>0)){notify('Difficulty is locked for this official run.');closeAll();return;}if(b.dataset.difficulty===state.startLevel){closeAll();return;}request({type:'mode',level:b.dataset.difficulty});});});
 document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeAll);});
-document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('pointerdown',function(e){if(e.target===el)closeAll();});});
+document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('pointerdown',function(e){if(e.target===el&&el.id!=='finalOverlay')closeAll();});});
 window.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAll();return;}if(e.target instanceof HTMLElement&&e.target.closest('.overlay:not([hidden])'))return;if((e.key==='z'&&(e.ctrlKey||e.metaKey))||e.key==='Backspace'){if(e.key==='Backspace'&&e.target.tagName==='INPUT')return;e.preventDefault();undo();}});
-setInterval(function(){if(state&&state.started&&!state.won&&!document.hidden&&!document.querySelector('.overlay:not([hidden])')){state.seconds++;$('timeLabel').textContent=timeText(state.seconds);save();}},1000);
-try{state=load()||blank('easy');save();render();if(state.won)nextHeat();}
+setInterval(function(){if(state&&state.started&&!state.won&&!state.finished){refreshClock();$('timeLabel').textContent=timeText(state.seconds);save();}},1000);
+try{state=load()||blank('easy');save();render();if(state.finished)showFinal();else if(state.won)nextHeat();}
 catch(err){$('progressLine').textContent='Unable to create a puzzle. Reload the page to retry.';console.error('Bridgebound puzzle generation error',err);}
 })();
 </script>
