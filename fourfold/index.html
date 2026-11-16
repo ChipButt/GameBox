@@ -46,7 +46,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-vis
 .cipherHow{font-size:12px;line-height:1.5;color:#dae5f9;text-align:center;margin:7px 0 13px}
 .cipherMapping{border:1px solid #65718e;border-radius:12px;padding:12px 6px;background:#0e1830}
 .cipherMapTitle{text-align:center;color:#b5c9de;font-size:10px;letter-spacing:.11em;font-weight:900;margin-bottom:8px}
-.cipherAlphabet{display:grid;grid-template-columns:repeat(26,minmax(0,1fr));gap:0;width:100%;margin:3px auto;font:800 clamp(7px,1.75vw,11px) 'Outfit',sans-serif;text-align:center;color:#f3edff}
+.cipherAlphabet{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;margin:3px auto;font:800 clamp(10px,2.5vw,13px) 'Outfit',sans-serif;text-align:center;color:#f3edff}
 .cipherAlphabet.code{color:#ffcf7c;background:#2b3657;border-radius:3px;padding:5px 0}
 .cipherMapNote{color:#bfc9df;text-align:center;font-size:10px;margin:8px 0 0}
 .cipherMessage{display:flex;flex-wrap:wrap;gap:5px;align-items:center;justify-content:center;padding:13px 8px;margin:13px 0;background:#101b34;border-radius:11px}
@@ -327,7 +327,8 @@ function renderCipher(p){
  const mapping=document.createElement('div');mapping.className='cipherMapping';
  const label=document.createElement('div');label.className='cipherMapTitle';label.textContent='PLAIN ALPHABET ↓ CODED ALPHABET';
  const encoded=p.method==='atbash'?ENGINE.cipherEncode(alphabet,'atbash'):ENGINE.cipherEncode(alphabet,'caesar',p.shift);
- mapping.append(label,cipherRow(alphabet,'plain'),cipherRow(encoded,'code'));
+ mapping.append(label);
+ for(let start=0;start<26;start+=13){mapping.append(cipherRow(alphabet.slice(start,start+13),'plain'),cipherRow(encoded.slice(start,start+13),'code'))}
  const note=document.createElement('div');note.className='cipherMapNote';
  note.textContent='For example: A → '+encoded[0]+' · B → '+encoded[1]+' · C → '+encoded[2];
  mapping.append(note);
