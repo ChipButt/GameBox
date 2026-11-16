@@ -228,7 +228,7 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
       <li><strong>Bridges never cross</strong> or pass through an island.</li>
       <li>To win, <strong>all the islands must be connected</strong> in one network, with every count satisfied.</li>
     </ol>
-    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Checkpoints glow green when their counts match; red means too many tracks. Every checkpoint must connect into one course. Hints reduce the points earned, and a new heat starts automatically.</p>
+    <p>Tap two checkpoints, drag from one to another, or tap a track to change it. Green checkpoints are complete; red means too many tracks. Every checkpoint must connect into one course. Points are awarded at the finish, and the next heat starts automatically.</p>
     <button id="rulesDone" class="menuBtn primary" style="width:100%" type="button">Back to the islands</button>
   </section>
 </div>
@@ -237,13 +237,6 @@ html,body{background:#07142e}body{background:radial-gradient(ellipse at 50% -25%
     <div class="sheetTop"><div><span class="eyebrow">Leave this puzzle?</span><h2 id="confirmTitle">Your bridges will be lost.</h2></div><button type="button" class="closeBtn" data-close aria-label="Cancel">×</button></div>
     <p id="confirmMessage">Your unfinished board will be replaced. Continue?</p>
     <div class="menuActions"><button id="cancelBtn" class="menuBtn" type="button">Keep playing</button><button id="confirmBtn" class="menuBtn primary" type="button">Continue</button></div>
-  </section>
-</div>
-<div id="winOverlay" class="overlay" hidden>
-  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-    <div class="podiumSpot"><span class="ribbonLeft"></span><div class="medalDisc" id="winMedalDisc"><svg viewBox="0 0 80 80" width="58" height="58" aria-hidden="true"><path d="M25 2h12l3 31H29zM44 2h12L48 33H37z" fill="#98B7D5"/><circle cx="40" cy="49" r="26" fill="none" stroke="currentColor" stroke-width="5"/><path d="m40 30 6 12 13 2-10 9 3 13-12-7-12 7 3-13-10-9 13-2z" fill="currentColor"/></svg></div><span class="ribbonRight"></span></div><span class="eyebrow winLabel" style="display:block">ALL CHECKPOINTS CONNECTED</span><h2 id="winTitle" style="text-align:center">GOLD MEDAL</h2>
-    <div id="winTime" class="winTime">00:00</div><div id="winSub" class="winSub">Beautifully done.</div>
-    <div class="menuActions"><button id="viewBoardBtn" class="menuBtn" type="button">View board</button><button id="nextBtn" class="menuBtn primary" type="button">Next heat</button></div>
   </section>
 </div>
 <script>
@@ -629,8 +622,6 @@ $('rulesBtn').addEventListener('click',function(){open('rulesOverlay');});
 $('rulesDone').addEventListener('click',closeAll);
 $('cancelBtn').addEventListener('click',function(){pendingAction=null;closeAll();});
 $('confirmBtn').addEventListener('click',function(){if(pendingAction){var act=pendingAction;pendingAction=null;perform(act);}});
-$('viewBoardBtn').addEventListener('click',closeAll);
-$('nextBtn').addEventListener('click',function(){nextHeat();});
 document.querySelectorAll('[data-difficulty]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.difficulty===state.startLevel&&state.completed===0){closeAll();return;}request({type:'mode',level:b.dataset.difficulty});});});
 document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeAll);});
 document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('pointerdown',function(e){if(e.target===el)closeAll();});});
