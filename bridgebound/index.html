@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#092d38">
-<title>Bridgebound — Island Logic · GameBox</title>
+<meta name="theme-color" content="#153d39"><meta name="description" content="North Pole Bridges — festive island logic for GameBox Advent 2026.">
+<title>North Pole Bridges · Advent 2026 · GameBox</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
 :root{color-scheme:dark;font-family:'DM Sans',system-ui,-apple-system,sans-serif;--deep:#071d29;--sea:#0c3c4b;--mint:#8be4c7;--gold:#edc179;--cream:#f9e8be;--muted:#a5bec7;--red:#ff948a}
@@ -29,31 +29,53 @@ button,a{font:inherit}button{cursor:pointer}button:disabled{opacity:.37;cursor:d
 @media(max-height:690px){.app{padding-top:calc(7px + env(safe-area-inset-top));padding-bottom:calc(7px + env(safe-area-inset-bottom))}.topbar{min-height:42px}.rule{margin:7px 0}.hud{margin-bottom:6px}.hudCell{min-height:48px;padding:6px 9px}.boardFrame{width:min(100%,620px,calc(100dvh - 217px))}.actions{padding-top:5px}.action{min-height:47px}.microcopy{margin-top:8px}}
 @media(max-width:370px){.app{padding-left:9px;padding-right:9px}.hud{gap:5px}.hudCell{padding:8px 7px}.hudCell strong{font-size:17px}.difficulty strong{font-size:15px}.actions{gap:6px}.action{font-size:11px}.topbar{gap:8px}.boardFrame{border-radius:17px}.sheet{padding:19px 15px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Christmas theme V2: a frozen lake, snowflake drifts, candy-cane edging, frosted outposts. */
+:root{--deep:#102231;--sea:#194955;--mint:#d6f9e4;--gold:#f7d284;--cream:#fff3de;--muted:#c1dade;--red:#e3767c}
+html,body{background:#102331}
+body{background:radial-gradient(ellipse 90% 43% at 50% 0%,#487f80 0%,#284f57 48%,transparent 95%),linear-gradient(145deg,#132f3e,#0d2432)}
+.brand h1{font-size:clamp(19px,4.8vw,29px);color:#fff1cc;text-shadow:0 2px #183e43}.brand .eyebrow{color:#dbf9dd}.version{color:#ffe7ab}
+.rule{height:4px;background:repeating-linear-gradient(90deg,#ba4049 0 18px,#fff9ea 18px 36px,#2e8c59 36px 54px,#fff9ea 54px 72px);border-radius:6px;margin:12px 0 11px}
+.iconBtn{background:linear-gradient(#316e5e,#154c50);border-color:#acd7ba;color:#fff6df;box-shadow:0 3px 0 #0a3035}
+.hudCell{background:linear-gradient(145deg,#2b665a,#1d4b50);border-color:#82b69d;box-shadow:inset 0 1px #f5fff446,0 3px 0 #0a3035}.hudCell small{color:#d8ece0}.hudCell strong{color:#fff6d8}
+.boardFrame{border:4px solid #e6fff4;border-radius:25px;box-shadow:0 0 0 4px #a63142,0 0 0 7px #ffeac3,0 18px 44px #0009;background:radial-gradient(ellipse at 13% 14%,#b2ecf642,transparent 49%),radial-gradient(ellipse at 80% 88%,#95cddd47,transparent 57%),repeating-linear-gradient(150deg,#124a64 0px,#194e65 22px,#17465f 43px,#124a64 65px)}
+.boardFrame:before{z-index:0;background:radial-gradient(circle at 20% 15%,#e5faffc2 0 1px,transparent 1.8px),radial-gradient(circle at 60% 75%,#ffffffb0 0 1px,transparent 1.7px),radial-gradient(circle at 43% 47%,#efffff93 0 1.5px,transparent 2.3px),repeating-linear-gradient(80deg,transparent 0 69px,#ccf3f617 70px 71px,transparent 73px 110px);background-size:66px 83px,102px 124px,137px 111px,auto}
+.boardFrame:after{border-color:#f9fffba0}.boardOrnament{color:#e0f9eda9;font-size:15px;line-height:1;text-shadow:0 0 10px #fff}
+.island text{font-size:20px;stroke:#f7ffff77;stroke-width:.2px}.island.active .islandOuter{stroke:#ffe59b;stroke-width:4;filter:drop-shadow(0 0 8px #ffe8a8)}
+.island.complete .islandFace{fill:url(#finished)}.island.over .islandFace{fill:url(#overfilled)}
+.progressLine{color:#daece5}.action{background:linear-gradient(#35745e,#1d554d);border-color:#a4d2b9;box-shadow:0 4px 0 #093431;color:#fff9ef}
+.action.gold{background:linear-gradient(#ffeaab,#eac078);border-color:#fff6e3;color:#3e3429;box-shadow:0 4px 0 #8d704a}
+.microcopy{color:#a7cbd0}.microcopy strong{color:#e5f9e5}
+.sheet{background:linear-gradient(155deg,#367565,#1a4e53 65%,#103140);border-color:#d5eedb}.sheet h2{color:#fff0c7}.sheet p{color:#e2eee5}.sheet h3{color:#e9ffe7}
+.closeBtn,.menuBtn{background:#316556;border-color:#a4d6b8}.choice{background:#23554b;border-color:#95bfa9}.choice.chosen{background:#436d58;border-color:#ffe2a0}
+.menuBtn.primary{background:linear-gradient(#ffe8a8,#dfb470);color:#3c312d}
+.winSeal{background:radial-gradient(#71b79d,#266b60);color:#fff4d9;border-color:#fff2ce;box-shadow:0 0 0 6px #efffea24,0 0 45px #adf6dd66}.winTime{color:#ffebae}
+@media(max-width:390px){.brand h1{font-size:20px}.version{font-size:8px}}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
     <a class="iconBtn" href="../" aria-label="Back to GameBox">‹</a>
-    <div class="brand"><span class="eyebrow">Chip In Games · Island Logic</span><h1>Bridgebound</h1></div>
-    <div class="topright"><span class="version">V1</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
+    <div class="brand"><span class="eyebrow">Advent 2026 · Winter Puzzle</span><h1>North Pole Bridges</h1></div>
+    <div class="topright"><span class="version">V2 · CHRISTMAS</span><button id="menuBtn" class="iconBtn" type="button" aria-label="Game menu">☰</button></div>
   </header>
   <div class="rule"></div>
   <section class="hud" aria-label="Puzzle status">
     <button id="difficultyBtn" class="hudCell difficulty" type="button" aria-label="Choose difficulty"><small>DIFFICULTY</small><strong id="difficultyLabel">Easy</strong></button>
-    <div class="hudCell"><small>ISLANDS READY</small><strong id="countLabel">0 / 9</strong></div>
+    <div class="hudCell"><small>OUTPOSTS READY</small><strong id="countLabel">0 / 9</strong></div>
     <div class="hudCell"><small>TIME</small><strong id="timeLabel">00:00</strong></div>
   </section>
   <main class="boardArea">
     <div class="boardFrame" id="boardFrame">
       <svg id="board" role="group" aria-label="Bridges puzzle board. Tap one island and then a visible neighbour, or drag between islands." viewBox="0 0 322 322">
         <defs>
-          <linearGradient id="sand" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#fff0bf"/><stop offset=".65" stop-color="#f1c777"/><stop offset="1" stop-color="#c69251"/></linearGradient>
-          <linearGradient id="finished" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7f7d0"/><stop offset="1" stop-color="#69c9a7"/></linearGradient>
+          <linearGradient id="sand" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#ffffff"/><stop offset=".60" stop-color="#e4f7f3"/><stop offset="1" stop-color="#a8d1df"/></linearGradient>
+          <linearGradient id="finished" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ecffe9"/><stop offset="1" stop-color="#8dddac"/></linearGradient>
           <linearGradient id="overfilled" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd2be"/><stop offset="1" stop-color="#ef826e"/></linearGradient>
         </defs>
       </svg>
-      <div class="boardOrnament" aria-hidden="true">N<br>✧</div>
+      <div class="boardOrnament" aria-hidden="true">✦<br>❄</div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
   </main>
@@ -63,11 +85,11 @@ button,a{font:inherit}button{cursor:pointer}button:disabled{opacity:.37;cursor:d
     <button id="hintBtn" class="action" type="button"><span aria-hidden="true">✧</span> Hint</button>
     <button id="newBtn" class="action gold" type="button"><span aria-hidden="true">✦</span> New puzzle</button>
   </div>
-  <div class="microcopy">ONE OR TWO BRIDGES · NO CROSSINGS · <strong>ONE CONNECTED NETWORK</strong></div>
+  <div class="microcopy">ONE OR TWO FESTIVE BRIDGES · NO CROSSINGS · <strong>CONNECT EVERY SNOWY OUTPOST</strong></div>
 </div>
 <div id="menuOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
-    <div class="sheetTop"><div><span class="eyebrow">Bridgebound · Settings</span><h2 id="menuTitle">Chart your course.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
+    <div class="sheetTop"><div><span class="eyebrow">North Pole Bridges · Settings</span><h2 id="menuTitle">Choose your challenge.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close menu">×</button></div>
     <p>Select a challenge. Each new puzzle has a unique logical solution.</p>
     <div class="difficultyOptions" id="difficultyOptions">
       <button type="button" class="choice" data-difficulty="easy"><b>Easy</b><small>5 × 5 waters</small></button>
@@ -81,7 +103,7 @@ button,a{font:inherit}button{cursor:pointer}button:disabled{opacity:.37;cursor:d
 </div>
 <div id="rulesOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-    <div class="sheetTop"><div><span class="eyebrow">Captain's guide</span><h2 id="rulesTitle">The rules of the sea.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close rules">×</button></div>
+    <div class="sheetTop"><div><span class="eyebrow">Santa's guide</span><h2 id="rulesTitle">Bridge the North Pole.</h2></div><button type="button" class="closeBtn" data-close aria-label="Close rules">×</button></div>
     <ol class="ruleList">
       <li>Join islands in a <strong>straight horizontal or vertical line</strong>, to the next island in that direction.</li>
       <li>An island's number tells you exactly <strong>how many bridges touch it</strong>.</li>
@@ -102,7 +124,7 @@ button,a{font:inherit}button{cursor:pointer}button:disabled{opacity:.37;cursor:d
 </div>
 <div id="winOverlay" class="overlay" hidden>
   <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-    <div class="winSeal" aria-hidden="true">✧</div><span class="eyebrow winLabel" style="display:block">Every island connected</span><h2 id="winTitle" style="text-align:center">Bridgebound!</h2>
+    <div class="winSeal" aria-hidden="true">❄</div><span class="eyebrow winLabel" style="display:block">Every snowy outpost connected</span><h2 id="winTitle" style="text-align:center">Christmas connected!</h2>
     <div id="winTime" class="winTime">00:00</div><div id="winSub" class="winSub">Beautifully done.</div>
     <div class="menuActions"><button id="viewBoardBtn" class="menuBtn" type="button">View board</button><button id="nextBtn" class="menuBtn primary" type="button">Next puzzle</button></div>
   </section>
